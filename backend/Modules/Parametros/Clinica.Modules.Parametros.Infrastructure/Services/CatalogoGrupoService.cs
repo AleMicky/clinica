@@ -2,7 +2,6 @@ using Clinica.Modules.Parametros.Application.Abstractions;
 using Clinica.Modules.Parametros.Application.CatalogoGrupos;
 using Clinica.Modules.Parametros.Domain.Entities;
 using Clinica.Modules.Parametros.Infrastructure.Persistence;
-using Clinica.SharedKernel.Abstractions;
 using Clinica.SharedKernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,12 +9,10 @@ namespace Clinica.Modules.Parametros.Infrastructure.Services;
 
 public class CatalogoGrupoService : ICatalogoGrupoService
 {
-    private readonly IRepository<CatalogoGrupo> _repository;
     private readonly ParametrosDbContext _context;
 
-    public CatalogoGrupoService(IRepository<CatalogoGrupo> repository, ParametrosDbContext context)
+    public CatalogoGrupoService(ParametrosDbContext context)
     {
-        _repository = repository;
         _context = context;
     }
 
@@ -28,15 +25,27 @@ public class CatalogoGrupoService : ICatalogoGrupoService
             throw new ArgumentException($"El código '{request.Codigo}' ya existe.");
         }
 
-        var grupo = CatalogoGrupo.Create(request.Codigo, request.Nombre, request.Descripcion);
-        await _repository.AddAsync(grupo, cancellationToken);
+        var grupo = new CatalogoGrupo
+        {
+            Id = Guid.NewGuid(),
+            Codigo = request.Codigo,
+            Nombre = request.Nombre,
+            Descripcion = request.Descripcion,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.CatalogoGrupos.Add(grupo);
+        await _context.SaveChangesAsync(cancellationToken);
 
         return MapToResponse(grupo);
     }
 
     public async Task<IReadOnlyList<CatalogoGrupoResponse>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var grupos = await _repository.GetAllAsync(cancellationToken);
+        var grupos = await _context.CatalogoGrupos
+            .AsNoTracking()
+            .OrderBy(g => g.Codigo)
+            .ToListAsync(cancellationToken);
 
         return grupos
             .Select(MapToResponse)
@@ -45,7 +54,9 @@ public class CatalogoGrupoService : ICatalogoGrupoService
 
     public async Task<CatalogoGrupoResponse> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var grupo = await _repository.GetByIdAsync(id, cancellationToken)
+        var grupo = await _context.CatalogoGrupos
+            .AsNoTracking()
+            .FirstOrDefaultAsync(g => g.Id == id, cancellationToken)
             ?? throw new NotFoundException(nameof(CatalogoGrupo), id);
 
         return MapToResponse(grupo);
@@ -56,7 +67,8 @@ public class CatalogoGrupoService : ICatalogoGrupoService
         UpdateCatalogoGrupoRequest request,
         CancellationToken cancellationToken = default)
     {
-        var grupo = await _repository.GetByIdAsync(id, cancellationToken)
+        var grupo = await _context.CatalogoGrupos
+            .FirstOrDefaultAsync(g => g.Id == id, cancellationToken)
             ?? throw new NotFoundException(nameof(CatalogoGrupo), id);
 
         if (await CodigoExistsAsync(request.Codigo, id, cancellationToken))
@@ -64,18 +76,24 @@ public class CatalogoGrupoService : ICatalogoGrupoService
             throw new ArgumentException($"El código '{request.Codigo}' ya existe.");
         }
 
-        grupo.Update(request.Codigo, request.Nombre, request.Descripcion);
-        await _repository.UpdateAsync(grupo, cancellationToken);
+        grupo.Codigo = request.Codigo;
+        grupo.Nombre = request.Nombre;
+        grupo.Descripcion = request.Descripcion;
+        grupo.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync(cancellationToken);
 
         return MapToResponse(grupo);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var grupo = await _repository.GetByIdAsync(id, cancellationToken)
+        var grupo = await _context.CatalogoGrupos
+            .FirstOrDefaultAsync(g => g.Id == id, cancellationToken)
             ?? throw new NotFoundException(nameof(CatalogoGrupo), id);
 
-        await _repository.DeleteAsync(grupo, cancellationToken);
+        _context.CatalogoGrupos.Remove(grupo);
+        await _context.SaveChangesAsync(cancellationToken);
     }
 
     private async Task<bool> CodigoExistsAsync(

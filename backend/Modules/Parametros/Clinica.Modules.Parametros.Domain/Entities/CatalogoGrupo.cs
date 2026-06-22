@@ -1,36 +1,20 @@
-using Clinica.SharedKernel.Abstractions;
-
 namespace Clinica.Modules.Parametros.Domain.Entities;
 
-public class CatalogoGrupo : AuditableEntity
+public class CatalogoGrupo
 {
+    public Guid Id { get; set; }
+
     public string Codigo { get; set; } = string.Empty;
 
     public string Nombre { get; set; } = string.Empty;
 
     public string Descripcion { get; set; } = string.Empty;
 
-    private CatalogoGrupo()
-    {
-    }
+    public DateTime CreatedAt { get; set; }
 
-    public static CatalogoGrupo Create(string codigo, string nombre, string descripcion)
-    {
-        return new CatalogoGrupo
-        {
-            Id = Guid.NewGuid(),
-            Codigo = codigo,
-            Nombre = nombre,
-            Descripcion = descripcion,
-            CreatedAt = DateTime.UtcNow
-        };
-    }
+    public string? CreatedBy { get; set; }
 
-    public void Update(string codigo, string nombre, string descripcion)
-    {
-        Codigo = codigo;
-        Nombre = nombre;
-        Descripcion = descripcion;
-        UpdatedAt = DateTime.UtcNow;
-    }
+    public DateTime? UpdatedAt { get; set; }
+
+    public string? UpdatedBy { get; set; }
 }
