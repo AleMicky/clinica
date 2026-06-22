@@ -1,4 +1,4 @@
-using Clinica.SharedKernel.Contracts;
+using Clinica.SharedKernel.Responses;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

@@ -1,14 +1,14 @@
 namespace Clinica.SharedKernel.Exceptions;
 
-public class NotFoundException : Exception
+public sealed class NotFoundException : Exception
 {
-    public NotFoundException(string name, object key)
-        : base($"Entidad \"{name}\" ({key}) no fue encontrada.")
+    public NotFoundException(string message)
+        : base(message)
     {
     }
 
-    public NotFoundException(string message)
-        : base(message)
+    public NotFoundException(string entityName, object id)
+        : base($"{entityName} con id '{id}' no encontrado.")
     {
     }
 }

@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using Clinica.SharedKernel.Contracts;
+using Clinica.SharedKernel.Responses;
 using Clinica.SharedKernel.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;

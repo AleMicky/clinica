@@ -1,6 +1,6 @@
 using Clinica.Modules.Parametros.Application.Abstractions;
 using Clinica.Modules.Parametros.Application.CatalogoGrupos;
-using Clinica.SharedKernel.Contracts;
+using Clinica.SharedKernel.Responses;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;

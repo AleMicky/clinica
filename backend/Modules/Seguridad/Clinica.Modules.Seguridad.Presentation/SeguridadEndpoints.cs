@@ -2,7 +2,7 @@ using Clinica.Modules.Seguridad.Application.Abstractions;
 using Clinica.Modules.Seguridad.Application.Auth;
 using Clinica.Modules.Seguridad.Application.Roles;
 using Clinica.Modules.Seguridad.Application.Users;
-using Clinica.SharedKernel.Contracts;
+using Clinica.SharedKernel.Responses;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
