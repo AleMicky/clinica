@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="12.1.1" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.9" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.9" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.9" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.9">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Clinica.SharedKernel\Clinica.SharedKernel.csproj" />
+    <ProjectReference Include="..\Modules\Seguridad\Clinica.Modules.Seguridad.Infrastructure\Clinica.Modules.Seguridad.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Seguridad\Clinica.Modules.Seguridad.Presentation\Clinica.Modules.Seguridad.Presentation.csproj" />
+    <ProjectReference Include="..\Modules\Parametros\Clinica.Modules.Parametros.Infrastructure\Clinica.Modules.Parametros.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Parametros\Clinica.Modules.Parametros.Presentation\Clinica.Modules.Parametros.Presentation.csproj" />
+    <ProjectReference Include="..\Modules\Workflow\Clinica.Modules.Workflow.Infrastructure\Clinica.Modules.Workflow.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Workflow\Clinica.Modules.Workflow.Presentation\Clinica.Modules.Workflow.Presentation.csproj" />
+  </ItemGroup>
+
+</Project>
