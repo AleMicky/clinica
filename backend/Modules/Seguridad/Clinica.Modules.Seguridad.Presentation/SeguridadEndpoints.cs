@@ -14,12 +14,12 @@ public static class SeguridadEndpoints
     public static IEndpointRouteBuilder MapSeguridadEndpoints(
         this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup(BasePath)
-            .WithTags("Seguridad");
+        var group = app.MapGroup(BasePath);
 
         group.MapGet("/health", HealthCheck)
             .WithName("Seguridad_Health")
             .WithSummary("Verifica el estado del módulo Seguridad")
+            .WithTags(SeguridadSwaggerTags.Module)
             .Produces<ApiResponse<string>>(StatusCodes.Status200OK);
 
         group.MapAuthEndpoints();

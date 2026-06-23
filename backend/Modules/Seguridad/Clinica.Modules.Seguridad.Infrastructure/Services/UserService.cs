@@ -54,16 +54,14 @@ public sealed class UserService(
         return MapToResponse(user, roles);
     }
 
-    public async Task AssignRoleAsync(
-        Guid userId,
-        AssignRoleRequest request,
+    public async Task<UserResponse> GetByIdAsync(
+        Guid id,
         CancellationToken cancellationToken = default)
     {
-        var user = await userManager.Users
-                       .FirstOrDefaultAsync(x => x.Id == userId, cancellationToken)
-                   ?? throw new NotFoundException($"Usuario con id '{userId}' no encontrado.");
+        var user = await FindUserAsync(id, cancellationToken);
+        var roles = await userManager.GetRolesAsync(user);
 
-        await AssignRoleInternalAsync(user, request.Role.Trim());
+        return MapToResponse(user, roles);
     }
 
     public async Task<IReadOnlyList<UserResponse>> GetAllAsync(
@@ -83,6 +81,90 @@ public sealed class UserService(
         }
 
         return responses;
+    }
+
+    public async Task<UserResponse> UpdateAsync(
+        Guid id,
+        UpdateUserRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await FindUserAsync(id, cancellationToken);
+
+        if (!string.IsNullOrWhiteSpace(request.Email))
+        {
+            var emailExists = await userManager.Users
+                .AnyAsync(
+                    x => x.Email == request.Email && x.Id != id,
+                    cancellationToken);
+
+            if (emailExists)
+                throw new BadRequestException($"El correo '{request.Email}' ya está registrado.");
+        }
+
+        user.NombreCompleto = request.NombreCompleto.Trim();
+        user.Email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim();
+        user.Activo = request.Activo;
+        user.EmailConfirmed = !string.IsNullOrWhiteSpace(user.Email);
+
+        var result = await userManager.UpdateAsync(user);
+
+        if (!result.Succeeded)
+            throw new BadRequestException(GetIdentityErrors(result));
+
+        var roles = await userManager.GetRolesAsync(user);
+
+        return MapToResponse(user, roles);
+    }
+
+    public async Task DeleteAsync(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await FindUserAsync(id, cancellationToken);
+
+        var result = await userManager.DeleteAsync(user);
+
+        if (!result.Succeeded)
+            throw new BadRequestException(GetIdentityErrors(result));
+    }
+
+    public async Task AssignRoleAsync(
+        Guid userId,
+        AssignRoleRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await FindUserAsync(userId, cancellationToken);
+
+        await AssignRoleInternalAsync(user, request.Role.Trim());
+    }
+
+    public async Task RemoveRoleAsync(
+        Guid userId,
+        string role,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await FindUserAsync(userId, cancellationToken);
+        var roleName = role.Trim();
+
+        if (string.IsNullOrWhiteSpace(roleName))
+            throw new BadRequestException("El rol es obligatorio.");
+
+        if (!await userManager.IsInRoleAsync(user, roleName))
+            throw new NotFoundException($"El usuario no tiene asignado el rol '{roleName}'.");
+
+        var result = await userManager.RemoveFromRoleAsync(user, roleName);
+
+        if (!result.Succeeded)
+            throw new BadRequestException(GetIdentityErrors(result));
+    }
+
+    private async Task<ApplicationUser> FindUserAsync(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        return await userManager.Users
+                   .FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
+               ?? throw new NotFoundException($"Usuario con id '{id}' no encontrado.");
     }
 
     private async Task AssignRoleInternalAsync(ApplicationUser user, string roleName)

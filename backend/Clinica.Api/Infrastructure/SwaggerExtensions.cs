@@ -1,4 +1,5 @@
 using Microsoft.OpenApi;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Clinica.Api.Infrastructure;
 
@@ -32,6 +33,9 @@ public static class SwaggerExtensions
             {
                 [new OpenApiSecuritySchemeReference("Bearer", document)] = []
             });
+
+            options.OrderActionsBy(api => $"{api.GroupName}_{api.RelativePath}");
+            options.DocumentFilter<SeguridadTagOrderDocumentFilter>();
         });
 
         return services;
@@ -49,5 +53,41 @@ public static class SwaggerExtensions
         });
 
         return app;
+    }
+
+    private sealed class SeguridadTagOrderDocumentFilter : IDocumentFilter
+    {
+        private static readonly string[] TagOrder =
+        [
+            "Seguridad",
+            "Seguridad · Autenticación",
+            "Seguridad · Usuarios",
+            "Seguridad · Roles",
+            "Parametros",
+            "Workflow",
+            "Sistema"
+        ];
+
+        public void Apply(OpenApiDocument swaggerDoc, DocumentFilterContext context)
+        {
+            if (swaggerDoc.Tags is null || swaggerDoc.Tags.Count == 0)
+                return;
+
+            var tagIndex = TagOrder
+                .Select((name, index) => (name, index))
+                .ToDictionary(x => x.name, x => x.index, StringComparer.Ordinal);
+
+            var orderedTags = swaggerDoc.Tags
+                .OrderBy(tag => tag.Name is not null && tagIndex.TryGetValue(tag.Name, out var index)
+                    ? index
+                    : int.MaxValue)
+                .ThenBy(tag => tag.Name, StringComparer.Ordinal)
+                .ToList();
+
+            swaggerDoc.Tags.Clear();
+
+            foreach (var tag in orderedTags)
+                swaggerDoc.Tags.Add(tag);
+        }
     }
 }

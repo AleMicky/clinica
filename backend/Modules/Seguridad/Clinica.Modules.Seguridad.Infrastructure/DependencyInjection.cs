@@ -34,6 +34,7 @@ public static class DependencyInjection
             .AddDefaultTokenProviders();
 
         services.AddScoped<JwtTokenGenerator>();
+        services.AddScoped<RefreshTokenService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IRoleService, RoleService>();
