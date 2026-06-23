@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\Clinica.Modules.Seguridad.Domain\Clinica.Modules.Seguridad.Domain.csproj" />
     <ProjectReference Include="..\..\..\Clinica.SharedKernel\Clinica.SharedKernel.csproj" />
   </ItemGroup>
 

@@ -1,5 +1,5 @@
 using Clinica.Modules.Seguridad.Application;
-using Clinica.Modules.Seguridad.Domain.Entities;
+using Clinica.Modules.Seguridad.Infrastructure.Identity;
 using Clinica.Modules.Seguridad.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +17,7 @@ public static class IdentitySeeder
         var services = scope.ServiceProvider;
         var logger = services.GetRequiredService<ILoggerFactory>().CreateLogger("IdentitySeeder");
 
-        var context = services.GetRequiredService<ClinicaDbContext>();
+        var context = services.GetRequiredService<SeguridadDbContext>();
         await context.Database.MigrateAsync();
 
         var roleManager = services.GetRequiredService<RoleManager<ApplicationRole>>();

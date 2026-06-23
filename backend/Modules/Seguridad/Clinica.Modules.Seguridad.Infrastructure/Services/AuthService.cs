@@ -1,46 +1,44 @@
 using Clinica.Modules.Seguridad.Application.Abstractions;
 using Clinica.Modules.Seguridad.Application.Auth;
-using Clinica.Modules.Seguridad.Domain.Entities;
+using Clinica.Modules.Seguridad.Infrastructure.Identity;
+using Clinica.Modules.Seguridad.Infrastructure.Jwt;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
 
 namespace Clinica.Modules.Seguridad.Infrastructure.Services;
 
-public class AuthService : IAuthService
+public class AuthService(
+    UserManager<ApplicationUser> userManager,
+    JwtTokenGenerator jwtTokenGenerator,
+    IConfiguration configuration
+) : IAuthService
 {
-    private readonly UserManager<ApplicationUser> _userManager;
-    private readonly IJwtTokenService _jwtTokenService;
-
-    public AuthService(UserManager<ApplicationUser> userManager, IJwtTokenService jwtTokenService)
-    {
-        _userManager = userManager;
-        _jwtTokenService = jwtTokenService;
-    }
-
     public async Task<LoginResponse> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
     {
-        var user = await _userManager.FindByNameAsync(request.UserName)
-            ?? await _userManager.FindByEmailAsync(request.UserName);
+        var user = await userManager.FindByNameAsync(request.UserName);
 
-        if (user is null || !user.Activo)
-        {
-            throw new UnauthorizedAccessException("Credenciales inválidas.");
-        }
+        if (user is null)
+            throw new UnauthorizedAccessException("Usuario o contraseña incorrectos.");
 
-        var passwordValid = await _userManager.CheckPasswordAsync(user, request.Password);
-        if (!passwordValid)
-        {
-            throw new UnauthorizedAccessException("Credenciales inválidas.");
-        }
+        if (!user.Activo)
+            throw new UnauthorizedAccessException("La cuenta de usuario está desactivada.");
 
-        var roles = await _userManager.GetRolesAsync(user);
-        var token = _jwtTokenService.GenerateToken(user, roles);
+        var valid = await userManager.CheckPasswordAsync(user, request.Password);
+
+        if (!valid)
+            throw new UnauthorizedAccessException("Usuario o contraseña incorrectos.");
+
+        var token = await jwtTokenGenerator.GenerateAsync(user);
+        var roles = await userManager.GetRolesAsync(user);
+        var expiresInHours = configuration.GetSection("Jwt").GetValue<int?>("ExpiresInHours") ?? 8;
 
         return new LoginResponse(
             token,
-            DateTime.UtcNow.AddHours(8),
+            DateTime.UtcNow.AddHours(expiresInHours),
             user.Id,
             user.UserName ?? string.Empty,
             user.NombreCompleto,
-            roles.ToList());
+            roles.ToList()
+        );
     }
 }

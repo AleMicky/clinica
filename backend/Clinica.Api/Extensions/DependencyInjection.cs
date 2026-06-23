@@ -1,5 +1,7 @@
 using System.Text;
 using Clinica.Api.Infrastructure;
+using Clinica.Api.Services;
+using Clinica.SharedKernel.Abstractions;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -35,7 +37,9 @@ public static class DependencyInjection
             });
 
         services.AddAuthorization();
+        services.AddHttpContextAccessor();
 
+        services.AddScoped<ICurrentUser, CurrentUserService>();
         services.AddCors(options =>
         {
             options.AddPolicy("Frontend", policy =>
@@ -56,6 +60,8 @@ public static class DependencyInjection
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
         });
+        
+   
 
         return services;
     }

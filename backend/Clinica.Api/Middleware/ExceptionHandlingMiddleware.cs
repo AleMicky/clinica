@@ -16,11 +16,38 @@ public sealed class ExceptionHandlingMiddleware(
         }
         catch (NotFoundException ex)
         {
-            await WriteErrorAsync(context, HttpStatusCode.NotFound, ex.Message);
+            await WriteErrorAsync(
+                context,
+                HttpStatusCode.NotFound,
+                ex.Message);
+        }
+        catch (BadRequestException ex)
+        {
+            await WriteErrorAsync(
+                context,
+                HttpStatusCode.BadRequest,
+                ex.Message);
         }
         catch (BusinessException ex)
         {
-            await WriteErrorAsync(context, HttpStatusCode.BadRequest, ex.Message);
+            await WriteErrorAsync(
+                context,
+                HttpStatusCode.BadRequest,
+                ex.Message);
+        }
+        catch (ValidationException ex)
+        {
+            await WriteErrorAsync(
+                context,
+                (HttpStatusCode)422,
+                ex.Message);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            await WriteErrorAsync(
+                context,
+                HttpStatusCode.Unauthorized,
+                ex.Message);
         }
         catch (Exception ex)
         {
@@ -41,13 +68,11 @@ public sealed class ExceptionHandlingMiddleware(
         context.Response.StatusCode = (int)statusCode;
         context.Response.ContentType = "application/json";
 
-        var response = new ApiResponse<object>
-        {
-            Success = false,
-            Message = message,
-            Data = null
-        };
-
-        await context.Response.WriteAsJsonAsync(response);
+        await context.Response.WriteAsJsonAsync(
+            new ApiResponse<object>
+            {
+                Success = false,
+                Message = message
+            });
     }
 }

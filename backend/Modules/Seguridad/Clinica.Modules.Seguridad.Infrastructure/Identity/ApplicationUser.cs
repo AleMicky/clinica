@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 
-namespace Clinica.Modules.Seguridad.Domain.Entities;
+namespace Clinica.Modules.Seguridad.Infrastructure.Identity;
 
 public class ApplicationUser : IdentityUser<Guid>
 {

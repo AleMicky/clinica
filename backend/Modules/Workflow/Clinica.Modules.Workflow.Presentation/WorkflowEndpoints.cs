@@ -8,16 +8,17 @@ namespace Clinica.Modules.Workflow.Presentation;
 
 public static class WorkflowEndpoints
 {
-    public static IEndpointRouteBuilder MapWorkflowEndpoints(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapWorkflowEndpoints(
+        this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/workflow")
             .WithTags("Workflow");
 
-        group.MapGet("/health", () => ApiResponse<string>.Ok("Workflow operativo"))
+        group.MapGet("/health", () => ApiResults.Ok("Workflow operativo"))
             .WithName("WorkflowHealth")
             .WithSummary("Estado del módulo Workflow")
-            .Produces<ApiResponse<string>>(StatusCodes.Status200OK)
-            .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status500InternalServerError);
 
         return app;
     }

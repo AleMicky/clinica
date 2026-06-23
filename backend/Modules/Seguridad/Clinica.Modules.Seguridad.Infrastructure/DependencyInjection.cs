@@ -1,5 +1,6 @@
 using Clinica.Modules.Seguridad.Application.Abstractions;
-using Clinica.Modules.Seguridad.Domain.Entities;
+using Clinica.Modules.Seguridad.Infrastructure.Identity;
+using Clinica.Modules.Seguridad.Infrastructure.Jwt;
 using Clinica.Modules.Seguridad.Infrastructure.Persistence;
 using Clinica.Modules.Seguridad.Infrastructure.Services;
 using Microsoft.AspNetCore.Identity;
@@ -15,7 +16,7 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.AddDbContext<ClinicaDbContext>(options =>
+        services.AddDbContext<SeguridadDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
         // IdentityCore: solo gestión de usuarios/roles en BD, sin cookies ni redirects (API pura con JWT).
@@ -29,10 +30,10 @@ public static class DependencyInjection
                 options.User.RequireUniqueEmail = false;
             })
             .AddRoles<ApplicationRole>()
-            .AddEntityFrameworkStores<ClinicaDbContext>()
+            .AddEntityFrameworkStores<SeguridadDbContext>()
             .AddDefaultTokenProviders();
 
-        services.AddScoped<IJwtTokenService, JwtTokenService>();
+        services.AddScoped<JwtTokenGenerator>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IRoleService, RoleService>();

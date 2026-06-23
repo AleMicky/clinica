@@ -2,7 +2,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Clinica.Modules.Seguridad.Application\Clinica.Modules.Seguridad.Application.csproj" />
-    <ProjectReference Include="..\Clinica.Modules.Seguridad.Domain\Clinica.Modules.Seguridad.Domain.csproj" />
     <ProjectReference Include="..\..\..\Clinica.SharedKernel\Clinica.SharedKernel.csproj" />
   </ItemGroup>
 
@@ -28,6 +27,10 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Migrations\" />
   </ItemGroup>
 
 </Project>

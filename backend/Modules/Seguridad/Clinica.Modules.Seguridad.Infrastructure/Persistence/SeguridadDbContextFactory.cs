@@ -4,16 +4,16 @@ using Microsoft.Extensions.Configuration;
 
 namespace Clinica.Modules.Seguridad.Infrastructure.Persistence;
 
-public class ClinicaDbContextFactory : IDesignTimeDbContextFactory<ClinicaDbContext>
+public class SeguridadDbContextFactory : IDesignTimeDbContextFactory<SeguridadDbContext>
 {
-    public ClinicaDbContext CreateDbContext(string[] args)
+    public SeguridadDbContext CreateDbContext(string[] args)
     {
         var configuration = BuildConfiguration();
 
-        var optionsBuilder = new DbContextOptionsBuilder<ClinicaDbContext>();
+        var optionsBuilder = new DbContextOptionsBuilder<SeguridadDbContext>();
         optionsBuilder.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
 
-        return new ClinicaDbContext(optionsBuilder.Options);
+        return new SeguridadDbContext(optionsBuilder.Options);
     }
 
     private static IConfiguration BuildConfiguration()

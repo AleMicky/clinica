@@ -2,7 +2,7 @@ using FluentValidation;
 
 namespace Clinica.Modules.Seguridad.Application.Auth;
 
-public class LoginRequestValidator : AbstractValidator<LoginRequest>
+public class LoginRequestValidator  : AbstractValidator<LoginRequest>
 {
     public LoginRequestValidator()
     {

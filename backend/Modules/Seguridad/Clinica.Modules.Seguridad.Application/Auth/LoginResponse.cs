@@ -1,9 +1,10 @@
 namespace Clinica.Modules.Seguridad.Application.Auth;
 
-public record LoginResponse(
+public sealed record LoginResponse(
     string Token,
     DateTime ExpiresAt,
     Guid UserId,
     string UserName,
     string NombreCompleto,
-    IReadOnlyList<string> Roles);
+    IReadOnlyList<string> Roles
+);

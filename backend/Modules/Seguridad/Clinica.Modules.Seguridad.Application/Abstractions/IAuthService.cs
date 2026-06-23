@@ -1,6 +1,11 @@
+using Clinica.Modules.Seguridad.Application.Auth;
+
 namespace Clinica.Modules.Seguridad.Application.Abstractions;
 
 public interface IAuthService
 {
-    Task<Auth.LoginResponse> LoginAsync(Auth.LoginRequest request, CancellationToken cancellationToken = default);
+    Task<LoginResponse> LoginAsync(
+        LoginRequest request,
+        CancellationToken cancellationToken = default
+    );
 }

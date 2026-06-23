@@ -29,11 +29,6 @@ public static class ApiResults
             });
     }
 
-    public static IResult NoContent()
-    {
-        return Results.NoContent();
-    }
-
     public static IResult BadRequest(
         string message)
     {
@@ -54,5 +49,34 @@ public static class ApiResults
                 Success = false,
                 Message = message
             });
+    }
+
+    public static IResult Unauthorized(
+        string message = "No autorizado")
+    {
+        return Results.Json(
+            new ApiResponse<object>
+            {
+                Success = false,
+                Message = message
+            },
+            statusCode: StatusCodes.Status401Unauthorized);
+    }
+
+    public static IResult Forbidden(
+        string message = "Acceso denegado")
+    {
+        return Results.Json(
+            new ApiResponse<object>
+            {
+                Success = false,
+                Message = message
+            },
+            statusCode: StatusCodes.Status403Forbidden);
+    }
+
+    public static IResult NoContent()
+    {
+        return Results.NoContent();
     }
 }

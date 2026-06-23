@@ -1,6 +1,4 @@
 using Clinica.Modules.Seguridad.Application;
-using Clinica.Modules.Seguridad.Presentation;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 
