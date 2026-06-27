@@ -1,6 +1,12 @@
 using Clinica.Modules.Parametros.Application;
 using Clinica.Modules.Parametros.Infrastructure;
 using Clinica.Modules.Parametros.Presentation;
+using Clinica.Modules.Personas.Application;
+using Clinica.Modules.Personas.Infrastructure;
+using Clinica.Modules.Personas.Presentation;
+using Clinica.Modules.RecursosHumanos.Application;
+using Clinica.Modules.RecursosHumanos.Infrastructure;
+using Clinica.Modules.RecursosHumanos.Presentation;
 using Clinica.Modules.Seguridad.Application;
 using Clinica.Modules.Seguridad.Infrastructure;
 using Clinica.Modules.Seguridad.Presentation;
@@ -31,6 +37,16 @@ public static class ModuleExtensions
             .AddWorkflowInfrastructure(configuration)
             .AddWorkflowPresentation();
 
+        services
+            .AddRecursosHumanosApplication()
+            .AddRecursosHumanosInfrastructure(configuration)
+            .AddRecursosHumanosPresentation();
+
+        services
+            .AddPersonasApplication()
+            .AddPersonasInfrastructure(configuration)
+            .AddPersonasPresentation();
+
         return services;
     }
 
@@ -39,6 +55,8 @@ public static class ModuleExtensions
         app.MapSeguridadModule();
         app.MapParametrosModule();
         app.MapWorkflowModule();
+        app.MapRecursosHumanosModule();
+        app.MapPersonasModule();
 
         return app;
     }

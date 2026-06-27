@@ -1,6 +1,8 @@
 using Clinica.Api.Infrastructure;
 using Clinica.Api.Middleware;
 using Clinica.Modules.Parametros.Infrastructure.Seed;
+using Clinica.Modules.Personas.Infrastructure.Seed;
+using Clinica.Modules.RecursosHumanos.Infrastructure.Seed;
 using Clinica.Modules.Seguridad.Infrastructure.Seed;
 
 namespace Clinica.Api.Extensions;
@@ -17,6 +19,8 @@ public static class ApplicationBuilderExtensions
         {
             await IdentitySeeder.SeedAsync(app.Services);
             await ParametrosDbSeeder.MigrateAsync(app.Services);
+            await RecursosHumanosDbSeeder.MigrateAsync(app.Services);
+            await PersonasDbSeeder.MigrateAsync(app.Services);
         }
         catch (Exception ex)
         {

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Clinica.SharedKernel\Clinica.SharedKernel.csproj" />
+    <ProjectReference Include="..\..\Parametros\Clinica.Modules.Parametros.Domain\Clinica.Modules.Parametros.Domain.csproj" />
+    <ProjectReference Include="..\..\RecursosHumanos\Clinica.Modules.RecursosHumanos.Domain\Clinica.Modules.RecursosHumanos.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

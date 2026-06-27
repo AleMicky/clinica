@@ -25,6 +25,10 @@
     <ProjectReference Include="..\Modules\Seguridad\Clinica.Modules.Seguridad.Presentation\Clinica.Modules.Seguridad.Presentation.csproj" />
     <ProjectReference Include="..\Modules\Parametros\Clinica.Modules.Parametros.Infrastructure\Clinica.Modules.Parametros.Infrastructure.csproj" />
     <ProjectReference Include="..\Modules\Parametros\Clinica.Modules.Parametros.Presentation\Clinica.Modules.Parametros.Presentation.csproj" />
+    <ProjectReference Include="..\Modules\RecursosHumanos\Clinica.Modules.RecursosHumanos.Infrastructure\Clinica.Modules.RecursosHumanos.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\RecursosHumanos\Clinica.Modules.RecursosHumanos.Presentation\Clinica.Modules.RecursosHumanos.Presentation.csproj" />
+    <ProjectReference Include="..\Modules\Personas\Clinica.Modules.Personas.Infrastructure\Clinica.Modules.Personas.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Personas\Clinica.Modules.Personas.Presentation\Clinica.Modules.Personas.Presentation.csproj" />
     <ProjectReference Include="..\Modules\Workflow\Clinica.Modules.Workflow.Infrastructure\Clinica.Modules.Workflow.Infrastructure.csproj" />
     <ProjectReference Include="..\Modules\Workflow\Clinica.Modules.Workflow.Presentation\Clinica.Modules.Workflow.Presentation.csproj" />
   </ItemGroup>
