@@ -1,3 +1,7 @@
 namespace Clinica.Modules.Parametros.Application.CatalogoGrupos;
 
-public record CreateCatalogoGrupoRequest(string Codigo, string Nombre, string Descripcion = "");
+public sealed record CreateCatalogoGrupoRequest(
+    string Codigo,
+    string Nombre,
+    string Descripcion = ""
+);

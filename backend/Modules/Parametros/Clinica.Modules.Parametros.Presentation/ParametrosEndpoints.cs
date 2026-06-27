@@ -1,7 +1,5 @@
-using Clinica.Modules.Parametros.Application.Abstractions;
-using Clinica.Modules.Parametros.Application.CatalogoGrupos;
+using Clinica.Modules.Parametros.Presentation.Endpoints;
 using Clinica.SharedKernel.Responses;
-using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -12,14 +10,16 @@ namespace Clinica.Modules.Parametros.Presentation;
 public static class ParametrosEndpoints
 {
     private const string BasePath = "/api/parametros";
-    private const string AdminPolicy = "AdminOnly";
 
-    public static IEndpointRouteBuilder MapParametrosEndpoints(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapParametrosEndpoints(
+        this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup(BasePath)
             .WithTags("Parametros");
 
         MapHealth(group);
+        MapCatalogoGrupoEndpoints(group);
+        MapCatalogoItemEndpoints(group);
 
         return app;
     }
@@ -33,10 +33,18 @@ public static class ParametrosEndpoints
             .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
     }
 
-    
+    private static void MapCatalogoGrupoEndpoints(RouteGroupBuilder group)
+    {
+        group.MapCatalogoGrupoEndpoints();
+    }
+
+    private static void MapCatalogoItemEndpoints(RouteGroupBuilder group)
+    {
+        group.MapCatalogoItemEndpoints();
+    }
+
     private static IResult HealthCheck()
     {
-        return ApiResults.Ok("Seguridad operativo.");
+        return ApiResults.Ok("Parámetros operativo.");
     }
-    
 }

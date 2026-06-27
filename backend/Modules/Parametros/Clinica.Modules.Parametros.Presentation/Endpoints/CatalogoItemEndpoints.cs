@@ -1,3 +1,5 @@
+using Clinica.Modules.Parametros.Application.Abstractions;
+using Clinica.Modules.Parametros.Application.CatalogoItems;
 using Clinica.SharedKernel.Pagination;
 using Clinica.SharedKernel.Responses;
 using FluentValidation;
@@ -5,30 +7,30 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 
-namespace Clinica.SharedKernel.Crud;
+namespace Clinica.Modules.Parametros.Presentation.Endpoints;
 
-public static class CrudEndpoints
+public static class CatalogoItemEndpoints
 {
-    public static RouteGroupBuilder MapCrud<TService, TKey, TResponse, TCreateRequest, TUpdateRequest>(
-        this RouteGroupBuilder group,
-        string name)
-        where TKey : struct
-        where TService : ICrudService<TKey, TResponse, TCreateRequest, TUpdateRequest>
+    public static RouteGroupBuilder MapCatalogoItemEndpoints(
+        this RouteGroupBuilder group)
     {
-        group.MapGet("/", async (
-                [AsParameters] PagedRequest request,
-                TService service,
+        var catalogoItems = group.MapGroup("/catalogo-items")
+            .RequireAuthorization();
+
+        catalogoItems.MapGet("/", async (
+                [AsParameters] CatalogoItemPagedRequest request,
+                ICatalogoItemService service,
                 CancellationToken cancellationToken) =>
             {
                 var result = await service.GetPagedAsync(request, cancellationToken);
                 return ApiResults.Ok(result);
             })
-            .WithName($"{name}_GetPaged")
-            .Produces<ApiResponse<PagedResult<TResponse>>>(StatusCodes.Status200OK);
+            .WithName("CatalogoItem_GetPaged")
+            .Produces<ApiResponse<PagedResult<CatalogoItemResponse>>>(StatusCodes.Status200OK);
 
-        group.MapGet("/{id}", async (
-                TKey id,
-                TService service,
+        catalogoItems.MapGet("/{id:guid}", async (
+                Guid id,
+                ICatalogoItemService service,
                 CancellationToken cancellationToken) =>
             {
                 var result = await service.GetByIdAsync(id, cancellationToken);
@@ -37,14 +39,14 @@ public static class CrudEndpoints
                     ? ApiResults.NotFound("Registro no encontrado.")
                     : ApiResults.Ok(result);
             })
-            .WithName($"{name}_GetById")
-            .Produces<ApiResponse<TResponse>>(StatusCodes.Status200OK)
+            .WithName("CatalogoItem_GetById")
+            .Produces<ApiResponse<CatalogoItemResponse>>(StatusCodes.Status200OK)
             .Produces<ApiResponse<object>>(StatusCodes.Status404NotFound);
 
-        group.MapPost("/", async (
-                TCreateRequest request,
-                IValidator<TCreateRequest> validator,
-                TService service,
+        catalogoItems.MapPost("/", async (
+                CreateCatalogoItemRequest request,
+                IValidator<CreateCatalogoItemRequest> validator,
+                ICatalogoItemService service,
                 CancellationToken cancellationToken) =>
             {
                 var validation = await validator.ValidateAsync(request, cancellationToken);
@@ -63,15 +65,15 @@ public static class CrudEndpoints
 
                 return ApiResults.Created(result, "Registro creado correctamente.");
             })
-            .WithName($"{name}_Create")
-            .Produces<ApiResponse<TResponse>>(StatusCodes.Status201Created)
+            .WithName("CatalogoItem_Create")
+            .Produces<ApiResponse<CatalogoItemResponse>>(StatusCodes.Status201Created)
             .Produces<ApiResponse<object>>(StatusCodes.Status400BadRequest);
 
-        group.MapPut("/{id}", async (
-                TKey id,
-                TUpdateRequest request,
-                IValidator<TUpdateRequest> validator,
-                TService service,
+        catalogoItems.MapPut("/{id:guid}", async (
+                Guid id,
+                UpdateCatalogoItemRequest request,
+                IValidator<UpdateCatalogoItemRequest> validator,
+                ICatalogoItemService service,
                 CancellationToken cancellationToken) =>
             {
                 var validation = await validator.ValidateAsync(request, cancellationToken);
@@ -90,21 +92,21 @@ public static class CrudEndpoints
 
                 return ApiResults.Ok(result, "Registro actualizado correctamente.");
             })
-            .WithName($"{name}_Update")
-            .Produces<ApiResponse<TResponse>>(StatusCodes.Status200OK)
+            .WithName("CatalogoItem_Update")
+            .Produces<ApiResponse<CatalogoItemResponse>>(StatusCodes.Status200OK)
             .Produces<ApiResponse<object>>(StatusCodes.Status400BadRequest)
             .Produces<ApiResponse<object>>(StatusCodes.Status404NotFound);
 
-        group.MapDelete("/{id}", async (
-                TKey id,
-                TService service,
+        catalogoItems.MapDelete("/{id:guid}", async (
+                Guid id,
+                ICatalogoItemService service,
                 CancellationToken cancellationToken) =>
             {
                 await service.DeleteAsync(id, cancellationToken);
 
                 return ApiResults.NoContent();
             })
-            .WithName($"{name}_Delete")
+            .WithName("CatalogoItem_Delete")
             .Produces(StatusCodes.Status204NoContent)
             .Produces<ApiResponse<object>>(StatusCodes.Status404NotFound);
 

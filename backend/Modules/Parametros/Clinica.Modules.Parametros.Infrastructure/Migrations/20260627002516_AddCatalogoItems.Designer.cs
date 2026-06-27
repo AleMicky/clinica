@@ -4,6 +4,7 @@ using Clinica.Modules.Parametros.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Clinica.Modules.Parametros.Infrastructure.Migrations
 {
     [DbContext(typeof(ParametrosDbContext))]
-    partial class ParametrosDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260627002516_AddCatalogoItems")]
+    partial class AddCatalogoItems
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

@@ -17,6 +17,7 @@ public static class DependencyInjection
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
         services.AddScoped<ICatalogoGrupoService, CatalogoGrupoService>();
+        services.AddScoped<ICatalogoItemService, CatalogoItemService>();
 
         return services;
     }

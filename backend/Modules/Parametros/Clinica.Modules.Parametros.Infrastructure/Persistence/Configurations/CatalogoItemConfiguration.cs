@@ -5,29 +5,38 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Clinica.Modules.Parametros.Infrastructure.Persistence.Configurations;
 
-public sealed class CatalogoGrupoConfiguration
-    : BaseEntityConfiguration<CatalogoGrupo>
+public sealed class CatalogoItemConfiguration
+    : BaseEntityConfiguration<CatalogoItem>
 {
     public override void Configure(
-        EntityTypeBuilder<CatalogoGrupo> builder)
+        EntityTypeBuilder<CatalogoItem> builder)
     {
         base.Configure(builder);
 
-        builder.ToTable("CatalogoGrupos");
+        builder.ToTable("CatalogoItems");
+
+        builder.Property(x => x.CatalogoGrupoId)
+            .IsRequired();
+
+        builder.HasOne(x => x.CatalogoGrupo)
+            .WithMany()
+            .HasForeignKey(x => x.CatalogoGrupoId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.Property(x => x.Codigo)
             .HasMaxLength(50)
             .IsRequired();
 
-        builder.HasIndex(x => x.Codigo)
+        builder.HasIndex(x => new { x.CatalogoGrupoId, x.Codigo })
             .IsUnique();
 
         builder.Property(x => x.Nombre)
             .HasMaxLength(200)
             .IsRequired();
 
-        builder.Property(x => x.Descripcion)
-            .HasMaxLength(500);
+        builder.Property(x => x.Valor)
+            .HasMaxLength(500)
+            .IsRequired();
 
         builder.Property(x => x.CreatedAt)
             .HasDefaultValueSql("GETUTCDATE()");
