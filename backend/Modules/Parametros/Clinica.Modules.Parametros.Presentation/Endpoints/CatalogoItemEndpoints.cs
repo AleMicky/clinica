@@ -15,7 +15,8 @@ public static class CatalogoItemEndpoints
         this RouteGroupBuilder group)
     {
         var catalogoItems = group.MapGroup("/catalogo-items")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .WithTags(ParametrosSwaggerTags.CatalogoItems);
 
         catalogoItems.MapGet("/", async (
                 [AsParameters] CatalogoItemPagedRequest request,

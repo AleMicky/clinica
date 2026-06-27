@@ -14,8 +14,7 @@ public static class ParametrosEndpoints
     public static IEndpointRouteBuilder MapParametrosEndpoints(
         this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup(BasePath)
-            .WithTags("Parametros");
+        var group = app.MapGroup(BasePath);
 
         MapHealth(group);
         MapCatalogoGrupoEndpoints(group);
@@ -29,6 +28,7 @@ public static class ParametrosEndpoints
         group.MapGet("/health", HealthCheck)
             .WithName("ParametrosHealth")
             .WithSummary("Estado del módulo Parámetros")
+            .WithTags(ParametrosSwaggerTags.Module)
             .Produces<ApiResponse<string>>(StatusCodes.Status200OK)
             .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
     }

@@ -64,6 +64,8 @@ public static class SwaggerExtensions
             "Seguridad · Usuarios",
             "Seguridad · Roles",
             "Parametros",
+            "Parametros · Catálogo grupos",
+            "Parametros · Catálogo ítems",
             "RecursosHumanos",
             "RecursosHumanos · Áreas",
             "RecursosHumanos · Cargos",
