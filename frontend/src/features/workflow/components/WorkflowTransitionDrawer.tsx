@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import { useForm } from '@tanstack/react-form'
-import { ArrowRightOutlined } from '@ant-design/icons'
+import { ArrowRightOutlined, DeleteOutlined } from '@ant-design/icons'
 import {
     Button,
     Col,
@@ -8,11 +8,13 @@ import {
     Flex,
     Form,
     Input,
+    Popconfirm,
     Row,
     Select,
     Switch,
 } from 'antd'
 
+import { notify } from '../../../shared/utils/notify'
 import { useRoles } from '../../roles/hooks/roles.hooks'
 import {
     createWorkflowTransitionDefaultValues,
@@ -27,26 +29,59 @@ import { WorkflowStateBadge } from './WorkflowStateBadge'
 const COMPACT_FORM_CLASS = 'workflow-form--compact'
 const FORM_COL = { xs: 24, sm: 12 }
 
-type WorkflowTransitionFormProps = {
+type WorkflowTransitionDrawerProps = {
     open: boolean
+    mode: 'create' | 'edit'
     transition: WorkflowTransition | null
     states: WorkflowState[]
+    existingTransitions: WorkflowTransition[]
+    initialFromStateId?: string
+    initialToStateId?: string
+    lockFromState?: boolean
+    lockToState?: boolean
     loading: boolean
+    deleting?: boolean
     onClose: () => void
     onCreate: (values: CreateWorkflowTransitionFormValues) => Promise<void>
     onUpdate: (values: UpdateWorkflowTransitionFormValues) => Promise<void>
+    onDelete?: (id: string) => Promise<void>
 }
 
-export function WorkflowTransitionForm({
+function findDuplicateTransition(
+    transitions: WorkflowTransition[],
+    fromStateId: string,
+    toStateId: string,
+    actionCode: string,
+    excludeId?: string,
+): WorkflowTransition | undefined {
+    const normalizedCode = actionCode.trim().toLowerCase()
+    return transitions.find(
+        (item) =>
+            item.fromStateId === fromStateId &&
+            item.toStateId === toStateId &&
+            item.actionCode.trim().toLowerCase() === normalizedCode &&
+            item.id !== excludeId,
+    )
+}
+
+export function WorkflowTransitionDrawer({
     open,
+    mode,
     transition,
     states,
+    existingTransitions,
+    initialFromStateId,
+    initialToStateId,
+    lockFromState = false,
+    lockToState = false,
     loading,
+    deleting = false,
     onClose,
     onCreate,
     onUpdate,
-}: WorkflowTransitionFormProps) {
-    const isEditing = transition !== null
+    onDelete,
+}: WorkflowTransitionDrawerProps) {
+    const isEditing = mode === 'edit' && transition !== null
 
     const { data: rolesData } = useRoles({ page: 1, pageSize: 100 })
     const roleOptions = useMemo(
@@ -68,6 +103,20 @@ export function WorkflowTransitionForm({
         defaultValues: createWorkflowTransitionDefaultValues,
         validators: { onSubmit: createWorkflowTransitionSchema },
         onSubmit: async ({ value }) => {
+            const duplicate = findDuplicateTransition(
+                existingTransitions,
+                value.fromStateId,
+                value.toStateId,
+                value.actionCode,
+            )
+            if (duplicate) {
+                notify.error(
+                    'Transición duplicada',
+                    'Ya existe una transición con el mismo origen, destino y código de acción.',
+                )
+                return
+            }
+
             await onCreate({
                 ...value,
                 requiredRole: value.requiredRole || null,
@@ -80,6 +129,21 @@ export function WorkflowTransitionForm({
         defaultValues: createWorkflowTransitionDefaultValues,
         validators: { onSubmit: updateWorkflowTransitionSchema },
         onSubmit: async ({ value }) => {
+            const duplicate = findDuplicateTransition(
+                existingTransitions,
+                value.fromStateId,
+                value.toStateId,
+                value.actionCode,
+                transition?.id,
+            )
+            if (duplicate) {
+                notify.error(
+                    'Transición duplicada',
+                    'Ya existe una transición con el mismo origen, destino y código de acción.',
+                )
+                return
+            }
+
             await onUpdate({
                 ...value,
                 requiredRole: value.requiredRole || null,
@@ -91,7 +155,7 @@ export function WorkflowTransitionForm({
     useEffect(() => {
         if (!open) return
 
-        if (transition) {
+        if (isEditing && transition) {
             updateForm.reset()
             updateForm.setFieldValue('fromStateId', transition.fromStateId)
             updateForm.setFieldValue('toStateId', transition.toStateId)
@@ -105,7 +169,21 @@ export function WorkflowTransitionForm({
         }
 
         createForm.reset()
-    }, [open, transition, createForm, updateForm])
+        if (initialFromStateId) {
+            createForm.setFieldValue('fromStateId', initialFromStateId)
+        }
+        if (initialToStateId) {
+            createForm.setFieldValue('toStateId', initialToStateId)
+        }
+    }, [
+        open,
+        isEditing,
+        transition,
+        initialFromStateId,
+        initialToStateId,
+        createForm,
+        updateForm,
+    ])
 
     const form = isEditing ? updateForm : createForm
 
@@ -114,23 +192,48 @@ export function WorkflowTransitionForm({
             title={isEditing ? 'Editar transición' : 'Nueva transición'}
             open={open}
             onClose={() => {
-                if (!loading) onClose()
+                if (!loading && !deleting) onClose()
             }}
-            width={560}
+            width={480}
             destroyOnHidden
-            className="workflow-drawer"
+            className="workflow-drawer workflow-drawer--transition"
             footer={
-                <Flex justify="flex-end" gap={8}>
-                    <Button onClick={onClose} disabled={loading}>
-                        Cancelar
-                    </Button>
-                    <Button
-                        type="primary"
-                        loading={loading}
-                        onClick={() => void form.handleSubmit()}
-                    >
-                        Guardar
-                    </Button>
+                <Flex justify="space-between" align="center" wrap gap={8}>
+                    {isEditing && transition && onDelete ? (
+                        <Popconfirm
+                            title="Eliminar transición"
+                            description={`¿Desea eliminar "${transition.actionName}"?`}
+                            okText="Eliminar"
+                            okType="danger"
+                            cancelText="Cancelar"
+                            onConfirm={() => void onDelete(transition.id)}
+                            disabled={loading || deleting}
+                        >
+                            <Button
+                                danger
+                                icon={<DeleteOutlined />}
+                                loading={deleting}
+                                disabled={loading}
+                            >
+                                Eliminar
+                            </Button>
+                        </Popconfirm>
+                    ) : (
+                        <span />
+                    )}
+                    <Flex gap={8}>
+                        <Button onClick={onClose} disabled={loading || deleting}>
+                            Cancelar
+                        </Button>
+                        <Button
+                            type="primary"
+                            loading={loading}
+                            disabled={deleting}
+                            onClick={() => void form.handleSubmit()}
+                        >
+                            Guardar
+                        </Button>
+                    </Flex>
                 </Flex>
             }
         >
@@ -180,6 +283,7 @@ export function WorkflowTransitionForm({
                                         optionFilterProp="label"
                                         placeholder="Seleccione origen"
                                         options={stateOptions}
+                                        disabled={lockFromState}
                                         value={field.state.value || undefined}
                                         onChange={(value) => field.handleChange(value)}
                                     />
@@ -197,6 +301,7 @@ export function WorkflowTransitionForm({
                                         optionFilterProp="label"
                                         placeholder="Seleccione destino"
                                         options={stateOptions}
+                                        disabled={lockToState}
                                         value={field.state.value || undefined}
                                         onChange={(value) => field.handleChange(value)}
                                     />
