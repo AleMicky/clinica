@@ -151,6 +151,166 @@ namespace Clinica.Modules.AtencionMedica.Infrastructure.Migrations
                     b.ToTable("AtencionFormularioRespuestas", (string)null);
                 });
 
+            modelBuilder.Entity("Clinica.Modules.AtencionMedica.Domain.Entities.Diagnostico", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CodigoCie10")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CodigoCie10")
+                        .IsUnique();
+
+                    b.ToTable("Diagnosticos", (string)null);
+                });
+
+            modelBuilder.Entity("Clinica.Modules.AtencionMedica.Domain.Entities.DiagnosticoAtencion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AtencionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("DiagnosticoId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("EsPrincipal")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Observaciones")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DiagnosticoId");
+
+                    b.HasIndex("AtencionId", "DiagnosticoId")
+                        .IsUnique();
+
+                    b.ToTable("DiagnosticoAtenciones", (string)null);
+                });
+
+            modelBuilder.Entity("Clinica.Modules.AtencionMedica.Domain.Entities.Estudio", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AtencionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("FechaSolicitud")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Justificacion")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<Guid>("TipoEstudioId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AtencionId");
+
+                    b.HasIndex("Estado");
+
+                    b.HasIndex("TipoEstudioId");
+
+                    b.ToTable("Estudios", (string)null);
+                });
+
             modelBuilder.Entity("Clinica.Modules.AtencionMedica.Domain.Entities.FormularioCampo", b =>
                 {
                     b.Property<Guid>("Id")
@@ -335,6 +495,320 @@ namespace Clinica.Modules.AtencionMedica.Infrastructure.Migrations
                     b.ToTable("FormularioSecciones", (string)null);
                 });
 
+            modelBuilder.Entity("Clinica.Modules.AtencionMedica.Domain.Entities.Interconsulta", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AtencionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("EspecialidadId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("FechaRespuesta")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FechaSolicitud")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<Guid?>("MedicoId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Motivo")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("Respuesta")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AtencionId");
+
+                    b.HasIndex("EspecialidadId");
+
+                    b.HasIndex("MedicoId");
+
+                    b.ToTable("Interconsultas", (string)null);
+                });
+
+            modelBuilder.Entity("Clinica.Modules.AtencionMedica.Domain.Entities.Prescripcion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AtencionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Observaciones")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AtencionId");
+
+                    b.HasIndex("Fecha");
+
+                    b.ToTable("Prescripciones", (string)null);
+                });
+
+            modelBuilder.Entity("Clinica.Modules.AtencionMedica.Domain.Entities.PrescripcionDetalle", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Dosis")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Duracion")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Frecuencia")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Indicaciones")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<Guid?>("MedicamentoId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("MedicamentoNombre")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<Guid>("PrescripcionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("ViaAdministracion")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PrescripcionId");
+
+                    b.ToTable("PrescripcionDetalles", (string)null);
+                });
+
+            modelBuilder.Entity("Clinica.Modules.AtencionMedica.Domain.Entities.ResultadoEstudio", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ArchivoUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("EstudioId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("FechaResultado")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Observaciones")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<Guid?>("RegistradoPorId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ResultadoTexto")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EstudioId")
+                        .IsUnique();
+
+                    b.ToTable("ResultadosEstudio", (string)null);
+                });
+
+            modelBuilder.Entity("Clinica.Modules.AtencionMedica.Domain.Entities.SignoVital", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AtencionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("FechaRegistro")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("FrecuenciaCardiaca")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("FrecuenciaRespiratoria")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Glasgow")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("GlucemiaCapilar")
+                        .HasPrecision(6, 2)
+                        .HasColumnType("decimal(6,2)");
+
+                    b.Property<decimal?>("Imc")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<decimal?>("Peso")
+                        .HasPrecision(6, 2)
+                        .HasColumnType("decimal(6,2)");
+
+                    b.Property<int?>("PresionDiastolica")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PresionSistolica")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("SaturacionOxigeno")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<decimal?>("Talla")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<decimal?>("Temperatura")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AtencionId");
+
+                    b.HasIndex("FechaRegistro");
+
+                    b.ToTable("SignosVitales", (string)null);
+                });
+
             modelBuilder.Entity("Clinica.Modules.AtencionMedica.Domain.Entities.TipoAtencion", b =>
                 {
                     b.Property<Guid>("Id")
@@ -451,6 +925,144 @@ namespace Clinica.Modules.AtencionMedica.Infrastructure.Migrations
                     b.ToTable("TiposCampoFormulario", (string)null);
                 });
 
+            modelBuilder.Entity("Clinica.Modules.AtencionMedica.Domain.Entities.Tratamiento", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AtencionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Descripcion")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime>("FechaRegistro")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Indicaciones")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AtencionId");
+
+                    b.ToTable("Tratamientos", (string)null);
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Parametros.Domain.Entities.CatalogoItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CatalogoGrupoId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Orden")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Valor")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CatalogoItems", null, t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Personas.Domain.Entities.Medico", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("EmpleadoId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EspecialidadId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("MatriculaProfesional")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RegistroColegioMedico")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Medicos", null, t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
+                });
+
             modelBuilder.Entity("Clinica.Modules.Personas.Domain.Entities.Paciente", b =>
                 {
                     b.Property<Guid>("Id")
@@ -494,6 +1106,46 @@ namespace Clinica.Modules.AtencionMedica.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Pacientes", null, t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
+                });
+
+            modelBuilder.Entity("Clinica.Modules.RecursosHumanos.Domain.Entities.Especialidad", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Descripcion")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Especialidades", null, t =>
                         {
                             t.ExcludeFromMigrations();
                         });
@@ -543,6 +1195,44 @@ namespace Clinica.Modules.AtencionMedica.Infrastructure.Migrations
                     b.Navigation("FormularioCampo");
                 });
 
+            modelBuilder.Entity("Clinica.Modules.AtencionMedica.Domain.Entities.DiagnosticoAtencion", b =>
+                {
+                    b.HasOne("Clinica.Modules.AtencionMedica.Domain.Entities.Atencion", "Atencion")
+                        .WithMany("Diagnosticos")
+                        .HasForeignKey("AtencionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Clinica.Modules.AtencionMedica.Domain.Entities.Diagnostico", "Diagnostico")
+                        .WithMany("Atenciones")
+                        .HasForeignKey("DiagnosticoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Atencion");
+
+                    b.Navigation("Diagnostico");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.AtencionMedica.Domain.Entities.Estudio", b =>
+                {
+                    b.HasOne("Clinica.Modules.AtencionMedica.Domain.Entities.Atencion", "Atencion")
+                        .WithMany("Estudios")
+                        .HasForeignKey("AtencionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Clinica.Modules.Parametros.Domain.Entities.CatalogoItem", "TipoEstudio")
+                        .WithMany()
+                        .HasForeignKey("TipoEstudioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Atencion");
+
+                    b.Navigation("TipoEstudio");
+                });
+
             modelBuilder.Entity("Clinica.Modules.AtencionMedica.Domain.Entities.FormularioCampo", b =>
                 {
                     b.HasOne("Clinica.Modules.AtencionMedica.Domain.Entities.FormularioSeccion", "FormularioSeccion")
@@ -584,9 +1274,108 @@ namespace Clinica.Modules.AtencionMedica.Infrastructure.Migrations
                     b.Navigation("FormularioClinico");
                 });
 
+            modelBuilder.Entity("Clinica.Modules.AtencionMedica.Domain.Entities.Interconsulta", b =>
+                {
+                    b.HasOne("Clinica.Modules.AtencionMedica.Domain.Entities.Atencion", "Atencion")
+                        .WithMany("Interconsultas")
+                        .HasForeignKey("AtencionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Clinica.Modules.RecursosHumanos.Domain.Entities.Especialidad", null)
+                        .WithMany()
+                        .HasForeignKey("EspecialidadId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Clinica.Modules.Personas.Domain.Entities.Medico", null)
+                        .WithMany()
+                        .HasForeignKey("MedicoId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Atencion");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.AtencionMedica.Domain.Entities.Prescripcion", b =>
+                {
+                    b.HasOne("Clinica.Modules.AtencionMedica.Domain.Entities.Atencion", "Atencion")
+                        .WithMany("Prescripciones")
+                        .HasForeignKey("AtencionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Atencion");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.AtencionMedica.Domain.Entities.PrescripcionDetalle", b =>
+                {
+                    b.HasOne("Clinica.Modules.AtencionMedica.Domain.Entities.Prescripcion", "Prescripcion")
+                        .WithMany("Detalles")
+                        .HasForeignKey("PrescripcionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Prescripcion");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.AtencionMedica.Domain.Entities.ResultadoEstudio", b =>
+                {
+                    b.HasOne("Clinica.Modules.AtencionMedica.Domain.Entities.Estudio", "Estudio")
+                        .WithOne("Resultado")
+                        .HasForeignKey("Clinica.Modules.AtencionMedica.Domain.Entities.ResultadoEstudio", "EstudioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Estudio");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.AtencionMedica.Domain.Entities.SignoVital", b =>
+                {
+                    b.HasOne("Clinica.Modules.AtencionMedica.Domain.Entities.Atencion", "Atencion")
+                        .WithMany("SignosVitales")
+                        .HasForeignKey("AtencionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Atencion");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.AtencionMedica.Domain.Entities.Tratamiento", b =>
+                {
+                    b.HasOne("Clinica.Modules.AtencionMedica.Domain.Entities.Atencion", "Atencion")
+                        .WithMany("Tratamientos")
+                        .HasForeignKey("AtencionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Atencion");
+                });
+
             modelBuilder.Entity("Clinica.Modules.AtencionMedica.Domain.Entities.Atencion", b =>
                 {
+                    b.Navigation("Diagnosticos");
+
+                    b.Navigation("Estudios");
+
+                    b.Navigation("Interconsultas");
+
+                    b.Navigation("Prescripciones");
+
                     b.Navigation("Respuestas");
+
+                    b.Navigation("SignosVitales");
+
+                    b.Navigation("Tratamientos");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.AtencionMedica.Domain.Entities.Diagnostico", b =>
+                {
+                    b.Navigation("Atenciones");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.AtencionMedica.Domain.Entities.Estudio", b =>
+                {
+                    b.Navigation("Resultado");
                 });
 
             modelBuilder.Entity("Clinica.Modules.AtencionMedica.Domain.Entities.FormularioClinico", b =>
@@ -599,6 +1388,11 @@ namespace Clinica.Modules.AtencionMedica.Infrastructure.Migrations
             modelBuilder.Entity("Clinica.Modules.AtencionMedica.Domain.Entities.FormularioSeccion", b =>
                 {
                     b.Navigation("Campos");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.AtencionMedica.Domain.Entities.Prescripcion", b =>
+                {
+                    b.Navigation("Detalles");
                 });
 
             modelBuilder.Entity("Clinica.Modules.AtencionMedica.Domain.Entities.TipoAtencion", b =>

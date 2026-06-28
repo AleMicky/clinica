@@ -24,6 +24,15 @@ public static class AtencionMedicaEndpoints
         group.MapFormularioCampoEndpoints();
         group.MapAtencionEndpoints();
         group.MapAtencionFormularioRespuestaEndpoints();
+        group.MapDiagnosticoEndpoints();
+        group.MapDiagnosticoAtencionEndpoints();
+        group.MapSignoVitalEndpoints();
+        group.MapTratamientoEndpoints();
+        group.MapEstudioEndpoints();
+        group.MapResultadoEstudioEndpoints();
+        group.MapInterconsultaEndpoints();
+        group.MapPrescripcionEndpoints();
+        group.MapPrescripcionDetalleEndpoints();
 
         return app;
     }

@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Clinica.SharedKernel\Clinica.SharedKernel.csproj" />
+    <ProjectReference Include="..\..\Parametros\Clinica.Modules.Parametros.Domain\Clinica.Modules.Parametros.Domain.csproj" />
   </ItemGroup>
 
 </Project>
