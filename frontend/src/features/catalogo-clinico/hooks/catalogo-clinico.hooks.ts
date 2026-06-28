@@ -14,7 +14,6 @@ import {
     prestacionesService,
     profesionesService,
     serviciosService,
-    tiposAtencionCatalogoService,
 } from '../services/catalogo-clinico.service'
 import type {
     CreateCatalogoBasePayload,
@@ -394,18 +393,6 @@ const cargosConfig: SimpleCatalogConfig = {
     },
 }
 
-const tiposAtencionConfig: SimpleCatalogConfig = {
-    queryKeyAll: queryKeys.catalogoClinico.tiposAtencion.all,
-    listKey: queryKeys.catalogoClinico.tiposAtencion.list,
-    service: tiposAtencionCatalogoService,
-    labels: {
-        entity: 'Tipo de atención',
-        created: 'Registro guardado correctamente.',
-        updated: 'Cambios guardados.',
-        deleted: 'Tipo de atención desactivado',
-    },
-}
-
 export function useEspecialidades(query: PagedQuery) {
     return useSimpleCatalogList(especialidadesConfig, query)
 }
@@ -443,17 +430,4 @@ export function useUpdateCargo() {
 }
 export function useDeleteCargo() {
     return useDeleteSimpleCatalog(cargosConfig)
-}
-
-export function useTiposAtencionCatalogo(query: PagedQuery) {
-    return useSimpleCatalogList(tiposAtencionConfig, query)
-}
-export function useCreateTipoAtencionCatalogo() {
-    return useCreateSimpleCatalog(tiposAtencionConfig)
-}
-export function useUpdateTipoAtencionCatalogo() {
-    return useUpdateSimpleCatalog(tiposAtencionConfig)
-}
-export function useDeleteTipoAtencionCatalogo() {
-    return useDeleteSimpleCatalog(tiposAtencionConfig)
 }

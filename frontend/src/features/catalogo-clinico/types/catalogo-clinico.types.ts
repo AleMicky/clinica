@@ -28,7 +28,6 @@ export type Prestacion = CatalogoBase & {
 export type Especialidad = CatalogoBase
 export type Profesion = CatalogoBase
 export type Cargo = CatalogoBase
-export type TipoAtencionCatalogo = CatalogoBase
 
 export type CreateCatalogoBasePayload = {
     codigo: string
@@ -73,5 +72,3 @@ export type UpdatePrestacionPayload = UpdateCatalogoBasePayload & {
 }
 
 export type CreateCatalogoResult = { id: string }
-
-export type CatalogoClinicoSection = 'tipos-atencion'

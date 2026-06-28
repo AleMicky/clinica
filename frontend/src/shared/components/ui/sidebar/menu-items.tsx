@@ -8,7 +8,6 @@ import {
     MedicineBoxOutlined,
     NodeIndexOutlined,
     SafetyCertificateOutlined,
-    SettingOutlined,
     ControlOutlined,
     SolutionOutlined,
     TeamOutlined,
@@ -146,13 +145,6 @@ export const menuGroups: MenuGroup[] = [
         roles: [AppRole.Admin],
         items: [
             {
-                key: '/configuracion',
-                to: '/configuracion',
-                icon: <SettingOutlined />,
-                label: 'Configuración general',
-                roles: [AppRole.Admin],
-            },
-            {
                 key: '/parametros',
                 icon: <ControlOutlined />,
                 label: 'Parámetros',
@@ -163,13 +155,6 @@ export const menuGroups: MenuGroup[] = [
                 to: '/catalogos',
                 icon: <AppstoreOutlined />,
                 label: 'Catálogos generales',
-                roles: [AppRole.Admin],
-            },
-            {
-                key: '/catalogo-clinico',
-                to: '/catalogo-clinico',
-                icon: <MedicineBoxOutlined />,
-                label: 'Catálogo clínico',
                 roles: [AppRole.Admin],
             },
         ],

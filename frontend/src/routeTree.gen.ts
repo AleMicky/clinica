@@ -20,9 +20,7 @@ import { Route as AdminSeguridadIndexRouteImport } from './routes/_admin/segurid
 import { Route as AdminRolesIndexRouteImport } from './routes/_admin/roles/index'
 import { Route as AdminRecursosHumanosIndexRouteImport } from './routes/_admin/recursos-humanos/index'
 import { Route as AdminPacientesIndexRouteImport } from './routes/_admin/pacientes/index'
-import { Route as AdminConfiguracionIndexRouteImport } from './routes/_admin/configuracion/index'
 import { Route as AdminCatalogosIndexRouteImport } from './routes/_admin/catalogos/index'
-import { Route as AdminCatalogoClinicoIndexRouteImport } from './routes/_admin/catalogo-clinico/index'
 import { Route as AdminAtencionesIndexRouteImport } from './routes/_admin/atenciones/index'
 import { Route as AdminUsuariosPerfilRouteImport } from './routes/_admin/usuarios/perfil'
 import { Route as AdminSeguridadUsuariosRouteImport } from './routes/_admin/seguridad/usuarios'
@@ -89,22 +87,11 @@ const AdminPacientesIndexRoute = AdminPacientesIndexRouteImport.update({
   path: '/pacientes/',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminConfiguracionIndexRoute = AdminConfiguracionIndexRouteImport.update({
-  id: '/configuracion/',
-  path: '/configuracion/',
-  getParentRoute: () => AdminRoute,
-} as any)
 const AdminCatalogosIndexRoute = AdminCatalogosIndexRouteImport.update({
   id: '/catalogos/',
   path: '/catalogos/',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminCatalogoClinicoIndexRoute =
-  AdminCatalogoClinicoIndexRouteImport.update({
-    id: '/catalogo-clinico/',
-    path: '/catalogo-clinico/',
-    getParentRoute: () => AdminRoute,
-  } as any)
 const AdminAtencionesIndexRoute = AdminAtencionesIndexRouteImport.update({
   id: '/atenciones/',
   path: '/atenciones/',
@@ -184,9 +171,7 @@ export interface FileRoutesByFullPath {
   '/seguridad/usuarios': typeof AdminSeguridadUsuariosRoute
   '/usuarios/perfil': typeof AdminUsuariosPerfilRoute
   '/atenciones/': typeof AdminAtencionesIndexRoute
-  '/catalogo-clinico/': typeof AdminCatalogoClinicoIndexRoute
   '/catalogos/': typeof AdminCatalogosIndexRoute
-  '/configuracion/': typeof AdminConfiguracionIndexRoute
   '/pacientes/': typeof AdminPacientesIndexRoute
   '/recursos-humanos/': typeof AdminRecursosHumanosIndexRoute
   '/roles/': typeof AdminRolesIndexRoute
@@ -207,9 +192,7 @@ export interface FileRoutesByTo {
   '/seguridad/usuarios': typeof AdminSeguridadUsuariosRoute
   '/usuarios/perfil': typeof AdminUsuariosPerfilRoute
   '/atenciones': typeof AdminAtencionesIndexRoute
-  '/catalogo-clinico': typeof AdminCatalogoClinicoIndexRoute
   '/catalogos': typeof AdminCatalogosIndexRoute
-  '/configuracion': typeof AdminConfiguracionIndexRoute
   '/pacientes': typeof AdminPacientesIndexRoute
   '/recursos-humanos': typeof AdminRecursosHumanosIndexRoute
   '/roles': typeof AdminRolesIndexRoute
@@ -235,9 +218,7 @@ export interface FileRoutesById {
   '/_admin/seguridad/usuarios': typeof AdminSeguridadUsuariosRoute
   '/_admin/usuarios/perfil': typeof AdminUsuariosPerfilRoute
   '/_admin/atenciones/': typeof AdminAtencionesIndexRoute
-  '/_admin/catalogo-clinico/': typeof AdminCatalogoClinicoIndexRoute
   '/_admin/catalogos/': typeof AdminCatalogosIndexRoute
-  '/_admin/configuracion/': typeof AdminConfiguracionIndexRoute
   '/_admin/pacientes/': typeof AdminPacientesIndexRoute
   '/_admin/recursos-humanos/': typeof AdminRecursosHumanosIndexRoute
   '/_admin/roles/': typeof AdminRolesIndexRoute
@@ -262,9 +243,7 @@ export interface FileRouteTypes {
     | '/seguridad/usuarios'
     | '/usuarios/perfil'
     | '/atenciones/'
-    | '/catalogo-clinico/'
     | '/catalogos/'
-    | '/configuracion/'
     | '/pacientes/'
     | '/recursos-humanos/'
     | '/roles/'
@@ -285,9 +264,7 @@ export interface FileRouteTypes {
     | '/seguridad/usuarios'
     | '/usuarios/perfil'
     | '/atenciones'
-    | '/catalogo-clinico'
     | '/catalogos'
-    | '/configuracion'
     | '/pacientes'
     | '/recursos-humanos'
     | '/roles'
@@ -312,9 +289,7 @@ export interface FileRouteTypes {
     | '/_admin/seguridad/usuarios'
     | '/_admin/usuarios/perfil'
     | '/_admin/atenciones/'
-    | '/_admin/catalogo-clinico/'
     | '/_admin/catalogos/'
-    | '/_admin/configuracion/'
     | '/_admin/pacientes/'
     | '/_admin/recursos-humanos/'
     | '/_admin/roles/'
@@ -406,25 +381,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPacientesIndexRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/_admin/configuracion/': {
-      id: '/_admin/configuracion/'
-      path: '/configuracion'
-      fullPath: '/configuracion/'
-      preLoaderRoute: typeof AdminConfiguracionIndexRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/_admin/catalogos/': {
       id: '/_admin/catalogos/'
       path: '/catalogos'
       fullPath: '/catalogos/'
       preLoaderRoute: typeof AdminCatalogosIndexRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/_admin/catalogo-clinico/': {
-      id: '/_admin/catalogo-clinico/'
-      path: '/catalogo-clinico'
-      fullPath: '/catalogo-clinico/'
-      preLoaderRoute: typeof AdminCatalogoClinicoIndexRouteImport
       parentRoute: typeof AdminRoute
     }
     '/_admin/atenciones/': {
@@ -554,9 +515,7 @@ interface AdminRouteChildren {
   AdminAtencionesAtencionIdRoute: typeof AdminAtencionesAtencionIdRoute
   AdminUsuariosPerfilRoute: typeof AdminUsuariosPerfilRoute
   AdminAtencionesIndexRoute: typeof AdminAtencionesIndexRoute
-  AdminCatalogoClinicoIndexRoute: typeof AdminCatalogoClinicoIndexRoute
   AdminCatalogosIndexRoute: typeof AdminCatalogosIndexRoute
-  AdminConfiguracionIndexRoute: typeof AdminConfiguracionIndexRoute
   AdminPacientesIndexRoute: typeof AdminPacientesIndexRoute
   AdminRolesIndexRoute: typeof AdminRolesIndexRoute
   AdminUsuariosIndexRoute: typeof AdminUsuariosIndexRoute
@@ -569,9 +528,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAtencionesAtencionIdRoute: AdminAtencionesAtencionIdRoute,
   AdminUsuariosPerfilRoute: AdminUsuariosPerfilRoute,
   AdminAtencionesIndexRoute: AdminAtencionesIndexRoute,
-  AdminCatalogoClinicoIndexRoute: AdminCatalogoClinicoIndexRoute,
   AdminCatalogosIndexRoute: AdminCatalogosIndexRoute,
-  AdminConfiguracionIndexRoute: AdminConfiguracionIndexRoute,
   AdminPacientesIndexRoute: AdminPacientesIndexRoute,
   AdminRolesIndexRoute: AdminRolesIndexRoute,
   AdminUsuariosIndexRoute: AdminUsuariosIndexRoute,

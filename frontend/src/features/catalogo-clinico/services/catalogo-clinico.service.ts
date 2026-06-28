@@ -14,7 +14,6 @@ import type {
     Prestacion,
     Profesion,
     Servicio,
-    TipoAtencionCatalogo,
     UpdateCatalogoBasePayload,
     UpdateDepartamentoPayload,
     UpdatePrestacionPayload,
@@ -126,8 +125,3 @@ export const profesionesService = createSimpleCatalogService<Profesion>(
 export const cargosService = createSimpleCatalogService<Cargo>(
     catalogoClinicoEndpoints.cargos.root,
 )
-
-export const tiposAtencionCatalogoService =
-    createSimpleCatalogService<TipoAtencionCatalogo>(
-        catalogoClinicoEndpoints.tiposAtencion.root,
-    )
