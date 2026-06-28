@@ -16,7 +16,7 @@ public static class SwaggerExtensions
             {
                 Title = "Clinica API",
                 Version = DocumentName,
-                Description = "API del sistema de clínica — monolito modular con módulos Seguridad, Parámetros, Recursos Humanos, Personas y Workflow."
+                Description = "API del sistema de clínica — monolito modular con módulos Seguridad, Parámetros, Recursos Humanos, Personas, Atención Médica y Workflow."
             });
 
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -79,6 +79,14 @@ public static class SwaggerExtensions
             "Personas · Empleados",
             "Personas · Médicos",
             "Personas · Contactos de emergencia",
+            "AtencionMedica",
+            "AtencionMedica · Tipos de atención",
+            "AtencionMedica · Tipos de campo",
+            "AtencionMedica · Formularios clínicos",
+            "AtencionMedica · Secciones de formulario",
+            "AtencionMedica · Campos de formulario",
+            "AtencionMedica · Atenciones",
+            "AtencionMedica · Respuestas de formulario",
             "Workflow",
             "Sistema"
         ];

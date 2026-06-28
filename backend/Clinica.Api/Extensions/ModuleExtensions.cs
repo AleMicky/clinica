@@ -1,3 +1,6 @@
+using Clinica.Modules.AtencionMedica.Application;
+using Clinica.Modules.AtencionMedica.Infrastructure;
+using Clinica.Modules.AtencionMedica.Presentation;
 using Clinica.Modules.Parametros.Application;
 using Clinica.Modules.Parametros.Infrastructure;
 using Clinica.Modules.Parametros.Presentation;
@@ -47,6 +50,11 @@ public static class ModuleExtensions
             .AddPersonasInfrastructure(configuration)
             .AddPersonasPresentation();
 
+        services
+            .AddAtencionMedicaApplication()
+            .AddAtencionMedicaInfrastructure(configuration)
+            .AddAtencionMedicaPresentation();
+
         return services;
     }
 
@@ -57,6 +65,7 @@ public static class ModuleExtensions
         app.MapWorkflowModule();
         app.MapRecursosHumanosModule();
         app.MapPersonasModule();
+        app.MapAtencionMedicaModule();
 
         return app;
     }
