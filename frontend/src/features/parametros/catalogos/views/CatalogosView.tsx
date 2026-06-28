@@ -57,12 +57,12 @@ export function CatalogosView() {
     const [editingItem, setEditingItem] = useState<CatalogoItem | null>(null)
     const [deletingItemId, setDeletingItemId] = useState<string | null>(null)
 
-    const { data, isFetching } = useCatalogoGrupos({
+    const { data, isLoading: isLoadingGrupos } = useCatalogoGrupos({
         page,
         pageSize,
         search: search || undefined,
     })
-    const { data: items = [], isFetching: isFetchingItems } = useCatalogoGrupoItems(
+    const { data: items = [], isLoading: isLoadingItems } = useCatalogoGrupoItems(
         selectedGrupo?.id ?? null,
     )
 
@@ -99,9 +99,9 @@ export function CatalogosView() {
     }, [grupos, selectedGrupo])
 
     useEffect(() => {
-        if (selectedGrupo || isFetching || grupos.length === 0) return
+        if (selectedGrupo || isLoadingGrupos || grupos.length === 0) return
         setSelectedGrupo(grupos[0])
-    }, [grupos, isFetching, selectedGrupo])
+    }, [grupos, isLoadingGrupos, selectedGrupo])
 
     const openCreateGrupoModal = () => {
         setEditingGrupo(null)
@@ -231,7 +231,7 @@ export function CatalogosView() {
 
                     <CatalogoGruposList
                         grupos={grupos}
-                        loading={isFetching}
+                        loading={isLoadingGrupos}
                         total={totalGrupos}
                         page={page}
                         pageSize={pageSize}
@@ -295,7 +295,7 @@ export function CatalogosView() {
                             <div className="catalogos-view__main-body">
                                 <CatalogoItemsTable
                                     items={items}
-                                    loading={isFetchingItems}
+                                    loading={isLoadingItems}
                                     onEdit={openEditItemModal}
                                     onDelete={handleDeleteItem}
                                     deletingId={deletingItemId}

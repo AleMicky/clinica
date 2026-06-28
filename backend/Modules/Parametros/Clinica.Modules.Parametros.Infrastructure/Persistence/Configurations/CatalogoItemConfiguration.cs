@@ -19,7 +19,7 @@ public sealed class CatalogoItemConfiguration
             .IsRequired();
 
         builder.HasOne(x => x.CatalogoGrupo)
-            .WithMany()
+            .WithMany(x => x.Items)
             .HasForeignKey(x => x.CatalogoGrupoId)
             .OnDelete(DeleteBehavior.Restrict);
 
