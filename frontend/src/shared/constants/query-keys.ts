@@ -32,6 +32,19 @@ export const queryKeys = {
         list: (query: PagedQuery) => ['pacientes', 'list', query] as const,
         detail: (id: EntityId) => ['pacientes', 'detail', id] as const,
     },
+    empleados: {
+        all: ['empleados'] as const,
+        lookup: ['empleados', 'lookup'] as const,
+        list: (query: PagedQuery & Record<string, unknown>) =>
+            ['empleados', 'list', query] as const,
+        detail: (id: EntityId) => ['empleados', 'detail', id] as const,
+    },
+    medicos: {
+        all: ['medicos'] as const,
+        list: (query: PagedQuery & Record<string, unknown>) =>
+            ['medicos', 'list', query] as const,
+        detail: (id: EntityId) => ['medicos', 'detail', id] as const,
+    },
     catalogoClinico: {
         all: ['catalogo-clinico'] as const,
         areas: {

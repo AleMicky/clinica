@@ -1,4 +1,4 @@
-import { Avatar, Breadcrumb, Button, Dropdown, Flex, Space, theme, Typography } from 'antd'
+import { Avatar, Breadcrumb, Button, Dropdown, Flex, Space, Tag, theme, Typography } from 'antd'
 import {
     LogoutOutlined,
     MenuFoldOutlined,
@@ -26,11 +26,15 @@ export function AppHeader({ collapsed, isMobile, onToggleSidebar }: AppHeaderPro
     const pathname = useRouterState({ select: (state) => state.location.pathname })
     const userRoles = authStore((state) => state.user?.roles ?? [])
     const breadcrumbSegments = getBreadcrumbSegments(pathname, userRoles)
+    const currentPage = breadcrumbSegments[breadcrumbSegments.length - 1]?.title ?? 'Panel'
 
     const { token } = theme.useToken()
+    const primaryRole = userRoles[0]
 
     return (
         <header className="admin-header">
+            <div className="admin-header__accent" aria-hidden />
+
             <Flex align="center" gap={16} className="admin-header__left">
                 <Button
                     type="text"
@@ -40,26 +44,34 @@ export function AppHeader({ collapsed, isMobile, onToggleSidebar }: AppHeaderPro
                     aria-label={collapsed ? 'Abrir menú' : 'Cerrar menú'}
                 />
 
-                <Breadcrumb
-                    className="admin-header__breadcrumb"
-                    items={breadcrumbSegments.map((segment, index) => {
-                        const isLast = index === breadcrumbSegments.length - 1
+                <div className="admin-header__context">
+                    {!isMobile && (
+                        <Text strong className="admin-header__page-title">
+                            {currentPage}
+                        </Text>
+                    )}
 
-                        return {
-                            title:
-                                segment.to && !isLast ? (
-                                    <Link
-                                        to={segment.to}
-                                        className="admin-header__breadcrumb-link"
-                                    >
-                                        {segment.title}
-                                    </Link>
-                                ) : (
-                                    segment.title
-                                ),
-                        }
-                    })}
-                />
+                    <Breadcrumb
+                        className="admin-header__breadcrumb"
+                        items={breadcrumbSegments.map((segment, index) => {
+                            const isLast = index === breadcrumbSegments.length - 1
+
+                            return {
+                                title:
+                                    segment.to && !isLast ? (
+                                        <Link
+                                            to={segment.to}
+                                            className="admin-header__breadcrumb-link"
+                                        >
+                                            {segment.title}
+                                        </Link>
+                                    ) : (
+                                        segment.title
+                                    ),
+                            }
+                        })}
+                    />
+                </div>
             </Flex>
 
             <Flex align="center" gap={4} className="admin-header__actions">
@@ -87,11 +99,22 @@ export function AppHeader({ collapsed, isMobile, onToggleSidebar }: AppHeaderPro
                 >
                     <Space className="admin-header__user" style={{ cursor: 'pointer' }}>
                         <Avatar
-                            size={36}
+                            size={34}
                             style={{ backgroundColor: token.colorPrimary }}
                             icon={<UserOutlined />}
                         />
-                        {!isMobile && <Text strong>{user?.nombreCompleto}</Text>}
+                        {!isMobile && (
+                            <Flex vertical gap={0} className="admin-header__user-info">
+                                <Text strong className="admin-header__user-name">
+                                    {user?.nombreCompleto}
+                                </Text>
+                                {primaryRole && (
+                                    <Tag bordered={false} className="admin-header__user-role">
+                                        {primaryRole}
+                                    </Tag>
+                                )}
+                            </Flex>
+                        )}
                     </Space>
                 </Dropdown>
             </Flex>

@@ -7,6 +7,7 @@ import {
     SafetyCertificateOutlined,
     SettingOutlined,
     ControlOutlined,
+    SolutionOutlined,
     TeamOutlined,
 } from '@ant-design/icons'
 
@@ -75,6 +76,20 @@ export const menuGroups: MenuGroup[] = [
                 to: '/seguridad',
                 icon: <SafetyCertificateOutlined />,
                 label: 'Seguridad',
+                roles: [AppRole.Admin],
+            },
+        ],
+    },
+    {
+        key: 'rrhh',
+        label: 'Recursos Humanos',
+        roles: [AppRole.Admin],
+        items: [
+            {
+                key: '/recursos-humanos',
+                to: '/recursos-humanos',
+                icon: <SolutionOutlined />,
+                label: 'Recursos Humanos',
                 roles: [AppRole.Admin],
             },
         ],
@@ -225,6 +240,8 @@ export type BreadcrumbSegment = {
 const nestedRouteLabels: Record<string, { title: string; parentPath: AppRoute }> = {
     '/seguridad/usuarios': { title: 'Usuarios', parentPath: '/seguridad' },
     '/seguridad/roles': { title: 'Roles y permisos', parentPath: '/seguridad' },
+    '/recursos-humanos/empleados': { title: 'Empleados', parentPath: '/recursos-humanos' },
+    '/recursos-humanos/medicos': { title: 'Médicos', parentPath: '/recursos-humanos' },
     '/usuarios/perfil': { title: 'Mi perfil', parentPath: '/seguridad/usuarios' },
     '/atenciones/$atencionId': { title: 'Detalle de atención', parentPath: '/atenciones' },
 }
@@ -252,7 +269,7 @@ export function getBreadcrumbSegments(
     userRoles: string[] = [],
 ): BreadcrumbSegment[] {
     const segments: BreadcrumbSegment[] = [
-        { title: 'Hospital Admin', to: '/' },
+        { title: 'Clínica ERP', to: '/' },
     ]
 
     const nested = nestedRouteLabels[pathname]

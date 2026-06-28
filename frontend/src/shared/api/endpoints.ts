@@ -50,6 +50,10 @@ export const catalogoItemEndpoints = createEndpoints(`${api.parametros}/catalogo
 
 export const pacienteEndpoints = createEndpoints(`${api.personas}/pacientes`)
 
+export const empleadoEndpoints = createEndpoints(`${api.personas}/empleados`)
+
+export const medicoEndpoints = createEndpoints(`${api.personas}/medicos`)
+
 export const catalogoClinicoEndpoints = {
     areas: createEndpoints(`${api.recursosHumanos}/areas`, (root) => ({
         departamentos: (id: EntityId) => `${root}/${id}/departamentos`,

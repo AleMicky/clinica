@@ -13,6 +13,8 @@ import {
 const { Sider } = Layout
 const { Text } = Typography
 
+const SIDEBAR_BG = '#152032'
+
 type SidebarContentProps = {
     collapsed: boolean
     showBrandText: boolean
@@ -43,54 +45,48 @@ function SidebarContent({ collapsed, showBrandText, onNavigate }: SidebarContent
                 justify={collapsed ? 'center' : 'flex-start'}
                 gap={12}
                 className="admin-sidebar__brand"
-                style={{
-                    height: 64,
-                    paddingInline: collapsed ? 0 : 20,
-                    borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-                }}
             >
                 <div
                     className="admin-sidebar__brand-icon"
-                    style={{
-                        background: `linear-gradient(135deg, ${token.colorPrimary}, #0958d9)`,
-                    }}
+                    style={{ background: token.colorPrimary }}
                 >
                     <MedicineBoxOutlined />
                 </div>
 
                 {showBrandText && (
                     <div className="admin-sidebar__brand-text">
-                        <Text strong style={{ color: '#fff', fontSize: 15 }}>
-                            Hospital Admin
+                        <Text strong className="admin-sidebar__brand-name">
+                            Clínica ERP
                         </Text>
-                        <Text
-                            style={{
-                                display: 'block',
-                                color: 'rgba(255, 255, 255, 0.55)',
-                                fontSize: 12,
-                                lineHeight: 1.3,
-                            }}
-                        >
-                            Panel clínico
+                        <Text className="admin-sidebar__brand-tagline">
+                            Gestión hospitalaria
                         </Text>
                     </div>
                 )}
             </Flex>
 
-            <Menu
-                theme="dark"
-                mode="inline"
-                inlineCollapsed={collapsed}
-                selectedKeys={selectedKeys}
-                items={
-                    collapsed
-                        ? buildFlatMenuItems(userRoles)
-                        : buildMenuItems(userRoles)
-                }
-                className="admin-sidebar__menu"
-                style={{ background: 'transparent', borderInlineEnd: 0 }}
-                onClick={handleMenuClick}
-            />
+            <div className="admin-sidebar__menu-wrap">
+                <Menu
+                    theme="dark"
+                    mode="inline"
+                    inlineCollapsed={collapsed}
+                    selectedKeys={selectedKeys}
+                    items={
+                        collapsed
+                            ? buildFlatMenuItems(userRoles)
+                            : buildMenuItems(userRoles)
+                    }
+                    className="admin-sidebar__menu"
+                    style={{ background: 'transparent', borderInlineEnd: 0 }}
+                    onClick={handleMenuClick}
+                />
+            </div>
+
+            {showBrandText && (
+                <div className="admin-sidebar__footer">
+                    <Text className="admin-sidebar__footer-version">v1.0 · Clínica ERP</Text>
+                </div>
+            )}
         </>
     )
 }
@@ -121,12 +117,12 @@ export function AppSidebar({ collapsed, isMobile, onNavigate }: AppSidebarProps)
         <Sider
             className={`admin-sidebar${isCollapsed ? ' admin-sidebar--collapsed' : ''}`}
             theme="dark"
-            width={260}
-            collapsedWidth={72}
+            width={248}
+            collapsedWidth={64}
             collapsed={isCollapsed}
             trigger={null}
             style={{
-                background: 'linear-gradient(180deg, #0f172a 0%, #111827 100%)',
+                background: SIDEBAR_BG,
                 borderRight: '1px solid rgba(255, 255, 255, 0.06)',
             }}
         >

@@ -14,9 +14,11 @@ import { Route as AdminRouteImport } from './routes/_admin'
 import { Route as AdminIndexRouteImport } from './routes/_admin/index'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as AdminSeguridadRouteImport } from './routes/_admin/seguridad'
+import { Route as AdminRecursosHumanosRouteImport } from './routes/_admin/recursos-humanos'
 import { Route as AdminUsuariosIndexRouteImport } from './routes/_admin/usuarios/index'
 import { Route as AdminSeguridadIndexRouteImport } from './routes/_admin/seguridad/index'
 import { Route as AdminRolesIndexRouteImport } from './routes/_admin/roles/index'
+import { Route as AdminRecursosHumanosIndexRouteImport } from './routes/_admin/recursos-humanos/index'
 import { Route as AdminPacientesIndexRouteImport } from './routes/_admin/pacientes/index'
 import { Route as AdminConfiguracionIndexRouteImport } from './routes/_admin/configuracion/index'
 import { Route as AdminCatalogosIndexRouteImport } from './routes/_admin/catalogos/index'
@@ -25,6 +27,8 @@ import { Route as AdminAtencionesIndexRouteImport } from './routes/_admin/atenci
 import { Route as AdminUsuariosPerfilRouteImport } from './routes/_admin/usuarios/perfil'
 import { Route as AdminSeguridadUsuariosRouteImport } from './routes/_admin/seguridad/usuarios'
 import { Route as AdminSeguridadRolesRouteImport } from './routes/_admin/seguridad/roles'
+import { Route as AdminRecursosHumanosMedicosRouteImport } from './routes/_admin/recursos-humanos/medicos'
+import { Route as AdminRecursosHumanosEmpleadosRouteImport } from './routes/_admin/recursos-humanos/empleados'
 import { Route as AdminAtencionesAtencionIdRouteImport } from './routes/_admin/atenciones/$atencionId'
 
 const AuthRoute = AuthRouteImport.update({
@@ -50,6 +54,11 @@ const AdminSeguridadRoute = AdminSeguridadRouteImport.update({
   path: '/seguridad',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminRecursosHumanosRoute = AdminRecursosHumanosRouteImport.update({
+  id: '/recursos-humanos',
+  path: '/recursos-humanos',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminUsuariosIndexRoute = AdminUsuariosIndexRouteImport.update({
   id: '/usuarios/',
   path: '/usuarios/',
@@ -65,6 +74,12 @@ const AdminRolesIndexRoute = AdminRolesIndexRouteImport.update({
   path: '/roles/',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminRecursosHumanosIndexRoute =
+  AdminRecursosHumanosIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AdminRecursosHumanosRoute,
+  } as any)
 const AdminPacientesIndexRoute = AdminPacientesIndexRouteImport.update({
   id: '/pacientes/',
   path: '/pacientes/',
@@ -106,6 +121,18 @@ const AdminSeguridadRolesRoute = AdminSeguridadRolesRouteImport.update({
   path: '/roles',
   getParentRoute: () => AdminSeguridadRoute,
 } as any)
+const AdminRecursosHumanosMedicosRoute =
+  AdminRecursosHumanosMedicosRouteImport.update({
+    id: '/medicos',
+    path: '/medicos',
+    getParentRoute: () => AdminRecursosHumanosRoute,
+  } as any)
+const AdminRecursosHumanosEmpleadosRoute =
+  AdminRecursosHumanosEmpleadosRouteImport.update({
+    id: '/empleados',
+    path: '/empleados',
+    getParentRoute: () => AdminRecursosHumanosRoute,
+  } as any)
 const AdminAtencionesAtencionIdRoute =
   AdminAtencionesAtencionIdRouteImport.update({
     id: '/atenciones/$atencionId',
@@ -115,9 +142,12 @@ const AdminAtencionesAtencionIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof AdminIndexRoute
+  '/recursos-humanos': typeof AdminRecursosHumanosRouteWithChildren
   '/seguridad': typeof AdminSeguridadRouteWithChildren
   '/login': typeof AuthLoginRoute
   '/atenciones/$atencionId': typeof AdminAtencionesAtencionIdRoute
+  '/recursos-humanos/empleados': typeof AdminRecursosHumanosEmpleadosRoute
+  '/recursos-humanos/medicos': typeof AdminRecursosHumanosMedicosRoute
   '/seguridad/roles': typeof AdminSeguridadRolesRoute
   '/seguridad/usuarios': typeof AdminSeguridadUsuariosRoute
   '/usuarios/perfil': typeof AdminUsuariosPerfilRoute
@@ -126,6 +156,7 @@ export interface FileRoutesByFullPath {
   '/catalogos/': typeof AdminCatalogosIndexRoute
   '/configuracion/': typeof AdminConfiguracionIndexRoute
   '/pacientes/': typeof AdminPacientesIndexRoute
+  '/recursos-humanos/': typeof AdminRecursosHumanosIndexRoute
   '/roles/': typeof AdminRolesIndexRoute
   '/seguridad/': typeof AdminSeguridadIndexRoute
   '/usuarios/': typeof AdminUsuariosIndexRoute
@@ -134,6 +165,8 @@ export interface FileRoutesByTo {
   '/': typeof AdminIndexRoute
   '/login': typeof AuthLoginRoute
   '/atenciones/$atencionId': typeof AdminAtencionesAtencionIdRoute
+  '/recursos-humanos/empleados': typeof AdminRecursosHumanosEmpleadosRoute
+  '/recursos-humanos/medicos': typeof AdminRecursosHumanosMedicosRoute
   '/seguridad/roles': typeof AdminSeguridadRolesRoute
   '/seguridad/usuarios': typeof AdminSeguridadUsuariosRoute
   '/usuarios/perfil': typeof AdminUsuariosPerfilRoute
@@ -142,6 +175,7 @@ export interface FileRoutesByTo {
   '/catalogos': typeof AdminCatalogosIndexRoute
   '/configuracion': typeof AdminConfiguracionIndexRoute
   '/pacientes': typeof AdminPacientesIndexRoute
+  '/recursos-humanos': typeof AdminRecursosHumanosIndexRoute
   '/roles': typeof AdminRolesIndexRoute
   '/seguridad': typeof AdminSeguridadIndexRoute
   '/usuarios': typeof AdminUsuariosIndexRoute
@@ -150,10 +184,13 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_admin': typeof AdminRouteWithChildren
   '/_auth': typeof AuthRouteWithChildren
+  '/_admin/recursos-humanos': typeof AdminRecursosHumanosRouteWithChildren
   '/_admin/seguridad': typeof AdminSeguridadRouteWithChildren
   '/_auth/login': typeof AuthLoginRoute
   '/_admin/': typeof AdminIndexRoute
   '/_admin/atenciones/$atencionId': typeof AdminAtencionesAtencionIdRoute
+  '/_admin/recursos-humanos/empleados': typeof AdminRecursosHumanosEmpleadosRoute
+  '/_admin/recursos-humanos/medicos': typeof AdminRecursosHumanosMedicosRoute
   '/_admin/seguridad/roles': typeof AdminSeguridadRolesRoute
   '/_admin/seguridad/usuarios': typeof AdminSeguridadUsuariosRoute
   '/_admin/usuarios/perfil': typeof AdminUsuariosPerfilRoute
@@ -162,6 +199,7 @@ export interface FileRoutesById {
   '/_admin/catalogos/': typeof AdminCatalogosIndexRoute
   '/_admin/configuracion/': typeof AdminConfiguracionIndexRoute
   '/_admin/pacientes/': typeof AdminPacientesIndexRoute
+  '/_admin/recursos-humanos/': typeof AdminRecursosHumanosIndexRoute
   '/_admin/roles/': typeof AdminRolesIndexRoute
   '/_admin/seguridad/': typeof AdminSeguridadIndexRoute
   '/_admin/usuarios/': typeof AdminUsuariosIndexRoute
@@ -170,9 +208,12 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/recursos-humanos'
     | '/seguridad'
     | '/login'
     | '/atenciones/$atencionId'
+    | '/recursos-humanos/empleados'
+    | '/recursos-humanos/medicos'
     | '/seguridad/roles'
     | '/seguridad/usuarios'
     | '/usuarios/perfil'
@@ -181,6 +222,7 @@ export interface FileRouteTypes {
     | '/catalogos/'
     | '/configuracion/'
     | '/pacientes/'
+    | '/recursos-humanos/'
     | '/roles/'
     | '/seguridad/'
     | '/usuarios/'
@@ -189,6 +231,8 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/atenciones/$atencionId'
+    | '/recursos-humanos/empleados'
+    | '/recursos-humanos/medicos'
     | '/seguridad/roles'
     | '/seguridad/usuarios'
     | '/usuarios/perfil'
@@ -197,6 +241,7 @@ export interface FileRouteTypes {
     | '/catalogos'
     | '/configuracion'
     | '/pacientes'
+    | '/recursos-humanos'
     | '/roles'
     | '/seguridad'
     | '/usuarios'
@@ -204,10 +249,13 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_admin'
     | '/_auth'
+    | '/_admin/recursos-humanos'
     | '/_admin/seguridad'
     | '/_auth/login'
     | '/_admin/'
     | '/_admin/atenciones/$atencionId'
+    | '/_admin/recursos-humanos/empleados'
+    | '/_admin/recursos-humanos/medicos'
     | '/_admin/seguridad/roles'
     | '/_admin/seguridad/usuarios'
     | '/_admin/usuarios/perfil'
@@ -216,6 +264,7 @@ export interface FileRouteTypes {
     | '/_admin/catalogos/'
     | '/_admin/configuracion/'
     | '/_admin/pacientes/'
+    | '/_admin/recursos-humanos/'
     | '/_admin/roles/'
     | '/_admin/seguridad/'
     | '/_admin/usuarios/'
@@ -263,6 +312,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSeguridadRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_admin/recursos-humanos': {
+      id: '/_admin/recursos-humanos'
+      path: '/recursos-humanos'
+      fullPath: '/recursos-humanos'
+      preLoaderRoute: typeof AdminRecursosHumanosRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/_admin/usuarios/': {
       id: '/_admin/usuarios/'
       path: '/usuarios'
@@ -283,6 +339,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/roles/'
       preLoaderRoute: typeof AdminRolesIndexRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/_admin/recursos-humanos/': {
+      id: '/_admin/recursos-humanos/'
+      path: '/'
+      fullPath: '/recursos-humanos/'
+      preLoaderRoute: typeof AdminRecursosHumanosIndexRouteImport
+      parentRoute: typeof AdminRecursosHumanosRoute
     }
     '/_admin/pacientes/': {
       id: '/_admin/pacientes/'
@@ -340,6 +403,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSeguridadRolesRouteImport
       parentRoute: typeof AdminSeguridadRoute
     }
+    '/_admin/recursos-humanos/medicos': {
+      id: '/_admin/recursos-humanos/medicos'
+      path: '/medicos'
+      fullPath: '/recursos-humanos/medicos'
+      preLoaderRoute: typeof AdminRecursosHumanosMedicosRouteImport
+      parentRoute: typeof AdminRecursosHumanosRoute
+    }
+    '/_admin/recursos-humanos/empleados': {
+      id: '/_admin/recursos-humanos/empleados'
+      path: '/empleados'
+      fullPath: '/recursos-humanos/empleados'
+      preLoaderRoute: typeof AdminRecursosHumanosEmpleadosRouteImport
+      parentRoute: typeof AdminRecursosHumanosRoute
+    }
     '/_admin/atenciones/$atencionId': {
       id: '/_admin/atenciones/$atencionId'
       path: '/atenciones/$atencionId'
@@ -349,6 +426,21 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AdminRecursosHumanosRouteChildren {
+  AdminRecursosHumanosEmpleadosRoute: typeof AdminRecursosHumanosEmpleadosRoute
+  AdminRecursosHumanosMedicosRoute: typeof AdminRecursosHumanosMedicosRoute
+  AdminRecursosHumanosIndexRoute: typeof AdminRecursosHumanosIndexRoute
+}
+
+const AdminRecursosHumanosRouteChildren: AdminRecursosHumanosRouteChildren = {
+  AdminRecursosHumanosEmpleadosRoute: AdminRecursosHumanosEmpleadosRoute,
+  AdminRecursosHumanosMedicosRoute: AdminRecursosHumanosMedicosRoute,
+  AdminRecursosHumanosIndexRoute: AdminRecursosHumanosIndexRoute,
+}
+
+const AdminRecursosHumanosRouteWithChildren =
+  AdminRecursosHumanosRoute._addFileChildren(AdminRecursosHumanosRouteChildren)
 
 interface AdminSeguridadRouteChildren {
   AdminSeguridadRolesRoute: typeof AdminSeguridadRolesRoute
@@ -367,6 +459,7 @@ const AdminSeguridadRouteWithChildren = AdminSeguridadRoute._addFileChildren(
 )
 
 interface AdminRouteChildren {
+  AdminRecursosHumanosRoute: typeof AdminRecursosHumanosRouteWithChildren
   AdminSeguridadRoute: typeof AdminSeguridadRouteWithChildren
   AdminIndexRoute: typeof AdminIndexRoute
   AdminAtencionesAtencionIdRoute: typeof AdminAtencionesAtencionIdRoute
@@ -381,6 +474,7 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminRecursosHumanosRoute: AdminRecursosHumanosRouteWithChildren,
   AdminSeguridadRoute: AdminSeguridadRouteWithChildren,
   AdminIndexRoute: AdminIndexRoute,
   AdminAtencionesAtencionIdRoute: AdminAtencionesAtencionIdRoute,

@@ -14,17 +14,17 @@ const features = [
     {
         icon: <TeamOutlined />,
         title: 'Gestión integral',
-        description: 'Administre pacientes, personal y recursos desde un solo lugar.',
+        description: 'Pacientes, atenciones, catálogos y recursos en un solo sistema.',
     },
     {
         icon: <SafetyCertificateOutlined />,
-        title: 'Acceso seguro',
-        description: 'Credenciales protegidas para el personal autorizado.',
+        title: 'Control de acceso',
+        description: 'Roles y permisos para operación segura del personal autorizado.',
     },
     {
         icon: <MedicineBoxOutlined />,
         title: 'Operación clínica',
-        description: 'Herramientas pensadas para el día a día del hospital.',
+        description: 'Flujos de trabajo diseñados para el entorno hospitalario.',
     },
 ]
 
@@ -40,10 +40,10 @@ function BrandHeader({ compact = false }: { compact?: boolean }) {
                     className="login-view__brand-title"
                     style={{ margin: 0 }}
                 >
-                    Hospital Admin
+                    Clínica ERP
                 </Title>
                 <Text className="login-view__brand-subtitle">
-                    Panel de administración clínica
+                    Sistema de gestión hospitalaria
                 </Text>
             </div>
         </Flex>
@@ -74,8 +74,8 @@ export function LoginView() {
                             <div>
                                 <BrandHeader />
                                 <Paragraph className="login-view__brand-description">
-                                    Plataforma centralizada para la gestión hospitalaria con
-                                    control de acceso y flujos operativos seguros.
+                                    Plataforma ERP para la administración hospitalaria con
+                                    módulos integrados, trazabilidad y control de acceso.
                                 </Paragraph>
                             </div>
 

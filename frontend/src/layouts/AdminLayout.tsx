@@ -35,7 +35,7 @@ export function AdminLayout() {
                     width={280}
                     className="admin-drawer"
                     styles={{
-                        body: { padding: 0, background: '#0f172a' },
+                        body: { padding: 0, background: '#152032' },
                         header: { display: 'none' },
                     }}
                 >
