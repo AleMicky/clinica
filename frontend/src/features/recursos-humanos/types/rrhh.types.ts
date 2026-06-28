@@ -1,13 +1,28 @@
-import type { FileRouteTypes } from '../../../routeTree.gen'
+export type RrhhCatalogSection = 'especialidades' | 'profesiones' | 'cargos'
 
-type AppRoute = FileRouteTypes['to']
-
-export type RrhhSection = 'empleados' | 'medicos'
-
-export type RrhhSectionMeta = {
-    key: RrhhSection
-    label: string
-    description: string
-    icon: 'empleados' | 'medicos'
-    to: AppRoute
+export const rrhhCatalogSectionMeta: Record<
+    RrhhCatalogSection,
+    { title: string; description: string; entityLabel: string; newButtonLabel: string; searchPlaceholder: string }
+> = {
+    especialidades: {
+        title: 'Especialidades médicas',
+        description: 'Áreas de especialización del personal clínico.',
+        entityLabel: 'especialidad',
+        newButtonLabel: 'Nueva especialidad',
+        searchPlaceholder: 'Buscar especialidad…',
+    },
+    profesiones: {
+        title: 'Profesiones',
+        description: 'Profesiones u oficios del personal de salud.',
+        entityLabel: 'profesión',
+        newButtonLabel: 'Nueva profesión',
+        searchPlaceholder: 'Buscar profesión…',
+    },
+    cargos: {
+        title: 'Cargos',
+        description: 'Puestos y roles dentro de la institución.',
+        entityLabel: 'cargo',
+        newButtonLabel: 'Nuevo cargo',
+        searchPlaceholder: 'Buscar cargo…',
+    },
 }

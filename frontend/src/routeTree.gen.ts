@@ -27,8 +27,12 @@ import { Route as AdminAtencionesIndexRouteImport } from './routes/_admin/atenci
 import { Route as AdminUsuariosPerfilRouteImport } from './routes/_admin/usuarios/perfil'
 import { Route as AdminSeguridadUsuariosRouteImport } from './routes/_admin/seguridad/usuarios'
 import { Route as AdminSeguridadRolesRouteImport } from './routes/_admin/seguridad/roles'
+import { Route as AdminRecursosHumanosProfesionesRouteImport } from './routes/_admin/recursos-humanos/profesiones'
 import { Route as AdminRecursosHumanosMedicosRouteImport } from './routes/_admin/recursos-humanos/medicos'
+import { Route as AdminRecursosHumanosJerarquiaRouteImport } from './routes/_admin/recursos-humanos/jerarquia'
+import { Route as AdminRecursosHumanosEspecialidadesRouteImport } from './routes/_admin/recursos-humanos/especialidades'
 import { Route as AdminRecursosHumanosEmpleadosRouteImport } from './routes/_admin/recursos-humanos/empleados'
+import { Route as AdminRecursosHumanosCargosRouteImport } from './routes/_admin/recursos-humanos/cargos'
 import { Route as AdminAtencionesAtencionIdRouteImport } from './routes/_admin/atenciones/$atencionId'
 
 const AuthRoute = AuthRouteImport.update({
@@ -121,16 +125,40 @@ const AdminSeguridadRolesRoute = AdminSeguridadRolesRouteImport.update({
   path: '/roles',
   getParentRoute: () => AdminSeguridadRoute,
 } as any)
+const AdminRecursosHumanosProfesionesRoute =
+  AdminRecursosHumanosProfesionesRouteImport.update({
+    id: '/profesiones',
+    path: '/profesiones',
+    getParentRoute: () => AdminRecursosHumanosRoute,
+  } as any)
 const AdminRecursosHumanosMedicosRoute =
   AdminRecursosHumanosMedicosRouteImport.update({
     id: '/medicos',
     path: '/medicos',
     getParentRoute: () => AdminRecursosHumanosRoute,
   } as any)
+const AdminRecursosHumanosJerarquiaRoute =
+  AdminRecursosHumanosJerarquiaRouteImport.update({
+    id: '/jerarquia',
+    path: '/jerarquia',
+    getParentRoute: () => AdminRecursosHumanosRoute,
+  } as any)
+const AdminRecursosHumanosEspecialidadesRoute =
+  AdminRecursosHumanosEspecialidadesRouteImport.update({
+    id: '/especialidades',
+    path: '/especialidades',
+    getParentRoute: () => AdminRecursosHumanosRoute,
+  } as any)
 const AdminRecursosHumanosEmpleadosRoute =
   AdminRecursosHumanosEmpleadosRouteImport.update({
     id: '/empleados',
     path: '/empleados',
+    getParentRoute: () => AdminRecursosHumanosRoute,
+  } as any)
+const AdminRecursosHumanosCargosRoute =
+  AdminRecursosHumanosCargosRouteImport.update({
+    id: '/cargos',
+    path: '/cargos',
     getParentRoute: () => AdminRecursosHumanosRoute,
   } as any)
 const AdminAtencionesAtencionIdRoute =
@@ -146,8 +174,12 @@ export interface FileRoutesByFullPath {
   '/seguridad': typeof AdminSeguridadRouteWithChildren
   '/login': typeof AuthLoginRoute
   '/atenciones/$atencionId': typeof AdminAtencionesAtencionIdRoute
+  '/recursos-humanos/cargos': typeof AdminRecursosHumanosCargosRoute
   '/recursos-humanos/empleados': typeof AdminRecursosHumanosEmpleadosRoute
+  '/recursos-humanos/especialidades': typeof AdminRecursosHumanosEspecialidadesRoute
+  '/recursos-humanos/jerarquia': typeof AdminRecursosHumanosJerarquiaRoute
   '/recursos-humanos/medicos': typeof AdminRecursosHumanosMedicosRoute
+  '/recursos-humanos/profesiones': typeof AdminRecursosHumanosProfesionesRoute
   '/seguridad/roles': typeof AdminSeguridadRolesRoute
   '/seguridad/usuarios': typeof AdminSeguridadUsuariosRoute
   '/usuarios/perfil': typeof AdminUsuariosPerfilRoute
@@ -165,8 +197,12 @@ export interface FileRoutesByTo {
   '/': typeof AdminIndexRoute
   '/login': typeof AuthLoginRoute
   '/atenciones/$atencionId': typeof AdminAtencionesAtencionIdRoute
+  '/recursos-humanos/cargos': typeof AdminRecursosHumanosCargosRoute
   '/recursos-humanos/empleados': typeof AdminRecursosHumanosEmpleadosRoute
+  '/recursos-humanos/especialidades': typeof AdminRecursosHumanosEspecialidadesRoute
+  '/recursos-humanos/jerarquia': typeof AdminRecursosHumanosJerarquiaRoute
   '/recursos-humanos/medicos': typeof AdminRecursosHumanosMedicosRoute
+  '/recursos-humanos/profesiones': typeof AdminRecursosHumanosProfesionesRoute
   '/seguridad/roles': typeof AdminSeguridadRolesRoute
   '/seguridad/usuarios': typeof AdminSeguridadUsuariosRoute
   '/usuarios/perfil': typeof AdminUsuariosPerfilRoute
@@ -189,8 +225,12 @@ export interface FileRoutesById {
   '/_auth/login': typeof AuthLoginRoute
   '/_admin/': typeof AdminIndexRoute
   '/_admin/atenciones/$atencionId': typeof AdminAtencionesAtencionIdRoute
+  '/_admin/recursos-humanos/cargos': typeof AdminRecursosHumanosCargosRoute
   '/_admin/recursos-humanos/empleados': typeof AdminRecursosHumanosEmpleadosRoute
+  '/_admin/recursos-humanos/especialidades': typeof AdminRecursosHumanosEspecialidadesRoute
+  '/_admin/recursos-humanos/jerarquia': typeof AdminRecursosHumanosJerarquiaRoute
   '/_admin/recursos-humanos/medicos': typeof AdminRecursosHumanosMedicosRoute
+  '/_admin/recursos-humanos/profesiones': typeof AdminRecursosHumanosProfesionesRoute
   '/_admin/seguridad/roles': typeof AdminSeguridadRolesRoute
   '/_admin/seguridad/usuarios': typeof AdminSeguridadUsuariosRoute
   '/_admin/usuarios/perfil': typeof AdminUsuariosPerfilRoute
@@ -212,8 +252,12 @@ export interface FileRouteTypes {
     | '/seguridad'
     | '/login'
     | '/atenciones/$atencionId'
+    | '/recursos-humanos/cargos'
     | '/recursos-humanos/empleados'
+    | '/recursos-humanos/especialidades'
+    | '/recursos-humanos/jerarquia'
     | '/recursos-humanos/medicos'
+    | '/recursos-humanos/profesiones'
     | '/seguridad/roles'
     | '/seguridad/usuarios'
     | '/usuarios/perfil'
@@ -231,8 +275,12 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/atenciones/$atencionId'
+    | '/recursos-humanos/cargos'
     | '/recursos-humanos/empleados'
+    | '/recursos-humanos/especialidades'
+    | '/recursos-humanos/jerarquia'
     | '/recursos-humanos/medicos'
+    | '/recursos-humanos/profesiones'
     | '/seguridad/roles'
     | '/seguridad/usuarios'
     | '/usuarios/perfil'
@@ -254,8 +302,12 @@ export interface FileRouteTypes {
     | '/_auth/login'
     | '/_admin/'
     | '/_admin/atenciones/$atencionId'
+    | '/_admin/recursos-humanos/cargos'
     | '/_admin/recursos-humanos/empleados'
+    | '/_admin/recursos-humanos/especialidades'
+    | '/_admin/recursos-humanos/jerarquia'
     | '/_admin/recursos-humanos/medicos'
+    | '/_admin/recursos-humanos/profesiones'
     | '/_admin/seguridad/roles'
     | '/_admin/seguridad/usuarios'
     | '/_admin/usuarios/perfil'
@@ -403,6 +455,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSeguridadRolesRouteImport
       parentRoute: typeof AdminSeguridadRoute
     }
+    '/_admin/recursos-humanos/profesiones': {
+      id: '/_admin/recursos-humanos/profesiones'
+      path: '/profesiones'
+      fullPath: '/recursos-humanos/profesiones'
+      preLoaderRoute: typeof AdminRecursosHumanosProfesionesRouteImport
+      parentRoute: typeof AdminRecursosHumanosRoute
+    }
     '/_admin/recursos-humanos/medicos': {
       id: '/_admin/recursos-humanos/medicos'
       path: '/medicos'
@@ -410,11 +469,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRecursosHumanosMedicosRouteImport
       parentRoute: typeof AdminRecursosHumanosRoute
     }
+    '/_admin/recursos-humanos/jerarquia': {
+      id: '/_admin/recursos-humanos/jerarquia'
+      path: '/jerarquia'
+      fullPath: '/recursos-humanos/jerarquia'
+      preLoaderRoute: typeof AdminRecursosHumanosJerarquiaRouteImport
+      parentRoute: typeof AdminRecursosHumanosRoute
+    }
+    '/_admin/recursos-humanos/especialidades': {
+      id: '/_admin/recursos-humanos/especialidades'
+      path: '/especialidades'
+      fullPath: '/recursos-humanos/especialidades'
+      preLoaderRoute: typeof AdminRecursosHumanosEspecialidadesRouteImport
+      parentRoute: typeof AdminRecursosHumanosRoute
+    }
     '/_admin/recursos-humanos/empleados': {
       id: '/_admin/recursos-humanos/empleados'
       path: '/empleados'
       fullPath: '/recursos-humanos/empleados'
       preLoaderRoute: typeof AdminRecursosHumanosEmpleadosRouteImport
+      parentRoute: typeof AdminRecursosHumanosRoute
+    }
+    '/_admin/recursos-humanos/cargos': {
+      id: '/_admin/recursos-humanos/cargos'
+      path: '/cargos'
+      fullPath: '/recursos-humanos/cargos'
+      preLoaderRoute: typeof AdminRecursosHumanosCargosRouteImport
       parentRoute: typeof AdminRecursosHumanosRoute
     }
     '/_admin/atenciones/$atencionId': {
@@ -428,14 +508,23 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRecursosHumanosRouteChildren {
+  AdminRecursosHumanosCargosRoute: typeof AdminRecursosHumanosCargosRoute
   AdminRecursosHumanosEmpleadosRoute: typeof AdminRecursosHumanosEmpleadosRoute
+  AdminRecursosHumanosEspecialidadesRoute: typeof AdminRecursosHumanosEspecialidadesRoute
+  AdminRecursosHumanosJerarquiaRoute: typeof AdminRecursosHumanosJerarquiaRoute
   AdminRecursosHumanosMedicosRoute: typeof AdminRecursosHumanosMedicosRoute
+  AdminRecursosHumanosProfesionesRoute: typeof AdminRecursosHumanosProfesionesRoute
   AdminRecursosHumanosIndexRoute: typeof AdminRecursosHumanosIndexRoute
 }
 
 const AdminRecursosHumanosRouteChildren: AdminRecursosHumanosRouteChildren = {
+  AdminRecursosHumanosCargosRoute: AdminRecursosHumanosCargosRoute,
   AdminRecursosHumanosEmpleadosRoute: AdminRecursosHumanosEmpleadosRoute,
+  AdminRecursosHumanosEspecialidadesRoute:
+    AdminRecursosHumanosEspecialidadesRoute,
+  AdminRecursosHumanosJerarquiaRoute: AdminRecursosHumanosJerarquiaRoute,
   AdminRecursosHumanosMedicosRoute: AdminRecursosHumanosMedicosRoute,
+  AdminRecursosHumanosProfesionesRoute: AdminRecursosHumanosProfesionesRoute,
   AdminRecursosHumanosIndexRoute: AdminRecursosHumanosIndexRoute,
 }
 

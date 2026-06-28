@@ -1,18 +1,13 @@
-import { Col, Flex, Grid, Row, Typography } from 'antd'
+import { Flex, Typography } from 'antd'
 import { SafetyCertificateOutlined, TeamOutlined } from '@ant-design/icons'
 import { Outlet } from '@tanstack/react-router'
 
 import { useRoles } from '../../roles/hooks/roles.hooks'
 import { useUsers } from '../../usuarios/hooks/users.hooks'
-import { SeguridadSidebar } from '../components/SeguridadSidebar'
 
 const { Text } = Typography
-const { useBreakpoint } = Grid
 
 export function SeguridadView() {
-    const screens = useBreakpoint()
-    const isMobile = !screens.md
-
     const { data: usersData, isFetching: isLoadingUsers } = useUsers({
         page: 1,
         pageSize: 1,
@@ -54,22 +49,10 @@ export function SeguridadView() {
                 </Flex>
             </header>
 
-            {isMobile ? <SeguridadSidebar variant="tabs" /> : null}
-
             <div className="erp-object-page__workspace">
-                <Row gutter={[0, 0]} className="erp-object-page__layout">
-                    {!isMobile ? (
-                        <Col xs={24} lg={5} xl={4}>
-                            <SeguridadSidebar />
-                        </Col>
-                    ) : null}
-
-                    <Col xs={24} lg={isMobile ? 24 : 19} xl={isMobile ? 24 : 20}>
-                        <section className="erp-object-page__content">
-                            <Outlet />
-                        </section>
-                    </Col>
-                </Row>
+                <section className="erp-object-page__content">
+                    <Outlet />
+                </section>
             </div>
         </div>
     )

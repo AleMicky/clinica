@@ -3,12 +3,15 @@ import type { FileRouteTypes } from '../../../../routeTree.gen'
 import {
     AppstoreOutlined,
     DashboardOutlined,
+    IdcardOutlined,
     MedicineBoxOutlined,
+    NodeIndexOutlined,
     SafetyCertificateOutlined,
     SettingOutlined,
     ControlOutlined,
     SolutionOutlined,
     TeamOutlined,
+    UserOutlined,
 } from '@ant-design/icons'
 
 import { AppRole, canAccessRoles, type AppRoleName } from '../../../constants/app-roles'
@@ -72,10 +75,17 @@ export const menuGroups: MenuGroup[] = [
         roles: [AppRole.Admin],
         items: [
             {
-                key: '/seguridad',
-                to: '/seguridad',
+                key: '/seguridad/usuarios',
+                to: '/seguridad/usuarios',
+                icon: <UserOutlined />,
+                label: 'Usuarios',
+                roles: [AppRole.Admin],
+            },
+            {
+                key: '/seguridad/roles',
+                to: '/seguridad/roles',
                 icon: <SafetyCertificateOutlined />,
-                label: 'Seguridad',
+                label: 'Roles y permisos',
                 roles: [AppRole.Admin],
             },
         ],
@@ -86,10 +96,45 @@ export const menuGroups: MenuGroup[] = [
         roles: [AppRole.Admin],
         items: [
             {
-                key: '/recursos-humanos',
-                to: '/recursos-humanos',
+                key: '/recursos-humanos/empleados',
+                to: '/recursos-humanos/empleados',
                 icon: <SolutionOutlined />,
-                label: 'Recursos Humanos',
+                label: 'Empleados',
+                roles: [AppRole.Admin],
+            },
+            {
+                key: '/recursos-humanos/medicos',
+                to: '/recursos-humanos/medicos',
+                icon: <MedicineBoxOutlined />,
+                label: 'Médicos',
+                roles: [AppRole.Admin],
+            },
+            {
+                key: '/recursos-humanos/jerarquia',
+                to: '/recursos-humanos/jerarquia',
+                icon: <NodeIndexOutlined />,
+                label: 'Áreas y servicios',
+                roles: [AppRole.Admin],
+            },
+            {
+                key: '/recursos-humanos/especialidades',
+                to: '/recursos-humanos/especialidades',
+                icon: <MedicineBoxOutlined />,
+                label: 'Especialidades',
+                roles: [AppRole.Admin],
+            },
+            {
+                key: '/recursos-humanos/profesiones',
+                to: '/recursos-humanos/profesiones',
+                icon: <UserOutlined />,
+                label: 'Profesiones',
+                roles: [AppRole.Admin],
+            },
+            {
+                key: '/recursos-humanos/cargos',
+                to: '/recursos-humanos/cargos',
+                icon: <IdcardOutlined />,
+                label: 'Cargos',
                 roles: [AppRole.Admin],
             },
         ],
@@ -238,10 +283,6 @@ export type BreadcrumbSegment = {
 }
 
 const nestedRouteLabels: Record<string, { title: string; parentPath: AppRoute }> = {
-    '/seguridad/usuarios': { title: 'Usuarios', parentPath: '/seguridad' },
-    '/seguridad/roles': { title: 'Roles y permisos', parentPath: '/seguridad' },
-    '/recursos-humanos/empleados': { title: 'Empleados', parentPath: '/recursos-humanos' },
-    '/recursos-humanos/medicos': { title: 'Médicos', parentPath: '/recursos-humanos' },
     '/usuarios/perfil': { title: 'Mi perfil', parentPath: '/seguridad/usuarios' },
     '/atenciones/$atencionId': { title: 'Detalle de atención', parentPath: '/atenciones' },
 }

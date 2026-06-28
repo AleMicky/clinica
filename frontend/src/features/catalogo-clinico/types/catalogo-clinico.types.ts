@@ -74,9 +74,4 @@ export type UpdatePrestacionPayload = UpdateCatalogoBasePayload & {
 
 export type CreateCatalogoResult = { id: string }
 
-export type CatalogoClinicoSection =
-    | 'jerarquia'
-    | 'especialidades'
-    | 'profesiones'
-    | 'cargos'
-    | 'tipos-atencion'
+export type CatalogoClinicoSection = 'tipos-atencion'
