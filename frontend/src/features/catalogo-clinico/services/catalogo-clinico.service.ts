@@ -35,17 +35,17 @@ function createSimpleCatalogService<T>(root: string) {
 
 export const areasService = {
     ...createSimpleCatalogService<Area>(catalogoClinicoEndpoints.areas.root),
-    getDepartamentos(areaId: string) {
-        return get<Departamento[]>(
-            catalogoClinicoEndpoints.areas.departamentos(areaId),
-        )
-    },
 }
 
 export const departamentosService = {
-    ...createSimpleCatalogService<Departamento>(
-        catalogoClinicoEndpoints.departamentos.root,
-    ),
+    getPaged(query: PagedQuery) {
+        return getPaged<Departamento>(
+            catalogoClinicoEndpoints.departamentos.root,
+            query,
+        )
+    },
+    getById: (id: string) =>
+        get<Departamento>(catalogoClinicoEndpoints.departamentos.byId(id)),
     create(data: CreateDepartamentoPayload) {
         return post<CreateCatalogoResult, CreateDepartamentoPayload>(
             catalogoClinicoEndpoints.departamentos.root,
@@ -58,11 +58,8 @@ export const departamentosService = {
             data,
         )
     },
-    getServicios(departamentoId: string) {
-        return get<Servicio[]>(
-            catalogoClinicoEndpoints.departamentos.servicios(departamentoId),
-        )
-    },
+    delete: (id: string) =>
+        del<void>(catalogoClinicoEndpoints.departamentos.byId(id)),
 }
 
 export const serviciosService = {

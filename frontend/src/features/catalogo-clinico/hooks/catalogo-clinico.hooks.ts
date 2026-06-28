@@ -36,11 +36,17 @@ export function useAreas(query: PagedQuery) {
     })
 }
 
+const HIERARCHY_LOOKUP_QUERY = { page: 1, pageSize: 100 } as const
+
 export function useAreaDepartamentos(areaId: string | null) {
+    const query = { ...HIERARCHY_LOOKUP_QUERY, areaId: areaId ?? undefined }
+
     return useAppQuery({
-        queryKey: queryKeys.catalogoClinico.areas.departamentos(areaId ?? ''),
-        queryFn: () => areasService.getDepartamentos(areaId!),
+        queryKey: queryKeys.catalogoClinico.departamentos.list(query),
+        queryFn: () =>
+            departamentosService.getPaged({ ...HIERARCHY_LOOKUP_QUERY, areaId: areaId! }),
         enabled: areaId !== null,
+        select: (data) => data.items,
     })
 }
 
@@ -102,12 +108,20 @@ export function useDepartamentos(query: PagedQuery) {
 }
 
 export function useDepartamentoServicios(departamentoId: string | null) {
+    const query = {
+        ...HIERARCHY_LOOKUP_QUERY,
+        departamentoId: departamentoId ?? undefined,
+    }
+
     return useAppQuery({
-        queryKey: queryKeys.catalogoClinico.departamentos.servicios(
-            departamentoId ?? '',
-        ),
-        queryFn: () => departamentosService.getServicios(departamentoId!),
+        queryKey: queryKeys.catalogoClinico.servicios.list(query),
+        queryFn: () =>
+            serviciosService.getPaged({
+                ...HIERARCHY_LOOKUP_QUERY,
+                departamentoId: departamentoId!,
+            }),
         enabled: departamentoId !== null,
+        select: (data) => data.items,
     })
 }
 

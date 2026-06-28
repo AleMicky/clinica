@@ -1,9 +1,9 @@
-import { CatalogoJerarquiaPanel } from '../../catalogo-clinico/components/CatalogoJerarquiaPanel'
+import { JerarquiaPanel } from '../components/JerarquiaPanel'
 
 export function JerarquiaView() {
     return (
         <div className="module-object-page__panel">
-            <CatalogoJerarquiaPanel />
+            <JerarquiaPanel />
         </div>
     )
 }

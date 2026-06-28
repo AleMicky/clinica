@@ -1765,6 +1765,96 @@ body {
     }
 }
 
+/* Jerarquía RRHH — maestro / detalle */
+
+.jerarquia-rrhh__master {
+    min-height: clamp(420px, 62vh, 640px);
+}
+
+.jerarquia-rrhh__detail-hero {
+    padding: 18px 20px;
+}
+
+.jerarquia-rrhh__detail-body {
+    padding-top: 16px;
+}
+
+.jerarquia-rrhh__subpanel {
+    display: flex;
+    flex-direction: column;
+    min-height: clamp(280px, 42vh, 420px);
+    border-radius: 12px;
+    border: 1px solid rgba(15, 23, 42, 0.07);
+    background: #fff;
+    overflow: hidden;
+}
+
+.jerarquia-rrhh__subpanel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.jerarquia-rrhh__subpanel-caption {
+    display: block;
+    font-size: 12px;
+}
+
+.jerarquia-rrhh__subpanel-search {
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.05);
+}
+
+.jerarquia-rrhh__subpanel-placeholder {
+    flex: 1;
+    display: grid;
+    place-items: center;
+    padding: 24px 16px;
+}
+
+.jerarquia-rrhh__mobile-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: rgba(15, 23, 42, 0.03);
+    border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.jerarquia-rrhh__crumb {
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--ant-color-primary);
+    font: inherit;
+    cursor: pointer;
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+    vertical-align: bottom;
+}
+
+.jerarquia-rrhh__crumb:hover {
+    text-decoration: underline;
+}
+
+[data-theme='dark'] .jerarquia-rrhh__subpanel {
+    background: #1a1f2e;
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .jerarquia-rrhh__mobile-nav {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
 /* Lista de grupos (panel maestro) */
 .catalogos-grupos-list {
     display: flex;
