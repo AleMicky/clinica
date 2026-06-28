@@ -1,13 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
     Button,
-    Empty,
     Flex,
     Input,
+    Skeleton,
     Typography,
     theme,
 } from 'antd'
 import {
+    AppstoreOutlined,
+    FolderOpenOutlined,
     PlusOutlined,
     SearchOutlined,
     UnorderedListOutlined,
@@ -38,7 +40,44 @@ import type { CatalogoGrupo, CatalogoItem } from '../types/catalogo.types'
 
 const { Text } = Typography
 
-const DEFAULT_PAGE_SIZE = 20
+const DEFAULT_PAGE_SIZE = 12
+
+type CatalogosPanelEmptyProps = {
+    icon: React.ReactNode
+    title: string
+    description: string
+}
+
+function CatalogosPanelEmpty({ icon, title, description }: CatalogosPanelEmptyProps) {
+    return (
+        <div className="catalogos-view__panel-empty">
+            <div className="catalogos-view__panel-empty-ring" aria-hidden>
+                <span className="catalogos-view__panel-empty-icon">{icon}</span>
+            </div>
+            <Text strong className="catalogos-view__panel-empty-title">
+                {title}
+            </Text>
+            <Text type="secondary" className="catalogos-view__panel-empty-desc">
+                {description}
+            </Text>
+        </div>
+    )
+}
+
+function CatalogosItemsSkeleton() {
+    return (
+        <div className="catalogos-view__items-skeleton" aria-busy aria-label="Cargando registros">
+            {Array.from({ length: 6 }).map((_, index) => (
+                <div key={index} className="catalogos-view__items-skeleton-row">
+                    <Skeleton.Input active size="small" style={{ width: 88 }} />
+                    <Skeleton.Input active size="small" style={{ flex: 1 }} />
+                    <Skeleton.Input active size="small" style={{ width: 72 }} />
+                    <Skeleton.Input active size="small" style={{ width: 48 }} />
+                </div>
+            ))}
+        </div>
+    )
+}
 
 export function CatalogosView() {
     const { token } = theme.useToken()
@@ -47,6 +86,7 @@ export function CatalogosView() {
     const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
     const [search, setSearch] = useState('')
     const [searchInput, setSearchInput] = useState('')
+    const [itemSearchInput, setItemSearchInput] = useState('')
     const [selectedGrupo, setSelectedGrupo] = useState<CatalogoGrupo | null>(null)
 
     const [grupoModalOpen, setGrupoModalOpen] = useState(false)
@@ -79,6 +119,23 @@ export function CatalogosView() {
     const grupos = data?.items ?? []
     const totalGrupos = data?.totalRecords ?? 0
 
+    const filteredItems = useMemo(() => {
+        const term = itemSearchInput.trim().toLowerCase()
+        if (!term) return items
+
+        return items.filter((item) => {
+            const codigo = item.codigo.toLowerCase()
+            const nombre = item.nombre.toLowerCase()
+            const valor = item.valor?.toLowerCase() ?? ''
+
+            return codigo.includes(term) || nombre.includes(term) || valor.includes(term)
+        })
+    }, [items, itemSearchInput])
+
+    const itemSearchActive = itemSearchInput.trim().length > 0
+    const showNoItemSearchResults =
+        itemSearchActive && filteredItems.length === 0 && items.length > 0
+
     useEffect(() => {
         if (!selectedGrupo || !grupos.length) return
 
@@ -102,6 +159,10 @@ export function CatalogosView() {
         if (selectedGrupo || isLoadingGrupos || grupos.length === 0) return
         setSelectedGrupo(grupos[0])
     }, [grupos, isLoadingGrupos, selectedGrupo])
+
+    useEffect(() => {
+        setItemSearchInput('')
+    }, [selectedGrupo?.id])
 
     const openCreateGrupoModal = () => {
         setEditingGrupo(null)
@@ -192,16 +253,25 @@ export function CatalogosView() {
         setPageSize(nextPageSize)
     }
 
+    const recordCountLabel = `${items.length} registro${items.length === 1 ? '' : 's'}`
+
     return (
-        <div className="module-object-page__panel catalogos-view catalogos-view--compact">
+        <div className="module-object-page__panel catalogos-view catalogos-view--compact catalogos-view--erp">
             <div className="catalogos-view__split">
                 <aside className="catalogos-view__sidebar">
                     <div className="catalogos-view__sidebar-head">
                         <Flex align="center" gap={8} className="catalogos-view__sidebar-title">
-                            <Text strong>Grupos</Text>
-                            <Text type="secondary" className="catalogos-view__sidebar-count">
-                                {totalGrupos}
-                            </Text>
+                            <span className="catalogos-view__sidebar-icon" aria-hidden>
+                                <AppstoreOutlined />
+                            </span>
+                            <div className="catalogos-view__sidebar-title-text">
+                                <Text strong className="catalogos-view__sidebar-label">
+                                    Catálogos
+                                </Text>
+                                <Text type="secondary" className="catalogos-view__sidebar-count">
+                                    {totalGrupos}
+                                </Text>
+                            </div>
                         </Flex>
                         <Button
                             type="primary"
@@ -217,8 +287,9 @@ export function CatalogosView() {
                         <Input
                             allowClear
                             size="small"
+                            className="catalogos-view__search-input"
                             prefix={<SearchOutlined style={{ color: token.colorTextQuaternary }} />}
-                            placeholder="Buscar…"
+                            placeholder="Buscar catálogo…"
                             value={searchInput}
                             onChange={(event) => setSearchInput(event.target.value)}
                             onPressEnter={() => handleSearch(searchInput)}
@@ -229,19 +300,33 @@ export function CatalogosView() {
                         />
                     </div>
 
-                    <CatalogoGruposList
-                        grupos={grupos}
-                        loading={isLoadingGrupos}
-                        total={totalGrupos}
-                        page={page}
-                        pageSize={pageSize}
-                        selectedGrupoId={selectedGrupo?.id ?? null}
-                        onPageChange={handlePageChange}
-                        onSelect={setSelectedGrupo}
-                        onEdit={openEditGrupoModal}
-                        onDelete={handleDeleteGrupo}
-                        deletingId={deletingGrupoId}
-                    />
+                    <div className="catalogos-view__sidebar-body">
+                        {!isLoadingGrupos && grupos.length === 0 ? (
+                            <CatalogosPanelEmpty
+                                icon={<FolderOpenOutlined />}
+                                title="Sin catálogos"
+                                description={
+                                    search
+                                        ? 'No se encontraron catálogos con ese criterio.'
+                                        : 'Cree un catálogo con el botón Nuevo para comenzar.'
+                                }
+                            />
+                        ) : (
+                            <CatalogoGruposList
+                                grupos={grupos}
+                                loading={isLoadingGrupos}
+                                total={totalGrupos}
+                                page={page}
+                                pageSize={pageSize}
+                                selectedGrupoId={selectedGrupo?.id ?? null}
+                                onPageChange={handlePageChange}
+                                onSelect={setSelectedGrupo}
+                                onEdit={openEditGrupoModal}
+                                onDelete={handleDeleteGrupo}
+                                deletingId={deletingGrupoId}
+                            />
+                        )}
+                    </div>
                 </aside>
 
                 <main
@@ -254,66 +339,97 @@ export function CatalogosView() {
                 >
                     {selectedGrupo ? (
                         <>
-                            <div className="catalogos-view__main-head">
+                            <div className="catalogos-view__catalog-card">
+                                <div className="catalogos-view__catalog-card-main">
+                                    <span className="catalogos-view__catalog-badge">
+                                        {selectedGrupo.codigo}
+                                    </span>
+                                    <div className="catalogos-view__catalog-info">
+                                        <Text strong className="catalogos-view__catalog-name">
+                                            {selectedGrupo.nombre}
+                                        </Text>
+                                        {selectedGrupo.descripcion ? (
+                                            <Text
+                                                type="secondary"
+                                                className="catalogos-view__catalog-desc"
+                                            >
+                                                {selectedGrupo.descripcion}
+                                            </Text>
+                                        ) : null}
+                                    </div>
+                                </div>
+
                                 <Flex
                                     align="center"
                                     gap={10}
-                                    className="catalogos-view__main-head-info"
+                                    wrap="wrap"
+                                    className="catalogos-view__catalog-actions"
                                 >
-                                    <code className="catalogos-view__main-code">
-                                        {selectedGrupo.codigo}
-                                    </code>
-                                    <Text strong ellipsis className="catalogos-view__main-name">
-                                        {selectedGrupo.nombre}
-                                    </Text>
-                                    {selectedGrupo.descripcion ? (
-                                        <Text
-                                            type="secondary"
-                                            ellipsis
-                                            className="catalogos-view__main-description"
-                                        >
-                                            {selectedGrupo.descripcion}
-                                        </Text>
-                                    ) : null}
-                                </Flex>
-
-                                <Flex align="center" gap={10} className="catalogos-view__main-actions">
-                                    <Text type="secondary" className="catalogos-view__main-count">
-                                        {items.length} ítem{items.length === 1 ? '' : 's'}
-                                    </Text>
+                                    <span className="catalogos-view__catalog-count">
+                                        {recordCountLabel}
+                                    </span>
                                     <Button
                                         type="primary"
                                         size="small"
                                         icon={<PlusOutlined />}
                                         onClick={openCreateItemModal}
                                     >
-                                        Nuevo ítem
+                                        Nuevo registro
                                     </Button>
                                 </Flex>
                             </div>
 
-                            <div className="catalogos-view__main-body">
-                                <CatalogoItemsTable
-                                    items={items}
-                                    loading={isLoadingItems}
-                                    onEdit={openEditItemModal}
-                                    onDelete={handleDeleteItem}
-                                    deletingId={deletingItemId}
+                            <div className="catalogos-view__items-toolbar">
+                                <Input
+                                    allowClear
+                                    size="small"
+                                    className="catalogos-view__search-input"
+                                    prefix={
+                                        <SearchOutlined
+                                            style={{ color: token.colorTextQuaternary }}
+                                        />
+                                    }
+                                    placeholder="Buscar en registros…"
+                                    value={itemSearchInput}
+                                    onChange={(event) => setItemSearchInput(event.target.value)}
+                                    onClear={() => setItemSearchInput('')}
                                 />
+                            </div>
+
+                            <div className="catalogos-view__main-body">
+                                {isLoadingItems && items.length === 0 ? (
+                                    <CatalogosItemsSkeleton />
+                                ) : showNoItemSearchResults ? (
+                                    <CatalogosPanelEmpty
+                                        icon={<SearchOutlined />}
+                                        title="Sin resultados"
+                                        description="No hay registros que coincidan con la búsqueda."
+                                    />
+                                ) : !isLoadingItems && items.length === 0 ? (
+                                    <CatalogosPanelEmpty
+                                        icon={<UnorderedListOutlined />}
+                                        title="Sin registros"
+                                        description="Agregue el primer registro con el botón Nuevo registro."
+                                    />
+                                ) : (
+                                    <div className="catalogos-view__table">
+                                        <CatalogoItemsTable
+                                            items={filteredItems}
+                                            loading={isLoadingItems}
+                                            onEdit={openEditItemModal}
+                                            onDelete={handleDeleteItem}
+                                            deletingId={deletingItemId}
+                                        />
+                                    </div>
+                                )}
                             </div>
                         </>
                     ) : (
                         <div className="catalogos-view__main-empty">
-                            <Empty
-                                image={<UnorderedListOutlined className="catalogos-view__main-empty-icon" />}
-                                description={
-                                    <Flex vertical gap={4} align="center">
-                                        <Text strong>Seleccione un catálogo</Text>
-                                        <Text type="secondary" style={{ fontSize: 13 }}>
-                                            Elija un grupo del panel izquierdo para ver sus ítems.
-                                        </Text>
-                                    </Flex>
-                                }
+                            <CatalogosPanelEmpty
+                                icon={<FolderOpenOutlined />}
+                                title="Seleccione un catálogo"
+                                description="Elija un grupo del panel izquierdo para ver y administrar sus registros."
                             />
                         </div>
                     )}
