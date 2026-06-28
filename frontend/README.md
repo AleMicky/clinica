@@ -1,11 +1,37 @@
-# Frontend React (opcional)
+# Frontend React
 
-Este directorio está reservado para el frontend React desacoplado del backend.
+Aplicación React desacoplada del backend Clinica.
 
-## Inicio rápido sugerido
+## Requisitos
+
+- Node.js 20+
+- pnpm
+- Backend API en ejecución (`http://localhost:5207`)
+
+## Configuración
+
+Copie las variables de entorno:
 
 ```bash
-npm create vite@latest . -- --template react-ts
+cp .env.example .env.development
 ```
 
-Configurar la URL base de la API en variables de entorno (por ejemplo `VITE_API_URL=http://localhost:5000`).
+Credenciales de prueba (seed del backend):
+
+- Usuario: `admin`
+- Contraseña: `Admin@2026!`
+
+## Desarrollo
+
+```bash
+pnpm install
+pnpm dev
+```
+
+La app estará en `http://localhost:5173`. Las peticiones a `/api` se proxyan al backend en desarrollo.
+
+## Build
+
+```bash
+pnpm build
+```
