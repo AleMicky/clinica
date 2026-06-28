@@ -19,15 +19,6 @@ export function usePacientes(query: PagedQuery) {
     })
 }
 
-export function usePersonasLookup() {
-    return useAppQuery({
-        queryKey: ['personas', 'lookup'] as const,
-        queryFn: () =>
-            pacientesService.getPersonasLookup({ page: 1, pageSize: 100 }),
-        staleTime: 5 * 60 * 1000,
-    })
-}
-
 export function useCreatePaciente() {
     const queryClient = useQueryClient()
 

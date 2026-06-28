@@ -2,8 +2,8 @@ import { useEffect } from 'react'
 import { useForm } from '@tanstack/react-form'
 import { Form, Input, Modal, Select } from 'antd'
 
-import { useCatalogoGruposGrouped } from '../../catalogos/hooks/catalogo-grupos.hooks'
-import { usePersonasLookup } from '../hooks/pacientes.hooks'
+import { useCatalogoGruposGrouped } from '../../parametros/catalogos/hooks/catalogo-grupos.hooks'
+import { usePersonasLookup } from '../../personas/hooks/personas.hooks'
 import {
     pacienteDefaultValues,
     pacienteSchema,

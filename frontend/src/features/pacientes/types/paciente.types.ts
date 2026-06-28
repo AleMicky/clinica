@@ -12,13 +12,6 @@ export type Paciente = {
     fechaRegistro: string
 }
 
-export type PersonaLookup = {
-    id: EntityId
-    nombreCompleto: string
-    numeroDocumento: string
-    tipoDocumentoNombre: string
-}
-
 export type CreatePacientePayload = {
     personaId: EntityId
     numeroHistoriaClinica: string

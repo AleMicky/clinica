@@ -1,10 +1,7 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { CatalogosView } from '../../../features/catalogos/views/CatalogosView'
-import { requireAdmin } from '../../../shared/utils/auth-guards'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_admin/catalogos/')({
     beforeLoad: () => {
-        requireAdmin()
+        throw redirect({ to: '/parametros' })
     },
-    component: CatalogosView,
 })

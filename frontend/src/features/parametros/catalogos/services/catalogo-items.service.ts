@@ -1,5 +1,5 @@
-import { del, post, put } from '../../../shared/api/http'
-import { catalogoItemEndpoints } from '../../../shared/api/endpoints'
+import { del, post, put } from '../../../../shared/api/http'
+import { catalogoItemEndpoints } from '../../../../shared/api/endpoints'
 import type {
     CatalogoItem,
     CreateCatalogoItemPayload,

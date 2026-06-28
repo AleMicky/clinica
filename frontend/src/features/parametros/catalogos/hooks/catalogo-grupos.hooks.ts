@@ -1,11 +1,11 @@
 import { useQueryClient } from '@tanstack/react-query'
 
-import { useAppMutation } from '../../../shared/hooks/use-app-mutation'
-import { useAppQuery } from '../../../shared/hooks/use-app-query'
-import { queryKeys } from '../../../shared/constants/query-keys'
-import { notify } from '../../../shared/utils/notify'
-import { getApiErrorMessage } from '../../../shared/utils/api-error'
-import type { PagedQuery } from '../../../shared/types/pagination.types'
+import { useAppMutation } from '../../../../shared/hooks/use-app-mutation'
+import { useAppQuery } from '../../../../shared/hooks/use-app-query'
+import { queryKeys } from '../../../../shared/constants/query-keys'
+import { notify } from '../../../../shared/utils/notify'
+import { getApiErrorMessage } from '../../../../shared/utils/api-error'
+import type { PagedQuery } from '../../../../shared/types/pagination.types'
 import { catalogoGruposService } from '../services/catalogo-grupos.service'
 import type {
     CreateCatalogoGrupoPayload,

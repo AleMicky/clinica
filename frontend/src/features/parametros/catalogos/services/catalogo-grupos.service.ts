@@ -1,6 +1,6 @@
-import { del, get, getPaged, post, put } from '../../../shared/api/http'
-import { catalogoGrupoEndpoints, catalogoItemEndpoints } from '../../../shared/api/endpoints'
-import type { PagedQuery } from '../../../shared/types/pagination.types'
+import { del, get, getPaged, post, put } from '../../../../shared/api/http'
+import { catalogoGrupoEndpoints, catalogoItemEndpoints } from '../../../../shared/api/endpoints'
+import type { PagedQuery } from '../../../../shared/types/pagination.types'
 import type {
     CatalogoGrupo,
     CatalogoGrupoConItems,

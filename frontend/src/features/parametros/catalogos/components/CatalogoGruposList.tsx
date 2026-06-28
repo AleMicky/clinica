@@ -9,12 +9,7 @@ import {
     Tooltip,
     Typography,
 } from 'antd'
-import {
-    BookOutlined,
-    DeleteOutlined,
-    EditOutlined,
-    RightOutlined,
-} from '@ant-design/icons'
+import { DeleteOutlined, EditOutlined } from '@ant-design/icons'
 
 import type { CatalogoGrupo } from '../types/catalogo.types'
 
@@ -58,23 +53,19 @@ export function CatalogoGruposList({
             <div className="catalogos-grupos-list__empty">
                 <Empty
                     image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    description="No hay grupos de catálogo registrados."
+                    description="No hay grupos registrados."
                 />
             </div>
         )
     }
 
     return (
-        <div className="catalogos-grupos-list">
+        <div className="catalogos-grupos-list catalogos-grupos-list--compact">
             <div className="catalogos-grupos-list__items" role="listbox" aria-label="Grupos de catálogo">
                 {loading
-                    ? Array.from({ length: 5 }).map((_, index) => (
+                    ? Array.from({ length: 6 }).map((_, index) => (
                           <div key={index} className="catalogos-grupos-list__skeleton">
-                              <Skeleton.Avatar active size={40} shape="square" />
-                              <div className="catalogos-grupos-list__skeleton-body">
-                                  <Skeleton.Input active size="small" style={{ width: '45%' }} />
-                                  <Skeleton.Input active size="small" style={{ width: '70%' }} />
-                              </div>
+                              <Skeleton.Input active size="small" style={{ width: '100%' }} />
                           </div>
                       ))
                     : grupos.map((grupo) => {
@@ -100,34 +91,28 @@ export function CatalogoGruposList({
                                       }
                                   }}
                               >
-                                  <div className="catalogos-grupos-list__item-icon" aria-hidden>
-                                      <BookOutlined />
-                                  </div>
-
-                                  <div className="catalogos-grupos-list__item-content">
-                                      <Flex align="center" gap={8} wrap="wrap">
-                                          <Text strong className="catalogos-grupos-list__item-name">
+                                  <Tooltip
+                                      title={grupo.descripcion || undefined}
+                                      placement="right"
+                                      mouseEnterDelay={0.4}
+                                  >
+                                      <div className="catalogos-grupos-list__item-content">
+                                          <Text
+                                              strong={isSelected}
+                                              className="catalogos-grupos-list__item-name"
+                                              ellipsis
+                                          >
                                               {grupo.nombre}
                                           </Text>
                                           <code className="catalogos-grupos-list__item-code">
                                               {grupo.codigo}
                                           </code>
-                                      </Flex>
-
-                                      {grupo.descripcion ? (
-                                          <Text
-                                              type="secondary"
-                                              className="catalogos-grupos-list__item-description"
-                                              ellipsis
-                                          >
-                                              {grupo.descripcion}
-                                          </Text>
-                                      ) : null}
-                                  </div>
+                                      </div>
+                                  </Tooltip>
 
                                   <Flex
                                       align="center"
-                                      gap={4}
+                                      gap={2}
                                       className="catalogos-grupos-list__item-actions"
                                       onClick={stopPropagation}
                                       onKeyDown={stopPropagation}
@@ -164,11 +149,6 @@ export function CatalogoGruposList({
                                           </Tooltip>
                                       </Popconfirm>
                                   </Flex>
-
-                                  <RightOutlined
-                                      className="catalogos-grupos-list__item-chevron"
-                                      aria-hidden
-                                  />
                               </div>
                           )
                       })}
@@ -177,7 +157,7 @@ export function CatalogoGruposList({
             {total > pageSize && (
                 <Flex justify="center" className="catalogos-grupos-list__pagination">
                     <Pagination
-                        simple={total > pageSize * 3}
+                        simple
                         size="small"
                         current={page}
                         pageSize={pageSize}

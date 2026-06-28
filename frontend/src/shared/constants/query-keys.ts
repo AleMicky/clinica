@@ -27,6 +27,13 @@ export const queryKeys = {
     catalogoItems: {
         all: ['catalogo-items'] as const,
     },
+    personas: {
+        all: ['personas'] as const,
+        lookup: ['personas', 'lookup'] as const,
+        list: (query: PagedQuery & Record<string, unknown>) =>
+            ['personas', 'list', query] as const,
+        detail: (id: EntityId) => ['personas', 'detail', id] as const,
+    },
     pacientes: {
         all: ['pacientes'] as const,
         list: (query: PagedQuery) => ['pacientes', 'list', query] as const,

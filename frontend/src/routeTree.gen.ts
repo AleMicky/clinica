@@ -15,10 +15,13 @@ import { Route as AdminIndexRouteImport } from './routes/_admin/index'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as AdminSeguridadRouteImport } from './routes/_admin/seguridad'
 import { Route as AdminRecursosHumanosRouteImport } from './routes/_admin/recursos-humanos'
+import { Route as AdminParametrosRouteImport } from './routes/_admin/parametros'
 import { Route as AdminUsuariosIndexRouteImport } from './routes/_admin/usuarios/index'
 import { Route as AdminSeguridadIndexRouteImport } from './routes/_admin/seguridad/index'
 import { Route as AdminRolesIndexRouteImport } from './routes/_admin/roles/index'
 import { Route as AdminRecursosHumanosIndexRouteImport } from './routes/_admin/recursos-humanos/index'
+import { Route as AdminPersonasIndexRouteImport } from './routes/_admin/personas/index'
+import { Route as AdminParametrosIndexRouteImport } from './routes/_admin/parametros/index'
 import { Route as AdminPacientesIndexRouteImport } from './routes/_admin/pacientes/index'
 import { Route as AdminCatalogosIndexRouteImport } from './routes/_admin/catalogos/index'
 import { Route as AdminAtencionesIndexRouteImport } from './routes/_admin/atenciones/index'
@@ -61,6 +64,11 @@ const AdminRecursosHumanosRoute = AdminRecursosHumanosRouteImport.update({
   path: '/recursos-humanos',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminParametrosRoute = AdminParametrosRouteImport.update({
+  id: '/parametros',
+  path: '/parametros',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminUsuariosIndexRoute = AdminUsuariosIndexRouteImport.update({
   id: '/usuarios/',
   path: '/usuarios/',
@@ -82,6 +90,16 @@ const AdminRecursosHumanosIndexRoute =
     path: '/',
     getParentRoute: () => AdminRecursosHumanosRoute,
   } as any)
+const AdminPersonasIndexRoute = AdminPersonasIndexRouteImport.update({
+  id: '/personas/',
+  path: '/personas/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminParametrosIndexRoute = AdminParametrosIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminParametrosRoute,
+} as any)
 const AdminPacientesIndexRoute = AdminPacientesIndexRouteImport.update({
   id: '/pacientes/',
   path: '/pacientes/',
@@ -157,6 +175,7 @@ const AdminAtencionesAtencionIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof AdminIndexRoute
+  '/parametros': typeof AdminParametrosRouteWithChildren
   '/recursos-humanos': typeof AdminRecursosHumanosRouteWithChildren
   '/seguridad': typeof AdminSeguridadRouteWithChildren
   '/login': typeof AuthLoginRoute
@@ -173,6 +192,8 @@ export interface FileRoutesByFullPath {
   '/atenciones/': typeof AdminAtencionesIndexRoute
   '/catalogos/': typeof AdminCatalogosIndexRoute
   '/pacientes/': typeof AdminPacientesIndexRoute
+  '/parametros/': typeof AdminParametrosIndexRoute
+  '/personas/': typeof AdminPersonasIndexRoute
   '/recursos-humanos/': typeof AdminRecursosHumanosIndexRoute
   '/roles/': typeof AdminRolesIndexRoute
   '/seguridad/': typeof AdminSeguridadIndexRoute
@@ -194,6 +215,8 @@ export interface FileRoutesByTo {
   '/atenciones': typeof AdminAtencionesIndexRoute
   '/catalogos': typeof AdminCatalogosIndexRoute
   '/pacientes': typeof AdminPacientesIndexRoute
+  '/parametros': typeof AdminParametrosIndexRoute
+  '/personas': typeof AdminPersonasIndexRoute
   '/recursos-humanos': typeof AdminRecursosHumanosIndexRoute
   '/roles': typeof AdminRolesIndexRoute
   '/seguridad': typeof AdminSeguridadIndexRoute
@@ -203,6 +226,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_admin': typeof AdminRouteWithChildren
   '/_auth': typeof AuthRouteWithChildren
+  '/_admin/parametros': typeof AdminParametrosRouteWithChildren
   '/_admin/recursos-humanos': typeof AdminRecursosHumanosRouteWithChildren
   '/_admin/seguridad': typeof AdminSeguridadRouteWithChildren
   '/_auth/login': typeof AuthLoginRoute
@@ -220,6 +244,8 @@ export interface FileRoutesById {
   '/_admin/atenciones/': typeof AdminAtencionesIndexRoute
   '/_admin/catalogos/': typeof AdminCatalogosIndexRoute
   '/_admin/pacientes/': typeof AdminPacientesIndexRoute
+  '/_admin/parametros/': typeof AdminParametrosIndexRoute
+  '/_admin/personas/': typeof AdminPersonasIndexRoute
   '/_admin/recursos-humanos/': typeof AdminRecursosHumanosIndexRoute
   '/_admin/roles/': typeof AdminRolesIndexRoute
   '/_admin/seguridad/': typeof AdminSeguridadIndexRoute
@@ -229,6 +255,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/parametros'
     | '/recursos-humanos'
     | '/seguridad'
     | '/login'
@@ -245,6 +272,8 @@ export interface FileRouteTypes {
     | '/atenciones/'
     | '/catalogos/'
     | '/pacientes/'
+    | '/parametros/'
+    | '/personas/'
     | '/recursos-humanos/'
     | '/roles/'
     | '/seguridad/'
@@ -266,6 +295,8 @@ export interface FileRouteTypes {
     | '/atenciones'
     | '/catalogos'
     | '/pacientes'
+    | '/parametros'
+    | '/personas'
     | '/recursos-humanos'
     | '/roles'
     | '/seguridad'
@@ -274,6 +305,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_admin'
     | '/_auth'
+    | '/_admin/parametros'
     | '/_admin/recursos-humanos'
     | '/_admin/seguridad'
     | '/_auth/login'
@@ -291,6 +323,8 @@ export interface FileRouteTypes {
     | '/_admin/atenciones/'
     | '/_admin/catalogos/'
     | '/_admin/pacientes/'
+    | '/_admin/parametros/'
+    | '/_admin/personas/'
     | '/_admin/recursos-humanos/'
     | '/_admin/roles/'
     | '/_admin/seguridad/'
@@ -346,6 +380,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRecursosHumanosRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_admin/parametros': {
+      id: '/_admin/parametros'
+      path: '/parametros'
+      fullPath: '/parametros'
+      preLoaderRoute: typeof AdminParametrosRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/_admin/usuarios/': {
       id: '/_admin/usuarios/'
       path: '/usuarios'
@@ -373,6 +414,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/recursos-humanos/'
       preLoaderRoute: typeof AdminRecursosHumanosIndexRouteImport
       parentRoute: typeof AdminRecursosHumanosRoute
+    }
+    '/_admin/personas/': {
+      id: '/_admin/personas/'
+      path: '/personas'
+      fullPath: '/personas/'
+      preLoaderRoute: typeof AdminPersonasIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/parametros/': {
+      id: '/_admin/parametros/'
+      path: '/'
+      fullPath: '/parametros/'
+      preLoaderRoute: typeof AdminParametrosIndexRouteImport
+      parentRoute: typeof AdminParametrosRoute
     }
     '/_admin/pacientes/': {
       id: '/_admin/pacientes/'
@@ -468,6 +523,18 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AdminParametrosRouteChildren {
+  AdminParametrosIndexRoute: typeof AdminParametrosIndexRoute
+}
+
+const AdminParametrosRouteChildren: AdminParametrosRouteChildren = {
+  AdminParametrosIndexRoute: AdminParametrosIndexRoute,
+}
+
+const AdminParametrosRouteWithChildren = AdminParametrosRoute._addFileChildren(
+  AdminParametrosRouteChildren,
+)
+
 interface AdminRecursosHumanosRouteChildren {
   AdminRecursosHumanosCargosRoute: typeof AdminRecursosHumanosCargosRoute
   AdminRecursosHumanosEmpleadosRoute: typeof AdminRecursosHumanosEmpleadosRoute
@@ -509,6 +576,7 @@ const AdminSeguridadRouteWithChildren = AdminSeguridadRoute._addFileChildren(
 )
 
 interface AdminRouteChildren {
+  AdminParametrosRoute: typeof AdminParametrosRouteWithChildren
   AdminRecursosHumanosRoute: typeof AdminRecursosHumanosRouteWithChildren
   AdminSeguridadRoute: typeof AdminSeguridadRouteWithChildren
   AdminIndexRoute: typeof AdminIndexRoute
@@ -517,11 +585,13 @@ interface AdminRouteChildren {
   AdminAtencionesIndexRoute: typeof AdminAtencionesIndexRoute
   AdminCatalogosIndexRoute: typeof AdminCatalogosIndexRoute
   AdminPacientesIndexRoute: typeof AdminPacientesIndexRoute
+  AdminPersonasIndexRoute: typeof AdminPersonasIndexRoute
   AdminRolesIndexRoute: typeof AdminRolesIndexRoute
   AdminUsuariosIndexRoute: typeof AdminUsuariosIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminParametrosRoute: AdminParametrosRouteWithChildren,
   AdminRecursosHumanosRoute: AdminRecursosHumanosRouteWithChildren,
   AdminSeguridadRoute: AdminSeguridadRouteWithChildren,
   AdminIndexRoute: AdminIndexRoute,
@@ -530,6 +600,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAtencionesIndexRoute: AdminAtencionesIndexRoute,
   AdminCatalogosIndexRoute: AdminCatalogosIndexRoute,
   AdminPacientesIndexRoute: AdminPacientesIndexRoute,
+  AdminPersonasIndexRoute: AdminPersonasIndexRoute,
   AdminRolesIndexRoute: AdminRolesIndexRoute,
   AdminUsuariosIndexRoute: AdminUsuariosIndexRoute,
 }

@@ -1,7 +1,6 @@
 import type { MenuProps } from 'antd'
 import type { FileRouteTypes } from '../../../../routeTree.gen'
 import {
-    AppstoreOutlined,
     DashboardOutlined,
     ExperimentOutlined,
     IdcardOutlined,
@@ -45,6 +44,20 @@ export const menuGroups: MenuGroup[] = [
                 to: '/',
                 icon: <DashboardOutlined />,
                 label: 'Dashboard',
+            },
+        ],
+    },
+    {
+        key: 'personas',
+        label: 'Personas',
+        roles: [AppRole.Admin, AppRole.Medico, AppRole.Recepcion],
+        items: [
+            {
+                key: '/personas',
+                to: '/personas',
+                icon: <IdcardOutlined />,
+                label: 'Personas',
+                roles: [AppRole.Admin, AppRole.Medico, AppRole.Recepcion],
             },
         ],
     },
@@ -140,20 +153,14 @@ export const menuGroups: MenuGroup[] = [
         ],
     },
     {
-        key: 'configuration',
-        label: 'Configuración',
+        key: 'parametros',
+        label: 'Parámetros',
         roles: [AppRole.Admin],
         items: [
             {
                 key: '/parametros',
+                to: '/parametros',
                 icon: <ControlOutlined />,
-                label: 'Parámetros',
-                roles: [AppRole.Admin],
-            },
-            {
-                key: '/catalogos',
-                to: '/catalogos',
-                icon: <AppstoreOutlined />,
                 label: 'Catálogos generales',
                 roles: [AppRole.Admin],
             },

@@ -9,7 +9,7 @@ import {
     useDepartamentoServicios,
     useProfesiones,
 } from '../../catalogo-clinico/hooks/catalogo-clinico.hooks'
-import { usePersonasLookup } from '../../pacientes/hooks/pacientes.hooks'
+import { usePersonasLookup } from '../../personas/hooks/personas.hooks'
 import {
     empleadoDefaultValues,
     empleadoSchema,

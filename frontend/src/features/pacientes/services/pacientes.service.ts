@@ -1,10 +1,9 @@
 import { del, get, getPaged, post, put } from '../../../shared/api/http'
-import { pacienteEndpoints, personaEndpoints } from '../../../shared/api/endpoints'
+import { pacienteEndpoints } from '../../../shared/api/endpoints'
 import type { PagedQuery } from '../../../shared/types/pagination.types'
 import type {
     CreatePacientePayload,
     Paciente,
-    PersonaLookup,
     UpdatePacientePayload,
 } from '../types/paciente.types'
 
@@ -15,10 +14,6 @@ export class PacientesService {
 
     getById(id: string) {
         return get<Paciente>(pacienteEndpoints.byId(id))
-    }
-
-    getPersonasLookup(query: PagedQuery) {
-        return getPaged<PersonaLookup>(personaEndpoints.root, query)
     }
 
     create(data: CreatePacientePayload) {
