@@ -16,6 +16,7 @@ import {
 } from '@ant-design/icons'
 
 import { useRoles } from '../../roles/hooks/roles.hooks'
+import { SeguridadSectionPanel } from '../../seguridad/components/SeguridadSectionPanel'
 import { UserFormModal } from '../components/UserFormModal'
 import { UsersTable } from '../components/UsersTable'
 import {
@@ -130,16 +131,59 @@ export function UsuariosView({ embedded = false }: UsuariosViewProps) {
         setPageSize(nextPageSize)
     }
 
+    if (embedded) {
+        return (
+            <>
+                <SeguridadSectionPanel
+                    title="Cuentas de usuario"
+                    caption={
+                        <>
+                            {totalUsers} registrado{totalUsers === 1 ? '' : 's'}
+                            {search ? ` · filtrando por "${search}"` : ''}
+                        </>
+                    }
+                    searchPlaceholder="Buscar por usuario o nombre…"
+                    searchValue={searchInput}
+                    onSearchChange={setSearchInput}
+                    onSearch={handleSearch}
+                    actionLabel="Nuevo usuario"
+                    onAction={openCreateModal}
+                >
+                    <UsersTable
+                        users={users}
+                        loading={isFetching}
+                        total={totalUsers}
+                        page={page}
+                        pageSize={pageSize}
+                        onPageChange={handlePageChange}
+                        onEdit={openEditModal}
+                        onDelete={handleDelete}
+                        deletingId={deletingId}
+                    />
+                </SeguridadSectionPanel>
+
+                <UserFormModal
+                    open={modalOpen}
+                    user={editingUser}
+                    roleOptions={roleOptions}
+                    loading={isSaving}
+                    onClose={closeModal}
+                    onCreate={handleCreate}
+                    onUpdate={handleUpdate}
+                />
+            </>
+        )
+    }
+
     return (
-        <div className={embedded ? 'seguridad-panel' : 'admin-page'}>
-            {!embedded ? (
-                <header className="admin-page__header">
-                    <Flex
-                        justify="space-between"
-                        align={isStacked ? 'flex-start' : 'center'}
-                        gap={16}
-                        wrap="wrap"
-                    >
+        <div className="admin-page">
+            <header className="admin-page__header">
+                <Flex
+                    justify="space-between"
+                    align={isStacked ? 'flex-start' : 'center'}
+                    gap={16}
+                    wrap="wrap"
+                >
                         <Flex align="center" gap={16}>
                             <div className="admin-page__header-icon" aria-hidden>
                                 <UserOutlined />
@@ -174,10 +218,9 @@ export function UsuariosView({ embedded = false }: UsuariosViewProps) {
                             </div>
                         </Flex>
                     </Flex>
-                </header>
-            ) : null}
+            </header>
 
-            <div className={embedded ? undefined : 'admin-page__workspace'}>
+            <div className="admin-page__workspace">
                 <section className="admin-page__panel">
                     <div className="admin-page__panel-toolbar">
                         <div>

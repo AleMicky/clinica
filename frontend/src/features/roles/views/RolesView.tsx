@@ -1,7 +1,14 @@
 import { useState } from 'react'
-import { Button, Flex, Input, Typography } from 'antd'
-import { PlusOutlined } from '@ant-design/icons'
+import {
+    Button,
+    Flex,
+    Input,
+    Typography,
+    theme,
+} from 'antd'
+import { PlusOutlined, SearchOutlined } from '@ant-design/icons'
 
+import { SeguridadSectionPanel } from '../../seguridad/components/SeguridadSectionPanel'
 import { RoleFormModal } from '../components/RoleFormModal'
 import { RolesTable } from '../components/RolesTable'
 import {
@@ -22,6 +29,8 @@ type RolesViewProps = {
 }
 
 export function RolesView({ embedded = false }: RolesViewProps) {
+    const { token } = theme.useToken()
+
     const [page, setPage] = useState(1)
     const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
     const [search, setSearch] = useState('')
@@ -35,6 +44,8 @@ export function RolesView({ embedded = false }: RolesViewProps) {
     const updateRole = useUpdateRole()
     const deleteRole = useDeleteRole()
 
+    const roles = data?.items ?? []
+    const totalRoles = data?.totalRecords ?? 0
     const isSaving = createRole.isPending || updateRole.isPending
 
     const openCreateModal = () => {
@@ -83,58 +94,89 @@ export function RolesView({ embedded = false }: RolesViewProps) {
         setPageSize(nextPageSize)
     }
 
-    return (
-        <Flex vertical gap={24} className={embedded ? 'seguridad-panel' : undefined}>
-            {!embedded ? (
-                <Flex
-                    justify="space-between"
-                    align="flex-start"
-                    gap={16}
-                    wrap="wrap"
+    if (embedded) {
+        return (
+            <>
+                <SeguridadSectionPanel
+                    title="Roles del sistema"
+                    caption={
+                        <>
+                            {totalRoles} registrado{totalRoles === 1 ? '' : 's'}
+                            {search ? ` · filtrando por "${search}"` : ''}
+                        </>
+                    }
+                    searchPlaceholder="Buscar por nombre de rol…"
+                    searchValue={searchInput}
+                    onSearchChange={setSearchInput}
+                    onSearch={handleSearch}
+                    actionLabel="Nuevo rol"
+                    onAction={openCreateModal}
                 >
-                    <div>
-                        <Title level={3} style={{ marginBottom: 4 }}>
-                            Roles y permisos
-                        </Title>
-                        <Text type="secondary">
-                            Administre los roles del sistema y su asignación a usuarios.
-                        </Text>
-                    </div>
+                    <RolesTable
+                        roles={roles}
+                        loading={isFetching}
+                        total={totalRoles}
+                        page={page}
+                        pageSize={pageSize}
+                        onPageChange={handlePageChange}
+                        onEdit={openEditModal}
+                        onDelete={handleDelete}
+                        deletingId={deletingId}
+                    />
+                </SeguridadSectionPanel>
 
-                    <Button
-                        type="primary"
-                        icon={<PlusOutlined />}
-                        onClick={openCreateModal}
-                    >
-                        Nuevo rol
-                    </Button>
-                </Flex>
-            ) : (
-                <Flex justify="flex-end">
-                    <Button
-                        type="primary"
-                        icon={<PlusOutlined />}
-                        onClick={openCreateModal}
-                    >
-                        Nuevo rol
-                    </Button>
-                </Flex>
-            )}
+                <RoleFormModal
+                    open={modalOpen}
+                    role={editingRole}
+                    loading={isSaving}
+                    onClose={closeModal}
+                    onSubmit={handleSubmit}
+                />
+            </>
+        )
+    }
 
-            <Input.Search
+    return (
+        <Flex vertical gap={24}>
+            <Flex
+                justify="space-between"
+                align="flex-start"
+                gap={16}
+                wrap="wrap"
+            >
+                <div>
+                    <Title level={3} style={{ marginBottom: 4 }}>
+                        Roles y permisos
+                    </Title>
+                    <Text type="secondary">
+                        Administre los roles del sistema y su asignación a usuarios.
+                    </Text>
+                </div>
+
+                <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={openCreateModal}
+                >
+                    Nuevo rol
+                </Button>
+            </Flex>
+
+            <Input
                 allowClear
+                prefix={<SearchOutlined style={{ color: token.colorTextQuaternary }} />}
                 placeholder="Buscar por nombre"
                 value={searchInput}
                 onChange={(event) => setSearchInput(event.target.value)}
-                onSearch={handleSearch}
+                onPressEnter={() => handleSearch(searchInput)}
                 onClear={() => handleSearch('')}
                 style={{ maxWidth: 360 }}
             />
 
             <RolesTable
-                roles={data?.items ?? []}
+                roles={roles}
                 loading={isFetching}
-                total={data?.totalRecords ?? 0}
+                total={totalRoles}
                 page={page}
                 pageSize={pageSize}
                 onPageChange={handlePageChange}

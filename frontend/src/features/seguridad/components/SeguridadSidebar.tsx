@@ -1,6 +1,4 @@
-import { Menu } from 'antd'
-import type { MenuProps } from 'antd'
-import { SafetyCertificateOutlined, UserOutlined } from '@ant-design/icons'
+import { RightOutlined } from '@ant-design/icons'
 import { Link, useRouterState } from '@tanstack/react-router'
 
 import type { SeguridadSection, SeguridadSectionMeta } from '../types/seguridad.types'
@@ -15,33 +13,56 @@ export const seguridadSections: SeguridadSectionMeta[] = [
         key: 'usuarios',
         label: 'Usuarios',
         description: 'Cuentas de acceso y credenciales del sistema.',
-        icon: <UserOutlined />,
+        icon: 'users',
         to: '/seguridad/usuarios',
     },
     {
         key: 'roles',
         label: 'Roles y permisos',
         description: 'Roles del sistema y su asignación a usuarios.',
-        icon: <SafetyCertificateOutlined />,
+        icon: 'roles',
         to: '/seguridad/roles',
     },
 ]
 
-const menuItems: MenuProps['items'] = [
-    {
-        type: 'group',
-        label: 'Gestión de acceso',
-        children: seguridadSections.map((section) => ({
-            key: section.key,
-            icon: section.icon,
-            label: (
-                <Link to={section.to} className="seguridad-sidebar__menu-link">
-                    {section.label}
-                </Link>
-            ),
-        })),
-    },
-]
+function SectionIcon({ type }: { type: SeguridadSectionMeta['icon'] }) {
+    if (type === 'roles') {
+        return (
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path
+                    d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinejoin="round"
+                />
+                <path
+                    d="M12 12l8-4.5M12 12v9M12 12L4 7.5"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinejoin="round"
+                />
+            </svg>
+        )
+    }
+
+    return (
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+            <circle cx="9" cy="8" r="3.5" stroke="currentColor" strokeWidth="1.6" />
+            <path
+                d="M4 19c0-2.8 2.2-5 5-5s5 2.2 5 5"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+            />
+            <path
+                d="M16 8.5h5M18.5 6v5"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+            />
+        </svg>
+    )
+}
 
 export function getActiveSeguridadSection(pathname: string): SeguridadSection {
     if (pathname.includes('/seguridad/roles')) return 'roles'
@@ -50,6 +71,43 @@ export function getActiveSeguridadSection(pathname: string): SeguridadSection {
 
 export function getSectionMeta(section: SeguridadSection): SeguridadSectionMeta {
     return seguridadSections.find((item) => item.key === section) ?? seguridadSections[0]
+}
+
+function NavItem({
+    section,
+    isActive,
+    onNavigate,
+    compact = false,
+}: {
+    section: SeguridadSectionMeta
+    isActive: boolean
+    onNavigate?: () => void
+    compact?: boolean
+}) {
+    return (
+        <Link
+            to={section.to}
+            className={[
+                'seguridad-nav-item',
+                isActive ? 'seguridad-nav-item--active' : '',
+                compact ? 'seguridad-nav-item--compact' : '',
+            ]
+                .filter(Boolean)
+                .join(' ')}
+            aria-current={isActive ? 'page' : undefined}
+            onClick={onNavigate}
+        >
+            <span className="seguridad-nav-item__icon" aria-hidden>
+                <SectionIcon type={section.icon} />
+            </span>
+            <span className="seguridad-nav-item__content">
+                <span className="seguridad-nav-item__label">{section.label}</span>
+            </span>
+            {!compact ? (
+                <RightOutlined className="seguridad-nav-item__chevron" aria-hidden />
+            ) : null}
+        </Link>
+    )
 }
 
 export function SeguridadSidebar({
@@ -62,33 +120,16 @@ export function SeguridadSidebar({
     if (variant === 'tabs') {
         return (
             <nav className="seguridad-tabs" aria-label="Secciones de seguridad">
-                <div className="seguridad-tabs__scroll" role="tablist">
-                    {seguridadSections.map((section) => {
-                        const isActive = activeSection === section.key
-
-                        return (
-                            <Link
-                                key={section.key}
-                                to={section.to}
-                                role="tab"
-                                aria-selected={isActive}
-                                className={[
-                                    'seguridad-tabs__item',
-                                    isActive ? 'seguridad-tabs__item--active' : '',
-                                ]
-                                    .filter(Boolean)
-                                    .join(' ')}
-                                onClick={onNavigate}
-                            >
-                                <span className="seguridad-tabs__icon" aria-hidden>
-                                    {section.icon}
-                                </span>
-                                <span className="seguridad-tabs__label">
-                                    {section.label}
-                                </span>
-                            </Link>
-                        )
-                    })}
+                <div className="seguridad-tabs__scroll">
+                    {seguridadSections.map((section) => (
+                        <NavItem
+                            key={section.key}
+                            section={section}
+                            isActive={activeSection === section.key}
+                            onNavigate={onNavigate}
+                            compact
+                        />
+                    ))}
                 </div>
             </nav>
         )
@@ -96,13 +137,17 @@ export function SeguridadSidebar({
 
     return (
         <nav className="seguridad-sidebar" aria-label="Secciones de seguridad">
-            <Menu
-                mode="inline"
-                selectedKeys={[activeSection]}
-                items={menuItems}
-                className="seguridad-sidebar__menu"
-                onClick={onNavigate}
-            />
+            <p className="seguridad-sidebar__eyebrow">Gestión de acceso</p>
+            <div className="seguridad-sidebar__list">
+                {seguridadSections.map((section) => (
+                    <NavItem
+                        key={section.key}
+                        section={section}
+                        isActive={activeSection === section.key}
+                        onNavigate={onNavigate}
+                    />
+                ))}
+            </div>
         </nav>
     )
 }

@@ -3,7 +3,7 @@ import {
     createColumnHelper,
     type ColumnDef,
 } from '@tanstack/react-table'
-import { Button, Popconfirm, Space, Tag } from 'antd'
+import { Button, Popconfirm, Space, Tag, Typography } from 'antd'
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons'
 
 import { AppDataTable } from '../../../shared/components/ui/data-table/AppDataTable'
@@ -23,6 +23,35 @@ type UsersTableProps = {
 
 const columnHelper = createColumnHelper<User>()
 
+function getInitials(name: string, userName: string) {
+    const source = name.trim() || userName.trim()
+    const parts = source.split(/\s+/).filter(Boolean)
+
+    if (parts.length >= 2) {
+        return `${parts[0][0] ?? ''}${parts[1][0] ?? ''}`.toUpperCase()
+    }
+
+    return source.slice(0, 2).toUpperCase()
+}
+
+function UserIdentityCell({ user }: { user: User }) {
+    return (
+        <div className="seguridad-user-cell">
+            <span className="seguridad-user-cell__avatar" aria-hidden>
+                {getInitials(user.nombreCompleto, user.userName)}
+            </span>
+            <span className="seguridad-user-cell__text">
+                <Typography.Text strong className="seguridad-user-cell__name">
+                    {user.nombreCompleto}
+                </Typography.Text>
+                <Typography.Text type="secondary" className="seguridad-user-cell__username">
+                    @{user.userName}
+                </Typography.Text>
+            </span>
+        </div>
+    )
+}
+
 export function UsersTable({
     users,
     loading,
@@ -36,15 +65,20 @@ export function UsersTable({
 }: UsersTableProps) {
     const columns = useMemo(
         () => [
-            columnHelper.accessor('userName', {
+            columnHelper.display({
+                id: 'identity',
                 header: 'Usuario',
-            }),
-            columnHelper.accessor('nombreCompleto', {
-                header: 'Nombre completo',
+                cell: ({ row }) => <UserIdentityCell user={row.original} />,
             }),
             columnHelper.accessor('roles', {
                 header: 'Rol',
-                cell: ({ getValue }) => getValue()[0] ?? '—',
+                cell: ({ getValue }) => {
+                    const role = getValue()[0]
+
+                    if (!role) return '—'
+
+                    return <Tag className="seguridad-role-tag">{role}</Tag>
+                },
             }),
             columnHelper.accessor('activo', {
                 header: 'Estado',

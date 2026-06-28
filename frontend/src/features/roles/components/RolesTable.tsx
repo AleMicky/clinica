@@ -3,7 +3,7 @@ import {
     createColumnHelper,
     type ColumnDef,
 } from '@tanstack/react-table'
-import { Button, Popconfirm, Space } from 'antd'
+import { Button, Popconfirm, Space, Tag } from 'antd'
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons'
 
 import { AppDataTable } from '../../../shared/components/ui/data-table/AppDataTable'
@@ -38,6 +38,11 @@ export function RolesTable({
         () => [
             columnHelper.accessor('name', {
                 header: 'Nombre',
+                cell: ({ getValue }) => (
+                    <Tag className="seguridad-role-tag seguridad-role-tag--large">
+                        {getValue()}
+                    </Tag>
+                ),
             }),
             columnHelper.display({
                 id: 'actions',
