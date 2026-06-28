@@ -1,4 +1,3 @@
-import { RightOutlined } from '@ant-design/icons'
 import { Link, useRouterState } from '@tanstack/react-router'
 
 import type { SeguridadSection, SeguridadSectionMeta } from '../types/seguridad.types'
@@ -88,24 +87,19 @@ function NavItem({
         <Link
             to={section.to}
             className={[
-                'seguridad-nav-item',
-                isActive ? 'seguridad-nav-item--active' : '',
-                compact ? 'seguridad-nav-item--compact' : '',
+                'erp-side-nav__item',
+                isActive ? 'erp-side-nav__item--active' : '',
+                compact ? 'erp-side-nav__item--compact' : '',
             ]
                 .filter(Boolean)
                 .join(' ')}
             aria-current={isActive ? 'page' : undefined}
             onClick={onNavigate}
         >
-            <span className="seguridad-nav-item__icon" aria-hidden>
+            <span className="erp-side-nav__item-icon" aria-hidden>
                 <SectionIcon type={section.icon} />
             </span>
-            <span className="seguridad-nav-item__content">
-                <span className="seguridad-nav-item__label">{section.label}</span>
-            </span>
-            {!compact ? (
-                <RightOutlined className="seguridad-nav-item__chevron" aria-hidden />
-            ) : null}
+            <span className="erp-side-nav__item-label">{section.label}</span>
         </Link>
     )
 }
@@ -119,8 +113,8 @@ export function SeguridadSidebar({
 
     if (variant === 'tabs') {
         return (
-            <nav className="seguridad-tabs" aria-label="Secciones de seguridad">
-                <div className="seguridad-tabs__scroll">
+            <nav className="erp-side-nav erp-side-nav--tabs" aria-label="Secciones de seguridad">
+                <div className="erp-side-nav__tabs-scroll">
                     {seguridadSections.map((section) => (
                         <NavItem
                             key={section.key}
@@ -136,9 +130,9 @@ export function SeguridadSidebar({
     }
 
     return (
-        <nav className="seguridad-sidebar" aria-label="Secciones de seguridad">
-            <p className="seguridad-sidebar__eyebrow">Gestión de acceso</p>
-            <div className="seguridad-sidebar__list">
+        <nav className="erp-side-nav" aria-label="Secciones de seguridad">
+            <p className="erp-side-nav__eyebrow">Gestión de acceso</p>
+            <div className="erp-side-nav__list">
                 {seguridadSections.map((section) => (
                     <NavItem
                         key={section.key}

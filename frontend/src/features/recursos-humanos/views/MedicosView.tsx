@@ -120,7 +120,7 @@ export function MedicosView() {
                 actionLabel="Nuevo médico"
                 onAction={openCreateModal}
             >
-                <div className="rrhh-page__filters rrhh-page__filters--embedded">
+                <div className="erp-list-report__filter-bar">
                     <Select
                         allowClear
                         size="small"

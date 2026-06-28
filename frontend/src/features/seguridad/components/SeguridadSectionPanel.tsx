@@ -29,34 +29,18 @@ export function SeguridadSectionPanel({
     const { token } = theme.useToken()
 
     return (
-        <div className="seguridad-section-panel">
-            <div className="seguridad-section-panel__head">
-                <div className="seguridad-section-panel__head-text">
-                    <Text strong className="seguridad-section-panel__title">
-                        {title}
-                    </Text>
-                    <Text type="secondary" className="seguridad-section-panel__caption">
-                        {caption}
-                    </Text>
-                </div>
+        <div className="erp-list-report">
+            <div className="erp-list-report__object-header">
+                <Text strong className="erp-list-report__title">
+                    {title}
+                </Text>
+                <Text type="secondary" className="erp-list-report__caption">
+                    {caption}
+                </Text>
+            </div>
 
-                <Flex gap={8} align="center" className="seguridad-section-panel__actions">
-                    <Input
-                        allowClear
-                        size="small"
-                        prefix={
-                            <SearchOutlined style={{ color: token.colorTextQuaternary }} />
-                        }
-                        placeholder={searchPlaceholder}
-                        value={searchValue}
-                        onChange={(event) => onSearchChange(event.target.value)}
-                        onPressEnter={() => onSearch(searchValue)}
-                        onClear={() => {
-                            onSearchChange('')
-                            onSearch('')
-                        }}
-                        className="seguridad-section-panel__search"
-                    />
+            <div className="erp-list-report__toolbar">
+                <Flex gap={8} align="center" className="erp-list-report__toolbar-actions">
                     <Button
                         type="primary"
                         size="small"
@@ -66,9 +50,24 @@ export function SeguridadSectionPanel({
                         {actionLabel}
                     </Button>
                 </Flex>
+
+                <Input
+                    allowClear
+                    size="small"
+                    prefix={<SearchOutlined style={{ color: token.colorTextQuaternary }} />}
+                    placeholder={searchPlaceholder}
+                    value={searchValue}
+                    onChange={(event) => onSearchChange(event.target.value)}
+                    onPressEnter={() => onSearch(searchValue)}
+                    onClear={() => {
+                        onSearchChange('')
+                        onSearch('')
+                    }}
+                    className="erp-list-report__search"
+                />
             </div>
 
-            <div className="seguridad-section-panel__body">{children}</div>
+            <div className="erp-list-report__content">{children}</div>
         </div>
     )
 }

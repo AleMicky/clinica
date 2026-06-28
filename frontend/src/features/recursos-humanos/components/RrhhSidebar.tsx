@@ -1,4 +1,3 @@
-import { RightOutlined } from '@ant-design/icons'
 import { Link, useRouterState } from '@tanstack/react-router'
 
 import type { RrhhSection, RrhhSectionMeta } from '../types/rrhh.types'
@@ -91,24 +90,19 @@ function NavItem({
         <Link
             to={section.to}
             className={[
-                'rrhh-nav-item',
-                isActive ? 'rrhh-nav-item--active' : '',
-                compact ? 'rrhh-nav-item--compact' : '',
+                'erp-side-nav__item',
+                isActive ? 'erp-side-nav__item--active' : '',
+                compact ? 'erp-side-nav__item--compact' : '',
             ]
                 .filter(Boolean)
                 .join(' ')}
             aria-current={isActive ? 'page' : undefined}
             onClick={onNavigate}
         >
-            <span className="rrhh-nav-item__icon" aria-hidden>
+            <span className="erp-side-nav__item-icon" aria-hidden>
                 <SectionIcon type={section.icon} />
             </span>
-            <span className="rrhh-nav-item__content">
-                <span className="rrhh-nav-item__label">{section.label}</span>
-            </span>
-            {!compact ? (
-                <RightOutlined className="rrhh-nav-item__chevron" aria-hidden />
-            ) : null}
+            <span className="erp-side-nav__item-label">{section.label}</span>
         </Link>
     )
 }
@@ -119,8 +113,8 @@ export function RrhhSidebar({ variant = 'sidebar', onNavigate }: RrhhSidebarProp
 
     if (variant === 'tabs') {
         return (
-            <nav className="rrhh-tabs" aria-label="Secciones de recursos humanos">
-                <div className="rrhh-tabs__scroll">
+            <nav className="erp-side-nav erp-side-nav--tabs" aria-label="Secciones de recursos humanos">
+                <div className="erp-side-nav__tabs-scroll">
                     {rrhhSections.map((section) => (
                         <NavItem
                             key={section.key}
@@ -136,9 +130,9 @@ export function RrhhSidebar({ variant = 'sidebar', onNavigate }: RrhhSidebarProp
     }
 
     return (
-        <nav className="rrhh-sidebar" aria-label="Secciones de recursos humanos">
-            <p className="rrhh-sidebar__eyebrow">Gestión de personal</p>
-            <div className="rrhh-sidebar__list">
+        <nav className="erp-side-nav" aria-label="Secciones de recursos humanos">
+            <p className="erp-side-nav__eyebrow">Gestión de personal</p>
+            <div className="erp-side-nav__list">
                 {rrhhSections.map((section) => (
                     <NavItem
                         key={section.key}

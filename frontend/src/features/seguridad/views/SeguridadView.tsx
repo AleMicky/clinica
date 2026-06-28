@@ -6,7 +6,7 @@ import { useRoles } from '../../roles/hooks/roles.hooks'
 import { useUsers } from '../../usuarios/hooks/users.hooks'
 import { SeguridadSidebar } from '../components/SeguridadSidebar'
 
-const { Title, Text } = Typography
+const { Text } = Typography
 const { useBreakpoint } = Grid
 
 export function SeguridadView() {
@@ -26,54 +26,46 @@ export function SeguridadView() {
     const totalRoles = rolesData?.totalRecords ?? 0
 
     return (
-        <div className="seguridad-view">
-            <header className="seguridad-view__hero">
-                <Flex
-                    justify="space-between"
-                    align="center"
-                    gap={12}
-                    wrap="wrap"
-                    className="seguridad-view__hero-inner"
-                >
-                    <Flex align="center" gap={10} className="seguridad-view__hero-main">
-                        <div className="seguridad-view__hero-icon" aria-hidden>
-                            <SafetyCertificateOutlined />
-                        </div>
-                        <div>
-                            <Title level={4} className="seguridad-view__title">
-                                Seguridad
-                            </Title>
-                            <Text type="secondary" className="seguridad-view__subtitle">
-                                Usuarios y roles del sistema
-                            </Text>
-                        </div>
-                    </Flex>
+        <div className="erp-object-page">
+            <header className="erp-object-page__header">
+                <Flex align="center" gap={10} className="erp-object-page__header-main">
+                    <div className="erp-object-page__header-icon" aria-hidden>
+                        <SafetyCertificateOutlined />
+                    </div>
+                    <div>
+                        <Text strong className="erp-object-page__title">
+                            Seguridad
+                        </Text>
+                        <Text type="secondary" className="erp-object-page__subtitle">
+                            Usuarios y roles del sistema
+                        </Text>
+                    </div>
+                </Flex>
 
-                    <Flex gap={8} wrap="wrap" className="seguridad-view__stats">
-                        <span className="seguridad-view__stat-pill">
-                            <TeamOutlined />
-                            {isLoadingUsers ? '…' : `${totalUsers} usuarios`}
-                        </span>
-                        <span className="seguridad-view__stat-pill">
-                            <SafetyCertificateOutlined />
-                            {isLoadingRoles ? '…' : `${totalRoles} roles`}
-                        </span>
-                    </Flex>
+                <Flex gap={12} wrap="wrap" className="erp-object-page__stats">
+                    <span className="erp-object-page__stat">
+                        <TeamOutlined />
+                        {isLoadingUsers ? '…' : `${totalUsers} usuarios`}
+                    </span>
+                    <span className="erp-object-page__stat">
+                        <SafetyCertificateOutlined />
+                        {isLoadingRoles ? '…' : `${totalRoles} roles`}
+                    </span>
                 </Flex>
             </header>
 
             {isMobile ? <SeguridadSidebar variant="tabs" /> : null}
 
-            <div className="seguridad-view__workspace">
-                <Row gutter={[12, 12]} className="seguridad-view__layout">
+            <div className="erp-object-page__workspace">
+                <Row gutter={[0, 0]} className="erp-object-page__layout">
                     {!isMobile ? (
-                        <Col xs={24} lg={6} xl={5}>
+                        <Col xs={24} lg={5} xl={4}>
                             <SeguridadSidebar />
                         </Col>
                     ) : null}
 
-                    <Col xs={24} lg={isMobile ? 24 : 18} xl={isMobile ? 24 : 19}>
-                        <section className="seguridad-view__content">
+                    <Col xs={24} lg={isMobile ? 24 : 19} xl={isMobile ? 24 : 20}>
+                        <section className="erp-object-page__content">
                             <Outlet />
                         </section>
                     </Col>

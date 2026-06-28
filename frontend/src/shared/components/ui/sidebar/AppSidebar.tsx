@@ -3,6 +3,7 @@ import { MedicineBoxOutlined } from '@ant-design/icons'
 import { useNavigate, useRouterState } from '@tanstack/react-router'
 
 import { authStore } from '../../../../stores/auth.store'
+import { useThemeStore } from '../../../../stores/theme.store'
 import {
     buildFlatMenuItems,
     buildMenuItems,
@@ -12,8 +13,6 @@ import {
 
 const { Sider } = Layout
 const { Text } = Typography
-
-const SIDEBAR_BG = '#152032'
 
 type SidebarContentProps = {
     collapsed: boolean
@@ -25,6 +24,7 @@ function SidebarContent({ collapsed, showBrandText, onNavigate }: SidebarContent
     const navigate = useNavigate()
     const pathname = useRouterState({ select: (state) => state.location.pathname })
     const userRoles = authStore((state) => state.user?.roles ?? [])
+    const isDark = useThemeStore((state) => state.isDark)
     const { token } = theme.useToken()
 
     const selectedKeys = [getSelectedMenuKey(pathname, userRoles)]
@@ -43,12 +43,12 @@ function SidebarContent({ collapsed, showBrandText, onNavigate }: SidebarContent
             <Flex
                 align="center"
                 justify={collapsed ? 'center' : 'flex-start'}
-                gap={12}
+                gap={10}
                 className="admin-sidebar__brand"
             >
                 <div
                     className="admin-sidebar__brand-icon"
-                    style={{ background: token.colorPrimary }}
+                    style={{ background: token.colorPrimary, color: '#fff' }}
                 >
                     <MedicineBoxOutlined />
                 </div>
@@ -67,7 +67,7 @@ function SidebarContent({ collapsed, showBrandText, onNavigate }: SidebarContent
 
             <div className="admin-sidebar__menu-wrap">
                 <Menu
-                    theme="dark"
+                    theme={isDark ? 'dark' : 'light'}
                     mode="inline"
                     inlineCollapsed={collapsed}
                     selectedKeys={selectedKeys}
@@ -100,6 +100,7 @@ type AppSidebarProps = {
 export function AppSidebar({ collapsed, isMobile, onNavigate }: AppSidebarProps) {
     const isCollapsed = collapsed && !isMobile
     const showBrandText = !isCollapsed
+    const isDark = useThemeStore((state) => state.isDark)
 
     if (isMobile) {
         return (
@@ -116,15 +117,11 @@ export function AppSidebar({ collapsed, isMobile, onNavigate }: AppSidebarProps)
     return (
         <Sider
             className={`admin-sidebar${isCollapsed ? ' admin-sidebar--collapsed' : ''}`}
-            theme="dark"
-            width={248}
-            collapsedWidth={64}
+            theme={isDark ? 'dark' : 'light'}
+            width={240}
+            collapsedWidth={56}
             collapsed={isCollapsed}
             trigger={null}
-            style={{
-                background: SIDEBAR_BG,
-                borderRight: '1px solid rgba(255, 255, 255, 0.06)',
-            }}
         >
             <SidebarContent
                 collapsed={isCollapsed}

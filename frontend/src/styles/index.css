@@ -174,7 +174,7 @@ body {
     }
 }
 
-/* Admin layout — ERP */
+/* Admin layout — SAP Fiori shell */
 .admin-layout__main {
     min-width: 0;
 }
@@ -186,44 +186,54 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 56px;
-    padding-inline: clamp(12px, 2.5vw, 20px);
+    height: 44px;
+    padding-inline: clamp(8px, 2vw, 16px);
     background: #fff;
-    border-bottom: 1px solid rgba(15, 23, 42, 0.1);
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-}
-
-.admin-header__accent {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, #1e4976, #2d6a9f);
+    border-bottom: 1px solid rgba(15, 23, 42, 0.12);
 }
 
 .admin-header__toggle {
-    font-size: 16px;
-    width: 36px;
-    height: 36px;
+    font-size: 15px;
+    width: 32px;
+    height: 32px;
     border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.admin-header__left {
+    min-width: 0;
+    flex: 1;
+}
+
+.admin-header__app-name {
+    font-size: 14px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.admin-header__divider {
+    width: 1px;
+    height: 20px;
+    background: rgba(15, 23, 42, 0.12);
+    flex-shrink: 0;
 }
 
 .admin-header__context {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 0;
     min-width: 0;
 }
 
 .admin-header__page-title {
-    font-size: 15px;
+    font-size: 14px;
     line-height: 1.2;
 }
 
 .admin-header__breadcrumb {
     display: none;
-    font-size: 12px;
+    font-size: 11px;
+    line-height: 1.2;
 }
 
 .admin-header__breadcrumb-link {
@@ -234,11 +244,26 @@ body {
     color: var(--ant-color-primary);
 }
 
+.admin-header__search {
+    width: 200px;
+    flex-shrink: 0;
+}
+
+.admin-header__search--mobile {
+    width: 140px;
+}
+
+.admin-header__search-trigger {
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+}
+
 .admin-header__user {
-    padding: 4px 8px 4px 4px;
-    border-radius: 6px;
-    border: 1px solid rgba(15, 23, 42, 0.08);
-    transition: background 0.2s ease, border-color 0.2s ease;
+    padding: 2px 8px 2px 2px;
+    border-radius: 4px;
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .admin-header__user:hover {
@@ -251,8 +276,8 @@ body {
 }
 
 .admin-header__user-name {
-    font-size: 13px;
-    max-width: 160px;
+    font-size: 12px;
+    max-width: 140px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -260,24 +285,27 @@ body {
 
 .admin-header__user-role {
     margin: 0;
-    padding: 0 6px;
+    padding: 0 5px;
     font-size: 10px;
-    line-height: 18px;
+    line-height: 16px;
     color: var(--ant-color-primary);
     background: rgba(30, 73, 118, 0.1);
 }
 
 .admin-layout__content {
-    padding: clamp(12px, 2.5vw, 20px);
+    padding: clamp(8px, 1.5vw, 12px);
 }
 
 .admin-layout__content-inner {
-    min-height: calc(100vh - 56px - 40px);
+    min-height: calc(100vh - 44px - 24px);
 }
 
+/* Sidebar claro — SAP Fiori */
 .admin-sidebar {
     display: flex;
     flex-direction: column;
+    background: #fff !important;
+    border-right: 1px solid rgba(15, 23, 42, 0.1) !important;
 }
 
 .admin-sidebar .ant-layout-sider-children {
@@ -287,34 +315,33 @@ body {
 }
 
 .admin-sidebar__brand {
-    height: 56px;
-    padding-inline: 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    height: 44px;
+    padding-inline: 12px;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
     flex-shrink: 0;
 }
 
 .admin-sidebar__brand-name {
     display: block;
-    color: #fff !important;
-    font-size: 14px;
+    color: rgba(15, 23, 42, 0.88) !important;
+    font-size: 13px;
     line-height: 1.2;
 }
 
 .admin-sidebar__brand-tagline {
     display: block;
-    color: rgba(255, 255, 255, 0.5) !important;
-    font-size: 11px;
+    color: rgba(15, 23, 42, 0.45) !important;
+    font-size: 10px;
     line-height: 1.3;
 }
 
 .admin-sidebar__brand-icon {
-    width: 34px;
-    height: 34px;
-    border-radius: 6px;
+    width: 30px;
+    height: 30px;
+    border-radius: 4px;
     display: grid;
     place-items: center;
-    font-size: 16px;
-    color: #fff;
+    font-size: 15px;
     flex-shrink: 0;
 }
 
@@ -325,45 +352,47 @@ body {
 }
 
 .admin-sidebar__menu {
-    padding: 8px 6px;
+    padding: 4px 0;
 }
 
 .admin-sidebar__menu .ant-menu-item-group-title {
-    padding: 10px 12px 4px;
+    padding: 12px 16px 4px;
     font-size: 10px;
     font-weight: 700;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.35) !important;
+    color: rgba(15, 23, 42, 0.4) !important;
 }
 
 .admin-sidebar__menu .ant-menu-item {
-    margin: 1px 6px;
-    border-radius: 4px;
-    width: calc(100% - 12px);
-    height: 40px;
-    line-height: 40px;
+    margin: 0;
+    border-radius: 0;
+    width: 100%;
+    height: 36px;
+    line-height: 36px;
+    padding-inline: 16px !important;
 }
 
 .admin-sidebar__menu .ant-menu-item-selected {
-    background: rgba(30, 73, 118, 0.5) !important;
-    border-left: 3px solid #4a90c4;
+    background: rgba(30, 73, 118, 0.08) !important;
+    color: var(--ant-color-primary) !important;
+    border-left: 3px solid var(--ant-color-primary);
+    font-weight: 600;
+}
+
+.admin-sidebar__menu .ant-menu-item:hover:not(.ant-menu-item-selected) {
+    background: rgba(15, 23, 42, 0.04) !important;
 }
 
 .admin-sidebar__footer {
-    padding: 10px 16px;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 8px 16px;
+    border-top: 1px solid rgba(15, 23, 42, 0.06);
     flex-shrink: 0;
 }
 
 .admin-sidebar__footer-version {
     font-size: 10px;
-    color: rgba(255, 255, 255, 0.35) !important;
-}
-
-.admin-sidebar--collapsed .admin-sidebar__menu,
-.ant-layout-sider-collapsed .admin-sidebar__menu {
-    padding: 6px 0;
+    color: rgba(15, 23, 42, 0.35) !important;
 }
 
 .admin-sidebar--collapsed .admin-sidebar__menu .ant-menu-item-group-title,
@@ -373,11 +402,7 @@ body {
 
 .admin-sidebar--collapsed .admin-sidebar__menu .ant-menu-item,
 .ant-layout-sider-collapsed .admin-sidebar__menu .ant-menu-item {
-    margin: 3px auto;
-    width: 44px;
-    height: 44px;
-    line-height: 44px;
-    padding-inline: 0;
+    padding-inline: 0 !important;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -386,35 +411,377 @@ body {
 .admin-sidebar--collapsed .admin-sidebar__menu .ant-menu-item-selected,
 .ant-layout-sider-collapsed .admin-sidebar__menu .ant-menu-item-selected {
     border-left: none;
-    border-bottom: 2px solid #4a90c4;
-}
-
-.admin-sidebar--collapsed .admin-sidebar__menu .ant-menu-item .ant-menu-item-icon,
-.ant-layout-sider-collapsed .admin-sidebar__menu .ant-menu-item .ant-menu-item-icon {
-    margin: 0;
-    font-size: 17px;
-}
-
-.admin-sidebar--collapsed .admin-sidebar__menu .ant-menu-item .ant-menu-title-content,
-.ant-layout-sider-collapsed .admin-sidebar__menu .ant-menu-item .ant-menu-title-content {
-    display: none;
-}
-
-.admin-sidebar--collapsed .admin-sidebar__menu .ant-menu-item-divider,
-.ant-layout-sider-collapsed .admin-sidebar__menu .ant-menu-item-divider {
-    margin: 6px 14px;
-    border-color: rgba(255, 255, 255, 0.08);
+    border-bottom: 2px solid var(--ant-color-primary);
 }
 
 .admin-sidebar--drawer {
     min-height: 100%;
     display: flex;
     flex-direction: column;
-    background: #152032;
+    background: #fff;
 }
 
 .admin-drawer .ant-drawer-body {
     padding: 0 !important;
+}
+
+.theme-toggle {
+    width: 32px;
+    height: 32px;
+    font-size: 15px;
+    border-radius: 4px;
+}
+
+.admin-header__actions {
+    flex-shrink: 0;
+}
+
+/* SAP Launchpad */
+.erp-launchpad {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.erp-launchpad__header {
+    padding: 12px 16px;
+    background: #fff;
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    border-radius: 4px;
+}
+
+.erp-launchpad__greeting {
+    display: block;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.3;
+    margin-bottom: 2px;
+}
+
+.erp-launchpad__subtitle {
+    font-size: 12px;
+}
+
+.erp-launchpad__meta {
+    padding: 6px 10px;
+    border-radius: 4px;
+    background: rgba(15, 23, 42, 0.03);
+    border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.erp-launchpad__date {
+    font-size: 12px;
+    text-transform: capitalize;
+}
+
+.erp-launchpad__role-tag {
+    margin: 0;
+    font-size: 11px;
+}
+
+.erp-launchpad__group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.erp-launchpad__group-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(15, 23, 42, 0.45);
+    padding-left: 4px;
+}
+
+.erp-launchpad__tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+    gap: 8px;
+}
+
+.erp-launchpad__tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 112px;
+    padding: 12px 8px;
+    background: #fff;
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    border-radius: 4px;
+    color: inherit;
+    text-decoration: none;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.erp-launchpad__tile:hover {
+    border-color: var(--ant-color-primary);
+    background: rgba(30, 73, 118, 0.04);
+}
+
+.erp-launchpad__tile-icon {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border-radius: 4px;
+    font-size: 22px;
+    color: var(--ant-color-primary);
+    background: rgba(30, 73, 118, 0.08);
+}
+
+.erp-launchpad__tile-label {
+    font-size: 12px;
+    font-weight: 500;
+    text-align: center;
+    line-height: 1.3;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.erp-launchpad__empty {
+    padding: 32px;
+    text-align: center;
+    background: #fff;
+    border: 1px dashed rgba(15, 23, 42, 0.12);
+    border-radius: 4px;
+}
+
+/* SAP Object Page */
+.erp-object-page {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    background: #fff;
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.erp-object-page__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    background: #fff;
+}
+
+.erp-object-page__header-icon {
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    border-radius: 4px;
+    font-size: 16px;
+    color: var(--ant-color-primary);
+    background: rgba(30, 73, 118, 0.08);
+    flex-shrink: 0;
+}
+
+.erp-object-page__title {
+    display: block;
+    font-size: 15px;
+    line-height: 1.3;
+}
+
+.erp-object-page__subtitle {
+    display: block;
+    font-size: 12px;
+    line-height: 1.3;
+}
+
+.erp-object-page__stats {
+    flex-shrink: 0;
+}
+
+.erp-object-page__stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: rgba(15, 23, 42, 0.65);
+}
+
+.erp-object-page__stat .anticon {
+    font-size: 12px;
+    color: var(--ant-color-primary);
+}
+
+.erp-object-page__workspace {
+    min-height: 0;
+}
+
+.erp-object-page__layout {
+    align-items: stretch;
+}
+
+.erp-object-page__content {
+    min-height: 400px;
+    border-left: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+/* SAP Side Nav (sub-módulos) */
+.erp-side-nav {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid rgba(15, 23, 42, 0.08);
+    background: #fafbfc;
+    min-height: 100%;
+}
+
+.erp-side-nav__eyebrow {
+    margin: 0;
+    padding: 12px 16px 6px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(15, 23, 42, 0.4);
+}
+
+.erp-side-nav__list {
+    display: flex;
+    flex-direction: column;
+}
+
+.erp-side-nav__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    color: rgba(15, 23, 42, 0.75);
+    text-decoration: none;
+    border-left: 3px solid transparent;
+    transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.erp-side-nav__item:hover {
+    background: rgba(15, 23, 42, 0.04);
+    color: inherit;
+}
+
+.erp-side-nav__item--active {
+    background: rgba(30, 73, 118, 0.08);
+    border-left-color: var(--ant-color-primary);
+    color: var(--ant-color-primary);
+    font-weight: 600;
+}
+
+.erp-side-nav__item-icon {
+    width: 24px;
+    height: 24px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    color: inherit;
+}
+
+.erp-side-nav__item-icon svg {
+    width: 16px;
+    height: 16px;
+}
+
+.erp-side-nav__item-label {
+    font-size: 13px;
+    line-height: 1.3;
+}
+
+.erp-side-nav--tabs {
+    border-right: none;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    background: #fff;
+}
+
+.erp-side-nav__tabs-scroll {
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.erp-side-nav__tabs-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.erp-side-nav__item--compact {
+    flex-shrink: 0;
+    padding: 8px 16px;
+    border-left: none;
+    border-bottom: 2px solid transparent;
+}
+
+.erp-side-nav__item--compact.erp-side-nav__item--active {
+    border-left: none;
+    border-bottom-color: var(--ant-color-primary);
+}
+
+/* SAP List Report */
+.erp-list-report {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+}
+
+.erp-list-report__object-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.erp-list-report__title {
+    display: block;
+    font-size: 14px;
+    line-height: 1.3;
+}
+
+.erp-list-report__caption {
+    display: block;
+    font-size: 12px;
+    line-height: 1.35;
+    margin-top: 2px;
+}
+
+.erp-list-report__toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 16px;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    background: #fafbfc;
+}
+
+.erp-list-report__toolbar-actions {
+    flex-shrink: 0;
+}
+
+.erp-list-report__search {
+    max-width: 280px;
+    min-width: 140px;
+    flex: 1;
+}
+
+.erp-list-report__filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+    background: #fff;
+}
+
+.erp-list-report__content {
+    flex: 1;
+    padding: 0 16px 12px;
 }
 
 @media (min-width: 768px) {
@@ -423,192 +790,45 @@ body {
     }
 }
 
-@media (max-width: 767px) {
-    .admin-layout__content-inner {
-        min-height: auto;
+@media (max-width: 991px) {
+    .erp-object-page__content {
+        border-left: none;
+        border-top: 1px solid rgba(15, 23, 42, 0.08);
+    }
+
+    .erp-side-nav:not(.erp-side-nav--tabs) {
+        border-right: none;
+        border-bottom: 1px solid rgba(15, 23, 42, 0.08);
     }
 }
 
-.theme-toggle {
-    width: 36px;
-    height: 36px;
-    font-size: 16px;
-    border-radius: 4px;
-}
+@media (max-width: 767px) {
+    .admin-header__app-name,
+    .admin-header__divider {
+        display: none;
+    }
 
-.admin-header__actions {
-    flex-shrink: 0;
-}
+    .admin-layout__content-inner {
+        min-height: auto;
+    }
 
-/* ERP Dashboard */
-.erp-dashboard {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
+    .erp-list-report__toolbar {
+        flex-wrap: wrap;
+    }
 
-.erp-dashboard__hero {
-    padding: 18px 20px;
-    border-radius: 8px;
-    background: #fff;
-    border: 1px solid rgba(15, 23, 42, 0.1);
-    border-left: 4px solid var(--ant-color-primary);
-}
-
-.erp-dashboard__hero-eyebrow {
-    margin-bottom: 6px;
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-}
-
-.erp-dashboard__hero-title {
-    margin: 0 0 4px !important;
-    font-size: 20px !important;
-}
-
-.erp-dashboard__hero-subtitle {
-    margin: 0 !important;
-    font-size: 13px;
-}
-
-.erp-dashboard__hero-meta {
-    padding: 8px 12px;
-    border-radius: 6px;
-    background: rgba(15, 23, 42, 0.03);
-    border: 1px solid rgba(15, 23, 42, 0.06);
-}
-
-.erp-dashboard__hero-date {
-    font-size: 12px;
-    text-transform: capitalize;
-}
-
-.erp-dashboard__role-tag {
-    margin: 0;
-    font-size: 11px;
-}
-
-.erp-dashboard__kpi-card {
-    border-radius: 8px;
-    border: 1px solid rgba(15, 23, 42, 0.08);
-}
-
-.erp-dashboard__kpi-card .ant-card-body {
-    padding: 14px 16px;
-}
-
-.erp-dashboard__kpi-label {
-    display: block;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    margin-bottom: 4px;
-}
-
-.erp-dashboard__kpi-value {
-    margin: 0 !important;
-    font-size: 28px !important;
-    color: var(--ant-color-primary);
-}
-
-.erp-dashboard__kpi-value--sm {
-    font-size: 16px !important;
-    color: inherit;
-}
-
-.erp-dashboard__section-head {
-    margin-bottom: 4px;
-}
-
-.erp-dashboard__module-link {
-    display: block;
-    color: inherit;
-    text-decoration: none;
-}
-
-.erp-dashboard__module-card {
-    border-radius: 8px;
-    border: 1px solid rgba(15, 23, 42, 0.08);
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.erp-dashboard__module-card:hover {
-    border-color: rgba(30, 73, 118, 0.25);
-    box-shadow: 0 2px 8px rgba(30, 73, 118, 0.1);
-}
-
-.erp-dashboard__module-icon {
-    width: 40px;
-    height: 40px;
-    display: grid;
-    place-items: center;
-    border-radius: 6px;
-    font-size: 18px;
-    color: var(--ant-color-primary);
-    background: rgba(30, 73, 118, 0.08);
-    flex-shrink: 0;
-}
-
-.erp-dashboard__module-content {
-    flex: 1;
-    min-width: 0;
-}
-
-.erp-dashboard__module-title {
-    display: block;
-    font-size: 14px;
-}
-
-.erp-dashboard__module-group {
-    display: block;
-    font-size: 11px;
-}
-
-.erp-dashboard__module-arrow {
-    color: rgba(15, 23, 42, 0.25);
-    font-size: 12px;
-    flex-shrink: 0;
-    transition: transform 0.15s ease, color 0.15s ease;
-}
-
-.erp-dashboard__module-card:hover .erp-dashboard__module-arrow {
-    color: var(--ant-color-primary);
-    transform: translateX(3px);
-}
-
-.erp-dashboard__empty {
-    border-radius: 8px;
-    border: 1px dashed rgba(15, 23, 42, 0.12);
-}
-
-[data-theme='dark'] .erp-dashboard__hero,
-[data-theme='dark'] .erp-dashboard__kpi-card,
-[data-theme='dark'] .erp-dashboard__module-card {
-    background: #161b22;
-    border-color: rgba(255, 255, 255, 0.08);
-}
-
-[data-theme='dark'] .erp-dashboard__hero-meta {
-    background: rgba(255, 255, 255, 0.03);
-    border-color: rgba(255, 255, 255, 0.06);
-}
-
-/* Dark mode */
-[data-theme='dark'] .auth-layout {
-    background:
-        linear-gradient(135deg, rgba(30, 73, 118, 0.08) 0%, transparent 50%),
-        linear-gradient(180deg, #0d1117 0%, #0a0e14 100%);
-}
-
-[data-theme='dark'] .login-view__card {
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+    .erp-list-report__search {
+        max-width: none;
+        width: 100%;
+    }
 }
 
 [data-theme='dark'] .admin-header {
     background: #161b22;
     border-bottom-color: rgba(255, 255, 255, 0.08);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme='dark'] .admin-header__divider {
+    background: rgba(255, 255, 255, 0.1);
 }
 
 [data-theme='dark'] .admin-header__user {
@@ -618,6 +838,114 @@ body {
 [data-theme='dark'] .admin-header__user:hover {
     background: rgba(30, 73, 118, 0.12);
     border-color: rgba(30, 73, 118, 0.25);
+}
+
+[data-theme='dark'] .admin-sidebar {
+    background: #161b22 !important;
+    border-right-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme='dark'] .admin-sidebar__brand {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .admin-sidebar__brand-name {
+    color: rgba(255, 255, 255, 0.88) !important;
+}
+
+[data-theme='dark'] .admin-sidebar__brand-tagline {
+    color: rgba(255, 255, 255, 0.45) !important;
+}
+
+[data-theme='dark'] .admin-sidebar__menu .ant-menu-item-group-title {
+    color: rgba(255, 255, 255, 0.35) !important;
+}
+
+[data-theme='dark'] .admin-sidebar__menu .ant-menu-item-selected {
+    background: rgba(30, 73, 118, 0.2) !important;
+}
+
+[data-theme='dark'] .admin-sidebar__menu .ant-menu-item:hover:not(.ant-menu-item-selected) {
+    background: rgba(255, 255, 255, 0.04) !important;
+}
+
+[data-theme='dark'] .admin-sidebar__footer {
+    border-top-color: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme='dark'] .admin-sidebar__footer-version {
+    color: rgba(255, 255, 255, 0.35) !important;
+}
+
+[data-theme='dark'] .admin-sidebar--drawer {
+    background: #161b22;
+}
+
+[data-theme='dark'] .erp-launchpad__header,
+[data-theme='dark'] .erp-launchpad__tile,
+[data-theme='dark'] .erp-launchpad__empty {
+    background: #161b22;
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .erp-launchpad__meta {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme='dark'] .erp-object-page {
+    background: #161b22;
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .erp-object-page__header {
+    background: #161b22;
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .erp-object-page__content {
+    border-left-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .erp-side-nav {
+    background: #141a22;
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .erp-side-nav--tabs {
+    background: #161b22;
+}
+
+[data-theme='dark'] .erp-side-nav__item {
+    color: rgba(255, 255, 255, 0.75);
+}
+
+[data-theme='dark'] .erp-side-nav__item:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+[data-theme='dark'] .erp-side-nav__item--active {
+    background: rgba(30, 73, 118, 0.2);
+}
+
+[data-theme='dark'] .erp-list-report__object-header,
+[data-theme='dark'] .erp-list-report__filter-bar {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .erp-list-report__toolbar {
+    background: #141a22;
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .auth-layout {
+    background:
+        linear-gradient(135deg, rgba(30, 73, 118, 0.08) 0%, transparent 50%),
+        linear-gradient(180deg, #0d1117 0%, #0a0e14 100%);
+}
+
+[data-theme='dark'] .login-view__card {
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
 }
 
 [data-theme='dark'] .admin-layout__content-inner {
