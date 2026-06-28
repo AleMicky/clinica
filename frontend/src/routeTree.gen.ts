@@ -17,6 +17,7 @@ import { Route as AdminSeguridadRouteImport } from './routes/_admin/seguridad'
 import { Route as AdminRecursosHumanosRouteImport } from './routes/_admin/recursos-humanos'
 import { Route as AdminParametrosRouteImport } from './routes/_admin/parametros'
 import { Route as AdminAtencionesRouteImport } from './routes/_admin/atenciones'
+import { Route as AdminWorkflowIndexRouteImport } from './routes/_admin/workflow/index'
 import { Route as AdminUsuariosIndexRouteImport } from './routes/_admin/usuarios/index'
 import { Route as AdminSeguridadIndexRouteImport } from './routes/_admin/seguridad/index'
 import { Route as AdminRolesIndexRouteImport } from './routes/_admin/roles/index'
@@ -39,6 +40,8 @@ import { Route as AdminAtencionesTiposAtencionRouteImport } from './routes/_admi
 import { Route as AdminAtencionesFormulariosRouteImport } from './routes/_admin/atenciones/formularios'
 import { Route as AdminAtencionesDiagnosticosRouteImport } from './routes/_admin/atenciones/diagnosticos'
 import { Route as AdminAtencionesAtencionIdRouteImport } from './routes/_admin/atenciones/$atencionId'
+import { Route as AdminWorkflowInstancesInstanceIdRouteImport } from './routes/_admin/workflow/instances/$instanceId'
+import { Route as AdminWorkflowDesignerDefinitionIdRouteImport } from './routes/_admin/workflow/designer/$definitionId'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/_auth',
@@ -76,6 +79,11 @@ const AdminParametrosRoute = AdminParametrosRouteImport.update({
 const AdminAtencionesRoute = AdminAtencionesRouteImport.update({
   id: '/atenciones',
   path: '/atenciones',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminWorkflowIndexRoute = AdminWorkflowIndexRouteImport.update({
+  id: '/workflow/',
+  path: '/workflow/',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminUsuariosIndexRoute = AdminUsuariosIndexRouteImport.update({
@@ -199,6 +207,18 @@ const AdminAtencionesAtencionIdRoute =
     path: '/$atencionId',
     getParentRoute: () => AdminAtencionesRoute,
   } as any)
+const AdminWorkflowInstancesInstanceIdRoute =
+  AdminWorkflowInstancesInstanceIdRouteImport.update({
+    id: '/workflow/instances/$instanceId',
+    path: '/workflow/instances/$instanceId',
+    getParentRoute: () => AdminRoute,
+  } as any)
+const AdminWorkflowDesignerDefinitionIdRoute =
+  AdminWorkflowDesignerDefinitionIdRouteImport.update({
+    id: '/workflow/designer/$definitionId',
+    path: '/workflow/designer/$definitionId',
+    getParentRoute: () => AdminRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AdminIndexRoute
@@ -229,6 +249,9 @@ export interface FileRoutesByFullPath {
   '/roles/': typeof AdminRolesIndexRoute
   '/seguridad/': typeof AdminSeguridadIndexRoute
   '/usuarios/': typeof AdminUsuariosIndexRoute
+  '/workflow/': typeof AdminWorkflowIndexRoute
+  '/workflow/designer/$definitionId': typeof AdminWorkflowDesignerDefinitionIdRoute
+  '/workflow/instances/$instanceId': typeof AdminWorkflowInstancesInstanceIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof AdminIndexRoute
@@ -255,6 +278,9 @@ export interface FileRoutesByTo {
   '/roles': typeof AdminRolesIndexRoute
   '/seguridad': typeof AdminSeguridadIndexRoute
   '/usuarios': typeof AdminUsuariosIndexRoute
+  '/workflow': typeof AdminWorkflowIndexRoute
+  '/workflow/designer/$definitionId': typeof AdminWorkflowDesignerDefinitionIdRoute
+  '/workflow/instances/$instanceId': typeof AdminWorkflowInstancesInstanceIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -288,6 +314,9 @@ export interface FileRoutesById {
   '/_admin/roles/': typeof AdminRolesIndexRoute
   '/_admin/seguridad/': typeof AdminSeguridadIndexRoute
   '/_admin/usuarios/': typeof AdminUsuariosIndexRoute
+  '/_admin/workflow/': typeof AdminWorkflowIndexRoute
+  '/_admin/workflow/designer/$definitionId': typeof AdminWorkflowDesignerDefinitionIdRoute
+  '/_admin/workflow/instances/$instanceId': typeof AdminWorkflowInstancesInstanceIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -320,6 +349,9 @@ export interface FileRouteTypes {
     | '/roles/'
     | '/seguridad/'
     | '/usuarios/'
+    | '/workflow/'
+    | '/workflow/designer/$definitionId'
+    | '/workflow/instances/$instanceId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -346,6 +378,9 @@ export interface FileRouteTypes {
     | '/roles'
     | '/seguridad'
     | '/usuarios'
+    | '/workflow'
+    | '/workflow/designer/$definitionId'
+    | '/workflow/instances/$instanceId'
   id:
     | '__root__'
     | '/_admin'
@@ -378,6 +413,9 @@ export interface FileRouteTypes {
     | '/_admin/roles/'
     | '/_admin/seguridad/'
     | '/_admin/usuarios/'
+    | '/_admin/workflow/'
+    | '/_admin/workflow/designer/$definitionId'
+    | '/_admin/workflow/instances/$instanceId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -441,6 +479,13 @@ declare module '@tanstack/react-router' {
       path: '/atenciones'
       fullPath: '/atenciones'
       preLoaderRoute: typeof AdminAtencionesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/workflow/': {
+      id: '/_admin/workflow/'
+      path: '/workflow'
+      fullPath: '/workflow/'
+      preLoaderRoute: typeof AdminWorkflowIndexRouteImport
       parentRoute: typeof AdminRoute
     }
     '/_admin/usuarios/': {
@@ -597,6 +642,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAtencionesAtencionIdRouteImport
       parentRoute: typeof AdminAtencionesRoute
     }
+    '/_admin/workflow/instances/$instanceId': {
+      id: '/_admin/workflow/instances/$instanceId'
+      path: '/workflow/instances/$instanceId'
+      fullPath: '/workflow/instances/$instanceId'
+      preLoaderRoute: typeof AdminWorkflowInstancesInstanceIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/workflow/designer/$definitionId': {
+      id: '/_admin/workflow/designer/$definitionId'
+      path: '/workflow/designer/$definitionId'
+      fullPath: '/workflow/designer/$definitionId'
+      preLoaderRoute: typeof AdminWorkflowDesignerDefinitionIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
@@ -684,6 +743,9 @@ interface AdminRouteChildren {
   AdminPersonasIndexRoute: typeof AdminPersonasIndexRoute
   AdminRolesIndexRoute: typeof AdminRolesIndexRoute
   AdminUsuariosIndexRoute: typeof AdminUsuariosIndexRoute
+  AdminWorkflowIndexRoute: typeof AdminWorkflowIndexRoute
+  AdminWorkflowDesignerDefinitionIdRoute: typeof AdminWorkflowDesignerDefinitionIdRoute
+  AdminWorkflowInstancesInstanceIdRoute: typeof AdminWorkflowInstancesInstanceIdRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
@@ -698,6 +760,10 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminPersonasIndexRoute: AdminPersonasIndexRoute,
   AdminRolesIndexRoute: AdminRolesIndexRoute,
   AdminUsuariosIndexRoute: AdminUsuariosIndexRoute,
+  AdminWorkflowIndexRoute: AdminWorkflowIndexRoute,
+  AdminWorkflowDesignerDefinitionIdRoute:
+    AdminWorkflowDesignerDefinitionIdRoute,
+  AdminWorkflowInstancesInstanceIdRoute: AdminWorkflowInstancesInstanceIdRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)

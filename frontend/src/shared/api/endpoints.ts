@@ -11,6 +11,7 @@ const api = {
     parametros: '/api/parametros',
     recursosHumanos: '/api/recursos-humanos',
     atencionMedica: '/api/atencion-medica',
+    workflow: '/api/workflow',
 } as const
 
 export const createEndpoints = <
@@ -87,4 +88,21 @@ export const atencionMedicaEndpoints = {
     interconsultas: createEndpoints(`${api.atencionMedica}/interconsultas`),
     prescripciones: createEndpoints(`${api.atencionMedica}/prescripciones`),
     prescripcionDetalles: createEndpoints(`${api.atencionMedica}/prescripcion-detalles`),
+} as const
+
+export const workflowEndpoints = {
+    definitions: createEndpoints(`${api.workflow}/definitions`),
+    states: (definitionId: EntityId) => `${api.workflow}/definitions/${definitionId}/states`,
+    stateById: (id: EntityId) => `${api.workflow}/states/${id}`,
+    transitions: (definitionId: EntityId) => `${api.workflow}/definitions/${definitionId}/transitions`,
+    transitionById: (id: EntityId) => `${api.workflow}/transitions/${id}`,
+    instances: {
+        start: `${api.workflow}/instances/start`,
+        byId: (id: EntityId) => `${api.workflow}/instances/${id}`,
+        byReference: (referenceModule: string, referenceEntity: string, referenceId: EntityId) =>
+            `${api.workflow}/instances/by-reference/${referenceModule}/${referenceEntity}/${referenceId}`,
+        availableActions: (id: EntityId) => `${api.workflow}/instances/${id}/available-actions`,
+        execute: (id: EntityId) => `${api.workflow}/instances/${id}/execute`,
+        history: (id: EntityId) => `${api.workflow}/instances/${id}/history`,
+    },
 } as const

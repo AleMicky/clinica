@@ -190,6 +190,20 @@ export const menuGroups: MenuGroup[] = [
             },
         ],
     },
+    {
+        key: 'workflow',
+        label: 'Workflow',
+        roles: [AppRole.Admin],
+        items: [
+            {
+                key: '/workflow',
+                to: '/workflow',
+                icon: <NodeIndexOutlined />,
+                label: 'Definiciones de workflow',
+                roles: [AppRole.Admin],
+            },
+        ],
+    },
 ]
 
 export function filterMenuGroups(
@@ -302,6 +316,8 @@ export type BreadcrumbSegment = {
 const nestedRouteLabels: Record<string, { title: string; parentPath: AppRoute }> = {
     '/usuarios/perfil': { title: 'Mi perfil', parentPath: '/seguridad/usuarios' },
     '/atenciones/$atencionId': { title: 'Detalle de atención', parentPath: '/atenciones' },
+    '/workflow/designer/$definitionId': { title: 'Diseñador de workflow', parentPath: '/workflow' },
+    '/workflow/instances/$instanceId': { title: 'Instancia de workflow', parentPath: '/workflow' },
 }
 
 function findMenuItemByPath(

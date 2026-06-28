@@ -5,6 +5,7 @@ using Clinica.Modules.Parametros.Infrastructure.Seed;
 using Clinica.Modules.Personas.Infrastructure.Seed;
 using Clinica.Modules.RecursosHumanos.Infrastructure.Seed;
 using Clinica.Modules.Seguridad.Infrastructure.Seed;
+using Clinica.Modules.Workflow.Infrastructure.Seed;
 
 namespace Clinica.Api.Extensions;
 
@@ -23,6 +24,7 @@ public static class ApplicationBuilderExtensions
             await RecursosHumanosDbSeeder.MigrateAsync(app.Services);
             await PersonasDbSeeder.MigrateAsync(app.Services);
             await AtencionMedicaDbSeeder.MigrateAsync(app.Services);
+            await WorkflowDbSeeder.MigrateAsync(app.Services);
         }
         catch (Exception ex)
         {

@@ -169,4 +169,31 @@ export const queryKeys = {
             all: ['atencion-medica', 'prescripcion-detalles'] as const,
         },
     },
+    workflow: {
+        all: ['workflow'] as const,
+        definitions: {
+            all: ['workflow', 'definitions'] as const,
+            list: (query: PagedQuery) => ['workflow', 'definitions', 'list', query] as const,
+            detail: (id: EntityId) => ['workflow', 'definitions', 'detail', id] as const,
+        },
+        states: {
+            all: ['workflow', 'states'] as const,
+            byDefinition: (definitionId: EntityId) =>
+                ['workflow', 'states', definitionId] as const,
+        },
+        transitions: {
+            all: ['workflow', 'transitions'] as const,
+            byDefinition: (definitionId: EntityId) =>
+                ['workflow', 'transitions', definitionId] as const,
+        },
+        instances: {
+            all: ['workflow', 'instances'] as const,
+            detail: (id: EntityId) => ['workflow', 'instances', 'detail', id] as const,
+            byReference: (referenceModule: string, referenceEntity: string, referenceId: EntityId) =>
+                ['workflow', 'instances', 'reference', referenceModule, referenceEntity, referenceId] as const,
+            availableActions: (id: EntityId) =>
+                ['workflow', 'instances', id, 'available-actions'] as const,
+            history: (id: EntityId) => ['workflow', 'instances', id, 'history'] as const,
+        },
+    },
 }

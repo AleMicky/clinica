@@ -1,3 +1,4 @@
+using Clinica.Modules.Workflow.Presentation.Endpoints;
 using Clinica.SharedKernel.Responses;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -8,18 +9,34 @@ namespace Clinica.Modules.Workflow.Presentation;
 
 public static class WorkflowEndpoints
 {
+    private const string BasePath = "/api/workflow";
+
     public static IEndpointRouteBuilder MapWorkflowEndpoints(
         this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/workflow")
-            .WithTags("Workflow");
+        var group = app.MapGroup(BasePath);
 
-        group.MapGet("/health", () => ApiResults.Ok("Workflow operativo"))
-            .WithName("WorkflowHealth")
-            .WithSummary("Estado del módulo Workflow")
-            .Produces(StatusCodes.Status200OK)
-            .Produces(StatusCodes.Status500InternalServerError);
+        MapHealth(group);
+        group.MapWorkflowDefinitionEndpoints();
+        group.MapWorkflowStateEndpoints();
+        group.MapWorkflowTransitionEndpoints();
+        group.MapWorkflowInstanceEndpoints();
 
         return app;
+    }
+
+    private static void MapHealth(RouteGroupBuilder group)
+    {
+        group.MapGet("/health", HealthCheck)
+            .WithName("WorkflowHealth")
+            .WithSummary("Estado del módulo Workflow")
+            .WithTags(WorkflowSwaggerTags.Module)
+            .Produces<ApiResponse<string>>(StatusCodes.Status200OK)
+            .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+    }
+
+    private static IResult HealthCheck()
+    {
+        return ApiResults.Ok("Workflow operativo.");
     }
 }
