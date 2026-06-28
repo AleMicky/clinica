@@ -10,15 +10,21 @@ import type {
     Atencion,
     AtencionChildPagedQuery,
     AtencionPagedQuery,
+    AtencionRespuestaPagedQuery,
+    CreateAtencionFormularioRespuestaPayload,
     CreateAtencionPayload,
     CreateDiagnosticoAtencionPayload,
     CreateDiagnosticoPayload,
     CreateEstudioPayload,
+    CreateFormularioCampoPayload,
+    CreateFormularioClinicoPayload,
+    CreateFormularioSeccionPayload,
     CreateInterconsultaPayload,
     CreatePrescripcionDetallePayload,
     CreatePrescripcionPayload,
     CreateResultadoEstudioPayload,
     CreateSignoVitalPayload,
+    CreateTipoAtencionPayload,
     CreateTratamientoPayload,
     Diagnostico,
     DiagnosticoAtencion,
@@ -26,8 +32,13 @@ import type {
     EspecialidadLookup,
     Estudio,
     EstudioPagedQuery,
+    FormularioCampo,
+    FormularioCampoPagedQuery,
     FormularioClinico,
     FormularioClinicoPagedQuery,
+    FormularioSeccion,
+    FormularioSeccionPagedQuery,
+    AtencionFormularioRespuesta,
     Interconsulta,
     PacienteLookup,
     Prescripcion,
@@ -37,16 +48,22 @@ import type {
     ResultadoEstudioPagedQuery,
     SignoVital,
     TipoAtencion,
+    TipoCampoFormulario,
     Tratamiento,
+    UpdateAtencionFormularioRespuestaPayload,
     UpdateAtencionPayload,
     UpdateDiagnosticoAtencionPayload,
     UpdateDiagnosticoPayload,
     UpdateEstudioPayload,
+    UpdateFormularioCampoPayload,
+    UpdateFormularioClinicoPayload,
+    UpdateFormularioSeccionPayload,
     UpdateInterconsultaPayload,
     UpdatePrescripcionDetallePayload,
     UpdatePrescripcionPayload,
     UpdateResultadoEstudioPayload,
     UpdateSignoVitalPayload,
+    UpdateTipoAtencionPayload,
     UpdateTratamientoPayload,
 } from '../types/atencion-medica.types'
 
@@ -60,9 +77,11 @@ export const atencionesService = {
 }
 
 export const tiposAtencionService = {
-    ...createGuidCrudService<TipoAtencion, never, never>(
-        atencionMedicaEndpoints.tiposAtencion.root,
-    ),
+    ...createGuidCrudService<
+        TipoAtencion,
+        CreateTipoAtencionPayload,
+        UpdateTipoAtencionPayload
+    >(atencionMedicaEndpoints.tiposAtencion.root),
     getPaged(query: PagedQuery) {
         return getPaged<TipoAtencion>(
             atencionMedicaEndpoints.tiposAtencion.root,
@@ -71,13 +90,69 @@ export const tiposAtencionService = {
     },
 }
 
-export const formulariosClinicosService = {
-    ...createGuidCrudService<FormularioClinico, never, never>(
-        atencionMedicaEndpoints.formulariosClinicos.root,
+export const tiposCampoFormularioService = {
+    ...createGuidCrudService<TipoCampoFormulario, never, never>(
+        atencionMedicaEndpoints.tiposCampoFormulario.root,
     ),
+    getPaged(query: PagedQuery) {
+        return getPaged<TipoCampoFormulario>(
+            atencionMedicaEndpoints.tiposCampoFormulario.root,
+            query,
+        )
+    },
+}
+
+export const formulariosClinicosService = {
+    ...createGuidCrudService<
+        FormularioClinico,
+        CreateFormularioClinicoPayload,
+        UpdateFormularioClinicoPayload
+    >(atencionMedicaEndpoints.formulariosClinicos.root),
     getPaged(query: FormularioClinicoPagedQuery) {
         return getPaged<FormularioClinico>(
             atencionMedicaEndpoints.formulariosClinicos.root,
+            query,
+        )
+    },
+}
+
+export const formularioSeccionesService = {
+    ...createGuidCrudService<
+        FormularioSeccion,
+        CreateFormularioSeccionPayload,
+        UpdateFormularioSeccionPayload
+    >(atencionMedicaEndpoints.formularioSecciones.root),
+    getPaged(query: FormularioSeccionPagedQuery) {
+        return getPaged<FormularioSeccion>(
+            atencionMedicaEndpoints.formularioSecciones.root,
+            query,
+        )
+    },
+}
+
+export const formularioCamposService = {
+    ...createGuidCrudService<
+        FormularioCampo,
+        CreateFormularioCampoPayload,
+        UpdateFormularioCampoPayload
+    >(atencionMedicaEndpoints.formularioCampos.root),
+    getPaged(query: FormularioCampoPagedQuery) {
+        return getPaged<FormularioCampo>(
+            atencionMedicaEndpoints.formularioCampos.root,
+            query,
+        )
+    },
+}
+
+export const atencionRespuestasService = {
+    ...createGuidCrudService<
+        AtencionFormularioRespuesta,
+        CreateAtencionFormularioRespuestaPayload,
+        UpdateAtencionFormularioRespuestaPayload
+    >(atencionMedicaEndpoints.atencionRespuestas.root),
+    getPaged(query: AtencionRespuestaPagedQuery) {
+        return getPaged<AtencionFormularioRespuesta>(
+            atencionMedicaEndpoints.atencionRespuestas.root,
             query,
         )
     },

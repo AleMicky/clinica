@@ -3,6 +3,8 @@ import type { FileRouteTypes } from '../../../../routeTree.gen'
 import {
     DashboardOutlined,
     ExperimentOutlined,
+    FileTextOutlined,
+    FormOutlined,
     IdcardOutlined,
     MedicineBoxOutlined,
     NodeIndexOutlined,
@@ -10,6 +12,7 @@ import {
     ControlOutlined,
     SolutionOutlined,
     TeamOutlined,
+    UnorderedListOutlined,
     UserOutlined,
 } from '@ant-design/icons'
 
@@ -79,6 +82,27 @@ export const menuGroups: MenuGroup[] = [
                 icon: <MedicineBoxOutlined />,
                 label: 'Atenciones',
                 roles: [AppRole.Admin, AppRole.Medico, AppRole.Recepcion],
+            },
+            {
+                key: '/atenciones/tipos-atencion',
+                to: '/atenciones/tipos-atencion',
+                icon: <UnorderedListOutlined />,
+                label: 'Tipos de atención',
+                roles: [AppRole.Admin],
+            },
+            {
+                key: '/atenciones/formularios',
+                to: '/atenciones/formularios',
+                icon: <FormOutlined />,
+                label: 'Formularios clínicos',
+                roles: [AppRole.Admin],
+            },
+            {
+                key: '/atenciones/diagnosticos',
+                to: '/atenciones/diagnosticos',
+                icon: <FileTextOutlined />,
+                label: 'Diagnósticos CIE-10',
+                roles: [AppRole.Admin],
             },
         ],
     },

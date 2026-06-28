@@ -1778,7 +1778,8 @@ body {
 }
 
 /* Contenedor de página: altura fija al viewport para scroll interno */
-.admin-layout__content-inner:has(.catalogos-view) {
+.admin-layout__content-inner:has(.catalogos-view),
+.admin-layout__content-inner:has(.formularios-view) {
     display: flex;
     flex-direction: column;
     height: calc(100dvh - 44px - clamp(16px, 3vw, 24px));
@@ -1787,13 +1788,15 @@ body {
     overflow: hidden;
 }
 
-.module-object-page:has(.catalogos-view) {
+.module-object-page:has(.catalogos-view),
+.module-object-page:has(.formularios-view) {
     flex: 1;
     min-height: 0;
     overflow: hidden;
 }
 
-.module-object-page:has(.catalogos-view) .module-object-page__workspace {
+.module-object-page:has(.catalogos-view) .module-object-page__workspace,
+.module-object-page:has(.formularios-view) .module-object-page__workspace {
     flex: 1;
     min-height: 0;
     overflow: hidden;
@@ -1801,7 +1804,8 @@ body {
     flex-direction: column;
 }
 
-.module-object-page:has(.catalogos-view) .module-object-page__content {
+.module-object-page:has(.catalogos-view) .module-object-page__content,
+.module-object-page:has(.formularios-view) .module-object-page__content {
     flex: 1;
     min-height: 0;
     display: flex;
@@ -2416,6 +2420,285 @@ body {
 
 [data-theme='dark'] .module-object-page__panel.catalogos-view {
     background: #161b22;
+}
+
+/* Formularios clínicos — layout ERP (Atención médica) */
+
+.module-object-page__panel.formularios-view {
+    padding: 0;
+    overflow: hidden;
+    flex: 1;
+    min-height: 0;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.formularios-view .catalogos-view__sidebar {
+    width: 300px;
+    min-width: 260px;
+    max-width: 300px;
+}
+
+.formularios-view__sidebar-filters {
+    padding: 0 10px 8px;
+    flex-shrink: 0;
+}
+
+.formularios-view__tipo-select {
+    width: 100%;
+}
+
+.formularios-view__detail-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 14px;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.92) 100%);
+    flex-shrink: 0;
+    min-height: 44px;
+}
+
+.formularios-view__detail-head-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+}
+
+.formularios-view__detail-name {
+    flex-shrink: 0;
+    max-width: min(220px, 28vw);
+    font-size: 14px;
+    line-height: 1.3;
+}
+
+.formularios-view__detail-desc {
+    flex: 1;
+    min-width: 0;
+    font-size: 12px;
+    line-height: 1.3;
+}
+
+.formularios-view__detail-actions {
+    flex-shrink: 0;
+}
+
+.formularios-view__secciones-strip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.05);
+    background: rgba(248, 250, 252, 0.55);
+    flex-shrink: 0;
+}
+
+.formularios-view__secciones-scroll {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    padding: 2px 0;
+}
+
+.formularios-view__seccion-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 180px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    background: #fff;
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+    transition:
+        border-color 0.15s ease,
+        background 0.15s ease,
+        box-shadow 0.15s ease;
+    flex-shrink: 0;
+}
+
+.formularios-view__seccion-tab:hover {
+    border-color: rgba(22, 119, 255, 0.22);
+    background: rgba(22, 119, 255, 0.04);
+}
+
+.formularios-view__seccion-tab--active {
+    border-color: rgba(22, 119, 255, 0.35);
+    background: rgba(22, 119, 255, 0.08);
+    box-shadow: 0 1px 3px rgba(22, 119, 255, 0.1);
+}
+
+.formularios-view__seccion-tab-label {
+    font-size: 12px;
+    max-width: 110px;
+}
+
+.formularios-view__seccion-tab-code {
+    flex-shrink: 0;
+    padding: 0 6px;
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--ant-color-primary);
+    background: rgba(22, 119, 255, 0.08);
+    border: 1px solid rgba(22, 119, 255, 0.14);
+}
+
+.formularios-view__seccion-add {
+    flex-shrink: 0;
+}
+
+.formularios-view .catalogos-view__main-body {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 8px 12px 10px;
+}
+
+.formularios-view__table {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+}
+
+.formularios-view__table .app-data-table {
+    gap: 0;
+    height: 100%;
+}
+
+.formularios-view__table .app-data-table__wrapper {
+    border-radius: 8px;
+    border-color: rgba(15, 23, 42, 0.08);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    overflow: visible;
+}
+
+.formularios-view__table .app-data-table__th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding: 7px 10px;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: rgba(15, 23, 42, 0.62);
+    background: #f1f5f9;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.formularios-view__table .app-data-table__td {
+    padding: 6px 10px;
+    font-size: 12.5px;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.05);
+}
+
+.formularios-view__table .app-data-table__tr:nth-child(even) .app-data-table__td {
+    background: rgba(248, 250, 252, 0.65);
+}
+
+.formularios-view__table .app-data-table__tr:hover .app-data-table__td {
+    background: rgba(22, 119, 255, 0.05);
+}
+
+.formularios-view__table .app-data-table__tr:last-child .app-data-table__td {
+    border-bottom: none;
+}
+
+.formularios-view__drawer .ant-drawer-body {
+    padding: 14px 16px;
+}
+
+.formularios-view__drawer-form .ant-form-item {
+    margin-bottom: 10px;
+}
+
+.formularios-view__drawer-form .ant-form-item-label {
+    padding-bottom: 2px;
+}
+
+.formularios-view__drawer-form .ant-form-item-label > label {
+    font-size: 12px;
+    height: auto;
+}
+
+.formularios-view__drawer-form .ant-input,
+.formularios-view__drawer-form .ant-input-number,
+.formularios-view__drawer-form .ant-input-number-input,
+.formularios-view__drawer-form .ant-select-selector,
+.formularios-view__drawer-form textarea.ant-input {
+    font-size: 13px;
+}
+
+.formularios-view__drawer-form .ant-form-item-extra {
+    font-size: 11px;
+    margin-top: 2px;
+}
+
+[data-theme='dark'] .formularios-view__detail-head {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme='dark'] .formularios-view__secciones-strip {
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme='dark'] .formularios-view__seccion-tab {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .formularios-view__seccion-tab--active {
+    background: rgba(22, 119, 255, 0.12);
+    border-color: rgba(22, 119, 255, 0.35);
+}
+
+[data-theme='dark'] .formularios-view__table .app-data-table__th {
+    background: #1a2230;
+    color: rgba(255, 255, 255, 0.62);
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .formularios-view__table .app-data-table__tr:nth-child(even) .app-data-table__td {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+@media (max-width: 991px) {
+    .formularios-view .catalogos-view__sidebar {
+        width: 100%;
+        max-width: none;
+        max-height: 220px;
+    }
+
+    .formularios-view__detail-head {
+        flex-wrap: wrap;
+    }
+
+    .formularios-view__detail-desc {
+        display: none;
+    }
+}
+
+@media (min-width: 1366px) {
+    .formularios-view__detail-name {
+        max-width: 280px;
+    }
 }
 
 [data-theme='dark'] .catalogos-view--compact .catalogos-view__sidebar {

@@ -19,6 +19,8 @@ import {
 import { ArrowLeftOutlined, DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
 import { Link } from '@tanstack/react-router'
 
+import { FormularioClinicoTab } from '../components/FormularioClinicoTab'
+import { EstudiosTab } from '../components/EstudiosTab'
 import {
     diagnosticosAtencionHooks,
     interconsultasHooks,
@@ -30,7 +32,6 @@ import {
     useDiagnosticosAtencion,
     useDiagnosticosCatalogo,
     useEspecialidadesLookup,
-    useEstudios,
     useInterconsultas,
     usePrescripcionDetalles,
     usePrescripciones,
@@ -755,32 +756,15 @@ function PrescripcionesTab({ atencionId }: { atencionId: string }) {
     )
 }
 
-// ── Estudios (simplificado) ─────────────────────────────────────────
-
-function EstudiosTab({ atencionId }: { atencionId: string }) {
-    const { data, isFetching } = useEstudios({ atencionId, page: 1, pageSize: 50 })
-
-    return (
-        <Table
-            rowKey="id"
-            loading={isFetching}
-            dataSource={data?.items ?? []}
-            size="small"
-            pagination={false}
-            columns={[
-                { title: 'Nombre', dataIndex: 'nombre' },
-                { title: 'Estado', dataIndex: 'estado', render: (v) => <Tag>{v}</Tag> },
-                { title: 'Solicitud', dataIndex: 'fechaSolicitud', render: formatDateTime },
-                { title: 'Justificación', dataIndex: 'justificacion', render: (v) => v || '—' },
-            ]}
-        />
-    )
-}
-
 // ── Vista principal de detalle ──────────────────────────────────────
 
 export function AtencionDetailTabs({ atencion }: AtencionDetailTabsProps) {
     const tabItems = [
+        {
+            key: 'formulario',
+            label: 'Formulario clínico',
+            children: <FormularioClinicoTab atencion={atencion} />,
+        },
         {
             key: 'signos',
             label: 'Signos vitales',

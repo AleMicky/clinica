@@ -7,6 +7,7 @@ public sealed record FormularioCampoResponse(
     string Etiqueta,
     Guid TipoCampoFormularioId,
     bool EsRequerido,
+    bool Visible,
     int Orden,
     string? Placeholder,
     string? ValorDefecto,

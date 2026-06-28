@@ -11,6 +11,14 @@ export type TipoAtencion = {
     descripcion: string
 }
 
+export type CreateTipoAtencionPayload = {
+    codigo: string
+    nombre: string
+    descripcion?: string
+}
+
+export type UpdateTipoAtencionPayload = CreateTipoAtencionPayload
+
 export type FormularioClinico = {
     id: Guid
     tipoAtencionId: Guid
@@ -20,6 +28,108 @@ export type FormularioClinico = {
     version: number
     activo: boolean
 }
+
+export type CreateFormularioClinicoPayload = {
+    tipoAtencionId: Guid
+    codigo: string
+    nombre: string
+    descripcion?: string
+    version?: number
+    activo?: boolean
+}
+
+export type UpdateFormularioClinicoPayload = CreateFormularioClinicoPayload
+
+export type FormularioSeccion = {
+    id: Guid
+    formularioClinicoId: Guid
+    codigo: string
+    nombre: string
+    orden: number
+}
+
+export type CreateFormularioSeccionPayload = {
+    formularioClinicoId: Guid
+    codigo: string
+    nombre: string
+    orden: number
+}
+
+export type UpdateFormularioSeccionPayload = CreateFormularioSeccionPayload
+
+export type FormularioSeccionPagedQuery = PagedQuery & {
+    formularioClinicoId?: Guid
+}
+
+export type TipoCampoFormulario = {
+    id: Guid
+    codigo: string
+    nombre: string
+    controlFrontend: string
+    tipoDato: string
+    permiteOpciones: boolean
+    permiteValorDefecto: boolean
+    permiteValidaciones: boolean
+    permiteMultiple: boolean
+}
+
+export type FormularioCampo = {
+    id: Guid
+    formularioSeccionId: Guid
+    codigo: string
+    etiqueta: string
+    tipoCampoFormularioId: Guid
+    esRequerido: boolean
+    visible: boolean
+    orden: number
+    placeholder?: string | null
+    valorDefecto?: string | null
+    opcionesJson?: string | null
+    validacionesJson?: string | null
+}
+
+export type CreateFormularioCampoPayload = {
+    formularioSeccionId: Guid
+    codigo: string
+    etiqueta: string
+    tipoCampoFormularioId: Guid
+    esRequerido: boolean
+    visible: boolean
+    orden: number
+    placeholder?: string | null
+    valorDefecto?: string | null
+    opcionesJson?: string | null
+    validacionesJson?: string | null
+}
+
+export type UpdateFormularioCampoPayload = CreateFormularioCampoPayload
+
+export type FormularioCampoPagedQuery = PagedQuery & {
+    formularioSeccionId?: Guid
+}
+
+export type AtencionFormularioRespuesta = {
+    id: Guid
+    atencionId: Guid
+    formularioCampoId: Guid
+    valorTexto?: string | null
+    valorNumero?: number | null
+    valorFecha?: string | null
+    valorBooleano?: boolean | null
+    valorJson?: string | null
+}
+
+export type CreateAtencionFormularioRespuestaPayload = {
+    atencionId: Guid
+    formularioCampoId: Guid
+    valorTexto?: string | null
+    valorNumero?: number | null
+    valorFecha?: string | null
+    valorBooleano?: boolean | null
+    valorJson?: string | null
+}
+
+export type UpdateAtencionFormularioRespuestaPayload = CreateAtencionFormularioRespuestaPayload
 
 export type PacienteLookup = {
     id: Guid
@@ -119,6 +229,8 @@ export type UpdateDiagnosticoAtencionPayload = CreateDiagnosticoAtencionPayload
 export type AtencionChildPagedQuery = PagedQuery & {
     atencionId?: Guid
 }
+
+export type AtencionRespuestaPagedQuery = AtencionChildPagedQuery
 
 // ── Signos vitales ──────────────────────────────────────────────────
 

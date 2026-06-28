@@ -14,6 +14,7 @@ public class FormularioCampo : AuditableEntity
     public TipoCampoFormulario TipoCampoFormulario { get; set; } = null!;
 
     public bool EsRequerido { get; set; }
+    public bool Visible { get; set; } = true;
     public int Orden { get; set; }
     public string? Placeholder { get; set; }
     public string? ValorDefecto { get; set; }

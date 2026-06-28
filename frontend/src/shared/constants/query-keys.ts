@@ -115,6 +115,20 @@ export const queryKeys = {
             list: (query: PagedQuery & Record<string, unknown>) =>
                 ['atencion-medica', 'formularios-clinicos', 'list', query] as const,
         },
+        tiposCampoFormulario: {
+            all: ['atencion-medica', 'tipos-campo-formulario'] as const,
+            list: (query: PagedQuery) =>
+                ['atencion-medica', 'tipos-campo-formulario', 'list', query] as const,
+        },
+        formularioSecciones: {
+            all: ['atencion-medica', 'formulario-secciones'] as const,
+        },
+        formularioCampos: {
+            all: ['atencion-medica', 'formulario-campos'] as const,
+        },
+        atencionRespuestas: {
+            all: ['atencion-medica', 'atencion-respuestas'] as const,
+        },
         pacientesLookup: {
             all: ['atencion-medica', 'pacientes-lookup'] as const,
             list: (query: PagedQuery) =>

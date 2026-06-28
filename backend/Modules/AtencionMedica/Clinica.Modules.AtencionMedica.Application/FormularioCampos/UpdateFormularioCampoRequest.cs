@@ -10,4 +10,5 @@ public sealed record UpdateFormularioCampoRequest(
     string? Placeholder = null,
     string? ValorDefecto = null,
     string? OpcionesJson = null,
-    string? ValidacionesJson = null);
+    string? ValidacionesJson = null,
+    bool Visible = true);

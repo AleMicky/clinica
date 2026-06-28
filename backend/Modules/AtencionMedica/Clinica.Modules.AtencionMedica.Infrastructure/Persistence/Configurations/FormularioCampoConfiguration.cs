@@ -40,6 +40,9 @@ public sealed class FormularioCampoConfiguration : BaseEntityConfiguration<Formu
         builder.HasIndex(x => new { x.FormularioSeccionId, x.Codigo })
             .IsUnique();
 
+        builder.Property(x => x.Visible)
+            .HasDefaultValue(true);
+
         builder.Property(x => x.Placeholder)
             .HasMaxLength(200);
 

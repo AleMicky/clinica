@@ -81,6 +81,7 @@ public sealed class FormularioCampoService(AtencionMedicaDbContext context)
             Etiqueta = Normalize(request.Etiqueta),
             TipoCampoFormularioId = request.TipoCampoFormularioId,
             EsRequerido = request.EsRequerido,
+            Visible = request.Visible,
             Orden = request.Orden,
             Placeholder = NormalizeOptional(request.Placeholder),
             ValorDefecto = NormalizeOptional(request.ValorDefecto),
@@ -120,6 +121,7 @@ public sealed class FormularioCampoService(AtencionMedicaDbContext context)
         entity.Etiqueta = Normalize(request.Etiqueta);
         entity.TipoCampoFormularioId = request.TipoCampoFormularioId;
         entity.EsRequerido = request.EsRequerido;
+        entity.Visible = request.Visible;
         entity.Orden = request.Orden;
         entity.Placeholder = NormalizeOptional(request.Placeholder);
         entity.ValorDefecto = NormalizeOptional(request.ValorDefecto);
@@ -198,6 +200,7 @@ public sealed class FormularioCampoService(AtencionMedicaDbContext context)
             entity.Etiqueta,
             entity.TipoCampoFormularioId,
             entity.EsRequerido,
+            entity.Visible,
             entity.Orden,
             entity.Placeholder,
             entity.ValorDefecto,

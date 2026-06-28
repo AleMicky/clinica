@@ -9,10 +9,13 @@ import type { PagedQuery } from '../../../shared/types/pagination.types'
 import type { GuidCrudService } from '../../../shared/services/guid-crud.service'
 import {
     atencionesService,
+    atencionRespuestasService,
     diagnosticoAtencionesService,
     diagnosticosService,
     especialidadesLookupService,
     estudiosService,
+    formularioCamposService,
+    formularioSeccionesService,
     formulariosClinicosService,
     interconsultasService,
     pacientesLookupService,
@@ -21,15 +24,19 @@ import {
     resultadosEstudioService,
     signosVitalesService,
     tiposAtencionService,
+    tiposCampoFormularioService,
     tratamientosService,
 } from '../services/atencion-medica.service'
 import type {
     AtencionChildPagedQuery,
     AtencionPagedQuery,
+    AtencionRespuestaPagedQuery,
     CreateAtencionPayload,
     DiagnosticoPagedQuery,
     EstudioPagedQuery,
+    FormularioCampoPagedQuery,
     FormularioClinicoPagedQuery,
+    FormularioSeccionPagedQuery,
     PrescripcionDetallePagedQuery,
     ResultadoEstudioPagedQuery,
     UpdateAtencionPayload,
@@ -189,8 +196,135 @@ export function useFormulariosClinicos(query: FormularioClinicoPagedQuery) {
     return useAppQuery({
         queryKey: queryKeys.atencionMedica.formulariosClinicos.list(query),
         queryFn: () => formulariosClinicosService.getPaged(query),
-        enabled: Boolean(query.tipoAtencionId),
+        enabled: query.tipoAtencionId === undefined || Boolean(query.tipoAtencionId),
     })
+}
+
+export const tiposAtencionHooks = createGuidCrudHooks(
+    queryKeys.atencionMedica.tiposAtencion.all,
+    tiposAtencionService,
+    {
+        created: 'Tipo de atención creado',
+        updated: 'Tipo de atención actualizado',
+        deleted: 'Tipo de atención eliminado',
+    },
+)
+
+export const formulariosClinicosHooks = createGuidCrudHooks(
+    queryKeys.atencionMedica.formulariosClinicos.all,
+    formulariosClinicosService,
+    {
+        created: 'Formulario clínico creado',
+        updated: 'Formulario clínico actualizado',
+        deleted: 'Formulario clínico eliminado',
+    },
+)
+
+export const formularioSeccionesHooks = createGuidCrudHooks(
+    queryKeys.atencionMedica.formularioSecciones.all,
+    formularioSeccionesService,
+    {
+        created: 'Sección creada',
+        updated: 'Sección actualizada',
+        deleted: 'Sección eliminada',
+    },
+)
+
+export const formularioCamposHooks = createGuidCrudHooks(
+    queryKeys.atencionMedica.formularioCampos.all,
+    formularioCamposService,
+    {
+        created: 'Campo creado',
+        updated: 'Campo actualizado',
+        deleted: 'Campo eliminado',
+    },
+)
+
+export const atencionRespuestasHooks = createGuidCrudHooks(
+    queryKeys.atencionMedica.atencionRespuestas.all,
+    atencionRespuestasService,
+    {
+        created: 'Respuesta guardada',
+        updated: 'Respuesta actualizada',
+        deleted: 'Respuesta eliminada',
+    },
+)
+
+export const diagnosticosCatalogoHooks = createGuidCrudHooks(
+    queryKeys.atencionMedica.diagnosticos.all,
+    diagnosticosService,
+    {
+        created: 'Diagnóstico registrado',
+        updated: 'Diagnóstico actualizado',
+        deleted: 'Diagnóstico eliminado',
+    },
+)
+
+export function useTiposCampoFormulario(query: PagedQuery = { page: 1, pageSize: 100 }) {
+    return useAppQuery({
+        queryKey: queryKeys.atencionMedica.tiposCampoFormulario.list(query),
+        queryFn: () => tiposCampoFormularioService.getPaged(query),
+    })
+}
+
+export function useFormularioSecciones(query: FormularioSeccionPagedQuery) {
+    return formularioSeccionesHooks.useList(query)
+}
+
+export function useFormularioCampos(query: FormularioCampoPagedQuery) {
+    return formularioCamposHooks.useList(query)
+}
+
+export function useAtencionRespuestas(query: AtencionRespuestaPagedQuery) {
+    return atencionRespuestasHooks.useList(query)
+}
+
+export function useFormularioEstructura(formularioClinicoId: string | undefined) {
+    const seccionesQuery = useFormularioSecciones({
+        page: 1,
+        pageSize: 100,
+        formularioClinicoId,
+    })
+
+    const secciones = seccionesQuery.data?.items ?? []
+    const seccionIds = secciones.map((s) => s.id).join(',')
+
+    const camposQuery = useAppQuery({
+        queryKey: [
+            ...queryKeys.atencionMedica.formularioCampos.all,
+            'estructura',
+            formularioClinicoId,
+            seccionIds,
+        ] as const,
+        queryFn: async () => {
+            if (!formularioClinicoId || secciones.length === 0) {
+                return { secciones: [], campos: [] }
+            }
+
+            const camposPorSeccion = await Promise.all(
+                secciones.map(async (seccion) => {
+                    const result = await formularioCamposService.getPaged({
+                        page: 1,
+                        pageSize: 500,
+                        formularioSeccionId: seccion.id,
+                    })
+                    return result.items
+                }),
+            )
+
+            return {
+                secciones: [...secciones].sort((a, b) => a.orden - b.orden),
+                campos: camposPorSeccion.flat(),
+            }
+        },
+        enabled: Boolean(formularioClinicoId) && seccionesQuery.isSuccess,
+    })
+
+    return {
+        secciones: camposQuery.data?.secciones ?? [],
+        campos: camposQuery.data?.campos ?? [],
+        isFetching: seccionesQuery.isFetching || camposQuery.isFetching,
+    }
 }
 
 export function usePacientesLookup(query: PagedQuery = { page: 1, pageSize: 100 }) {
