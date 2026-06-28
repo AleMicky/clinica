@@ -5,7 +5,7 @@ import {
     useAreaDepartamentos,
     useAreas,
 } from '../../catalogo-clinico/hooks/catalogo-clinico.hooks'
-import { SeguridadSectionPanel } from '../../seguridad/components/SeguridadSectionPanel'
+import { ModuleSectionPanel } from '../../../shared/components/ui/module-page/ModuleSectionPanel'
 import { EmpleadoFormModal } from '../components/EmpleadoFormModal'
 import { EmpleadosTable } from '../components/EmpleadosTable'
 import {
@@ -126,7 +126,7 @@ export function EmpleadosView() {
 
     return (
         <>
-            <SeguridadSectionPanel
+            <ModuleSectionPanel
                 title="Directorio de empleados"
                 caption={
                     <>
@@ -141,7 +141,7 @@ export function EmpleadosView() {
                 actionLabel="Nuevo empleado"
                 onAction={openCreateModal}
             >
-                <div className="erp-list-report__filter-bar">
+                <div className="module-section-panel__filters">
                     <Select
                         allowClear
                         size="small"
@@ -196,7 +196,7 @@ export function EmpleadosView() {
                     onDelete={handleDelete}
                     deletingId={deletingId}
                 />
-            </SeguridadSectionPanel>
+            </ModuleSectionPanel>
 
             <EmpleadoFormModal
                 open={modalOpen}

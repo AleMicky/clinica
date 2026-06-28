@@ -8,7 +8,7 @@ import {
 } from 'antd'
 import { PlusOutlined, SearchOutlined } from '@ant-design/icons'
 
-import { SeguridadSectionPanel } from '../../seguridad/components/SeguridadSectionPanel'
+import { ModuleSectionPanel } from '../../../shared/components/ui/module-page/ModuleSectionPanel'
 import { RoleFormModal } from '../components/RoleFormModal'
 import { RolesTable } from '../components/RolesTable'
 import {
@@ -97,7 +97,7 @@ export function RolesView({ embedded = false }: RolesViewProps) {
     if (embedded) {
         return (
             <>
-                <SeguridadSectionPanel
+                <ModuleSectionPanel
                     title="Roles del sistema"
                     caption={
                         <>
@@ -123,7 +123,7 @@ export function RolesView({ embedded = false }: RolesViewProps) {
                         onDelete={handleDelete}
                         deletingId={deletingId}
                     />
-                </SeguridadSectionPanel>
+                </ModuleSectionPanel>
 
                 <RoleFormModal
                     open={modalOpen}

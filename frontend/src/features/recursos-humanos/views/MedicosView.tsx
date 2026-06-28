@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { Select } from 'antd'
+import { Button, Select, Typography } from 'antd'
 
 import { useEspecialidades } from '../../catalogo-clinico/hooks/catalogo-clinico.hooks'
-import { SeguridadSectionPanel } from '../../seguridad/components/SeguridadSectionPanel'
+import { ModuleSectionPanel } from '../../../shared/components/ui/module-page/ModuleSectionPanel'
 import { MedicoFormModal } from '../components/MedicoFormModal'
 import { MedicosTable } from '../components/MedicosTable'
 import {
@@ -17,6 +17,8 @@ import {
     type MedicoFormValues,
 } from '../schemas/medico.schema'
 import type { Medico } from '../types/medico.types'
+
+const { Text } = Typography
 
 const DEFAULT_PAGE_SIZE = 20
 const LOOKUP_QUERY = { page: 1, pageSize: 200 }
@@ -53,6 +55,8 @@ export function MedicosView() {
             label: especialidad.nombre,
             value: especialidad.id,
         })) ?? []
+
+    const hasActiveFilters = Boolean(search || especialidadFilter)
 
     const openCreateModal = () => {
         setEditingMedico(null)
@@ -105,12 +109,12 @@ export function MedicosView() {
 
     return (
         <>
-            <SeguridadSectionPanel
+            <ModuleSectionPanel
                 title="Directorio de médicos"
                 caption={
                     <>
                         {totalMedicos} registrado{totalMedicos === 1 ? '' : 's'}
-                        {especialidadFilter ? ' · filtro por especialidad' : ''}
+                        {hasActiveFilters ? ' · filtros activos' : ''}
                     </>
                 }
                 searchPlaceholder="Buscar por nombre o matrícula…"
@@ -120,7 +124,7 @@ export function MedicosView() {
                 actionLabel="Nuevo médico"
                 onAction={openCreateModal}
             >
-                <div className="erp-list-report__filter-bar">
+                <div className="module-section-panel__filters">
                     <Select
                         allowClear
                         size="small"
@@ -133,6 +137,24 @@ export function MedicosView() {
                         }}
                         className="rrhh-page__filter-select"
                     />
+                    {hasActiveFilters ? (
+                        <Button
+                            type="link"
+                            size="small"
+                            onClick={() => {
+                                setSearchInput('')
+                                setSearch('')
+                                setEspecialidadFilter(undefined)
+                                setPage(1)
+                            }}
+                        >
+                            Limpiar
+                        </Button>
+                    ) : (
+                        <Text type="secondary" className="rrhh-page__filter-hint">
+                            Filtre por especialidad médica
+                        </Text>
+                    )}
                 </div>
 
                 <MedicosTable
@@ -146,7 +168,7 @@ export function MedicosView() {
                     onDelete={handleDelete}
                     deletingId={deletingId}
                 />
-            </SeguridadSectionPanel>
+            </ModuleSectionPanel>
 
             <MedicoFormModal
                 open={modalOpen}

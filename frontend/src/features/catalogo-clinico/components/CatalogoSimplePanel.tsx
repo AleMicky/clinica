@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
     createColumnHelper,
     type ColumnDef,
@@ -67,6 +67,16 @@ export function CatalogoSimplePanel({
     const [modalOpen, setModalOpen] = useState(false)
     const [editing, setEditing] = useState<CatalogoBase | null>(null)
     const [deletingId, setDeletingId] = useState<string | null>(null)
+    const onSearchRef = useRef(onSearch)
+    onSearchRef.current = onSearch
+
+    useEffect(() => {
+        const timer = window.setTimeout(() => {
+            onSearchRef.current(searchInput.trim())
+        }, 400)
+
+        return () => window.clearTimeout(timer)
+    }, [searchInput])
 
     const columns = useMemo(
         () =>

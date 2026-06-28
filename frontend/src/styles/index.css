@@ -553,6 +553,231 @@ body {
     border-radius: 4px;
 }
 
+/* Module object page (RRHH, Seguridad, Catálogo clínico) */
+.module-object-page {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(16px, 3vw, 24px);
+}
+
+.module-object-page__header-icon {
+    width: clamp(40px, 8vw, 48px);
+    height: clamp(40px, 8vw, 48px);
+    display: grid;
+    place-items: center;
+    border-radius: 14px;
+    font-size: clamp(18px, 4vw, 22px);
+    color: var(--ant-color-primary);
+    background: linear-gradient(135deg, rgba(22, 119, 255, 0.14), rgba(22, 119, 255, 0.04));
+    box-shadow: inset 0 0 0 1px rgba(22, 119, 255, 0.12);
+    flex-shrink: 0;
+}
+
+.module-object-page__title {
+    margin-bottom: 2px !important;
+}
+
+.module-object-page__subtitle {
+    display: block;
+    font-size: clamp(13px, 2.5vw, 14px);
+    line-height: 1.45;
+    max-width: 52ch;
+}
+
+.module-object-page__stats {
+    flex-shrink: 0;
+}
+
+.module-object-page__stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(15, 23, 42, 0.72);
+    background: rgba(248, 250, 252, 0.95);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.module-object-page__stat .anticon {
+    font-size: 14px;
+    color: var(--ant-color-primary);
+}
+
+.module-object-page__section-badge {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    padding: 10px 16px;
+    border-radius: 12px;
+    background: rgba(248, 250, 252, 0.9);
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    flex-shrink: 0;
+}
+
+.module-object-page__section-badge-icon {
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    font-size: 16px;
+    color: var(--ant-color-primary);
+    background: rgba(22, 119, 255, 0.1);
+    flex-shrink: 0;
+}
+
+.module-object-page__section-badge-content {
+    min-width: 0;
+}
+
+.module-object-page__section-badge-label {
+    display: block;
+    font-size: 11px;
+    line-height: 1.2;
+    margin-bottom: 2px;
+}
+
+.module-object-page__section-badge-title {
+    display: block;
+    font-size: 14px;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 220px;
+}
+
+.module-object-page__workspace {
+    min-height: 0;
+}
+
+.module-object-page__content {
+    min-height: 0;
+}
+
+.module-object-page__panel {
+    min-height: 480px;
+    border-radius: 16px;
+    background: #fff;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 4px 24px rgba(15, 23, 42, 0.04);
+    padding: clamp(14px, 3vw, 22px) clamp(14px, 3vw, 24px) clamp(18px, 3vw, 24px);
+}
+
+/* Module section panel (listados embebidos) */
+.module-section-panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 420px;
+    border-radius: 16px;
+    background: #fff;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 4px 24px rgba(15, 23, 42, 0.04);
+    overflow: hidden;
+}
+
+.module-section-panel__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: clamp(14px, 3vw, 18px) clamp(14px, 3vw, 22px);
+    border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.module-section-panel__header-text {
+    min-width: 0;
+    flex: 1;
+}
+
+.module-section-panel__title {
+    display: block;
+    font-size: clamp(15px, 3vw, 16px);
+    margin-bottom: 4px;
+}
+
+.module-section-panel__caption {
+    display: block;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.module-section-panel__action {
+    flex-shrink: 0;
+}
+
+.module-section-panel__search {
+    padding: 0 clamp(14px, 3vw, 22px) 16px;
+    max-width: 420px;
+}
+
+.module-section-panel__body {
+    flex: 1;
+    padding: 0 clamp(14px, 3vw, 22px) clamp(14px, 3vw, 18px);
+}
+
+.module-section-panel__filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(15, 23, 42, 0.02);
+    border: 1px solid rgba(15, 23, 42, 0.05);
+}
+
+[data-theme='dark'] .module-object-page__stat {
+    color: rgba(255, 255, 255, 0.75);
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .module-object-page__section-badge,
+[data-theme='dark'] .module-object-page__panel,
+[data-theme='dark'] .module-section-panel {
+    background: #161b22;
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .module-section-panel__header {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .module-section-panel__filters {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.06);
+}
+
+@media (max-width: 767px) {
+    .module-object-page__header-main {
+        width: 100%;
+    }
+
+    .module-object-page__section-badge {
+        width: 100%;
+    }
+
+    .module-object-page__section-badge-title {
+        max-width: none;
+    }
+
+    .module-section-panel__header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .module-section-panel__search {
+        max-width: none;
+        width: 100%;
+    }
+}
+
 /* SAP Object Page */
 .erp-object-page {
     display: flex;

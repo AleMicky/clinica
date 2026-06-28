@@ -3,6 +3,7 @@ import type { FileRouteTypes } from '../../../../routeTree.gen'
 import {
     AppstoreOutlined,
     DashboardOutlined,
+    ExperimentOutlined,
     IdcardOutlined,
     MedicineBoxOutlined,
     NodeIndexOutlined,
@@ -119,7 +120,7 @@ export const menuGroups: MenuGroup[] = [
             {
                 key: '/recursos-humanos/especialidades',
                 to: '/recursos-humanos/especialidades',
-                icon: <MedicineBoxOutlined />,
+                icon: <ExperimentOutlined />,
                 label: 'Especialidades',
                 roles: [AppRole.Admin],
             },
@@ -161,7 +162,7 @@ export const menuGroups: MenuGroup[] = [
                 key: '/catalogos',
                 to: '/catalogos',
                 icon: <AppstoreOutlined />,
-                label: 'Parámetros',
+                label: 'Catálogos generales',
                 roles: [AppRole.Admin],
             },
             {

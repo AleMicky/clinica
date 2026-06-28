@@ -16,7 +16,7 @@ import {
 } from '@ant-design/icons'
 
 import { useRoles } from '../../roles/hooks/roles.hooks'
-import { SeguridadSectionPanel } from '../../seguridad/components/SeguridadSectionPanel'
+import { ModuleSectionPanel } from '../../../shared/components/ui/module-page/ModuleSectionPanel'
 import { UserFormModal } from '../components/UserFormModal'
 import { UsersTable } from '../components/UsersTable'
 import {
@@ -134,7 +134,7 @@ export function UsuariosView({ embedded = false }: UsuariosViewProps) {
     if (embedded) {
         return (
             <>
-                <SeguridadSectionPanel
+                <ModuleSectionPanel
                     title="Cuentas de usuario"
                     caption={
                         <>
@@ -160,7 +160,7 @@ export function UsuariosView({ embedded = false }: UsuariosViewProps) {
                         onDelete={handleDelete}
                         deletingId={deletingId}
                     />
-                </SeguridadSectionPanel>
+                </ModuleSectionPanel>
 
                 <UserFormModal
                     open={modalOpen}
