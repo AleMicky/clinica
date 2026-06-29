@@ -1,31 +1,34 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import type { DataNode } from 'antd/es/tree'
 import {
     Breadcrumb,
     Button,
-    Col,
+    Dropdown,
     Empty,
     Flex,
     Grid,
     Input,
-    Row,
-    Tabs,
+    Modal,
+    Skeleton,
+    Tag,
+    Tree,
     Typography,
     theme,
 } from 'antd'
+import type { MenuProps } from 'antd'
 import {
     ApartmentOutlined,
     ArrowLeftOutlined,
     BankOutlined,
+    DeleteOutlined,
+    EditOutlined,
     ExperimentOutlined,
+    MoreOutlined,
     NodeIndexOutlined,
     PlusOutlined,
     SearchOutlined,
 } from '@ant-design/icons'
 
-import { CatalogoBaseFormModal } from '../../catalogo-clinico/components/CatalogoBaseFormModal'
-import { DepartamentoFormModal } from '../../catalogo-clinico/components/DepartamentoFormModal'
-import { HierarchyList } from '../../catalogo-clinico/components/HierarchyList'
-import { ServicioFormModal } from '../../catalogo-clinico/components/ServicioFormModal'
 import {
     useCreateArea,
     useCreateDepartamento,
@@ -49,14 +52,29 @@ import type {
     JerarquiaDepartamentoNode,
     JerarquiaServicioNode,
 } from '../types/jerarquia.types'
+import {
+    JerarquiaAreaDrawer,
+    JerarquiaDepartamentoDrawer,
+    JerarquiaServicioDrawer,
+} from './JerarquiaFormDrawers'
 
-const { Text, Paragraph } = Typography
+const { Text, Paragraph, Title } = Typography
 const { useBreakpoint } = Grid
 
-const DEFAULT_PAGE_SIZE = 15
+type NodeKind = 'area' | 'departamento' | 'servicio'
+type SelectionKind = NodeKind | null
 
-type HierarchyStep = 'area' | 'detail'
-type DetailTab = 'departamentos' | 'servicios'
+function nodeKey(kind: NodeKind, id: string) {
+    return `${kind}:${id}`
+}
+
+function parseNodeKey(key: string): { kind: NodeKind; id: string } | null {
+    const [kind, id] = key.split(':')
+    if (!id || (kind !== 'area' && kind !== 'departamento' && kind !== 'servicio')) {
+        return null
+    }
+    return { kind, id }
+}
 
 function toArea(node: JerarquiaAreaNode): Area {
     return {
@@ -89,11 +107,6 @@ function toServicio(node: JerarquiaServicioNode, departamentoNombre: string): Se
     }
 }
 
-function formatEmpleadosMeta(count?: number | null) {
-    if (count == null) return undefined
-    return `${count} empleado${count === 1 ? '' : 's'}`
-}
-
 function toBasePayload(values: CatalogoBaseFormValues) {
     return {
         codigo: values.codigo,
@@ -102,17 +115,185 @@ function toBasePayload(values: CatalogoBaseFormValues) {
     }
 }
 
-function filterBySearch<T extends { codigo: string; nombre: string }>(
-    items: T[],
-    search: string,
-) {
-    const query = search.trim().toLowerCase()
-    if (!query) return items
+function matchesQuery(value: string, query: string) {
+    return value.toLowerCase().includes(query)
+}
 
-    return items.filter(
-        (item) =>
-            item.nombre.toLowerCase().includes(query) ||
-            item.codigo.toLowerCase().includes(query),
+function filterJerarquiaTree(
+    areas: JerarquiaAreaNode[],
+    query: string,
+): JerarquiaAreaNode[] {
+    const normalized = query.trim().toLowerCase()
+    if (!normalized) return areas
+
+    return areas
+        .map((area) => {
+            const areaMatch =
+                matchesQuery(area.nombre, normalized) ||
+                matchesQuery(area.codigo, normalized)
+
+            const departamentos = area.departamentos
+                .map((dept) => {
+                    const deptMatch =
+                        matchesQuery(dept.nombre, normalized) ||
+                        matchesQuery(dept.codigo, normalized)
+
+                    const servicios = dept.servicios.filter(
+                        (servicio) =>
+                            matchesQuery(servicio.nombre, normalized) ||
+                            matchesQuery(servicio.codigo, normalized),
+                    )
+
+                    if (deptMatch) return dept
+                    if (servicios.length > 0) return { ...dept, servicios }
+                    return null
+                })
+                .filter((dept): dept is JerarquiaDepartamentoNode => dept !== null)
+
+            if (areaMatch) return area
+            if (departamentos.length > 0) return { ...area, departamentos }
+            return null
+        })
+        .filter((area): area is JerarquiaAreaNode => area !== null)
+}
+
+function collectExpandedKeys(areas: JerarquiaAreaNode[], query: string): string[] {
+    const normalized = query.trim().toLowerCase()
+    if (!normalized) return []
+
+    const keys: string[] = []
+
+    for (const area of areas) {
+        let expandArea = false
+
+        for (const dept of area.departamentos) {
+            const deptMatch =
+                matchesQuery(dept.nombre, normalized) ||
+                matchesQuery(dept.codigo, normalized)
+            const servicioMatch = dept.servicios.some(
+                (servicio) =>
+                    matchesQuery(servicio.nombre, normalized) ||
+                    matchesQuery(servicio.codigo, normalized),
+            )
+
+            if (deptMatch || servicioMatch) {
+                expandArea = true
+                keys.push(nodeKey('departamento', dept.id))
+            }
+        }
+
+        const areaMatch =
+            matchesQuery(area.nombre, normalized) ||
+            matchesQuery(area.codigo, normalized)
+
+        if (expandArea || areaMatch) {
+            keys.push(nodeKey('area', area.id))
+        }
+    }
+
+    return keys
+}
+
+function countAreaServicios(area: JerarquiaAreaNode) {
+    return area.departamentos.reduce((total, dept) => total + dept.servicios.length, 0)
+}
+
+function formatEmpleados(count?: number | null) {
+    if (count == null) return null
+    return `${count} empleado${count === 1 ? '' : 's'}`
+}
+
+type ChildCardProps = {
+    icon: React.ReactNode
+    nombre: string
+    codigo: string
+    meta?: string | null
+    selected?: boolean
+    onClick: () => void
+}
+
+function ChildCard({ icon, nombre, codigo, meta, selected, onClick }: ChildCardProps) {
+    return (
+        <button
+            type="button"
+            className={[
+                'jerarquia-explorer__child-card',
+                selected ? 'jerarquia-explorer__child-card--selected' : '',
+            ]
+                .filter(Boolean)
+                .join(' ')}
+            onClick={onClick}
+        >
+            <span className="jerarquia-explorer__child-card-icon" aria-hidden>
+                {icon}
+            </span>
+            <span className="jerarquia-explorer__child-card-body">
+                <Text strong className="jerarquia-explorer__child-card-name">
+                    {nombre}
+                </Text>
+                <Text type="secondary" className="jerarquia-explorer__child-card-code">
+                    {codigo}
+                </Text>
+                {meta ? (
+                    <Text type="secondary" className="jerarquia-explorer__child-card-meta">
+                        {meta}
+                    </Text>
+                ) : null}
+            </span>
+        </button>
+    )
+}
+
+type TreeTitleProps = {
+    icon: React.ReactNode
+    nombre: string
+    codigo: string
+    countLabel?: string
+    menuItems: MenuProps['items']
+    deleting?: boolean
+}
+
+function TreeNodeTitle({
+    icon,
+    nombre,
+    codigo,
+    countLabel,
+    menuItems,
+    deleting,
+}: TreeTitleProps) {
+    return (
+        <div className="jerarquia-explorer__tree-node">
+            <span className="jerarquia-explorer__tree-node-icon" aria-hidden>
+                {icon}
+            </span>
+            <span className="jerarquia-explorer__tree-node-content">
+                <Text className="jerarquia-explorer__tree-node-name">{nombre}</Text>
+                <Tag className="jerarquia-explorer__tree-node-tag" variant="filled">
+                    {codigo}
+                </Tag>
+                {countLabel ? (
+                    <Text type="secondary" className="jerarquia-explorer__tree-node-count">
+                        {countLabel}
+                    </Text>
+                ) : null}
+            </span>
+            <span className="jerarquia-explorer__tree-node-actions">
+                <Dropdown
+                    menu={{ items: menuItems }}
+                    trigger={['click']}
+                    placement="bottomRight"
+                >
+                    <Button
+                        type="text"
+                        size="small"
+                        icon={<MoreOutlined />}
+                        loading={deleting}
+                        onClick={(event) => event.stopPropagation()}
+                        aria-label="Acciones"
+                    />
+                </Dropdown>
+            </span>
+        </div>
     )
 }
 
@@ -121,22 +302,24 @@ export function JerarquiaPanel() {
     const screens = useBreakpoint()
     const isMobile = !screens.lg
 
-    const [areaPage, setAreaPage] = useState(1)
-    const [areaSearchInput, setAreaSearchInput] = useState('')
-    const [areaSearch, setAreaSearch] = useState('')
-    const [deptSearch, setDeptSearch] = useState('')
-    const [servicioSearch, setServicioSearch] = useState('')
+    const [treeSearchInput, setTreeSearchInput] = useState('')
+    const [treeSearch, setTreeSearch] = useState('')
+    const [expandedKeys, setExpandedKeys] = useState<string[]>([])
+    const [selectedKeys, setSelectedKeys] = useState<string[]>([])
 
     const [selectedArea, setSelectedArea] = useState<Area | null>(null)
     const [selectedDept, setSelectedDept] = useState<Departamento | null>(null)
-    const [detailTab, setDetailTab] = useState<DetailTab>('departamentos')
+    const [selectedServicio, setSelectedServicio] = useState<Servicio | null>(null)
+    const [selectionKind, setSelectionKind] = useState<SelectionKind>(null)
 
-    const [areaModalOpen, setAreaModalOpen] = useState(false)
+    const [areaDrawerOpen, setAreaDrawerOpen] = useState(false)
     const [editingArea, setEditingArea] = useState<Area | null>(null)
-    const [deptModalOpen, setDeptModalOpen] = useState(false)
+    const [deptDrawerOpen, setDeptDrawerOpen] = useState(false)
     const [editingDept, setEditingDept] = useState<Departamento | null>(null)
-    const [servicioModalOpen, setServicioModalOpen] = useState(false)
+    const [servicioDrawerOpen, setServicioDrawerOpen] = useState(false)
     const [editingServicio, setEditingServicio] = useState<Servicio | null>(null)
+    const [defaultAreaId, setDefaultAreaId] = useState<string | null>(null)
+    const [defaultDepartamentoId, setDefaultDepartamentoId] = useState<string | null>(null)
 
     const [deletingAreaId, setDeletingAreaId] = useState<string | null>(null)
     const [deletingDeptId, setDeletingDeptId] = useState<string | null>(null)
@@ -164,9 +347,12 @@ export function JerarquiaPanel() {
     const allAreas = useMemo(() => areaNodes.map(toArea), [areaNodes])
     const areaOptions = allAreas
 
-    const selectedAreaNode = selectedArea
-        ? areaNodesById.get(selectedArea.id) ?? null
-        : null
+    const filteredAreaNodes = useMemo(
+        () => filterJerarquiaTree(areaNodes, treeSearch),
+        [areaNodes, treeSearch],
+    )
+
+    const selectedAreaNode = selectedArea ? areaNodesById.get(selectedArea.id) ?? null : null
 
     const departamentos = useMemo(
         () =>
@@ -178,126 +364,187 @@ export function JerarquiaPanel() {
         [selectedAreaNode],
     )
 
-    const selectedDeptNode = useMemo(
-        () =>
-            selectedDept && selectedAreaNode
-                ? selectedAreaNode.departamentos.find(
-                      (dept) => dept.id === selectedDept.id,
-                  ) ?? null
-                : null,
-        [selectedDept, selectedAreaNode],
-    )
+    const selectedDeptNode = useMemo(() => {
+        if (!selectedDept) return null
+        for (const area of areaNodes) {
+            const dept = area.departamentos.find((item) => item.id === selectedDept.id)
+            if (dept) return dept
+        }
+        return null
+    }, [selectedDept, areaNodes])
 
-    const servicios = useMemo(
-        () =>
-            selectedDeptNode
-                ? selectedDeptNode.servicios.map((servicio) =>
-                      toServicio(servicio, selectedDeptNode.nombre),
-                  )
-                : [],
-        [selectedDeptNode],
-    )
+    const selectedServicioNode = useMemo(() => {
+        if (!selectedServicio) return null
+        for (const area of areaNodes) {
+            for (const dept of area.departamentos) {
+                const servicio = dept.servicios.find((item) => item.id === selectedServicio.id)
+                if (servicio) return { servicio, dept, area }
+            }
+        }
+        return null
+    }, [selectedServicio, areaNodes])
 
-    const filteredAreas = useMemo(
-        () => filterBySearch(allAreas, areaSearch),
-        [allAreas, areaSearch],
-    )
-
-    const displayAreas = useMemo(() => {
-        if (areaSearch) return filteredAreas
-
-        const start = (areaPage - 1) * DEFAULT_PAGE_SIZE
-        return filteredAreas.slice(start, start + DEFAULT_PAGE_SIZE)
-    }, [filteredAreas, areaSearch, areaPage])
-
-    const totalAreas = filteredAreas.length
-    const loadingAreas = loadingJerarquia
-    const loadingDepts = loadingJerarquia
-    const loadingServicios = loadingJerarquia
-
-    const filteredDepartamentos = useMemo(
-        () => filterBySearch(departamentos, deptSearch),
-        [departamentos, deptSearch],
-    )
-
-    const filteredServicios = useMemo(
-        () => filterBySearch(servicios, servicioSearch),
-        [servicios, servicioSearch],
-    )
-
-    const areaListItems = useMemo(
-        () =>
-            displayAreas.map((area) => ({
-                ...area,
-                meta: formatEmpleadosMeta(areaNodesById.get(area.id)?.empleadosCount),
-            })),
-        [displayAreas, areaNodesById],
-    )
-
-    const departamentoListItems = useMemo(
-        () =>
-            filteredDepartamentos.map((dept) => {
-                const node = selectedAreaNode?.departamentos.find(
-                    (item) => item.id === dept.id,
+    const serviciosDepartamentos = useMemo(() => {
+        if (editingServicio) {
+            for (const area of areaNodes) {
+                const areaDepartamentos = area.departamentos.map((dept) =>
+                    toDepartamento(dept, area.nombre),
                 )
-
-                return {
-                    ...dept,
-                    meta: formatEmpleadosMeta(node?.empleadosCount),
+                if (
+                    areaDepartamentos.some(
+                        (dept) => dept.id === editingServicio.departamentoId,
+                    )
+                ) {
+                    return areaDepartamentos
                 }
-            }),
-        [filteredDepartamentos, selectedAreaNode],
-    )
+            }
+        }
 
-    const servicioListItems = useMemo(
-        () =>
-            filteredServicios.map((servicio) => {
-                const node = selectedDeptNode?.servicios.find(
-                    (item) => item.id === servicio.id,
-                )
+        if (selectedAreaNode) {
+            return selectedAreaNode.departamentos.map((dept) =>
+                toDepartamento(dept, selectedAreaNode.nombre),
+            )
+        }
 
-                return {
-                    ...servicio,
-                    meta: formatEmpleadosMeta(node?.empleadosCount),
-                }
-            }),
-        [filteredServicios, selectedDeptNode],
-    )
+        if (defaultAreaId) {
+            const area = areaNodesById.get(defaultAreaId)
+            if (!area) return []
+            return area.departamentos.map((dept) => toDepartamento(dept, area.nombre))
+        }
 
-    useEffect(() => {
-        setSelectedDept(null)
-        setDeptSearch('')
-        setServicioSearch('')
-        setDetailTab('departamentos')
-    }, [selectedArea?.id])
-
-    useEffect(() => {
-        setServicioSearch('')
-    }, [selectedDept?.id])
-
-    useEffect(() => {
-        const timer = window.setTimeout(() => {
-            setAreaSearch(areaSearchInput.trim())
-        }, 300)
-
-        return () => window.clearTimeout(timer)
-    }, [areaSearchInput])
+        return departamentos
+    }, [
+        editingServicio,
+        areaNodes,
+        selectedAreaNode,
+        defaultAreaId,
+        areaNodesById,
+        departamentos,
+    ])
 
     const isSavingArea = createArea.isPending || updateArea.isPending
     const isSavingDept = createDept.isPending || updateDept.isPending
     const isSavingServicio = createServicio.isPending || updateServicio.isPending
 
-    const mobileStep = useMemo<HierarchyStep>(
-        () => (selectedArea ? 'detail' : 'area'),
-        [selectedArea],
+    const hasSelection = selectionKind !== null
+
+    useEffect(() => {
+        const timer = window.setTimeout(() => {
+            setTreeSearch(treeSearchInput.trim())
+        }, 300)
+        return () => window.clearTimeout(timer)
+    }, [treeSearchInput])
+
+    useEffect(() => {
+        if (!treeSearch) return
+        setExpandedKeys(collectExpandedKeys(areaNodes, treeSearch))
+    }, [treeSearch, areaNodes])
+
+    const syncSelection = useCallback(
+        (kind: SelectionKind, area: Area | null, dept: Departamento | null, servicio: Servicio | null) => {
+            setSelectionKind(kind)
+            setSelectedArea(area)
+            setSelectedDept(dept)
+            setSelectedServicio(servicio)
+
+            if (servicio) {
+                setSelectedKeys([nodeKey('servicio', servicio.id)])
+                return
+            }
+            if (dept) {
+                setSelectedKeys([nodeKey('departamento', dept.id)])
+                return
+            }
+            if (area) {
+                setSelectedKeys([nodeKey('area', area.id)])
+                return
+            }
+            setSelectedKeys([])
+        },
+        [],
     )
 
-    const handleMobileBack = () => {
-        setSelectedArea(null)
-        setSelectedDept(null)
+    const openCreateArea = () => {
+        setEditingArea(null)
+        setAreaDrawerOpen(true)
     }
 
-    const showMobilePanel = (step: HierarchyStep) => !isMobile || mobileStep === step
+    const openEditArea = (area: Area) => {
+        setEditingArea(area)
+        setAreaDrawerOpen(true)
+    }
+
+    const openCreateDept = (areaId?: string) => {
+        setEditingDept(null)
+        setDefaultAreaId(areaId ?? selectedArea?.id ?? null)
+        setDeptDrawerOpen(true)
+    }
+
+    const openEditDept = (dept: Departamento) => {
+        setEditingDept(dept)
+        setDefaultAreaId(null)
+        setDeptDrawerOpen(true)
+    }
+
+    const openCreateServicio = (departamentoId?: string, areaId?: string) => {
+        setEditingServicio(null)
+        setDefaultDepartamentoId(departamentoId ?? selectedDept?.id ?? null)
+        setDefaultAreaId(areaId ?? selectedArea?.id ?? null)
+        setServicioDrawerOpen(true)
+    }
+
+    const openEditServicio = (servicio: Servicio) => {
+        setEditingServicio(servicio)
+        setDefaultDepartamentoId(null)
+        setDefaultAreaId(null)
+        setServicioDrawerOpen(true)
+    }
+
+    const handleDeleteArea = async (areaId: string) => {
+        setDeletingAreaId(areaId)
+        try {
+            await deleteArea.mutateAsync(areaId)
+            if (selectedArea?.id === areaId) {
+                syncSelection(null, null, null, null)
+            }
+        } finally {
+            setDeletingAreaId(null)
+        }
+    }
+
+    const handleDeleteDept = async (deptId: string) => {
+        setDeletingDeptId(deptId)
+        try {
+            await deleteDept.mutateAsync(deptId)
+            if (selectedDept?.id === deptId) {
+                syncSelection(
+                    selectedArea ? 'area' : null,
+                    selectedArea,
+                    null,
+                    null,
+                )
+            }
+        } finally {
+            setDeletingDeptId(null)
+        }
+    }
+
+    const handleDeleteServicio = async (servicioId: string) => {
+        setDeletingServicioId(servicioId)
+        try {
+            await deleteServicio.mutateAsync(servicioId)
+            if (selectedServicio?.id === servicioId) {
+                syncSelection(
+                    selectedDept ? 'departamento' : selectedArea ? 'area' : null,
+                    selectedArea,
+                    selectedDept,
+                    null,
+                )
+            }
+        } finally {
+            setDeletingServicioId(null)
+        }
+    }
 
     const handleAreaSubmit = async (values: CatalogoBaseFormValues) => {
         const payload = toBasePayload(values)
@@ -308,7 +555,7 @@ export function JerarquiaPanel() {
             await createArea.mutateAsync(payload)
         }
 
-        setAreaModalOpen(false)
+        setAreaDrawerOpen(false)
         setEditingArea(null)
     }
 
@@ -324,8 +571,9 @@ export function JerarquiaPanel() {
             await createDept.mutateAsync(payload)
         }
 
-        setDeptModalOpen(false)
+        setDeptDrawerOpen(false)
         setEditingDept(null)
+        setDefaultAreaId(null)
     }
 
     const handleServicioSubmit = async (values: ServicioFormValues) => {
@@ -340,452 +588,729 @@ export function JerarquiaPanel() {
             await createServicio.mutateAsync(payload)
         }
 
-        setServicioModalOpen(false)
+        setServicioDrawerOpen(false)
         setEditingServicio(null)
+        setDefaultDepartamentoId(null)
+        setDefaultAreaId(null)
     }
 
-    const renderAreaMaster = () => (
-        <section className="catalogos-view__panel catalogos-view__panel--master jerarquia-rrhh__master">
-            <div className="catalogos-view__panel-toolbar">
-                <div>
-                    <Text strong>Áreas</Text>
-                    <Text type="secondary" className="catalogos-view__panel-caption">
-                        {totalAreas} registrada{totalAreas === 1 ? '' : 's'}
-                    </Text>
-                </div>
+    const buildAreaMenu = (area: Area): MenuProps['items'] => [
+        {
+            key: 'edit',
+            icon: <EditOutlined />,
+            label: 'Editar área',
+            onClick: ({ domEvent }) => {
+                domEvent.stopPropagation()
+                openEditArea(area)
+            },
+        },
+        {
+            key: 'new-dept',
+            icon: <PlusOutlined />,
+            label: 'Nuevo departamento',
+            onClick: ({ domEvent }) => {
+                domEvent.stopPropagation()
+                openCreateDept(area.id)
+            },
+        },
+        { type: 'divider' },
+        {
+            key: 'delete',
+            danger: true,
+            icon: <DeleteOutlined />,
+            label: 'Eliminar área',
+            onClick: ({ domEvent }) => {
+                domEvent.stopPropagation()
+                Modal.confirm({
+                    title: '¿Eliminar área?',
+                    content: 'Se eliminará el área y su jerarquía asociada.',
+                    okText: 'Eliminar',
+                    okType: 'danger',
+                    cancelText: 'Cancelar',
+                    onOk: () => handleDeleteArea(area.id),
+                })
+            },
+        },
+    ]
+
+    const buildDeptMenu = (dept: Departamento): MenuProps['items'] => [
+        {
+            key: 'edit',
+            icon: <EditOutlined />,
+            label: 'Editar departamento',
+            onClick: ({ domEvent }) => {
+                domEvent.stopPropagation()
+                openEditDept(dept)
+            },
+        },
+        {
+            key: 'new-serv',
+            icon: <PlusOutlined />,
+            label: 'Nuevo servicio',
+            onClick: ({ domEvent }) => {
+                domEvent.stopPropagation()
+                openCreateServicio(dept.id, dept.areaId)
+            },
+        },
+        { type: 'divider' },
+        {
+            key: 'delete',
+            danger: true,
+            icon: <DeleteOutlined />,
+            label: 'Eliminar departamento',
+            onClick: ({ domEvent }) => {
+                domEvent.stopPropagation()
+                Modal.confirm({
+                    title: '¿Eliminar departamento?',
+                    content: 'Se eliminará el departamento y sus servicios.',
+                    okText: 'Eliminar',
+                    okType: 'danger',
+                    cancelText: 'Cancelar',
+                    onOk: () => handleDeleteDept(dept.id),
+                })
+            },
+        },
+    ]
+
+    const buildServicioMenu = (servicio: Servicio): MenuProps['items'] => [
+        {
+            key: 'edit',
+            icon: <EditOutlined />,
+            label: 'Editar servicio',
+            onClick: ({ domEvent }) => {
+                domEvent.stopPropagation()
+                openEditServicio(servicio)
+            },
+        },
+        { type: 'divider' },
+        {
+            key: 'delete',
+            danger: true,
+            icon: <DeleteOutlined />,
+            label: 'Eliminar servicio',
+            onClick: ({ domEvent }) => {
+                domEvent.stopPropagation()
+                Modal.confirm({
+                    title: '¿Eliminar servicio?',
+                    okText: 'Eliminar',
+                    okType: 'danger',
+                    cancelText: 'Cancelar',
+                    onOk: () => handleDeleteServicio(servicio.id),
+                })
+            },
+        },
+    ]
+
+    const treeData = useMemo<DataNode[]>(() => {
+        return filteredAreaNodes.map((area) => {
+            const areaEntity = toArea(area)
+            const serviciosCount = countAreaServicios(area)
+            const deptCount = area.departamentos.length
+
+            return {
+                key: nodeKey('area', area.id),
+                title: (
+                    <TreeNodeTitle
+                        icon={<BankOutlined />}
+                        nombre={area.nombre}
+                        codigo={area.codigo}
+                        countLabel={`${deptCount} depto${deptCount === 1 ? '' : 's'} · ${serviciosCount} serv.`}
+                        menuItems={buildAreaMenu(areaEntity)}
+                        deleting={deletingAreaId === area.id}
+                    />
+                ),
+                children: area.departamentos.map((dept) => {
+                    const deptEntity = toDepartamento(dept, area.nombre)
+                    const servCount = dept.servicios.length
+
+                    return {
+                        key: nodeKey('departamento', dept.id),
+                        title: (
+                            <TreeNodeTitle
+                                icon={<ApartmentOutlined />}
+                                nombre={dept.nombre}
+                                codigo={dept.codigo}
+                                countLabel={`${servCount} servicio${servCount === 1 ? '' : 's'}`}
+                                menuItems={buildDeptMenu(deptEntity)}
+                                deleting={deletingDeptId === dept.id}
+                            />
+                        ),
+                        children: dept.servicios.map((servicio) => {
+                            const servicioEntity = toServicio(servicio, dept.nombre)
+                            const empleados = formatEmpleados(servicio.empleadosCount)
+
+                            return {
+                                key: nodeKey('servicio', servicio.id),
+                                isLeaf: true,
+                                title: (
+                                    <TreeNodeTitle
+                                        icon={<ExperimentOutlined />}
+                                        nombre={servicio.nombre}
+                                        codigo={servicio.codigo}
+                                        countLabel={empleados ?? undefined}
+                                        menuItems={buildServicioMenu(servicioEntity)}
+                                        deleting={deletingServicioId === servicio.id}
+                                    />
+                                ),
+                            }
+                        }),
+                    }
+                }),
+            }
+        })
+    }, [
+        filteredAreaNodes,
+        deletingAreaId,
+        deletingDeptId,
+        deletingServicioId,
+    ])
+
+    const handleTreeSelect = (keys: React.Key[]) => {
+        const key = String(keys[0] ?? '')
+        if (!key) {
+            syncSelection(null, null, null, null)
+            return
+        }
+
+        const parsed = parseNodeKey(key)
+        if (!parsed) return
+
+        if (parsed.kind === 'area') {
+            const area = allAreas.find((item) => item.id === parsed.id) ?? null
+            syncSelection(area ? 'area' : null, area, null, null)
+            return
+        }
+
+        if (parsed.kind === 'departamento') {
+            for (const areaNode of areaNodes) {
+                const deptNode = areaNode.departamentos.find((item) => item.id === parsed.id)
+                if (!deptNode) continue
+                const area = toArea(areaNode)
+                const dept = toDepartamento(deptNode, areaNode.nombre)
+                syncSelection('departamento', area, dept, null)
+                return
+            }
+        }
+
+        if (parsed.kind === 'servicio') {
+            for (const areaNode of areaNodes) {
+                for (const deptNode of areaNode.departamentos) {
+                    const servicioNode = deptNode.servicios.find((item) => item.id === parsed.id)
+                    if (!servicioNode) continue
+                    const area = toArea(areaNode)
+                    const dept = toDepartamento(deptNode, areaNode.nombre)
+                    const servicio = toServicio(servicioNode, deptNode.nombre)
+                    syncSelection('servicio', area, dept, servicio)
+                    return
+                }
+            }
+        }
+    }
+
+    const breadcrumbItems = useMemo(() => {
+        const items: { title: React.ReactNode }[] = [
+            { title: <span className="jerarquia-explorer__crumb-static">Recursos Humanos</span> },
+        ]
+
+        if (selectedArea) {
+            items.push({
+                title: (
+                    <button
+                        type="button"
+                        className="jerarquia-explorer__crumb"
+                        onClick={() => syncSelection('area', selectedArea, null, null)}
+                    >
+                        {selectedArea.nombre}
+                    </button>
+                ),
+            })
+        }
+
+        if (selectedDept && selectionKind !== 'area') {
+            items.push({
+                title: (
+                    <button
+                        type="button"
+                        className="jerarquia-explorer__crumb"
+                        onClick={() =>
+                            syncSelection('departamento', selectedArea, selectedDept, null)
+                        }
+                    >
+                        {selectedDept.nombre}
+                    </button>
+                ),
+            })
+        }
+
+        if (selectedServicio && selectionKind === 'servicio') {
+            items.push({ title: selectedServicio.nombre })
+        }
+
+        return items
+    }, [selectedArea, selectedDept, selectedServicio, selectionKind, syncSelection])
+
+    const renderTreePanel = () => (
+        <aside className="jerarquia-explorer__sidebar">
+            <div className="jerarquia-explorer__sidebar-head">
+                <Flex align="center" gap={8}>
+                    <NodeIndexOutlined className="jerarquia-explorer__sidebar-icon" />
+                    <div>
+                        <Text strong className="jerarquia-explorer__sidebar-title">
+                            Explorador organizacional
+                        </Text>
+                        <Text type="secondary" className="jerarquia-explorer__sidebar-caption">
+                            {areaNodes.length} área{areaNodes.length === 1 ? '' : 's'}
+                        </Text>
+                    </div>
+                </Flex>
                 <Button
                     type="primary"
                     size="small"
                     icon={<PlusOutlined />}
-                    onClick={() => {
-                        setEditingArea(null)
-                        setAreaModalOpen(true)
-                    }}
+                    onClick={openCreateArea}
                 >
-                    Nueva
+                    Área
                 </Button>
             </div>
 
-            <div className="catalogos-view__panel-search">
-                <Input
-                    allowClear
-                    prefix={<SearchOutlined style={{ color: token.colorTextQuaternary }} />}
-                    placeholder="Buscar área…"
-                    value={areaSearchInput}
-                    onChange={(event) => setAreaSearchInput(event.target.value)}
-                    onClear={() => {
-                        setAreaSearchInput('')
-                        setAreaSearch('')
-                    }}
-                />
-            </div>
-
-            <HierarchyList
-                items={areaListItems}
-                loading={loadingAreas}
-                total={totalAreas}
-                page={areaSearch ? 1 : areaPage}
-                pageSize={DEFAULT_PAGE_SIZE}
-                selectedId={selectedArea?.id ?? null}
-                emptyText={
-                    areaSearch
-                        ? 'No hay áreas que coincidan con la búsqueda.'
-                        : 'Cree la primera área.'
-                }
-                icon={<BankOutlined />}
-                onPageChange={
-                    areaSearch
-                        ? undefined
-                        : (page) => {
-                              setAreaPage(page)
-                              setAreaSearchInput('')
-                              setAreaSearch('')
-                          }
-                }
-                onSelect={(item) =>
-                    setSelectedArea(
-                        allAreas.find((area) => area.id === item.id) ?? null,
-                    )
-                }
-                onEdit={(item) => {
-                    setEditingArea(
-                        allAreas.find((area) => area.id === item.id) ?? null,
-                    )
-                    setAreaModalOpen(true)
-                }}
-                onDelete={async (item) => {
-                    setDeletingAreaId(item.id)
-                    try {
-                        await deleteArea.mutateAsync(item.id)
-                        if (selectedArea?.id === item.id) {
-                            setSelectedArea(null)
-                        }
-                    } finally {
-                        setDeletingAreaId(null)
-                    }
-                }}
-                deletingId={deletingAreaId}
-            />
-        </section>
-    )
-
-    const renderDetailEmpty = () => (
-        <div className="catalogos-view__empty jerarquia-rrhh__empty">
-            <div className="catalogos-view__empty-visual" aria-hidden>
-                <div className="catalogos-view__empty-icon">
-                    <NodeIndexOutlined />
-                </div>
-                <div className="catalogos-view__empty-ring" />
-            </div>
-            <Empty
-                image={false}
-                description={
-                    <Flex vertical gap={6} align="center">
-                        <Text strong style={{ fontSize: 16 }}>
-                            Seleccione un área
-                        </Text>
-                        <Paragraph
-                            type="secondary"
-                            style={{ marginBottom: 0, maxWidth: 360, textAlign: 'center' }}
-                        >
-                            Elija un área en el panel izquierdo para administrar sus
-                            departamentos y servicios.
-                        </Paragraph>
-                    </Flex>
-                }
-            />
-        </div>
-    )
-
-    const renderDepartamentosPanel = () => (
-        <section className="jerarquia-rrhh__subpanel jerarquia-rrhh__subpanel--flat">
-            <div className="jerarquia-rrhh__subpanel-search">
+            <div className="jerarquia-explorer__sidebar-search">
                 <Input
                     allowClear
                     size="small"
                     prefix={<SearchOutlined style={{ color: token.colorTextQuaternary }} />}
-                    placeholder="Buscar departamento…"
-                    value={deptSearch}
-                    onChange={(event) => setDeptSearch(event.target.value)}
+                    placeholder="Buscar área, departamento o servicio…"
+                    value={treeSearchInput}
+                    onChange={(event) => setTreeSearchInput(event.target.value)}
+                    onClear={() => {
+                        setTreeSearchInput('')
+                        setTreeSearch('')
+                    }}
                 />
             </div>
 
-            <HierarchyList
-                items={departamentoListItems}
-                loading={loadingDepts}
-                selectedId={selectedDept?.id ?? null}
-                emptyText={
-                    deptSearch
-                        ? 'Sin coincidencias.'
-                        : 'Sin departamentos en esta área.'
-                }
-                icon={<ApartmentOutlined />}
-                onSelect={(item) => {
-                    const dept =
-                        departamentos.find(
-                            (departamento) => departamento.id === item.id,
-                        ) ?? null
-                    setSelectedDept(dept)
-                    if (dept && isMobile) {
-                        setDetailTab('servicios')
-                    }
-                }}
-                onEdit={(item) => {
-                    setEditingDept(
-                        departamentos.find((departamento) => departamento.id === item.id) ??
-                            null,
-                    )
-                    setDeptModalOpen(true)
-                }}
-                onDelete={async (item) => {
-                    setDeletingDeptId(item.id)
-                    try {
-                        await deleteDept.mutateAsync(item.id)
-                        if (selectedDept?.id === item.id) {
-                            setSelectedDept(null)
-                        }
-                    } finally {
-                        setDeletingDeptId(null)
-                    }
-                }}
-                deletingId={deletingDeptId}
-            />
-        </section>
-    )
-
-    const renderServiciosPanel = () => (
-        <section className="jerarquia-rrhh__subpanel jerarquia-rrhh__subpanel--flat">
-            {selectedDept ? (
-                <>
-                    <div className="jerarquia-rrhh__subpanel-context">
-                        <Text type="secondary">Departamento:</Text>
-                        <Text strong>{selectedDept.nombre}</Text>
-                        <Button
-                            type="link"
-                            size="small"
-                            onClick={() => {
-                                setSelectedDept(null)
-                                setDetailTab('departamentos')
-                            }}
-                        >
-                            Cambiar
-                        </Button>
+            <div className="jerarquia-explorer__sidebar-body">
+                {loadingJerarquia ? (
+                    <div className="jerarquia-explorer__sidebar-loading">
+                        <Skeleton active paragraph={{ rows: 8 }} />
                     </div>
-
-                    <div className="jerarquia-rrhh__subpanel-search">
-                        <Input
-                            allowClear
-                            size="small"
-                            prefix={
-                                <SearchOutlined
-                                    style={{ color: token.colorTextQuaternary }}
-                                />
-                            }
-                            placeholder="Buscar servicio…"
-                            value={servicioSearch}
-                            onChange={(event) => setServicioSearch(event.target.value)}
+                ) : areaNodes.length === 0 ? (
+                    <div className="jerarquia-explorer__sidebar-empty">
+                        <Empty
+                            image={Empty.PRESENTED_IMAGE_SIMPLE}
+                            description="No hay áreas registradas"
+                        >
+                            <Button type="primary" icon={<PlusOutlined />} onClick={openCreateArea}>
+                                Crear primera área
+                            </Button>
+                        </Empty>
+                    </div>
+                ) : filteredAreaNodes.length === 0 ? (
+                    <div className="jerarquia-explorer__sidebar-empty">
+                        <Empty
+                            image={Empty.PRESENTED_IMAGE_SIMPLE}
+                            description="Sin coincidencias en la búsqueda"
                         />
                     </div>
-
-                    <HierarchyList
-                        items={servicioListItems}
-                        loading={loadingServicios}
-                        selectedId={null}
-                        emptyText={
-                            servicioSearch
-                                ? 'Sin coincidencias.'
-                                : 'Sin servicios en este departamento.'
-                        }
-                        icon={<ExperimentOutlined />}
-                        onSelect={() => {}}
-                        onEdit={(item) => {
-                            setEditingServicio(
-                                servicios.find((servicio) => servicio.id === item.id) ??
-                                    null,
-                            )
-                            setServicioModalOpen(true)
-                        }}
-                        onDelete={async (item) => {
-                            setDeletingServicioId(item.id)
-                            try {
-                                await deleteServicio.mutateAsync(item.id)
-                            } finally {
-                                setDeletingServicioId(null)
-                            }
-                        }}
-                        deletingId={deletingServicioId}
+                ) : (
+                    <Tree
+                        blockNode
+                        showLine={{ showLeafIcon: false }}
+                        treeData={treeData}
+                        selectedKeys={selectedKeys}
+                        expandedKeys={expandedKeys}
+                        onExpand={(keys) => setExpandedKeys(keys.map(String))}
+                        onSelect={(keys) => handleTreeSelect(keys)}
+                        className="jerarquia-explorer__tree"
                     />
-                </>
-            ) : (
-                <div className="jerarquia-rrhh__subpanel-placeholder">
-                    <Empty
-                        image={Empty.PRESENTED_IMAGE_SIMPLE}
-                        description="Seleccione un departamento en la pestaña anterior"
-                    />
-                </div>
-            )}
-        </section>
+                )}
+            </div>
+        </aside>
     )
 
-    const renderDetail = () => {
-        if (!selectedArea) return renderDetailEmpty()
+    const renderStat = (label: string, value: string | number) => (
+        <div className="jerarquia-explorer__stat">
+            <Text type="secondary" className="jerarquia-explorer__stat-label">
+                {label}
+            </Text>
+            <Text strong className="jerarquia-explorer__stat-value">
+                {value}
+            </Text>
+        </div>
+    )
 
-        const tabItems = [
-            {
-                key: 'departamentos',
-                label: (
-                    <Flex align="center" gap={6}>
-                        <ApartmentOutlined />
-                        <span>Departamentos</span>
-                        <Text type="secondary" className="jerarquia-rrhh__tab-count">
-                            {departamentos.length}
-                        </Text>
-                    </Flex>
-                ),
-                children: renderDepartamentosPanel(),
-            },
-            {
-                key: 'servicios',
-                label: (
-                    <Flex align="center" gap={6}>
-                        <ExperimentOutlined />
-                        <span>Servicios</span>
-                        {selectedDept ? (
-                            <Text type="secondary" className="jerarquia-rrhh__tab-count">
-                                {servicios.length}
-                            </Text>
-                        ) : null}
-                    </Flex>
-                ),
-                children: renderServiciosPanel(),
-            },
-        ]
+    const renderAreaDetail = () => {
+        if (!selectedArea || !selectedAreaNode) return null
+
+        const serviciosTotal = countAreaServicios(selectedAreaNode)
+        const empleados = formatEmpleados(selectedAreaNode.empleadosCount)
 
         return (
             <>
-                <div className="jerarquia-rrhh__detail-head">
-                    <Flex align="center" gap={10} wrap="wrap" className="jerarquia-rrhh__detail-title">
-                        <BankOutlined className="jerarquia-rrhh__detail-icon" />
-                        <div>
-                            <Flex align="center" gap={8} wrap="wrap">
-                                <Text strong className="jerarquia-rrhh__detail-name">
-                                    {selectedArea.nombre}
-                                </Text>
-                                <code className="catalogos-view__detail-code">
+                <div className="jerarquia-explorer__detail-hero">
+                    <Flex align="flex-start" justify="space-between" gap={16} wrap="wrap">
+                        <Flex align="flex-start" gap={12} className="jerarquia-explorer__detail-main">
+                            <div className="jerarquia-explorer__detail-badge" aria-hidden>
+                                <BankOutlined />
+                            </div>
+                            <div>
+                                <Tag className="jerarquia-explorer__detail-code-tag" variant="filled">
                                     {selectedArea.codigo}
-                                </code>
-                            </Flex>
-                            {selectedArea.descripcion ? (
-                                <Paragraph
-                                    type="secondary"
-                                    className="jerarquia-rrhh__detail-description"
-                                >
-                                    {selectedArea.descripcion}
-                                </Paragraph>
-                            ) : null}
-                        </div>
+                                </Tag>
+                                <Title level={4} className="jerarquia-explorer__detail-title">
+                                    {selectedArea.nombre}
+                                </Title>
+                                {selectedArea.descripcion ? (
+                                    <Paragraph
+                                        type="secondary"
+                                        className="jerarquia-explorer__detail-description"
+                                    >
+                                        {selectedArea.descripcion}
+                                    </Paragraph>
+                                ) : null}
+                            </div>
+                        </Flex>
+                        <Flex gap={8} wrap="wrap" className="jerarquia-explorer__detail-actions">
+                            <Button
+                                icon={<EditOutlined />}
+                                onClick={() => openEditArea(selectedArea)}
+                            >
+                                Editar
+                            </Button>
+                            <Button
+                                type="primary"
+                                icon={<PlusOutlined />}
+                                onClick={() => openCreateDept(selectedArea.id)}
+                            >
+                                Nuevo departamento
+                            </Button>
+                        </Flex>
                     </Flex>
 
-                    <Flex gap={8} wrap="wrap" className="jerarquia-rrhh__detail-actions">
-                        <Button
-                            size="small"
-                            icon={<PlusOutlined />}
-                            onClick={() => {
-                                setEditingDept(null)
-                                setDeptModalOpen(true)
-                            }}
-                        >
-                            Departamento
-                        </Button>
-                        <Button
-                            type="primary"
-                            size="small"
-                            icon={<PlusOutlined />}
-                            disabled={!selectedDept}
-                            onClick={() => {
-                                setEditingServicio(null)
-                                setServicioModalOpen(true)
-                            }}
-                        >
-                            Servicio
-                        </Button>
-                    </Flex>
+                    <div className="jerarquia-explorer__stats-row">
+                        {renderStat('Departamentos', selectedAreaNode.departamentos.length)}
+                        {renderStat('Servicios', serviciosTotal)}
+                        {empleados ? renderStat('Empleados', empleados) : null}
+                    </div>
                 </div>
 
-                <div className="jerarquia-rrhh__detail-body">
-                    <Tabs
-                        activeKey={detailTab}
-                        onChange={(key) => setDetailTab(key as DetailTab)}
-                        items={tabItems}
-                        className="jerarquia-rrhh__tabs"
-                    />
+                <div className="jerarquia-explorer__detail-section">
+                    <Text strong className="jerarquia-explorer__section-title">
+                        Departamentos
+                    </Text>
+                    {selectedAreaNode.departamentos.length === 0 ? (
+                        <div className="jerarquia-explorer__section-empty">
+                            <Empty
+                                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                                description="Esta área no tiene departamentos"
+                            >
+                                <Button
+                                    type="primary"
+                                    icon={<PlusOutlined />}
+                                    onClick={() => openCreateDept(selectedArea.id)}
+                                >
+                                    Agregar departamento
+                                </Button>
+                            </Empty>
+                        </div>
+                    ) : (
+                        <div className="jerarquia-explorer__child-grid">
+                            {selectedAreaNode.departamentos.map((dept) => {
+                                const servCount = dept.servicios.length
+                                const meta = [
+                                    `${servCount} servicio${servCount === 1 ? '' : 's'}`,
+                                    formatEmpleados(dept.empleadosCount),
+                                ]
+                                    .filter(Boolean)
+                                    .join(' · ')
+
+                                return (
+                                    <ChildCard
+                                        key={dept.id}
+                                        icon={<ApartmentOutlined />}
+                                        nombre={dept.nombre}
+                                        codigo={dept.codigo}
+                                        meta={meta}
+                                        selected={selectedDept?.id === dept.id}
+                                        onClick={() =>
+                                            syncSelection(
+                                                'departamento',
+                                                selectedArea,
+                                                toDepartamento(dept, selectedArea.nombre),
+                                                null,
+                                            )
+                                        }
+                                    />
+                                )
+                            })}
+                        </div>
+                    )}
                 </div>
             </>
         )
     }
 
-    return (
-        <div className="jerarquia-rrhh">
-            {isMobile ? (
-                <div className="jerarquia-rrhh__mobile-nav">
-                    {mobileStep !== 'area' ? (
-                        <Button
-                            type="text"
-                            size="small"
-                            icon={<ArrowLeftOutlined />}
-                            onClick={handleMobileBack}
-                        >
-                            Áreas
-                        </Button>
-                    ) : null}
+    const renderDepartamentoDetail = () => {
+        if (!selectedArea || !selectedDept || !selectedDeptNode) return null
 
-                    <Breadcrumb
-                        items={[
-                            {
-                                title: (
-                                    <button
-                                        type="button"
-                                        className="jerarquia-rrhh__crumb"
-                                        onClick={() => {
-                                            setSelectedArea(null)
-                                            setSelectedDept(null)
-                                        }}
+        const empleados = formatEmpleados(selectedDeptNode.empleadosCount)
+
+        return (
+            <>
+                <div className="jerarquia-explorer__detail-hero">
+                    <Flex align="flex-start" justify="space-between" gap={16} wrap="wrap">
+                        <Flex align="flex-start" gap={12} className="jerarquia-explorer__detail-main">
+                            <div className="jerarquia-explorer__detail-badge" aria-hidden>
+                                <ApartmentOutlined />
+                            </div>
+                            <div>
+                                <Tag className="jerarquia-explorer__detail-code-tag" variant="filled">
+                                    {selectedDept.codigo}
+                                </Tag>
+                                <Title level={4} className="jerarquia-explorer__detail-title">
+                                    {selectedDept.nombre}
+                                </Title>
+                                <Text type="secondary" className="jerarquia-explorer__detail-parent">
+                                    Área: {selectedArea.nombre}
+                                </Text>
+                                {selectedDept.descripcion ? (
+                                    <Paragraph
+                                        type="secondary"
+                                        className="jerarquia-explorer__detail-description"
                                     >
-                                        Áreas
-                                    </button>
-                                ),
-                            },
-                            ...(selectedArea
-                                ? [{ title: selectedArea.nombre }]
-                                : []),
-                        ]}
+                                        {selectedDept.descripcion}
+                                    </Paragraph>
+                                ) : null}
+                            </div>
+                        </Flex>
+                        <Flex gap={8} wrap="wrap" className="jerarquia-explorer__detail-actions">
+                            <Button
+                                icon={<EditOutlined />}
+                                onClick={() => openEditDept(selectedDept)}
+                            >
+                                Editar
+                            </Button>
+                            <Button
+                                type="primary"
+                                icon={<PlusOutlined />}
+                                onClick={() => openCreateServicio(selectedDept.id, selectedDept.areaId)}
+                            >
+                                Nuevo servicio
+                            </Button>
+                        </Flex>
+                    </Flex>
+
+                    <div className="jerarquia-explorer__stats-row">
+                        {renderStat('Servicios', selectedDeptNode.servicios.length)}
+                        {empleados ? renderStat('Empleados', empleados) : null}
+                    </div>
+                </div>
+
+                <div className="jerarquia-explorer__detail-section">
+                    <Text strong className="jerarquia-explorer__section-title">
+                        Servicios
+                    </Text>
+                    {selectedDeptNode.servicios.length === 0 ? (
+                        <div className="jerarquia-explorer__section-empty">
+                            <Empty
+                                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                                description="Este departamento no tiene servicios"
+                            >
+                                <Button
+                                    type="primary"
+                                    icon={<PlusOutlined />}
+                                    onClick={() =>
+                                        openCreateServicio(selectedDept.id, selectedDept.areaId)
+                                    }
+                                >
+                                    Agregar servicio
+                                </Button>
+                            </Empty>
+                        </div>
+                    ) : (
+                        <div className="jerarquia-explorer__child-grid">
+                            {selectedDeptNode.servicios.map((servicio) => (
+                                <ChildCard
+                                    key={servicio.id}
+                                    icon={<ExperimentOutlined />}
+                                    nombre={servicio.nombre}
+                                    codigo={servicio.codigo}
+                                    meta={formatEmpleados(servicio.empleadosCount)}
+                                    selected={selectedServicio?.id === servicio.id}
+                                    onClick={() =>
+                                        syncSelection(
+                                            'servicio',
+                                            selectedArea,
+                                            selectedDept,
+                                            toServicio(servicio, selectedDept.nombre),
+                                        )
+                                    }
+                                />
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </>
+        )
+    }
+
+    const renderServicioDetail = () => {
+        if (!selectedArea || !selectedDept || !selectedServicio || !selectedServicioNode) {
+            return null
+        }
+
+        const empleados = formatEmpleados(selectedServicioNode.servicio.empleadosCount)
+
+        return (
+            <div className="jerarquia-explorer__detail-hero jerarquia-explorer__detail-hero--solo">
+                <Flex align="flex-start" justify="space-between" gap={16} wrap="wrap">
+                    <Flex align="flex-start" gap={12} className="jerarquia-explorer__detail-main">
+                        <div className="jerarquia-explorer__detail-badge" aria-hidden>
+                            <ExperimentOutlined />
+                        </div>
+                        <div>
+                            <Tag className="jerarquia-explorer__detail-code-tag" variant="filled">
+                                {selectedServicio.codigo}
+                            </Tag>
+                            <Title level={4} className="jerarquia-explorer__detail-title">
+                                {selectedServicio.nombre}
+                            </Title>
+                            <Text type="secondary" className="jerarquia-explorer__detail-parent">
+                                {selectedArea.nombre} › {selectedDept.nombre}
+                            </Text>
+                            {selectedServicio.descripcion ? (
+                                <Paragraph
+                                    type="secondary"
+                                    className="jerarquia-explorer__detail-description"
+                                >
+                                    {selectedServicio.descripcion}
+                                </Paragraph>
+                            ) : null}
+                        </div>
+                    </Flex>
+                    <Flex gap={8} wrap="wrap" className="jerarquia-explorer__detail-actions">
+                        <Button
+                            icon={<EditOutlined />}
+                            onClick={() => openEditServicio(selectedServicio)}
+                        >
+                            Editar
+                        </Button>
+                    </Flex>
+                </Flex>
+
+                {empleados ? (
+                    <div className="jerarquia-explorer__stats-row">
+                        {renderStat('Empleados', empleados)}
+                    </div>
+                ) : null}
+            </div>
+        )
+    }
+
+    const renderDetailContent = () => {
+        if (!hasSelection) {
+            return (
+                <div className="jerarquia-explorer__detail-empty">
+                    <div className="jerarquia-explorer__detail-empty-visual" aria-hidden>
+                        <NodeIndexOutlined />
+                    </div>
+                    <Empty
+                        image={false}
+                        description={
+                            <Flex vertical gap={6} align="center">
+                                <Text strong style={{ fontSize: 16 }}>
+                                    Seleccione un elemento
+                                </Text>
+                                <Paragraph
+                                    type="secondary"
+                                    style={{ marginBottom: 0, maxWidth: 360, textAlign: 'center' }}
+                                >
+                                    Elija un área, departamento o servicio en el árbol para ver su
+                                    detalle y administrar su jerarquía.
+                                </Paragraph>
+                            </Flex>
+                        }
                     />
+                </div>
+            )
+        }
+
+        if (selectionKind === 'servicio') return renderServicioDetail()
+        if (selectionKind === 'departamento') return renderDepartamentoDetail()
+        return renderAreaDetail()
+    }
+
+    const showTreeOnMobile = isMobile && !hasSelection
+    const showDetailOnMobile = !isMobile || hasSelection
+
+    return (
+        <div className="jerarquia-explorer">
+            {isMobile && hasSelection ? (
+                <div className="jerarquia-explorer__mobile-nav">
+                    <Button
+                        type="text"
+                        size="small"
+                        icon={<ArrowLeftOutlined />}
+                        onClick={() => syncSelection(null, null, null, null)}
+                    >
+                        Explorador
+                    </Button>
                 </div>
             ) : null}
 
-            <Row gutter={[20, 20]} className="catalogos-view__master-detail">
-                {showMobilePanel('area') ? (
-                    <Col xs={24} lg={9} xl={8}>
-                        {renderAreaMaster()}
-                    </Col>
-                ) : null}
+            <div className="jerarquia-explorer__split">
+                {(!isMobile || showTreeOnMobile) && renderTreePanel()}
 
-                {(!isMobile || mobileStep !== 'area') ? (
-                    <Col xs={24} lg={15} xl={16}>
-                        <section
-                            className={[
-                                'catalogos-view__panel',
-                                'catalogos-view__panel--detail',
-                                selectedArea ? 'catalogos-view__panel--active' : '',
-                            ]
-                                .filter(Boolean)
-                                .join(' ')}
-                        >
-                            {renderDetail()}
-                        </section>
-                    </Col>
+                {showDetailOnMobile ? (
+                    <main className="jerarquia-explorer__main">
+                        <div className="jerarquia-explorer__main-breadcrumb">
+                            <Breadcrumb items={breadcrumbItems} />
+                        </div>
+                        <div className="jerarquia-explorer__main-body">{renderDetailContent()}</div>
+                    </main>
                 ) : null}
-            </Row>
+            </div>
 
-            <CatalogoBaseFormModal
-                open={areaModalOpen}
-                entityLabel="área"
+            <JerarquiaAreaDrawer
+                open={areaDrawerOpen}
                 entity={editingArea}
                 loading={isSavingArea}
                 onClose={() => {
                     if (!isSavingArea) {
-                        setAreaModalOpen(false)
+                        setAreaDrawerOpen(false)
                         setEditingArea(null)
                     }
                 }}
                 onSubmit={handleAreaSubmit}
             />
 
-            <DepartamentoFormModal
-                open={deptModalOpen}
+            <JerarquiaDepartamentoDrawer
+                open={deptDrawerOpen}
                 departamento={editingDept}
                 areas={areaOptions}
-                defaultAreaId={selectedArea?.id}
+                defaultAreaId={defaultAreaId ?? selectedArea?.id}
                 loading={isSavingDept}
                 onClose={() => {
                     if (!isSavingDept) {
-                        setDeptModalOpen(false)
+                        setDeptDrawerOpen(false)
                         setEditingDept(null)
+                        setDefaultAreaId(null)
                     }
                 }}
                 onSubmit={handleDeptSubmit}
             />
 
-            <ServicioFormModal
-                open={servicioModalOpen}
+            <JerarquiaServicioDrawer
+                open={servicioDrawerOpen}
                 servicio={editingServicio}
-                departamentos={departamentos}
-                defaultDepartamentoId={selectedDept?.id}
+                departamentos={serviciosDepartamentos}
+                defaultDepartamentoId={defaultDepartamentoId ?? selectedDept?.id}
                 loading={isSavingServicio}
                 onClose={() => {
                     if (!isSavingServicio) {
-                        setServicioModalOpen(false)
+                        setServicioDrawerOpen(false)
                         setEditingServicio(null)
+                        setDefaultDepartamentoId(null)
+                        setDefaultAreaId(null)
                     }
                 }}
                 onSubmit={handleServicioSubmit}

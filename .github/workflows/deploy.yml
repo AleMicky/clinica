@@ -2,15 +2,20 @@ name: Deploy to VPS
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    env:
+      APP_DIR: /opt/clinica/clinica
+      SSH_PORT: 22
+
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Copy project to VPS
@@ -19,23 +24,34 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          port: ${{ secrets.VPS_PORT != '' && secrets.VPS_PORT || 22 }}
+          port: ${{ secrets.VPS_PORT || env.SSH_PORT }}
           source: "."
-          target: ${{ secrets.VPS_APP_PATH != '' && secrets.VPS_APP_PATH || '/root/clinica' }}
+          target: ${{ secrets.VPS_APP_PATH || env.APP_DIR }}
           overwrite: true
+          rm: true
 
-      - name: Build and start containers
+      - name: Deploy application
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          port: ${{ secrets.VPS_PORT != '' && secrets.VPS_PORT || 22 }}
+          port: ${{ secrets.VPS_PORT || env.SSH_PORT }}
           script_stop: true
           script: |
-            set -euo pipefail
-            APP_DIR="${{ secrets.VPS_APP_PATH }}"
-            if [ -z "$APP_DIR" ]; then APP_DIR="/root/clinica"; fi
+            set -e
+
+            APP_DIR="${{ secrets.VPS_APP_PATH || env.APP_DIR }}"
+
+            echo "Directorio de despliegue: $APP_DIR"
+
+            mkdir -p "$APP_DIR"
             cd "$APP_DIR"
+
+            echo "Archivos copiados:"
+            ls -lah
+
             chmod +x docker/deploy.sh
-            SKIP_GIT_PULL=1 ./docker/deploy.sh
+
+            export SKIP_GIT_PULL=1
+            ./docker/deploy.sh
