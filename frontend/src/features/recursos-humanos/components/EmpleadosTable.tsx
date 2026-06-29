@@ -73,6 +73,7 @@ export function EmpleadosTable({
                         <Text strong>{row.original.personaNombreCompleto}</Text>
                         <Text type="secondary" className="rrhh-page__employee-meta">
                             {row.original.cargoNombre} · {row.original.profesionNombre}
+                            {row.original.esMedico ? ' · Médico' : ''}
                         </Text>
                     </div>
                 ),

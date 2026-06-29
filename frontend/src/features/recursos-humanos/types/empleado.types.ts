@@ -1,5 +1,19 @@
 export type EntityId = string
 
+export type EmpleadoMedicoEspecialidad = {
+    especialidadId: EntityId
+    especialidadNombre: string
+    esPrincipal: boolean
+}
+
+export type EmpleadoMedico = {
+    id: EntityId
+    especialidades: EmpleadoMedicoEspecialidad[]
+    especialidadPrincipalId: EntityId
+    matriculaProfesional: string
+    registroColegioMedico?: string | null
+}
+
 export type Empleado = {
     id: EntityId
     personaId: EntityId
@@ -16,6 +30,8 @@ export type Empleado = {
     profesionNombre: string
     cargoId: EntityId
     cargoNombre: string
+    esMedico: boolean
+    medico?: EmpleadoMedico | null
 }
 
 export type EmpleadoQuery = {
@@ -35,6 +51,15 @@ export type CreateEmpleadoPayload = {
     profesionId: EntityId
     cargoId: EntityId
     fechaIngreso?: string | null
+    esMedico: boolean
+    medico?: CreateEmpleadoMedicoPayload | null
+}
+
+export type CreateEmpleadoMedicoPayload = {
+    especialidadIds: EntityId[]
+    especialidadPrincipalId: EntityId
+    matriculaProfesional: string
+    registroColegioMedico?: string | null
 }
 
 export type UpdateEmpleadoPayload = CreateEmpleadoPayload

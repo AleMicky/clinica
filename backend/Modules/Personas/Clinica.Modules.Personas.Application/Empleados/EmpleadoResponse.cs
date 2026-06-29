@@ -15,5 +15,7 @@ public sealed record EmpleadoResponse(
     Guid ProfesionId,
     string ProfesionNombre,
     Guid CargoId,
-    string CargoNombre
+    string CargoNombre,
+    bool EsMedico,
+    EmpleadoMedicoResponse? Medico
 );

@@ -1,5 +1,6 @@
 using Clinica.Modules.Personas.Application.Abstractions;
 using Clinica.Modules.Personas.Application.Empleados;
+using Clinica.Modules.Personas.Application.Medicos;
 using Clinica.Modules.Personas.Domain.Entities;
 using Clinica.Modules.Personas.Infrastructure.Persistence;
 using Clinica.Modules.RecursosHumanos.Domain.Entities;
@@ -10,7 +11,8 @@ using Microsoft.EntityFrameworkCore;
 namespace Clinica.Modules.Personas.Infrastructure.Services;
 
 public sealed class EmpleadoService(
-    PersonasDbContext context
+    PersonasDbContext context,
+    IMedicoService medicoService
 ) : IEmpleadoService
 {
     public Task<PagedResult<EmpleadoResponse>> GetPagedAsync(
@@ -69,17 +71,24 @@ public sealed class EmpleadoService(
             .OrderBy(x => x.CodigoEmpleado)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(x => ToResponse(x))
             .ToListAsync(cancellationToken);
 
-        return new PagedResult<EmpleadoResponse>(items, total, page, pageSize);
+        var medicos = await LoadMedicosByEmpleadoIdsAsync(
+            items.Select(x => x.Id).ToList(),
+            cancellationToken);
+
+        var responses = items
+            .Select(x => ToResponse(x, medicos.GetValueOrDefault(x.Id)))
+            .ToList();
+
+        return new PagedResult<EmpleadoResponse>(responses, total, page, pageSize);
     }
 
     public async Task<EmpleadoResponse?> GetByIdAsync(
         Guid id,
         CancellationToken cancellationToken = default)
     {
-        return await context.Empleados
+        var entity = await context.Empleados
             .AsNoTracking()
             .Include(x => x.Persona)
             .Include(x => x.Area)
@@ -87,9 +96,14 @@ public sealed class EmpleadoService(
             .Include(x => x.Servicio)
             .Include(x => x.Profesion)
             .Include(x => x.Cargo)
-            .Where(x => x.Id == id)
-            .Select(x => ToResponse(x))
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+
+        if (entity is null)
+            return null;
+
+        var medico = await LoadMedicoByEmpleadoIdAsync(entity.Id, cancellationToken);
+
+        return ToResponse(entity, medico);
     }
 
     public async Task<EmpleadoResponse> CreateAsync(
@@ -117,6 +131,9 @@ public sealed class EmpleadoService(
 
         context.Empleados.Add(entity);
         await context.SaveChangesAsync(cancellationToken);
+
+        if (request.EsMedico)
+            await CreateMedicoAsync(entity.Id, request.Medico!, cancellationToken);
 
         return (await GetByIdAsync(entity.Id, cancellationToken))!;
     }
@@ -150,6 +167,8 @@ public sealed class EmpleadoService(
 
         await context.SaveChangesAsync(cancellationToken);
 
+        await SyncMedicoAsync(id, request.EsMedico, request.Medico, cancellationToken);
+
         return (await GetByIdAsync(entity.Id, cancellationToken))!;
     }
 
@@ -171,6 +190,84 @@ public sealed class EmpleadoService(
 
         context.Empleados.Remove(entity);
         await context.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task SyncMedicoAsync(
+        Guid empleadoId,
+        bool esMedico,
+        EmpleadoMedicoRequest? medicoRequest,
+        CancellationToken cancellationToken)
+    {
+        var existingMedico = await context.Medicos
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.EmpleadoId == empleadoId, cancellationToken);
+
+        if (esMedico)
+        {
+            if (medicoRequest is null)
+                throw new BusinessException("Complete los datos médicos del empleado.");
+
+            if (existingMedico is null)
+            {
+                await CreateMedicoAsync(empleadoId, medicoRequest, cancellationToken);
+                return;
+            }
+
+            await medicoService.UpdateAsync(
+                existingMedico.Id,
+                new UpdateMedicoRequest(
+                    empleadoId,
+                    medicoRequest.EspecialidadIds,
+                    medicoRequest.EspecialidadPrincipalId,
+                    medicoRequest.MatriculaProfesional,
+                    medicoRequest.RegistroColegioMedico),
+                cancellationToken);
+            return;
+        }
+
+        if (existingMedico is not null)
+            await medicoService.DeleteAsync(existingMedico.Id, cancellationToken);
+    }
+
+    private Task<MedicoResponse> CreateMedicoAsync(
+        Guid empleadoId,
+        EmpleadoMedicoRequest medicoRequest,
+        CancellationToken cancellationToken)
+    {
+        return medicoService.CreateAsync(
+            new CreateMedicoRequest(
+                empleadoId,
+                medicoRequest.EspecialidadIds,
+                medicoRequest.EspecialidadPrincipalId,
+                medicoRequest.MatriculaProfesional,
+                medicoRequest.RegistroColegioMedico),
+            cancellationToken);
+    }
+
+    private async Task<Dictionary<Guid, Medico>> LoadMedicosByEmpleadoIdsAsync(
+        IReadOnlyList<Guid> empleadoIds,
+        CancellationToken cancellationToken)
+    {
+        if (empleadoIds.Count == 0)
+            return [];
+
+        return await context.Medicos
+            .AsNoTracking()
+            .Include(x => x.Especialidades)
+            .ThenInclude(x => x.Especialidad)
+            .Where(x => empleadoIds.Contains(x.EmpleadoId))
+            .ToDictionaryAsync(x => x.EmpleadoId, cancellationToken);
+    }
+
+    private async Task<Medico?> LoadMedicoByEmpleadoIdAsync(
+        Guid empleadoId,
+        CancellationToken cancellationToken)
+    {
+        return await context.Medicos
+            .AsNoTracking()
+            .Include(x => x.Especialidades)
+            .ThenInclude(x => x.Especialidad)
+            .FirstOrDefaultAsync(x => x.EmpleadoId == empleadoId, cancellationToken);
     }
 
     private async Task EnsurePersonaExistsAsync(
@@ -232,7 +329,9 @@ public sealed class EmpleadoService(
                 request.ServicioId,
                 request.ProfesionId,
                 request.CargoId,
-                request.FechaIngreso),
+                request.FechaIngreso,
+                request.EsMedico,
+                request.Medico),
             cancellationToken);
     }
 
@@ -253,7 +352,7 @@ public sealed class EmpleadoService(
 
     private static string Normalize(string value) => value.Trim();
 
-    private static EmpleadoResponse ToResponse(Empleado entity)
+    private static EmpleadoResponse ToResponse(Empleado entity, Medico? medico = null)
     {
         return new EmpleadoResponse(
             entity.Id,
@@ -270,6 +369,30 @@ public sealed class EmpleadoService(
             entity.ProfesionId,
             entity.Profesion.Nombre,
             entity.CargoId,
-            entity.Cargo.Nombre);
+            entity.Cargo.Nombre,
+            medico is not null,
+            medico is null ? null : ToMedicoResponse(medico));
+    }
+
+    private static EmpleadoMedicoResponse ToMedicoResponse(Medico medico)
+    {
+        var especialidades = medico.Especialidades
+            .OrderByDescending(x => x.EsPrincipal)
+            .ThenBy(x => x.Especialidad.Nombre)
+            .Select(x => new MedicoEspecialidadResponse(
+                x.EspecialidadId,
+                x.Especialidad.Nombre,
+                x.EsPrincipal))
+            .ToList();
+
+        var principal = especialidades.FirstOrDefault(x => x.EsPrincipal)
+            ?? especialidades.FirstOrDefault();
+
+        return new EmpleadoMedicoResponse(
+            medico.Id,
+            especialidades,
+            principal?.EspecialidadId ?? Guid.Empty,
+            medico.MatriculaProfesional,
+            medico.RegistroColegioMedico);
     }
 }

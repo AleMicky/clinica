@@ -4,6 +4,7 @@
     <ProjectReference Include="..\Clinica.Modules.RecursosHumanos.Application\Clinica.Modules.RecursosHumanos.Application.csproj" />
     <ProjectReference Include="..\Clinica.Modules.RecursosHumanos.Domain\Clinica.Modules.RecursosHumanos.Domain.csproj" />
     <ProjectReference Include="..\..\Personas\Clinica.Modules.Personas.Domain\Clinica.Modules.Personas.Domain.csproj" />
+    <ProjectReference Include="..\..\Personas\Clinica.Modules.Personas.Infrastructure\Clinica.Modules.Personas.Infrastructure.csproj" />
     <ProjectReference Include="..\..\..\Clinica.SharedKernel\Clinica.SharedKernel.csproj" />
   </ItemGroup>
 

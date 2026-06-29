@@ -19,6 +19,14 @@ export function useEmpleados(query: EmpleadoQuery) {
     })
 }
 
+export function useEmpleado(id: string | null, enabled = true) {
+    return useAppQuery({
+        queryKey: queryKeys.empleados.detail(id ?? ''),
+        queryFn: () => empleadosService.getById(id!),
+        enabled: enabled && Boolean(id),
+    })
+}
+
 export function useCreateEmpleado() {
     const queryClient = useQueryClient()
 
@@ -26,6 +34,7 @@ export function useCreateEmpleado() {
         mutationFn: (data: CreateEmpleadoPayload) => empleadosService.create(data),
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey: queryKeys.empleados.all })
+            void queryClient.invalidateQueries({ queryKey: queryKeys.medicos.all })
             notify.success('Empleado registrado', 'El empleado se guardó correctamente.')
         },
         onError: (error) => {
@@ -42,6 +51,7 @@ export function useUpdateEmpleado() {
             empleadosService.update(id, data),
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey: queryKeys.empleados.all })
+            void queryClient.invalidateQueries({ queryKey: queryKeys.medicos.all })
             notify.success('Empleado actualizado', 'Los cambios se guardaron correctamente.')
         },
         onError: (error) => {

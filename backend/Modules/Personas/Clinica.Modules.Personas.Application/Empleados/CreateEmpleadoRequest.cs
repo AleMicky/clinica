@@ -8,5 +8,7 @@ public sealed record CreateEmpleadoRequest(
     Guid ServicioId,
     Guid ProfesionId,
     Guid CargoId,
-    DateOnly? FechaIngreso = null
+    DateOnly? FechaIngreso = null,
+    bool EsMedico = false,
+    EmpleadoMedicoRequest? Medico = null
 );

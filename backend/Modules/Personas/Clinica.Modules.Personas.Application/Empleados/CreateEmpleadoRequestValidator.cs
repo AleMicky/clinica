@@ -13,5 +13,15 @@ public class CreateEmpleadoRequestValidator : AbstractValidator<CreateEmpleadoRe
         RuleFor(x => x.ServicioId).NotEmpty();
         RuleFor(x => x.ProfesionId).NotEmpty();
         RuleFor(x => x.CargoId).NotEmpty();
+
+        When(x => x.EsMedico, () =>
+        {
+            RuleFor(x => x.Medico)
+                .NotNull()
+                .WithMessage("Complete los datos médicos del empleado.");
+
+            RuleFor(x => x.Medico!)
+                .SetValidator(new EmpleadoMedicoRequestValidator());
+        });
     }
 }

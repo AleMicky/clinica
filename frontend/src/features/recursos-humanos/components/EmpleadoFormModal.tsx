@@ -1,21 +1,25 @@
 import { useEffect, useState } from 'react'
-import { useForm } from '@tanstack/react-form'
-import { Col, Form, Input, Modal, Row, Select } from 'antd'
+import { useForm, useStore } from '@tanstack/react-form'
+import { Col, Divider, Form, Input, Modal, Row, Select, Switch, Typography } from 'antd'
 
 import {
     useAreaDepartamentos,
     useAreas,
     useCargos,
     useDepartamentoServicios,
+    useEspecialidades,
     useProfesiones,
 } from '../../catalogo-clinico/hooks/catalogo-clinico.hooks'
 import { usePersonasLookup } from '../../personas/hooks/personas.hooks'
+import { useEmpleado } from '../hooks/empleados.hooks'
 import {
     empleadoDefaultValues,
     empleadoSchema,
     type EmpleadoFormValues,
 } from '../schemas/empleado.schema'
 import type { Empleado } from '../types/empleado.types'
+
+const { Text } = Typography
 
 type EmpleadoFormModalProps = {
     open: boolean
@@ -46,11 +50,18 @@ export function EmpleadoFormModal({
 }: EmpleadoFormModalProps) {
     const isEditing = empleado !== null
 
+    const { data: empleadoDetail, isFetching: loadingEmpleadoDetail } = useEmpleado(
+        empleado?.id ?? null,
+        open && isEditing,
+    )
+
     const { data: personasResult, isFetching: loadingPersonas } = usePersonasLookup()
     const { data: areasResult, isFetching: loadingAreas } = useAreas(LOOKUP_QUERY)
     const { data: profesionesResult, isFetching: loadingProfesiones } =
         useProfesiones(LOOKUP_QUERY)
     const { data: cargosResult, isFetching: loadingCargos } = useCargos(LOOKUP_QUERY)
+    const { data: especialidadesResult, isFetching: loadingEspecialidades } =
+        useEspecialidades(LOOKUP_QUERY)
 
     const [areaId, setAreaId] = useState<string | null>(null)
     const [departamentoId, setDepartamentoId] = useState<string | null>(null)
@@ -70,27 +81,54 @@ export function EmpleadoFormModal({
         },
     })
 
+    const esMedico = useStore(form.store, (state) => state.values.esMedico)
+    const selectedEspecialidadIds = useStore(
+        form.store,
+        (state) => state.values.especialidadIds,
+    )
+
+    const empleadoSource = empleadoDetail ?? empleado
+
     useEffect(() => {
         if (!open) return
 
         form.reset()
 
-        if (empleado) {
-            form.setFieldValue('personaId', empleado.personaId)
-            form.setFieldValue('codigoEmpleado', empleado.codigoEmpleado)
-            form.setFieldValue('areaId', empleado.areaId)
-            form.setFieldValue('departamentoId', empleado.departamentoId)
-            form.setFieldValue('servicioId', empleado.servicioId)
-            form.setFieldValue('profesionId', empleado.profesionId)
-            form.setFieldValue('cargoId', empleado.cargoId)
-            form.setFieldValue('fechaIngreso', empleado.fechaIngreso ?? '')
-            setAreaId(empleado.areaId)
-            setDepartamentoId(empleado.departamentoId)
+        if (empleadoSource) {
+            form.setFieldValue('personaId', empleadoSource.personaId)
+            form.setFieldValue('codigoEmpleado', empleadoSource.codigoEmpleado)
+            form.setFieldValue('areaId', empleadoSource.areaId)
+            form.setFieldValue('departamentoId', empleadoSource.departamentoId)
+            form.setFieldValue('servicioId', empleadoSource.servicioId)
+            form.setFieldValue('profesionId', empleadoSource.profesionId)
+            form.setFieldValue('cargoId', empleadoSource.cargoId)
+            form.setFieldValue('fechaIngreso', empleadoSource.fechaIngreso ?? '')
+            form.setFieldValue('esMedico', empleadoSource.esMedico)
+            form.setFieldValue(
+                'especialidadIds',
+                empleadoSource.medico?.especialidades.map(
+                    (item) => item.especialidadId,
+                ) ?? [],
+            )
+            form.setFieldValue(
+                'especialidadPrincipalId',
+                empleadoSource.medico?.especialidadPrincipalId ?? '',
+            )
+            form.setFieldValue(
+                'matriculaProfesional',
+                empleadoSource.medico?.matriculaProfesional ?? '',
+            )
+            form.setFieldValue(
+                'registroColegioMedico',
+                empleadoSource.medico?.registroColegioMedico ?? '',
+            )
+            setAreaId(empleadoSource.areaId)
+            setDepartamentoId(empleadoSource.departamentoId)
         } else {
             setAreaId(null)
             setDepartamentoId(null)
         }
-    }, [open, empleado, form])
+    }, [open, empleadoSource, form])
 
     const personaOptions =
         personasResult?.items.map((persona) => ({
@@ -128,6 +166,16 @@ export function EmpleadoFormModal({
             value: cargo.id,
         })) ?? []
 
+    const especialidadOptions =
+        especialidadesResult?.items.map((especialidad) => ({
+            label: especialidad.nombre,
+            value: especialidad.id,
+        })) ?? []
+
+    const principalOptions = especialidadOptions.filter((option) =>
+        selectedEspecialidadIds.includes(option.value),
+    )
+
     const handleClose = () => {
         if (loading) return
         onClose()
@@ -147,6 +195,19 @@ export function EmpleadoFormModal({
         form.setFieldValue('servicioId', '')
     }
 
+    const handleEsMedicoChange = (checked: boolean) => {
+        form.setFieldValue('esMedico', checked)
+
+        if (!checked) {
+            form.setFieldValue('especialidadIds', [])
+            form.setFieldValue('especialidadPrincipalId', '')
+            form.setFieldValue('matriculaProfesional', '')
+            form.setFieldValue('registroColegioMedico', '')
+        }
+    }
+
+    const isFormLoading = loading || (isEditing && loadingEmpleadoDetail)
+
     return (
         <Modal
             title={isEditing ? 'Editar empleado' : 'Nuevo empleado'}
@@ -155,9 +216,9 @@ export function EmpleadoFormModal({
             onOk={() => void form.handleSubmit()}
             okText={isEditing ? 'Guardar' : 'Registrar'}
             cancelText="Cancelar"
-            confirmLoading={loading}
+            confirmLoading={isFormLoading}
             destroyOnHidden
-            width={640}
+            width={680}
             className="rrhh-form-modal"
         >
             <Form layout="vertical" requiredMark={false} size="small">
@@ -181,7 +242,11 @@ export function EmpleadoFormModal({
                                             value={field.state.value || undefined}
                                             onChange={(value) => field.handleChange(value)}
                                             onBlur={field.handleBlur}
-                                            disabled={loading || loadingPersonas || isEditing}
+                                            disabled={
+                                                isFormLoading ||
+                                                loadingPersonas ||
+                                                isEditing
+                                            }
                                         />
                                     </Form.Item>
                                 )
@@ -207,7 +272,7 @@ export function EmpleadoFormModal({
                                                 field.handleChange(event.target.value)
                                             }
                                             onBlur={field.handleBlur}
-                                            disabled={loading}
+                                            disabled={isFormLoading}
                                         />
                                     </Form.Item>
                                 )
@@ -226,7 +291,7 @@ export function EmpleadoFormModal({
                                             field.handleChange(event.target.value)
                                         }
                                         onBlur={field.handleBlur}
-                                        disabled={loading}
+                                        disabled={isFormLoading}
                                     />
                                 </Form.Item>
                             )}
@@ -252,7 +317,7 @@ export function EmpleadoFormModal({
                                             value={field.state.value || undefined}
                                             onChange={(value) => field.handleChange(value)}
                                             onBlur={field.handleBlur}
-                                            disabled={loading || loadingCargos}
+                                            disabled={isFormLoading || loadingCargos}
                                         />
                                     </Form.Item>
                                 )
@@ -279,7 +344,7 @@ export function EmpleadoFormModal({
                                             value={field.state.value || undefined}
                                             onChange={(value) => field.handleChange(value)}
                                             onBlur={field.handleBlur}
-                                            disabled={loading || loadingProfesiones}
+                                            disabled={isFormLoading || loadingProfesiones}
                                         />
                                     </Form.Item>
                                 )
@@ -306,7 +371,7 @@ export function EmpleadoFormModal({
                                             value={field.state.value || undefined}
                                             onChange={handleAreaChange}
                                             onBlur={field.handleBlur}
-                                            disabled={loading || loadingAreas}
+                                            disabled={isFormLoading || loadingAreas}
                                         />
                                     </Form.Item>
                                 )
@@ -334,7 +399,7 @@ export function EmpleadoFormModal({
                                             onChange={handleDepartamentoChange}
                                             onBlur={field.handleBlur}
                                             disabled={
-                                                loading ||
+                                                isFormLoading ||
                                                 loadingDepartamentos ||
                                                 !areaId
                                             }
@@ -365,7 +430,7 @@ export function EmpleadoFormModal({
                                             onChange={(value) => field.handleChange(value)}
                                             onBlur={field.handleBlur}
                                             disabled={
-                                                loading ||
+                                                isFormLoading ||
                                                 loadingServicios ||
                                                 !departamentoId
                                             }
@@ -376,6 +441,169 @@ export function EmpleadoFormModal({
                         </form.Field>
                     </Col>
                 </Row>
+
+                <Divider className="rrhh-form-modal__divider" />
+
+                <form.Field name="esMedico">
+                    {(field) => (
+                        <Form.Item
+                            label="Registrar como médico"
+                            help="Active esta opción para registrar especialidades y matrícula sin ir al directorio de médicos."
+                        >
+                            <Switch
+                                checked={field.state.value}
+                                onChange={handleEsMedicoChange}
+                                disabled={isFormLoading}
+                            />
+                        </Form.Item>
+                    )}
+                </form.Field>
+
+                {esMedico ? (
+                    <Row gutter={12}>
+                        <Col xs={24}>
+                            <form.Field name="especialidadIds">
+                                {(field) => {
+                                    const error = getFieldError(field.state.meta.errors)
+
+                                    return (
+                                        <Form.Item
+                                            label="Especialidades"
+                                            validateStatus={error ? 'error' : undefined}
+                                            help={error || undefined}
+                                        >
+                                            <Select
+                                                mode="multiple"
+                                                showSearch
+                                                optionFilterProp="label"
+                                                placeholder="Seleccionar especialidades"
+                                                options={especialidadOptions}
+                                                value={field.state.value}
+                                                onChange={(values) => {
+                                                    field.handleChange(values)
+
+                                                    const principalId =
+                                                        form.getFieldValue(
+                                                            'especialidadPrincipalId',
+                                                        )
+
+                                                    if (
+                                                        values.length === 1 &&
+                                                        values[0] !== principalId
+                                                    ) {
+                                                        form.setFieldValue(
+                                                            'especialidadPrincipalId',
+                                                            values[0],
+                                                        )
+                                                    } else if (
+                                                        principalId &&
+                                                        !values.includes(principalId)
+                                                    ) {
+                                                        form.setFieldValue(
+                                                            'especialidadPrincipalId',
+                                                            values[0] ?? '',
+                                                        )
+                                                    }
+                                                }}
+                                                onBlur={field.handleBlur}
+                                                disabled={
+                                                    isFormLoading || loadingEspecialidades
+                                                }
+                                            />
+                                        </Form.Item>
+                                    )
+                                }}
+                            </form.Field>
+                        </Col>
+
+                        <Col xs={24}>
+                            <form.Field name="especialidadPrincipalId">
+                                {(field) => {
+                                    const error = getFieldError(field.state.meta.errors)
+
+                                    return (
+                                        <Form.Item
+                                            label="Especialidad principal"
+                                            validateStatus={error ? 'error' : undefined}
+                                            help={
+                                                error ||
+                                                (selectedEspecialidadIds.length > 1
+                                                    ? 'Se usa como referencia en atención médica.'
+                                                    : undefined)
+                                            }
+                                        >
+                                            <Select
+                                                showSearch
+                                                optionFilterProp="label"
+                                                placeholder="Seleccionar especialidad principal"
+                                                options={principalOptions}
+                                                value={field.state.value || undefined}
+                                                onChange={(value) =>
+                                                    field.handleChange(value)
+                                                }
+                                                onBlur={field.handleBlur}
+                                                disabled={
+                                                    isFormLoading ||
+                                                    loadingEspecialidades ||
+                                                    selectedEspecialidadIds.length === 0
+                                                }
+                                            />
+                                        </Form.Item>
+                                    )
+                                }}
+                            </form.Field>
+                        </Col>
+
+                        <Col xs={24} sm={12}>
+                            <form.Field name="matriculaProfesional">
+                                {(field) => {
+                                    const error = getFieldError(field.state.meta.errors)
+
+                                    return (
+                                        <Form.Item
+                                            label="Matrícula profesional"
+                                            validateStatus={error ? 'error' : undefined}
+                                            help={error || undefined}
+                                        >
+                                            <Input
+                                                placeholder="MP-12345"
+                                                value={field.state.value}
+                                                onChange={(event) =>
+                                                    field.handleChange(event.target.value)
+                                                }
+                                                onBlur={field.handleBlur}
+                                                disabled={isFormLoading}
+                                            />
+                                        </Form.Item>
+                                    )
+                                }}
+                            </form.Field>
+                        </Col>
+
+                        <Col xs={24} sm={12}>
+                            <form.Field name="registroColegioMedico">
+                                {(field) => (
+                                    <Form.Item label="Registro colegio médico">
+                                        <Input
+                                            placeholder="Opcional"
+                                            value={field.state.value}
+                                            onChange={(event) =>
+                                                field.handleChange(event.target.value)
+                                            }
+                                            onBlur={field.handleBlur}
+                                            disabled={isFormLoading}
+                                        />
+                                    </Form.Item>
+                                )}
+                            </form.Field>
+                        </Col>
+                    </Row>
+                ) : (
+                    <Text type="secondary">
+                        Si el empleado ejerce como médico, active el interruptor para
+                        completar sus datos profesionales aquí mismo.
+                    </Text>
+                )}
             </Form>
         </Modal>
     )
