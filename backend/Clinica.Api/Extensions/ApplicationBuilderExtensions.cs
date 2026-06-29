@@ -23,6 +23,7 @@ public static class ApplicationBuilderExtensions
             await ParametrosDbSeeder.MigrateAsync(app.Services);
             await RecursosHumanosDbSeeder.MigrateAsync(app.Services);
             await PersonasDbSeeder.MigrateAsync(app.Services);
+            await DemoUsersSeeder.SeedAsync(app.Services);
             await AtencionMedicaDbSeeder.MigrateAsync(app.Services);
             await WorkflowDbSeeder.MigrateAsync(app.Services);
         }

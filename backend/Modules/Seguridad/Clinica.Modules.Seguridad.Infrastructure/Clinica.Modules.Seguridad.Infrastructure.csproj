@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Clinica.Modules.Seguridad.Application\Clinica.Modules.Seguridad.Application.csproj" />
     <ProjectReference Include="..\..\Personas\Clinica.Modules.Personas.Application\Clinica.Modules.Personas.Application.csproj" />
+    <ProjectReference Include="..\..\Personas\Clinica.Modules.Personas.Infrastructure\Clinica.Modules.Personas.Infrastructure.csproj" />
     <ProjectReference Include="..\..\..\Clinica.SharedKernel\Clinica.SharedKernel.csproj" />
   </ItemGroup>
 
