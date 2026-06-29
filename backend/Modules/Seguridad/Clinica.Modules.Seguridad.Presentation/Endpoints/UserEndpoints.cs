@@ -17,6 +17,12 @@ public static class UserEndpoints
             .RequireAuthorization(SeguridadEndpoints.AdminPolicy)
             .WithTags(SeguridadSwaggerTags.Users);
 
+        users.MapPost("/con-persona", CreateUserWithPersonaAsync)
+            .WithName("Seguridad_CreateUserWithPersona")
+            .WithSummary("Crear usuario vinculado a una persona")
+            .Produces<ApiResponse<UsuarioPersonaResponse>>(StatusCodes.Status201Created)
+            .Produces<ProblemDetails>(StatusCodes.Status400BadRequest);
+
         users.MapPost("/", CreateUserAsync)
             .WithName("Seguridad_CreateUser")
             .WithSummary("Crear un nuevo usuario")
@@ -63,6 +69,22 @@ public static class UserEndpoints
             .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
 
         return group;
+    }
+
+    private static async Task<IResult> CreateUserWithPersonaAsync(
+        CreateUsuarioPersonaRequest request,
+        IValidator<CreateUsuarioPersonaRequest> validator,
+        IUsuarioPersonaService usuarioPersonaService,
+        CancellationToken cancellationToken)
+    {
+        var validation = await validator.ValidateAsync(request, cancellationToken);
+
+        if (!validation.IsValid)
+            return ApiResults.BadRequest(GetValidationErrors(validation));
+
+        var user = await usuarioPersonaService.CreateAsync(request, cancellationToken);
+
+        return ApiResults.Created(user, "Usuario y persona registrados correctamente.");
     }
 
     private static async Task<IResult> CreateUserAsync(

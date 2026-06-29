@@ -1,3 +1,4 @@
+using Clinica.Modules.Personas.Application.Abstractions;
 using Clinica.Modules.Seguridad.Application.Abstractions;
 using Clinica.Modules.Seguridad.Application.Users;
 using Clinica.Modules.Seguridad.Infrastructure.Identity;
@@ -9,7 +10,8 @@ namespace Clinica.Modules.Seguridad.Infrastructure.Services;
 
 public sealed class UserService(
     UserManager<ApplicationUser> userManager,
-    RoleManager<ApplicationRole> roleManager
+    RoleManager<ApplicationRole> roleManager,
+    IPersonaService personaService
 ) : IUserService
 {
     public async Task<UserResponse> CreateAsync(
@@ -51,7 +53,7 @@ public sealed class UserService(
 
         var roles = await userManager.GetRolesAsync(user);
 
-        return MapToResponse(user, roles);
+        return await MapToResponseAsync(user, roles, cancellationToken);
     }
 
     public async Task<UserResponse> GetByIdAsync(
@@ -61,7 +63,7 @@ public sealed class UserService(
         var user = await FindUserAsync(id, cancellationToken);
         var roles = await userManager.GetRolesAsync(user);
 
-        return MapToResponse(user, roles);
+        return await MapToResponseAsync(user, roles, cancellationToken);
     }
 
     public async Task<IReadOnlyList<UserResponse>> GetAllAsync(
@@ -77,7 +79,7 @@ public sealed class UserService(
         foreach (var user in users)
         {
             var roles = await userManager.GetRolesAsync(user);
-            responses.Add(MapToResponse(user, roles));
+            responses.Add(await MapToResponseAsync(user, roles, cancellationToken));
         }
 
         return responses;
@@ -113,7 +115,7 @@ public sealed class UserService(
 
         var roles = await userManager.GetRolesAsync(user);
 
-        return MapToResponse(user, roles);
+        return await MapToResponseAsync(user, roles, cancellationToken);
     }
 
     public async Task DeleteAsync(
@@ -191,14 +193,34 @@ public sealed class UserService(
         return string.Join("; ", result.Errors.Select(e => e.Description));
     }
 
-    private static UserResponse MapToResponse(ApplicationUser user, IList<string> roles)
+    private async Task<UserResponse> MapToResponseAsync(
+        ApplicationUser user,
+        IList<string> roles,
+        CancellationToken cancellationToken)
     {
+        string? personaNombreCompleto = null;
+        string? personaNumeroDocumento = null;
+
+        if (user.PersonaId is { } personaId)
+        {
+            var persona = await personaService.GetByIdAsync(personaId, cancellationToken);
+
+            if (persona is not null)
+            {
+                personaNombreCompleto = persona.NombreCompleto;
+                personaNumeroDocumento = persona.NumeroDocumento;
+            }
+        }
+
         return new UserResponse(
             user.Id,
             user.UserName ?? string.Empty,
             user.NombreCompleto,
             user.Email,
             user.Activo,
-            roles.ToList());
+            roles.ToList(),
+            user.PersonaId,
+            personaNombreCompleto,
+            personaNumeroDocumento);
     }
 }

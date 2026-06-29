@@ -1,16 +1,30 @@
-import { useEffect, useState } from 'react'
-import { useForm } from '@tanstack/react-form'
-import { Form, Input, Modal, Select, Switch } from 'antd'
-
+import { useEffect, useMemo, useState } from 'react'
+import { useForm, useStore } from '@tanstack/react-form'
 import {
-    createUserDefaultValues,
-    createUserSchema,
+    Form,
+    Input,
+    Modal,
+    Radio,
+    Select,
+    Switch,
+    Tabs,
+    Typography,
+} from 'antd'
+
+import { PersonaFormFields } from '../../personas/components/PersonaFormFields'
+import { usePersonasLookup } from '../../personas/hooks/personas.hooks'
+import { useSyncUserRoles } from '../hooks/users.hooks'
+import {
+    buildNombreCompletoPreview,
+    createUsuarioPersonaDefaultValues,
+    createUsuarioPersonaSchema,
+    type CreateUsuarioPersonaFormValues,
+} from '../schemas/usuario-persona.schema'
+import {
     updateUserDefaultValues,
     updateUserSchema,
-    type CreateUserFormValues,
     type UpdateUserFormValues,
 } from '../schemas/user.schema'
-import { useSyncUserRoles } from '../hooks/users.hooks'
 import type { User } from '../types/user.types'
 
 type UserFormModalProps = {
@@ -19,7 +33,7 @@ type UserFormModalProps = {
     roleOptions: string[]
     loading: boolean
     onClose: () => void
-    onCreate: (values: CreateUserFormValues) => Promise<void>
+    onCreate: (values: CreateUsuarioPersonaFormValues) => Promise<void>
     onUpdate: (values: UpdateUserFormValues) => Promise<void>
 }
 
@@ -43,14 +57,16 @@ export function UserFormModal({
     onUpdate,
 }: UserFormModalProps) {
     const isEditing = user !== null
+    const [activeTab, setActiveTab] = useState('persona')
     const [selectedRoles, setSelectedRoles] = useState<string[]>([])
     const [rolesError, setRolesError] = useState<string | null>(null)
     const syncUserRoles = useSyncUserRoles()
+    const { data: personasResult, isFetching: loadingPersonas } = usePersonasLookup()
 
     const createForm = useForm({
-        defaultValues: createUserDefaultValues,
+        defaultValues: createUsuarioPersonaDefaultValues,
         validators: {
-            onSubmit: createUserSchema,
+            onSubmit: createUsuarioPersonaSchema,
         },
         onSubmit: async ({ value }) => {
             await onCreate(value)
@@ -88,6 +104,20 @@ export function UserFormModal({
         },
     })
 
+    const createValues = useStore(createForm.store, (state) => state.values)
+    const modo = createValues.modo
+
+    const nombreCompletoPreview = useMemo(() => {
+        if (modo === 'existente') {
+            const persona = personasResult?.items.find(
+                (item) => item.id === createValues.personaId,
+            )
+            return persona?.nombreCompleto ?? ''
+        }
+
+        return buildNombreCompletoPreview(createValues)
+    }, [modo, createValues, personasResult?.items])
+
     useEffect(() => {
         if (!open) return
 
@@ -101,9 +131,21 @@ export function UserFormModal({
         }
 
         createForm.reset()
-        setSelectedRoles([])
+        setActiveTab('persona')
         setRolesError(null)
     }, [open, user, createForm, updateForm])
+
+    useEffect(() => {
+        if (isEditing || modo !== 'nueva') return
+
+        const documento = createValues.numeroDocumento?.trim()
+        if (!documento) return
+
+        const currentUserName = createForm.getFieldValue('userName')?.trim()
+        if (!currentUserName) {
+            createForm.setFieldValue('userName', documento)
+        }
+    }, [createValues.numeroDocumento, modo, isEditing, createForm])
 
     const isSaving = loading || syncUserRoles.isPending
 
@@ -126,6 +168,183 @@ export function UserFormModal({
         value: role,
     }))
 
+    const personaOptions =
+        personasResult?.items.map((persona) => ({
+            label: `${persona.nombreCompleto} (${persona.tipoDocumentoNombre}: ${persona.numeroDocumento})`,
+            value: persona.id,
+        })) ?? []
+
+    const createTabs = [
+        {
+            key: 'persona',
+            label: 'Persona',
+            children: (
+                <>
+                    <createForm.Field name="modo">
+                        {(field) => (
+                            <Form.Item label="Origen de la persona">
+                                <Radio.Group
+                                    value={field.state.value}
+                                    onChange={(event) =>
+                                        field.handleChange(event.target.value)
+                                    }
+                                    disabled={isSaving}
+                                >
+                                    <Radio value="nueva">Nueva persona</Radio>
+                                    <Radio value="existente">Persona existente</Radio>
+                                </Radio.Group>
+                            </Form.Item>
+                        )}
+                    </createForm.Field>
+
+                    {modo === 'existente' ? (
+                        <createForm.Field name="personaId">
+                            {(field) => {
+                                const error = getFieldError(field.state.meta.errors)
+
+                                return (
+                                    <Form.Item
+                                        label="Persona"
+                                        validateStatus={error ? 'error' : undefined}
+                                        help={error || undefined}
+                                    >
+                                        <Select
+                                            showSearch
+                                            optionFilterProp="label"
+                                            placeholder="Buscar persona por nombre o documento"
+                                            options={personaOptions}
+                                            value={field.state.value || undefined}
+                                            onChange={(value) => field.handleChange(value)}
+                                            onBlur={field.handleBlur}
+                                            disabled={isSaving || loadingPersonas}
+                                        />
+                                    </Form.Item>
+                                )
+                            }}
+                        </createForm.Field>
+                    ) : (
+                        <PersonaFormFields form={createForm} loading={isSaving} />
+                    )}
+
+                    {nombreCompletoPreview ? (
+                        <Form.Item label="Nombre completo (vista previa)">
+                            <Typography.Text>{nombreCompletoPreview}</Typography.Text>
+                        </Form.Item>
+                    ) : null}
+                </>
+            ),
+        },
+        {
+            key: 'acceso',
+            label: 'Acceso al sistema',
+            children: (
+                <>
+                    <createForm.Field name="userName">
+                        {(field) => {
+                            const error = getFieldError(field.state.meta.errors)
+
+                            return (
+                                <Form.Item
+                                    label="Usuario"
+                                    validateStatus={error ? 'error' : undefined}
+                                    help={
+                                        error ||
+                                        (modo === 'nueva'
+                                            ? 'Por defecto se usa el número de documento.'
+                                            : undefined)
+                                    }
+                                >
+                                    <Input
+                                        placeholder="Nombre de usuario"
+                                        value={field.state.value}
+                                        onChange={(event) =>
+                                            field.handleChange(event.target.value)
+                                        }
+                                        onBlur={field.handleBlur}
+                                        disabled={isSaving}
+                                    />
+                                </Form.Item>
+                            )
+                        }}
+                    </createForm.Field>
+
+                    <createForm.Field name="email">
+                        {(field) => {
+                            const error = getFieldError(field.state.meta.errors)
+
+                            return (
+                                <Form.Item
+                                    label="Correo electrónico"
+                                    validateStatus={error ? 'error' : undefined}
+                                    help={error || 'Opcional'}
+                                >
+                                    <Input
+                                        type="email"
+                                        placeholder="correo@ejemplo.com"
+                                        value={field.state.value}
+                                        onChange={(event) =>
+                                            field.handleChange(event.target.value)
+                                        }
+                                        onBlur={field.handleBlur}
+                                        disabled={isSaving}
+                                    />
+                                </Form.Item>
+                            )
+                        }}
+                    </createForm.Field>
+
+                    <createForm.Field name="password">
+                        {(field) => {
+                            const error = getFieldError(field.state.meta.errors)
+
+                            return (
+                                <Form.Item
+                                    label="Contraseña"
+                                    validateStatus={error ? 'error' : undefined}
+                                    help={error || undefined}
+                                >
+                                    <Input.Password
+                                        placeholder="Mínimo 8 caracteres"
+                                        value={field.state.value}
+                                        onChange={(event) =>
+                                            field.handleChange(event.target.value)
+                                        }
+                                        onBlur={field.handleBlur}
+                                        disabled={isSaving}
+                                    />
+                                </Form.Item>
+                            )
+                        }}
+                    </createForm.Field>
+
+                    <createForm.Field name="roles">
+                        {(field) => {
+                            const error = getFieldError(field.state.meta.errors)
+
+                            return (
+                                <Form.Item
+                                    label="Roles"
+                                    validateStatus={error ? 'error' : undefined}
+                                    help={error || 'Seleccione uno o más roles.'}
+                                >
+                                    <Select
+                                        mode="multiple"
+                                        placeholder="Seleccione roles"
+                                        options={roleSelectOptions}
+                                        value={field.state.value}
+                                        onChange={(value) => field.handleChange(value)}
+                                        onBlur={field.handleBlur}
+                                        disabled={isSaving}
+                                    />
+                                </Form.Item>
+                            )
+                        }}
+                    </createForm.Field>
+                </>
+            ),
+        },
+    ]
+
     return (
         <Modal
             title={isEditing ? 'Editar usuario' : 'Nuevo usuario'}
@@ -136,111 +355,32 @@ export function UserFormModal({
             cancelText="Cancelar"
             confirmLoading={isSaving}
             destroyOnHidden
+            width={isEditing ? 520 : 760}
+            className={isEditing ? undefined : 'rrhh-form-modal'}
         >
-            <Form layout="vertical" requiredMark={false}>
+            <Form layout="vertical" requiredMark={false} size={isEditing ? 'middle' : 'small'}>
                 {!isEditing ? (
-                    <>
-                        <createForm.Field name="userName">
-                            {(field) => {
-                                const error = getFieldError(field.state.meta.errors)
-
-                                return (
-                                    <Form.Item
-                                        label="Usuario"
-                                        validateStatus={error ? 'error' : undefined}
-                                        help={error || undefined}
-                                    >
-                                        <Input
-                                            placeholder="admin"
-                                            value={field.state.value}
-                                            onChange={(event) =>
-                                                field.handleChange(event.target.value)
-                                            }
-                                            onBlur={field.handleBlur}
-                                            disabled={isSaving}
-                                            autoFocus
-                                        />
-                                    </Form.Item>
-                                )
-                            }}
-                        </createForm.Field>
-
-                        <createForm.Field name="nombreCompleto">
-                            {(field) => {
-                                const error = getFieldError(field.state.meta.errors)
-
-                                return (
-                                    <Form.Item
-                                        label="Nombre completo"
-                                        validateStatus={error ? 'error' : undefined}
-                                        help={error || undefined}
-                                    >
-                                        <Input
-                                            placeholder="Nombre y apellidos"
-                                            value={field.state.value}
-                                            onChange={(event) =>
-                                                field.handleChange(event.target.value)
-                                            }
-                                            onBlur={field.handleBlur}
-                                            disabled={isSaving}
-                                        />
-                                    </Form.Item>
-                                )
-                            }}
-                        </createForm.Field>
-
-                        <createForm.Field name="password">
-                            {(field) => {
-                                const error = getFieldError(field.state.meta.errors)
-
-                                return (
-                                    <Form.Item
-                                        label="Contraseña"
-                                        validateStatus={error ? 'error' : undefined}
-                                        help={error || undefined}
-                                    >
-                                        <Input.Password
-                                            placeholder="Mínimo 6 caracteres"
-                                            value={field.state.value}
-                                            onChange={(event) =>
-                                                field.handleChange(event.target.value)
-                                            }
-                                            onBlur={field.handleBlur}
-                                            disabled={isSaving}
-                                        />
-                                    </Form.Item>
-                                )
-                            }}
-                        </createForm.Field>
-
-                        <createForm.Field name="rol">
-                            {(field) => {
-                                const error = getFieldError(field.state.meta.errors)
-
-                                return (
-                                    <Form.Item
-                                        label="Rol"
-                                        validateStatus={error ? 'error' : undefined}
-                                        help={error || undefined}
-                                    >
-                                        <Select
-                                            placeholder="Seleccione un rol"
-                                            options={roleSelectOptions}
-                                            value={field.state.value || undefined}
-                                            onChange={(value) => field.handleChange(value)}
-                                            onBlur={field.handleBlur}
-                                            disabled={isSaving}
-                                        />
-                                    </Form.Item>
-                                )
-                            }}
-                        </createForm.Field>
-                    </>
+                    <Tabs
+                        activeKey={activeTab}
+                        onChange={setActiveTab}
+                        items={createTabs}
+                    />
                 ) : (
                     <>
                         <Form.Item label="Usuario">
                             <Input value={user?.userName} disabled />
                         </Form.Item>
+
+                        {user?.personaId ? (
+                            <Form.Item label="Persona vinculada">
+                                <Typography.Text>
+                                    {user.personaNombreCompleto ?? user.nombreCompleto}
+                                    {user.personaNumeroDocumento
+                                        ? ` · ${user.personaNumeroDocumento}`
+                                        : ''}
+                                </Typography.Text>
+                            </Form.Item>
+                        ) : null}
 
                         <Form.Item
                             label="Roles"
@@ -280,8 +420,7 @@ export function UserFormModal({
                                                 field.handleChange(event.target.value)
                                             }
                                             onBlur={field.handleBlur}
-                                            disabled={isSaving}
-                                            autoFocus
+                                            disabled={isSaving || Boolean(user?.personaId)}
                                         />
                                     </Form.Item>
                                 )

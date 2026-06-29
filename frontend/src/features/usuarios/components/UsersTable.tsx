@@ -70,6 +70,31 @@ export function UsersTable({
                 header: 'Usuario',
                 cell: ({ row }) => <UserIdentityCell user={row.original} />,
             }),
+            columnHelper.display({
+                id: 'persona',
+                header: 'Persona',
+                cell: ({ row }) => {
+                    const user = row.original
+
+                    if (!user.personaId) {
+                        return <Typography.Text type="secondary">—</Typography.Text>
+                    }
+
+                    return (
+                        <span>
+                            <Typography.Text>
+                                {user.personaNombreCompleto ?? user.nombreCompleto}
+                            </Typography.Text>
+                            {user.personaNumeroDocumento ? (
+                                <Typography.Text type="secondary" className="seguridad-user-cell__username">
+                                    {' '}
+                                    · {user.personaNumeroDocumento}
+                                </Typography.Text>
+                            ) : null}
+                        </span>
+                    )
+                },
+            }),
             columnHelper.accessor('roles', {
                 header: 'Rol',
                 cell: ({ getValue }) => {

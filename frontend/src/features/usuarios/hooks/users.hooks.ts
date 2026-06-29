@@ -7,7 +7,7 @@ import { notify } from '../../../shared/utils/notify'
 import { getApiErrorMessage } from '../../../shared/utils/api-error'
 import type { PagedQuery } from '../../../shared/types/pagination.types'
 import { usersService } from '../services/users.service'
-import type { CreateUserPayload, UpdateUserPayload } from '../types/user.types'
+import type { CreateUserPayload, CreateUsuarioPersonaApiPayload, UpdateUserPayload } from '../types/user.types'
 
 function getRoleChanges(currentRoles: string[], nextRoles: string[]) {
     const current = new Set(currentRoles)
@@ -58,6 +58,23 @@ export function useUsers(query: PagedQuery) {
     return useAppQuery({
         queryKey: queryKeys.users.list(query),
         queryFn: () => usersService.getPaged(query),
+    })
+}
+
+export function useCreateUserWithPersona() {
+    const queryClient = useQueryClient()
+
+    return useAppMutation({
+        mutationFn: (data: CreateUsuarioPersonaApiPayload) =>
+            usersService.createWithPersona(data),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: queryKeys.users.all })
+            void queryClient.invalidateQueries({ queryKey: queryKeys.personas.all })
+            notify.success('Usuario creado', 'El usuario y la persona se registraron correctamente.')
+        },
+        onError: (error) => {
+            notify.error('Error al crear usuario', getApiErrorMessage(error))
+        },
     })
 }
 

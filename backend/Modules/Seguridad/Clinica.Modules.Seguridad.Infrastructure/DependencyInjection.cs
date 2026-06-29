@@ -37,6 +37,7 @@ public static class DependencyInjection
         services.AddScoped<RefreshTokenService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IUsuarioPersonaService, UsuarioPersonaService>();
         services.AddScoped<IRoleService, RoleService>();
 
         return services;

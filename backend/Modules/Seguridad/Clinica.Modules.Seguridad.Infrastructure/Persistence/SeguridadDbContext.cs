@@ -19,6 +19,8 @@ public sealed class SeguridadDbContext : IdentityDbContext<ApplicationUser, Appl
         builder.Entity<ApplicationUser>(entity =>
         {
             entity.Property(u => u.NombreCompleto).HasMaxLength(200).IsRequired();
+            entity.Property(u => u.PersonaId);
+            entity.HasIndex(u => u.PersonaId).IsUnique().HasFilter("[PersonaId] IS NOT NULL");
             entity.Property(u => u.Activo).HasDefaultValue(true);
             entity.Property(u => u.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
         });

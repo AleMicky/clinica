@@ -5,15 +5,19 @@ import { paginateList } from '../../../shared/utils/pagination'
 import type {
     CreateUserApiPayload,
     CreateUserPayload,
+    CreateUsuarioPersonaApiPayload,
     UpdateUserApiPayload,
     UpdateUserPayload,
     User,
+    UsuarioPersona,
 } from '../types/user.types'
 
 function filterUsers(user: User, search: string) {
     return (
         user.userName.toLowerCase().includes(search) ||
         user.nombreCompleto.toLowerCase().includes(search) ||
+        (user.personaNombreCompleto?.toLowerCase().includes(search) ?? false) ||
+        (user.personaNumeroDocumento?.toLowerCase().includes(search) ?? false) ||
         user.roles.some((role) => role.toLowerCase().includes(search))
     )
 }
@@ -37,6 +41,13 @@ export class UsersService {
         }
 
         return post<User, CreateUserApiPayload>(userEndpoints.root, payload)
+    }
+
+    createWithPersona(data: CreateUsuarioPersonaApiPayload) {
+        return post<UsuarioPersona, CreateUsuarioPersonaApiPayload>(
+            userEndpoints.conPersona,
+            data,
+        )
     }
 
     update(id: string, data: UpdateUserPayload) {

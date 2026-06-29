@@ -20,13 +20,16 @@ import { ModuleSectionPanel } from '../../../shared/components/ui/module-page/Mo
 import { UserFormModal } from '../components/UserFormModal'
 import { UsersTable } from '../components/UsersTable'
 import {
-    useCreateUser,
+    useCreateUserWithPersona,
     useDeleteUser,
     useUpdateUser,
     useUsers,
 } from '../hooks/users.hooks'
+import {
+    toCreateUsuarioPersonaPayload,
+    type CreateUsuarioPersonaFormValues,
+} from '../schemas/usuario-persona.schema'
 import type {
-    CreateUserFormValues,
     UpdateUserFormValues,
 } from '../schemas/user.schema'
 import type { User } from '../types/user.types'
@@ -59,7 +62,7 @@ export function UsuariosView({ embedded = false }: UsuariosViewProps) {
         search: search || undefined,
     })
     const { data: rolesData } = useRoles({ page: 1, pageSize: 100 })
-    const createUser = useCreateUser()
+    const createUserWithPersona = useCreateUserWithPersona()
     const updateUser = useUpdateUser()
     const deleteUser = useDeleteUser()
 
@@ -76,7 +79,7 @@ export function UsuariosView({ embedded = false }: UsuariosViewProps) {
         [users],
     )
 
-    const isSaving = createUser.isPending || updateUser.isPending
+    const isSaving = createUserWithPersona.isPending || updateUser.isPending
 
     const openCreateModal = () => {
         setEditingUser(null)
@@ -94,8 +97,8 @@ export function UsuariosView({ embedded = false }: UsuariosViewProps) {
         setEditingUser(null)
     }
 
-    const handleCreate = async (values: CreateUserFormValues) => {
-        await createUser.mutateAsync(values)
+    const handleCreate = async (values: CreateUsuarioPersonaFormValues) => {
+        await createUserWithPersona.mutateAsync(toCreateUsuarioPersonaPayload(values))
         closeModal()
     }
 

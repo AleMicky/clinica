@@ -40,7 +40,9 @@ export const authEndpoints = createEndpoints(`${api.seguridad}/auth`, (root) => 
 
 export const roleEndpoints = createEndpoints(`${api.seguridad}/roles`)
 
-export const userEndpoints = createEndpoints(`${api.seguridad}/users`)
+export const userEndpoints = createEndpoints(`${api.seguridad}/users`, (root) => ({
+    conPersona: `${root}/con-persona`,
+}))
 
 export const catalogoGrupoEndpoints = createEndpoints(
     `${api.parametros}/catalogo-grupos`,

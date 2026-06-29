@@ -1,13 +1,12 @@
 namespace Clinica.Modules.Seguridad.Application.Users;
 
-public sealed record UserResponse(
+public sealed record UsuarioPersonaResponse(
     Guid Id,
     string UserName,
     string NombreCompleto,
     string? Email,
     bool Activo,
     IReadOnlyList<string> Roles,
-    Guid? PersonaId = null,
-    string? PersonaNombreCompleto = null,
-    string? PersonaNumeroDocumento = null
+    Guid PersonaId,
+    string PersonaNombreCompleto
 );
