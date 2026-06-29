@@ -1,9 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
 
+import { PerfilView } from '../../../features/auth/views/PerfilView'
+
 export const Route = createFileRoute('/_admin/usuarios/perfil')({
-  component: RouteComponent,
+    component: PerfilPage,
 })
 
-function RouteComponent() {
-  return <div>Hello "/_admin/usuarios/perfil"!</div>
+function PerfilPage() {
+    return <PerfilView />
 }

@@ -9,6 +9,51 @@ import type { PagedQuery } from '../../../shared/types/pagination.types'
 import { usersService } from '../services/users.service'
 import type { CreateUserPayload, UpdateUserPayload } from '../types/user.types'
 
+function getRoleChanges(currentRoles: string[], nextRoles: string[]) {
+    const current = new Set(currentRoles)
+    const next = new Set(nextRoles)
+
+    return {
+        toAdd: nextRoles.filter((role) => !current.has(role)),
+        toRemove: currentRoles.filter((role) => !next.has(role)),
+    }
+}
+
+export async function syncUserRoles(
+    userId: string,
+    currentRoles: string[],
+    nextRoles: string[],
+) {
+    const { toAdd, toRemove } = getRoleChanges(currentRoles, nextRoles)
+
+    await Promise.all([
+        ...toAdd.map((role) => usersService.assignRole(userId, role)),
+        ...toRemove.map((role) => usersService.removeRole(userId, role)),
+    ])
+}
+
+export function useSyncUserRoles() {
+    const queryClient = useQueryClient()
+
+    return useAppMutation({
+        mutationFn: ({
+            userId,
+            currentRoles,
+            nextRoles,
+        }: {
+            userId: string
+            currentRoles: string[]
+            nextRoles: string[]
+        }) => syncUserRoles(userId, currentRoles, nextRoles),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: queryKeys.users.all })
+        },
+        onError: (error) => {
+            notify.error('Error al actualizar roles', getApiErrorMessage(error))
+        },
+    })
+}
+
 export function useUsers(query: PagedQuery) {
     return useAppQuery({
         queryKey: queryKeys.users.list(query),

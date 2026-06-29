@@ -3,6 +3,7 @@ import { authEndpoints } from '../../../shared/api/endpoints'
 import type { LoginFormValues } from '../schemas/login.schema'
 import type {
     AuthSession,
+    ChangePasswordPayload,
     LoginApiResponse,
     RefreshTokenRequest,
     User,
@@ -48,6 +49,13 @@ export class AuthService {
 
     me() {
         return get<User>(authEndpoints.me)
+    }
+
+    changePassword(data: ChangePasswordPayload) {
+        return post<void, ChangePasswordPayload>(
+            authEndpoints.changePassword,
+            data,
+        )
     }
 }
 

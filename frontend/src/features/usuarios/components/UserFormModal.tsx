@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from '@tanstack/react-form'
 import { Form, Input, Modal, Select, Switch } from 'antd'
 
@@ -10,6 +10,7 @@ import {
     type CreateUserFormValues,
     type UpdateUserFormValues,
 } from '../schemas/user.schema'
+import { useSyncUserRoles } from '../hooks/users.hooks'
 import type { User } from '../types/user.types'
 
 type UserFormModalProps = {
@@ -42,6 +43,9 @@ export function UserFormModal({
     onUpdate,
 }: UserFormModalProps) {
     const isEditing = user !== null
+    const [selectedRoles, setSelectedRoles] = useState<string[]>([])
+    const [rolesError, setRolesError] = useState<string | null>(null)
+    const syncUserRoles = useSyncUserRoles()
 
     const createForm = useForm({
         defaultValues: createUserDefaultValues,
@@ -59,6 +63,27 @@ export function UserFormModal({
             onSubmit: updateUserSchema,
         },
         onSubmit: async ({ value }) => {
+            if (!user) return
+
+            if (selectedRoles.length === 0) {
+                setRolesError('Asigne al menos un rol.')
+                return
+            }
+
+            setRolesError(null)
+
+            const rolesChanged =
+                selectedRoles.length !== user.roles.length ||
+                selectedRoles.some((role) => !user.roles.includes(role))
+
+            if (rolesChanged) {
+                await syncUserRoles.mutateAsync({
+                    userId: user.id,
+                    currentRoles: user.roles,
+                    nextRoles: selectedRoles,
+                })
+            }
+
             await onUpdate(value)
         },
     })
@@ -70,14 +95,20 @@ export function UserFormModal({
             updateForm.reset()
             updateForm.setFieldValue('nombreCompleto', user.nombreCompleto)
             updateForm.setFieldValue('activo', user.activo)
+            setSelectedRoles(user.roles)
+            setRolesError(null)
             return
         }
 
         createForm.reset()
+        setSelectedRoles([])
+        setRolesError(null)
     }, [open, user, createForm, updateForm])
 
+    const isSaving = loading || syncUserRoles.isPending
+
     const handleClose = () => {
-        if (loading) return
+        if (isSaving) return
         onClose()
     }
 
@@ -103,7 +134,7 @@ export function UserFormModal({
             onOk={handleSubmit}
             okText={isEditing ? 'Guardar' : 'Crear'}
             cancelText="Cancelar"
-            confirmLoading={loading}
+            confirmLoading={isSaving}
             destroyOnHidden
         >
             <Form layout="vertical" requiredMark={false}>
@@ -126,7 +157,7 @@ export function UserFormModal({
                                                 field.handleChange(event.target.value)
                                             }
                                             onBlur={field.handleBlur}
-                                            disabled={loading}
+                                            disabled={isSaving}
                                             autoFocus
                                         />
                                     </Form.Item>
@@ -151,7 +182,7 @@ export function UserFormModal({
                                                 field.handleChange(event.target.value)
                                             }
                                             onBlur={field.handleBlur}
-                                            disabled={loading}
+                                            disabled={isSaving}
                                         />
                                     </Form.Item>
                                 )
@@ -175,7 +206,7 @@ export function UserFormModal({
                                                 field.handleChange(event.target.value)
                                             }
                                             onBlur={field.handleBlur}
-                                            disabled={loading}
+                                            disabled={isSaving}
                                         />
                                     </Form.Item>
                                 )
@@ -198,7 +229,7 @@ export function UserFormModal({
                                             value={field.state.value || undefined}
                                             onChange={(value) => field.handleChange(value)}
                                             onBlur={field.handleBlur}
-                                            disabled={loading}
+                                            disabled={isSaving}
                                         />
                                     </Form.Item>
                                 )
@@ -211,8 +242,25 @@ export function UserFormModal({
                             <Input value={user?.userName} disabled />
                         </Form.Item>
 
-                        <Form.Item label="Rol">
-                            <Input value={user?.roles.join(', ')} disabled />
+                        <Form.Item
+                            label="Roles"
+                            validateStatus={rolesError ? 'error' : undefined}
+                            help={rolesError || 'Seleccione uno o más roles.'}
+                            required
+                        >
+                            <Select
+                                mode="multiple"
+                                placeholder="Seleccione roles"
+                                options={roleSelectOptions}
+                                value={selectedRoles}
+                                onChange={(value) => {
+                                    setSelectedRoles(value)
+                                    if (value.length > 0) {
+                                        setRolesError(null)
+                                    }
+                                }}
+                                disabled={isSaving}
+                            />
                         </Form.Item>
 
                         <updateForm.Field name="nombreCompleto">
@@ -232,7 +280,7 @@ export function UserFormModal({
                                                 field.handleChange(event.target.value)
                                             }
                                             onBlur={field.handleBlur}
-                                            disabled={loading}
+                                            disabled={isSaving}
                                             autoFocus
                                         />
                                     </Form.Item>
@@ -248,7 +296,7 @@ export function UserFormModal({
                                         onChange={(checked) => field.handleChange(checked)}
                                         checkedChildren="Activo"
                                         unCheckedChildren="Inactivo"
-                                        disabled={loading}
+                                        disabled={isSaving}
                                     />
                                 </Form.Item>
                             )}

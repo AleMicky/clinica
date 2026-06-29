@@ -6,6 +6,7 @@ import { queryKeys } from "../../../shared/constants/query-keys"
 import { authStore } from "../../../stores/auth.store"
 import { notify } from "../../../shared/utils/notify"
 import type { LoginFormValues } from "../schemas/login.schema"
+import type { ChangePasswordFormValues } from "../schemas/change-password.schema"
 import { useAppQuery } from "../../../shared/hooks/use-app-query"
 import { getApiErrorMessage } from "../../../shared/utils/api-error"
 
@@ -39,7 +40,13 @@ export function useLogout() {
     const queryClient = useQueryClient()
     const navigate = useNavigate()
 
-    return () => {
+    return async () => {
+        try {
+            await authService.logout()
+        } catch {
+            // Si falla la red o el servidor, igual se cierra la sesión local.
+        }
+
         authStore.getState().logout()
         queryClient.clear()
         notify.info(
@@ -58,4 +65,33 @@ export function useMe() {
         enabled: !!accessToken,
     })
 
+}
+
+export function useChangePassword() {
+    const queryClient = useQueryClient()
+    const navigate = useNavigate()
+
+    return useAppMutation({
+        mutationFn: (values: ChangePasswordFormValues) =>
+            authService.changePassword({
+                currentPassword: values.currentPassword,
+                newPassword: values.newPassword,
+            }),
+        onSuccess: () => {
+            authStore.getState().logout()
+            queryClient.clear()
+            notify.success(
+                'Contraseña actualizada',
+                'Su contraseña se cambió correctamente. Inicie sesión nuevamente.',
+            )
+            navigate({ to: '/login' })
+        },
+        onError: (error) => {
+            notify.error(
+                'Error al cambiar la contraseña',
+                getApiErrorMessage(error),
+                'change-password-error',
+            )
+        },
+    })
 }

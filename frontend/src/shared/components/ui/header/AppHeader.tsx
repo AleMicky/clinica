@@ -184,6 +184,7 @@ export function AppHeader({ collapsed, isMobile, onToggleSidebar }: AppHeaderPro
                                 key: 'profile',
                                 icon: <UserOutlined />,
                                 label: 'Mi perfil',
+                                onClick: () => navigate({ to: '/usuarios/perfil' }),
                             },
                             { type: 'divider' },
                             {

@@ -49,6 +49,19 @@ export class UsersService {
         return put<User, UpdateUserApiPayload>(userEndpoints.byId(id), payload)
     }
 
+    assignRole(userId: string, role: string) {
+        return post<User, { role: string }>(
+            `${userEndpoints.byId(userId)}/roles`,
+            { role },
+        )
+    }
+
+    removeRole(userId: string, role: string) {
+        return del<void>(
+            `${userEndpoints.byId(userId)}/roles/${encodeURIComponent(role)}`,
+        )
+    }
+
     delete(id: string) {
         return del<void>(userEndpoints.byId(id))
     }

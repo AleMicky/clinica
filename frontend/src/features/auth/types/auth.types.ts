@@ -31,3 +31,8 @@ export type AuthSession = {
 export type RefreshTokenRequest = {
     refreshToken: string
 }
+
+export type ChangePasswordPayload = {
+    currentPassword: string
+    newPassword: string
+}

@@ -35,6 +35,7 @@ export const authEndpoints = createEndpoints(`${api.seguridad}/auth`, (root) => 
     refresh: `${root}/refresh`,
     me: `${root}/me`,
     logout: `${root}/logout`,
+    changePassword: `${root}/change-password`,
 }))
 
 export const roleEndpoints = createEndpoints(`${api.seguridad}/roles`)
