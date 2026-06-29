@@ -30,6 +30,14 @@ import {
 } from './PacienteSearchBox'
 import { useFormularioRecepcion } from '../hooks/useFormularioRecepcion'
 import { useTiposAtencion } from '../hooks/useTiposAtencion'
+import { pacientesService } from '../../pacientes/services/pacientes.service'
+import { personasService } from '../../personas/services/personas.service'
+import { useAppQuery } from '../../../shared/hooks/use-app-query'
+import { queryKeys } from '../../../shared/constants/query-keys'
+import {
+    buildPacientePrefill,
+    formatFieldDisplayValue,
+} from '../utils/recepcion-prefill'
 import type {
     CrearRecepcionAtencionPayload,
     DynamicFormValues,
@@ -68,6 +76,20 @@ export function RecepcionPacienteWizard({
     const { data: formulario, isFetching: loadingFormulario } =
         useFormularioRecepcion(tipoAtencionId || undefined)
 
+    const { data: pacienteDetalle } = useAppQuery({
+        queryKey: queryKeys.pacientes.detail(paciente?.id ?? ''),
+        queryFn: () => pacientesService.getById(paciente!.id),
+        enabled: Boolean(paciente?.id),
+    })
+
+    const personaId = pacienteDetalle?.personaId ?? paciente?.personaId
+
+    const { data: persona } = useAppQuery({
+        queryKey: queryKeys.personas.detail(personaId ?? ''),
+        queryFn: () => personasService.getById(personaId!),
+        enabled: Boolean(personaId),
+    })
+
     const tipoOptions = useMemo(
         () =>
             (tiposData?.items ?? []).map((tipo) => ({
@@ -83,14 +105,9 @@ export function RecepcionPacienteWizard({
     )
 
     const prefill = useMemo(() => {
-        if (!paciente) return undefined
-
-        return {
-            historia_clinica: paciente.numeroHistoriaClinica,
-            nombres_apellidos: paciente.personaNombreCompleto,
-            nombres: paciente.personaNombreCompleto,
-        }
-    }, [paciente])
+        if (!pacienteDetalle) return undefined
+        return buildPacientePrefill(pacienteDetalle, persona)
+    }, [pacienteDetalle, persona])
 
     useEffect(() => {
         if (!formulario) return
@@ -171,8 +188,13 @@ export function RecepcionPacienteWizard({
         setStepError(null)
     }
 
+    const respuestasCount = useMemo(
+        () => (formulario ? buildRespuestasPayload(formulario, formValues).length : 0),
+        [formulario, formValues],
+    )
+
     return (
-        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+        <Space orientation="vertical" size="middle" style={{ width: '100%' }}>
             <Steps
                 size="small"
                 current={currentStep}
@@ -181,7 +203,7 @@ export function RecepcionPacienteWizard({
             />
 
             {stepError ? (
-                <Alert type="error" showIcon message={stepError} />
+                <Alert type="error" showIcon title={stepError} />
             ) : null}
 
             {currentStep === 0 ? (
@@ -194,7 +216,7 @@ export function RecepcionPacienteWizard({
                         <Alert
                             type="info"
                             showIcon
-                            message={`Paciente seleccionado: ${paciente.label}`}
+                            title={`Paciente seleccionado: ${paciente.label}`}
                         />
                     ) : null}
                 </Card>
@@ -246,9 +268,7 @@ export function RecepcionPacienteWizard({
                             {formulario?.formularioNombre ?? '—'}
                         </Descriptions.Item>
                         <Descriptions.Item label="Campos completados">
-                            {formulario
-                                ? buildRespuestasPayload(formulario, formValues).length
-                                : 0}
+                            {respuestasCount}
                         </Descriptions.Item>
                         <Descriptions.Item label="Estado inicial">
                             RECEPCION
@@ -294,20 +314,14 @@ function ResumenRespuestas({
     formulario: FormularioRecepcion
     values: DynamicFormValues
 }) {
-    const items = formulario.secciones.flatMap((seccion) =>
-        seccion.campos
-            .filter((campo) => {
-                const value = values[campo.id]
-                return value !== undefined && value !== null && value !== ''
-            })
-            .map((campo) => ({
-                key: campo.id,
-                label: campo.etiqueta,
-                children: String(values[campo.id] ?? '—'),
-            })),
+    const campos = formulario.secciones.flatMap((seccion) =>
+        seccion.campos.filter((campo) => {
+            const value = values[campo.id]
+            return value !== undefined && value !== null && value !== ''
+        }),
     )
 
-    if (!items.length) {
+    if (!campos.length) {
         return (
             <Text type="secondary" style={{ display: 'block', marginTop: 16 }}>
                 No hay respuestas para mostrar.
@@ -321,7 +335,12 @@ function ResumenRespuestas({
             size="small"
             column={1}
             style={{ marginTop: 16 }}
-            items={items.slice(0, 12)}
-        />
+        >
+            {campos.slice(0, 12).map((campo) => (
+                <Descriptions.Item key={campo.id} label={campo.etiqueta}>
+                    {formatFieldDisplayValue(values[campo.id], campo.tipoDato)}
+                </Descriptions.Item>
+            ))}
+        </Descriptions>
     )
 }

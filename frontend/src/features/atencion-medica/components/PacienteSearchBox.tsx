@@ -24,6 +24,7 @@ type RegistrarPacienteStep = 'closed' | 'persona' | 'paciente'
 
 export type PacienteSeleccionado = {
     id: string
+    personaId: string
     label: string
     numeroHistoriaClinica: string
     personaNombreCompleto: string
@@ -93,6 +94,7 @@ export function PacienteSearchBox({ value, onChange, disabled }: PacienteSearchB
     const seleccionarPaciente = (paciente: Paciente) => {
         onChange({
             id: paciente.id,
+            personaId: paciente.personaId,
             label: `${paciente.personaNombreCompleto} · HC ${paciente.numeroHistoriaClinica}`,
             numeroHistoriaClinica: paciente.numeroHistoriaClinica,
             personaNombreCompleto: paciente.personaNombreCompleto,

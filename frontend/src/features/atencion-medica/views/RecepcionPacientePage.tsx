@@ -18,7 +18,7 @@ export function RecepcionPacientePage() {
     const [ultimaAtencion, setUltimaAtencion] = useState<RecepcionAtencion | null>(null)
 
     return (
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        <Space orientation="vertical" size="large" style={{ width: '100%' }}>
             <Flex align="center" gap={12}>
                 <MedicineBoxOutlined
                     style={{ fontSize: 24, color: token.colorPrimary }}
@@ -37,7 +37,7 @@ export function RecepcionPacientePage() {
                 <Alert
                     type="success"
                     showIcon
-                    message={`Atención ${ultimaAtencion.numeroAtencion} creada correctamente`}
+                    title={`Atención ${ultimaAtencion.numeroAtencion} creada correctamente`}
                     description={
                         <Space>
                             <Tag color="blue">{ultimaAtencion.estado}</Tag>
@@ -65,7 +65,7 @@ export function RecepcionPacientePage() {
                 />
             ) : null}
 
-            <Card size="small" bordered={false} className="his-panel">
+            <Card size="small" variant="borderless" className="his-panel">
                 <RecepcionPacienteWizard
                     loading={crearRecepcion.isPending}
                     onSubmit={(payload) => crearRecepcion.mutateAsync(payload)}

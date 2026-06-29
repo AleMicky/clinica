@@ -18,6 +18,7 @@ import type {
     FormularioRecepcionCampo,
     RespuestaFormularioPayload,
 } from '../types/recepcion.types'
+import { toIsoDateTime } from '../utils/recepcion-prefill'
 
 const { Text, Title } = Typography
 
@@ -106,12 +107,12 @@ export function buildRespuestasPayload(
                 break
             case 'date':
             case 'datetime':
-            case 'time':
-                acc.push({
-                    ...base,
-                    valorFecha: new Date(String(value)).toISOString(),
-                })
+            case 'time': {
+                const valorFecha = toIsoDateTime(value, campo.tipoDato)
+                if (!valorFecha) break
+                acc.push({ ...base, valorFecha })
                 break
+            }
             case 'bool':
                 acc.push({ ...base, valorBooleano: Boolean(value) })
                 break
