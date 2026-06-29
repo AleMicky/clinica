@@ -1,6 +1,7 @@
 using Clinica.Modules.Parametros.Domain.Entities;
 using Clinica.Modules.Personas.Application.Abstractions;
 using Clinica.Modules.Personas.Application.Pacientes;
+using Clinica.Modules.Personas.Application.Personas;
 using Clinica.Modules.Personas.Domain.Entities;
 using Clinica.Modules.Personas.Infrastructure.Persistence;
 using Clinica.SharedKernel.Exceptions;
@@ -10,7 +11,8 @@ using Microsoft.EntityFrameworkCore;
 namespace Clinica.Modules.Personas.Infrastructure.Services;
 
 public sealed class PacienteService(
-    PersonasDbContext context
+    PersonasDbContext context,
+    IPersonaService personaService
 ) : IPacienteService
 {
     public Task<PagedResult<PacienteResponse>> GetPagedAsync(
@@ -82,29 +84,61 @@ public sealed class PacienteService(
         CreatePacienteRequest request,
         CancellationToken cancellationToken = default)
     {
-        await EnsurePersonaExistsAsync(request.PersonaId, cancellationToken);
-        await EnsurePersonaNotPacienteAsync(request.PersonaId, null, cancellationToken);
+        PersonaResponse persona;
+        var personaCreated = false;
 
-        if (request.GrupoSanguineoId is { } grupoSanguineoId)
-            await EnsureCatalogoItemExistsAsync(grupoSanguineoId, cancellationToken);
-
-        var numeroHistoria = Normalize(request.NumeroHistoriaClinica);
-        await EnsureHistoriaClinicaIsUniqueAsync(numeroHistoria, null, cancellationToken);
-
-        var entity = new Paciente
+        if (request.Modo == "nueva")
         {
-            PersonaId = request.PersonaId,
-            NumeroHistoriaClinica = numeroHistoria,
-            GrupoSanguineoId = request.GrupoSanguineoId,
-            Alergias = NormalizeOptional(request.Alergias),
-            Observaciones = NormalizeOptional(request.Observaciones),
-            FechaRegistro = DateTime.UtcNow
-        };
+            if (request.Persona is null)
+                throw new BusinessException("Debe completar los datos de la nueva persona.");
 
-        context.Pacientes.Add(entity);
-        await context.SaveChangesAsync(cancellationToken);
+            persona = await personaService.CreateAsync(request.Persona, cancellationToken);
+            personaCreated = true;
+        }
+        else
+        {
+            if (request.PersonaId is not { } personaId || personaId == Guid.Empty)
+                throw new BusinessException("Debe seleccionar una persona existente.");
 
-        return (await GetByIdAsync(entity.Id, cancellationToken))!;
+            persona = await personaService.GetByIdAsync(personaId, cancellationToken)
+                      ?? throw new NotFoundException("Persona no encontrada.");
+        }
+
+        try
+        {
+            await EnsurePersonaNotPacienteAsync(persona.Id, null, cancellationToken);
+
+            if (request.GrupoSanguineoId is { } grupoSanguineoId)
+                await EnsureCatalogoItemExistsAsync(grupoSanguineoId, cancellationToken);
+
+            var numeroHistoria = await ResolveNumeroHistoriaClinicaAsync(
+                request.NumeroHistoriaClinica,
+                persona,
+                null,
+                cancellationToken);
+
+            var entity = new Paciente
+            {
+                PersonaId = persona.Id,
+                NumeroHistoriaClinica = numeroHistoria,
+                GrupoSanguineoId = request.GrupoSanguineoId,
+                Alergias = NormalizeOptional(request.Alergias),
+                Observaciones = NormalizeOptional(request.Observaciones),
+                FechaRegistro = DateTime.UtcNow
+            };
+
+            context.Pacientes.Add(entity);
+            await context.SaveChangesAsync(cancellationToken);
+
+            return (await GetByIdAsync(entity.Id, cancellationToken))!;
+        }
+        catch
+        {
+            if (personaCreated)
+                await personaService.DeleteAsync(persona.Id, cancellationToken);
+
+            throw;
+        }
     }
 
     public async Task<PacienteResponse> UpdateAsync(
@@ -189,18 +223,54 @@ public sealed class PacienteService(
             throw new BusinessException("El ítem de catálogo no existe.");
     }
 
+    private async Task<string> ResolveNumeroHistoriaClinicaAsync(
+        string? requestedNumero,
+        PersonaResponse persona,
+        Guid? currentId,
+        CancellationToken cancellationToken)
+    {
+        var baseNumero = string.IsNullOrWhiteSpace(requestedNumero)
+            ? HistoriaClinicaGenerator.Generate(
+                persona.Nombres,
+                persona.ApellidoPaterno,
+                persona.ApellidoMaterno,
+                persona.NumeroDocumento)
+            : Normalize(requestedNumero);
+
+        var candidate = baseNumero;
+        var suffix = 1;
+
+        while (await HistoriaClinicaExistsAsync(candidate, currentId, cancellationToken))
+        {
+            suffix++;
+            candidate = $"{baseNumero}-{suffix}";
+
+            if (candidate.Length > 30)
+                throw new BusinessException(
+                    "No se pudo generar un número de historia clínica único.");
+        }
+
+        return candidate;
+    }
+
+    private async Task<bool> HistoriaClinicaExistsAsync(
+        string numeroHistoriaClinica,
+        Guid? currentId,
+        CancellationToken cancellationToken)
+    {
+        return await context.Pacientes
+            .AnyAsync(x =>
+                    x.NumeroHistoriaClinica == numeroHistoriaClinica &&
+                    (!currentId.HasValue || x.Id != currentId.Value),
+                cancellationToken);
+    }
+
     private async Task EnsureHistoriaClinicaIsUniqueAsync(
         string numeroHistoriaClinica,
         Guid? currentId,
         CancellationToken cancellationToken)
     {
-        var exists = await context.Pacientes
-            .AnyAsync(x =>
-                    x.NumeroHistoriaClinica == numeroHistoriaClinica &&
-                    (!currentId.HasValue || x.Id != currentId.Value),
-                cancellationToken);
-
-        if (exists)
+        if (await HistoriaClinicaExistsAsync(numeroHistoriaClinica, currentId, cancellationToken))
             throw new BusinessException("El número de historia clínica ya existe.");
     }
 

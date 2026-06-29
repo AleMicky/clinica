@@ -8,19 +8,12 @@ import { useCreatePaciente, usePacientes } from '../../pacientes/hooks/pacientes
 import {
     toCreatePacientePayload,
     type PacienteFormValues,
+    type PacienteUpdateFormValues,
 } from '../../pacientes/schemas/paciente.schema'
-import { PersonaFormModal } from '../../personas/components/PersonaFormModal'
-import { useCreatePersona } from '../../personas/hooks/personas.hooks'
-import {
-    toCreatePersonaPayload,
-    type PersonaFormValues,
-} from '../../personas/schemas/persona.schema'
 import { queryKeys } from '../../../shared/constants/query-keys'
 import type { Paciente } from '../../pacientes/types/paciente.types'
 
 const { Text } = Typography
-
-type RegistrarPacienteStep = 'closed' | 'persona' | 'paciente'
 
 export type PacienteSeleccionado = {
     id: string
@@ -38,11 +31,9 @@ type PacienteSearchBoxProps = {
 
 export function PacienteSearchBox({ value, onChange, disabled }: PacienteSearchBoxProps) {
     const [pacienteSearch, setPacienteSearch] = useState('')
-    const [registrarStep, setRegistrarStep] = useState<RegistrarPacienteStep>('closed')
-    const [nuevaPersonaId, setNuevaPersonaId] = useState('')
+    const [registrarOpen, setRegistrarOpen] = useState(false)
 
     const queryClient = useQueryClient()
-    const createPersona = useCreatePersona()
     const createPaciente = useCreatePaciente()
 
     const { data: pacientesData, isFetching: loadingPacientes } = usePacientes({
@@ -66,29 +57,20 @@ export function PacienteSearchBox({ value, onChange, disabled }: PacienteSearchB
         !loadingPacientes &&
         (pacientesData?.items.length ?? 0) === 0
 
-    const abrirRegistroPaciente = () => {
-        setNuevaPersonaId('')
-        setRegistrarStep('persona')
-    }
-
     const cerrarRegistroPaciente = () => {
-        if (createPersona.isPending || createPaciente.isPending) return
-        setRegistrarStep('closed')
-        setNuevaPersonaId('')
+        if (createPaciente.isPending) return
+        setRegistrarOpen(false)
     }
 
-    const handleRegistrarPersona = async (values: PersonaFormValues) => {
-        const persona = await createPersona.mutateAsync(toCreatePersonaPayload(values))
-        setNuevaPersonaId(persona.id)
-        setRegistrarStep('paciente')
-    }
-
-    const handleRegistrarPaciente = async (values: PacienteFormValues) => {
-        const paciente = await createPaciente.mutateAsync(toCreatePacientePayload(values))
+    const handleRegistrarPaciente = async (
+        values: PacienteFormValues | PacienteUpdateFormValues,
+    ) => {
+        const paciente = await createPaciente.mutateAsync(
+            toCreatePacientePayload(values as PacienteFormValues),
+        )
         await queryClient.invalidateQueries({ queryKey: queryKeys.pacientes.all })
         seleccionarPaciente(paciente)
-        setRegistrarStep('closed')
-        setNuevaPersonaId('')
+        setRegistrarOpen(false)
     }
 
     const seleccionarPaciente = (paciente: Paciente) => {
@@ -136,7 +118,7 @@ export function PacienteSearchBox({ value, onChange, disabled }: PacienteSearchB
                                     <Button
                                         type="link"
                                         size="small"
-                                        onClick={abrirRegistroPaciente}
+                                        onClick={() => setRegistrarOpen(true)}
                                     >
                                         Registrar nuevo paciente
                                     </Button>
@@ -146,7 +128,7 @@ export function PacienteSearchBox({ value, onChange, disabled }: PacienteSearchB
                     />
                     <Button
                         icon={<PlusOutlined />}
-                        onClick={abrirRegistroPaciente}
+                        onClick={() => setRegistrarOpen(true)}
                         disabled={disabled}
                     >
                         Nuevo
@@ -154,22 +136,11 @@ export function PacienteSearchBox({ value, onChange, disabled }: PacienteSearchB
                 </Flex>
             </Form.Item>
 
-            <PersonaFormModal
-                open={registrarStep === 'persona'}
-                persona={null}
-                loading={createPersona.isPending}
-                title="Registrar persona (paso 1 de 2)"
-                onClose={cerrarRegistroPaciente}
-                onSubmit={handleRegistrarPersona}
-            />
-
             <PacienteFormModal
-                open={registrarStep === 'paciente'}
+                open={registrarOpen}
                 paciente={null}
                 loading={createPaciente.isPending}
-                initialPersonaId={nuevaPersonaId}
-                lockPersona
-                title="Registrar paciente (paso 2 de 2)"
+                title="Registrar paciente"
                 onClose={cerrarRegistroPaciente}
                 onSubmit={handleRegistrarPaciente}
             />
