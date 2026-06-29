@@ -46,6 +46,7 @@ public static class AtencionMedicaDbSeeder
             ("TIME", "Hora", "TimePicker", "time"),
             ("DATETIME", "Fecha y hora", "DateTimePicker", "datetime"),
             ("SELECT", "Selección", "Select", "string"),
+            ("RADIO", "Opción única", "Radio", "string"),
             ("CHECKBOX", "Checkbox", "Checkbox", "bool")
         };
 
@@ -94,6 +95,21 @@ public static class AtencionMedicaDbSeeder
         await context.SaveChangesAsync();
     }
 
+    private static readonly string SexoOpcionesJson =
+        """["Masculino","Femenino","Otro"]""";
+
+    private static readonly string EstadoCivilOpcionesJson =
+        """["Soltero","Casado","Divorciado","Viudo","Unión libre"]""";
+
+    private static readonly string ModoIngresoOpcionesJson =
+        """["Propio medio","Ambulancia","Referido","Otro"]""";
+
+    private static readonly string TipoAccidenteOpcionesJson =
+        """["Tránsito","Laboral","Doméstico","Otro"]""";
+
+    private static readonly string SiNoOpcionesJson =
+        """["Sí","No"]""";
+
     private static async Task SeedConsultaExternaAsync(AtencionMedicaDbContext context)
     {
         await SeedFormularioAsync(
@@ -102,6 +118,23 @@ public static class AtencionMedicaDbSeeder
             "FORM_CONSULTA_EXTERNA",
             "Hoja de Consulta Externa",
             [
+                new("RECEPCION", "Datos de recepción", 0,
+                [
+                    Campo("historia_clinica", "Historia Clínica", "TEXT", 1, true),
+                    Campo("fecha", "Fecha", "DATE", 2, true),
+                    Campo("hora", "Hora", "TIME", 3, true),
+                    Campo("apellido_paterno", "Apellido Paterno", "TEXT", 4),
+                    Campo("apellido_materno", "Apellido Materno", "TEXT", 5),
+                    Campo("nombres", "Nombres", "TEXT", 6, true),
+                    Campo("documento", "Documento", "TEXT", 7, true),
+                    Campo("fecha_nacimiento", "Fecha Nacimiento", "DATE", 8),
+                    Campo("edad", "Edad", "NUMBER", 9),
+                    Campo("sexo", "Sexo", "SELECT", 10, opcionesJson: SexoOpcionesJson),
+                    Campo("estado_civil", "Estado Civil", "SELECT", 11, opcionesJson: EstadoCivilOpcionesJson),
+                    Campo("direccion", "Dirección", "TEXT", 12),
+                    Campo("telefono", "Teléfono", "TEXT", 13),
+                    Campo("profesion_ocupacion", "Profesión / Ocupación", "TEXT", 14)
+                ]),
                 new("DATOS_CONSULTA", "Datos de consulta", 1,
                 [
                     Campo("servicio", "Servicio", "TEXT", 1),
@@ -137,6 +170,29 @@ public static class AtencionMedicaDbSeeder
             "FORM_EMERGENCIA",
             "Historia Clínica de Emergencias",
             [
+                new("RECEPCION", "Datos de recepción", 0,
+                [
+                    Campo("historia_clinica", "Historia Clínica", "TEXT", 1, true),
+                    Campo("nombres_apellidos", "Nombres y Apellidos", "TEXT", 2, true),
+                    Campo("documento", "Documento", "TEXT", 3, true),
+                    Campo("fecha_nacimiento", "Fecha Nacimiento", "DATE", 4),
+                    Campo("edad", "Edad", "NUMBER", 5),
+                    Campo("sexo", "Sexo", "SELECT", 6, opcionesJson: SexoOpcionesJson),
+                    Campo("direccion", "Dirección", "TEXT", 7),
+                    Campo("telefono", "Teléfono", "TEXT", 8),
+                    Campo("estado_civil", "Estado Civil", "SELECT", 9, opcionesJson: EstadoCivilOpcionesJson),
+                    Campo("fecha_atencion", "Fecha Atención", "DATE", 10, true),
+                    Campo("hora_atencion", "Hora Atención", "TIME", 11, true),
+                    Campo("referido_de", "Referido de", "TEXT", 12),
+                    Campo("modo_ingreso", "Modo de Ingreso", "SELECT", 13, opcionesJson: ModoIngresoOpcionesJson),
+                    Campo("acompanado_por", "Acompañado por", "TEXT", 14),
+                    Campo("otros", "Otros", "TEXT", 15),
+                    Campo("accidente_en", "Accidente en", "TEXT", 16),
+                    Campo("tipo_accidente", "Tipo de Accidente", "SELECT", 17, opcionesJson: TipoAccidenteOpcionesJson),
+                    Campo("notificacion_policial", "Notificación Policial", "RADIO", 18, opcionesJson: SiNoOpcionesJson),
+                    Campo("fuente_historia", "Fuente de la Historia", "TEXT", 19),
+                    Campo("motivo_consulta", "Motivo de Consulta", "TEXTAREA", 20, true)
+                ]),
                 new("DATOS_ATENCION", "Datos de atención", 1,
                 [
                     Campo("fecha_atencion", "Fecha de atención", "DATE", 1),
@@ -204,6 +260,34 @@ public static class AtencionMedicaDbSeeder
             "FORM_INTERNACION",
             "Formulario de Internación y Egreso",
             [
+                new("RECEPCION", "Datos de recepción", 0,
+                [
+                    Campo("historia_clinica", "Historia Clínica", "TEXT", 1, true),
+                    Campo("apellido_paterno", "Apellido Paterno", "TEXT", 2, true),
+                    Campo("apellido_materno", "Apellido Materno", "TEXT", 3),
+                    Campo("nombres", "Nombres", "TEXT", 4, true),
+                    Campo("documento", "Documento", "TEXT", 5, true),
+                    Campo("fecha_nacimiento", "Fecha Nacimiento", "DATE", 6),
+                    Campo("edad", "Edad", "NUMBER", 7),
+                    Campo("sexo", "Sexo", "SELECT", 8, opcionesJson: SexoOpcionesJson),
+                    Campo("estado_civil", "Estado Civil", "SELECT", 9, opcionesJson: EstadoCivilOpcionesJson),
+                    Campo("direccion", "Dirección", "TEXT", 10),
+                    Campo("ciudad", "Ciudad", "TEXT", 11),
+                    Campo("telefono", "Teléfono", "TEXT", 12),
+                    Campo("ocupacion", "Ocupación", "TEXT", 13),
+                    Campo("lugar_trabajo", "Lugar de Trabajo", "TEXT", 14),
+                    Campo("telefono_trabajo", "Teléfono Trabajo", "TEXT", 15),
+                    Campo("responsable1_nombre", "Responsable 1 Nombre", "TEXT", 16),
+                    Campo("responsable1_parentesco", "Responsable 1 Parentesco", "TEXT", 17),
+                    Campo("responsable1_direccion", "Responsable 1 Dirección", "TEXT", 18),
+                    Campo("responsable1_telefono", "Responsable 1 Teléfono", "TEXT", 19),
+                    Campo("responsable1_documento", "Responsable 1 Documento", "TEXT", 20),
+                    Campo("responsable2_nombre", "Responsable 2 Nombre", "TEXT", 21),
+                    Campo("responsable2_parentesco", "Responsable 2 Parentesco", "TEXT", 22),
+                    Campo("responsable2_direccion", "Responsable 2 Dirección", "TEXT", 23),
+                    Campo("responsable2_telefono", "Responsable 2 Teléfono", "TEXT", 24),
+                    Campo("responsable2_documento", "Responsable 2 Documento", "TEXT", 25)
+                ]),
                 new("DATOS_INTERNACION", "Datos de internación", 1,
                 [
                     Campo("personal_solicita_internacion", "Personal de salud que solicita la internación", "TEXT", 1),
@@ -307,7 +391,8 @@ public static class AtencionMedicaDbSeeder
                         TipoCampoFormularioId = tipoCampo.Id,
                         EsRequerido = campoSeed.EsRequerido,
                         Orden = campoSeed.Orden,
-                        Visible = true
+                        Visible = true,
+                        OpcionesJson = campoSeed.OpcionesJson
                     });
                 }
                 else
@@ -317,6 +402,7 @@ public static class AtencionMedicaDbSeeder
                     campo.EsRequerido = campoSeed.EsRequerido;
                     campo.Orden = campoSeed.Orden;
                     campo.Visible = true;
+                    campo.OpcionesJson = campoSeed.OpcionesJson;
                 }
             }
         }
@@ -329,9 +415,10 @@ public static class AtencionMedicaDbSeeder
         string etiqueta,
         string tipoCampoCodigo,
         int orden,
-        bool requerido = false)
+        bool requerido = false,
+        string? opcionesJson = null)
     {
-        return new CampoSeed(codigo, etiqueta, tipoCampoCodigo, orden, requerido);
+        return new CampoSeed(codigo, etiqueta, tipoCampoCodigo, orden, requerido, opcionesJson);
     }
 
     private sealed record FormularioSeed(
@@ -345,5 +432,6 @@ public static class AtencionMedicaDbSeeder
         string Etiqueta,
         string TipoCampoCodigo,
         int Orden,
-        bool EsRequerido);
+        bool EsRequerido,
+        string? OpcionesJson = null);
 }

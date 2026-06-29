@@ -1,4 +1,4 @@
-import { get, getPaged, post } from '../../../shared/api/http'
+import { getPaged } from '../../../shared/api/http'
 import {
     atencionMedicaEndpoints,
     catalogoClinicoEndpoints,
@@ -66,10 +66,6 @@ import type {
     UpdateTipoAtencionPayload,
     UpdateTratamientoPayload,
 } from '../types/atencion-medica.types'
-import type {
-    CrearRecepcionAtencionPayload,
-    RecepcionAtencion,
-} from '../types/recepcion.types'
 
 export const atencionesService = {
     ...createGuidCrudService<Atencion, CreateAtencionPayload, UpdateAtencionPayload>(
@@ -295,20 +291,5 @@ export const prescripcionDetallesService = {
             atencionMedicaEndpoints.prescripcionDetalles.root,
             query,
         )
-    },
-}
-
-export const recepcionAtencionService = {
-    crear(data: CrearRecepcionAtencionPayload) {
-        return post<RecepcionAtencion, CrearRecepcionAtencionPayload>(
-            atencionMedicaEndpoints.recepcion.root,
-            data,
-        )
-    },
-    getPendientes() {
-        return get<RecepcionAtencion[]>(atencionMedicaEndpoints.recepcion.pendientes)
-    },
-    getById(id: string) {
-        return get<RecepcionAtencion>(atencionMedicaEndpoints.recepcion.byId(id))
     },
 }

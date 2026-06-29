@@ -1,15 +1,11 @@
 import { useState } from 'react'
 import { MedicineBoxOutlined } from '@ant-design/icons'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { Alert, Button, Card, Flex, Space, Table, Typography, theme } from 'antd'
+import { Alert, Button, Card, Flex, Space, Table, Tag, Typography, theme } from 'antd'
 
-import { RecepcionPacienteForm } from '../components/RecepcionPacienteForm'
+import { RecepcionPacienteWizard } from '../components/RecepcionPacienteWizard'
 import { useCrearRecepcionAtencion } from '../hooks/useCrearRecepcionAtencion'
 import { useRecepcionPendientes } from '../hooks/useRecepcionPendientes'
-import {
-    toCrearRecepcionPayload,
-    type RecepcionFormValues,
-} from '../schemas/recepcion.schema'
 import type { RecepcionAtencion } from '../types/recepcion.types'
 
 const { Title, Text } = Typography
@@ -20,11 +16,6 @@ export function RecepcionPacientePage() {
     const crearRecepcion = useCrearRecepcionAtencion()
     const { data: pendientes, isFetching: loadingPendientes } = useRecepcionPendientes()
     const [ultimaAtencion, setUltimaAtencion] = useState<RecepcionAtencion | null>(null)
-
-    const handleSubmit = async (values: RecepcionFormValues) => {
-        const atencion = await crearRecepcion.mutateAsync(toCrearRecepcionPayload(values))
-        setUltimaAtencion(atencion)
-    }
 
     return (
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
@@ -37,7 +28,7 @@ export function RecepcionPacientePage() {
                         Recepción de paciente
                     </Title>
                     <Text type="secondary">
-                        Registro inicial de atención y arranque del flujo clínico
+                        Registro administrativo inicial y arranque del flujo clínico
                     </Text>
                 </div>
             </Flex>
@@ -49,6 +40,7 @@ export function RecepcionPacientePage() {
                     message={`Atención ${ultimaAtencion.numeroAtencion} creada correctamente`}
                     description={
                         <Space>
+                            <Tag color="blue">{ultimaAtencion.estado}</Tag>
                             <Button
                                 type="link"
                                 size="small"
@@ -73,10 +65,11 @@ export function RecepcionPacientePage() {
                 />
             ) : null}
 
-            <Card size="small" bordered={false}>
-                <RecepcionPacienteForm
+            <Card size="small" bordered={false} className="his-panel">
+                <RecepcionPacienteWizard
                     loading={crearRecepcion.isPending}
-                    onSubmit={handleSubmit}
+                    onSubmit={(payload) => crearRecepcion.mutateAsync(payload)}
+                    onSuccess={setUltimaAtencion}
                 />
             </Card>
 
@@ -116,6 +109,7 @@ export function RecepcionPacientePage() {
                             dataIndex: 'motivoConsulta',
                             key: 'motivoConsulta',
                             ellipsis: true,
+                            render: (value: string | null) => value ?? '—',
                         },
                         {
                             title: 'Fecha recepción',
@@ -132,6 +126,7 @@ export function RecepcionPacientePage() {
                             dataIndex: 'estado',
                             key: 'estado',
                             width: 120,
+                            render: (value: string) => <Tag>{value}</Tag>,
                         },
                     ]}
                 />

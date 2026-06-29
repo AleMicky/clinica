@@ -93,6 +93,7 @@ export const atencionMedicaEndpoints = {
     prescripcionDetalles: createEndpoints(`${api.atencionMedica}/prescripcion-detalles`),
     recepcion: createEndpoints(`${api.atencionMedica}/recepcion`, (root) => ({
         pendientes: `${root}/pendientes`,
+        formulario: (tipoAtencionId: EntityId) => `${root}/formulario/${tipoAtencionId}`,
     })),
 } as const
 

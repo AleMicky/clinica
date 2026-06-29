@@ -53,6 +53,19 @@ public static class RecepcionEndpoints
             .WithSummary("Listar atenciones pendientes en recepción")
             .Produces<ApiResponse<IReadOnlyCollection<AtencionResponse>>>(StatusCodes.Status200OK);
 
+        recepcionGroup.MapGet("/formulario/{tipoAtencionId:guid}", async (
+                Guid tipoAtencionId,
+                IRecepcionAtencionService service,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await service.GetFormularioRecepcionAsync(tipoAtencionId, cancellationToken);
+                return ApiResults.Ok(result);
+            })
+            .WithName("RecepcionAtencion_GetFormulario")
+            .WithSummary("Obtener formulario de recepción por tipo de atención")
+            .Produces<ApiResponse<FormularioRecepcionResponse>>(StatusCodes.Status200OK)
+            .Produces<ApiResponse<object>>(StatusCodes.Status400BadRequest);
+
         recepcionGroup.MapGet("/{id:guid}", async (
                 Guid id,
                 IRecepcionAtencionService service,

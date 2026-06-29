@@ -168,6 +168,8 @@ export const queryKeys = {
         recepcion: {
             all: ['atencion-medica', 'recepcion'] as const,
             pendientes: ['atencion-medica', 'recepcion', 'pendientes'] as const,
+            formulario: (tipoAtencionId: string) =>
+                ['atencion-medica', 'recepcion', 'formulario', tipoAtencionId] as const,
             detail: (id: string) =>
                 ['atencion-medica', 'recepcion', 'detail', id] as const,
         },
