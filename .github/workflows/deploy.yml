@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      APP_DIR: /opt/clinica/clinica
+      APP_DIR: /opt/clinica
       SSH_PORT: 22
 
     steps:
