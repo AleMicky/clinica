@@ -6,7 +6,7 @@ public class CreateAtencionRequestValidator : AbstractValidator<CreateAtencionRe
 {
     public CreateAtencionRequestValidator()
     {
-        RuleFor(x => x.NumeroTramite).NotEmpty().MaximumLength(30);
+        RuleFor(x => x.NumeroAtencion).NotEmpty().MaximumLength(30);
         RuleFor(x => x.PacienteId).NotEmpty();
         RuleFor(x => x.TipoAtencionId).NotEmpty();
         RuleFor(x => x.FormularioClinicoId).NotEmpty();

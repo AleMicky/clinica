@@ -148,17 +148,28 @@ export type EspecialidadLookup = {
 
 export type Atencion = {
     id: Guid
-    numeroTramite: string
+    numeroAtencion: string
     pacienteId: Guid
     tipoAtencionId: Guid
-    formularioClinicoId: Guid
+    servicioId?: Guid | null
+    especialidadId?: Guid | null
+    medicoId?: Guid | null
+    motivoConsulta?: string | null
+    formularioClinicoId?: Guid | null
     fechaAtencion: string
+    fechaRecepcion?: string | null
     estado: string
+    workflowInstanceId?: Guid | null
+    responsableFinancieroNombre?: string | null
+    responsableFinancieroDocumento?: string | null
+    responsableFinancieroTelefono?: string | null
+    seguroNombre?: string | null
+    numeroAfiliacion?: string | null
     observaciones?: string | null
 }
 
 export type CreateAtencionPayload = {
-    numeroTramite: string
+    numeroAtencion: string
     pacienteId: Guid
     tipoAtencionId: Guid
     formularioClinicoId: Guid
@@ -168,7 +179,7 @@ export type CreateAtencionPayload = {
 }
 
 export type UpdateAtencionPayload = {
-    numeroTramite: string
+    numeroAtencion: string
     pacienteId: Guid
     tipoAtencionId: Guid
     formularioClinicoId: Guid

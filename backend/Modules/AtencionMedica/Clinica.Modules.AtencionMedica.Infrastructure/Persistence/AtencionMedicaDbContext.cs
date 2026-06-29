@@ -66,5 +66,12 @@ public class AtencionMedicaDbContext : DbContext
             entity.Ignore(x => x.Empleado);
             entity.Ignore(x => x.Especialidad);
         });
+
+        modelBuilder.Entity<Servicio>(entity =>
+        {
+            entity.ToTable("Servicios", t => t.ExcludeFromMigrations());
+            entity.HasKey(x => x.Id);
+            entity.Ignore(x => x.Departamento);
+        });
     }
 }

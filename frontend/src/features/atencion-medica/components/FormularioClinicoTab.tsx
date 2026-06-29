@@ -172,7 +172,7 @@ export function FormularioClinicoTab({ atencion }: FormularioClinicoTabProps) {
     const [saving, setSaving] = useState(false)
 
     const { secciones, campos, isFetching: loadingEstructura } = useFormularioEstructura(
-        atencion.formularioClinicoId,
+        atencion.formularioClinicoId ?? undefined,
     )
 
     const camposPorSeccion = useMemo(() => {

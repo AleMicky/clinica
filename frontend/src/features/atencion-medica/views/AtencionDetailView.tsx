@@ -824,7 +824,7 @@ export function AtencionDetailView({ atencionId }: AtencionDetailViewProps) {
                     </Link>
                     <div>
                         <Title level={3} className="admin-page__title">
-                            Atención {atencion.numeroTramite}
+                            Atención {atencion.numeroAtencion}
                         </Title>
                         <Text type="secondary">
                             {formatDateTime(atencion.fechaAtencion)} ·{' '}
@@ -838,7 +838,7 @@ export function AtencionDetailView({ atencionId }: AtencionDetailViewProps) {
                 <section className="admin-page__panel" style={{ marginBottom: 16 }}>
                     <Descriptions size="small" column={{ xs: 1, sm: 2, lg: 3 }}>
                         <Descriptions.Item label="Trámite">
-                            {atencion.numeroTramite}
+                            {atencion.numeroAtencion}
                         </Descriptions.Item>
                         <Descriptions.Item label="Fecha">
                             {formatDateTime(atencion.fechaAtencion)}

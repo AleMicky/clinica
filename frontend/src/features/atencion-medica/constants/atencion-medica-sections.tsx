@@ -2,6 +2,7 @@ import {
     FileTextOutlined,
     FormOutlined,
     MedicineBoxOutlined,
+    SolutionOutlined,
     UnorderedListOutlined,
 } from '@ant-design/icons'
 
@@ -16,6 +17,11 @@ export const atencionMedicaPageSections: AtencionMedicaPageSection[] = [
         path: '/atenciones',
         title: 'Atenciones',
         icon: <MedicineBoxOutlined />,
+    },
+    {
+        path: '/atencion-medica/recepcion',
+        title: 'Recepción',
+        icon: <SolutionOutlined />,
     },
     {
         path: '/atenciones/tipos-atencion',

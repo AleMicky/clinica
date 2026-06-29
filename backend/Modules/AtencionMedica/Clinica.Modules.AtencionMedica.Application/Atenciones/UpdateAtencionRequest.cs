@@ -1,7 +1,7 @@
 namespace Clinica.Modules.AtencionMedica.Application.Atenciones;
 
 public sealed record UpdateAtencionRequest(
-    string NumeroTramite,
+    string NumeroAtencion,
     Guid PacienteId,
     Guid TipoAtencionId,
     Guid FormularioClinicoId,

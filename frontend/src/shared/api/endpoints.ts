@@ -88,6 +88,9 @@ export const atencionMedicaEndpoints = {
     interconsultas: createEndpoints(`${api.atencionMedica}/interconsultas`),
     prescripciones: createEndpoints(`${api.atencionMedica}/prescripciones`),
     prescripcionDetalles: createEndpoints(`${api.atencionMedica}/prescripcion-detalles`),
+    recepcion: createEndpoints(`${api.atencionMedica}/recepcion`, (root) => ({
+        pendientes: `${root}/pendientes`,
+    })),
 } as const
 
 export const workflowEndpoints = {

@@ -134,13 +134,13 @@ export function AtencionFormModal({
             <Form layout="vertical" requiredMark={false}>
                 <Row gutter={16}>
                     <Col xs={24} md={12}>
-                        <form.Field name="numeroTramite">
+                        <form.Field name="numeroAtencion">
                             {(field) => {
                                 const error = getFieldError(field.state.meta.errors)
 
                                 return (
                                     <Form.Item
-                                        label="Número de trámite"
+                                        label="Número de atención"
                                         validateStatus={error ? 'error' : undefined}
                                         help={error || undefined}
                                     >

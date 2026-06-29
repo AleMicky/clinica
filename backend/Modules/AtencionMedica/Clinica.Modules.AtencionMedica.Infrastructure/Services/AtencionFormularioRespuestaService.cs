@@ -70,9 +70,12 @@ public sealed class AtencionFormularioRespuestaService(AtencionMedicaDbContext c
         if (atencion is null)
             throw new BusinessException("La atención no existe.");
 
+        if (!atencion.FormularioClinicoId.HasValue)
+            throw new BusinessException("La atención no tiene un formulario clínico asignado.");
+
         await EnsureCampoBelongsToFormularioAsync(
             request.FormularioCampoId,
-            atencion.FormularioClinicoId,
+            atencion.FormularioClinicoId.Value,
             cancellationToken);
 
         await EnsureRespuestaIsUniqueAsync(
@@ -116,9 +119,12 @@ public sealed class AtencionFormularioRespuestaService(AtencionMedicaDbContext c
         if (atencion is null)
             throw new BusinessException("La atención no existe.");
 
+        if (!atencion.FormularioClinicoId.HasValue)
+            throw new BusinessException("La atención no tiene un formulario clínico asignado.");
+
         await EnsureCampoBelongsToFormularioAsync(
             request.FormularioCampoId,
-            atencion.FormularioClinicoId,
+            atencion.FormularioClinicoId.Value,
             cancellationToken);
 
         await EnsureRespuestaIsUniqueAsync(

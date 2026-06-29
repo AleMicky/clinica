@@ -14,6 +14,7 @@ type PersonaFormModalProps = {
     open: boolean
     persona: Persona | null
     loading: boolean
+    title?: string
     onClose: () => void
     onSubmit: (values: PersonaFormValues) => Promise<void>
 }
@@ -46,6 +47,7 @@ export function PersonaFormModal({
     open,
     persona,
     loading,
+    title,
     onClose,
     onSubmit,
 }: PersonaFormModalProps) {
@@ -95,7 +97,7 @@ export function PersonaFormModal({
 
     return (
         <Modal
-            title={isEditing ? 'Editar persona' : 'Nueva persona'}
+            title={title ?? (isEditing ? 'Editar persona' : 'Nueva persona')}
             open={open}
             onCancel={handleClose}
             onOk={() => void form.handleSubmit()}

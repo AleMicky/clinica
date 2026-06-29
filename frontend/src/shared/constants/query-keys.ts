@@ -165,6 +165,12 @@ export const queryKeys = {
         prescripciones: {
             all: ['atencion-medica', 'prescripciones'] as const,
         },
+        recepcion: {
+            all: ['atencion-medica', 'recepcion'] as const,
+            pendientes: ['atencion-medica', 'recepcion', 'pendientes'] as const,
+            detail: (id: string) =>
+                ['atencion-medica', 'recepcion', 'detail', id] as const,
+        },
         prescripcionDetalles: {
             all: ['atencion-medica', 'prescripcion-detalles'] as const,
         },

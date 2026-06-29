@@ -40,6 +40,7 @@ import { Route as AdminAtencionesTiposAtencionRouteImport } from './routes/_admi
 import { Route as AdminAtencionesFormulariosRouteImport } from './routes/_admin/atenciones/formularios'
 import { Route as AdminAtencionesDiagnosticosRouteImport } from './routes/_admin/atenciones/diagnosticos'
 import { Route as AdminAtencionesAtencionIdRouteImport } from './routes/_admin/atenciones/$atencionId'
+import { Route as AdminAtencionMedicaRecepcionRouteImport } from './routes/_admin/atencion-medica/recepcion'
 import { Route as AdminWorkflowInstancesInstanceIdRouteImport } from './routes/_admin/workflow/instances/$instanceId'
 import { Route as AdminWorkflowDesignerDefinitionIdRouteImport } from './routes/_admin/workflow/designer/$definitionId'
 
@@ -207,6 +208,12 @@ const AdminAtencionesAtencionIdRoute =
     path: '/$atencionId',
     getParentRoute: () => AdminAtencionesRoute,
   } as any)
+const AdminAtencionMedicaRecepcionRoute =
+  AdminAtencionMedicaRecepcionRouteImport.update({
+    id: '/atencion-medica/recepcion',
+    path: '/atencion-medica/recepcion',
+    getParentRoute: () => AdminRoute,
+  } as any)
 const AdminWorkflowInstancesInstanceIdRoute =
   AdminWorkflowInstancesInstanceIdRouteImport.update({
     id: '/workflow/instances/$instanceId',
@@ -227,6 +234,7 @@ export interface FileRoutesByFullPath {
   '/recursos-humanos': typeof AdminRecursosHumanosRouteWithChildren
   '/seguridad': typeof AdminSeguridadRouteWithChildren
   '/login': typeof AuthLoginRoute
+  '/atencion-medica/recepcion': typeof AdminAtencionMedicaRecepcionRoute
   '/atenciones/$atencionId': typeof AdminAtencionesAtencionIdRoute
   '/atenciones/diagnosticos': typeof AdminAtencionesDiagnosticosRoute
   '/atenciones/formularios': typeof AdminAtencionesFormulariosRoute
@@ -256,6 +264,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof AdminIndexRoute
   '/login': typeof AuthLoginRoute
+  '/atencion-medica/recepcion': typeof AdminAtencionMedicaRecepcionRoute
   '/atenciones/$atencionId': typeof AdminAtencionesAtencionIdRoute
   '/atenciones/diagnosticos': typeof AdminAtencionesDiagnosticosRoute
   '/atenciones/formularios': typeof AdminAtencionesFormulariosRoute
@@ -292,6 +301,7 @@ export interface FileRoutesById {
   '/_admin/seguridad': typeof AdminSeguridadRouteWithChildren
   '/_auth/login': typeof AuthLoginRoute
   '/_admin/': typeof AdminIndexRoute
+  '/_admin/atencion-medica/recepcion': typeof AdminAtencionMedicaRecepcionRoute
   '/_admin/atenciones/$atencionId': typeof AdminAtencionesAtencionIdRoute
   '/_admin/atenciones/diagnosticos': typeof AdminAtencionesDiagnosticosRoute
   '/_admin/atenciones/formularios': typeof AdminAtencionesFormulariosRoute
@@ -327,6 +337,7 @@ export interface FileRouteTypes {
     | '/recursos-humanos'
     | '/seguridad'
     | '/login'
+    | '/atencion-medica/recepcion'
     | '/atenciones/$atencionId'
     | '/atenciones/diagnosticos'
     | '/atenciones/formularios'
@@ -356,6 +367,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/atencion-medica/recepcion'
     | '/atenciones/$atencionId'
     | '/atenciones/diagnosticos'
     | '/atenciones/formularios'
@@ -391,6 +403,7 @@ export interface FileRouteTypes {
     | '/_admin/seguridad'
     | '/_auth/login'
     | '/_admin/'
+    | '/_admin/atencion-medica/recepcion'
     | '/_admin/atenciones/$atencionId'
     | '/_admin/atenciones/diagnosticos'
     | '/_admin/atenciones/formularios'
@@ -642,6 +655,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAtencionesAtencionIdRouteImport
       parentRoute: typeof AdminAtencionesRoute
     }
+    '/_admin/atencion-medica/recepcion': {
+      id: '/_admin/atencion-medica/recepcion'
+      path: '/atencion-medica/recepcion'
+      fullPath: '/atencion-medica/recepcion'
+      preLoaderRoute: typeof AdminAtencionMedicaRecepcionRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/_admin/workflow/instances/$instanceId': {
       id: '/_admin/workflow/instances/$instanceId'
       path: '/workflow/instances/$instanceId'
@@ -737,6 +757,7 @@ interface AdminRouteChildren {
   AdminRecursosHumanosRoute: typeof AdminRecursosHumanosRouteWithChildren
   AdminSeguridadRoute: typeof AdminSeguridadRouteWithChildren
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminAtencionMedicaRecepcionRoute: typeof AdminAtencionMedicaRecepcionRoute
   AdminUsuariosPerfilRoute: typeof AdminUsuariosPerfilRoute
   AdminCatalogosIndexRoute: typeof AdminCatalogosIndexRoute
   AdminPacientesIndexRoute: typeof AdminPacientesIndexRoute
@@ -754,6 +775,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminRecursosHumanosRoute: AdminRecursosHumanosRouteWithChildren,
   AdminSeguridadRoute: AdminSeguridadRouteWithChildren,
   AdminIndexRoute: AdminIndexRoute,
+  AdminAtencionMedicaRecepcionRoute: AdminAtencionMedicaRecepcionRoute,
   AdminUsuariosPerfilRoute: AdminUsuariosPerfilRoute,
   AdminCatalogosIndexRoute: AdminCatalogosIndexRoute,
   AdminPacientesIndexRoute: AdminPacientesIndexRoute,

@@ -6,7 +6,7 @@ import type {
 } from '../types/atencion-medica.types'
 
 export const atencionFormSchema = z.object({
-    numeroTramite: z.string().trim().min(1, 'El número de trámite es requerido').max(30),
+    numeroAtencion: z.string().trim().min(1, 'El número de atención es requerido').max(30),
     pacienteId: z.string().uuid('Seleccione un paciente'),
     tipoAtencionId: z.string().uuid('Seleccione un tipo de atención'),
     formularioClinicoId: z.string().uuid('Seleccione un formulario clínico'),
@@ -18,7 +18,7 @@ export const atencionFormSchema = z.object({
 export type AtencionFormValues = z.infer<typeof atencionFormSchema>
 
 export const atencionDefaultValues: AtencionFormValues = {
-    numeroTramite: '',
+    numeroAtencion: '',
     pacienteId: '',
     tipoAtencionId: '',
     formularioClinicoId: '',
@@ -29,7 +29,7 @@ export const atencionDefaultValues: AtencionFormValues = {
 
 export function toCreateAtencionPayload(values: AtencionFormValues): CreateAtencionPayload {
     return {
-        numeroTramite: values.numeroTramite.trim(),
+        numeroAtencion: values.numeroAtencion.trim(),
         pacienteId: values.pacienteId,
         tipoAtencionId: values.tipoAtencionId,
         formularioClinicoId: values.formularioClinicoId,
@@ -41,7 +41,7 @@ export function toCreateAtencionPayload(values: AtencionFormValues): CreateAtenc
 
 export function toUpdateAtencionPayload(values: AtencionFormValues): UpdateAtencionPayload {
     return {
-        numeroTramite: values.numeroTramite.trim(),
+        numeroAtencion: values.numeroAtencion.trim(),
         pacienteId: values.pacienteId,
         tipoAtencionId: values.tipoAtencionId,
         formularioClinicoId: values.formularioClinicoId,
@@ -52,19 +52,19 @@ export function toUpdateAtencionPayload(values: AtencionFormValues): UpdateAtenc
 }
 
 export function atencionToFormValues(atencion: {
-    numeroTramite: string
+    numeroAtencion: string
     pacienteId: string
     tipoAtencionId: string
-    formularioClinicoId: string
+    formularioClinicoId?: string | null
     fechaAtencion: string
     estado: string
     observaciones?: string | null
 }): AtencionFormValues {
     return {
-        numeroTramite: atencion.numeroTramite,
+        numeroAtencion: atencion.numeroAtencion,
         pacienteId: atencion.pacienteId,
         tipoAtencionId: atencion.tipoAtencionId,
-        formularioClinicoId: atencion.formularioClinicoId,
+        formularioClinicoId: atencion.formularioClinicoId ?? '',
         fechaAtencion: atencion.fechaAtencion.slice(0, 16),
         estado: atencion.estado,
         observaciones: atencion.observaciones ?? '',

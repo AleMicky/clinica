@@ -44,8 +44,8 @@ export function AtencionesTable({
 }: AtencionesTableProps) {
     const columns = useMemo(
         () => [
-            columnHelper.accessor('numeroTramite', {
-                header: 'Trámite',
+            columnHelper.accessor('numeroAtencion', {
+                header: 'Atención',
                 size: 120,
                 cell: ({ getValue }) => (
                     <Text code style={{ fontSize: 12 }}>
@@ -88,18 +88,18 @@ export function AtencionesTable({
                                 <Button
                                     type="text"
                                     icon={<EyeOutlined />}
-                                    aria-label={`Ver atención ${atencion.numeroTramite}`}
+                                    aria-label={`Ver atención ${atencion.numeroAtencion}`}
                                 />
                             </Link>
                             <Button
                                 type="text"
                                 icon={<EditOutlined />}
-                                aria-label={`Editar atención ${atencion.numeroTramite}`}
+                                aria-label={`Editar atención ${atencion.numeroAtencion}`}
                                 onClick={() => onEdit(atencion)}
                             />
                             <Popconfirm
                                 title="Eliminar atención"
-                                description={`¿Desea eliminar la atención "${atencion.numeroTramite}"?`}
+                                description={`¿Desea eliminar la atención "${atencion.numeroAtencion}"?`}
                                 okText="Eliminar"
                                 cancelText="Cancelar"
                                 okButtonProps={{
@@ -112,7 +112,7 @@ export function AtencionesTable({
                                     type="text"
                                     danger
                                     icon={<DeleteOutlined />}
-                                    aria-label={`Eliminar atención ${atencion.numeroTramite}`}
+                                    aria-label={`Eliminar atención ${atencion.numeroAtencion}`}
                                     loading={deletingId === atencion.id}
                                 />
                             </Popconfirm>

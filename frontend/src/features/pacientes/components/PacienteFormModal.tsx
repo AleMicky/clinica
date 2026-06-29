@@ -15,6 +15,9 @@ type PacienteFormModalProps = {
     open: boolean
     paciente: Paciente | null
     loading: boolean
+    initialPersonaId?: string
+    lockPersona?: boolean
+    title?: string
     onClose: () => void
     onSubmit: (values: PacienteFormValues) => Promise<void>
 }
@@ -33,6 +36,9 @@ export function PacienteFormModal({
     open,
     paciente,
     loading,
+    initialPersonaId,
+    lockPersona = false,
+    title,
     onClose,
     onSubmit,
 }: PacienteFormModalProps) {
@@ -61,8 +67,10 @@ export function PacienteFormModal({
             form.setFieldValue('grupoSanguineoId', paciente.grupoSanguineoId ?? '')
             form.setFieldValue('alergias', paciente.alergias ?? '')
             form.setFieldValue('observaciones', paciente.observaciones ?? '')
+        } else if (initialPersonaId) {
+            form.setFieldValue('personaId', initialPersonaId)
         }
-    }, [open, paciente, form])
+    }, [open, paciente, initialPersonaId, form])
 
     const grupoSanguineoOptions =
         catalogos
@@ -85,7 +93,7 @@ export function PacienteFormModal({
 
     return (
         <Modal
-            title={isEditing ? 'Editar paciente' : 'Nuevo paciente'}
+            title={title ?? (isEditing ? 'Editar paciente' : 'Nuevo paciente')}
             open={open}
             onCancel={handleClose}
             onOk={() => void form.handleSubmit()}
@@ -113,7 +121,12 @@ export function PacienteFormModal({
                                     value={field.state.value || undefined}
                                     onChange={(value) => field.handleChange(value)}
                                     onBlur={field.handleBlur}
-                                    disabled={loading || loadingPersonas || isEditing}
+                                    disabled={
+                                        loading ||
+                                        loadingPersonas ||
+                                        isEditing ||
+                                        lockPersona
+                                    }
                                 />
                             </Form.Item>
                         )
