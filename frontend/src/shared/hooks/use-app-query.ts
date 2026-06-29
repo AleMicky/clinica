@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import {
     useQuery,
     type UseQueryOptions,
@@ -20,14 +21,19 @@ export function useAppQuery<
         TQueryKey
     >,
 ) {
-    return useQuery({
+    const notifiedErrorRef = useRef<unknown>(null)
+
+    const result = useQuery({
         retry: false,
         ...options,
-
-        throwOnError: (error) => {
-            notify.error('Error', getApiErrorMessage(error))
-
-            return false
-        },
     })
+
+    useEffect(() => {
+        if (!result.error || result.error === notifiedErrorRef.current) return
+
+        notifiedErrorRef.current = result.error
+        notify.error('Error', getApiErrorMessage(result.error))
+    }, [result.error])
+
+    return result
 }

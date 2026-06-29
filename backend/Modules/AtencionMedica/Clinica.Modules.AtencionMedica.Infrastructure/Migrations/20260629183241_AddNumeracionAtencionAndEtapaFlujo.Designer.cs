@@ -4,6 +4,7 @@ using Clinica.Modules.AtencionMedica.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Clinica.Modules.AtencionMedica.Infrastructure.Migrations
 {
     [DbContext(typeof(AtencionMedicaDbContext))]
-    partial class AtencionMedicaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260629183241_AddNumeracionAtencionAndEtapaFlujo")]
+    partial class AddNumeracionAtencionAndEtapaFlujo
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

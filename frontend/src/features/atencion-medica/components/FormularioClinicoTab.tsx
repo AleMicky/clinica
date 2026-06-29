@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import {
     Button,
     Checkbox,
@@ -8,6 +9,7 @@ import {
     InputNumber,
     Select,
     Spin,
+    Tag,
     Typography,
 } from 'antd'
 
@@ -17,17 +19,20 @@ import {
     useFormularioEstructura,
     useTiposCampoFormulario,
 } from '../hooks/atencion-medica.hooks'
+import { useAtencionFlujoCompletitud } from '../hooks/useAtencionFlujo'
 import type {
     Atencion,
     AtencionFormularioRespuesta,
     FormularioCampo,
     TipoCampoFormulario,
 } from '../types/atencion-medica.types'
+import { queryKeys } from '../../../shared/constants/query-keys'
 
 const { Text, Title } = Typography
 
 type FormularioClinicoTabProps = {
     atencion: Atencion
+    etapaForzada?: string
 }
 
 function parseOpciones(json?: string | null): { value: string; label: string }[] {
@@ -167,17 +172,28 @@ function renderFieldInput(
     }
 }
 
-export function FormularioClinicoTab({ atencion }: FormularioClinicoTabProps) {
+export function FormularioClinicoTab({ atencion, etapaForzada }: FormularioClinicoTabProps) {
     const [form] = Form.useForm()
     const [saving, setSaving] = useState(false)
+    const [mostrarTodas, setMostrarTodas] = useState(false)
+
+    const { data: completitud } = useAtencionFlujoCompletitud(atencion.id)
+    const etapaActual = etapaForzada ?? completitud?.etapaActual
 
     const { secciones, campos, isFetching: loadingEstructura } = useFormularioEstructura(
         atencion.formularioClinicoId ?? undefined,
     )
 
+    const seccionesVisibles = useMemo(() => {
+        if (!etapaActual) return secciones
+        if (etapaForzada) return secciones.filter((s) => s.etapaFlujo === etapaForzada)
+        if (mostrarTodas) return secciones
+        return secciones.filter((s) => s.etapaFlujo === etapaActual)
+    }, [etapaActual, etapaForzada, mostrarTodas, secciones])
+
     const camposPorSeccion = useMemo(() => {
         const map = new Map<string, FormularioCampo[]>()
-        secciones.forEach((seccion) => {
+        seccionesVisibles.forEach((seccion) => {
             map.set(
                 seccion.id,
                 campos
@@ -186,7 +202,7 @@ export function FormularioClinicoTab({ atencion }: FormularioClinicoTabProps) {
             )
         })
         return map
-    }, [campos, secciones])
+    }, [campos, seccionesVisibles])
 
     const { data: tiposCampoData } = useTiposCampoFormulario()
     const tipoCampoMap = useMemo(
@@ -213,8 +229,13 @@ export function FormularioClinicoTab({ atencion }: FormularioClinicoTabProps) {
 
     const createMutation = atencionRespuestasHooks.useCreate()
     const updateMutation = atencionRespuestasHooks.useUpdate()
+    const queryClient = useQueryClient()
+
+    const formReady = !loadingEstructura && !loadingRespuestas && secciones.length > 0
 
     useEffect(() => {
+        if (!formReady) return
+
         const values: Record<string, unknown> = {}
         campos.forEach((campo) => {
             const respuesta = respuestaMap.get(campo.id)
@@ -225,7 +246,7 @@ export function FormularioClinicoTab({ atencion }: FormularioClinicoTabProps) {
                 undefined
         })
         form.setFieldsValue(values)
-    }, [campos, form, respuestaMap, tipoCampoMap])
+    }, [campos, form, formReady, respuestaMap, tipoCampoMap])
 
     const handleSave = async () => {
         const values = await form.validateFields()
@@ -253,6 +274,9 @@ export function FormularioClinicoTab({ atencion }: FormularioClinicoTabProps) {
             }
         } finally {
             setSaving(false)
+            void queryClient.invalidateQueries({
+                queryKey: queryKeys.atencionMedica.flujo.completitud(atencion.id),
+            })
         }
     }
 
@@ -270,7 +294,18 @@ export function FormularioClinicoTab({ atencion }: FormularioClinicoTabProps) {
 
     return (
         <Form form={form} layout="vertical">
-            {secciones.map((seccion) => {
+            {etapaActual && !etapaForzada ? (
+                <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
+                    <Text type="secondary">
+                        Mostrando secciones de la etapa: <Tag>{etapaActual}</Tag>
+                    </Text>
+                    <Button type="link" size="small" onClick={() => setMostrarTodas((v) => !v)}>
+                        {mostrarTodas ? 'Solo etapa actual' : 'Ver todas las secciones'}
+                    </Button>
+                </Flex>
+            ) : null}
+
+            {seccionesVisibles.map((seccion) => {
                 const seccionCampos = camposPorSeccion.get(seccion.id) ?? []
 
                 return (

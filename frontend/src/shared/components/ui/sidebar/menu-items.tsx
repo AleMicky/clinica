@@ -71,14 +71,19 @@ export const menuGroups: MenuGroup[] = [
     {
         key: 'clinical',
         label: 'Clínica',
-        roles: [AppRole.Admin, AppRole.Medico, AppRole.Recepcion],
+        roles: [
+            AppRole.Admin,
+            AppRole.Medico,
+            AppRole.Recepcion,
+            AppRole.Enfermeria,
+        ],
         items: [
             {
                 key: '/pacientes',
                 to: '/pacientes',
                 icon: <TeamOutlined />,
                 label: 'Pacientes',
-                roles: [AppRole.Admin, AppRole.Medico, AppRole.Recepcion],
+                roles: [AppRole.Admin, AppRole.Medico, AppRole.Recepcion, AppRole.Enfermeria],
             },
             {
                 key: '/atenciones',
@@ -92,7 +97,21 @@ export const menuGroups: MenuGroup[] = [
                 to: '/atencion-medica/recepcion',
                 icon: <SolutionOutlined />,
                 label: 'Recepción',
-                roles: [AppRole.Admin, AppRole.Medico, AppRole.Recepcion],
+                roles: [AppRole.Admin, AppRole.Recepcion],
+            },
+            {
+                key: '/atencion-medica/enfermeria',
+                to: '/atencion-medica/enfermeria',
+                icon: <ExperimentOutlined />,
+                label: 'Enfermería',
+                roles: [AppRole.Admin, AppRole.Enfermeria],
+            },
+            {
+                key: '/atencion-medica/consulta-medica',
+                to: '/atencion-medica/consulta-medica',
+                icon: <MedicineBoxOutlined />,
+                label: 'Consulta médica',
+                roles: [AppRole.Admin, AppRole.Medico],
             },
             {
                 key: '/atenciones/tipos-atencion',

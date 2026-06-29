@@ -16,6 +16,7 @@ public sealed class RecepcionAtencionService(
     IWorkflowService workflowService) : IRecepcionAtencionService
 {
     private const string RecepcionSeccionCodigo = "RECEPCION";
+    private const string RecepcionEtapaFlujo = AtencionEtapasFlujo.Recepcion;
 
     public async Task<FormularioRecepcionResponse> GetFormularioRecepcionAsync(
         Guid tipoAtencionId,
@@ -28,7 +29,8 @@ public sealed class RecepcionAtencionService(
                 "No existe un formulario clínico activo para el tipo de atención.");
 
         var secciones = formulario.Secciones
-            .Where(x => x.Codigo == RecepcionSeccionCodigo)
+            .Where(x => x.EtapaFlujo == RecepcionEtapaFlujo ||
+                        (string.IsNullOrEmpty(x.EtapaFlujo) && x.Codigo == RecepcionSeccionCodigo))
             .OrderBy(x => x.Orden)
             .Select(seccion => new FormularioRecepcionSeccionResponse(
                 seccion.Id,
@@ -74,7 +76,8 @@ public sealed class RecepcionAtencionService(
                 "No existe un formulario clínico activo para el tipo de atención.");
 
         var camposRecepcion = formulario.Secciones
-            .Where(x => x.Codigo == RecepcionSeccionCodigo)
+            .Where(x => x.EtapaFlujo == RecepcionEtapaFlujo ||
+                        (string.IsNullOrEmpty(x.EtapaFlujo) && x.Codigo == RecepcionSeccionCodigo))
             .SelectMany(x => x.Campos.Where(c => c.Visible))
             .ToList();
 
@@ -92,7 +95,10 @@ public sealed class RecepcionAtencionService(
         }
 
         var now = DateTime.UtcNow;
-        var numeroAtencion = await GenerateNumeroAtencionAsync(now.Year, cancellationToken);
+        var numeroAtencion = await GenerateNumeroAtencionAsync(
+            request.TipoAtencionId,
+            now.Year,
+            cancellationToken);
 
         var entity = new AtencionEntity
         {
@@ -238,28 +244,38 @@ public sealed class RecepcionAtencionService(
     }
 
     private async Task<string> GenerateNumeroAtencionAsync(
-        int year,
+        Guid tipoAtencionId,
+        int gestion,
         CancellationToken cancellationToken)
     {
-        var prefix = $"AT-{year}-";
-
-        var lastNumber = await context.Atenciones
+        var tipo = await context.TiposAtencion
             .AsNoTracking()
-            .Where(x => x.NumeroAtencion.StartsWith(prefix))
-            .OrderByDescending(x => x.NumeroAtencion)
-            .Select(x => x.NumeroAtencion)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(x => x.Id == tipoAtencionId, cancellationToken)
+            ?? throw new BusinessException("El tipo de atención no existe.");
 
-        var nextSequence = 1;
+        var prefijo = TipoAtencionPrefijos.ObtenerPrefijo(tipo.Codigo);
 
-        if (lastNumber is not null)
+        var numeracion = await context.NumeracionesAtencion
+            .FirstOrDefaultAsync(
+                x => x.TipoAtencionId == tipoAtencionId && x.Gestion == gestion,
+                cancellationToken);
+
+        if (numeracion is null)
         {
-            var suffix = lastNumber[prefix.Length..];
-            if (int.TryParse(suffix, out var parsed))
-                nextSequence = parsed + 1;
+            numeracion = new NumeracionAtencion
+            {
+                TipoAtencionId = tipoAtencionId,
+                Gestion = gestion,
+                UltimoCorrelativo = 0
+            };
+
+            context.NumeracionesAtencion.Add(numeracion);
         }
 
-        return $"{prefix}{nextSequence:D6}";
+        numeracion.UltimoCorrelativo++;
+        var correlativo = numeracion.UltimoCorrelativo;
+
+        return $"{prefijo}-{gestion}-{correlativo:D6}";
     }
 
     private async Task EnsurePacienteExistsAsync(

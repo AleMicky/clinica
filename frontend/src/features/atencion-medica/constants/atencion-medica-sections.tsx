@@ -1,4 +1,5 @@
 import {
+    ExperimentOutlined,
     FileTextOutlined,
     FormOutlined,
     MedicineBoxOutlined,
@@ -22,6 +23,16 @@ export const atencionMedicaPageSections: AtencionMedicaPageSection[] = [
         path: '/atencion-medica/recepcion',
         title: 'Recepción',
         icon: <SolutionOutlined />,
+    },
+    {
+        path: '/atencion-medica/enfermeria',
+        title: 'Enfermería',
+        icon: <ExperimentOutlined />,
+    },
+    {
+        path: '/atencion-medica/consulta-medica',
+        title: 'Consulta médica',
+        icon: <MedicineBoxOutlined />,
     },
     {
         path: '/atenciones/tipos-atencion',

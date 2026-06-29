@@ -5,4 +5,5 @@ public sealed record FormularioSeccionResponse(
     Guid FormularioClinicoId,
     string Codigo,
     string Nombre,
-    int Orden);
+    int Orden,
+    string? EtapaFlujo);

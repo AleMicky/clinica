@@ -46,6 +46,7 @@ export type FormularioSeccion = {
     codigo: string
     nombre: string
     orden: number
+    etapaFlujo?: string | null
 }
 
 export type CreateFormularioSeccionPayload = {
@@ -53,6 +54,7 @@ export type CreateFormularioSeccionPayload = {
     codigo: string
     nombre: string
     orden: number
+    etapaFlujo?: string | null
 }
 
 export type UpdateFormularioSeccionPayload = CreateFormularioSeccionPayload

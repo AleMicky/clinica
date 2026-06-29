@@ -8,7 +8,7 @@ export const notify = {
   ) =>
     notification.error({
       key,
-      message,
+      title: message,
       description,
     }),
 
@@ -19,7 +19,7 @@ export const notify = {
   ) =>
     notification.success({
       key,
-      message,
+      title: message,
       description,
     }),
 
@@ -30,7 +30,7 @@ export const notify = {
   ) =>
     notification.warning({
       key,
-      message,
+      title: message,
       description,
     }),
 
@@ -41,7 +41,7 @@ export const notify = {
   ) =>
     notification.info({
       key,
-      message,
+      title: message,
       description,
     }),
 }

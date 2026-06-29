@@ -1,3 +1,4 @@
+using Clinica.Modules.AtencionMedica.Domain.Constants;
 using Clinica.Modules.AtencionMedica.Domain.Entities;
 using Clinica.Modules.AtencionMedica.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -102,10 +103,16 @@ public static class AtencionMedicaDbSeeder
         """["Soltero","Casado","Divorciado","Viudo","Unión libre"]""";
 
     private static readonly string ModoIngresoOpcionesJson =
-        """["Propio medio","Ambulancia","Referido","Otro"]""";
+        """["Caminando","Camilla","Ambulancia","Silla de Ruedas","En Brazos"]""";
+
+    private static readonly string AcompanadoPorOpcionesJson =
+        """["Familiares","Amigos","Solo","Ambulancia"]""";
+
+    private static readonly string AccidenteEnOpcionesJson =
+        """["Domicilio","Vía Pública","Trabajo"]""";
 
     private static readonly string TipoAccidenteOpcionesJson =
-        """["Tránsito","Laboral","Doméstico","Otro"]""";
+        """["Personal","Laboral","Tránsito","Agresión Física","No se conoce"]""";
 
     private static readonly string SiNoOpcionesJson =
         """["Sí","No"]""";
@@ -118,46 +125,60 @@ public static class AtencionMedicaDbSeeder
             "FORM_CONSULTA_EXTERNA",
             "Hoja de Consulta Externa",
             [
-                new("RECEPCION", "Datos de recepción", 0,
+                new("DATOS_GENERALES", "Datos generales", 0, AtencionEtapasFlujo.Recepcion,
                 [
                     Campo("historia_clinica", "Historia Clínica", "TEXT", 1, true),
                     Campo("fecha", "Fecha", "DATE", 2, true),
                     Campo("hora", "Hora", "TIME", 3, true),
-                    Campo("apellido_paterno", "Apellido Paterno", "TEXT", 4),
-                    Campo("apellido_materno", "Apellido Materno", "TEXT", 5),
-                    Campo("nombres", "Nombres", "TEXT", 6, true),
-                    Campo("documento", "Documento", "TEXT", 7, true),
-                    Campo("fecha_nacimiento", "Fecha Nacimiento", "DATE", 8),
-                    Campo("edad", "Edad", "NUMBER", 9),
-                    Campo("sexo", "Sexo", "SELECT", 10, opcionesJson: SexoOpcionesJson),
-                    Campo("estado_civil", "Estado Civil", "SELECT", 11, opcionesJson: EstadoCivilOpcionesJson),
-                    Campo("direccion", "Dirección", "TEXT", 12),
-                    Campo("telefono", "Teléfono", "TEXT", 13),
-                    Campo("profesion_ocupacion", "Profesión / Ocupación", "TEXT", 14)
+                    Campo("servicio", "Servicio", "TEXT", 4)
                 ]),
-                new("DATOS_CONSULTA", "Datos de consulta", 1,
+                new("DATOS_PACIENTE", "Datos del paciente", 1, AtencionEtapasFlujo.Recepcion,
                 [
-                    Campo("servicio", "Servicio", "TEXT", 1),
-                    Campo("fecha", "Fecha", "DATE", 2),
-                    Campo("hora", "Hora", "TIME", 3)
+                    Campo("apellido_paterno", "Apellido Paterno", "TEXT", 1),
+                    Campo("apellido_materno", "Apellido Materno", "TEXT", 2),
+                    Campo("nombres", "Nombres", "TEXT", 3, true),
+                    Campo("documento", "Documento de Identidad", "TEXT", 4, true),
+                    Campo("fecha_nacimiento", "Fecha de Nacimiento", "DATE", 5),
+                    Campo("edad", "Edad", "NUMBER", 6),
+                    Campo("sexo", "Sexo", "SELECT", 7, opcionesJson: SexoOpcionesJson),
+                    Campo("estado_civil", "Estado Civil", "SELECT", 8, opcionesJson: EstadoCivilOpcionesJson),
+                    Campo("direccion", "Dirección", "TEXT", 9),
+                    Campo("telefono", "Teléfono", "TEXT", 10),
+                    Campo("profesion_ocupacion", "Profesión / Ocupación", "TEXT", 11)
                 ]),
-                new("SIGNOS_VITALES", "Signos vitales", 2,
+                new("DATOS_CLINICOS_RECEPCION", "Datos clínicos (recepción)", 2, AtencionEtapasFlujo.Recepcion,
                 [
-                    Campo("fc", "FC", "NUMBER", 1),
-                    Campo("fr", "FR", "NUMBER", 2),
-                    Campo("pa", "PA", "TEXT", 3),
-                    Campo("temperatura", "Temperatura", "DECIMAL", 4),
-                    Campo("saturacion_oxigeno", "SATO2", "DECIMAL", 5),
-                    Campo("glucemia_capilar", "Glucemia capilar", "DECIMAL", 6),
-                    Campo("glasgow", "Glasgow", "NUMBER", 7)
+                    Campo("motivo_consulta", "Motivo de Consulta", "TEXTAREA", 1, true),
+                    Campo("observaciones_iniciales", "Observaciones Iniciales", "TEXTAREA", 2)
                 ]),
-                new("HISTORIA_CLINICA", "Historia clínica", 3,
+                new("SIGNOS_VITALES", "Signos vitales (enfermería)", 3, AtencionEtapasFlujo.Enfermeria,
                 [
-                    Campo("motivo_consulta", "Motivo de consulta", "TEXTAREA", 1),
-                    Campo("enfermedad_actual", "Enfermedad actual", "TEXTAREA", 2),
-                    Campo("examen_fisico", "Examen físico", "TEXTAREA", 3),
-                    Campo("conducta_tratamiento", "Conducta y tratamiento", "TEXTAREA", 4),
-                    Campo("observaciones", "Observaciones", "TEXTAREA", 5)
+                    Campo("peso", "Peso", "DECIMAL", 1),
+                    Campo("talla", "Talla", "DECIMAL", 2),
+                    Campo("imc", "Índice de Masa Corporal", "DECIMAL", 3),
+                    Campo("pa", "Presión Arterial", "TEXT", 4),
+                    Campo("fc", "Frecuencia Cardíaca", "NUMBER", 5),
+                    Campo("fr", "Frecuencia Respiratoria", "NUMBER", 6),
+                    Campo("temperatura", "Temperatura", "DECIMAL", 7),
+                    Campo("saturacion_oxigeno", "Saturación de Oxígeno", "DECIMAL", 8),
+                    Campo("glucemia", "Glucemia", "DECIMAL", 9)
+                ]),
+                new("CONSULTA_MEDICA", "Consulta médica", 4, AtencionEtapasFlujo.ConsultaMedica,
+                [
+                    Campo("enfermedad_actual", "Enfermedad Actual", "TEXTAREA", 1),
+                    Campo("antecedentes_personales", "Antecedentes Personales", "TEXTAREA", 2),
+                    Campo("antecedentes_familiares", "Antecedentes Familiares", "TEXTAREA", 3),
+                    Campo("antecedentes_quirurgicos", "Antecedentes Quirúrgicos", "TEXTAREA", 4),
+                    Campo("antecedentes_alergicos", "Antecedentes Alérgicos", "TEXTAREA", 5),
+                    Campo("examen_fisico", "Examen Físico", "TEXTAREA", 6),
+                    Campo("diagnostico", "Diagnóstico", "TEXTAREA", 7),
+                    Campo("plan_terapeutico", "Plan Terapéutico", "TEXTAREA", 8),
+                    Campo("tratamiento", "Tratamiento", "TEXTAREA", 9),
+                    Campo("interconsulta", "Interconsulta", "TEXTAREA", 10),
+                    Campo("estudios_complementarios", "Estudios Complementarios", "TEXTAREA", 11),
+                    Campo("prescripcion_medica", "Prescripción Médica", "TEXTAREA", 12),
+                    Campo("indicaciones", "Indicaciones", "TEXTAREA", 13),
+                    Campo("firma_sello_medico", "Firma y Sello Médico", "TEXT", 14)
                 ])
             ]);
     }
@@ -170,84 +191,94 @@ public static class AtencionMedicaDbSeeder
             "FORM_EMERGENCIA",
             "Historia Clínica de Emergencias",
             [
-                new("RECEPCION", "Datos de recepción", 0,
+                new("DATOS_GENERALES", "Datos generales", 0, AtencionEtapasFlujo.Recepcion,
                 [
                     Campo("historia_clinica", "Historia Clínica", "TEXT", 1, true),
-                    Campo("nombres_apellidos", "Nombres y Apellidos", "TEXT", 2, true),
-                    Campo("documento", "Documento", "TEXT", 3, true),
-                    Campo("fecha_nacimiento", "Fecha Nacimiento", "DATE", 4),
+                    Campo("fecha_atencion", "Fecha Atención", "DATE", 2, true),
+                    Campo("hora_atencion", "Hora Atención", "TIME", 3, true)
+                ]),
+                new("DATOS_PACIENTE", "Datos del paciente", 1, AtencionEtapasFlujo.Recepcion,
+                [
+                    Campo("apellidos", "Apellidos", "TEXT", 1, true),
+                    Campo("nombres", "Nombres", "TEXT", 2, true),
+                    Campo("documento", "Documento de Identidad", "TEXT", 3, true),
+                    Campo("fecha_nacimiento", "Fecha de Nacimiento", "DATE", 4),
                     Campo("edad", "Edad", "NUMBER", 5),
                     Campo("sexo", "Sexo", "SELECT", 6, opcionesJson: SexoOpcionesJson),
-                    Campo("direccion", "Dirección", "TEXT", 7),
-                    Campo("telefono", "Teléfono", "TEXT", 8),
-                    Campo("estado_civil", "Estado Civil", "SELECT", 9, opcionesJson: EstadoCivilOpcionesJson),
-                    Campo("fecha_atencion", "Fecha Atención", "DATE", 10, true),
-                    Campo("hora_atencion", "Hora Atención", "TIME", 11, true),
-                    Campo("referido_de", "Referido de", "TEXT", 12),
-                    Campo("modo_ingreso", "Modo de Ingreso", "SELECT", 13, opcionesJson: ModoIngresoOpcionesJson),
-                    Campo("acompanado_por", "Acompañado por", "TEXT", 14),
-                    Campo("otros", "Otros", "TEXT", 15),
-                    Campo("accidente_en", "Accidente en", "TEXT", 16),
-                    Campo("tipo_accidente", "Tipo de Accidente", "SELECT", 17, opcionesJson: TipoAccidenteOpcionesJson),
-                    Campo("notificacion_policial", "Notificación Policial", "RADIO", 18, opcionesJson: SiNoOpcionesJson),
-                    Campo("fuente_historia", "Fuente de la Historia", "TEXT", 19),
-                    Campo("motivo_consulta", "Motivo de Consulta", "TEXTAREA", 20, true)
+                    Campo("estado_civil", "Estado Civil", "SELECT", 7, opcionesJson: EstadoCivilOpcionesJson),
+                    Campo("direccion", "Dirección", "TEXT", 8),
+                    Campo("telefono", "Teléfono", "TEXT", 9)
                 ]),
-                new("DATOS_ATENCION", "Datos de atención", 1,
+                new("INGRESO", "Ingreso", 2, AtencionEtapasFlujo.Recepcion,
                 [
-                    Campo("fecha_atencion", "Fecha de atención", "DATE", 1),
-                    Campo("hora_atencion", "Hora de atención", "TIME", 2),
-                    Campo("referido_de", "Referido de", "TEXT", 3)
+                    Campo("referido_de", "Referido de", "TEXT", 1),
+                    Campo("modo_ingreso", "Modo de Ingreso", "SELECT", 2, opcionesJson: ModoIngresoOpcionesJson),
+                    Campo("acompanado_por", "Acompañado por", "SELECT", 3, opcionesJson: AcompanadoPorOpcionesJson),
+                    Campo("otros", "Otros", "TEXT", 4)
                 ]),
-                new("MODO_INGRESO", "Modo de ingreso", 2,
+                new("DATOS_ACCIDENTE", "Datos del accidente", 3, AtencionEtapasFlujo.Recepcion,
                 [
-                    Campo("modo_ingreso", "Modo de ingreso", "SELECT", 1),
-                    Campo("acompanado_de", "Acompañado de", "SELECT", 2)
+                    Campo("accidente_en", "Accidente en", "SELECT", 1, opcionesJson: AccidenteEnOpcionesJson),
+                    Campo("tipo_accidente", "Tipo de Accidente", "SELECT", 2, opcionesJson: TipoAccidenteOpcionesJson),
+                    Campo("notificacion_policial", "Notificación Policial", "RADIO", 3, opcionesJson: SiNoOpcionesJson),
+                    Campo("responsable_policial", "Responsable Policial", "TEXT", 4)
                 ]),
-                new("ACCIDENTE", "Datos del accidente", 3,
+                new("HISTORIA_CLINICA_RECEPCION", "Historia clínica (recepción)", 4, AtencionEtapasFlujo.Recepcion,
                 [
-                    Campo("accidente_en", "Accidente en", "SELECT", 1),
-                    Campo("tipo_accidente", "Tipo de accidente", "SELECT", 2),
-                    Campo("notificacion_policial", "Notificación policial", "CHECKBOX", 3),
-                    Campo("responsable_policial", "Responsable policial", "TEXT", 4)
+                    Campo("fuente_historia", "Fuente de la Historia", "TEXT", 1),
+                    Campo("motivo_consulta", "Motivo de Consulta", "TEXTAREA", 2, true),
+                    Campo("enfermedad_actual", "Enfermedad Actual", "TEXTAREA", 3)
                 ]),
-                new("HISTORIA_CLINICA", "Historia clínica", 4,
+                new("SIGNOS_VITALES", "Signos vitales", 5, AtencionEtapasFlujo.Enfermeria,
                 [
-                    Campo("fuente_historia", "Fuente de la historia", "TEXT", 1),
-                    Campo("motivo_consulta", "Motivo de consulta", "TEXTAREA", 2),
-                    Campo("enfermedad_actual", "Enfermedad actual", "TEXTAREA", 3)
-                ]),
-                new("SIGNOS_VITALES", "Signos vitales", 5,
-                [
-                    Campo("fc", "FC", "NUMBER", 1),
-                    Campo("fr", "FR", "NUMBER", 2),
-                    Campo("pa", "PA", "TEXT", 3),
+                    Campo("fc", "Frecuencia Cardíaca", "NUMBER", 1),
+                    Campo("fr", "Frecuencia Respiratoria", "NUMBER", 2),
+                    Campo("pa", "Presión Arterial", "TEXT", 3),
                     Campo("temperatura", "Temperatura", "DECIMAL", 4),
-                    Campo("saturacion_oxigeno", "SATO2", "DECIMAL", 5),
-                    Campo("glucemia_capilar", "Glucemia capilar", "DECIMAL", 6),
-                    Campo("glasgow", "Glasgow", "NUMBER", 7)
+                    Campo("saturacion_oxigeno", "Saturación de Oxígeno", "DECIMAL", 5),
+                    Campo("glucemia_capilar", "Glucemia Capilar", "DECIMAL", 6),
+                    Campo("glasgow", "Escala de Glasgow", "NUMBER", 7)
                 ]),
-                new("EVALUACION", "Evaluación médica", 6,
+                new("EXAMEN_FISICO", "Examen físico", 6, AtencionEtapasFlujo.ConsultaMedica,
                 [
-                    Campo("estado_general", "Estado general del paciente", "SELECT", 1),
-                    Campo("conducta_tratamiento", "Conducta y tratamiento", "TEXTAREA", 2),
-                    Campo("estudios_complementarios", "Estudios complementarios", "TEXTAREA", 3),
-                    Campo("estudio_imagen", "Estudio de imagen", "TEXTAREA", 4),
-                    Campo("diagnostico", "Diagnóstico", "TEXTAREA", 5)
+                    Campo("estado_general", "Estado General", "TEXTAREA", 1),
+                    Campo("examen_clinico", "Examen Clínico", "TEXTAREA", 2)
                 ]),
-                new("INTERCONSULTA", "Interconsulta y referencia", 7,
+                new("DIAGNOSTICO", "Diagnóstico", 7, AtencionEtapasFlujo.ConsultaMedica,
                 [
-                    Campo("interconsulta_a", "Interconsulta a", "TEXT", 1),
+                    Campo("diagnostico_principal", "Diagnóstico Principal", "TEXTAREA", 1),
+                    Campo("diagnostico_secundario", "Diagnóstico Secundario", "TEXTAREA", 2)
+                ]),
+                new("TRATAMIENTO", "Tratamiento", 8, AtencionEtapasFlujo.ConsultaMedica,
+                [
+                    Campo("conducta", "Conducta", "TEXTAREA", 1),
+                    Campo("tratamiento", "Tratamiento", "TEXTAREA", 2)
+                ]),
+                new("ESTUDIOS", "Estudios", 9, AtencionEtapasFlujo.ConsultaMedica,
+                [
+                    Campo("laboratorio", "Laboratorio", "TEXTAREA", 1),
+                    Campo("imagenologia", "Imagenología", "TEXTAREA", 2),
+                    Campo("otros_estudios", "Otros Estudios", "TEXTAREA", 3)
+                ]),
+                new("INTERCONSULTA", "Interconsulta", 10, AtencionEtapasFlujo.ConsultaMedica,
+                [
+                    Campo("especialidad", "Especialidad", "TEXT", 1),
                     Campo("hora_interconsulta", "Hora", "TIME", 2),
-                    Campo("informacion_a", "Información a", "TEXT", 3),
-                    Campo("referido_a", "Referido a", "TEXT", 4),
-                    Campo("motivo_referencia", "Motivo de referencia", "TEXTAREA", 5)
+                    Campo("observaciones_interconsulta", "Observaciones", "TEXTAREA", 3)
                 ]),
-                new("EGRESO_EMERGENCIA", "Condición al egreso de emergencia", 8,
+                new("REFERENCIA", "Referencia", 11, AtencionEtapasFlujo.ConsultaMedica,
                 [
-                    Campo("condicion_egreso", "Condición al egreso", "SELECT", 1),
-                    Campo("recomendaciones", "Recomendaciones y/u observaciones", "TEXTAREA", 2),
-                    Campo("atendido_por", "Atendido por", "TEXT", 3)
+                    Campo("referido_a", "Referido a", "TEXT", 1),
+                    Campo("motivo_referencia", "Motivo de Referencia", "TEXTAREA", 2)
+                ]),
+                new("EGRESO", "Egreso", 12, AtencionEtapasFlujo.ConsultaMedica,
+                [
+                    Campo("condicion_egreso", "Condición de Egreso", "TEXT", 1),
+                    Campo("recomendaciones", "Recomendaciones", "TEXTAREA", 2),
+                    Campo("observaciones_egreso", "Observaciones", "TEXTAREA", 3),
+                    Campo("atendido_por", "Atendido por", "TEXT", 4),
+                    Campo("firma", "Firma", "TEXT", 5),
+                    Campo("sello", "Sello", "TEXT", 6)
                 ])
             ]);
     }
@@ -260,61 +291,75 @@ public static class AtencionMedicaDbSeeder
             "FORM_INTERNACION",
             "Formulario de Internación y Egreso",
             [
-                new("RECEPCION", "Datos de recepción", 0,
+                new("DATOS_GENERALES", "Datos generales", 0, AtencionEtapasFlujo.Recepcion,
                 [
-                    Campo("historia_clinica", "Historia Clínica", "TEXT", 1, true),
-                    Campo("apellido_paterno", "Apellido Paterno", "TEXT", 2, true),
-                    Campo("apellido_materno", "Apellido Materno", "TEXT", 3),
-                    Campo("nombres", "Nombres", "TEXT", 4, true),
-                    Campo("documento", "Documento", "TEXT", 5, true),
-                    Campo("fecha_nacimiento", "Fecha Nacimiento", "DATE", 6),
-                    Campo("edad", "Edad", "NUMBER", 7),
-                    Campo("sexo", "Sexo", "SELECT", 8, opcionesJson: SexoOpcionesJson),
-                    Campo("estado_civil", "Estado Civil", "SELECT", 9, opcionesJson: EstadoCivilOpcionesJson),
-                    Campo("direccion", "Dirección", "TEXT", 10),
-                    Campo("ciudad", "Ciudad", "TEXT", 11),
-                    Campo("telefono", "Teléfono", "TEXT", 12),
-                    Campo("ocupacion", "Ocupación", "TEXT", 13),
-                    Campo("lugar_trabajo", "Lugar de Trabajo", "TEXT", 14),
-                    Campo("telefono_trabajo", "Teléfono Trabajo", "TEXT", 15),
-                    Campo("responsable1_nombre", "Responsable 1 Nombre", "TEXT", 16),
-                    Campo("responsable1_parentesco", "Responsable 1 Parentesco", "TEXT", 17),
-                    Campo("responsable1_direccion", "Responsable 1 Dirección", "TEXT", 18),
-                    Campo("responsable1_telefono", "Responsable 1 Teléfono", "TEXT", 19),
-                    Campo("responsable1_documento", "Responsable 1 Documento", "TEXT", 20),
-                    Campo("responsable2_nombre", "Responsable 2 Nombre", "TEXT", 21),
-                    Campo("responsable2_parentesco", "Responsable 2 Parentesco", "TEXT", 22),
-                    Campo("responsable2_direccion", "Responsable 2 Dirección", "TEXT", 23),
-                    Campo("responsable2_telefono", "Responsable 2 Teléfono", "TEXT", 24),
-                    Campo("responsable2_documento", "Responsable 2 Documento", "TEXT", 25)
+                    Campo("historia_clinica", "Historia Clínica", "TEXT", 1, true)
                 ]),
-                new("DATOS_INTERNACION", "Datos de internación", 1,
+                new("DATOS_PACIENTE", "Datos del paciente", 1, AtencionEtapasFlujo.Recepcion,
                 [
-                    Campo("personal_solicita_internacion", "Personal de salud que solicita la internación", "TEXT", 1),
-                    Campo("medico_tratante", "Médico tratante", "TEXT", 2),
-                    Campo("diagnostico_ingreso", "Diagnóstico de ingreso", "TEXTAREA", 3),
-                    Campo("fecha_ingreso", "Fecha", "DATE", 4),
-                    Campo("hora_ingreso", "Hora", "TIME", 5)
+                    Campo("apellido_paterno", "Apellido Paterno", "TEXT", 1, true),
+                    Campo("apellido_materno", "Apellido Materno", "TEXT", 2),
+                    Campo("nombres", "Nombres", "TEXT", 3, true),
+                    Campo("documento", "Documento de Identidad", "TEXT", 4, true),
+                    Campo("fecha_nacimiento", "Fecha de Nacimiento", "DATE", 5),
+                    Campo("edad", "Edad", "NUMBER", 6),
+                    Campo("sexo", "Sexo", "SELECT", 7, opcionesJson: SexoOpcionesJson),
+                    Campo("estado_civil", "Estado Civil", "SELECT", 8, opcionesJson: EstadoCivilOpcionesJson),
+                    Campo("direccion", "Dirección", "TEXT", 9),
+                    Campo("ciudad", "Ciudad", "TEXT", 10),
+                    Campo("telefono", "Teléfono", "TEXT", 11),
+                    Campo("ocupacion", "Ocupación", "TEXT", 12),
+                    Campo("lugar_trabajo", "Lugar de Trabajo", "TEXT", 13),
+                    Campo("telefono_trabajo", "Teléfono del Trabajo", "TEXT", 14)
                 ]),
-                new("EGRESO", "Egreso", 2,
+                new("RESPONSABLE_1", "Responsable 1", 2, AtencionEtapasFlujo.Recepcion,
                 [
-                    Campo("diagnostico_egreso", "Diagnóstico de egreso", "TEXTAREA", 1),
-                    Campo("observaciones_procedimientos", "Observaciones y procedimientos", "TEXTAREA", 2),
-                    Campo("fecha_egreso", "Fecha y hora de egreso", "DATETIME", 3),
-                    Campo("condicion_egreso", "Condición al egresar", "SELECT", 4),
-                    Campo("dias_internacion", "Días de internación", "NUMBER", 5),
-                    Campo("causa_alta", "Causa de alta", "SELECT", 6)
+                    Campo("responsable1_nombre", "Nombre Completo", "TEXT", 1),
+                    Campo("responsable1_parentesco", "Parentesco", "TEXT", 2),
+                    Campo("responsable1_direccion", "Dirección", "TEXT", 3),
+                    Campo("responsable1_telefono", "Teléfono", "TEXT", 4),
+                    Campo("responsable1_documento", "Documento de Identidad", "TEXT", 5)
                 ]),
-                new("RECIEN_NACIDO", "Recién nacido", 3,
+                new("RESPONSABLE_2", "Responsable 2", 3, AtencionEtapasFlujo.Recepcion,
                 [
-                    Campo("tipo_nacimiento", "Tipo", "SELECT", 1),
-                    Campo("fecha_nacimiento", "Fecha de nacimiento", "DATE", 2),
-                    Campo("sexo", "Sexo", "SELECT", 3),
-                    Campo("condicion_nacer", "Condición al nacer", "SELECT", 4),
-                    Campo("peso", "Peso", "DECIMAL", 5),
-                    Campo("condicion_egreso_rn", "Condición de egreso", "SELECT", 6),
-                    Campo("fecha_egreso_rn", "Fecha de egreso", "DATE", 7),
-                    Campo("dias_internacion_rn", "N.º de días de internación", "NUMBER", 8)
+                    Campo("responsable2_nombre", "Nombre Completo", "TEXT", 1),
+                    Campo("responsable2_parentesco", "Parentesco", "TEXT", 2),
+                    Campo("responsable2_direccion", "Dirección", "TEXT", 3),
+                    Campo("responsable2_telefono", "Teléfono", "TEXT", 4),
+                    Campo("responsable2_documento", "Documento de Identidad", "TEXT", 5)
+                ]),
+                new("INTERNACION", "Internación", 4, AtencionEtapasFlujo.ConsultaMedica,
+                [
+                    Campo("personal_solicita_internacion", "Personal de Salud que solicita la Internación", "TEXT", 1),
+                    Campo("medico_tratante", "Médico Tratante", "TEXT", 2),
+                    Campo("diagnostico_ingreso", "Diagnóstico de Ingreso", "TEXTAREA", 3),
+                    Campo("fecha_ingreso", "Fecha de Ingreso", "DATE", 4),
+                    Campo("hora_ingreso", "Hora de Ingreso", "TIME", 5),
+                    Campo("firma_sello_admision", "Firma y Sello de Admisión", "TEXT", 6)
+                ]),
+                new("EGRESO", "Egreso", 5, AtencionEtapasFlujo.ConsultaMedica,
+                [
+                    Campo("diagnostico_egreso", "Diagnóstico de Egreso", "TEXTAREA", 1),
+                    Campo("procedimientos_realizados", "Procedimientos Realizados", "TEXTAREA", 2),
+                    Campo("observaciones_egreso", "Observaciones", "TEXTAREA", 3),
+                    Campo("fecha_egreso", "Fecha de Egreso", "DATE", 4),
+                    Campo("hora_egreso", "Hora de Egreso", "TIME", 5),
+                    Campo("condicion_egreso", "Condición de Egreso", "TEXT", 6),
+                    Campo("dias_internacion", "Días de Internación", "NUMBER", 7),
+                    Campo("causa_alta", "Causa de Alta", "TEXT", 8),
+                    Campo("firma_sello_egreso", "Firma y Sello", "TEXT", 9),
+                    Campo("firma_sello_medico_tratante", "Firma y Sello del Médico Tratante", "TEXT", 10)
+                ]),
+                new("RECIEN_NACIDO", "Recién nacido", 6, AtencionEtapasFlujo.ConsultaMedica,
+                [
+                    Campo("tipo_nacimiento", "Tipo de Nacimiento", "TEXT", 1),
+                    Campo("fecha_nacimiento_rn", "Fecha de Nacimiento", "DATE", 2),
+                    Campo("sexo_rn", "Sexo", "SELECT", 3, opcionesJson: SexoOpcionesJson),
+                    Campo("condicion_nacer", "Condición al Nacer", "TEXT", 4),
+                    Campo("peso_rn", "Peso", "DECIMAL", 5),
+                    Campo("condicion_egreso_rn", "Condición de Egreso", "TEXT", 6),
+                    Campo("fecha_egreso_rn", "Fecha de Egreso", "DATE", 7),
+                    Campo("dias_internacion_rn", "Días de Internación", "NUMBER", 8)
                 ])
             ]);
     }
@@ -363,7 +408,8 @@ public static class AtencionMedicaDbSeeder
                 {
                     Codigo = seccionSeed.Codigo,
                     Nombre = seccionSeed.Nombre,
-                    Orden = seccionSeed.Orden
+                    Orden = seccionSeed.Orden,
+                    EtapaFlujo = seccionSeed.EtapaFlujo
                 };
 
                 formulario.Secciones.Add(seccion);
@@ -372,6 +418,7 @@ public static class AtencionMedicaDbSeeder
             {
                 seccion.Nombre = seccionSeed.Nombre;
                 seccion.Orden = seccionSeed.Orden;
+                seccion.EtapaFlujo = seccionSeed.EtapaFlujo;
             }
 
             foreach (var campoSeed in seccionSeed.Campos)
@@ -425,6 +472,7 @@ public static class AtencionMedicaDbSeeder
         string Codigo,
         string Nombre,
         int Orden,
+        string EtapaFlujo,
         CampoSeed[] Campos);
 
     private sealed record CampoSeed(

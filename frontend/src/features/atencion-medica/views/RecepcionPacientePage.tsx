@@ -4,6 +4,7 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { Alert, Button, Card, Flex, Space, Table, Tag, Typography, theme } from 'antd'
 
 import { RecepcionPacienteWizard } from '../components/RecepcionPacienteWizard'
+import { AtencionFlujoPanel } from '../components/AtencionFlujoPanel'
 import { useCrearRecepcionAtencion } from '../hooks/useCrearRecepcionAtencion'
 import { useRecepcionPendientes } from '../hooks/useRecepcionPendientes'
 import type { RecepcionAtencion } from '../types/recepcion.types'
@@ -39,27 +40,30 @@ export function RecepcionPacientePage() {
                     showIcon
                     title={`Atención ${ultimaAtencion.numeroAtencion} creada correctamente`}
                     description={
-                        <Space>
-                            <Tag color="blue">{ultimaAtencion.estado}</Tag>
-                            <Button
-                                type="link"
-                                size="small"
-                                onClick={() =>
-                                    void navigate({
-                                        to: '/atenciones/$atencionId',
-                                        params: { atencionId: ultimaAtencion.id },
-                                    })
-                                }
-                            >
-                                Ver detalle de atención
-                            </Button>
-                            <Button
-                                type="link"
-                                size="small"
-                                onClick={() => setUltimaAtencion(null)}
-                            >
-                                Registrar otra
-                            </Button>
+                        <Space orientation="vertical" size="small" style={{ width: '100%' }}>
+                            <Space>
+                                <Tag color="blue">{ultimaAtencion.estado}</Tag>
+                                <Button
+                                    type="link"
+                                    size="small"
+                                    onClick={() =>
+                                        void navigate({
+                                            to: '/atenciones/$atencionId',
+                                            params: { atencionId: ultimaAtencion.id },
+                                        })
+                                    }
+                                >
+                                    Ver detalle de atención
+                                </Button>
+                                <Button
+                                    type="link"
+                                    size="small"
+                                    onClick={() => setUltimaAtencion(null)}
+                                >
+                                    Registrar otra
+                                </Button>
+                            </Space>
+                            <AtencionFlujoPanel atencionId={ultimaAtencion.id} compact />
                         </Space>
                     }
                 />
@@ -126,7 +130,16 @@ export function RecepcionPacientePage() {
                             dataIndex: 'estado',
                             key: 'estado',
                             width: 120,
-                            render: (value: string) => <Tag>{value}</Tag>,
+                            render: (value: string, record) => (
+                                <Space orientation="vertical" size={0}>
+                                    <Tag>{value}</Tag>
+                                    {record.workflowInstanceId ? (
+                                        <Text type="secondary" style={{ fontSize: 11 }}>
+                                            WF activo
+                                        </Text>
+                                    ) : null}
+                                </Space>
+                            ),
                         },
                     ]}
                 />

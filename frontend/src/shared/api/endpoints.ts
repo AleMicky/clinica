@@ -75,7 +75,10 @@ export const catalogoClinicoEndpoints = {
 } as const
 
 export const atencionMedicaEndpoints = {
-    atenciones: createEndpoints(`${api.atencionMedica}/atenciones`),
+    atenciones: createEndpoints(`${api.atencionMedica}/atenciones`, (root) => ({
+        flujoCompletitud: (id: EntityId) => `${root}/${id}/flujo/completitud`,
+        flujoAvanzar: (id: EntityId) => `${root}/${id}/flujo/avanzar`,
+    })),
     tiposAtencion: createEndpoints(`${api.atencionMedica}/tipos-atencion`),
     tiposCampoFormulario: createEndpoints(`${api.atencionMedica}/tipos-campo-formulario`),
     formulariosClinicos: createEndpoints(`${api.atencionMedica}/formularios-clinicos`),
@@ -94,6 +97,12 @@ export const atencionMedicaEndpoints = {
     recepcion: createEndpoints(`${api.atencionMedica}/recepcion`, (root) => ({
         pendientes: `${root}/pendientes`,
         formulario: (tipoAtencionId: EntityId) => `${root}/formulario/${tipoAtencionId}`,
+    })),
+    enfermeria: createEndpoints(`${api.atencionMedica}/enfermeria`, (root) => ({
+        pendientes: `${root}/pendientes`,
+    })),
+    consultaMedica: createEndpoints(`${api.atencionMedica}/consulta-medica`, (root) => ({
+        pendientes: `${root}/pendientes`,
     })),
 } as const
 

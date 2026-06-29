@@ -4,4 +4,5 @@ public sealed record UpdateFormularioSeccionRequest(
     Guid FormularioClinicoId,
     string Codigo,
     string Nombre,
-    int Orden);
+    int Orden,
+    string? EtapaFlujo = null);

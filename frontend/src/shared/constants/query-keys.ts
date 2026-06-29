@@ -180,6 +180,16 @@ export const queryKeys = {
             detail: (id: string) =>
                 ['atencion-medica', 'recepcion', 'detail', id] as const,
         },
+        flujo: {
+            completitud: (atencionId: string) =>
+                ['atencion-medica', 'flujo', 'completitud', atencionId] as const,
+        },
+        enfermeria: {
+            pendientes: ['atencion-medica', 'enfermeria', 'pendientes'] as const,
+        },
+        consultaMedica: {
+            pendientes: ['atencion-medica', 'consulta-medica', 'pendientes'] as const,
+        },
         prescripcionDetalles: {
             all: ['atencion-medica', 'prescripcion-detalles'] as const,
         },

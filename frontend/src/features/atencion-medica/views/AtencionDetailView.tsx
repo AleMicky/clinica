@@ -20,6 +20,7 @@ import { ArrowLeftOutlined, DeleteOutlined, EditOutlined, PlusOutlined } from '@
 import { Link } from '@tanstack/react-router'
 
 import { FormularioClinicoTab } from '../components/FormularioClinicoTab'
+import { AtencionFlujoPanel } from '../components/AtencionFlujoPanel'
 import { EstudiosTab } from '../components/EstudiosTab'
 import {
     diagnosticosAtencionHooks,
@@ -53,6 +54,9 @@ const { Title, Text } = Typography
 
 type AtencionDetailTabsProps = {
     atencion: Atencion
+    visibleTabKeys?: string[]
+    defaultActiveKey?: string
+    etapaFormulario?: string
 }
 
 // ── Signos vitales ──────────────────────────────────────────────────
@@ -758,12 +762,22 @@ function PrescripcionesTab({ atencionId }: { atencionId: string }) {
 
 // ── Vista principal de detalle ──────────────────────────────────────
 
-export function AtencionDetailTabs({ atencion }: AtencionDetailTabsProps) {
+export function AtencionDetailTabs({
+    atencion,
+    visibleTabKeys,
+    defaultActiveKey = 'formulario',
+    etapaFormulario,
+}: AtencionDetailTabsProps) {
     const tabItems = [
         {
             key: 'formulario',
             label: 'Formulario clínico',
-            children: <FormularioClinicoTab atencion={atencion} />,
+            children: (
+                <FormularioClinicoTab
+                    atencion={atencion}
+                    etapaForzada={etapaFormulario}
+                />
+            ),
         },
         {
             key: 'signos',
@@ -797,7 +811,11 @@ export function AtencionDetailTabs({ atencion }: AtencionDetailTabsProps) {
         },
     ]
 
-    return <Tabs items={tabItems} />
+    const filteredItems = visibleTabKeys
+        ? tabItems.filter((item) => visibleTabKeys.includes(item.key))
+        : tabItems
+
+    return <Tabs items={filteredItems} defaultActiveKey={defaultActiveKey} />
 }
 
 type AtencionDetailViewProps = {
@@ -835,6 +853,10 @@ export function AtencionDetailView({ atencionId }: AtencionDetailViewProps) {
             </header>
 
             <div className="admin-page__workspace">
+                <section className="admin-page__panel" style={{ marginBottom: 16 }}>
+                    <AtencionFlujoPanel atencionId={atencion.id} />
+                </section>
+
                 <section className="admin-page__panel" style={{ marginBottom: 16 }}>
                     <Descriptions size="small" column={{ xs: 1, sm: 2, lg: 3 }}>
                         <Descriptions.Item label="Trámite">
