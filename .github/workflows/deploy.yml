@@ -28,7 +28,7 @@ jobs:
           source: "."
           target: ${{ secrets.VPS_APP_PATH || env.APP_DIR }}
           overwrite: true
-          rm: true
+          rm: false
 
       - name: Deploy application
         uses: appleboy/ssh-action@v1.2.0
@@ -45,7 +45,6 @@ jobs:
 
             echo "Directorio de despliegue: $APP_DIR"
 
-            mkdir -p "$APP_DIR"
             cd "$APP_DIR"
 
             echo "Archivos copiados:"
