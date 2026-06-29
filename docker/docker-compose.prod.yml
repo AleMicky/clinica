@@ -1,0 +1,73 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: clinica-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}
+    volumes:
+      - clinica-sqlserver-data:/var/opt/mssql
+    restart: unless-stopped
+    networks:
+      - clinica-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q \"SELECT 1\" || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api
+    image: clinica-api:latest
+    container_name: clinica-api
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      CLINICA_RUN_DB_INIT: "true"
+      ConnectionStrings__DefaultConnection: Server=sqlserver,1433;Database=ClinicaDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true
+      Jwt__Issuer: ${JWT_ISSUER:-Clinica}
+      Jwt__Audience: ${JWT_AUDIENCE:-Clinica}
+      Jwt__Key: ${JWT_KEY}
+      Jwt__ExpiresInHours: ${JWT_EXPIRES_HOURS:-8}
+      Jwt__RefreshTokenExpiresInDays: ${JWT_REFRESH_DAYS:-7}
+      Cors__Origins__0: ${FRONTEND_ORIGIN:-http://localhost}
+      Seed__AdminUserName: ${ADMIN_USERNAME:-admin}
+      Seed__AdminEmail: ${ADMIN_EMAIL:-admin@clinica.com}
+      Seed__AdminPassword: ${ADMIN_PASSWORD}
+      Seed__SeedDemoUsers: ${SEED_DEMO_USERS:-false}
+    restart: unless-stopped
+    networks:
+      - clinica-net
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.frontend
+      args:
+        VITE_API_URL: ""
+    image: clinica-frontend:latest
+    container_name: clinica-frontend
+    depends_on:
+      - api
+    ports:
+      - "${HTTP_PORT:-80}:80"
+    restart: unless-stopped
+    networks:
+      - clinica-net
+
+networks:
+  clinica-net:
+    driver: bridge
+
+volumes:
+  clinica-sqlserver-data:

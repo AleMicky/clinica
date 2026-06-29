@@ -1,0 +1,23 @@
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+
+COPY backend/Clinica.sln ./
+COPY backend/Clinica.SharedKernel/ Clinica.SharedKernel/
+COPY backend/Clinica.Api/ Clinica.Api/
+COPY backend/Modules/ Modules/
+
+RUN dotnet restore Clinica.sln
+RUN dotnet publish Clinica.Api/Clinica.Api.csproj \
+    -c Release \
+    -o /app/publish \
+    --no-restore
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+WORKDIR /app
+
+ENV ASPNETCORE_URLS=http://+:8080
+EXPOSE 8080
+
+COPY --from=build /app/publish .
+
+ENTRYPOINT ["dotnet", "Clinica.Api.dll"]

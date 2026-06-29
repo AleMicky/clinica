@@ -6,6 +6,7 @@ using Clinica.Modules.Personas.Infrastructure.Seed;
 using Clinica.Modules.RecursosHumanos.Infrastructure.Seed;
 using Clinica.Modules.Seguridad.Infrastructure.Seed;
 using Clinica.Modules.Workflow.Infrastructure.Seed;
+using Microsoft.AspNetCore.HttpOverrides;
 
 namespace Clinica.Api.Extensions;
 
@@ -14,7 +15,10 @@ public static class ApplicationBuilderExtensions
     public static async Task<WebApplication> UseClinicaSeedAsync(
         this WebApplication app)
     {
-        if (!app.Environment.IsDevelopment())
+        var runDbInit = app.Environment.IsDevelopment()
+            || app.Configuration.GetValue("CLINICA_RUN_DB_INIT", false);
+
+        if (!runDbInit)
             return app;
 
         try
@@ -48,9 +52,16 @@ public static class ApplicationBuilderExtensions
         if (app.Environment.IsDevelopment())
         {
             app.UseClinicaSwagger();
+            app.UseHttpsRedirection();
         }
-
-        app.UseHttpsRedirection();
+        else
+        {
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor
+                    | ForwardedHeaders.XForwardedProto,
+            });
+        }
 
         app.UseCors("Frontend");
 
