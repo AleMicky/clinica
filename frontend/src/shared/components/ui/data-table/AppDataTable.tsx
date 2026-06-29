@@ -24,6 +24,7 @@ type AppDataTableProps<TData> = {
     pagination?: AppDataTablePagination
     selectedRowId?: string
     onRowClick?: (row: TData) => void
+    className?: string
 }
 
 export function AppDataTable<TData>({
@@ -35,6 +36,7 @@ export function AppDataTable<TData>({
     pagination,
     selectedRowId,
     onRowClick,
+    className,
 }: AppDataTableProps<TData>) {
     const pageCount = pagination
         ? Math.max(1, Math.ceil(pagination.total / pagination.pageSize))
@@ -68,7 +70,7 @@ export function AppDataTable<TData>({
     }, [pagination])
 
     return (
-        <div className="app-data-table">
+        <div className={['app-data-table', className].filter(Boolean).join(' ')}>
             <Spin spinning={loading}>
                 <div className="app-data-table__wrapper">
                     <table className="app-data-table__table">

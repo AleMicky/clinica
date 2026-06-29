@@ -3,8 +3,23 @@ import {
     createColumnHelper,
     type ColumnDef,
 } from '@tanstack/react-table'
-import { Button, Popconfirm, Space, Tag, Typography } from 'antd'
-import { DeleteOutlined, EditOutlined } from '@ant-design/icons'
+import {
+    Button,
+    Dropdown,
+    Modal,
+    Tag,
+    Tooltip,
+    Typography,
+} from 'antd'
+import type { MenuProps } from 'antd'
+import {
+    DeleteOutlined,
+    EditOutlined,
+    KeyOutlined,
+    LockOutlined,
+    MoreOutlined,
+    UnlockOutlined,
+} from '@ant-design/icons'
 
 import { AppDataTable } from '../../../shared/components/ui/data-table/AppDataTable'
 import type { User } from '../types/user.types'
@@ -18,7 +33,10 @@ type UsersTableProps = {
     onPageChange: (page: number, pageSize: number) => void
     onEdit: (user: User) => void
     onDelete: (user: User) => void
+    onToggleActive: (user: User) => void
     deletingId: string | null
+    togglingId: string | null
+    className?: string
 }
 
 const columnHelper = createColumnHelper<User>()
@@ -52,6 +70,112 @@ function UserIdentityCell({ user }: { user: User }) {
     )
 }
 
+function PersonaCell({ user }: { user: User }) {
+    if (!user.personaId) {
+        return (
+            <Typography.Text type="secondary" className="seguridad-user-cell__persona-empty">
+                Sin persona
+            </Typography.Text>
+        )
+    }
+
+    return (
+        <div className="seguridad-user-cell__persona">
+            <Typography.Text className="seguridad-user-cell__persona-name">
+                {user.personaNombreCompleto ?? user.nombreCompleto}
+            </Typography.Text>
+            {user.personaNumeroDocumento ? (
+                <Typography.Text type="secondary" className="seguridad-user-cell__persona-doc">
+                    {user.personaNumeroDocumento}
+                </Typography.Text>
+            ) : null}
+        </div>
+    )
+}
+
+function UserActionsCell({
+    user,
+    onEdit,
+    onDelete,
+    onToggleActive,
+    deletingId,
+    togglingId,
+}: {
+    user: User
+    onEdit: (user: User) => void
+    onDelete: (user: User) => void
+    onToggleActive: (user: User) => void
+    deletingId: string | null
+    togglingId: string | null
+}) {
+    const isBusy = deletingId === user.id || togglingId === user.id
+
+    const handleDeleteClick = () => {
+        Modal.confirm({
+            title: 'Desactivar usuario',
+            content: `¿Desea desactivar al usuario "${user.userName}"?`,
+            okText: 'Desactivar',
+            cancelText: 'Cancelar',
+            okButtonProps: { danger: true },
+            onOk: () => onDelete(user),
+        })
+    }
+
+    const menuItems: MenuProps['items'] = [
+        {
+            key: 'edit',
+            icon: <EditOutlined />,
+            label: 'Editar',
+            onClick: () => onEdit(user),
+        },
+        {
+            key: 'toggle',
+            icon: user.activo ? <LockOutlined /> : <UnlockOutlined />,
+            label: user.activo ? 'Bloquear' : 'Activar',
+            disabled: isBusy,
+            onClick: () => onToggleActive(user),
+        },
+        {
+            key: 'reset',
+            icon: <KeyOutlined />,
+            label: (
+                <Tooltip title="Función no disponible aún">
+                    <span>Restablecer contraseña</span>
+                </Tooltip>
+            ),
+            disabled: true,
+        },
+        { type: 'divider' },
+        {
+            key: 'delete',
+            icon: <DeleteOutlined />,
+            label: 'Desactivar',
+            danger: true,
+            disabled: !user.activo || isBusy,
+            onClick: handleDeleteClick,
+        },
+    ]
+
+    return (
+        <div className="seguridad-user-actions">
+            <Dropdown
+                menu={{ items: menuItems }}
+                trigger={['click']}
+                placement="bottomRight"
+            >
+                <Button
+                    type="text"
+                    size="small"
+                    icon={<MoreOutlined />}
+                    loading={isBusy}
+                    aria-label={`Acciones para ${user.userName}`}
+                    className="seguridad-user-actions__trigger"
+                />
+            </Dropdown>
+        </div>
+    )
+}
+
 export function UsersTable({
     users,
     loading,
@@ -61,7 +185,10 @@ export function UsersTable({
     onPageChange,
     onEdit,
     onDelete,
+    onToggleActive,
     deletingId,
+    togglingId,
+    className,
 }: UsersTableProps) {
     const columns = useMemo(
         () => [
@@ -72,98 +199,71 @@ export function UsersTable({
             }),
             columnHelper.display({
                 id: 'persona',
-                header: 'Persona',
-                cell: ({ row }) => {
-                    const user = row.original
+                header: 'Persona asociada',
+                cell: ({ row }) => <PersonaCell user={row.original} />,
+            }),
+            columnHelper.accessor('roles', {
+                header: 'Rol',
+                size: 140,
+                cell: ({ getValue }) => {
+                    const roles = getValue()
 
-                    if (!user.personaId) {
+                    if (roles.length === 0) {
                         return <Typography.Text type="secondary">—</Typography.Text>
                     }
 
                     return (
-                        <span>
-                            <Typography.Text>
-                                {user.personaNombreCompleto ?? user.nombreCompleto}
-                            </Typography.Text>
-                            {user.personaNumeroDocumento ? (
-                                <Typography.Text type="secondary" className="seguridad-user-cell__username">
-                                    {' '}
-                                    · {user.personaNumeroDocumento}
-                                </Typography.Text>
-                            ) : null}
-                        </span>
+                        <div className="seguridad-user-cell__roles">
+                            {roles.map((role) => (
+                                <Tag key={role} className="seguridad-role-tag">
+                                    {role}
+                                </Tag>
+                            ))}
+                        </div>
                     )
-                },
-            }),
-            columnHelper.accessor('roles', {
-                header: 'Rol',
-                cell: ({ getValue }) => {
-                    const role = getValue()[0]
-
-                    if (!role) return '—'
-
-                    return <Tag className="seguridad-role-tag">{role}</Tag>
                 },
             }),
             columnHelper.accessor('activo', {
                 header: 'Estado',
-                size: 120,
+                size: 100,
                 cell: ({ getValue }) => (
-                    <Tag color={getValue() ? 'success' : 'default'}>
+                    <Tag
+                        className={
+                            getValue()
+                                ? 'seguridad-status-tag seguridad-status-tag--active'
+                                : 'seguridad-status-tag seguridad-status-tag--inactive'
+                        }
+                    >
                         {getValue() ? 'Activo' : 'Inactivo'}
                     </Tag>
                 ),
             }),
             columnHelper.display({
                 id: 'actions',
-                header: 'Acciones',
-                size: 140,
+                header: '',
+                size: 56,
                 meta: {
                     align: 'right',
                     headerAlign: 'right',
                 },
-                cell: ({ row }) => {
-                    const user = row.original
-
-                    return (
-                        <Space size="small">
-                            <Button
-                                type="text"
-                                icon={<EditOutlined />}
-                                aria-label={`Editar ${user.userName}`}
-                                onClick={() => onEdit(user)}
-                            />
-                            <Popconfirm
-                                title="Desactivar usuario"
-                                description={`¿Desea desactivar al usuario "${user.userName}"?`}
-                                okText="Desactivar"
-                                cancelText="Cancelar"
-                                okButtonProps={{
-                                    danger: true,
-                                    loading: deletingId === user.id,
-                                }}
-                                disabled={!user.activo}
-                                onConfirm={() => onDelete(user)}
-                            >
-                                <Button
-                                    type="text"
-                                    danger
-                                    icon={<DeleteOutlined />}
-                                    aria-label={`Desactivar ${user.userName}`}
-                                    loading={deletingId === user.id}
-                                    disabled={!user.activo}
-                                />
-                            </Popconfirm>
-                        </Space>
-                    )
-                },
+                cell: ({ row }) => (
+                    <UserActionsCell
+                        user={row.original}
+                        onEdit={onEdit}
+                        onDelete={onDelete}
+                        onToggleActive={onToggleActive}
+                        deletingId={deletingId}
+                        togglingId={togglingId}
+                    />
+                ),
             }),
-        ] as ColumnDef<User, any>[],
-        [onEdit, onDelete, deletingId],
+        ] as ColumnDef<User, unknown>[],
+        [onEdit, onDelete, onToggleActive, deletingId, togglingId],
     )
 
     return (
         <AppDataTable
+            className={className}
             data={users}
             columns={columns}
             loading={loading}

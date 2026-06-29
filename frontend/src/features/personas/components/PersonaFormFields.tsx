@@ -1,12 +1,15 @@
-import { Col, Form, Input, Row, Select } from 'antd'
+import { Col, Form, Input, Row, Select, Typography } from 'antd'
 
 import { useCatalogoGruposGrouped } from '../../parametros/catalogos/hooks/catalogo-grupos.hooks'
+
+const { Text } = Typography
 
 type PersonaFormFieldsProps = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     form: any
     loading?: boolean
     fieldPrefix?: string
+    variant?: 'default' | 'sections'
 }
 
 function getFieldError(errors: unknown[]) {
@@ -37,10 +40,19 @@ function fieldName(prefix: string | undefined, name: string) {
     return prefix ? `${prefix}.${name}` : name
 }
 
+function SectionTitle({ children }: { children: React.ReactNode }) {
+    return (
+        <Col span={24}>
+            <Text className="usuario-drawer__section-title">{children}</Text>
+        </Col>
+    )
+}
+
 export function PersonaFormFields({
     form,
     loading = false,
     fieldPrefix,
+    variant = 'default',
 }: PersonaFormFieldsProps) {
     const { data: catalogos, isFetching: loadingCatalogos } = useCatalogoGruposGrouped()
 
@@ -50,10 +62,15 @@ export function PersonaFormFields({
     const estadoCivilOptions = getCatalogoOptions(catalogos, 'ESTADO_CIVIL')
 
     const disabled = loading || loadingCatalogos
+    const showSections = variant === 'sections'
+    const gutter: [number, number] = showSections ? [12, 0] : [12, 0]
+    const colProps = showSections ? { xs: 24, sm: 12 } : { xs: 24, sm: 12 }
 
     return (
-        <Row gutter={12}>
-            <Col xs={24} sm={12}>
+        <Row gutter={gutter}>
+            {showSections ? <SectionTitle>Documento</SectionTitle> : null}
+
+            <Col {...colProps}>
                 <form.Field name={fieldName(fieldPrefix, 'tipoDocumentoId')}>
                     {(field: { state: { value: string; meta: { errors: unknown[] } }; handleChange: (v: string) => void; handleBlur: () => void }) => {
                         const error = getFieldError(field.state.meta.errors)
@@ -61,6 +78,7 @@ export function PersonaFormFields({
                         return (
                             <Form.Item
                                 label="Tipo de documento"
+                                required
                                 validateStatus={error ? 'error' : undefined}
                                 help={error || undefined}
                             >
@@ -80,7 +98,7 @@ export function PersonaFormFields({
                 </form.Field>
             </Col>
 
-            <Col xs={24} sm={12}>
+            <Col {...colProps}>
                 <form.Field name={fieldName(fieldPrefix, 'numeroDocumento')}>
                     {(field: { state: { value: string; meta: { errors: unknown[] } }; handleChange: (v: string) => void; handleBlur: () => void }) => {
                         const error = getFieldError(field.state.meta.errors)
@@ -88,6 +106,7 @@ export function PersonaFormFields({
                         return (
                             <Form.Item
                                 label="Número de documento"
+                                required
                                 validateStatus={error ? 'error' : undefined}
                                 help={error || undefined}
                             >
@@ -106,7 +125,7 @@ export function PersonaFormFields({
                 </form.Field>
             </Col>
 
-            <Col xs={24} sm={12}>
+            <Col {...colProps}>
                 <form.Field name={fieldName(fieldPrefix, 'extensionDocumentoId')}>
                     {(field: { state: { value: string }; handleChange: (v: string) => void; handleBlur: () => void }) => (
                         <Form.Item label="Extensión">
@@ -126,7 +145,7 @@ export function PersonaFormFields({
                 </form.Field>
             </Col>
 
-            <Col xs={24} sm={12}>
+            <Col {...colProps}>
                 <form.Field name={fieldName(fieldPrefix, 'complementoDocumento')}>
                     {(field: { state: { value: string }; handleChange: (v: string) => void; handleBlur: () => void }) => (
                         <Form.Item label="Complemento">
@@ -144,7 +163,9 @@ export function PersonaFormFields({
                 </form.Field>
             </Col>
 
-            <Col xs={24} sm={12}>
+            {showSections ? <SectionTitle>Datos personales</SectionTitle> : null}
+
+            <Col {...colProps}>
                 <form.Field name={fieldName(fieldPrefix, 'nombres')}>
                     {(field: { state: { value: string; meta: { errors: unknown[] } }; handleChange: (v: string) => void; handleBlur: () => void }) => {
                         const error = getFieldError(field.state.meta.errors)
@@ -152,6 +173,7 @@ export function PersonaFormFields({
                         return (
                             <Form.Item
                                 label="Nombres"
+                                required
                                 validateStatus={error ? 'error' : undefined}
                                 help={error || undefined}
                             >
@@ -170,7 +192,7 @@ export function PersonaFormFields({
                 </form.Field>
             </Col>
 
-            <Col xs={24} sm={12}>
+            <Col {...colProps}>
                 <form.Field name={fieldName(fieldPrefix, 'apellidoPaterno')}>
                     {(field: { state: { value: string; meta: { errors: unknown[] } }; handleChange: (v: string) => void; handleBlur: () => void }) => {
                         const error = getFieldError(field.state.meta.errors)
@@ -178,6 +200,7 @@ export function PersonaFormFields({
                         return (
                             <Form.Item
                                 label="Apellido paterno"
+                                required
                                 validateStatus={error ? 'error' : undefined}
                                 help={error || undefined}
                             >
@@ -196,7 +219,7 @@ export function PersonaFormFields({
                 </form.Field>
             </Col>
 
-            <Col xs={24} sm={12}>
+            <Col {...colProps}>
                 <form.Field name={fieldName(fieldPrefix, 'apellidoMaterno')}>
                     {(field: { state: { value: string }; handleChange: (v: string) => void; handleBlur: () => void }) => (
                         <Form.Item label="Apellido materno">
@@ -214,7 +237,7 @@ export function PersonaFormFields({
                 </form.Field>
             </Col>
 
-            <Col xs={24} sm={12}>
+            <Col {...colProps}>
                 <form.Field name={fieldName(fieldPrefix, 'fechaNacimiento')}>
                     {(field: { state: { value: string; meta: { errors: unknown[] } }; handleChange: (v: string) => void; handleBlur: () => void }) => {
                         const error = getFieldError(field.state.meta.errors)
@@ -222,6 +245,7 @@ export function PersonaFormFields({
                         return (
                             <Form.Item
                                 label="Fecha de nacimiento"
+                                required
                                 validateStatus={error ? 'error' : undefined}
                                 help={error || undefined}
                             >
@@ -240,7 +264,7 @@ export function PersonaFormFields({
                 </form.Field>
             </Col>
 
-            <Col xs={24} sm={12}>
+            <Col {...colProps}>
                 <form.Field name={fieldName(fieldPrefix, 'sexoId')}>
                     {(field: { state: { value: string; meta: { errors: unknown[] } }; handleChange: (v: string) => void; handleBlur: () => void }) => {
                         const error = getFieldError(field.state.meta.errors)
@@ -248,6 +272,7 @@ export function PersonaFormFields({
                         return (
                             <Form.Item
                                 label="Sexo"
+                                required
                                 validateStatus={error ? 'error' : undefined}
                                 help={error || undefined}
                             >
@@ -267,7 +292,7 @@ export function PersonaFormFields({
                 </form.Field>
             </Col>
 
-            <Col xs={24} sm={12}>
+            <Col {...colProps}>
                 <form.Field name={fieldName(fieldPrefix, 'estadoCivilId')}>
                     {(field: { state: { value: string; meta: { errors: unknown[] } }; handleChange: (v: string) => void; handleBlur: () => void }) => {
                         const error = getFieldError(field.state.meta.errors)
@@ -275,6 +300,7 @@ export function PersonaFormFields({
                         return (
                             <Form.Item
                                 label="Estado civil"
+                                required
                                 validateStatus={error ? 'error' : undefined}
                                 help={error || undefined}
                             >
@@ -294,7 +320,9 @@ export function PersonaFormFields({
                 </form.Field>
             </Col>
 
-            <Col xs={24} sm={12}>
+            {showSections ? <SectionTitle>Contacto</SectionTitle> : null}
+
+            <Col {...colProps}>
                 <form.Field name={fieldName(fieldPrefix, 'telefono')}>
                     {(field: { state: { value: string; meta: { errors: unknown[] } }; handleChange: (v: string) => void; handleBlur: () => void }) => {
                         const error = getFieldError(field.state.meta.errors)
@@ -302,6 +330,7 @@ export function PersonaFormFields({
                         return (
                             <Form.Item
                                 label="Teléfono"
+                                required
                                 validateStatus={error ? 'error' : undefined}
                                 help={error || undefined}
                             >
@@ -320,7 +349,7 @@ export function PersonaFormFields({
                 </form.Field>
             </Col>
 
-            <Col xs={24}>
+            <Col span={24}>
                 <form.Field name={fieldName(fieldPrefix, 'direccion')}>
                     {(field: { state: { value: string; meta: { errors: unknown[] } }; handleChange: (v: string) => void; handleBlur: () => void }) => {
                         const error = getFieldError(field.state.meta.errors)
@@ -328,11 +357,12 @@ export function PersonaFormFields({
                         return (
                             <Form.Item
                                 label="Dirección"
+                                required
                                 validateStatus={error ? 'error' : undefined}
                                 help={error || undefined}
                             >
                                 <Input.TextArea
-                                    rows={2}
+                                    rows={showSections ? 2 : 2}
                                     placeholder="Dirección de domicilio"
                                     value={field.state.value}
                                     onChange={(event) =>

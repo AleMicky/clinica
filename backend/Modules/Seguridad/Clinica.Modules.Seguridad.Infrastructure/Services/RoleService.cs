@@ -14,11 +14,9 @@ public class RoleService(
 ) : IRoleService
 {
     private static readonly HashSet<string> SystemRoles =
-    [
-        SeguridadRoles.Administrador,
-        SeguridadRoles.Medico,
-        SeguridadRoles.Recepcionista
-    ];
+        SeguridadRoles.Definitions
+            .Select(definition => definition.Name)
+            .ToHashSet(StringComparer.Ordinal);
 
     public async Task<RoleResponse> CreateAsync(
         CreateRoleRequest request,

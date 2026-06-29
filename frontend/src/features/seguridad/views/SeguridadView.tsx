@@ -23,27 +23,43 @@ export function SeguridadView() {
     const totalRoles = rolesData?.totalRecords ?? 0
 
     return (
-        <ModuleObjectPage
-            icon={<SafetyCertificateOutlined />}
-            title="Seguridad"
-            subtitle="Usuarios, roles y control de acceso al sistema"
-            stats={[
-                {
-                    icon: <TeamOutlined />,
-                    label: isLoadingUsers ? '…' : `${totalUsers} usuarios`,
-                },
-                {
-                    icon: <SafetyCertificateOutlined />,
-                    label: isLoadingRoles ? '…' : `${totalRoles} roles`,
-                },
-            ]}
-            activeSection={
-                activeSection
-                    ? { icon: activeSection.icon, title: activeSection.title }
-                    : null
-            }
-        >
-            <Outlet />
-        </ModuleObjectPage>
+        <div className="seguridad-module">
+            <ModuleObjectPage
+                icon={<SafetyCertificateOutlined />}
+                title="Seguridad"
+                subtitle="Usuarios, roles y control de acceso al sistema"
+                stats={[
+                    {
+                        icon: <TeamOutlined />,
+                        label: isLoadingUsers ? (
+                            '…'
+                        ) : (
+                            <>
+                                <span className="seguridad-module__stat-value">{totalUsers}</span>
+                                <span className="seguridad-module__stat-label">usuarios</span>
+                            </>
+                        ),
+                    },
+                    {
+                        icon: <SafetyCertificateOutlined />,
+                        label: isLoadingRoles ? (
+                            '…'
+                        ) : (
+                            <>
+                                <span className="seguridad-module__stat-value">{totalRoles}</span>
+                                <span className="seguridad-module__stat-label">roles</span>
+                            </>
+                        ),
+                    },
+                ]}
+                activeSection={
+                    activeSection
+                        ? { icon: activeSection.icon, title: activeSection.title }
+                        : null
+                }
+            >
+                <Outlet />
+            </ModuleObjectPage>
+        </div>
     )
 }

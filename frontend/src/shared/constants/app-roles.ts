@@ -3,6 +3,10 @@ export const AppRole = {
     Admin: 'Administrador',
     Medico: 'Medico',
     Recepcion: 'Recepcionista',
+    Enfermeria: 'Enfermeria',
+    Farmacia: 'Farmacia',
+    Laboratorio: 'Laboratorio',
+    RecursosHumanos: 'RecursosHumanos',
 } as const
 
 export type AppRoleName = (typeof AppRole)[keyof typeof AppRole]

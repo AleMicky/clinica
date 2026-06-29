@@ -30,31 +30,46 @@ public static class IdentitySeeder
 
     private static async Task SeedRolesAsync(RoleManager<ApplicationRole> roleManager, ILogger logger)
     {
-        var roles = new[]
+        foreach (var (name, descripcion) in SeguridadRoles.Definitions)
         {
-            (SeguridadRoles.Administrador, "Acceso total al sistema"),
-            (SeguridadRoles.Medico, "Personal médico"),
-            (SeguridadRoles.Recepcionista, "Personal de recepción")
-        };
+            var existing = await roleManager.FindByNameAsync(name);
 
-        foreach (var (name, descripcion) in roles)
-        {
-            if (await roleManager.RoleExistsAsync(name))
+            if (existing is null)
+            {
+                var result = await roleManager.CreateAsync(new ApplicationRole
+                {
+                    Id = Guid.NewGuid(),
+                    Name = name,
+                    NormalizedName = name.ToUpperInvariant(),
+                    Descripcion = descripcion
+                });
+
+                if (result.Succeeded)
+                {
+                    logger.LogInformation("Rol '{Role}' creado.", name);
+                }
+                else
+                {
+                    logger.LogWarning(
+                        "No se pudo crear el rol '{Role}': {Errors}",
+                        name,
+                        string.Join("; ", result.Errors.Select(e => e.Description)));
+                }
+
+                continue;
+            }
+
+            if (string.Equals(existing.Descripcion, descripcion, StringComparison.Ordinal))
             {
                 continue;
             }
 
-            var result = await roleManager.CreateAsync(new ApplicationRole
-            {
-                Id = Guid.NewGuid(),
-                Name = name,
-                NormalizedName = name.ToUpperInvariant(),
-                Descripcion = descripcion
-            });
+            existing.Descripcion = descripcion;
+            var updateResult = await roleManager.UpdateAsync(existing);
 
-            if (result.Succeeded)
+            if (updateResult.Succeeded)
             {
-                logger.LogInformation("Rol '{Role}' creado.", name);
+                logger.LogInformation("Descripción del rol '{Role}' actualizada.", name);
             }
         }
     }
@@ -71,6 +86,7 @@ public static class IdentitySeeder
         var existing = await userManager.FindByNameAsync(adminUserName);
         if (existing is not null)
         {
+            await EnsureUserInRoleAsync(userManager, existing, SeguridadRoles.Administrador, logger);
             return;
         }
 
@@ -82,6 +98,7 @@ public static class IdentitySeeder
             if (updateResult.Succeeded)
             {
                 logger.LogInformation("Usuario admin migrado al nombre de usuario '{UserName}'.", adminUserName);
+                await EnsureUserInRoleAsync(userManager, legacyAdmin, SeguridadRoles.Administrador, logger);
             }
 
             return;
@@ -106,5 +123,27 @@ public static class IdentitySeeder
 
         await userManager.AddToRoleAsync(admin, SeguridadRoles.Administrador);
         logger.LogInformation("Usuario administrador '{UserName}' creado.", adminUserName);
+    }
+
+    private static async Task EnsureUserInRoleAsync(
+        UserManager<ApplicationUser> userManager,
+        ApplicationUser user,
+        string roleName,
+        ILogger logger)
+    {
+        if (await userManager.IsInRoleAsync(user, roleName))
+        {
+            return;
+        }
+
+        var result = await userManager.AddToRoleAsync(user, roleName);
+
+        if (result.Succeeded)
+        {
+            logger.LogInformation(
+                "Rol '{Role}' asignado al usuario '{UserName}'.",
+                roleName,
+                user.UserName);
+        }
     }
 }
