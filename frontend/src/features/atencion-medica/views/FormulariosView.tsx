@@ -623,7 +623,7 @@ export function FormulariosView() {
                                                                   {formulario.nombre}
                                                               </Text>
                                                               <Tag
-                                                                  bordered={false}
+                                                                  variant="filled"
                                                                   className="formularios-view__item-tag"
                                                               >
                                                                   {formulario.codigo}
@@ -694,7 +694,7 @@ export function FormulariosView() {
                     {selectedFormulario ? (
                         <>
                             <div className="formularios-view__context-bar">
-                                <Tag bordered={false} className="formularios-view__context-code">
+                                <Tag variant="filled" className="formularios-view__context-code">
                                     {selectedFormulario.codigo}
                                 </Tag>
                                 <div className="formularios-view__context-text">
@@ -873,7 +873,7 @@ export function FormulariosView() {
                 title={editingFormulario ? 'Editar formulario' : 'Nuevo formulario'}
                 open={formularioDrawer}
                 onClose={() => setFormularioDrawer(false)}
-                width={420}
+                size={420}
                 destroyOnClose
                 className="formularios-view__drawer"
                 footer={
@@ -936,7 +936,7 @@ export function FormulariosView() {
                 title={editingSeccion ? 'Editar sección' : 'Nueva sección'}
                 open={seccionDrawer}
                 onClose={() => setSeccionDrawer(false)}
-                width={400}
+                size={400}
                 destroyOnClose
                 className="formularios-view__drawer"
                 footer={
@@ -981,7 +981,7 @@ export function FormulariosView() {
                 title={editingCampo ? 'Editar campo' : 'Nuevo campo'}
                 open={campoDrawer}
                 onClose={() => setCampoDrawer(false)}
-                width={440}
+                size={440}
                 destroyOnClose
                 className="formularios-view__drawer"
                 footer={

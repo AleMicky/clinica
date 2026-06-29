@@ -1,9 +1,13 @@
-import { useEffect, useState } from 'react'
 import { Drawer, Grid, Layout, theme } from 'antd'
 import { Outlet } from '@tanstack/react-router'
 
 import { AppHeader } from '../shared/components/ui/header/AppHeader'
-import { AppSidebar } from '../shared/components/ui/sidebar/AppSidebar'
+import {
+    AppSidebar,
+    SIDEBAR_COLLAPSED_WIDTH,
+    SIDEBAR_WIDTH,
+} from '../shared/components/ui/sidebar/AppSidebar'
+import { useSidebarPersistence } from '../shared/components/ui/sidebar/useSidebarPersistence'
 
 const { Content } = Layout
 const { useBreakpoint } = Grid
@@ -11,20 +15,25 @@ const { useBreakpoint } = Grid
 export function AdminLayout() {
     const screens = useBreakpoint()
     const isMobile = !screens.lg
-    const [collapsed, setCollapsed] = useState(false)
+    const { collapsed, setCollapsed, toggleSidebar } = useSidebarPersistence(isMobile)
     const { token } = theme.useToken()
 
-    useEffect(() => {
-        setCollapsed(isMobile)
-    }, [isMobile])
-
-    const toggleSidebar = () => setCollapsed((prev) => !prev)
     const closeMobileSidebar = () => setCollapsed(true)
+
+    const mainOffset = isMobile
+        ? 0
+        : collapsed
+          ? SIDEBAR_COLLAPSED_WIDTH
+          : SIDEBAR_WIDTH
 
     return (
         <Layout className="admin-layout" style={{ minHeight: '100vh' }}>
             {!isMobile && (
-                <AppSidebar collapsed={collapsed} isMobile={false} />
+                <AppSidebar
+                    collapsed={collapsed}
+                    isMobile={false}
+                    onToggleSidebar={toggleSidebar}
+                />
             )}
 
             {isMobile && (
@@ -32,7 +41,7 @@ export function AdminLayout() {
                     placement="left"
                     open={!collapsed}
                     onClose={closeMobileSidebar}
-                    width={280}
+                    size={280}
                     className="admin-drawer"
                     styles={{
                         body: { padding: 0 },
@@ -43,11 +52,18 @@ export function AdminLayout() {
                         collapsed={false}
                         isMobile
                         onNavigate={closeMobileSidebar}
+                        onToggleSidebar={closeMobileSidebar}
                     />
                 </Drawer>
             )}
 
-            <Layout className="admin-layout__main">
+            <Layout
+                className="admin-layout__main"
+                style={{
+                    marginLeft: mainOffset,
+                    transition: 'margin-left 0.2s ease',
+                }}
+            >
                 <AppHeader
                     collapsed={collapsed}
                     isMobile={isMobile}

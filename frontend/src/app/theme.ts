@@ -22,7 +22,7 @@ export function getThemeConfig(isDark: boolean): ThemeConfig {
         algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
         token: {
             ...sharedTokens,
-            colorBgLayout: isDark ? '#0d1117' : '#e8ecf1',
+            colorBgLayout: isDark ? '#0d1117' : '#f8fafc',
             colorBgContainer: isDark ? '#161b22' : '#ffffff',
             colorBorder: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(15, 23, 42, 0.1)',
             colorBorderSecondary: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(15, 23, 42, 0.06)',

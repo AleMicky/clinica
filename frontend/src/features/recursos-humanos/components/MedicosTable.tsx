@@ -68,7 +68,7 @@ export function MedicosTable({
                 header: 'Especialidad',
                 size: 140,
                 cell: ({ row }) => (
-                    <Tag bordered={false} className="rrhh-page__date-tag">
+                    <Tag variant="filled" className="rrhh-page__date-tag">
                         {row.original.especialidadNombre}
                     </Tag>
                 ),

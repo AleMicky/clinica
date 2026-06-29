@@ -16,7 +16,7 @@ export function WorkflowStateDrawer({ open, state, onClose, onEdit }: WorkflowSt
             title="Detalle del estado"
             open={open}
             onClose={onClose}
-            width={460}
+            size={460}
             destroyOnHidden
             className="workflow-drawer workflow-drawer--detail"
             footer={

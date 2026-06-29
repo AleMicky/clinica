@@ -87,7 +87,7 @@ export function EmpleadosTable({
                 header: 'Ingreso',
                 size: 100,
                 cell: ({ getValue }) => (
-                    <Tag bordered={false} className="rrhh-page__date-tag">
+                    <Tag variant="filled" className="rrhh-page__date-tag">
                         {formatDate(getValue())}
                     </Tag>
                 ),

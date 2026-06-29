@@ -1,16 +1,20 @@
 import type { MenuProps } from 'antd'
 import type { FileRouteTypes } from '../../../../routeTree.gen'
 import {
+    ApartmentOutlined,
     DashboardOutlined,
     ExperimentOutlined,
     FileTextOutlined,
+    FlagOutlined,
     FormOutlined,
+    HistoryOutlined,
     IdcardOutlined,
     MedicineBoxOutlined,
     NodeIndexOutlined,
     SafetyCertificateOutlined,
     ControlOutlined,
     SolutionOutlined,
+    SwapOutlined,
     TeamOutlined,
     UnorderedListOutlined,
     UserOutlined,
@@ -202,6 +206,34 @@ export const menuGroups: MenuGroup[] = [
                 label: 'Definiciones de workflow',
                 roles: [AppRole.Admin],
             },
+            {
+                key: 'workflow-flow-view',
+                icon: <ApartmentOutlined />,
+                label: 'Vista del flujo',
+                roles: [AppRole.Admin],
+                disabled: true,
+            },
+            {
+                key: 'workflow-states',
+                icon: <FlagOutlined />,
+                label: 'Estados',
+                roles: [AppRole.Admin],
+                disabled: true,
+            },
+            {
+                key: 'workflow-transitions',
+                icon: <SwapOutlined />,
+                label: 'Transiciones',
+                roles: [AppRole.Admin],
+                disabled: true,
+            },
+            {
+                key: 'workflow-history',
+                icon: <HistoryOutlined />,
+                label: 'Historial',
+                roles: [AppRole.Admin],
+                disabled: true,
+            },
         ],
     },
 ]
@@ -223,6 +255,35 @@ export function filterMenuGroups(
 
 export function getMenuGroupsForUser(userRoles: string[] = []): MenuGroup[] {
     return filterMenuGroups(menuGroups, userRoles)
+}
+
+export function filterMenuGroupsBySearch(
+    groups: MenuGroup[],
+    query: string,
+): MenuGroup[] {
+    const normalized = query.trim().toLowerCase()
+    if (!normalized) return groups
+
+    return groups
+        .map((group) => {
+            const groupMatches = group.label.toLowerCase().includes(normalized)
+            const items = groupMatches
+                ? group.items
+                : group.items.filter((item) =>
+                      item.label.toLowerCase().includes(normalized),
+                  )
+
+            return { ...group, items }
+        })
+        .filter((group) => group.items.length > 0)
+}
+
+export function getFilteredMenuGroupsForUser(
+    userRoles: string[] = [],
+    searchQuery = '',
+): MenuGroup[] {
+    const groups = getMenuGroupsForUser(userRoles)
+    return filterMenuGroupsBySearch(groups, searchQuery)
 }
 
 type AntMenuItemEntry = {

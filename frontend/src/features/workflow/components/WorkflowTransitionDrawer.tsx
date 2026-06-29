@@ -194,7 +194,7 @@ export function WorkflowTransitionDrawer({
             onClose={() => {
                 if (!loading && !deleting) onClose()
             }}
-            width={480}
+            size={480}
             destroyOnHidden
             className="workflow-drawer workflow-drawer--transition"
             footer={

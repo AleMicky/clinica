@@ -50,7 +50,7 @@ export function DashboardView() {
                             {formatToday()}
                         </Text>
                         {primaryRole && (
-                            <Tag bordered={false} className="erp-launchpad__role-tag">
+                            <Tag variant="filled" className="erp-launchpad__role-tag">
                                 {primaryRole}
                             </Tag>
                         )}

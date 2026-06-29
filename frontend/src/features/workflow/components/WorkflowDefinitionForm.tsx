@@ -91,7 +91,7 @@ export function WorkflowDefinitionForm({
             onClose={() => {
                 if (!loading) onClose()
             }}
-            width={520}
+            size={520}
             destroyOnHidden
             className="workflow-drawer"
             footer={

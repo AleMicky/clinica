@@ -208,7 +208,7 @@ export function AppHeader({ collapsed, isMobile, onToggleSidebar }: AppHeaderPro
                                     {user?.nombreCompleto}
                                 </Text>
                                 {primaryRole && (
-                                    <Tag bordered={false} className="admin-header__user-role">
+                                    <Tag variant="filled" className="admin-header__user-role">
                                         {primaryRole}
                                     </Tag>
                                 )}
