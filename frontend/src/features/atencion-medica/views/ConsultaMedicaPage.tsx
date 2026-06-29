@@ -1,14 +1,22 @@
-import { MedicineBoxOutlined } from '@ant-design/icons'
-import { Card, Flex, Space, Typography, theme } from 'antd'
+import { MedicineBoxOutlined, ReloadOutlined } from '@ant-design/icons'
+import { Alert, Button, Card, Flex, Space, Typography, theme } from 'antd'
 
 import { BandejaAtencionesTable } from '../components/BandejaAtencionesTable'
 import { useConsultaMedicaPendientes } from '../hooks/useBandejaAtenciones'
+import { getApiErrorMessage } from '../../../shared/utils/api-error'
 
 const { Title, Text } = Typography
 
 export function ConsultaMedicaPage() {
     const { token } = theme.useToken()
-    const { data: pendientes, isFetching } = useConsultaMedicaPendientes()
+    const {
+        data: pendientes,
+        isFetching,
+        isError,
+        error,
+        refetch,
+        isRefetching,
+    } = useConsultaMedicaPendientes()
 
     return (
         <Space orientation="vertical" size="large" style={{ width: '100%' }}>
@@ -23,6 +31,25 @@ export function ConsultaMedicaPage() {
                     </Text>
                 </div>
             </Flex>
+
+            {isError ? (
+                <Alert
+                    type="error"
+                    showIcon
+                    title="No se pudo cargar la bandeja de consulta médica"
+                    description={getApiErrorMessage(error)}
+                    action={
+                        <Button
+                            size="small"
+                            icon={<ReloadOutlined />}
+                            loading={isRefetching}
+                            onClick={() => void refetch()}
+                        >
+                            Reintentar
+                        </Button>
+                    }
+                />
+            ) : null}
 
             <Card
                 size="small"

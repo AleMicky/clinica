@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { Button, Space, Table, Tag, Typography } from 'antd'
 import { RightOutlined } from '@ant-design/icons'
 
@@ -17,6 +17,8 @@ export function BandejaAtencionesTable({
     loading,
     workbenchTo,
 }: BandejaAtencionesTableProps) {
+    const navigate = useNavigate()
+
     return (
         <Table
             size="small"
@@ -62,11 +64,19 @@ export function BandejaAtencionesTable({
                     key: 'acciones',
                     width: 120,
                     render: (_, record) => (
-                        <Link to={workbenchTo} params={{ atencionId: record.id }}>
-                            <Button type="link" size="small" icon={<RightOutlined />}>
-                                Atender
-                            </Button>
-                        </Link>
+                        <Button
+                            type="link"
+                            size="small"
+                            icon={<RightOutlined />}
+                            onClick={() =>
+                                void navigate({
+                                    to: workbenchTo,
+                                    params: { atencionId: record.id },
+                                })
+                            }
+                        >
+                            Atender
+                        </Button>
                     ),
                 },
             ]}

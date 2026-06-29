@@ -43,6 +43,8 @@ import { Route as AdminAtencionesAtencionIdRouteImport } from './routes/_admin/a
 import { Route as AdminAtencionMedicaRecepcionRouteImport } from './routes/_admin/atencion-medica/recepcion'
 import { Route as AdminAtencionMedicaEnfermeriaRouteImport } from './routes/_admin/atencion-medica/enfermeria'
 import { Route as AdminAtencionMedicaConsultaMedicaRouteImport } from './routes/_admin/atencion-medica/consulta-medica'
+import { Route as AdminAtencionMedicaEnfermeriaIndexRouteImport } from './routes/_admin/atencion-medica/enfermeria/index'
+import { Route as AdminAtencionMedicaConsultaMedicaIndexRouteImport } from './routes/_admin/atencion-medica/consulta-medica/index'
 import { Route as AdminWorkflowInstancesInstanceIdRouteImport } from './routes/_admin/workflow/instances/$instanceId'
 import { Route as AdminWorkflowDesignerDefinitionIdRouteImport } from './routes/_admin/workflow/designer/$definitionId'
 import { Route as AdminAtencionMedicaEnfermeriaAtencionIdRouteImport } from './routes/_admin/atencion-medica/enfermeria/$atencionId'
@@ -230,6 +232,18 @@ const AdminAtencionMedicaConsultaMedicaRoute =
     path: '/atencion-medica/consulta-medica',
     getParentRoute: () => AdminRoute,
   } as any)
+const AdminAtencionMedicaEnfermeriaIndexRoute =
+  AdminAtencionMedicaEnfermeriaIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AdminAtencionMedicaEnfermeriaRoute,
+  } as any)
+const AdminAtencionMedicaConsultaMedicaIndexRoute =
+  AdminAtencionMedicaConsultaMedicaIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AdminAtencionMedicaConsultaMedicaRoute,
+  } as any)
 const AdminWorkflowInstancesInstanceIdRoute =
   AdminWorkflowInstancesInstanceIdRouteImport.update({
     id: '/workflow/instances/$instanceId',
@@ -292,12 +306,12 @@ export interface FileRoutesByFullPath {
   '/atencion-medica/enfermeria/$atencionId': typeof AdminAtencionMedicaEnfermeriaAtencionIdRoute
   '/workflow/designer/$definitionId': typeof AdminWorkflowDesignerDefinitionIdRoute
   '/workflow/instances/$instanceId': typeof AdminWorkflowInstancesInstanceIdRoute
+  '/atencion-medica/consulta-medica/': typeof AdminAtencionMedicaConsultaMedicaIndexRoute
+  '/atencion-medica/enfermeria/': typeof AdminAtencionMedicaEnfermeriaIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof AdminIndexRoute
   '/login': typeof AuthLoginRoute
-  '/atencion-medica/consulta-medica': typeof AdminAtencionMedicaConsultaMedicaRouteWithChildren
-  '/atencion-medica/enfermeria': typeof AdminAtencionMedicaEnfermeriaRouteWithChildren
   '/atencion-medica/recepcion': typeof AdminAtencionMedicaRecepcionRoute
   '/atenciones/$atencionId': typeof AdminAtencionesAtencionIdRoute
   '/atenciones/diagnosticos': typeof AdminAtencionesDiagnosticosRoute
@@ -326,6 +340,8 @@ export interface FileRoutesByTo {
   '/atencion-medica/enfermeria/$atencionId': typeof AdminAtencionMedicaEnfermeriaAtencionIdRoute
   '/workflow/designer/$definitionId': typeof AdminWorkflowDesignerDefinitionIdRoute
   '/workflow/instances/$instanceId': typeof AdminWorkflowInstancesInstanceIdRoute
+  '/atencion-medica/consulta-medica': typeof AdminAtencionMedicaConsultaMedicaIndexRoute
+  '/atencion-medica/enfermeria': typeof AdminAtencionMedicaEnfermeriaIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -367,6 +383,8 @@ export interface FileRoutesById {
   '/_admin/atencion-medica/enfermeria/$atencionId': typeof AdminAtencionMedicaEnfermeriaAtencionIdRoute
   '/_admin/workflow/designer/$definitionId': typeof AdminWorkflowDesignerDefinitionIdRoute
   '/_admin/workflow/instances/$instanceId': typeof AdminWorkflowInstancesInstanceIdRoute
+  '/_admin/atencion-medica/consulta-medica/': typeof AdminAtencionMedicaConsultaMedicaIndexRoute
+  '/_admin/atencion-medica/enfermeria/': typeof AdminAtencionMedicaEnfermeriaIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -407,12 +425,12 @@ export interface FileRouteTypes {
     | '/atencion-medica/enfermeria/$atencionId'
     | '/workflow/designer/$definitionId'
     | '/workflow/instances/$instanceId'
+    | '/atencion-medica/consulta-medica/'
+    | '/atencion-medica/enfermeria/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
-    | '/atencion-medica/consulta-medica'
-    | '/atencion-medica/enfermeria'
     | '/atencion-medica/recepcion'
     | '/atenciones/$atencionId'
     | '/atenciones/diagnosticos'
@@ -441,6 +459,8 @@ export interface FileRouteTypes {
     | '/atencion-medica/enfermeria/$atencionId'
     | '/workflow/designer/$definitionId'
     | '/workflow/instances/$instanceId'
+    | '/atencion-medica/consulta-medica'
+    | '/atencion-medica/enfermeria'
   id:
     | '__root__'
     | '/_admin'
@@ -481,6 +501,8 @@ export interface FileRouteTypes {
     | '/_admin/atencion-medica/enfermeria/$atencionId'
     | '/_admin/workflow/designer/$definitionId'
     | '/_admin/workflow/instances/$instanceId'
+    | '/_admin/atencion-medica/consulta-medica/'
+    | '/_admin/atencion-medica/enfermeria/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -728,6 +750,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAtencionMedicaConsultaMedicaRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_admin/atencion-medica/enfermeria/': {
+      id: '/_admin/atencion-medica/enfermeria/'
+      path: '/'
+      fullPath: '/atencion-medica/enfermeria/'
+      preLoaderRoute: typeof AdminAtencionMedicaEnfermeriaIndexRouteImport
+      parentRoute: typeof AdminAtencionMedicaEnfermeriaRoute
+    }
+    '/_admin/atencion-medica/consulta-medica/': {
+      id: '/_admin/atencion-medica/consulta-medica/'
+      path: '/'
+      fullPath: '/atencion-medica/consulta-medica/'
+      preLoaderRoute: typeof AdminAtencionMedicaConsultaMedicaIndexRouteImport
+      parentRoute: typeof AdminAtencionMedicaConsultaMedicaRoute
+    }
     '/_admin/workflow/instances/$instanceId': {
       id: '/_admin/workflow/instances/$instanceId'
       path: '/workflow/instances/$instanceId'
@@ -833,12 +869,15 @@ const AdminSeguridadRouteWithChildren = AdminSeguridadRoute._addFileChildren(
 
 interface AdminAtencionMedicaConsultaMedicaRouteChildren {
   AdminAtencionMedicaConsultaMedicaAtencionIdRoute: typeof AdminAtencionMedicaConsultaMedicaAtencionIdRoute
+  AdminAtencionMedicaConsultaMedicaIndexRoute: typeof AdminAtencionMedicaConsultaMedicaIndexRoute
 }
 
 const AdminAtencionMedicaConsultaMedicaRouteChildren: AdminAtencionMedicaConsultaMedicaRouteChildren =
   {
     AdminAtencionMedicaConsultaMedicaAtencionIdRoute:
       AdminAtencionMedicaConsultaMedicaAtencionIdRoute,
+    AdminAtencionMedicaConsultaMedicaIndexRoute:
+      AdminAtencionMedicaConsultaMedicaIndexRoute,
   }
 
 const AdminAtencionMedicaConsultaMedicaRouteWithChildren =
@@ -848,12 +887,15 @@ const AdminAtencionMedicaConsultaMedicaRouteWithChildren =
 
 interface AdminAtencionMedicaEnfermeriaRouteChildren {
   AdminAtencionMedicaEnfermeriaAtencionIdRoute: typeof AdminAtencionMedicaEnfermeriaAtencionIdRoute
+  AdminAtencionMedicaEnfermeriaIndexRoute: typeof AdminAtencionMedicaEnfermeriaIndexRoute
 }
 
 const AdminAtencionMedicaEnfermeriaRouteChildren: AdminAtencionMedicaEnfermeriaRouteChildren =
   {
     AdminAtencionMedicaEnfermeriaAtencionIdRoute:
       AdminAtencionMedicaEnfermeriaAtencionIdRoute,
+    AdminAtencionMedicaEnfermeriaIndexRoute:
+      AdminAtencionMedicaEnfermeriaIndexRoute,
   }
 
 const AdminAtencionMedicaEnfermeriaRouteWithChildren =

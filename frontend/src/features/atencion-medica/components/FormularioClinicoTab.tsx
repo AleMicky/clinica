@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import {
     Button,
@@ -233,8 +233,8 @@ export function FormularioClinicoTab({ atencion, etapaForzada }: FormularioClini
 
     const formReady = !loadingEstructura && !loadingRespuestas && secciones.length > 0
 
-    useEffect(() => {
-        if (!formReady) return
+    const initialValues = useMemo(() => {
+        if (!formReady) return undefined
 
         const values: Record<string, unknown> = {}
         campos.forEach((campo) => {
@@ -245,8 +245,8 @@ export function FormularioClinicoTab({ atencion, etapaForzada }: FormularioClini
                 campo.valorDefecto ??
                 undefined
         })
-        form.setFieldsValue(values)
-    }, [campos, form, formReady, respuestaMap, tipoCampoMap])
+        return values
+    }, [campos, formReady, respuestaMap, tipoCampoMap])
 
     const handleSave = async () => {
         const values = await form.validateFields()
@@ -293,7 +293,12 @@ export function FormularioClinicoTab({ atencion, etapaForzada }: FormularioClini
     }
 
     return (
-        <Form form={form} layout="vertical">
+        <Form
+            key={`${atencion.id}-${respuestasData?.items.length ?? 0}`}
+            form={form}
+            layout="vertical"
+            initialValues={initialValues}
+        >
             {etapaActual && !etapaForzada ? (
                 <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
                     <Text type="secondary">

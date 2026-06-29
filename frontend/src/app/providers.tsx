@@ -8,6 +8,7 @@ import { router } from './router'
 import { queryClient } from './query-client'
 import { getThemeConfig } from './theme'
 import { useThemeStore } from '../stores/theme.store'
+import { NotificationBridge } from '../shared/components/NotificationBridge'
 
 type AppProvidersProps = {
     children?: ReactNode
@@ -22,7 +23,10 @@ function ThemeProvider({ children }: { children: ReactNode }) {
 
     return (
         <ConfigProvider locale={esES} theme={getThemeConfig(isDark)}>
-            <AntdApp>{children}</AntdApp>
+            <AntdApp>
+                <NotificationBridge />
+                {children}
+            </AntdApp>
         </ConfigProvider>
     )
 }
