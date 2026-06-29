@@ -5,30 +5,29 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Clinica.Modules.Personas.Infrastructure.Persistence.Configurations;
 
-public sealed class MedicoConfiguration : BaseEntityConfiguration<Medico>
+public sealed class MedicoEspecialidadConfiguration : BaseEntityConfiguration<MedicoEspecialidad>
 {
-    public override void Configure(EntityTypeBuilder<Medico> builder)
+    public override void Configure(EntityTypeBuilder<MedicoEspecialidad> builder)
     {
         base.Configure(builder);
 
-        builder.ToTable("Medicos");
+        builder.ToTable("MedicoEspecialidades");
 
-        builder.Property(x => x.MatriculaProfesional)
-            .HasMaxLength(50)
-            .IsRequired();
-
-        builder.HasIndex(x => x.MatriculaProfesional)
+        builder.HasIndex(x => new { x.MedicoId, x.EspecialidadId })
             .IsUnique();
 
-        builder.HasIndex(x => x.EmpleadoId)
+        builder.HasIndex(x => x.MedicoId)
+            .HasFilter("[EsPrincipal] = 1")
             .IsUnique();
 
-        builder.Property(x => x.RegistroColegioMedico)
-            .HasMaxLength(50);
+        builder.HasOne(x => x.Medico)
+            .WithMany(x => x.Especialidades)
+            .HasForeignKey(x => x.MedicoId)
+            .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasOne(x => x.Empleado)
+        builder.HasOne(x => x.Especialidad)
             .WithMany()
-            .HasForeignKey(x => x.EmpleadoId)
+            .HasForeignKey(x => x.EspecialidadId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.Property(x => x.CreatedAt)

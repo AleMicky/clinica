@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useForm } from '@tanstack/react-form'
+import { useForm, useStore } from '@tanstack/react-form'
 import { Col, Form, Input, Modal, Row, Select } from 'antd'
 
 import { useEspecialidades } from '../../catalogo-clinico/hooks/catalogo-clinico.hooks'
@@ -54,6 +54,11 @@ export function MedicoFormModal({
         },
     })
 
+    const selectedEspecialidadIds = useStore(
+        form.store,
+        (state) => state.values.especialidadIds,
+    )
+
     useEffect(() => {
         if (!open) return
 
@@ -61,7 +66,14 @@ export function MedicoFormModal({
 
         if (medico) {
             form.setFieldValue('empleadoId', medico.empleadoId)
-            form.setFieldValue('especialidadId', medico.especialidadId)
+            form.setFieldValue(
+                'especialidadIds',
+                medico.especialidades.map((item) => item.especialidadId),
+            )
+            form.setFieldValue(
+                'especialidadPrincipalId',
+                medico.especialidadPrincipalId,
+            )
             form.setFieldValue('matriculaProfesional', medico.matriculaProfesional)
             form.setFieldValue('registroColegioMedico', medico.registroColegioMedico ?? '')
         }
@@ -79,6 +91,10 @@ export function MedicoFormModal({
             value: especialidad.id,
         })) ?? []
 
+    const principalOptions = especialidadOptions.filter((option) =>
+        selectedEspecialidadIds.includes(option.value),
+    )
+
     const handleClose = () => {
         if (loading) return
         onClose()
@@ -94,7 +110,7 @@ export function MedicoFormModal({
             cancelText="Cancelar"
             confirmLoading={loading}
             destroyOnHidden
-            width={520}
+            width={560}
             className="rrhh-form-modal"
         >
             <Form layout="vertical" requiredMark={false} size="small">
@@ -126,26 +142,86 @@ export function MedicoFormModal({
                         </form.Field>
                     </Col>
 
-                    <Col xs={24} sm={12}>
-                        <form.Field name="especialidadId">
+                    <Col xs={24}>
+                        <form.Field name="especialidadIds">
                             {(field) => {
                                 const error = getFieldError(field.state.meta.errors)
 
                                 return (
                                     <Form.Item
-                                        label="Especialidad"
+                                        label="Especialidades"
                                         validateStatus={error ? 'error' : undefined}
                                         help={error || undefined}
                                     >
                                         <Select
+                                            mode="multiple"
                                             showSearch
                                             optionFilterProp="label"
-                                            placeholder="Seleccionar especialidad"
+                                            placeholder="Seleccionar especialidades"
                                             options={especialidadOptions}
+                                            value={field.state.value}
+                                            onChange={(values) => {
+                                                field.handleChange(values)
+
+                                                const principalId =
+                                                    form.getFieldValue('especialidadPrincipalId')
+
+                                                if (
+                                                    values.length === 1 &&
+                                                    values[0] !== principalId
+                                                ) {
+                                                    form.setFieldValue(
+                                                        'especialidadPrincipalId',
+                                                        values[0],
+                                                    )
+                                                } else if (
+                                                    principalId &&
+                                                    !values.includes(principalId)
+                                                ) {
+                                                    form.setFieldValue(
+                                                        'especialidadPrincipalId',
+                                                        values[0] ?? '',
+                                                    )
+                                                }
+                                            }}
+                                            onBlur={field.handleBlur}
+                                            disabled={loading || loadingEspecialidades}
+                                        />
+                                    </Form.Item>
+                                )
+                            }}
+                        </form.Field>
+                    </Col>
+
+                    <Col xs={24}>
+                        <form.Field name="especialidadPrincipalId">
+                            {(field) => {
+                                const error = getFieldError(field.state.meta.errors)
+
+                                return (
+                                    <Form.Item
+                                        label="Especialidad principal"
+                                        validateStatus={error ? 'error' : undefined}
+                                        help={
+                                            error ||
+                                            (selectedEspecialidadIds.length > 1
+                                                ? 'Se usa como referencia en atención médica.'
+                                                : undefined)
+                                        }
+                                    >
+                                        <Select
+                                            showSearch
+                                            optionFilterProp="label"
+                                            placeholder="Seleccionar especialidad principal"
+                                            options={principalOptions}
                                             value={field.state.value || undefined}
                                             onChange={(value) => field.handleChange(value)}
                                             onBlur={field.handleBlur}
-                                            disabled={loading || loadingEspecialidades}
+                                            disabled={
+                                                loading ||
+                                                loadingEspecialidades ||
+                                                selectedEspecialidadIds.length === 0
+                                            }
                                         />
                                     </Form.Item>
                                 )
@@ -179,7 +255,7 @@ export function MedicoFormModal({
                         </form.Field>
                     </Col>
 
-                    <Col xs={24}>
+                    <Col xs={24} sm={12}>
                         <form.Field name="registroColegioMedico">
                             {(field) => (
                                 <Form.Item label="Registro colegio médico">

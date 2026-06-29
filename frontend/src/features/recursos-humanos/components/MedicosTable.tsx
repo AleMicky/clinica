@@ -53,7 +53,8 @@ export function MedicosTable({
                     <div className="rrhh-page__employee-cell">
                         <Text strong>{row.original.personaNombreCompleto}</Text>
                         <Text type="secondary" className="rrhh-page__employee-meta">
-                            {row.original.empleadoCodigo} · {row.original.especialidadNombre}
+                            {row.original.empleadoCodigo} ·{' '}
+                            {row.original.especialidadPrincipalNombre}
                         </Text>
                     </div>
                 ),
@@ -65,12 +66,22 @@ export function MedicosTable({
             }),
             columnHelper.display({
                 id: 'especialidad',
-                header: 'Especialidad',
-                size: 140,
+                header: 'Especialidades',
+                size: 180,
                 cell: ({ row }) => (
-                    <Tag variant="filled" className="rrhh-page__date-tag">
-                        {row.original.especialidadNombre}
-                    </Tag>
+                    <Space size={[4, 4]} wrap>
+                        {row.original.especialidades.map((especialidad) => (
+                            <Tag
+                                key={especialidad.especialidadId}
+                                variant="filled"
+                                className="rrhh-page__date-tag"
+                                color={especialidad.esPrincipal ? 'blue' : undefined}
+                            >
+                                {especialidad.especialidadNombre}
+                                {especialidad.esPrincipal ? ' · principal' : ''}
+                            </Tag>
+                        ))}
+                    </Space>
                 ),
             }),
             columnHelper.display({

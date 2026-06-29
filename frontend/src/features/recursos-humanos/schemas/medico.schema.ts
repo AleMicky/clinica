@@ -1,25 +1,40 @@
 import { z } from 'zod'
 
-export const medicoSchema = z.object({
-    empleadoId: z.string().trim().min(1, 'Seleccione un empleado.'),
-    especialidadId: z.string().trim().min(1, 'Seleccione una especialidad.'),
-    matriculaProfesional: z
-        .string()
-        .trim()
-        .min(1, 'La matrícula profesional es obligatoria.')
-        .max(50, 'No puede superar los 50 caracteres.'),
-    registroColegioMedico: z
-        .string()
-        .trim()
-        .max(50, 'No puede superar los 50 caracteres.'),
-})
+export const medicoSchema = z
+    .object({
+        empleadoId: z.string().trim().min(1, 'Seleccione un empleado.'),
+        especialidadIds: z
+            .array(z.string().trim().min(1))
+            .min(1, 'Seleccione al menos una especialidad.'),
+        especialidadPrincipalId: z
+            .string()
+            .trim()
+            .min(1, 'Seleccione la especialidad principal.'),
+        matriculaProfesional: z
+            .string()
+            .trim()
+            .min(1, 'La matrícula profesional es obligatoria.')
+            .max(50, 'No puede superar los 50 caracteres.'),
+        registroColegioMedico: z
+            .string()
+            .trim()
+            .max(50, 'No puede superar los 50 caracteres.'),
+    })
+    .refine(
+        (values) => values.especialidadIds.includes(values.especialidadPrincipalId),
+        {
+            message: 'La especialidad principal debe estar entre las seleccionadas.',
+            path: ['especialidadPrincipalId'],
+        },
+    )
 
 export type MedicoFormInput = z.infer<typeof medicoSchema>
 export type MedicoFormValues = z.output<typeof medicoSchema>
 
 export const medicoDefaultValues: MedicoFormInput = {
     empleadoId: '',
-    especialidadId: '',
+    especialidadIds: [],
+    especialidadPrincipalId: '',
     matriculaProfesional: '',
     registroColegioMedico: '',
 }
@@ -34,7 +49,8 @@ export function toCreateMedicoPayload(
 ): import('../types/medico.types').CreateMedicoPayload {
     return {
         empleadoId: values.empleadoId,
-        especialidadId: values.especialidadId,
+        especialidadIds: values.especialidadIds,
+        especialidadPrincipalId: values.especialidadPrincipalId,
         matriculaProfesional: values.matriculaProfesional.trim(),
         registroColegioMedico: toOptionalText(values.registroColegioMedico),
     }

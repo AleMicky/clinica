@@ -23,6 +23,7 @@ public static class RecursosHumanosEndpoints
         group.MapEspecialidadEndpoints();
         group.MapDepartamentoEndpoints();
         group.MapServicioEndpoints();
+        group.MapJerarquiaEndpoints();
 
         return app;
     }

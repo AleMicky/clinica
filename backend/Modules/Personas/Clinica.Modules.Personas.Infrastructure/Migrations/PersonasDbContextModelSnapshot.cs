@@ -265,9 +265,6 @@ namespace Clinica.Modules.Personas.Infrastructure.Migrations
                     b.Property<Guid>("EmpleadoId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("EspecialidadId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -294,12 +291,60 @@ namespace Clinica.Modules.Personas.Infrastructure.Migrations
                     b.HasIndex("EmpleadoId")
                         .IsUnique();
 
-                    b.HasIndex("EspecialidadId");
-
                     b.HasIndex("MatriculaProfesional")
                         .IsUnique();
 
                     b.ToTable("Medicos", (string)null);
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Personas.Domain.Entities.MedicoEspecialidad", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("EspecialidadId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("EsPrincipal")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<Guid>("MedicoId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EspecialidadId");
+
+                    b.HasIndex("MedicoId")
+                        .HasFilter("[EsPrincipal] = 1")
+                        .IsUnique();
+
+                    b.HasIndex("MedicoId", "EspecialidadId")
+                        .IsUnique();
+
+                    b.ToTable("MedicoEspecialidades", (string)null);
                 });
 
             modelBuilder.Entity("Clinica.Modules.Personas.Domain.Entities.Paciente", b =>
@@ -779,15 +824,26 @@ namespace Clinica.Modules.Personas.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.Navigation("Empleado");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Personas.Domain.Entities.MedicoEspecialidad", b =>
+                {
                     b.HasOne("Clinica.Modules.RecursosHumanos.Domain.Entities.Especialidad", "Especialidad")
                         .WithMany()
                         .HasForeignKey("EspecialidadId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Empleado");
+                    b.HasOne("Clinica.Modules.Personas.Domain.Entities.Medico", "Medico")
+                        .WithMany("Especialidades")
+                        .HasForeignKey("MedicoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Especialidad");
+
+                    b.Navigation("Medico");
                 });
 
             modelBuilder.Entity("Clinica.Modules.Personas.Domain.Entities.Paciente", b =>
@@ -861,6 +917,11 @@ namespace Clinica.Modules.Personas.Infrastructure.Migrations
             modelBuilder.Entity("Clinica.Modules.RecursosHumanos.Domain.Entities.Departamento", b =>
                 {
                     b.Navigation("Servicios");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Personas.Domain.Entities.Medico", b =>
+                {
+                    b.Navigation("Especialidades");
                 });
 #pragma warning restore 612, 618
         }

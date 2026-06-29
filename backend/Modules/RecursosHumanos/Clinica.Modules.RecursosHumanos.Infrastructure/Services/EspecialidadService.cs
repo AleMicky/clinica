@@ -97,6 +97,12 @@ public sealed class EspecialidadService(
         if (entity is null)
             throw new NotFoundException("Especialidad no encontrada.");
 
+        var enUso = await context.Set<Clinica.Modules.Personas.Domain.Entities.MedicoEspecialidad>()
+            .AnyAsync(x => x.EspecialidadId == id, cancellationToken);
+
+        if (enUso)
+            throw new BusinessException("No se puede eliminar la especialidad porque está asignada a uno o más médicos.");
+
         context.Especialidades.Remove(entity);
         await context.SaveChangesAsync(cancellationToken);
     }

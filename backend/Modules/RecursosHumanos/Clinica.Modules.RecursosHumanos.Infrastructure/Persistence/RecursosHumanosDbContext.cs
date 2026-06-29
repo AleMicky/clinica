@@ -1,3 +1,4 @@
+using Clinica.Modules.Personas.Domain.Entities;
 using Clinica.Modules.RecursosHumanos.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,6 +25,30 @@ public class RecursosHumanosDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        ConfigureExternalEntities(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(RecursosHumanosDbContext).Assembly);
+    }
+
+    private static void ConfigureExternalEntities(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Clinica.Modules.Personas.Domain.Entities.MedicoEspecialidad>(entity =>
+        {
+            entity.ToTable("MedicoEspecialidades", t => t.ExcludeFromMigrations());
+            entity.HasKey(x => x.Id);
+            entity.Ignore(x => x.Medico);
+            entity.Ignore(x => x.Especialidad);
+        });
+
+        modelBuilder.Entity<Empleado>(entity =>
+        {
+            entity.ToTable("Empleados", t => t.ExcludeFromMigrations());
+            entity.HasKey(x => x.Id);
+            entity.Ignore(x => x.Persona);
+            entity.Ignore(x => x.Area);
+            entity.Ignore(x => x.Departamento);
+            entity.Ignore(x => x.Servicio);
+            entity.Ignore(x => x.Profesion);
+            entity.Ignore(x => x.Cargo);
+        });
     }
 }

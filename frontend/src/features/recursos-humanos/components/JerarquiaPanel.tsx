@@ -27,15 +27,12 @@ import { DepartamentoFormModal } from '../../catalogo-clinico/components/Departa
 import { HierarchyList } from '../../catalogo-clinico/components/HierarchyList'
 import { ServicioFormModal } from '../../catalogo-clinico/components/ServicioFormModal'
 import {
-    useAreaDepartamentos,
-    useAreas,
     useCreateArea,
     useCreateDepartamento,
     useCreateServicio,
     useDeleteArea,
     useDeleteDepartamento,
     useDeleteServicio,
-    useDepartamentoServicios,
     useUpdateArea,
     useUpdateDepartamento,
     useUpdateServicio,
@@ -46,15 +43,56 @@ import type {
     ServicioFormValues,
 } from '../../catalogo-clinico/schemas/catalogo-clinico.schema'
 import type { Area, Departamento, Servicio } from '../../catalogo-clinico/types/catalogo-clinico.types'
+import { useJerarquiaOrganizacional } from '../hooks/jerarquia.hooks'
+import type {
+    JerarquiaAreaNode,
+    JerarquiaDepartamentoNode,
+    JerarquiaServicioNode,
+} from '../types/jerarquia.types'
 
 const { Text, Paragraph } = Typography
 const { useBreakpoint } = Grid
 
 const DEFAULT_PAGE_SIZE = 15
-const LOOKUP_PAGE_SIZE = 100
 
 type HierarchyStep = 'area' | 'detail'
 type DetailTab = 'departamentos' | 'servicios'
+
+function toArea(node: JerarquiaAreaNode): Area {
+    return {
+        id: node.id,
+        codigo: node.codigo,
+        nombre: node.nombre,
+        descripcion: node.descripcion || null,
+    }
+}
+
+function toDepartamento(node: JerarquiaDepartamentoNode, areaNombre: string): Departamento {
+    return {
+        id: node.id,
+        areaId: node.areaId,
+        areaNombre,
+        codigo: node.codigo,
+        nombre: node.nombre,
+        descripcion: node.descripcion || null,
+    }
+}
+
+function toServicio(node: JerarquiaServicioNode, departamentoNombre: string): Servicio {
+    return {
+        id: node.id,
+        departamentoId: node.departamentoId,
+        departamentoNombre,
+        codigo: node.codigo,
+        nombre: node.nombre,
+        descripcion: node.descripcion || null,
+    }
+}
+
+function formatEmpleadosMeta(count?: number | null) {
+    if (count == null) return undefined
+    return `${count} empleado${count === 1 ? '' : 's'}`
+}
 
 function toBasePayload(values: CatalogoBaseFormValues) {
     return {
@@ -104,21 +142,7 @@ export function JerarquiaPanel() {
     const [deletingDeptId, setDeletingDeptId] = useState<string | null>(null)
     const [deletingServicioId, setDeletingServicioId] = useState<string | null>(null)
 
-    const { data: areaData, isFetching: loadingAreas } = useAreas({
-        page: areaPage,
-        pageSize: DEFAULT_PAGE_SIZE,
-    })
-
-    const { data: areasForSelect } = useAreas({
-        page: 1,
-        pageSize: LOOKUP_PAGE_SIZE,
-    })
-
-    const { data: departamentos = [], isFetching: loadingDepts } =
-        useAreaDepartamentos(selectedArea?.id ?? null)
-
-    const { data: servicios = [], isFetching: loadingServicios } =
-        useDepartamentoServicios(selectedDept?.id ?? null)
+    const { data: jerarquia, isFetching: loadingJerarquia } = useJerarquiaOrganizacional(true)
 
     const createArea = useCreateArea()
     const updateArea = useUpdateArea()
@@ -130,17 +154,66 @@ export function JerarquiaPanel() {
     const updateServicio = useUpdateServicio()
     const deleteServicio = useDeleteServicio()
 
-    const areas = areaData?.items ?? []
-    const totalAreas = areaData?.totalRecords ?? 0
-    const areaOptions = areasForSelect?.items ?? areas
-    const isAreaSearchActive = areaSearch.length > 0
+    const areaNodes = jerarquia?.areas ?? []
 
-    const displayAreas = isAreaSearchActive ? areaOptions : areas
+    const areaNodesById = useMemo(
+        () => new Map(areaNodes.map((area) => [area.id, area])),
+        [areaNodes],
+    )
+
+    const allAreas = useMemo(() => areaNodes.map(toArea), [areaNodes])
+    const areaOptions = allAreas
+
+    const selectedAreaNode = selectedArea
+        ? areaNodesById.get(selectedArea.id) ?? null
+        : null
+
+    const departamentos = useMemo(
+        () =>
+            selectedAreaNode
+                ? selectedAreaNode.departamentos.map((dept) =>
+                      toDepartamento(dept, selectedAreaNode.nombre),
+                  )
+                : [],
+        [selectedAreaNode],
+    )
+
+    const selectedDeptNode = useMemo(
+        () =>
+            selectedDept && selectedAreaNode
+                ? selectedAreaNode.departamentos.find(
+                      (dept) => dept.id === selectedDept.id,
+                  ) ?? null
+                : null,
+        [selectedDept, selectedAreaNode],
+    )
+
+    const servicios = useMemo(
+        () =>
+            selectedDeptNode
+                ? selectedDeptNode.servicios.map((servicio) =>
+                      toServicio(servicio, selectedDeptNode.nombre),
+                  )
+                : [],
+        [selectedDeptNode],
+    )
 
     const filteredAreas = useMemo(
-        () => filterBySearch(displayAreas, areaSearch),
-        [displayAreas, areaSearch],
+        () => filterBySearch(allAreas, areaSearch),
+        [allAreas, areaSearch],
     )
+
+    const displayAreas = useMemo(() => {
+        if (areaSearch) return filteredAreas
+
+        const start = (areaPage - 1) * DEFAULT_PAGE_SIZE
+        return filteredAreas.slice(start, start + DEFAULT_PAGE_SIZE)
+    }, [filteredAreas, areaSearch, areaPage])
+
+    const totalAreas = filteredAreas.length
+    const loadingAreas = loadingJerarquia
+    const loadingDepts = loadingJerarquia
+    const loadingServicios = loadingJerarquia
 
     const filteredDepartamentos = useMemo(
         () => filterBySearch(departamentos, deptSearch),
@@ -150,6 +223,45 @@ export function JerarquiaPanel() {
     const filteredServicios = useMemo(
         () => filterBySearch(servicios, servicioSearch),
         [servicios, servicioSearch],
+    )
+
+    const areaListItems = useMemo(
+        () =>
+            displayAreas.map((area) => ({
+                ...area,
+                meta: formatEmpleadosMeta(areaNodesById.get(area.id)?.empleadosCount),
+            })),
+        [displayAreas, areaNodesById],
+    )
+
+    const departamentoListItems = useMemo(
+        () =>
+            filteredDepartamentos.map((dept) => {
+                const node = selectedAreaNode?.departamentos.find(
+                    (item) => item.id === dept.id,
+                )
+
+                return {
+                    ...dept,
+                    meta: formatEmpleadosMeta(node?.empleadosCount),
+                }
+            }),
+        [filteredDepartamentos, selectedAreaNode],
+    )
+
+    const servicioListItems = useMemo(
+        () =>
+            filteredServicios.map((servicio) => {
+                const node = selectedDeptNode?.servicios.find(
+                    (item) => item.id === servicio.id,
+                )
+
+                return {
+                    ...servicio,
+                    meta: formatEmpleadosMeta(node?.empleadosCount),
+                }
+            }),
+        [filteredServicios, selectedDeptNode],
     )
 
     useEffect(() => {
@@ -269,17 +381,11 @@ export function JerarquiaPanel() {
             </div>
 
             <HierarchyList
-                items={filteredAreas}
+                items={areaListItems}
                 loading={loadingAreas}
-                total={
-                    isAreaSearchActive
-                        ? filteredAreas.length
-                        : areaSearch
-                          ? filteredAreas.length
-                          : totalAreas
-                }
-                page={isAreaSearchActive ? 1 : areaPage}
-                pageSize={isAreaSearchActive ? LOOKUP_PAGE_SIZE : DEFAULT_PAGE_SIZE}
+                total={totalAreas}
+                page={areaSearch ? 1 : areaPage}
+                pageSize={DEFAULT_PAGE_SIZE}
                 selectedId={selectedArea?.id ?? null}
                 emptyText={
                     areaSearch
@@ -288,7 +394,7 @@ export function JerarquiaPanel() {
                 }
                 icon={<BankOutlined />}
                 onPageChange={
-                    isAreaSearchActive
+                    areaSearch
                         ? undefined
                         : (page) => {
                               setAreaPage(page)
@@ -298,12 +404,12 @@ export function JerarquiaPanel() {
                 }
                 onSelect={(item) =>
                     setSelectedArea(
-                        displayAreas.find((area) => area.id === item.id) ?? null,
+                        allAreas.find((area) => area.id === item.id) ?? null,
                     )
                 }
                 onEdit={(item) => {
                     setEditingArea(
-                        displayAreas.find((area) => area.id === item.id) ?? null,
+                        allAreas.find((area) => area.id === item.id) ?? null,
                     )
                     setAreaModalOpen(true)
                 }}
@@ -365,7 +471,7 @@ export function JerarquiaPanel() {
             </div>
 
             <HierarchyList
-                items={filteredDepartamentos}
+                items={departamentoListItems}
                 loading={loadingDepts}
                 selectedId={selectedDept?.id ?? null}
                 emptyText={
@@ -442,7 +548,7 @@ export function JerarquiaPanel() {
                     </div>
 
                     <HierarchyList
-                        items={filteredServicios}
+                        items={servicioListItems}
                         loading={loadingServicios}
                         selectedId={null}
                         emptyText={

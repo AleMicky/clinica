@@ -1,4 +1,4 @@
-import { useQueryClient } from '@tanstack/react-query'
+import { useQueryClient, type QueryClient } from '@tanstack/react-query'
 
 import { useAppMutation } from '../../../shared/hooks/use-app-mutation'
 import { useAppQuery } from '../../../shared/hooks/use-app-query'
@@ -25,6 +25,15 @@ import type {
     UpdatePrestacionPayload,
     UpdateServicioPayload,
 } from '../types/catalogo-clinico.types'
+
+function invalidateCatalogoHierarchy(qc: QueryClient) {
+    void qc.invalidateQueries({
+        queryKey: queryKeys.catalogoClinico.all,
+    })
+    void qc.invalidateQueries({
+        queryKey: queryKeys.recursosHumanos.jerarquia.all,
+    })
+}
 
 // ── Áreas ──────────────────────────────────────────────────────
 
@@ -54,9 +63,7 @@ export function useCreateArea() {
     return useAppMutation({
         mutationFn: (data: CreateCatalogoBasePayload) => areasService.create(data),
         onSuccess: () => {
-            void qc.invalidateQueries({
-                queryKey: queryKeys.catalogoClinico.areas.all,
-            })
+            invalidateCatalogoHierarchy(qc)
             notify.success('Área creada', 'Registro guardado correctamente.')
         },
         onError: (e) => notify.error('Error al crear', getApiErrorMessage(e)),
@@ -74,9 +81,7 @@ export function useUpdateArea() {
             data: UpdateCatalogoBasePayload
         }) => areasService.update(id, data),
         onSuccess: () => {
-            void qc.invalidateQueries({
-                queryKey: queryKeys.catalogoClinico.areas.all,
-            })
+            invalidateCatalogoHierarchy(qc)
             notify.success('Área actualizada', 'Cambios guardados.')
         },
         onError: (e) => notify.error('Error al actualizar', getApiErrorMessage(e)),
@@ -88,9 +93,7 @@ export function useDeleteArea() {
     return useAppMutation({
         mutationFn: (id: string) => areasService.delete(id),
         onSuccess: () => {
-            void qc.invalidateQueries({
-                queryKey: queryKeys.catalogoClinico.all,
-            })
+            invalidateCatalogoHierarchy(qc)
             notify.success('Área desactivada')
         },
         onError: (e) => notify.error('Error al desactivar', getApiErrorMessage(e)),
@@ -130,9 +133,7 @@ export function useCreateDepartamento() {
         mutationFn: (data: CreateDepartamentoPayload) =>
             departamentosService.create(data),
         onSuccess: () => {
-            void qc.invalidateQueries({
-                queryKey: queryKeys.catalogoClinico.all,
-            })
+            invalidateCatalogoHierarchy(qc)
             notify.success('Departamento creado', 'Registro guardado correctamente.')
         },
         onError: (e) =>
@@ -151,9 +152,7 @@ export function useUpdateDepartamento() {
             data: UpdateDepartamentoPayload
         }) => departamentosService.update(id, data),
         onSuccess: () => {
-            void qc.invalidateQueries({
-                queryKey: queryKeys.catalogoClinico.all,
-            })
+            invalidateCatalogoHierarchy(qc)
             notify.success('Departamento actualizado', 'Cambios guardados.')
         },
         onError: (e) =>
@@ -166,9 +165,7 @@ export function useDeleteDepartamento() {
     return useAppMutation({
         mutationFn: (id: string) => departamentosService.delete(id),
         onSuccess: () => {
-            void qc.invalidateQueries({
-                queryKey: queryKeys.catalogoClinico.all,
-            })
+            invalidateCatalogoHierarchy(qc)
             notify.success('Departamento desactivado')
         },
         onError: (e) =>
@@ -191,9 +188,7 @@ export function useCreateServicio() {
     return useAppMutation({
         mutationFn: (data: CreateServicioPayload) => serviciosService.create(data),
         onSuccess: () => {
-            void qc.invalidateQueries({
-                queryKey: queryKeys.catalogoClinico.all,
-            })
+            invalidateCatalogoHierarchy(qc)
             notify.success('Servicio creado', 'Registro guardado correctamente.')
         },
         onError: (e) =>
@@ -212,9 +207,7 @@ export function useUpdateServicio() {
             data: UpdateServicioPayload
         }) => serviciosService.update(id, data),
         onSuccess: () => {
-            void qc.invalidateQueries({
-                queryKey: queryKeys.catalogoClinico.all,
-            })
+            invalidateCatalogoHierarchy(qc)
             notify.success('Servicio actualizado', 'Cambios guardados.')
         },
         onError: (e) =>
@@ -227,9 +220,7 @@ export function useDeleteServicio() {
     return useAppMutation({
         mutationFn: (id: string) => serviciosService.delete(id),
         onSuccess: () => {
-            void qc.invalidateQueries({
-                queryKey: queryKeys.catalogoClinico.all,
-            })
+            invalidateCatalogoHierarchy(qc)
             notify.success('Servicio desactivado')
         },
         onError: (e) =>

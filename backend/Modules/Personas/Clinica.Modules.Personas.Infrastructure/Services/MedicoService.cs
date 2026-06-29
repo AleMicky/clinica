@@ -37,14 +37,18 @@ public sealed class MedicoService(
             .AsNoTracking()
             .Include(x => x.Empleado)
             .ThenInclude(x => x.Persona)
-            .Include(x => x.Especialidad)
+            .Include(x => x.Especialidades)
+            .ThenInclude(x => x.Especialidad)
             .AsQueryable();
 
         if (request.EmpleadoId is { } empleadoId && empleadoId != Guid.Empty)
             query = query.Where(x => x.EmpleadoId == empleadoId);
 
         if (request.EspecialidadId is { } especialidadId && especialidadId != Guid.Empty)
-            query = query.Where(x => x.EspecialidadId == especialidadId);
+        {
+            query = query.Where(x =>
+                x.Especialidades.Any(e => e.EspecialidadId == especialidadId));
+        }
 
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
@@ -56,7 +60,7 @@ public sealed class MedicoService(
                 x.Empleado.Persona.Nombres.Contains(search) ||
                 x.Empleado.Persona.ApellidoPaterno.Contains(search) ||
                 x.Empleado.Persona.ApellidoMaterno.Contains(search) ||
-                x.Especialidad.Nombre.Contains(search));
+                x.Especialidades.Any(e => e.Especialidad.Nombre.Contains(search)));
         }
 
         var total = await query.CountAsync(cancellationToken);
@@ -80,7 +84,8 @@ public sealed class MedicoService(
             .AsNoTracking()
             .Include(x => x.Empleado)
             .ThenInclude(x => x.Persona)
-            .Include(x => x.Especialidad)
+            .Include(x => x.Especialidades)
+            .ThenInclude(x => x.Especialidad)
             .Where(x => x.Id == id)
             .Select(x => ToResponse(x))
             .FirstOrDefaultAsync(cancellationToken);
@@ -92,7 +97,7 @@ public sealed class MedicoService(
     {
         await EnsureEmpleadoExistsAsync(request.EmpleadoId, cancellationToken);
         await EnsureEmpleadoNotMedicoAsync(request.EmpleadoId, null, cancellationToken);
-        await EnsureEspecialidadExistsAsync(request.EspecialidadId, cancellationToken);
+        await EnsureEspecialidadesExistAsync(request.EspecialidadIds, cancellationToken);
 
         var matricula = Normalize(request.MatriculaProfesional);
         await EnsureMatriculaIsUniqueAsync(matricula, null, cancellationToken);
@@ -100,9 +105,9 @@ public sealed class MedicoService(
         var entity = new Medico
         {
             EmpleadoId = request.EmpleadoId,
-            EspecialidadId = request.EspecialidadId,
             MatriculaProfesional = matricula,
-            RegistroColegioMedico = NormalizeOptional(request.RegistroColegioMedico)
+            RegistroColegioMedico = NormalizeOptional(request.RegistroColegioMedico),
+            Especialidades = BuildEspecialidades(request.EspecialidadIds, request.EspecialidadPrincipalId)
         };
 
         context.Medicos.Add(entity);
@@ -117,6 +122,7 @@ public sealed class MedicoService(
         CancellationToken cancellationToken = default)
     {
         var entity = await context.Medicos
+            .Include(x => x.Especialidades)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (entity is null)
@@ -124,15 +130,16 @@ public sealed class MedicoService(
 
         await EnsureEmpleadoExistsAsync(request.EmpleadoId, cancellationToken);
         await EnsureEmpleadoNotMedicoAsync(request.EmpleadoId, id, cancellationToken);
-        await EnsureEspecialidadExistsAsync(request.EspecialidadId, cancellationToken);
+        await EnsureEspecialidadesExistAsync(request.EspecialidadIds, cancellationToken);
 
         var matricula = Normalize(request.MatriculaProfesional);
         await EnsureMatriculaIsUniqueAsync(matricula, id, cancellationToken);
 
         entity.EmpleadoId = request.EmpleadoId;
-        entity.EspecialidadId = request.EspecialidadId;
         entity.MatriculaProfesional = matricula;
         entity.RegistroColegioMedico = NormalizeOptional(request.RegistroColegioMedico);
+
+        SyncEspecialidades(entity, request.EspecialidadIds, request.EspecialidadPrincipalId);
 
         await context.SaveChangesAsync(cancellationToken);
 
@@ -179,15 +186,20 @@ public sealed class MedicoService(
             throw new BusinessException("El empleado ya está registrado como médico.");
     }
 
-    private async Task EnsureEspecialidadExistsAsync(
-        Guid especialidadId,
+    private async Task EnsureEspecialidadesExistAsync(
+        IReadOnlyList<Guid> especialidadIds,
         CancellationToken cancellationToken)
     {
-        var exists = await context.Set<Especialidad>()
-            .AnyAsync(x => x.Id == especialidadId, cancellationToken);
+        var distinctIds = especialidadIds.Distinct().ToList();
 
-        if (!exists)
-            throw new BusinessException("La especialidad no existe.");
+        if (distinctIds.Count != especialidadIds.Count)
+            throw new BusinessException("No se permiten especialidades duplicadas.");
+
+        var count = await context.Set<Especialidad>()
+            .CountAsync(x => distinctIds.Contains(x.Id), cancellationToken);
+
+        if (count != distinctIds.Count)
+            throw new BusinessException("Una o más especialidades no existen.");
     }
 
     private async Task EnsureMatriculaIsUniqueAsync(
@@ -205,6 +217,54 @@ public sealed class MedicoService(
             throw new BusinessException("La matrícula profesional ya existe.");
     }
 
+    private static List<MedicoEspecialidad> BuildEspecialidades(
+        IReadOnlyList<Guid> especialidadIds,
+        Guid especialidadPrincipalId)
+    {
+        return especialidadIds
+            .Distinct()
+            .Select(especialidadId => new MedicoEspecialidad
+            {
+                EspecialidadId = especialidadId,
+                EsPrincipal = especialidadId == especialidadPrincipalId
+            })
+            .ToList();
+    }
+
+    private static void SyncEspecialidades(
+        Medico entity,
+        IReadOnlyList<Guid> especialidadIds,
+        Guid especialidadPrincipalId)
+    {
+        var distinctIds = especialidadIds.Distinct().ToHashSet();
+
+        var toRemove = entity.Especialidades
+            .Where(x => !distinctIds.Contains(x.EspecialidadId))
+            .ToList();
+
+        foreach (var item in toRemove)
+            entity.Especialidades.Remove(item);
+
+        foreach (var especialidadId in distinctIds)
+        {
+            var existing = entity.Especialidades
+                .FirstOrDefault(x => x.EspecialidadId == especialidadId);
+
+            if (existing is null)
+            {
+                entity.Especialidades.Add(new MedicoEspecialidad
+                {
+                    EspecialidadId = especialidadId,
+                    EsPrincipal = especialidadId == especialidadPrincipalId
+                });
+            }
+            else
+            {
+                existing.EsPrincipal = especialidadId == especialidadPrincipalId;
+            }
+        }
+    }
+
     private static string Normalize(string value) => value.Trim();
 
     private static string? NormalizeOptional(string? value)
@@ -218,13 +278,26 @@ public sealed class MedicoService(
 
     private static MedicoResponse ToResponse(Medico entity)
     {
+        var especialidades = entity.Especialidades
+            .OrderByDescending(x => x.EsPrincipal)
+            .ThenBy(x => x.Especialidad.Nombre)
+            .Select(x => new MedicoEspecialidadResponse(
+                x.EspecialidadId,
+                x.Especialidad.Nombre,
+                x.EsPrincipal))
+            .ToList();
+
+        var principal = especialidades.FirstOrDefault(x => x.EsPrincipal)
+            ?? especialidades.FirstOrDefault();
+
         return new MedicoResponse(
             entity.Id,
             entity.EmpleadoId,
             entity.Empleado.CodigoEmpleado,
             PersonaNaming.NombreCompleto(entity.Empleado.Persona),
-            entity.EspecialidadId,
-            entity.Especialidad.Nombre,
+            especialidades,
+            principal?.EspecialidadId ?? Guid.Empty,
+            principal?.EspecialidadNombre ?? string.Empty,
             entity.MatriculaProfesional,
             entity.RegistroColegioMedico);
     }

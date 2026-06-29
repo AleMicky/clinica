@@ -5,8 +5,9 @@ public sealed record MedicoResponse(
     Guid EmpleadoId,
     string EmpleadoCodigo,
     string PersonaNombreCompleto,
-    Guid EspecialidadId,
-    string EspecialidadNombre,
+    IReadOnlyList<MedicoEspecialidadResponse> Especialidades,
+    Guid EspecialidadPrincipalId,
+    string EspecialidadPrincipalNombre,
     string MatriculaProfesional,
     string? RegistroColegioMedico
 );

@@ -1,12 +1,19 @@
 export type EntityId = string
 
+export type MedicoEspecialidad = {
+    especialidadId: EntityId
+    especialidadNombre: string
+    esPrincipal: boolean
+}
+
 export type Medico = {
     id: EntityId
     empleadoId: EntityId
     empleadoCodigo: string
     personaNombreCompleto: string
-    especialidadId: EntityId
-    especialidadNombre: string
+    especialidades: MedicoEspecialidad[]
+    especialidadPrincipalId: EntityId
+    especialidadPrincipalNombre: string
     matriculaProfesional: string
     registroColegioMedico?: string | null
 }
@@ -21,7 +28,8 @@ export type MedicoQuery = {
 
 export type CreateMedicoPayload = {
     empleadoId: EntityId
-    especialidadId: EntityId
+    especialidadIds: EntityId[]
+    especialidadPrincipalId: EntityId
     matriculaProfesional: string
     registroColegioMedico?: string | null
 }

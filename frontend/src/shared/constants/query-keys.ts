@@ -52,6 +52,13 @@ export const queryKeys = {
             ['medicos', 'list', query] as const,
         detail: (id: EntityId) => ['medicos', 'detail', id] as const,
     },
+    recursosHumanos: {
+        jerarquia: {
+            all: ['recursos-humanos', 'jerarquia'] as const,
+            tree: (includeCounts?: boolean) =>
+                ['recursos-humanos', 'jerarquia', { includeCounts: !!includeCounts }] as const,
+        },
+    },
     catalogoClinico: {
         all: ['catalogo-clinico'] as const,
         areas: {
