@@ -3307,6 +3307,33 @@ body {
     padding-top: 12px;
 }
 
+.formularios-view__preview-alert {
+    margin-bottom: 12px;
+}
+
+.formularios-view__preview-toolbar {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--ant-color-border-secondary);
+}
+
+.formularios-view__preview-section {
+    margin-bottom: 20px;
+    padding: 14px 16px;
+    border: 1px solid var(--ant-color-border-secondary);
+    border-radius: 8px;
+    background: var(--ant-color-fill-quaternary);
+}
+
+.formularios-view__preview-section--hidden {
+    opacity: 0.72;
+    border-style: dashed;
+}
+
+.formularios-view__preview-form .ant-form-item {
+    margin-bottom: 14px;
+}
+
 .formularios-view__drawer-form .ant-form-item {
     margin-bottom: 12px;
 }

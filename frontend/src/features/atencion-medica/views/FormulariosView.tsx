@@ -41,6 +41,7 @@ import {
     DownSquareOutlined,
     EditOutlined,
     EyeInvisibleOutlined,
+    EyeOutlined,
     FieldNumberOutlined,
     FileTextOutlined,
     FolderOpenOutlined,
@@ -54,6 +55,7 @@ import {
 import { useNavigate } from '@tanstack/react-router'
 
 import { AppDataTable } from '../../../shared/components/ui/data-table/AppDataTable'
+import { FormularioPreviewModal } from '../components/FormularioPreviewModal'
 import {
     formularioCamposHooks,
     formularioSeccionesHooks,
@@ -315,6 +317,7 @@ export function FormulariosView({ tipoAtencionId, formularioId }: FormulariosVie
     const [formularioDrawer, setFormularioDrawer] = useState(false)
     const [seccionDrawer, setSeccionDrawer] = useState(false)
     const [campoDrawer, setCampoDrawer] = useState(false)
+    const [previewOpen, setPreviewOpen] = useState(false)
     const [editingFormulario, setEditingFormulario] = useState<FormularioClinico | null>(null)
     const [editingSeccion, setEditingSeccion] = useState<FormularioSeccion | null>(null)
     const [editingCampo, setEditingCampo] = useState<FormularioCampo | null>(null)
@@ -1108,6 +1111,13 @@ export function FormulariosView({ tipoAtencionId, formularioId }: FormulariosVie
                                 <Flex gap={8} wrap="wrap" className="formularios-view__editor-actions">
                                     <Button
                                         size="small"
+                                        icon={<EyeOutlined />}
+                                        onClick={() => setPreviewOpen(true)}
+                                    >
+                                        Vista previa
+                                    </Button>
+                                    <Button
+                                        size="small"
                                         icon={<EditOutlined />}
                                         onClick={() => openFormularioDrawer(selectedFormulario)}
                                     >
@@ -1314,6 +1324,12 @@ export function FormulariosView({ tipoAtencionId, formularioId }: FormulariosVie
                     )}
                 </main>
             </div>
+
+            <FormularioPreviewModal
+                open={previewOpen}
+                formulario={selectedFormulario}
+                onClose={() => setPreviewOpen(false)}
+            />
 
             <Drawer
                 title={
