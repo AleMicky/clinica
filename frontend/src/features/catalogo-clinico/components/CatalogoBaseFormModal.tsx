@@ -87,7 +87,13 @@ export function CatalogoBaseFormModal({
                                 <Input
                                     placeholder="Ej. EMER, CARD"
                                     value={field.state.value}
-                                    onChange={(e) => field.handleChange(e.target.value.toUpperCase())}
+                                    onChange={(e) =>
+                                        field.handleChange(
+                                            e.target.value
+                                                .toUpperCase()
+                                                .replace(/\s+/g, '_'),
+                                        )
+                                    }
                                     onBlur={field.handleBlur}
                                     disabled={loading || isEditing}
                                     autoFocus={!isEditing}

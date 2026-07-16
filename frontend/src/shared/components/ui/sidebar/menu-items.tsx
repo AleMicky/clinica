@@ -407,6 +407,22 @@ export type BreadcrumbSegment = {
     to?: AppRoute
 }
 
+const ATENCION_CATALOG_PREFIXES = [
+    '/atenciones/tipos-atencion',
+    '/atenciones/formularios',
+    '/atenciones/diagnosticos',
+] as const
+
+function isAtencionCatalogPath(pathname: string): boolean {
+    return ATENCION_CATALOG_PREFIXES.some(
+        (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+    )
+}
+
+function isAtencionDetailUuidPath(pathname: string): boolean {
+    return /^\/atenciones\/[0-9a-f-]{36}$/i.test(pathname)
+}
+
 const nestedRouteLabels: Record<string, { title: string; parentPath: AppRoute }> = {
     '/usuarios/perfil': { title: 'Mi perfil', parentPath: '/seguridad/usuarios' },
     '/atenciones/$atencionId': { title: 'Detalle de atención', parentPath: '/atenciones' },
@@ -456,7 +472,7 @@ export function getBreadcrumbSegments(
         return segments
     }
 
-    if (pathname.startsWith('/atenciones/') && pathname !== '/atenciones') {
+    if (isAtencionDetailUuidPath(pathname)) {
         const parent = findMenuItemByPath('/atenciones', userRoles)
 
         if (parent.group && parent.group.key !== 'general') {
@@ -469,6 +485,49 @@ export function getBreadcrumbSegments(
 
         segments.push({ title: 'Detalle de atención' })
         return segments
+    }
+
+    if (
+        pathname === '/atenciones/formularios' ||
+        pathname.startsWith('/atenciones/formularios/')
+    ) {
+        const tiposParent = findMenuItemByPath('/atenciones/tipos-atencion', userRoles)
+
+        if (tiposParent.group && tiposParent.group.key !== 'general') {
+            segments.push({ title: tiposParent.group.label })
+        }
+
+        segments.push({
+            title: 'Tipos de atención',
+            to: '/atenciones/tipos-atencion',
+        })
+        segments.push({ title: 'Formularios clínicos' })
+        return segments
+    }
+
+    if (pathname === '/atenciones/tipos-atencion') {
+        const tiposParent = findMenuItemByPath('/atenciones/tipos-atencion', userRoles)
+
+        if (tiposParent.group && tiposParent.group.key !== 'general') {
+            segments.push({ title: tiposParent.group.label })
+        }
+
+        segments.push({ title: 'Configuración clínica' })
+        segments.push({ title: 'Tipos de atención' })
+        return segments
+    }
+
+    if (isAtencionCatalogPath(pathname)) {
+        const { group, item } = findMenuItemByPath(pathname, userRoles)
+
+        if (group && group.key !== 'general') {
+            segments.push({ title: group.label })
+        }
+
+        if (item) {
+            segments.push({ title: item.label, to: item.to })
+            return segments
+        }
     }
 
     const { group, item } = findMenuItemByPath(pathname, userRoles)

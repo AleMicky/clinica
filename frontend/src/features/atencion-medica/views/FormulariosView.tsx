@@ -4,10 +4,13 @@ import {
     type ColumnDef,
 } from '@tanstack/react-table'
 import {
+    Alert,
     Button,
     Col,
+    Divider,
     Drawer,
     Dropdown,
+    Empty,
     Flex,
     Form,
     Input,
@@ -27,14 +30,21 @@ import {
 import type { MenuProps } from 'antd'
 import {
     ArrowLeftOutlined,
+    CalendarOutlined,
+    CheckSquareOutlined,
+    ClockCircleOutlined,
     CopyOutlined,
     DeleteOutlined,
+    DownSquareOutlined,
     EditOutlined,
+    FieldNumberOutlined,
     FileTextOutlined,
     FolderOpenOutlined,
+    FontSizeOutlined,
     MoreOutlined,
     PlusOutlined,
     SearchOutlined,
+    SendOutlined,
     UnorderedListOutlined,
 } from '@ant-design/icons'
 import { useNavigate } from '@tanstack/react-router'
@@ -44,6 +54,7 @@ import {
     formularioCamposHooks,
     formularioSeccionesHooks,
     formulariosClinicosHooks,
+    tiposAtencionHooks,
     useFormularioCampos,
     useFormularioSecciones,
     useFormulariosClinicos,
@@ -60,26 +71,75 @@ const { Text } = Typography
 
 const COMPACT_FORM_CLASS = 'formularios-view__drawer-form'
 
+type FormularioEstadoFiltro = 'todos' | 'activos' | 'inactivos'
+
 type PanelEmptyProps = {
     icon: React.ReactNode
     title: string
     description: string
+    action?: React.ReactNode
+    steps?: string[]
 }
 
-function PanelEmpty({ icon, title, description }: PanelEmptyProps) {
+function PanelEmpty({ icon, title, description, action, steps }: PanelEmptyProps) {
     return (
-        <div className="catalogos-view__panel-empty">
-            <div className="catalogos-view__panel-empty-ring" aria-hidden>
-                <span className="catalogos-view__panel-empty-icon">{icon}</span>
-            </div>
+        <div className="catalogos-view__panel-empty formularios-view__panel-empty">
+            <span className="formularios-view__panel-empty-icon" aria-hidden>
+                {icon}
+            </span>
             <Text strong className="catalogos-view__panel-empty-title">
                 {title}
             </Text>
             <Text type="secondary" className="catalogos-view__panel-empty-desc">
                 {description}
             </Text>
+            {steps && steps.length > 0 ? (
+                <ol className="formularios-view__empty-steps">
+                    {steps.map((step) => (
+                        <li key={step}>{step}</li>
+                    ))}
+                </ol>
+            ) : null}
+            {action ? <div className="formularios-view__empty-action">{action}</div> : null}
         </div>
     )
+}
+
+type TipoCampoInfo = {
+    nombre: string
+    controlFrontend: string
+}
+
+function getCampoTipoVisual(controlFrontend: string | undefined): {
+    icon: React.ReactNode
+    label: string
+} {
+    const control = (controlFrontend ?? '').toLowerCase()
+
+    if (control.includes('checkbox') || control.includes('switch')) {
+        return { icon: <CheckSquareOutlined />, label: 'Checkbox' }
+    }
+    if (control.includes('date') && !control.includes('time')) {
+        return { icon: <CalendarOutlined />, label: 'Fecha' }
+    }
+    if (control.includes('time')) {
+        return { icon: <ClockCircleOutlined />, label: 'Hora' }
+    }
+    if (
+        control.includes('select') ||
+        control.includes('dropdown') ||
+        control.includes('radio')
+    ) {
+        return { icon: <DownSquareOutlined />, label: 'Lista' }
+    }
+    if (control.includes('number')) {
+        return { icon: <FieldNumberOutlined />, label: 'Número' }
+    }
+    if (control.includes('textarea')) {
+        return { icon: <FontSizeOutlined />, label: 'Texto largo' }
+    }
+
+    return { icon: <FontSizeOutlined />, label: 'Texto' }
 }
 
 function CamposSkeleton() {
@@ -99,6 +159,18 @@ function CamposSkeleton() {
 
 function stopPropagation(event: MouseEvent | KeyboardEvent) {
     event.stopPropagation()
+}
+
+function formularioEstadoLabel(activo: boolean): string {
+    return activo ? 'Activo' : 'Inactivo'
+}
+
+function formularioEstadoColor(activo: boolean): 'success' | 'default' {
+    return activo ? 'success' : 'default'
+}
+
+function normalizeCodigo(value: string): string {
+    return value.toUpperCase().replace(/\s+/g, '_')
 }
 
 const campoColumnHelper = createColumnHelper<FormularioCampo>()
@@ -159,29 +231,64 @@ function CampoRowActions({ campo, onEdit, onDuplicate, onDelete }: CampoRowActio
 
 type FormulariosViewProps = {
     tipoAtencionId: string
+    formularioId?: string
 }
 
-export function FormulariosView({ tipoAtencionId }: FormulariosViewProps) {
+export function FormulariosView({ tipoAtencionId, formularioId }: FormulariosViewProps) {
     const { token } = theme.useToken()
     const navigate = useNavigate()
 
-    const [selectedFormulario, setSelectedFormulario] = useState<FormularioClinico | null>(null)
-    const [selectedSeccion, setSelectedSeccion] = useState<FormularioSeccion | null>(null)
-
+    const [selectedSeccionId, setSelectedSeccionId] = useState<string | null>(null)
     const [formularioSearchInput, setFormularioSearchInput] = useState('')
+    const [estadoFiltro, setEstadoFiltro] = useState<FormularioEstadoFiltro>('todos')
     const [campoSearchInput, setCampoSearchInput] = useState('')
+    const [campoSearchSeccionId, setCampoSearchSeccionId] = useState<string | null>(null)
 
-    const { data: tiposData } = useTiposAtencion()
-    const { data: formulariosData, isFetching: loadingFormularios } = useFormulariosClinicos({
+    const {
+        data: tipoAtencion,
+        isFetching: loadingTipo,
+        isError: errorTipo,
+        refetch: refetchTipo,
+    } = tiposAtencionHooks.useDetail(tipoAtencionId)
+
+    const {
+        data: formulariosData,
+        isFetching: loadingFormularios,
+        isLoading: initialLoadingFormularios,
+        isError: errorFormularios,
+        refetch: refetchFormularios,
+        isRefetching: refetchingFormularios,
+    } = useFormulariosClinicos({
         page: 1,
         pageSize: 100,
         tipoAtencionId,
     })
+
+    const { data: tiposData } = useTiposAtencion()
+
+    const formularios = useMemo(() => {
+        const items = formulariosData?.items ?? []
+        return items.filter((item) => item.tipoAtencionId === tipoAtencionId)
+    }, [formulariosData?.items, tipoAtencionId])
+
+    const selectedFormulario = useMemo(() => {
+        if (!formularioId) return null
+        return formularios.find((item) => item.id === formularioId) ?? null
+    }, [formularioId, formularios])
+
     const { data: seccionesData, isFetching: loadingSecciones } = useFormularioSecciones({
         page: 1,
         pageSize: 100,
         formularioClinicoId: selectedFormulario?.id,
     })
+
+    const secciones = useMemo(() => seccionesData?.items ?? [], [seccionesData?.items])
+
+    const selectedSeccion = useMemo(() => {
+        if (secciones.length === 0) return null
+        return secciones.find((item) => item.id === selectedSeccionId) ?? secciones[0] ?? null
+    }, [secciones, selectedSeccionId])
+
     const { data: camposData, isFetching: loadingCampos } = useFormularioCampos({
         page: 1,
         pageSize: 200,
@@ -210,49 +317,72 @@ export function FormulariosView({ tipoAtencionId }: FormulariosViewProps) {
     const [seccionForm] = Form.useForm()
     const [campoForm] = Form.useForm()
 
-    const tipoCampoMap = useMemo(
-        () => new Map(tiposCampoData?.items.map((t) => [t.id, t.nombre]) ?? []),
-        [tiposCampoData?.items],
-    )
+    const tipoCampoMap = useMemo(() => {
+        const map = new Map<string, TipoCampoInfo>()
+        for (const item of tiposCampoData?.items ?? []) {
+            map.set(item.id, {
+                nombre: item.nombre,
+                controlFrontend: item.controlFrontend,
+            })
+        }
+        return map
+    }, [tiposCampoData?.items])
 
-    const formularios = useMemo(() => {
-        const items = formulariosData?.items ?? []
-        return items.filter((item) => item.tipoAtencionId === tipoAtencionId)
-    }, [formulariosData?.items, tipoAtencionId])
-    const secciones = seccionesData?.items ?? []
-    const campos = camposData?.items ?? []
+    const campos = useMemo(() => camposData?.items ?? [], [camposData?.items])
 
-    const tipoAtencionLabel = useMemo(() => {
-        const tipo = tiposData?.items.find((t) => t.id === tipoAtencionId)
-        return tipo ? `${tipo.codigo} — ${tipo.nombre}` : null
-    }, [tipoAtencionId, tiposData?.items])
+    const effectiveCampoSearch =
+        campoSearchSeccionId === selectedSeccion?.id ? campoSearchInput : ''
+
+    const selectFormulario = (id: string | undefined) => {
+        setSelectedSeccionId(null)
+        setCampoSearchInput('')
+        setCampoSearchSeccionId(null)
+        void navigate({
+            to: '/atenciones/formularios/$tipoAtencionId',
+            params: { tipoAtencionId },
+            search: id ? { formularioId: id } : {},
+            replace: false,
+        })
+    }
 
     useEffect(() => {
-        setSelectedFormulario(null)
-        setFormularioSearchInput('')
-    }, [tipoAtencionId])
+        if (!formularioId || loadingFormularios) return
+        const stillExists = formularios.some((item) => item.id === formularioId)
+        if (!stillExists && formularios.length > 0) {
+            void navigate({
+                to: '/atenciones/formularios/$tipoAtencionId',
+                params: { tipoAtencionId },
+                search: {},
+                replace: true,
+            })
+        }
+    }, [formularios, loadingFormularios, formularioId, navigate, tipoAtencionId])
 
     const filteredFormularios = useMemo(() => {
         const term = formularioSearchInput.trim().toLowerCase()
-        if (!term) return formularios
 
         return formularios.filter((item) => {
+            if (estadoFiltro === 'activos' && !item.activo) return false
+            if (estadoFiltro === 'inactivos' && item.activo) return false
+
+            if (!term) return true
+
             const codigo = item.codigo.toLowerCase()
             const nombre = item.nombre.toLowerCase()
             const descripcion = item.descripcion?.toLowerCase() ?? ''
 
             return codigo.includes(term) || nombre.includes(term) || descripcion.includes(term)
         })
-    }, [formularios, formularioSearchInput])
+    }, [formularios, formularioSearchInput, estadoFiltro])
 
     const filteredCampos = useMemo(() => {
-        const term = campoSearchInput.trim().toLowerCase()
+        const term = effectiveCampoSearch.trim().toLowerCase()
         if (!term) return campos
 
         return campos.filter((item) => {
             const codigo = item.codigo.toLowerCase()
             const etiqueta = item.etiqueta.toLowerCase()
-            const tipo = tipoCampoMap.get(item.tipoCampoFormularioId)?.toLowerCase() ?? ''
+            const tipo = tipoCampoMap.get(item.tipoCampoFormularioId)?.nombre.toLowerCase() ?? ''
             const valor = item.valorDefecto?.toLowerCase() ?? ''
 
             return (
@@ -262,41 +392,11 @@ export function FormulariosView({ tipoAtencionId }: FormulariosViewProps) {
                 valor.includes(term)
             )
         })
-    }, [campos, campoSearchInput, tipoCampoMap])
+    }, [campos, effectiveCampoSearch, tipoCampoMap])
 
-    const campoSearchActive = campoSearchInput.trim().length > 0
+    const campoSearchActive = effectiveCampoSearch.trim().length > 0
     const showNoCampoSearchResults =
         campoSearchActive && filteredCampos.length === 0 && campos.length > 0
-
-    useEffect(() => {
-        setSelectedSeccion(null)
-    }, [selectedFormulario?.id])
-
-    useEffect(() => {
-        if (!selectedFormulario || loadingFormularios) return
-
-        const stillExists = formularios.some((item) => item.id === selectedFormulario.id)
-        if (!stillExists) {
-            setSelectedFormulario(formularios[0] ?? null)
-        }
-    }, [formularios, loadingFormularios, selectedFormulario])
-
-    useEffect(() => {
-        if (!selectedFormulario || loadingSecciones) return
-        if (secciones.length === 0) {
-            setSelectedSeccion(null)
-            return
-        }
-
-        const updatedSeccion = secciones.find((item) => item.id === selectedSeccion?.id)
-        if (!updatedSeccion) {
-            setSelectedSeccion(secciones[0])
-        }
-    }, [secciones, loadingSecciones, selectedFormulario, selectedSeccion?.id])
-
-    useEffect(() => {
-        setCampoSearchInput('')
-    }, [selectedSeccion?.id])
 
     const openFormularioDrawer = (item?: FormularioClinico) => {
         setEditingFormulario(item ?? null)
@@ -363,7 +463,7 @@ export function FormulariosView({ tipoAtencionId }: FormulariosViewProps) {
         const values = await formularioForm.validateFields()
         const payload = {
             tipoAtencionId: values.tipoAtencionId,
-            codigo: values.codigo,
+            codigo: normalizeCodigo(values.codigo),
             nombre: values.nombre,
             descripcion: values.descripcion || '',
             version: values.version ?? 1,
@@ -373,10 +473,27 @@ export function FormulariosView({ tipoAtencionId }: FormulariosViewProps) {
         if (editingFormulario) {
             await updateFormulario.mutateAsync({ id: editingFormulario.id, data: payload })
         } else {
-            await createFormulario.mutateAsync(payload)
+            const created = await createFormulario.mutateAsync(payload)
+            if (created?.id) {
+                selectFormulario(created.id)
+            }
         }
 
         setFormularioDrawer(false)
+    }
+
+    const handleToggleActivo = async (formulario: FormularioClinico) => {
+        await updateFormulario.mutateAsync({
+            id: formulario.id,
+            data: {
+                tipoAtencionId: formulario.tipoAtencionId,
+                codigo: formulario.codigo,
+                nombre: formulario.nombre,
+                descripcion: formulario.descripcion || '',
+                version: formulario.version,
+                activo: !formulario.activo,
+            },
+        })
     }
 
     const handleSeccionSubmit = async () => {
@@ -384,7 +501,7 @@ export function FormulariosView({ tipoAtencionId }: FormulariosViewProps) {
         const values = await seccionForm.validateFields()
         const payload = {
             formularioClinicoId: selectedFormulario.id,
-            codigo: values.codigo,
+            codigo: normalizeCodigo(values.codigo),
             nombre: values.nombre,
             orden: values.orden,
         }
@@ -403,7 +520,7 @@ export function FormulariosView({ tipoAtencionId }: FormulariosViewProps) {
         const values = await campoForm.validateFields()
         const payload = {
             formularioSeccionId: selectedSeccion.id,
-            codigo: values.codigo,
+            codigo: normalizeCodigo(values.codigo),
             etiqueta: values.etiqueta,
             tipoCampoFormularioId: values.tipoCampoFormularioId,
             esRequerido: values.esRequerido ?? false,
@@ -444,26 +561,29 @@ export function FormulariosView({ tipoAtencionId }: FormulariosViewProps) {
                     ),
                 }),
                 campoColumnHelper.accessor('tipoCampoFormularioId', {
-                    header: 'Valor',
-                    size: 140,
+                    header: 'Tipo',
+                    size: 150,
                     cell: ({ row }) => {
-                        const tipo = tipoCampoMap.get(row.original.tipoCampoFormularioId)
+                        const info = tipoCampoMap.get(row.original.tipoCampoFormularioId)
+                        const visual = getCampoTipoVisual(info?.controlFrontend)
+                        const title = info?.nombre ?? visual.label
                         const defecto = row.original.valorDefecto
 
-                        if (defecto) {
-                            return (
-                                <Tooltip title={defecto}>
-                                    <span className="formularios-view__cell-text formularios-view__cell-text--muted">
-                                        {defecto}
-                                    </span>
-                                </Tooltip>
-                            )
-                        }
-
                         return (
-                            <Tooltip title={tipo ?? undefined}>
-                                <span className="formularios-view__cell-text formularios-view__cell-text--muted">
-                                    {tipo ?? '—'}
+                            <Tooltip
+                                title={
+                                    defecto
+                                        ? `${title} · Defecto: ${defecto}`
+                                        : title
+                                }
+                            >
+                                <span className="formularios-view__tipo-cell">
+                                    <span className="formularios-view__tipo-cell-icon" aria-hidden>
+                                        {visual.icon}
+                                    </span>
+                                    <span className="formularios-view__tipo-cell-label">
+                                        {visual.label}
+                                    </span>
                                 </span>
                             </Tooltip>
                         )
@@ -489,11 +609,28 @@ export function FormulariosView({ tipoAtencionId }: FormulariosViewProps) {
                     ),
                 }),
             ] as ColumnDef<FormularioCampo, unknown>[],
-        [tipoCampoMap, deleteCampo, openCampoDrawer, openDuplicateCampoDrawer],
+        [tipoCampoMap, deleteCampo],
     )
 
-    const recordCountLabel = `${campos.length} registro${campos.length === 1 ? '' : 's'}`
+    const recordCountLabel = `${campos.length} campo${campos.length === 1 ? '' : 's'}`
     const formularioDesc = selectedFormulario?.descripcion?.trim()
+    const searchTerm = formularioSearchInput.trim()
+    const isLoadingSidebar = initialLoadingFormularios || loadingTipo
+    const hasFormularios = formularios.length > 0
+    const hasSearchOrFilter = searchTerm.length > 0 || estadoFiltro !== 'todos'
+    const showSearchEmpty =
+        !isLoadingSidebar &&
+        !errorFormularios &&
+        hasFormularios &&
+        filteredFormularios.length === 0 &&
+        hasSearchOrFilter
+    const showNoFormularios =
+        !isLoadingSidebar && !errorFormularios && !hasFormularios
+    const showSelectPrompt =
+        !isLoadingSidebar &&
+        !errorFormularios &&
+        hasFormularios &&
+        !selectedFormulario
 
     const seccionTabItems = useMemo(
         () =>
@@ -512,195 +649,309 @@ export function FormulariosView({ tipoAtencionId }: FormulariosViewProps) {
         [secciones],
     )
 
+    const buildFormularioMenu = (formulario: FormularioClinico): MenuProps['items'] => [
+        {
+            key: 'edit',
+            label: 'Editar',
+            icon: <EditOutlined />,
+            onClick: () => openFormularioDrawer(formulario),
+        },
+        {
+            key: 'toggle',
+            label: formulario.activo ? 'Desactivar' : 'Activar',
+            onClick: () => void handleToggleActivo(formulario),
+        },
+        { type: 'divider' },
+        {
+            key: 'delete',
+            label: 'Eliminar',
+            icon: <DeleteOutlined />,
+            danger: true,
+            onClick: () => {
+                Modal.confirm({
+                    title: '¿Eliminar formulario?',
+                    content: `Se eliminará "${formulario.nombre}".`,
+                    okText: 'Eliminar',
+                    okType: 'danger',
+                    cancelText: 'Cancelar',
+                    onOk: async () => {
+                        await deleteFormulario.mutateAsync(formulario.id)
+                        if (formularioId === formulario.id) {
+                            selectFormulario(undefined)
+                        }
+                    },
+                })
+            },
+        },
+    ]
+
+    const renderMainEmpty = () => {
+        if (isLoadingSidebar) {
+            return (
+                <div className="catalogos-view__main-empty" aria-busy aria-label="Cargando">
+                    <Skeleton active paragraph={{ rows: 4 }} />
+                </div>
+            )
+        }
+
+        if (errorFormularios || errorTipo) {
+            return (
+                <div className="catalogos-view__main-empty">
+                    <Alert
+                        type="error"
+                        showIcon
+                        title="No se pudieron cargar los formularios."
+                        action={
+                            <Button
+                                size="small"
+                                loading={refetchingFormularios}
+                                onClick={() => {
+                                    void refetchFormularios()
+                                    void refetchTipo()
+                                }}
+                            >
+                                Reintentar
+                            </Button>
+                        }
+                    />
+                </div>
+            )
+        }
+
+        if (showNoFormularios) {
+            return (
+                <div className="catalogos-view__main-empty">
+                    <PanelEmpty
+                        icon={<FolderOpenOutlined />}
+                        title="Cree el primer formulario clínico"
+                        description="Configure secciones, campos y validaciones para este tipo de atención."
+                        steps={[
+                            'Cree el formulario.',
+                            'Agregue secciones.',
+                            'Configure los campos.',
+                            'Publique una versión.',
+                        ]}
+                        action={
+                            <Button
+                                type="primary"
+                                icon={<PlusOutlined />}
+                                onClick={() => openFormularioDrawer()}
+                            >
+                                Crear primer formulario
+                            </Button>
+                        }
+                    />
+                </div>
+            )
+        }
+
+        if (showSelectPrompt) {
+            return (
+                <div className="catalogos-view__main-empty">
+                    <PanelEmpty
+                        icon={<FileTextOutlined />}
+                        title="Seleccione un formulario"
+                        description="Elija un formulario del panel izquierdo para editar su estructura y configuración."
+                    />
+                </div>
+            )
+        }
+
+        return null
+    }
+
     return (
         <div className="module-object-page__panel catalogos-view catalogos-view--compact catalogos-view--erp formularios-view">
             <div className="catalogos-view__split">
-                <aside className="catalogos-view__sidebar">
-                    <div className="catalogos-view__sidebar-head">
-                        <Flex align="center" gap={8} className="catalogos-view__sidebar-title">
-                            <span className="catalogos-view__sidebar-icon" aria-hidden>
-                                <FileTextOutlined />
-                            </span>
-                            <div className="catalogos-view__sidebar-title-text">
-                                <Text strong className="catalogos-view__sidebar-label">
-                                    Formularios
+                <aside className="catalogos-view__sidebar formularios-view__sidebar">
+                    <div className="formularios-view__sidebar-context">
+                        <Button
+                            type="link"
+                            size="small"
+                            icon={<ArrowLeftOutlined />}
+                            className="formularios-view__back-btn"
+                            onClick={() => navigate({ to: '/atenciones/tipos-atencion' })}
+                        >
+                            Volver a tipos de atención
+                        </Button>
+
+                        {loadingTipo && !tipoAtencion ? (
+                            <Skeleton active title={{ width: '80%' }} paragraph={{ rows: 1 }} />
+                        ) : tipoAtencion ? (
+                            <div className="formularios-view__tipo-context">
+                                <Text strong className="formularios-view__tipo-nombre">
+                                    {tipoAtencion.nombre}
                                 </Text>
-                                <Text type="secondary" className="catalogos-view__sidebar-count">
-                                    {formularios.length}
-                                </Text>
+                                <Flex gap={8} align="center" wrap="wrap">
+                                    <Text code className="formularios-view__tipo-codigo">
+                                        {tipoAtencion.codigo}
+                                    </Text>
+                                    {/* TODO: estado del tipo cuando el backend lo exponga. */}
+                                </Flex>
                             </div>
-                        </Flex>
+                        ) : (
+                            <Text type="secondary">Tipo de atención no encontrado.</Text>
+                        )}
+                    </div>
+
+                    <Divider className="formularios-view__sidebar-divider" />
+
+                    <div className="formularios-view__sidebar-toolbar">
+                        <Text strong className="formularios-view__sidebar-heading">
+                            Formularios clínicos
+                            <Text type="secondary" className="formularios-view__sidebar-count">
+                                {' '}
+                                ({formularios.length})
+                            </Text>
+                        </Text>
                         <Button
                             type="primary"
                             size="small"
                             icon={<PlusOutlined />}
                             onClick={() => openFormularioDrawer()}
                         >
-                            Nuevo
+                            Nuevo formulario
                         </Button>
                     </div>
 
                     <div className="formularios-view__sidebar-filters">
-                        <Button
-                            type="text"
-                            size="small"
-                            icon={<ArrowLeftOutlined />}
-                            className="formularios-view__back-btn"
-                            onClick={() =>
-                                navigate({ to: '/atenciones/tipos-atencion' })
-                            }
-                        >
-                            Tipos de atención
-                        </Button>
-                        {tipoAtencionLabel ? (
-                            <Tag variant="filled" className="formularios-view__tipo-tag">
-                                {tipoAtencionLabel}
-                            </Tag>
-                        ) : null}
-                    </div>
-
-                    <div className="catalogos-view__sidebar-search">
                         <Input
                             allowClear
                             size="small"
                             className="catalogos-view__search-input"
                             prefix={<SearchOutlined style={{ color: token.colorTextQuaternary }} />}
-                            placeholder="Buscar formulario…"
+                            placeholder="Buscar formulario..."
                             value={formularioSearchInput}
                             onChange={(event) => setFormularioSearchInput(event.target.value)}
                             onClear={() => setFormularioSearchInput('')}
                         />
+                        <Select
+                            size="small"
+                            className="formularios-view__estado-filter"
+                            value={estadoFiltro}
+                            aria-label="Filtrar formularios por estado"
+                            options={[
+                                { value: 'todos', label: 'Todos' },
+                                { value: 'activos', label: 'Activos' },
+                                { value: 'inactivos', label: 'Inactivos' },
+                            ]}
+                            onChange={(value: FormularioEstadoFiltro) => setEstadoFiltro(value)}
+                        />
                     </div>
 
                     <div className="catalogos-view__sidebar-body">
-                        {!loadingFormularios && filteredFormularios.length === 0 ? (
-                            <PanelEmpty
-                                icon={<FolderOpenOutlined />}
-                                title="Sin formularios"
+                        {isLoadingSidebar ? (
+                            <div aria-busy aria-label="Cargando formularios">
+                                {Array.from({ length: 5 }).map((_, index) => (
+                                    <div key={index} className="catalogos-grupos-list__skeleton">
+                                        <Skeleton.Input active size="small" style={{ width: '100%' }} />
+                                    </div>
+                                ))}
+                            </div>
+                        ) : errorFormularios ? (
+                            <Alert
+                                type="error"
+                                showIcon
+                                title="No se pudieron cargar los formularios."
+                                action={
+                                    <Button
+                                        size="small"
+                                        loading={refetchingFormularios}
+                                        onClick={() => void refetchFormularios()}
+                                    >
+                                        Reintentar
+                                    </Button>
+                                }
+                            />
+                        ) : showNoFormularios ? (
+                            <Text type="secondary" className="formularios-view__sidebar-empty">
+                                Aún no existen formularios.
+                            </Text>
+                        ) : showSearchEmpty ? (
+                            <Empty
+                                image={Empty.PRESENTED_IMAGE_SIMPLE}
                                 description={
-                                    formularioSearchInput
-                                        ? 'No se encontraron formularios con ese criterio.'
-                                        : 'Cree un formulario con el botón Nuevo para comenzar.'
+                                    searchTerm
+                                        ? `No se encontraron formularios con “${searchTerm}”.`
+                                        : 'No hay formularios con ese estado.'
                                 }
                             />
                         ) : (
-                            <div className="catalogos-grupos-list catalogos-grupos-list--compact">
-                                <div
-                                    className="catalogos-grupos-list__items"
-                                    role="listbox"
-                                    aria-label="Formularios clínicos"
-                                >
-                                    {loadingFormularios
-                                        ? Array.from({ length: 6 }).map((_, index) => (
-                                              <div
-                                                  key={index}
-                                                  className="catalogos-grupos-list__skeleton"
-                                              >
-                                                  <Skeleton.Input
-                                                      active
-                                                      size="small"
-                                                      style={{ width: '100%' }}
-                                                  />
-                                              </div>
-                                          ))
-                                        : filteredFormularios.map((formulario) => {
-                                              const isSelected =
-                                                  selectedFormulario?.id === formulario.id
+                            <div
+                                className="formularios-view__form-list"
+                                role="listbox"
+                                aria-label="Formularios clínicos"
+                            >
+                                {filteredFormularios.map((formulario) => {
+                                    const isSelected = selectedFormulario?.id === formulario.id
 
-                                              return (
-                                                  <div
-                                                      key={formulario.id}
-                                                      role="option"
-                                                      aria-selected={isSelected}
-                                                      tabIndex={0}
-                                                      className={[
-                                                          'catalogos-grupos-list__item',
-                                                          isSelected
-                                                              ? 'catalogos-grupos-list__item--selected'
-                                                              : '',
-                                                      ]
-                                                          .filter(Boolean)
-                                                          .join(' ')}
-                                                      onClick={() => setSelectedFormulario(formulario)}
-                                                      onKeyDown={(event) => {
-                                                          if (
-                                                              event.key === 'Enter' ||
-                                                              event.key === ' '
-                                                          ) {
-                                                              event.preventDefault()
-                                                              setSelectedFormulario(formulario)
-                                                          }
-                                                      }}
-                                                  >
-                                                      <Tooltip
-                                                          title={formulario.nombre}
-                                                          placement="right"
-                                                          mouseEnterDelay={0.35}
-                                                      >
-                                                          <div className="catalogos-grupos-list__item-content">
-                                                              <Text
-                                                                  strong={isSelected}
-                                                                  className="catalogos-grupos-list__item-name"
-                                                                  ellipsis={{ tooltip: false }}
-                                                              >
-                                                                  {formulario.nombre}
-                                                              </Text>
-                                                              <Tag
-                                                                  variant="filled"
-                                                                  className="formularios-view__item-tag"
-                                                              >
-                                                                  {formulario.codigo}
-                                                              </Tag>
-                                                          </div>
-                                                      </Tooltip>
-
-                                                      <Flex
-                                                          align="center"
-                                                          gap={2}
-                                                          className="catalogos-grupos-list__item-actions"
-                                                          onClick={stopPropagation}
-                                                          onKeyDown={stopPropagation}
-                                                      >
-                                                          <Tooltip title="Editar">
-                                                              <Button
-                                                                  type="text"
-                                                                  size="small"
-                                                                  icon={<EditOutlined />}
-                                                                  aria-label={`Editar ${formulario.nombre}`}
-                                                                  onClick={() =>
-                                                                      openFormularioDrawer(formulario)
-                                                                  }
-                                                              />
-                                                          </Tooltip>
-                                                          <Popconfirm
-                                                              title="¿Eliminar formulario?"
-                                                              onConfirm={() => {
-                                                                  deleteFormulario.mutate(
-                                                                      formulario.id,
-                                                                  )
-                                                                  if (
-                                                                      selectedFormulario?.id ===
-                                                                      formulario.id
-                                                                  ) {
-                                                                      setSelectedFormulario(null)
-                                                                  }
-                                                              }}
-                                                          >
-                                                              <Tooltip title="Eliminar">
-                                                                  <Button
-                                                                      type="text"
-                                                                      size="small"
-                                                                      danger
-                                                                      icon={<DeleteOutlined />}
-                                                                      aria-label={`Eliminar ${formulario.nombre}`}
-                                                                  />
-                                                              </Tooltip>
-                                                          </Popconfirm>
-                                                      </Flex>
-                                                  </div>
-                                              )
-                                          })}
-                                </div>
+                                    return (
+                                        <div
+                                            key={formulario.id}
+                                            role="option"
+                                            aria-selected={isSelected}
+                                            tabIndex={0}
+                                            className={[
+                                                'admin-sidebar__nav-item',
+                                                'formularios-view__form-item',
+                                                isSelected
+                                                    ? 'admin-sidebar__nav-item--active'
+                                                    : '',
+                                            ]
+                                                .filter(Boolean)
+                                                .join(' ')}
+                                            onClick={() => selectFormulario(formulario.id)}
+                                            onKeyDown={(event) => {
+                                                if (event.key === 'Enter' || event.key === ' ') {
+                                                    event.preventDefault()
+                                                    selectFormulario(formulario.id)
+                                                }
+                                            }}
+                                        >
+                                            <span
+                                                className="admin-sidebar__nav-icon formularios-view__form-item-icon"
+                                                aria-hidden
+                                            >
+                                                <FileTextOutlined />
+                                            </span>
+                                            <div className="formularios-view__form-item-content">
+                                                <div
+                                                    className="formularios-view__form-item-title"
+                                                    title={formulario.nombre}
+                                                >
+                                                    {formulario.nombre}
+                                                </div>
+                                                <div className="formularios-view__form-item-code">
+                                                    {formulario.codigo}
+                                                </div>
+                                                <div className="formularios-view__form-item-meta">
+                                                    {formularioEstadoLabel(formulario.activo)} · v
+                                                    {formulario.version}
+                                                </div>
+                                            </div>
+                                            <div
+                                                className="formularios-view__form-item-actions"
+                                                onClick={stopPropagation}
+                                                onKeyDown={stopPropagation}
+                                            >
+                                                <Dropdown
+                                                    menu={{
+                                                        items: buildFormularioMenu(formulario),
+                                                    }}
+                                                    trigger={['click']}
+                                                    placement="bottomRight"
+                                                >
+                                                    <Button
+                                                        type="text"
+                                                        size="small"
+                                                        icon={<MoreOutlined />}
+                                                        aria-label={`Acciones de ${formulario.nombre}`}
+                                                    />
+                                                </Dropdown>
+                                            </div>
+                                        </div>
+                                    )
+                                })}
                             </div>
                         )}
                     </div>
@@ -716,184 +967,265 @@ export function FormulariosView({ tipoAtencionId }: FormulariosViewProps) {
                 >
                     {selectedFormulario ? (
                         <>
-                            <div className="formularios-view__context-bar">
-                                <Tag variant="filled" className="formularios-view__context-code">
-                                    {selectedFormulario.codigo}
-                                </Tag>
-                                <div className="formularios-view__context-text">
-                                    <Tooltip title={selectedFormulario.nombre}>
-                                        <Text
-                                            strong
-                                            className="formularios-view__context-name"
-                                            ellipsis={{ tooltip: false }}
-                                        >
-                                            {selectedFormulario.nombre}
-                                        </Text>
-                                    </Tooltip>
-                                    {formularioDesc ? (
-                                        <Tooltip title={formularioDesc}>
+                            <header className="formularios-view__editor-header">
+                                <div className="formularios-view__editor-header-main">
+                                    <Flex align="center" gap={8} wrap="wrap">
+                                        <FileTextOutlined
+                                            className="formularios-view__editor-header-icon"
+                                            aria-hidden
+                                        />
+                                        <Tooltip title={selectedFormulario.nombre}>
                                             <Text
-                                                type="secondary"
-                                                className="formularios-view__context-desc"
+                                                strong
+                                                className="formularios-view__context-name"
                                                 ellipsis={{ tooltip: false }}
                                             >
-                                                {formularioDesc}
+                                                {selectedFormulario.nombre}
                                             </Text>
                                         </Tooltip>
-                                    ) : (
-                                        <Text type="secondary" className="formularios-view__context-desc">
-                                            v{selectedFormulario.version}
+                                    </Flex>
+                                    <Flex gap={8} wrap="wrap" align="center">
+                                        <Text code className="formularios-view__context-code-text">
+                                            {selectedFormulario.codigo}
                                         </Text>
-                                    )}
+                                        <Tag
+                                            color={formularioEstadoColor(selectedFormulario.activo)}
+                                            className="formularios-view__estado-tag"
+                                        >
+                                            {formularioEstadoLabel(selectedFormulario.activo)}
+                                        </Tag>
+                                        <Text
+                                            type="secondary"
+                                            className="formularios-view__context-desc"
+                                        >
+                                            Versión {selectedFormulario.version}
+                                            {formularioDesc ? ` · ${formularioDesc}` : ''}
+                                        </Text>
+                                    </Flex>
                                 </div>
-                            </div>
-
-                            <div className="formularios-view__tabs-wrap">
-                                {loadingSecciones && secciones.length === 0 ? (
-                                    <Skeleton.Input active size="small" style={{ width: 240 }} />
-                                ) : (
-                                    <Tabs
+                                <Flex gap={8} wrap="wrap" className="formularios-view__editor-actions">
+                                    <Button
                                         size="small"
-                                        type="line"
-                                        className="formularios-view__tabs"
-                                        activeKey={selectedSeccion?.id}
-                                        onChange={(key) => {
-                                            const seccion = secciones.find((item) => item.id === key)
-                                            if (seccion) setSelectedSeccion(seccion)
-                                        }}
-                                        items={seccionTabItems}
-                                        tabBarExtraContent={
-                                            <Flex align="center" gap={4} className="formularios-view__tabs-extra">
-                                                {selectedSeccion ? (
-                                                    <>
-                                                        <Tooltip title="Editar sección">
-                                                            <Button
-                                                                type="text"
-                                                                size="small"
-                                                                icon={<EditOutlined />}
-                                                                onClick={() =>
-                                                                    openSeccionDrawer(selectedSeccion)
-                                                                }
-                                                            />
-                                                        </Tooltip>
-                                                        <Popconfirm
-                                                            title="¿Eliminar sección?"
-                                                            onConfirm={() => {
-                                                                deleteSeccion.mutate(selectedSeccion.id)
-                                                                setSelectedSeccion(null)
-                                                            }}
-                                                        >
-                                                            <Tooltip title="Eliminar sección">
-                                                                <Button
-                                                                    type="text"
-                                                                    size="small"
-                                                                    danger
-                                                                    icon={<DeleteOutlined />}
-                                                                />
-                                                            </Tooltip>
-                                                        </Popconfirm>
-                                                    </>
-                                                ) : null}
-                                                <Button
-                                                    size="small"
-                                                    type="link"
-                                                    icon={<PlusOutlined />}
-                                                    onClick={() => openSeccionDrawer()}
-                                                >
-                                                    Sección
-                                                </Button>
-                                            </Flex>
-                                        }
-                                    />
-                                )}
-                            </div>
-
-                            <div className="formularios-view__action-bar">
-                                <Input
-                                    allowClear
-                                    size="small"
-                                    className="formularios-view__action-search catalogos-view__search-input"
-                                    prefix={
-                                        <SearchOutlined
-                                            style={{ color: token.colorTextQuaternary }}
-                                        />
-                                    }
-                                    placeholder="Buscar en campos…"
-                                    value={campoSearchInput}
-                                    onChange={(event) => setCampoSearchInput(event.target.value)}
-                                    onClear={() => setCampoSearchInput('')}
-                                    disabled={!selectedSeccion}
-                                />
-                                <span className="formularios-view__action-count">
-                                    {recordCountLabel}
-                                </span>
-                                <Button
-                                    type="primary"
-                                    size="small"
-                                    icon={<PlusOutlined />}
-                                    disabled={!selectedSeccion}
-                                    onClick={() => openCampoDrawer()}
-                                >
-                                    Nuevo registro
-                                </Button>
-                            </div>
-
-                            <div className="catalogos-view__main-body">
-                                {!selectedSeccion ? (
-                                    <PanelEmpty
-                                        icon={<UnorderedListOutlined />}
+                                        icon={<EditOutlined />}
+                                        onClick={() => openFormularioDrawer(selectedFormulario)}
+                                    >
+                                        Editar
+                                    </Button>
+                                    <Tooltip
                                         title={
-                                            secciones.length === 0
-                                                ? 'Sin secciones'
-                                                : 'Seleccione una sección'
+                                            selectedFormulario.activo
+                                                ? 'Desactivar formulario'
+                                                : 'Activar formulario'
                                         }
-                                        description={
-                                            secciones.length === 0
-                                                ? 'Agregue la primera sección para definir campos del formulario.'
-                                                : 'Elija una sección de la franja superior para ver sus campos.'
-                                        }
-                                    />
-                                ) : loadingCampos && campos.length === 0 ? (
-                                    <CamposSkeleton />
-                                ) : showNoCampoSearchResults ? (
-                                    <PanelEmpty
-                                        icon={<SearchOutlined />}
-                                        title="Sin resultados"
-                                        description="No hay campos que coincidan con la búsqueda."
-                                    />
-                                ) : !loadingCampos && campos.length === 0 ? (
-                                    <PanelEmpty
-                                        icon={<UnorderedListOutlined />}
-                                        title="Sin registros"
-                                        description="Agregue el primer campo con el botón Nuevo registro."
-                                    />
-                                ) : (
-                                    <div className="catalogos-view__table formularios-view__table">
-                                        <AppDataTable
-                                            data={filteredCampos}
-                                            columns={campoColumns}
-                                            loading={loadingCampos}
-                                            emptyText="Sin campos en esta sección."
-                                            getRowId={(row) => String(row.id)}
-                                        />
-                                    </div>
-                                )}
+                                    >
+                                        <Button
+                                            size="small"
+                                            icon={<SendOutlined />}
+                                            onClick={() =>
+                                                void handleToggleActivo(selectedFormulario)
+                                            }
+                                            loading={updateFormulario.isPending}
+                                        >
+                                            {selectedFormulario.activo ? 'Desactivar' : 'Activar'}
+                                        </Button>
+                                    </Tooltip>
+                                </Flex>
+                            </header>
+
+                            {/* TODO: cuando exista selección de campo en la tabla, mostrar
+                                Drawer de propiedades (~360px) a la derecha en lugar de un panel fijo. */}
+                            <div className="formularios-view__workspace">
+                                <section className="formularios-view__workspace-main">
+                                    {loadingSecciones && secciones.length === 0 ? (
+                                        <div className="formularios-view__tabs-wrap">
+                                            <Skeleton.Input
+                                                active
+                                                size="small"
+                                                style={{ width: 240 }}
+                                            />
+                                        </div>
+                                    ) : secciones.length === 0 ? (
+                                        <div className="catalogos-view__main-body formularios-view__fields-body">
+                                            <PanelEmpty
+                                                icon={<UnorderedListOutlined />}
+                                                title="Sin secciones"
+                                                description="Agregue la primera sección para comenzar a organizar los campos del formulario."
+                                                action={
+                                                    <Button
+                                                        type="primary"
+                                                        icon={<PlusOutlined />}
+                                                        onClick={() => openSeccionDrawer()}
+                                                    >
+                                                        Nueva sección
+                                                    </Button>
+                                                }
+                                            />
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <div className="formularios-view__tabs-wrap">
+                                                <Tabs
+                                                    size="small"
+                                                    type="card"
+                                                    className="formularios-view__tabs"
+                                                    activeKey={selectedSeccion?.id}
+                                                    onChange={(key) => {
+                                                        setSelectedSeccionId(key)
+                                                        setCampoSearchInput('')
+                                                        setCampoSearchSeccionId(key)
+                                                    }}
+                                                    items={seccionTabItems}
+                                                    tabBarExtraContent={
+                                                        <Flex
+                                                            align="center"
+                                                            gap={4}
+                                                            className="formularios-view__tabs-extra"
+                                                        >
+                                                            {selectedSeccion ? (
+                                                                <>
+                                                                    <Tooltip title="Editar sección">
+                                                                        <Button
+                                                                            type="text"
+                                                                            size="small"
+                                                                            icon={<EditOutlined />}
+                                                                            aria-label="Editar sección"
+                                                                            onClick={() =>
+                                                                                openSeccionDrawer(
+                                                                                    selectedSeccion,
+                                                                                )
+                                                                            }
+                                                                        />
+                                                                    </Tooltip>
+                                                                    <Popconfirm
+                                                                        title="¿Eliminar sección?"
+                                                                        onConfirm={() => {
+                                                                            deleteSeccion.mutate(
+                                                                                selectedSeccion.id,
+                                                                            )
+                                                                            setSelectedSeccionId(
+                                                                                null,
+                                                                            )
+                                                                        }}
+                                                                    >
+                                                                        <Tooltip title="Eliminar sección">
+                                                                            <Button
+                                                                                type="text"
+                                                                                size="small"
+                                                                                danger
+                                                                                icon={
+                                                                                    <DeleteOutlined />
+                                                                                }
+                                                                                aria-label="Eliminar sección"
+                                                                            />
+                                                                        </Tooltip>
+                                                                    </Popconfirm>
+                                                                </>
+                                                            ) : null}
+                                                            <Button
+                                                                size="small"
+                                                                type="dashed"
+                                                                icon={<PlusOutlined />}
+                                                                onClick={() => openSeccionDrawer()}
+                                                            >
+                                                                Nueva sección
+                                                            </Button>
+                                                        </Flex>
+                                                    }
+                                                />
+                                            </div>
+
+                                            {selectedSeccion ? (
+                                                <div className="formularios-view__action-bar">
+                                                    <Input
+                                                        allowClear
+                                                        size="small"
+                                                        className="formularios-view__action-search catalogos-view__search-input"
+                                                        prefix={
+                                                            <SearchOutlined
+                                                                style={{
+                                                                    color: token.colorTextQuaternary,
+                                                                }}
+                                                            />
+                                                        }
+                                                        placeholder="Buscar campo..."
+                                                        value={effectiveCampoSearch}
+                                                        onChange={(event) => {
+                                                            setCampoSearchInput(
+                                                                event.target.value,
+                                                            )
+                                                            setCampoSearchSeccionId(
+                                                                selectedSeccion.id,
+                                                            )
+                                                        }}
+                                                        onClear={() => {
+                                                            setCampoSearchInput('')
+                                                            setCampoSearchSeccionId(
+                                                                selectedSeccion.id,
+                                                            )
+                                                        }}
+                                                    />
+                                                    <span className="formularios-view__action-count">
+                                                        {recordCountLabel}
+                                                    </span>
+                                                    <Button
+                                                        type="primary"
+                                                        size="small"
+                                                        icon={<PlusOutlined />}
+                                                        onClick={() => openCampoDrawer()}
+                                                    >
+                                                        Nuevo campo
+                                                    </Button>
+                                                </div>
+                                            ) : null}
+
+                                            <div className="catalogos-view__main-body formularios-view__fields-body">
+                                                {!selectedSeccion ? (
+                                                    <PanelEmpty
+                                                        icon={<UnorderedListOutlined />}
+                                                        title="Seleccione una sección"
+                                                        description="Elija una sección de la franja superior para ver sus campos."
+                                                    />
+                                                ) : loadingCampos && campos.length === 0 ? (
+                                                    <CamposSkeleton />
+                                                ) : showNoCampoSearchResults ? (
+                                                    <PanelEmpty
+                                                        icon={<SearchOutlined />}
+                                                        title="Sin resultados"
+                                                        description="No hay campos que coincidan con la búsqueda."
+                                                    />
+                                                ) : !loadingCampos && campos.length === 0 ? (
+                                                    <PanelEmpty
+                                                        icon={<UnorderedListOutlined />}
+                                                        title="Sin campos"
+                                                        description="Agregue el primer campo con el botón Nuevo campo."
+                                                    />
+                                                ) : (
+                                                    <div className="catalogos-view__table formularios-view__table">
+                                                        <AppDataTable
+                                                            data={filteredCampos}
+                                                            columns={campoColumns}
+                                                            loading={loadingCampos}
+                                                            emptyText="Sin campos en esta sección."
+                                                            getRowId={(row) => String(row.id)}
+                                                        />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </>
+                                    )}
+                                </section>
                             </div>
                         </>
                     ) : (
-                        <div className="catalogos-view__main-empty">
-                            <PanelEmpty
-                                icon={<FolderOpenOutlined />}
-                                title="Seleccione un formulario"
-                                description="Elija un formulario del panel izquierdo para administrar secciones y campos."
-                            />
-                        </div>
+                        renderMainEmpty()
                     )}
                 </main>
             </div>
 
             <Drawer
-                title={editingFormulario ? 'Editar formulario' : 'Nuevo formulario'}
+                title={
+                    editingFormulario ? 'Editar formulario clínico' : 'Nuevo formulario clínico'
+                }
                 open={formularioDrawer}
                 onClose={() => setFormularioDrawer(false)}
                 size={420}
@@ -926,7 +1258,7 @@ export function FormulariosView({ tipoAtencionId }: FormulariosViewProps) {
                     >
                         <Select
                             disabled
-                            options={tiposData?.items.map((t) => ({
+                            options={(tiposData?.items ?? []).map((t) => ({
                                 value: t.id,
                                 label: `${t.codigo} — ${t.nombre}`,
                             }))}
@@ -935,7 +1267,15 @@ export function FormulariosView({ tipoAtencionId }: FormulariosViewProps) {
                     <Row gutter={8}>
                         <Col span={12}>
                             <Form.Item name="codigo" label="Código" rules={[{ required: true }]}>
-                                <Input autoFocus={!editingFormulario} />
+                                <Input
+                                    autoFocus={!editingFormulario}
+                                    onChange={(event) => {
+                                        formularioForm.setFieldValue(
+                                            'codigo',
+                                            normalizeCodigo(event.target.value),
+                                        )
+                                    }}
+                                />
                             </Form.Item>
                         </Col>
                         <Col span={12}>
@@ -986,7 +1326,15 @@ export function FormulariosView({ tipoAtencionId }: FormulariosViewProps) {
                     <Row gutter={8}>
                         <Col span={12}>
                             <Form.Item name="codigo" label="Código" rules={[{ required: true }]}>
-                                <Input autoFocus={!editingSeccion} />
+                                <Input
+                                    autoFocus={!editingSeccion}
+                                    onChange={(event) => {
+                                        seccionForm.setFieldValue(
+                                            'codigo',
+                                            normalizeCodigo(event.target.value),
+                                        )
+                                    }}
+                                />
                             </Form.Item>
                         </Col>
                         <Col span={12}>
@@ -1031,7 +1379,15 @@ export function FormulariosView({ tipoAtencionId }: FormulariosViewProps) {
                     <Row gutter={8}>
                         <Col span={12}>
                             <Form.Item name="codigo" label="Código" rules={[{ required: true }]}>
-                                <Input autoFocus={!editingCampo} />
+                                <Input
+                                    autoFocus={!editingCampo}
+                                    onChange={(event) => {
+                                        campoForm.setFieldValue(
+                                            'codigo',
+                                            normalizeCodigo(event.target.value),
+                                        )
+                                    }}
+                                />
                             </Form.Item>
                         </Col>
                         <Col span={12}>
