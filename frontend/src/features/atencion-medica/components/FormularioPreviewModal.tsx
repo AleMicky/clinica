@@ -3,6 +3,7 @@ import {
     Alert,
     Checkbox,
     Col,
+    DatePicker,
     Empty,
     Flex,
     Form,
@@ -15,6 +16,7 @@ import {
     Skeleton,
     Switch,
     Tag,
+    TimePicker,
     Typography,
 } from 'antd'
 import { EyeInvisibleOutlined } from '@ant-design/icons'
@@ -30,6 +32,10 @@ import type {
 } from '../types/atencion-medica.types'
 
 const { Text, Title } = Typography
+
+const DATE_FORMAT = 'DD/MM/YYYY'
+const DATETIME_FORMAT = 'DD/MM/YYYY HH:mm'
+const TIME_FORMAT = 'HH:mm'
 
 const ETAPA_LABELS: Record<string, string> = {
     RECEPCION: 'Recepción',
@@ -90,13 +96,32 @@ function renderPreviewField(
             )
         case 'date':
         case 'datepicker':
-            return <Input type="date" />
+            return (
+                <DatePicker
+                    style={{ width: '100%' }}
+                    format={DATE_FORMAT}
+                    placeholder={campo.placeholder ?? 'Seleccione fecha'}
+                />
+            )
         case 'datetime':
         case 'datetimepicker':
-            return <Input type="datetime-local" />
+            return (
+                <DatePicker
+                    showTime
+                    style={{ width: '100%' }}
+                    format={DATETIME_FORMAT}
+                    placeholder={campo.placeholder ?? 'Seleccione fecha y hora'}
+                />
+            )
         case 'time':
         case 'timepicker':
-            return <Input type="time" />
+            return (
+                <TimePicker
+                    style={{ width: '100%' }}
+                    format={TIME_FORMAT}
+                    placeholder={campo.placeholder ?? 'Seleccione hora'}
+                />
+            )
         case 'checkbox':
         case 'switch':
             return <Checkbox>{campo.etiqueta}</Checkbox>
@@ -199,12 +224,28 @@ export function FormularioPreviewModal({
     const initialValues = useMemo(() => {
         const values: Record<string, unknown> = {}
         for (const campo of campos) {
-            if (campo.valorDefecto != null && campo.valorDefecto !== '') {
-                values[campo.id] = campo.valorDefecto
+            if (campo.valorDefecto == null || campo.valorDefecto === '') continue
+
+            const control = (
+                tipoCampoMap.get(campo.tipoCampoFormularioId)?.controlFrontend ?? ''
+            ).toLowerCase()
+
+            // DatePicker/TimePicker esperan Dayjs; en vista previa se dejan vacíos.
+            if (
+                control === 'date' ||
+                control === 'datepicker' ||
+                control === 'datetime' ||
+                control === 'datetimepicker' ||
+                control === 'time' ||
+                control === 'timepicker'
+            ) {
+                continue
             }
+
+            values[campo.id] = campo.valorDefecto
         }
         return values
-    }, [campos])
+    }, [campos, tipoCampoMap])
 
     const handleClose = () => {
         setMostrarOcultos(false)
