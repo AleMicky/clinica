@@ -14,10 +14,10 @@ import {
     Empty,
     Flex,
     Form,
+    Grid,
     Input,
     InputNumber,
     Modal,
-    Popconfirm,
     Row,
     Select,
     Skeleton,
@@ -28,6 +28,8 @@ import {
     theme,
 } from 'antd'
 import type { MenuProps } from 'antd'
+
+const { useBreakpoint } = Grid
 import {
     ArrowLeftOutlined,
     CalendarOutlined,
@@ -238,7 +240,9 @@ type FormulariosViewProps = {
 
 export function FormulariosView({ tipoAtencionId, formularioId }: FormulariosViewProps) {
     const { token } = theme.useToken()
+    const screens = useBreakpoint()
     const navigate = useNavigate()
+    const compactTabsExtra = !screens.md
 
     const [selectedSeccionId, setSelectedSeccionId] = useState<string | null>(null)
     const [formularioSearchInput, setFormularioSearchInput] = useState('')
@@ -754,6 +758,34 @@ export function FormulariosView({ tipoAtencionId, formularioId }: FormulariosVie
         },
     ]
 
+    const buildSeccionMenu = (seccion: FormularioSeccion): MenuProps['items'] => [
+        {
+            key: 'edit',
+            label: 'Editar sección',
+            icon: <EditOutlined />,
+            onClick: () => openSeccionDrawer(seccion),
+        },
+        {
+            key: 'delete',
+            label: 'Eliminar sección',
+            icon: <DeleteOutlined />,
+            danger: true,
+            onClick: () => {
+                Modal.confirm({
+                    title: '¿Eliminar sección?',
+                    content: `Se eliminará la sección "${seccion.nombre}".`,
+                    okText: 'Eliminar',
+                    okType: 'danger',
+                    cancelText: 'Cancelar',
+                    onOk: () => {
+                        deleteSeccion.mutate(seccion.id)
+                        setSelectedSeccionId(null)
+                    },
+                })
+            },
+        },
+    ]
+
     const renderMainEmpty = () => {
         if (isLoadingSidebar) {
             return (
@@ -1139,6 +1171,7 @@ export function FormulariosView({ tipoAtencionId, formularioId }: FormulariosVie
                                                     type="card"
                                                     className="formularios-view__tabs"
                                                     activeKey={selectedSeccion?.id}
+                                                    tabBarGutter={4}
                                                     onChange={(key) => {
                                                         setSelectedSeccionId(key)
                                                         setCampoSearchInput('')
@@ -1146,60 +1179,50 @@ export function FormulariosView({ tipoAtencionId, formularioId }: FormulariosVie
                                                     }}
                                                     items={seccionTabItems}
                                                     tabBarExtraContent={
-                                                        <Flex
-                                                            align="center"
-                                                            gap={4}
-                                                            className="formularios-view__tabs-extra"
-                                                        >
+                                                        <div className="formularios-view__tabs-extra">
                                                             {selectedSeccion ? (
-                                                                <>
-                                                                    <Tooltip title="Editar sección">
-                                                                        <Button
-                                                                            type="text"
-                                                                            size="small"
-                                                                            icon={<EditOutlined />}
-                                                                            aria-label="Editar sección"
-                                                                            onClick={() =>
-                                                                                openSeccionDrawer(
-                                                                                    selectedSeccion,
-                                                                                )
-                                                                            }
-                                                                        />
-                                                                    </Tooltip>
-                                                                    <Popconfirm
-                                                                        title="¿Eliminar sección?"
-                                                                        onConfirm={() => {
-                                                                            deleteSeccion.mutate(
-                                                                                selectedSeccion.id,
-                                                                            )
-                                                                            setSelectedSeccionId(
-                                                                                null,
-                                                                            )
-                                                                        }}
-                                                                    >
-                                                                        <Tooltip title="Eliminar sección">
-                                                                            <Button
-                                                                                type="text"
-                                                                                size="small"
-                                                                                danger
-                                                                                icon={
-                                                                                    <DeleteOutlined />
-                                                                                }
-                                                                                aria-label="Eliminar sección"
-                                                                            />
-                                                                        </Tooltip>
-                                                                    </Popconfirm>
-                                                                </>
+                                                                <Dropdown
+                                                                    menu={{
+                                                                        items: buildSeccionMenu(
+                                                                            selectedSeccion,
+                                                                        ),
+                                                                    }}
+                                                                    trigger={['click']}
+                                                                    placement="bottomRight"
+                                                                >
+                                                                    <Button
+                                                                        type="text"
+                                                                        size="small"
+                                                                        icon={<MoreOutlined />}
+                                                                        aria-label={`Acciones de ${selectedSeccion.nombre}`}
+                                                                    />
+                                                                </Dropdown>
                                                             ) : null}
-                                                            <Button
-                                                                size="small"
-                                                                type="dashed"
-                                                                icon={<PlusOutlined />}
-                                                                onClick={() => openSeccionDrawer()}
-                                                            >
-                                                                Nueva sección
-                                                            </Button>
-                                                        </Flex>
+                                                            {compactTabsExtra ? (
+                                                                <Tooltip title="Nueva sección">
+                                                                    <Button
+                                                                        type="text"
+                                                                        size="small"
+                                                                        icon={<PlusOutlined />}
+                                                                        aria-label="Nueva sección"
+                                                                        onClick={() =>
+                                                                            openSeccionDrawer()
+                                                                        }
+                                                                    />
+                                                                </Tooltip>
+                                                            ) : (
+                                                                <Button
+                                                                    type="text"
+                                                                    size="small"
+                                                                    icon={<PlusOutlined />}
+                                                                    onClick={() =>
+                                                                        openSeccionDrawer()
+                                                                    }
+                                                                >
+                                                                    Nueva sección
+                                                                </Button>
+                                                            )}
+                                                        </div>
                                                     }
                                                 />
                                             </div>
