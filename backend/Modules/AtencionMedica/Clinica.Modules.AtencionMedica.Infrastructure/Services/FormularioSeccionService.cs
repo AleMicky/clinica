@@ -79,7 +79,8 @@ public sealed class FormularioSeccionService(AtencionMedicaDbContext context)
             Codigo = codigo,
             Nombre = Normalize(request.Nombre),
             Orden = request.Orden,
-            EtapaFlujo = NormalizeOptional(request.EtapaFlujo)
+            EtapaFlujo = NormalizeOptional(request.EtapaFlujo),
+            Visible = request.Visible
         };
 
         context.FormularioSecciones.Add(entity);
@@ -113,6 +114,7 @@ public sealed class FormularioSeccionService(AtencionMedicaDbContext context)
         entity.Nombre = Normalize(request.Nombre);
         entity.Orden = request.Orden;
         entity.EtapaFlujo = NormalizeOptional(request.EtapaFlujo);
+        entity.Visible = request.Visible;
 
         await context.SaveChangesAsync(cancellationToken);
 
@@ -168,5 +170,12 @@ public sealed class FormularioSeccionService(AtencionMedicaDbContext context)
     }
 
     private static FormularioSeccionResponse ToResponse(FormularioSeccion entity) =>
-        new(entity.Id, entity.FormularioClinicoId, entity.Codigo, entity.Nombre, entity.Orden, entity.EtapaFlujo);
+        new(
+            entity.Id,
+            entity.FormularioClinicoId,
+            entity.Codigo,
+            entity.Nombre,
+            entity.Orden,
+            entity.EtapaFlujo,
+            entity.Visible);
 }

@@ -130,6 +130,7 @@ public sealed class AtencionFlujoService(
         var respuestasMap = respuestas.ToDictionary(x => x.FormularioCampoId);
 
         return formulario.Secciones
+            .Where(x => x.Visible)
             .OrderBy(x => x.Orden)
             .Select(seccion =>
             {

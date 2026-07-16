@@ -10,6 +10,7 @@ public class FormularioSeccion : AuditableEntity
     public string Codigo { get; set; } = string.Empty;
     public string Nombre { get; set; } = string.Empty;
     public int Orden { get; set; }
+    public bool Visible { get; set; } = true;
 
     /// <summary>
     /// Etapa del flujo clínico a la que pertenece la sección (RECEPCION, ENFERMERIA, CONSULTA_MEDICA, etc.).

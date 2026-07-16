@@ -5,6 +5,7 @@ import {
 } from '@tanstack/react-table'
 import {
     Alert,
+    Badge,
     Button,
     Col,
     Divider,
@@ -22,7 +23,6 @@ import {
     Skeleton,
     Switch,
     Tabs,
-    Tag,
     Tooltip,
     Typography,
     theme,
@@ -31,12 +31,14 @@ import type { MenuProps } from 'antd'
 import {
     ArrowLeftOutlined,
     CalendarOutlined,
+    CheckOutlined,
     CheckSquareOutlined,
     ClockCircleOutlined,
     CopyOutlined,
     DeleteOutlined,
     DownSquareOutlined,
     EditOutlined,
+    EyeInvisibleOutlined,
     FieldNumberOutlined,
     FileTextOutlined,
     FolderOpenOutlined,
@@ -165,7 +167,7 @@ function formularioEstadoLabel(activo: boolean): string {
     return activo ? 'Activo' : 'Inactivo'
 }
 
-function formularioEstadoColor(activo: boolean): 'success' | 'default' {
+function formularioEstadoBadgeStatus(activo: boolean): 'success' | 'default' {
     return activo ? 'success' : 'default'
 }
 
@@ -422,6 +424,7 @@ export function FormulariosView({ tipoAtencionId, formularioId }: FormulariosVie
         } else {
             seccionForm.setFieldsValue({
                 orden: secciones.length + 1,
+                visible: true,
             })
         }
         setSeccionDrawer(true)
@@ -437,6 +440,7 @@ export function FormulariosView({ tipoAtencionId, formularioId }: FormulariosVie
             campoForm.setFieldsValue({
                 orden: campos.length + 1,
                 esRequerido: false,
+                visible: true,
             })
         }
         setCampoDrawer(true)
@@ -451,6 +455,7 @@ export function FormulariosView({ tipoAtencionId, formularioId }: FormulariosVie
             etiqueta: `${item.etiqueta} (copia)`,
             tipoCampoFormularioId: item.tipoCampoFormularioId,
             esRequerido: item.esRequerido,
+            visible: item.visible,
             orden: campos.length + 1,
             placeholder: item.placeholder ?? undefined,
             valorDefecto: item.valorDefecto ?? undefined,
@@ -504,6 +509,8 @@ export function FormulariosView({ tipoAtencionId, formularioId }: FormulariosVie
             codigo: normalizeCodigo(values.codigo),
             nombre: values.nombre,
             orden: values.orden,
+            etapaFlujo: editingSeccion?.etapaFlujo ?? null,
+            visible: values.visible ?? true,
         }
 
         if (editingSeccion) {
@@ -524,7 +531,7 @@ export function FormulariosView({ tipoAtencionId, formularioId }: FormulariosVie
             etiqueta: values.etiqueta,
             tipoCampoFormularioId: values.tipoCampoFormularioId,
             esRequerido: values.esRequerido ?? false,
-            visible: editingCampo?.visible ?? true,
+            visible: values.visible ?? true,
             orden: values.orden,
             placeholder: values.placeholder || null,
             valorDefecto: values.valorDefecto || null,
@@ -543,26 +550,37 @@ export function FormulariosView({ tipoAtencionId, formularioId }: FormulariosVie
     const campoColumns = useMemo(
         () =>
             [
-                campoColumnHelper.accessor('codigo', {
-                    header: 'Código',
-                    size: 120,
-                    cell: ({ getValue }) => (
-                        <Tooltip title={getValue()}>
-                            <span className="formularios-view__cell-text">{getValue()}</span>
-                        </Tooltip>
-                    ),
-                }),
                 campoColumnHelper.accessor('etiqueta', {
-                    header: 'Nombre',
-                    cell: ({ getValue }) => (
-                        <Tooltip title={getValue()}>
-                            <span className="formularios-view__cell-text">{getValue()}</span>
-                        </Tooltip>
-                    ),
+                    header: 'Campo',
+                    cell: ({ row }) => {
+                        const { etiqueta, codigo } = row.original
+                        return (
+                            <div className="formularios-view__campo-cell">
+                                <Tooltip title={etiqueta}>
+                                    <Text
+                                        className="formularios-view__campo-nombre"
+                                        ellipsis={{ tooltip: false }}
+                                    >
+                                        {etiqueta}
+                                    </Text>
+                                </Tooltip>
+                                <Tooltip title={codigo}>
+                                    <Text
+                                        type="secondary"
+                                        code
+                                        className="formularios-view__campo-codigo"
+                                        ellipsis={{ tooltip: false }}
+                                    >
+                                        {codigo}
+                                    </Text>
+                                </Tooltip>
+                            </div>
+                        )
+                    },
                 }),
                 campoColumnHelper.accessor('tipoCampoFormularioId', {
                     header: 'Tipo',
-                    size: 150,
+                    size: 140,
                     cell: ({ row }) => {
                         const info = tipoCampoMap.get(row.original.tipoCampoFormularioId)
                         const visual = getCampoTipoVisual(info?.controlFrontend)
@@ -581,9 +599,12 @@ export function FormulariosView({ tipoAtencionId, formularioId }: FormulariosVie
                                     <span className="formularios-view__tipo-cell-icon" aria-hidden>
                                         {visual.icon}
                                     </span>
-                                    <span className="formularios-view__tipo-cell-label">
+                                    <Text
+                                        type="secondary"
+                                        className="formularios-view__tipo-cell-label"
+                                    >
                                         {visual.label}
-                                    </span>
+                                    </Text>
                                 </span>
                             </Tooltip>
                         )
@@ -593,6 +614,33 @@ export function FormulariosView({ tipoAtencionId, formularioId }: FormulariosVie
                     header: 'Orden',
                     size: 72,
                     meta: { align: 'center', headerAlign: 'center' },
+                }),
+                campoColumnHelper.accessor('visible', {
+                    header: 'Visibilidad',
+                    size: 96,
+                    meta: { align: 'center', headerAlign: 'center' },
+                    cell: ({ getValue }) => {
+                        const isVisible = getValue()
+                        return (
+                            <Tooltip title={isVisible ? 'Visible' : 'No visible'}>
+                                <span
+                                    className={[
+                                        'formularios-view__visibility-icon',
+                                        isVisible
+                                            ? 'formularios-view__visibility-icon--visible'
+                                            : 'formularios-view__visibility-icon--hidden',
+                                    ].join(' ')}
+                                    aria-label={isVisible ? 'Visible' : 'No visible'}
+                                >
+                                    {isVisible ? (
+                                        <CheckOutlined />
+                                    ) : (
+                                        <EyeInvisibleOutlined />
+                                    )}
+                                </span>
+                            </Tooltip>
+                        )
+                    },
                 }),
                 campoColumnHelper.display({
                     id: 'actions',
@@ -637,8 +685,29 @@ export function FormulariosView({ tipoAtencionId, formularioId }: FormulariosVie
             secciones.map((seccion) => ({
                 key: seccion.id,
                 label: (
-                    <Tooltip title={seccion.nombre}>
-                        <span className="formularios-view__tab-label">
+                    <Tooltip
+                        title={
+                            seccion.visible
+                                ? seccion.nombre
+                                : `${seccion.nombre} (oculta)`
+                        }
+                    >
+                        <span
+                            className={[
+                                'formularios-view__tab-label',
+                                seccion.visible
+                                    ? ''
+                                    : 'formularios-view__tab-label--hidden',
+                            ]
+                                .filter(Boolean)
+                                .join(' ')}
+                        >
+                            {!seccion.visible ? (
+                                <EyeInvisibleOutlined
+                                    className="formularios-view__tab-hidden-icon"
+                                    aria-hidden
+                                />
+                            ) : null}
                             <Text ellipsis className="formularios-view__tab-name">
                                 {seccion.nombre}
                             </Text>
@@ -988,12 +1057,13 @@ export function FormulariosView({ tipoAtencionId, formularioId }: FormulariosVie
                                         <Text code className="formularios-view__context-code-text">
                                             {selectedFormulario.codigo}
                                         </Text>
-                                        <Tag
-                                            color={formularioEstadoColor(selectedFormulario.activo)}
-                                            className="formularios-view__estado-tag"
-                                        >
-                                            {formularioEstadoLabel(selectedFormulario.activo)}
-                                        </Tag>
+                                        <Badge
+                                            status={formularioEstadoBadgeStatus(
+                                                selectedFormulario.activo,
+                                            )}
+                                            text={formularioEstadoLabel(selectedFormulario.activo)}
+                                            className="formularios-view__estado-badge"
+                                        />
                                         <Text
                                             type="secondary"
                                             className="formularios-view__context-desc"
@@ -1346,6 +1416,14 @@ export function FormulariosView({ tipoAtencionId, formularioId }: FormulariosVie
                     <Form.Item name="nombre" label="Nombre" rules={[{ required: true }]}>
                         <Input />
                     </Form.Item>
+                    <Form.Item
+                        name="visible"
+                        label="Visible"
+                        valuePropName="checked"
+                        extra="Si está desactivado, la sección no se muestra en la atención clínica."
+                    >
+                        <Switch size="small" />
+                    </Form.Item>
                 </Form>
             </Drawer>
 
@@ -1431,9 +1509,23 @@ export function FormulariosView({ tipoAtencionId, formularioId }: FormulariosVie
                             </Form.Item>
                         </Col>
                     </Row>
-                    <Form.Item name="esRequerido" label="Requerido" valuePropName="checked">
-                        <Switch size="small" />
-                    </Form.Item>
+                    <Row gutter={8}>
+                        <Col span={12}>
+                            <Form.Item name="esRequerido" label="Requerido" valuePropName="checked">
+                                <Switch size="small" />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item
+                                name="visible"
+                                label="Visible"
+                                valuePropName="checked"
+                                extra="Si está desactivado, el campo no se muestra en la atención clínica."
+                            >
+                                <Switch size="small" />
+                            </Form.Item>
+                        </Col>
+                    </Row>
                     <Form.Item
                         name="opcionesJson"
                         label="Opciones JSON"

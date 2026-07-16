@@ -32,6 +32,9 @@ public sealed class FormularioSeccionConfiguration : BaseEntityConfiguration<For
         builder.Property(x => x.EtapaFlujo)
             .HasMaxLength(50);
 
+        builder.Property(x => x.Visible)
+            .HasDefaultValue(true);
+
         builder.HasIndex(x => new { x.FormularioClinicoId, x.Codigo })
             .IsUnique();
 

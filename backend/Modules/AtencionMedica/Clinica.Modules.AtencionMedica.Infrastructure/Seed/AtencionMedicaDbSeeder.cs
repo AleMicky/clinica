@@ -409,7 +409,8 @@ public static class AtencionMedicaDbSeeder
                     Codigo = seccionSeed.Codigo,
                     Nombre = seccionSeed.Nombre,
                     Orden = seccionSeed.Orden,
-                    EtapaFlujo = seccionSeed.EtapaFlujo
+                    EtapaFlujo = seccionSeed.EtapaFlujo,
+                    Visible = true
                 };
 
                 formulario.Secciones.Add(seccion);
@@ -419,6 +420,7 @@ public static class AtencionMedicaDbSeeder
                 seccion.Nombre = seccionSeed.Nombre;
                 seccion.Orden = seccionSeed.Orden;
                 seccion.EtapaFlujo = seccionSeed.EtapaFlujo;
+                seccion.Visible = true;
             }
 
             foreach (var campoSeed in seccionSeed.Campos)

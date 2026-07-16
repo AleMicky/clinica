@@ -29,6 +29,7 @@ public sealed class RecepcionAtencionService(
                 "No existe un formulario clínico activo para el tipo de atención.");
 
         var secciones = formulario.Secciones
+            .Where(x => x.Visible)
             .Where(x => x.EtapaFlujo == RecepcionEtapaFlujo ||
                         (string.IsNullOrEmpty(x.EtapaFlujo) && x.Codigo == RecepcionSeccionCodigo))
             .OrderBy(x => x.Orden)
@@ -76,6 +77,7 @@ public sealed class RecepcionAtencionService(
                 "No existe un formulario clínico activo para el tipo de atención.");
 
         var camposRecepcion = formulario.Secciones
+            .Where(x => x.Visible)
             .Where(x => x.EtapaFlujo == RecepcionEtapaFlujo ||
                         (string.IsNullOrEmpty(x.EtapaFlujo) && x.Codigo == RecepcionSeccionCodigo))
             .SelectMany(x => x.Campos.Where(c => c.Visible))

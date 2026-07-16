@@ -6,4 +6,5 @@ public sealed record FormularioSeccionResponse(
     string Codigo,
     string Nombre,
     int Orden,
-    string? EtapaFlujo);
+    string? EtapaFlujo,
+    bool Visible);

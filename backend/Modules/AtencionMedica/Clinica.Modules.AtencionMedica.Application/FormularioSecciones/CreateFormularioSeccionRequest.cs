@@ -5,4 +5,5 @@ public sealed record CreateFormularioSeccionRequest(
     string Codigo,
     string Nombre,
     int Orden,
-    string? EtapaFlujo = null);
+    string? EtapaFlujo = null,
+    bool Visible = true);

@@ -2930,11 +2930,14 @@ body {
     font-size: 11px;
 }
 
-.formularios-view__estado-tag {
-    margin: 0 !important;
-    font-size: 11px !important;
-    line-height: 18px;
-    padding-inline: 6px !important;
+.formularios-view__estado-badge {
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.formularios-view__estado-badge .ant-badge-status-text {
+    color: inherit;
+    font-size: 12px;
 }
 
 .formularios-view__form-item-actions {
@@ -3037,9 +3040,20 @@ body {
 }
 
 .formularios-view__tab-label {
-    display: block;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     min-width: 0;
     max-width: 140px;
+}
+
+.formularios-view__tab-label--hidden {
+    opacity: 0.65;
+}
+
+.formularios-view__tab-hidden-icon {
+    flex-shrink: 0;
+    font-size: 11px;
 }
 
 .formularios-view__tab-name {
@@ -3123,6 +3137,37 @@ body {
     white-space: nowrap;
 }
 
+.formularios-view__campo-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.formularios-view__campo-nombre {
+    display: block;
+    max-width: 100%;
+    font-size: 13px;
+    line-height: 1.3;
+    margin: 0;
+}
+
+.formularios-view__campo-nombre.ant-typography {
+    margin-bottom: 0;
+}
+
+.formularios-view__campo-codigo {
+    display: inline-block;
+    max-width: 100%;
+    font-size: 11px;
+    line-height: 1.3;
+    margin: 0;
+}
+
+.formularios-view__campo-codigo.ant-typography {
+    margin-bottom: 0;
+}
+
 .formularios-view__tipo-cell {
     display: inline-flex;
     align-items: center;
@@ -3138,6 +3183,23 @@ body {
 
 .formularios-view__tipo-cell-label {
     font-size: 12px;
+    margin: 0 !important;
+}
+
+.formularios-view__visibility-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    line-height: 1;
+}
+
+.formularios-view__visibility-icon--visible {
+    color: var(--ant-color-success);
+}
+
+.formularios-view__visibility-icon--hidden {
+    color: var(--ant-color-text-secondary);
 }
 
 .formularios-view__row-actions:hover {

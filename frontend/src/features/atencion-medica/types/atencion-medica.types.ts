@@ -47,6 +47,7 @@ export type FormularioSeccion = {
     nombre: string
     orden: number
     etapaFlujo?: string | null
+    visible: boolean
 }
 
 export type CreateFormularioSeccionPayload = {
@@ -55,6 +56,7 @@ export type CreateFormularioSeccionPayload = {
     nombre: string
     orden: number
     etapaFlujo?: string | null
+    visible: boolean
 }
 
 export type UpdateFormularioSeccionPayload = CreateFormularioSeccionPayload

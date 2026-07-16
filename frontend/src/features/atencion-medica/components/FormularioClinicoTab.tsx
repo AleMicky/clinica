@@ -185,10 +185,11 @@ export function FormularioClinicoTab({ atencion, etapaForzada }: FormularioClini
     )
 
     const seccionesVisibles = useMemo(() => {
-        if (!etapaActual) return secciones
-        if (etapaForzada) return secciones.filter((s) => s.etapaFlujo === etapaForzada)
-        if (mostrarTodas) return secciones
-        return secciones.filter((s) => s.etapaFlujo === etapaActual)
+        const visibles = secciones.filter((s) => s.visible !== false)
+        if (!etapaActual) return visibles
+        if (etapaForzada) return visibles.filter((s) => s.etapaFlujo === etapaForzada)
+        if (mostrarTodas) return visibles
+        return visibles.filter((s) => s.etapaFlujo === etapaActual)
     }, [etapaActual, etapaForzada, mostrarTodas, secciones])
 
     const camposPorSeccion = useMemo(() => {
@@ -197,7 +198,7 @@ export function FormularioClinicoTab({ atencion, etapaForzada }: FormularioClini
             map.set(
                 seccion.id,
                 campos
-                    .filter((c) => c.formularioSeccionId === seccion.id)
+                    .filter((c) => c.formularioSeccionId === seccion.id && c.visible !== false)
                     .sort((a, b) => a.orden - b.orden),
             )
         })
