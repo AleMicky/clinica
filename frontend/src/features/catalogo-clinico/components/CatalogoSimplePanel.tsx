@@ -37,6 +37,8 @@ type CatalogoSimplePanelProps = {
     onCreate: (values: CatalogoBaseFormValues) => Promise<void>
     onUpdate: (id: string, values: CatalogoBaseFormValues) => Promise<void>
     onDelete: (id: string) => Promise<void>
+    /** Acciones adicionales por fila (antes de editar/eliminar). */
+    extraRowActions?: (item: CatalogoBase) => React.ReactNode
 }
 
 const columnHelper = createColumnHelper<CatalogoBase>()
@@ -59,6 +61,7 @@ export function CatalogoSimplePanel({
     onCreate,
     onUpdate,
     onDelete,
+    extraRowActions,
 }: CatalogoSimplePanelProps) {
     const { token } = theme.useToken()
     const screens = useBreakpoint()
@@ -96,12 +99,13 @@ export function CatalogoSimplePanel({
                 columnHelper.display({
                     id: 'actions',
                     header: 'Acciones',
-                    size: 120,
+                    size: extraRowActions ? 160 : 120,
                     meta: { align: 'right', headerAlign: 'right' },
                     cell: ({ row }) => {
                         const item = row.original
                         return (
                             <Space size="small">
+                                {extraRowActions?.(item)}
                                 <Button
                                     type="text"
                                     icon={<EditOutlined />}
@@ -140,7 +144,7 @@ export function CatalogoSimplePanel({
                     },
                 }),
             ] as ColumnDef<CatalogoBase, unknown>[],
-        [deletingId, onDelete],
+        [deletingId, extraRowActions, onDelete],
     )
 
     const closeModal = () => {

@@ -47,6 +47,7 @@ import { Route as AdminAtencionMedicaEnfermeriaIndexRouteImport } from './routes
 import { Route as AdminAtencionMedicaConsultaMedicaIndexRouteImport } from './routes/_admin/atencion-medica/consulta-medica/index'
 import { Route as AdminWorkflowInstancesInstanceIdRouteImport } from './routes/_admin/workflow/instances/$instanceId'
 import { Route as AdminWorkflowDesignerDefinitionIdRouteImport } from './routes/_admin/workflow/designer/$definitionId'
+import { Route as AdminAtencionesFormulariosTipoAtencionIdRouteImport } from './routes/_admin/atenciones/formularios.$tipoAtencionId'
 import { Route as AdminAtencionMedicaEnfermeriaAtencionIdRouteImport } from './routes/_admin/atencion-medica/enfermeria/$atencionId'
 import { Route as AdminAtencionMedicaConsultaMedicaAtencionIdRouteImport } from './routes/_admin/atencion-medica/consulta-medica/$atencionId'
 
@@ -256,6 +257,12 @@ const AdminWorkflowDesignerDefinitionIdRoute =
     path: '/workflow/designer/$definitionId',
     getParentRoute: () => AdminRoute,
   } as any)
+const AdminAtencionesFormulariosTipoAtencionIdRoute =
+  AdminAtencionesFormulariosTipoAtencionIdRouteImport.update({
+    id: '/$tipoAtencionId',
+    path: '/$tipoAtencionId',
+    getParentRoute: () => AdminAtencionesFormulariosRoute,
+  } as any)
 const AdminAtencionMedicaEnfermeriaAtencionIdRoute =
   AdminAtencionMedicaEnfermeriaAtencionIdRouteImport.update({
     id: '/$atencionId',
@@ -281,7 +288,7 @@ export interface FileRoutesByFullPath {
   '/atencion-medica/recepcion': typeof AdminAtencionMedicaRecepcionRoute
   '/atenciones/$atencionId': typeof AdminAtencionesAtencionIdRoute
   '/atenciones/diagnosticos': typeof AdminAtencionesDiagnosticosRoute
-  '/atenciones/formularios': typeof AdminAtencionesFormulariosRoute
+  '/atenciones/formularios': typeof AdminAtencionesFormulariosRouteWithChildren
   '/atenciones/tipos-atencion': typeof AdminAtencionesTiposAtencionRoute
   '/recursos-humanos/cargos': typeof AdminRecursosHumanosCargosRoute
   '/recursos-humanos/empleados': typeof AdminRecursosHumanosEmpleadosRoute
@@ -304,6 +311,7 @@ export interface FileRoutesByFullPath {
   '/workflow/': typeof AdminWorkflowIndexRoute
   '/atencion-medica/consulta-medica/$atencionId': typeof AdminAtencionMedicaConsultaMedicaAtencionIdRoute
   '/atencion-medica/enfermeria/$atencionId': typeof AdminAtencionMedicaEnfermeriaAtencionIdRoute
+  '/atenciones/formularios/$tipoAtencionId': typeof AdminAtencionesFormulariosTipoAtencionIdRoute
   '/workflow/designer/$definitionId': typeof AdminWorkflowDesignerDefinitionIdRoute
   '/workflow/instances/$instanceId': typeof AdminWorkflowInstancesInstanceIdRoute
   '/atencion-medica/consulta-medica/': typeof AdminAtencionMedicaConsultaMedicaIndexRoute
@@ -315,7 +323,7 @@ export interface FileRoutesByTo {
   '/atencion-medica/recepcion': typeof AdminAtencionMedicaRecepcionRoute
   '/atenciones/$atencionId': typeof AdminAtencionesAtencionIdRoute
   '/atenciones/diagnosticos': typeof AdminAtencionesDiagnosticosRoute
-  '/atenciones/formularios': typeof AdminAtencionesFormulariosRoute
+  '/atenciones/formularios': typeof AdminAtencionesFormulariosRouteWithChildren
   '/atenciones/tipos-atencion': typeof AdminAtencionesTiposAtencionRoute
   '/recursos-humanos/cargos': typeof AdminRecursosHumanosCargosRoute
   '/recursos-humanos/empleados': typeof AdminRecursosHumanosEmpleadosRoute
@@ -338,6 +346,7 @@ export interface FileRoutesByTo {
   '/workflow': typeof AdminWorkflowIndexRoute
   '/atencion-medica/consulta-medica/$atencionId': typeof AdminAtencionMedicaConsultaMedicaAtencionIdRoute
   '/atencion-medica/enfermeria/$atencionId': typeof AdminAtencionMedicaEnfermeriaAtencionIdRoute
+  '/atenciones/formularios/$tipoAtencionId': typeof AdminAtencionesFormulariosTipoAtencionIdRoute
   '/workflow/designer/$definitionId': typeof AdminWorkflowDesignerDefinitionIdRoute
   '/workflow/instances/$instanceId': typeof AdminWorkflowInstancesInstanceIdRoute
   '/atencion-medica/consulta-medica': typeof AdminAtencionMedicaConsultaMedicaIndexRoute
@@ -358,7 +367,7 @@ export interface FileRoutesById {
   '/_admin/atencion-medica/recepcion': typeof AdminAtencionMedicaRecepcionRoute
   '/_admin/atenciones/$atencionId': typeof AdminAtencionesAtencionIdRoute
   '/_admin/atenciones/diagnosticos': typeof AdminAtencionesDiagnosticosRoute
-  '/_admin/atenciones/formularios': typeof AdminAtencionesFormulariosRoute
+  '/_admin/atenciones/formularios': typeof AdminAtencionesFormulariosRouteWithChildren
   '/_admin/atenciones/tipos-atencion': typeof AdminAtencionesTiposAtencionRoute
   '/_admin/recursos-humanos/cargos': typeof AdminRecursosHumanosCargosRoute
   '/_admin/recursos-humanos/empleados': typeof AdminRecursosHumanosEmpleadosRoute
@@ -381,6 +390,7 @@ export interface FileRoutesById {
   '/_admin/workflow/': typeof AdminWorkflowIndexRoute
   '/_admin/atencion-medica/consulta-medica/$atencionId': typeof AdminAtencionMedicaConsultaMedicaAtencionIdRoute
   '/_admin/atencion-medica/enfermeria/$atencionId': typeof AdminAtencionMedicaEnfermeriaAtencionIdRoute
+  '/_admin/atenciones/formularios/$tipoAtencionId': typeof AdminAtencionesFormulariosTipoAtencionIdRoute
   '/_admin/workflow/designer/$definitionId': typeof AdminWorkflowDesignerDefinitionIdRoute
   '/_admin/workflow/instances/$instanceId': typeof AdminWorkflowInstancesInstanceIdRoute
   '/_admin/atencion-medica/consulta-medica/': typeof AdminAtencionMedicaConsultaMedicaIndexRoute
@@ -423,6 +433,7 @@ export interface FileRouteTypes {
     | '/workflow/'
     | '/atencion-medica/consulta-medica/$atencionId'
     | '/atencion-medica/enfermeria/$atencionId'
+    | '/atenciones/formularios/$tipoAtencionId'
     | '/workflow/designer/$definitionId'
     | '/workflow/instances/$instanceId'
     | '/atencion-medica/consulta-medica/'
@@ -457,6 +468,7 @@ export interface FileRouteTypes {
     | '/workflow'
     | '/atencion-medica/consulta-medica/$atencionId'
     | '/atencion-medica/enfermeria/$atencionId'
+    | '/atenciones/formularios/$tipoAtencionId'
     | '/workflow/designer/$definitionId'
     | '/workflow/instances/$instanceId'
     | '/atencion-medica/consulta-medica'
@@ -499,6 +511,7 @@ export interface FileRouteTypes {
     | '/_admin/workflow/'
     | '/_admin/atencion-medica/consulta-medica/$atencionId'
     | '/_admin/atencion-medica/enfermeria/$atencionId'
+    | '/_admin/atenciones/formularios/$tipoAtencionId'
     | '/_admin/workflow/designer/$definitionId'
     | '/_admin/workflow/instances/$instanceId'
     | '/_admin/atencion-medica/consulta-medica/'
@@ -778,6 +791,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminWorkflowDesignerDefinitionIdRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_admin/atenciones/formularios/$tipoAtencionId': {
+      id: '/_admin/atenciones/formularios/$tipoAtencionId'
+      path: '/$tipoAtencionId'
+      fullPath: '/atenciones/formularios/$tipoAtencionId'
+      preLoaderRoute: typeof AdminAtencionesFormulariosTipoAtencionIdRouteImport
+      parentRoute: typeof AdminAtencionesFormulariosRoute
+    }
     '/_admin/atencion-medica/enfermeria/$atencionId': {
       id: '/_admin/atencion-medica/enfermeria/$atencionId'
       path: '/$atencionId'
@@ -795,10 +815,25 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AdminAtencionesFormulariosRouteChildren {
+  AdminAtencionesFormulariosTipoAtencionIdRoute: typeof AdminAtencionesFormulariosTipoAtencionIdRoute
+}
+
+const AdminAtencionesFormulariosRouteChildren: AdminAtencionesFormulariosRouteChildren =
+  {
+    AdminAtencionesFormulariosTipoAtencionIdRoute:
+      AdminAtencionesFormulariosTipoAtencionIdRoute,
+  }
+
+const AdminAtencionesFormulariosRouteWithChildren =
+  AdminAtencionesFormulariosRoute._addFileChildren(
+    AdminAtencionesFormulariosRouteChildren,
+  )
+
 interface AdminAtencionesRouteChildren {
   AdminAtencionesAtencionIdRoute: typeof AdminAtencionesAtencionIdRoute
   AdminAtencionesDiagnosticosRoute: typeof AdminAtencionesDiagnosticosRoute
-  AdminAtencionesFormulariosRoute: typeof AdminAtencionesFormulariosRoute
+  AdminAtencionesFormulariosRoute: typeof AdminAtencionesFormulariosRouteWithChildren
   AdminAtencionesTiposAtencionRoute: typeof AdminAtencionesTiposAtencionRoute
   AdminAtencionesIndexRoute: typeof AdminAtencionesIndexRoute
 }
@@ -806,7 +841,7 @@ interface AdminAtencionesRouteChildren {
 const AdminAtencionesRouteChildren: AdminAtencionesRouteChildren = {
   AdminAtencionesAtencionIdRoute: AdminAtencionesAtencionIdRoute,
   AdminAtencionesDiagnosticosRoute: AdminAtencionesDiagnosticosRoute,
-  AdminAtencionesFormulariosRoute: AdminAtencionesFormulariosRoute,
+  AdminAtencionesFormulariosRoute: AdminAtencionesFormulariosRouteWithChildren,
   AdminAtencionesTiposAtencionRoute: AdminAtencionesTiposAtencionRoute,
   AdminAtencionesIndexRoute: AdminAtencionesIndexRoute,
 }

@@ -196,7 +196,7 @@ export function useFormulariosClinicos(query: FormularioClinicoPagedQuery) {
     return useAppQuery({
         queryKey: queryKeys.atencionMedica.formulariosClinicos.list(query),
         queryFn: () => formulariosClinicosService.getPaged(query),
-        enabled: query.tipoAtencionId === undefined || Boolean(query.tipoAtencionId),
+        enabled: Boolean(query.tipoAtencionId),
     })
 }
 

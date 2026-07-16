@@ -26,6 +26,7 @@ import {
 } from 'antd'
 import type { MenuProps } from 'antd'
 import {
+    ArrowLeftOutlined,
     CopyOutlined,
     DeleteOutlined,
     EditOutlined,
@@ -36,6 +37,7 @@ import {
     SearchOutlined,
     UnorderedListOutlined,
 } from '@ant-design/icons'
+import { useNavigate } from '@tanstack/react-router'
 
 import { AppDataTable } from '../../../shared/components/ui/data-table/AppDataTable'
 import {
@@ -155,10 +157,14 @@ function CampoRowActions({ campo, onEdit, onDuplicate, onDelete }: CampoRowActio
     )
 }
 
-export function FormulariosView() {
-    const { token } = theme.useToken()
+type FormulariosViewProps = {
+    tipoAtencionId: string
+}
 
-    const [tipoAtencionId, setTipoAtencionId] = useState<string>()
+export function FormulariosView({ tipoAtencionId }: FormulariosViewProps) {
+    const { token } = theme.useToken()
+    const navigate = useNavigate()
+
     const [selectedFormulario, setSelectedFormulario] = useState<FormularioClinico | null>(null)
     const [selectedSeccion, setSelectedSeccion] = useState<FormularioSeccion | null>(null)
 
@@ -209,9 +215,22 @@ export function FormulariosView() {
         [tiposCampoData?.items],
     )
 
-    const formularios = formulariosData?.items ?? []
+    const formularios = useMemo(() => {
+        const items = formulariosData?.items ?? []
+        return items.filter((item) => item.tipoAtencionId === tipoAtencionId)
+    }, [formulariosData?.items, tipoAtencionId])
     const secciones = seccionesData?.items ?? []
     const campos = camposData?.items ?? []
+
+    const tipoAtencionLabel = useMemo(() => {
+        const tipo = tiposData?.items.find((t) => t.id === tipoAtencionId)
+        return tipo ? `${tipo.codigo} — ${tipo.nombre}` : null
+    }, [tipoAtencionId, tiposData?.items])
+
+    useEffect(() => {
+        setSelectedFormulario(null)
+        setFormularioSearchInput('')
+    }, [tipoAtencionId])
 
     const filteredFormularios = useMemo(() => {
         const term = formularioSearchInput.trim().toLowerCase()
@@ -522,18 +541,22 @@ export function FormulariosView() {
                     </div>
 
                     <div className="formularios-view__sidebar-filters">
-                        <Select
-                            allowClear
+                        <Button
+                            type="text"
                             size="small"
-                            placeholder="Tipo de atención"
-                            className="formularios-view__tipo-select"
-                            value={tipoAtencionId}
-                            onChange={setTipoAtencionId}
-                            options={tiposData?.items.map((t) => ({
-                                value: t.id,
-                                label: `${t.codigo} — ${t.nombre}`,
-                            }))}
-                        />
+                            icon={<ArrowLeftOutlined />}
+                            className="formularios-view__back-btn"
+                            onClick={() =>
+                                navigate({ to: '/atenciones/tipos-atencion' })
+                            }
+                        >
+                            Tipos de atención
+                        </Button>
+                        {tipoAtencionLabel ? (
+                            <Tag variant="filled" className="formularios-view__tipo-tag">
+                                {tipoAtencionLabel}
+                            </Tag>
+                        ) : null}
                     </div>
 
                     <div className="catalogos-view__sidebar-search">
@@ -555,7 +578,7 @@ export function FormulariosView() {
                                 icon={<FolderOpenOutlined />}
                                 title="Sin formularios"
                                 description={
-                                    formularioSearchInput || tipoAtencionId
+                                    formularioSearchInput
                                         ? 'No se encontraron formularios con ese criterio.'
                                         : 'Cree un formulario con el botón Nuevo para comenzar.'
                                 }
@@ -902,6 +925,7 @@ export function FormulariosView() {
                         rules={[{ required: true }]}
                     >
                         <Select
+                            disabled
                             options={tiposData?.items.map((t) => ({
                                 value: t.id,
                                 label: `${t.codigo} — ${t.nombre}`,

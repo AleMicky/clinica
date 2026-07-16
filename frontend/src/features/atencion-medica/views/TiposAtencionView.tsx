@@ -1,3 +1,6 @@
+import { Button, Tooltip } from 'antd'
+import { FormOutlined } from '@ant-design/icons'
+import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 
 import { CatalogoSimplePanel } from '../../catalogo-clinico/components/CatalogoSimplePanel'
@@ -26,6 +29,7 @@ function toPayload(values: CatalogoBaseFormValues) {
 }
 
 export function TiposAtencionView() {
+    const navigate = useNavigate()
     const [page, setPage] = useState(1)
     const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
     const [search, setSearch] = useState('')
@@ -73,6 +77,21 @@ export function TiposAtencionView() {
                 onDelete={async (id) => {
                     await deleteMutation.mutateAsync(id)
                 }}
+                extraRowActions={(item) => (
+                    <Tooltip title="Ver formularios">
+                        <Button
+                            type="text"
+                            icon={<FormOutlined />}
+                            aria-label={`Formularios de ${item.nombre}`}
+                            onClick={() =>
+                                navigate({
+                                    to: '/atenciones/formularios/$tipoAtencionId',
+                                    params: { tipoAtencionId: item.id },
+                                })
+                            }
+                        />
+                    </Tooltip>
+                )}
             />
         </div>
     )

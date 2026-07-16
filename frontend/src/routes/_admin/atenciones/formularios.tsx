@@ -1,10 +1,18 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { FormulariosView } from '../../../features/atencion-medica/views/FormulariosView'
+import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 import { requireAdmin } from '../../../shared/utils/auth-guards'
 
 export const Route = createFileRoute('/_admin/atenciones/formularios')({
-    beforeLoad: () => {
+    beforeLoad: ({ location }) => {
         requireAdmin()
+
+        const path = location.pathname.replace(/\/$/, '')
+        if (path === '/atenciones/formularios') {
+            throw redirect({ to: '/atenciones/tipos-atencion' })
+        }
     },
-    component: FormulariosView,
+    component: FormulariosLayout,
 })
+
+function FormulariosLayout() {
+    return <Outlet />
+}

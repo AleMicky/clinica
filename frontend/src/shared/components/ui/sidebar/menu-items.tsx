@@ -6,7 +6,6 @@ import {
     ExperimentOutlined,
     FileTextOutlined,
     FlagOutlined,
-    FormOutlined,
     HistoryOutlined,
     IdcardOutlined,
     MedicineBoxOutlined,
@@ -118,13 +117,6 @@ export const menuGroups: MenuGroup[] = [
                 to: '/atenciones/tipos-atencion',
                 icon: <UnorderedListOutlined />,
                 label: 'Tipos de atención',
-                roles: [AppRole.Admin],
-            },
-            {
-                key: '/atenciones/formularios',
-                to: '/atenciones/formularios',
-                icon: <FormOutlined />,
-                label: 'Formularios clínicos',
                 roles: [AppRole.Admin],
             },
             {
@@ -358,6 +350,14 @@ export function getSelectedMenuKey(
     pathname: string,
     userRoles: string[] = [],
 ): string {
+    // Formularios se gestiona desde Tipos de atención (entrada única en el menú).
+    if (
+        pathname === '/atenciones/formularios' ||
+        pathname.startsWith('/atenciones/formularios/')
+    ) {
+        return '/atenciones/tipos-atencion'
+    }
+
     const items = getMenuGroupsForUser(userRoles).flatMap((group) => group.items)
 
     const match = items
@@ -377,6 +377,13 @@ export function getMenuBreadcrumb(
     pathname: string,
     userRoles: string[] = [],
 ): { group?: string; page: string } {
+    if (
+        pathname === '/atenciones/formularios' ||
+        pathname.startsWith('/atenciones/formularios/')
+    ) {
+        return { group: 'Clínica', page: 'Formularios clínicos' }
+    }
+
     for (const group of getMenuGroupsForUser(userRoles)) {
         for (const item of group.items) {
             if (
