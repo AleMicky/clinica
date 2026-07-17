@@ -49,21 +49,26 @@ export function ServicesCard({
                     <Text strong className="jerarquia-explorer__section-title">
                         {title}
                     </Text>
+                    <Text type="secondary" className="jerarquia-explorer__section-count">
+                        {count}
+                    </Text>
                 </Flex>
-                <Text type="secondary" className="jerarquia-explorer__section-count">
-                    {count}
-                </Text>
             </Flex>
             {items.length === 0 ? (
                 <div className="jerarquia-explorer__section-empty">
                     <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={emptyDescription}>
-                        <Button type="primary" icon={<PlusOutlined />} onClick={onEmptyAction}>
+                        <Button
+                            type="primary"
+                            size="small"
+                            icon={<PlusOutlined />}
+                            onClick={onEmptyAction}
+                        >
                             {emptyActionLabel}
                         </Button>
                     </Empty>
                 </div>
             ) : (
-                <div className="jerarquia-explorer__child-grid">
+                <div className="jerarquia-explorer__child-list">
                     {items.map((item) => (
                         <JerarquiaChildCard
                             key={item.id}

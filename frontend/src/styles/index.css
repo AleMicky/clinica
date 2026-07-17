@@ -3981,61 +3981,61 @@ body {
 /* Jerarquía RRHH — explorador organizacional */
 
 .module-object-page:has(.jerarquia-explorer-page) {
-    gap: 8px;
+    gap: 6px;
     flex: 1;
     min-height: 0;
 }
 
 .module-object-page:has(.jerarquia-explorer-page) .module-object-page__header {
     flex-shrink: 0;
-    min-height: 64px;
-    max-height: 70px;
-    padding: 6px 0;
+    min-height: 52px;
+    max-height: 58px;
+    padding: 4px 0;
 }
 
 .module-object-page:has(.jerarquia-explorer-page) .module-object-page__header-main {
-    gap: 10px;
+    gap: 8px;
     align-items: center;
 }
 
 .module-object-page:has(.jerarquia-explorer-page) .module-object-page__header-icon {
-    width: 36px;
-    height: 36px;
-    font-size: 16px;
-    border-radius: 10px;
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+    border-radius: 8px;
 }
 
 .module-object-page:has(.jerarquia-explorer-page) .module-object-page__title {
     margin: 0 !important;
-    font-size: 20px !important;
+    font-size: 18px !important;
     font-weight: 600 !important;
     line-height: 1.2 !important;
 }
 
 .module-object-page:has(.jerarquia-explorer-page) .module-object-page__subtitle {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 400;
-    line-height: 1.3;
-    margin-top: 1px;
+    line-height: 1.25;
+    margin-top: 0;
 }
 
 .module-object-page:has(.jerarquia-explorer-page) .module-object-page__stat {
-    padding: 4px 10px;
-    font-size: 12px;
-    gap: 6px;
+    padding: 3px 8px;
+    font-size: 11px;
+    gap: 5px;
 }
 
 .module-object-page:has(.jerarquia-explorer-page) .module-object-page__section-badge {
-    padding: 4px 10px;
-    gap: 8px;
-    border-radius: 8px;
+    padding: 3px 8px;
+    gap: 6px;
+    border-radius: 7px;
 }
 
 .module-object-page:has(.jerarquia-explorer-page) .module-object-page__section-badge-icon {
-    width: 28px;
-    height: 28px;
-    font-size: 14px;
-    border-radius: 8px;
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+    border-radius: 6px;
 }
 
 .module-object-page:has(.jerarquia-explorer-page) .module-object-page__section-badge-label {
@@ -4043,7 +4043,7 @@ body {
 }
 
 .module-object-page:has(.jerarquia-explorer-page) .module-object-page__section-badge-title {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
 }
 
@@ -4089,6 +4089,11 @@ body {
     height: 100%;
 }
 
+.jerarquia-explorer--tree-only {
+    background: #fff;
+    border-radius: 0 0 10px 10px;
+}
+
 .jerarquia-explorer__split {
     display: flex;
     flex: 1;
@@ -4096,60 +4101,61 @@ body {
     overflow: hidden;
 }
 
+.jerarquia-explorer__tree-panel,
 .jerarquia-explorer__sidebar {
-    width: 300px;
-    min-width: 280px;
-    max-width: 320px;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
     display: flex;
     flex-direction: column;
     min-height: 0;
-    border-right: 1px solid #e2e8f0;
+    flex: 1;
     background: #fff;
-    flex-shrink: 0;
+    border-right: none;
 }
 
 .jerarquia-explorer__sidebar-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
-    padding: 10px 12px;
+    gap: 8px;
+    padding: 8px 10px;
     border-bottom: 1px solid #e2e8f0;
     flex-shrink: 0;
 }
 
 .jerarquia-explorer__sidebar-icon {
-    font-size: 16px;
+    font-size: 14px;
     color: var(--ant-color-primary);
     flex-shrink: 0;
 }
 
 .jerarquia-explorer__sidebar-title {
     display: block;
-    font-size: 13px;
+    font-size: 12.5px;
     font-weight: 600;
-    line-height: 1.25;
+    line-height: 1.2;
     color: #0f172a;
 }
 
 .jerarquia-explorer__sidebar-caption {
     display: block;
-    font-size: 11px;
-    line-height: 1.3;
+    font-size: 10.5px;
+    line-height: 1.25;
     color: #64748b;
-    margin-top: 1px;
 }
 
 .jerarquia-explorer__sidebar-search {
-    padding: 8px 12px;
+    padding: 6px 10px;
     border-bottom: 1px solid #e2e8f0;
     flex-shrink: 0;
 }
 
 .jerarquia-explorer__search-input.ant-input-affix-wrapper {
-    border-radius: 8px;
+    border-radius: 6px;
     border-color: #e2e8f0;
-    padding-block: 4px;
+    padding-block: 2px;
+    min-height: 30px;
     box-shadow: none;
 }
 
@@ -4159,43 +4165,60 @@ body {
 }
 
 .jerarquia-explorer__search-input .ant-input {
-    font-size: 13px;
+    font-size: 12.5px;
 }
 
 .jerarquia-explorer__sidebar-body {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    padding: 6px 6px 10px;
+    padding: 8px 12px 12px;
+}
+
+.jerarquia-explorer__tree-panel .jerarquia-explorer__tree.ant-tree {
+    max-width: 920px;
+}
+
+.jerarquia-explorer__detail-drawer-breadcrumb {
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.jerarquia-explorer__detail-drawer-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.jerarquia-explorer__detail-drawer .jerarquia-explorer__detail-hero,
+.jerarquia-explorer__detail-drawer .jerarquia-explorer__detail-section {
+    box-shadow: none;
 }
 
 .jerarquia-explorer__sidebar-loading,
 .jerarquia-explorer__sidebar-empty {
-    padding: 20px 12px;
+    padding: 16px 10px;
 }
 
 .jerarquia-explorer__tree.ant-tree {
     background: transparent;
-    font-size: 13px;
-}
-
-.jerarquia-explorer__tree .ant-tree-list-holder-inner {
-    gap: 0;
+    font-size: 12.5px;
 }
 
 .jerarquia-explorer__tree .ant-tree-indent-unit {
-    width: 16px;
+    width: 14px;
 }
 
 .jerarquia-explorer__tree .ant-tree-treenode {
     width: 100%;
-    padding: 2px 0;
+    padding: 1px 0;
     align-items: center;
 }
 
 .jerarquia-explorer__tree .ant-tree-switcher {
-    width: 20px;
-    line-height: 28px;
+    width: 18px;
+    line-height: 24px;
     align-self: center;
 }
 
@@ -4203,12 +4226,12 @@ body {
     flex: 1;
     min-width: 0;
     border-radius: 6px;
-    border-left: 3px solid transparent;
-    padding: 4px 6px 4px 4px;
+    border-left: 2px solid transparent;
+    padding: 5px 8px 5px 4px;
     margin-inline-start: 0;
     transition:
-        background 0.15s ease,
-        border-color 0.15s ease;
+        background 0.12s ease,
+        border-color 0.12s ease;
 }
 
 .jerarquia-explorer__tree .ant-tree-node-content-wrapper:hover {
@@ -4228,74 +4251,62 @@ body {
 .jerarquia-explorer__tree-node {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     min-width: 0;
     width: 100%;
 }
 
 .jerarquia-explorer__tree-node-icon {
     flex-shrink: 0;
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     display: grid;
     place-items: center;
     color: #64748b;
     font-size: 13px;
 }
 
-.jerarquia-explorer__tree-node-content {
+.jerarquia-explorer__tree-node-name {
     flex: 1;
     min-width: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1px;
-}
-
-.jerarquia-explorer__tree-node-primary {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    min-width: 0;
-    max-width: 100%;
-}
-
-.jerarquia-explorer__tree-node-name {
-    font-size: 12.5px;
-    line-height: 1.3;
+    font-size: 13.5px;
+    font-weight: 500;
+    line-height: 1.35;
     color: #0f172a;
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 .jerarquia-explorer__tree-node-tag {
     margin: 0;
-    font-size: 10px;
-    line-height: 16px;
-    padding: 0 5px;
+    font-size: 9px;
+    line-height: 14px;
+    padding: 0 4px;
     border: none;
-    border-radius: 4px;
+    border-radius: 3px;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-weight: 500;
-    letter-spacing: 0.02em;
-    background: rgba(15, 23, 42, 0.06);
-    color: #475569;
+    letter-spacing: 0.01em;
+    background: rgba(15, 23, 42, 0.05);
+    color: #94a3b8;
     flex-shrink: 0;
+    opacity: 0.85;
 }
 
 .jerarquia-explorer__tree-node-count {
-    font-size: 10.5px;
-    line-height: 1.25;
-    color: #94a3b8;
-    white-space: nowrap;
+    display: none;
 }
 
 .jerarquia-explorer__tree-node-actions {
     flex-shrink: 0;
     opacity: 0;
-    transition: opacity 0.15s ease;
+    margin-left: auto;
+    transition: opacity 0.12s ease;
+}
+
+.jerarquia-explorer__tree-node-actions .ant-btn {
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    color: #94a3b8;
 }
 
 .jerarquia-explorer__tree-node:hover .jerarquia-explorer__tree-node-actions,
@@ -4314,14 +4325,25 @@ body {
 
 .jerarquia-explorer__main-breadcrumb {
     flex-shrink: 0;
-    padding: 7px 14px;
+    padding: 5px 12px;
     border-bottom: 1px solid #e2e8f0;
     background: #fff;
 }
 
+.jerarquia-explorer__main-breadcrumb .ant-breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    row-gap: 2px;
+}
+
+.jerarquia-explorer__main-breadcrumb .ant-breadcrumb-link {
+    white-space: normal;
+    word-break: break-word;
+}
+
 .jerarquia-explorer__crumb-static {
     color: #64748b;
-    font-size: 12.5px;
+    font-size: 12px;
 }
 
 .jerarquia-explorer__crumb {
@@ -4330,14 +4352,14 @@ body {
     background: none;
     color: var(--ant-color-primary);
     font: inherit;
-    font-size: 12.5px;
+    font-size: 12px;
     cursor: pointer;
-    max-width: 180px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    display: inline-block;
-    vertical-align: bottom;
+    max-width: none;
+    white-space: normal;
+    word-break: break-word;
+    text-align: left;
+    display: inline;
+    vertical-align: baseline;
 }
 
 .jerarquia-explorer__crumb:hover {
@@ -4348,40 +4370,39 @@ body {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    padding: 12px 14px 14px;
+    padding: 8px 10px 10px;
 }
 
 .jerarquia-explorer__detail-empty {
-    min-height: 260px;
+    min-height: 220px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    border-radius: 10px;
+    gap: 8px;
+    border-radius: 8px;
     border: 1px dashed #e2e8f0;
     background: #fff;
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
 }
 
 .jerarquia-explorer__detail-empty-visual {
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
     display: grid;
     place-items: center;
     border-radius: 50%;
-    font-size: 22px;
+    font-size: 18px;
     color: rgba(22, 119, 255, 0.45);
     background: rgba(22, 119, 255, 0.08);
 }
 
 .jerarquia-explorer__detail-hero {
-    padding: 12px 14px;
-    border-radius: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
     border: 1px solid #e2e8f0;
     background: #fff;
-    margin-bottom: 10px;
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    margin-bottom: 8px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
 }
 
 .jerarquia-explorer__detail-main {
@@ -4394,53 +4415,101 @@ body {
 }
 
 .jerarquia-explorer__detail-badge {
-    width: 36px;
-    height: 36px;
+    width: 30px;
+    height: 30px;
     display: grid;
     place-items: center;
-    border-radius: 9px;
-    font-size: 15px;
+    border-radius: 7px;
+    font-size: 13px;
     color: var(--ant-color-primary);
     background: rgba(22, 119, 255, 0.1);
     flex-shrink: 0;
 }
 
+.jerarquia-explorer__detail-title-row {
+    min-width: 0;
+}
+
+.jerarquia-explorer__hierarchy-path {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 0;
+    margin-bottom: 4px;
+    max-width: 100%;
+}
+
+.jerarquia-explorer__hierarchy-item {
+    display: inline-flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 4px;
+    max-width: 100%;
+}
+
+.jerarquia-explorer__hierarchy-sep {
+    margin: 0 6px 0 4px;
+    color: #94a3b8;
+    font-size: 11px;
+    line-height: 1.3;
+}
+
+.jerarquia-explorer__hierarchy-label {
+    font-size: 10.5px;
+    font-weight: 500;
+    line-height: 1.3;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.jerarquia-explorer__hierarchy-name {
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.35;
+    color: #334155;
+    word-break: break-word;
+}
+
 .jerarquia-explorer__detail-code-tag {
-    margin: 0 0 4px;
+    margin: 0;
     font-size: 10px;
     line-height: 16px;
-    padding: 0 6px;
+    padding: 0 5px;
     border: none;
-    border-radius: 4px;
+    border-radius: 3px;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-weight: 500;
-    letter-spacing: 0.02em;
     background: rgba(15, 23, 42, 0.06);
     color: #475569;
 }
 
 .jerarquia-explorer__detail-title {
-    margin: 0 0 2px !important;
-    font-size: 17px !important;
+    margin: 0 !important;
+    font-size: 15px !important;
     font-weight: 600 !important;
     line-height: 1.25 !important;
     color: #0f172a !important;
+    white-space: normal;
+    word-break: break-word;
 }
 
 .jerarquia-explorer__detail-parent {
     display: block;
-    font-size: 12px;
-    line-height: 1.3;
+    font-size: 11px;
+    line-height: 1.35;
     color: #64748b;
-    margin-bottom: 0;
+    margin-top: 2px;
+    white-space: normal;
+    word-break: break-word;
 }
 
 .jerarquia-explorer__detail-description {
-    margin: 6px 0 0 !important;
-    font-size: 12.5px;
-    line-height: 1.45;
+    margin: 4px 0 0 !important;
+    font-size: 12px;
+    line-height: 1.4;
     color: #64748b;
-    max-width: 56ch;
+    max-width: 52ch;
 }
 
 .jerarquia-explorer__detail-actions {
@@ -4449,53 +4518,52 @@ body {
 }
 
 .jerarquia-explorer__detail-actions .ant-btn {
-    height: 30px;
-    padding-inline: 12px;
-    font-size: 12.5px;
+    height: 26px;
+    padding-inline: 10px;
+    font-size: 12px;
     border-radius: 6px;
 }
 
 .jerarquia-explorer__stats-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 10px;
-    padding-top: 10px;
+    gap: 6px;
+    margin-top: 8px;
+    padding-top: 8px;
     border-top: 1px solid #f1f5f9;
 }
 
 .jerarquia-explorer__stat {
-    min-width: 96px;
-    padding: 8px 10px;
-    border-radius: 8px;
+    min-width: 78px;
+    padding: 5px 8px;
+    border-radius: 6px;
     background: #f8fafc;
     border: 1px solid #e2e8f0;
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
 }
 
 .jerarquia-explorer__stat-label {
     display: block;
-    font-size: 11px;
+    font-size: 10px;
     line-height: 1.2;
     color: #64748b;
-    margin-bottom: 2px;
+    margin-bottom: 1px;
 }
 
 .jerarquia-explorer__stat-value {
-    font-size: 18px;
+    font-size: 15px;
     font-weight: 600;
-    line-height: 1.2;
+    line-height: 1.15;
     color: #0f172a;
     font-variant-numeric: tabular-nums;
 }
 
 .jerarquia-explorer__detail-section {
-    border-radius: 10px;
+    border-radius: 8px;
     border: 1px solid #e2e8f0;
     background: #fff;
-    padding: 10px 12px;
-    margin-bottom: 10px;
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
 }
 
 .jerarquia-explorer__detail-section:last-child {
@@ -4504,16 +4572,16 @@ body {
 
 .jerarquia-explorer__section-head,
 .jerarquia-explorer__empleados-head {
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .jerarquia-explorer__section-icon {
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
     display: grid;
     place-items: center;
-    border-radius: 6px;
-    font-size: 12px;
+    border-radius: 5px;
+    font-size: 11px;
     color: var(--ant-color-primary);
     background: rgba(22, 119, 255, 0.1);
     flex-shrink: 0;
@@ -4522,40 +4590,40 @@ body {
 .jerarquia-explorer__section-icon-inline {
     display: inline-flex;
     align-items: center;
-    font-size: 13px;
+    font-size: 12px;
     color: var(--ant-color-primary);
     line-height: 1;
 }
 
 .jerarquia-explorer__section-title {
     display: block;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
-    line-height: 1.25;
+    line-height: 1.2;
     color: #0f172a;
     margin-bottom: 0;
 }
 
 .jerarquia-explorer__section-caption {
     display: block;
-    font-size: 11px;
-    line-height: 1.25;
+    font-size: 10px;
+    line-height: 1.2;
     color: #94a3b8;
     margin-top: 0;
 }
 
 .jerarquia-explorer__section-count {
-    font-size: 12px;
+    font-size: 11px;
     font-variant-numeric: tabular-nums;
     color: #64748b;
 }
 
 .jerarquia-explorer__section-empty {
-    padding: 8px 4px;
+    padding: 4px 2px;
 }
 
 .jerarquia-explorer__section-empty .ant-empty {
-    margin-block: 4px;
+    margin-block: 2px;
 }
 
 .jerarquia-explorer__section-empty .ant-empty-description {
@@ -4573,18 +4641,18 @@ body {
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
 }
 
 .jerarquia-explorer__empleado {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 7px 10px;
-    border-radius: 8px;
+    gap: 8px;
+    padding: 4px 8px;
+    border-radius: 6px;
     border: 1px solid transparent;
     background: #f8fafc;
-    transition: background 0.15s ease, border-color 0.15s ease;
+    transition: background 0.12s ease, border-color 0.12s ease;
 }
 
 .jerarquia-explorer__empleado:hover {
@@ -4596,7 +4664,7 @@ body {
     flex-shrink: 0;
     background: linear-gradient(145deg, #3b82f6, #1d4ed8);
     color: #fff;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 600;
 }
 
@@ -4605,7 +4673,7 @@ body {
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 0;
 }
 
 .jerarquia-explorer__empleado-line {
@@ -4613,26 +4681,26 @@ body {
 }
 
 .jerarquia-explorer__empleado-name {
-    font-size: 13px;
-    line-height: 1.3;
+    font-size: 12px;
+    line-height: 1.25;
     color: #0f172a;
     min-width: 0;
 }
 
 .jerarquia-explorer__empleado-meta {
-    font-size: 11.5px;
-    line-height: 1.3;
+    font-size: 10.5px;
+    line-height: 1.25;
     color: #64748b;
     max-width: 100%;
 }
 
 .jerarquia-explorer__empleado-medico-tag {
     margin: 0;
-    font-size: 10px;
-    line-height: 16px;
-    padding-inline: 5px;
+    font-size: 9px;
+    line-height: 14px;
+    padding-inline: 4px;
     border: none;
-    border-radius: 4px;
+    border-radius: 3px;
     background: rgba(16, 185, 129, 0.12);
     color: #047857;
     flex-shrink: 0;
@@ -4641,14 +4709,13 @@ body {
 .jerarquia-explorer__empleado-code {
     flex-shrink: 0;
     margin: 0;
-    font-size: 10px;
-    line-height: 16px;
-    padding: 0 6px;
+    font-size: 9.5px;
+    line-height: 14px;
+    padding: 0 5px;
     border: none;
-    border-radius: 4px;
+    border-radius: 3px;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-weight: 500;
-    letter-spacing: 0.02em;
     background: rgba(15, 23, 42, 0.06);
     color: #475569;
 }
@@ -4656,48 +4723,45 @@ body {
 .jerarquia-explorer__empleados-pagination {
     display: flex;
     justify-content: flex-end;
-    margin-top: 8px;
-    padding-top: 8px;
+    margin-top: 6px;
+    padding-top: 6px;
     border-top: 1px solid #f1f5f9;
 }
 
-.jerarquia-explorer__child-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 8px;
+.jerarquia-explorer__child-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
-.jerarquia-explorer__child-card {
+.jerarquia-explorer__child-row {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 10px;
     width: 100%;
-    padding: 10px 12px;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-    background: #fff;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    background: #f8fafc;
     text-align: left;
     cursor: pointer;
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
     transition:
-        border-color 0.15s ease,
-        background 0.15s ease,
-        box-shadow 0.15s ease;
+        border-color 0.12s ease,
+        background 0.12s ease;
 }
 
-.jerarquia-explorer__child-card:hover {
-    border-color: rgba(22, 119, 255, 0.22);
-    background: #f8fafc;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+.jerarquia-explorer__child-row:hover {
+    background: #fff;
+    border-color: #e2e8f0;
 }
 
-.jerarquia-explorer__child-card--selected {
-    border-color: rgba(22, 119, 255, 0.35);
+.jerarquia-explorer__child-row--selected {
     background: #eff6ff;
-    box-shadow: inset 3px 0 0 var(--ant-color-primary);
+    border-color: rgba(22, 119, 255, 0.22);
+    box-shadow: inset 2px 0 0 var(--ant-color-primary);
 }
 
-.jerarquia-explorer__child-card-icon {
+.jerarquia-explorer__child-row-icon {
     flex-shrink: 0;
     width: 28px;
     height: 28px;
@@ -4709,93 +4773,92 @@ body {
     background: rgba(22, 119, 255, 0.1);
 }
 
-.jerarquia-explorer__child-card-body {
+.jerarquia-explorer__child-row-body {
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 1px;
     flex: 1;
 }
 
-.jerarquia-explorer__child-card-top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 8px;
-    min-width: 0;
-}
-
-.jerarquia-explorer__child-card-name {
+.jerarquia-explorer__child-row-name {
     font-size: 13px;
     font-weight: 600;
     line-height: 1.3;
     color: #0f172a;
-    min-width: 0;
+    white-space: normal;
+    word-break: break-word;
 }
 
-.jerarquia-explorer__child-card-code {
+.jerarquia-explorer__child-row-meta {
+    font-size: 11px;
+    line-height: 1.25;
+    color: #64748b;
+}
+
+.jerarquia-explorer__child-row-code {
     margin: 0;
     flex-shrink: 0;
     font-size: 10px;
     line-height: 16px;
     padding: 0 5px;
     border: none;
-    border-radius: 4px;
+    border-radius: 3px;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-weight: 500;
-    letter-spacing: 0.02em;
     background: rgba(15, 23, 42, 0.06);
     color: #475569;
 }
 
-.jerarquia-explorer__child-card-meta {
-    font-size: 11.5px;
-    line-height: 1.3;
-    color: #64748b;
+.jerarquia-explorer__child-row-chevron {
+    flex-shrink: 0;
+    font-size: 10px;
+    color: #94a3b8;
+}
+
+.jerarquia-explorer__child-row:hover .jerarquia-explorer__child-row-chevron,
+.jerarquia-explorer__child-row--selected .jerarquia-explorer__child-row-chevron {
+    color: var(--ant-color-primary);
+}
+
+/* Compatibilidad con clases anteriores de tarjeta */
+.jerarquia-explorer__child-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.jerarquia-explorer__child-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    background: #f8fafc;
+    text-align: left;
+    cursor: pointer;
+}
+
+.jerarquia-explorer__child-card:hover,
+.jerarquia-explorer__child-card--selected {
+    background: #eff6ff;
+    border-color: rgba(22, 119, 255, 0.22);
 }
 
 .jerarquia-explorer__mobile-nav {
     flex-shrink: 0;
-    padding: 8px 10px 0;
+    padding: 6px 8px 0;
 }
 
 .jerarquia-explorer__drawer-form .ant-form-item {
     margin-bottom: 12px;
 }
 
-@media (max-width: 1200px) {
-    .jerarquia-explorer__sidebar {
-        width: 280px;
-        min-width: 260px;
-        max-width: 300px;
-    }
-
-    .jerarquia-explorer__child-grid {
-        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    }
-}
-
 @media (max-width: 991px) {
-    .jerarquia-explorer__split {
-        flex-direction: column;
-    }
-
-    .jerarquia-explorer__sidebar {
-        width: 100%;
+    .jerarquia-explorer__tree-panel .jerarquia-explorer__tree.ant-tree {
         max-width: none;
-        min-width: 0;
-        min-height: 260px;
-        max-height: 42vh;
-        border-right: none;
-        border-bottom: 1px solid #e2e8f0;
-    }
-
-    .jerarquia-explorer__main {
-        min-height: 320px;
-    }
-
-    .jerarquia-explorer__main-body {
-        padding: 10px 12px 12px;
     }
 
     .jerarquia-explorer__detail-actions {
@@ -4813,11 +4876,14 @@ body {
     border-color: rgba(255, 255, 255, 0.08);
 }
 
+[data-theme='dark'] .jerarquia-explorer--tree-only,
+[data-theme='dark'] .jerarquia-explorer__tree-panel,
 [data-theme='dark'] .jerarquia-explorer__sidebar,
 [data-theme='dark'] .jerarquia-explorer__main-breadcrumb,
 [data-theme='dark'] .jerarquia-explorer__detail-hero,
 [data-theme='dark'] .jerarquia-explorer__detail-section,
 [data-theme='dark'] .jerarquia-explorer__child-card,
+[data-theme='dark'] .jerarquia-explorer__child-row,
 [data-theme='dark'] .jerarquia-explorer__detail-empty,
 [data-theme='dark'] .jerarquia-explorer__empleado {
     background: #161b22;
@@ -4841,6 +4907,7 @@ body {
 [data-theme='dark'] .jerarquia-explorer__section-title,
 [data-theme='dark'] .jerarquia-explorer__tree-node-name,
 [data-theme='dark'] .jerarquia-explorer__child-card-name,
+[data-theme='dark'] .jerarquia-explorer__child-row-name,
 [data-theme='dark'] .jerarquia-explorer__empleado-name,
 [data-theme='dark'] .jerarquia-explorer__stat-value {
     color: rgba(255, 255, 255, 0.92) !important;
@@ -4850,11 +4917,18 @@ body {
 [data-theme='dark'] .jerarquia-explorer__detail-parent,
 [data-theme='dark'] .jerarquia-explorer__detail-description,
 [data-theme='dark'] .jerarquia-explorer__child-card-meta,
+[data-theme='dark'] .jerarquia-explorer__child-row-meta,
 [data-theme='dark'] .jerarquia-explorer__empleado-meta,
 [data-theme='dark'] .jerarquia-explorer__stat-label,
 [data-theme='dark'] .jerarquia-explorer__tree-node-count,
-[data-theme='dark'] .jerarquia-explorer__section-count {
+[data-theme='dark'] .jerarquia-explorer__section-count,
+[data-theme='dark'] .jerarquia-explorer__hierarchy-label,
+[data-theme='dark'] .jerarquia-explorer__hierarchy-sep {
     color: rgba(255, 255, 255, 0.45);
+}
+
+[data-theme='dark'] .jerarquia-explorer__hierarchy-name {
+    color: rgba(255, 255, 255, 0.78);
 }
 
 [data-theme='dark'] .jerarquia-explorer__tree-node-icon {
@@ -4864,6 +4938,7 @@ body {
 [data-theme='dark'] .jerarquia-explorer__tree-node-tag,
 [data-theme='dark'] .jerarquia-explorer__detail-code-tag,
 [data-theme='dark'] .jerarquia-explorer__child-card-code,
+[data-theme='dark'] .jerarquia-explorer__child-row-code,
 [data-theme='dark'] .jerarquia-explorer__empleado-code {
     background: rgba(255, 255, 255, 0.08);
     color: rgba(255, 255, 255, 0.65);
@@ -4876,6 +4951,8 @@ body {
 
 [data-theme='dark'] .jerarquia-explorer__child-card:hover,
 [data-theme='dark'] .jerarquia-explorer__child-card--selected,
+[data-theme='dark'] .jerarquia-explorer__child-row:hover,
+[data-theme='dark'] .jerarquia-explorer__child-row--selected,
 [data-theme='dark'] .jerarquia-explorer__empleado:hover {
     background: rgba(22, 119, 255, 0.1);
 }

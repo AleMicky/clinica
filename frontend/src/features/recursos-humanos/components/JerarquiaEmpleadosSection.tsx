@@ -39,11 +39,11 @@ function EmpleadoRow({
 
     return (
         <li className="jerarquia-explorer__empleado">
-            <Avatar size={28} className="jerarquia-explorer__empleado-avatar" aria-hidden>
+            <Avatar size={24} className="jerarquia-explorer__empleado-avatar" aria-hidden>
                 {initials(empleado.personaNombreCompleto)}
             </Avatar>
             <div className="jerarquia-explorer__empleado-body">
-                <Flex align="center" gap={6} wrap="nowrap" className="jerarquia-explorer__empleado-line">
+                <Flex align="center" gap={4} wrap="nowrap" className="jerarquia-explorer__empleado-line">
                     <Text strong className="jerarquia-explorer__empleado-name" ellipsis>
                         {empleado.personaNombreCompleto}
                     </Text>

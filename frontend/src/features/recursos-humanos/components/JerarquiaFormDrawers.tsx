@@ -82,6 +82,7 @@ export function JerarquiaAreaDrawer({
             onClose={() => {
                 if (!loading) onClose()
             }}
+            placement="left"
             size={480}
             destroyOnHidden
             footer={
@@ -226,6 +227,7 @@ export function JerarquiaDepartamentoDrawer({
             onClose={() => {
                 if (!loading) onClose()
             }}
+            placement="left"
             size={520}
             destroyOnHidden
             footer={
@@ -387,6 +389,7 @@ export function JerarquiaServicioDrawer({
             onClose={() => {
                 if (!loading) onClose()
             }}
+            placement="left"
             size={520}
             destroyOnHidden
             footer={

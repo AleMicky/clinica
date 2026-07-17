@@ -38,7 +38,7 @@ export function OrganizationTree({
     const { token } = theme.useToken()
 
     return (
-        <aside className="jerarquia-explorer__sidebar">
+        <section className="jerarquia-explorer__tree-panel">
             <div className="jerarquia-explorer__sidebar-head">
                 <Flex align="center" gap={8}>
                     <NodeIndexOutlined className="jerarquia-explorer__sidebar-icon" />
@@ -47,7 +47,8 @@ export function OrganizationTree({
                             Explorador organizacional
                         </Text>
                         <Text type="secondary" className="jerarquia-explorer__sidebar-caption">
-                            {areaCount} área{areaCount === 1 ? '' : 's'}
+                            {areaCount} área{areaCount === 1 ? '' : 's'} · seleccione un nodo para
+                            ver detalle
                         </Text>
                     </div>
                 </Flex>
@@ -64,6 +65,7 @@ export function OrganizationTree({
             <div className="jerarquia-explorer__sidebar-search">
                 <Input
                     allowClear
+                    size="middle"
                     prefix={<SearchOutlined style={{ color: token.colorTextQuaternary }} />}
                     placeholder="Buscar área, departamento o servicio…"
                     value={treeSearchInput}
@@ -76,7 +78,7 @@ export function OrganizationTree({
             <div className="jerarquia-explorer__sidebar-body">
                 {loading ? (
                     <div className="jerarquia-explorer__sidebar-loading">
-                        <Skeleton active paragraph={{ rows: 8 }} />
+                        <Skeleton active paragraph={{ rows: 10 }} />
                     </div>
                 ) : !hasAreas ? (
                     <div className="jerarquia-explorer__sidebar-empty">
@@ -109,6 +111,6 @@ export function OrganizationTree({
                     />
                 )}
             </div>
-        </aside>
+        </section>
     )
 }

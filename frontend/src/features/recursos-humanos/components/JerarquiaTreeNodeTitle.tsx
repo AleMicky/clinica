@@ -22,23 +22,16 @@ export function JerarquiaTreeNodeTitle({
     deleting,
 }: JerarquiaTreeNodeTitleProps) {
     return (
-        <div className="jerarquia-explorer__tree-node">
+        <div className="jerarquia-explorer__tree-node" title={countLabel ? `${nombre} · ${countLabel}` : nombre}>
             <span className="jerarquia-explorer__tree-node-icon" aria-hidden>
                 {icon}
             </span>
-            <span className="jerarquia-explorer__tree-node-content">
-                <span className="jerarquia-explorer__tree-node-primary">
-                    <Text className="jerarquia-explorer__tree-node-name">{nombre}</Text>
-                    <Tag className="jerarquia-explorer__tree-node-tag" variant="filled">
-                        {codigo}
-                    </Tag>
-                </span>
-                {countLabel ? (
-                    <Text type="secondary" className="jerarquia-explorer__tree-node-count">
-                        {countLabel}
-                    </Text>
-                ) : null}
-            </span>
+            <Text className="jerarquia-explorer__tree-node-name" ellipsis>
+                {nombre}
+            </Text>
+            <Tag className="jerarquia-explorer__tree-node-tag" variant="filled">
+                {codigo}
+            </Tag>
             <span className="jerarquia-explorer__tree-node-actions">
                 <Dropdown
                     menu={{ items: menuItems }}

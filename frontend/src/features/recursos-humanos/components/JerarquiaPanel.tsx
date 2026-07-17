@@ -2,22 +2,16 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { DataNode } from 'antd/es/tree'
 import {
     Breadcrumb,
-    Button,
-    Empty,
-    Flex,
-    Grid,
+    Drawer,
     Modal,
-    Typography,
 } from 'antd'
 import type { MenuProps } from 'antd'
 import {
     ApartmentOutlined,
-    ArrowLeftOutlined,
     BankOutlined,
     DeleteOutlined,
     EditOutlined,
     ExperimentOutlined,
-    NodeIndexOutlined,
     PlusOutlined,
 } from '@ant-design/icons'
 
@@ -64,13 +58,7 @@ import { JerarquiaTreeNodeTitle } from './JerarquiaTreeNodeTitle'
 import { OrganizationTree } from './OrganizationTree'
 import { ServicesCard } from './ServicesCard'
 
-const { Text, Paragraph } = Typography
-const { useBreakpoint } = Grid
-
 export function JerarquiaPanel() {
-    const screens = useBreakpoint()
-    const isMobile = !screens.lg
-
     const [treeSearchInput, setTreeSearchInput] = useState('')
     const [treeSearch, setTreeSearch] = useState('')
     const [expandedKeys, setExpandedKeys] = useState<string[]>([])
@@ -671,6 +659,7 @@ export function JerarquiaPanel() {
                     icon={<BankOutlined />}
                     codigo={selectedArea.codigo}
                     nombre={selectedArea.nombre}
+                    hierarchy={[{ label: 'Área', nombre: selectedArea.nombre }]}
                     descripcion={selectedArea.descripcion}
                     actions={[
                         {
@@ -745,7 +734,10 @@ export function JerarquiaPanel() {
                     icon={<ApartmentOutlined />}
                     codigo={selectedDept.codigo}
                     nombre={selectedDept.nombre}
-                    parentLabel={`Área: ${selectedArea.nombre}`}
+                    hierarchy={[
+                        { label: 'Área', nombre: selectedArea.nombre },
+                        { label: 'Departamento', nombre: selectedDept.nombre },
+                    ]}
                     descripcion={selectedDept.descripcion}
                     actions={[
                         {
@@ -812,7 +804,11 @@ export function JerarquiaPanel() {
                     icon={<ExperimentOutlined />}
                     codigo={selectedServicio.codigo}
                     nombre={selectedServicio.nombre}
-                    parentLabel={`${selectedArea.nombre} › ${selectedDept.nombre}`}
+                    hierarchy={[
+                        { label: 'Área', nombre: selectedArea.nombre },
+                        { label: 'Departamento', nombre: selectedDept.nombre },
+                        { label: 'Servicio', nombre: selectedServicio.nombre },
+                    ]}
                     descripcion={selectedServicio.descripcion}
                     actions={[
                         {
@@ -834,68 +830,42 @@ export function JerarquiaPanel() {
     }
 
     const renderDetailContent = () => {
-        if (!hasSelection) {
-            return (
-                <div className="jerarquia-explorer__detail-empty">
-                    <div className="jerarquia-explorer__detail-empty-visual" aria-hidden>
-                        <NodeIndexOutlined />
-                    </div>
-                    <Empty
-                        image={false}
-                        description={
-                            <Flex vertical gap={6} align="center">
-                                <Text strong style={{ fontSize: 14 }}>
-                                    Seleccione un elemento
-                                </Text>
-                                <Paragraph
-                                    type="secondary"
-                                    style={{ marginBottom: 0, maxWidth: 300, textAlign: 'center', fontSize: 12 }}
-                                >
-                                    Elija un área, departamento o servicio en el árbol para ver su
-                                    detalle, el personal asignado y administrar la jerarquía.
-                                </Paragraph>
-                            </Flex>
-                        }
-                    />
-                </div>
-            )
-        }
-
         if (selectionKind === 'servicio') return renderServicioDetail()
         if (selectionKind === 'departamento') return renderDepartamentoDetail()
-        return renderAreaDetail()
+        if (selectionKind === 'area') return renderAreaDetail()
+        return null
     }
 
-    const showTreeOnMobile = isMobile && !hasSelection
-    const showDetailOnMobile = !isMobile || hasSelection
+    const detailTitle =
+        selectionKind === 'servicio'
+            ? 'Detalle del servicio'
+            : selectionKind === 'departamento'
+              ? 'Detalle del departamento'
+              : selectionKind === 'area'
+                ? 'Detalle del área'
+                : 'Detalle'
 
     return (
-        <div className="jerarquia-explorer">
-            {isMobile && hasSelection ? (
-                <div className="jerarquia-explorer__mobile-nav">
-                    <Button
-                        type="text"
-                        size="small"
-                        icon={<ArrowLeftOutlined />}
-                        onClick={() => syncSelection(null, null, null, null)}
-                    >
-                        Explorador
-                    </Button>
+        <div className="jerarquia-explorer jerarquia-explorer--tree-only">
+            {renderTreePanel()}
+
+            <Drawer
+                title={detailTitle}
+                open={hasSelection}
+                onClose={() => syncSelection(null, null, null, null)}
+                placement="right"
+                width={520}
+                destroyOnHidden
+                className="jerarquia-explorer__detail-drawer"
+                styles={{ body: { padding: '12px 16px' } }}
+            >
+                <div className="jerarquia-explorer__detail-drawer-breadcrumb">
+                    <Breadcrumb items={breadcrumbItems} />
                 </div>
-            ) : null}
-
-            <div className="jerarquia-explorer__split">
-                {(!isMobile || showTreeOnMobile) && renderTreePanel()}
-
-                {showDetailOnMobile ? (
-                    <main className="jerarquia-explorer__main">
-                        <div className="jerarquia-explorer__main-breadcrumb">
-                            <Breadcrumb items={breadcrumbItems} />
-                        </div>
-                        <div className="jerarquia-explorer__main-body">{renderDetailContent()}</div>
-                    </main>
-                ) : null}
-            </div>
+                <div className="jerarquia-explorer__detail-drawer-body">
+                    {renderDetailContent()}
+                </div>
+            </Drawer>
 
             <JerarquiaAreaDrawer
                 open={areaDrawerOpen}
