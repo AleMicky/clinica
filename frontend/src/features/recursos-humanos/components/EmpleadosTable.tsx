@@ -21,6 +21,7 @@ type EmpleadosTableProps = {
     onEdit: (empleado: Empleado) => void
     onDelete: (empleado: Empleado) => void
     deletingId: string | null
+    className?: string
 }
 
 const columnHelper = createColumnHelper<Empleado>()
@@ -54,6 +55,7 @@ export function EmpleadosTable({
     onEdit,
     onDelete,
     deletingId,
+    className,
 }: EmpleadosTableProps) {
     const columns = useMemo(
         () => [
@@ -143,6 +145,7 @@ export function EmpleadosTable({
 
     return (
         <AppDataTable
+            className={className}
             data={empleados}
             columns={columns}
             loading={loading}

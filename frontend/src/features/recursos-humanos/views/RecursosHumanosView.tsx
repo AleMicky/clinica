@@ -23,27 +23,29 @@ export function RecursosHumanosView() {
     const totalMedicos = medicosData?.totalRecords ?? 0
 
     return (
-        <ModuleObjectPage
-            icon={<SolutionOutlined />}
-            title="Recursos Humanos"
-            subtitle="Personal, estructura organizacional y catálogos del hospital"
-            stats={[
-                {
-                    icon: <SolutionOutlined />,
-                    label: loadingEmpleados ? '…' : `${totalEmpleados} empleados`,
-                },
-                {
-                    icon: <MedicineBoxOutlined />,
-                    label: loadingMedicos ? '…' : `${totalMedicos} médicos`,
-                },
-            ]}
-            activeSection={
-                activeSection
-                    ? { icon: activeSection.icon, title: activeSection.title }
-                    : null
-            }
-        >
-            <Outlet />
-        </ModuleObjectPage>
+        <div className="rrhh-module">
+            <ModuleObjectPage
+                icon={<SolutionOutlined />}
+                title="Recursos Humanos"
+                subtitle="Personal, estructura organizacional y catálogos del hospital"
+                stats={[
+                    {
+                        icon: <SolutionOutlined />,
+                        label: loadingEmpleados ? '…' : `${totalEmpleados} empleados`,
+                    },
+                    {
+                        icon: <MedicineBoxOutlined />,
+                        label: loadingMedicos ? '…' : `${totalMedicos} médicos`,
+                    },
+                ]}
+                activeSection={
+                    activeSection
+                        ? { icon: activeSection.icon, title: activeSection.title }
+                        : null
+                }
+            >
+                <Outlet />
+            </ModuleObjectPage>
+        </div>
     )
 }
