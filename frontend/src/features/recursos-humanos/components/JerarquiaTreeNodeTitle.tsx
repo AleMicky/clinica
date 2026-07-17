@@ -1,28 +1,41 @@
-import { Button, Dropdown, Tag, Typography } from 'antd'
+import { Button, Dropdown, Tag, Tooltip, Typography } from 'antd'
 import type { MenuProps } from 'antd'
-import { MoreOutlined } from '@ant-design/icons'
+import { EditOutlined, MoreOutlined, PlusOutlined } from '@ant-design/icons'
 
 const { Text } = Typography
+
+export type TreeNodeLevel = 'area' | 'departamento' | 'servicio'
 
 type JerarquiaTreeNodeTitleProps = {
     icon: React.ReactNode
     nombre: string
     codigo: string
+    level?: TreeNodeLevel
     countLabel?: string
     menuItems: MenuProps['items']
     deleting?: boolean
+    onEdit: () => void
+    onCreate?: () => void
+    createLabel?: string
 }
 
 export function JerarquiaTreeNodeTitle({
     icon,
     nombre,
     codigo,
+    level = 'area',
     countLabel,
     menuItems,
     deleting,
+    onEdit,
+    onCreate,
+    createLabel,
 }: JerarquiaTreeNodeTitleProps) {
     return (
-        <div className="jerarquia-explorer__tree-node" title={countLabel ? `${nombre} · ${countLabel}` : nombre}>
+        <div
+            className={`jerarquia-explorer__tree-node jerarquia-explorer__tree-node--${level}`}
+            title={countLabel ? `${nombre} · ${countLabel}` : nombre}
+        >
             <span className="jerarquia-explorer__tree-node-icon" aria-hidden>
                 {icon}
             </span>
@@ -33,6 +46,32 @@ export function JerarquiaTreeNodeTitle({
                 {codigo}
             </Tag>
             <span className="jerarquia-explorer__tree-node-actions">
+                <Tooltip title="Editar">
+                    <Button
+                        type="text"
+                        size="small"
+                        icon={<EditOutlined />}
+                        onClick={(event) => {
+                            event.stopPropagation()
+                            onEdit()
+                        }}
+                        aria-label="Editar"
+                    />
+                </Tooltip>
+                {onCreate ? (
+                    <Tooltip title={createLabel ?? 'Nuevo'}>
+                        <Button
+                            type="text"
+                            size="small"
+                            icon={<PlusOutlined />}
+                            onClick={(event) => {
+                                event.stopPropagation()
+                                onCreate()
+                            }}
+                            aria-label={createLabel ?? 'Nuevo'}
+                        />
+                    </Tooltip>
+                ) : null}
                 <Dropdown
                     menu={{ items: menuItems }}
                     trigger={['click']}
@@ -44,7 +83,7 @@ export function JerarquiaTreeNodeTitle({
                         icon={<MoreOutlined />}
                         loading={deleting}
                         onClick={(event) => event.stopPropagation()}
-                        aria-label="Acciones"
+                        aria-label="Más acciones"
                     />
                 </Dropdown>
             </span>

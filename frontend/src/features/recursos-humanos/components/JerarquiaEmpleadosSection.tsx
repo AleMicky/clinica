@@ -39,11 +39,11 @@ function EmpleadoRow({
 
     return (
         <li className="jerarquia-explorer__empleado">
-            <Avatar size={24} className="jerarquia-explorer__empleado-avatar" aria-hidden>
+            <Avatar size={26} className="jerarquia-explorer__empleado-avatar" aria-hidden>
                 {initials(empleado.personaNombreCompleto)}
             </Avatar>
             <div className="jerarquia-explorer__empleado-body">
-                <Flex align="center" gap={4} wrap="nowrap" className="jerarquia-explorer__empleado-line">
+                <Flex align="center" gap={6} wrap="nowrap" className="jerarquia-explorer__empleado-line">
                     <Text strong className="jerarquia-explorer__empleado-name" ellipsis>
                         {empleado.personaNombreCompleto}
                     </Text>
@@ -103,23 +103,30 @@ export function JerarquiaEmpleadosSection({
 
     return (
         <div className="jerarquia-explorer__detail-section jerarquia-explorer__empleados-section">
-            <Flex align="center" justify="space-between" gap={8} className="jerarquia-explorer__empleados-head">
+            <Flex
+                align="center"
+                justify="space-between"
+                gap={8}
+                className="jerarquia-explorer__empleados-head"
+            >
                 <Flex align="center" gap={6}>
                     <TeamOutlined className="jerarquia-explorer__section-icon-inline" />
                     <Text strong className="jerarquia-explorer__section-title">
                         Empleados
                     </Text>
+                    {canFetch && !isFetching ? (
+                        <Text type="secondary" className="jerarquia-explorer__section-count">
+                            {total}
+                        </Text>
+                    ) : null}
                 </Flex>
-                {canFetch && !isFetching ? (
-                    <Text type="secondary" className="jerarquia-explorer__section-count">
-                        {total}
-                    </Text>
-                ) : null}
             </Flex>
 
             {!canFetch ? null : isFetching && empleados.length === 0 ? (
                 <div className="jerarquia-explorer__empleados-loading">
-                    <Skeleton active title={false} paragraph={{ rows: 2 }} />
+                    <Skeleton active avatar title={false} paragraph={{ rows: 1 }} />
+                    <Skeleton active avatar title={false} paragraph={{ rows: 1 }} />
+                    <Skeleton active avatar title={false} paragraph={{ rows: 1 }} />
                 </div>
             ) : empleados.length === 0 ? (
                 <div className="jerarquia-explorer__section-empty">

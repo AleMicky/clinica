@@ -10,9 +10,7 @@ import {
     ApartmentOutlined,
     BankOutlined,
     DeleteOutlined,
-    EditOutlined,
     ExperimentOutlined,
-    PlusOutlined,
 } from '@ant-design/icons'
 
 import {
@@ -56,7 +54,6 @@ import {
 } from './JerarquiaFormDrawers'
 import { JerarquiaTreeNodeTitle } from './JerarquiaTreeNodeTitle'
 import { OrganizationTree } from './OrganizationTree'
-import { ServicesCard } from './ServicesCard'
 
 export function JerarquiaPanel() {
     const [treeSearchInput, setTreeSearchInput] = useState('')
@@ -353,25 +350,6 @@ export function JerarquiaPanel() {
 
     const buildAreaMenu = (area: Area): MenuProps['items'] => [
         {
-            key: 'edit',
-            icon: <EditOutlined />,
-            label: 'Editar área',
-            onClick: ({ domEvent }) => {
-                domEvent.stopPropagation()
-                openEditArea(area)
-            },
-        },
-        {
-            key: 'new-dept',
-            icon: <PlusOutlined />,
-            label: 'Nuevo departamento',
-            onClick: ({ domEvent }) => {
-                domEvent.stopPropagation()
-                openCreateDept(area.id)
-            },
-        },
-        { type: 'divider' },
-        {
             key: 'delete',
             danger: true,
             icon: <DeleteOutlined />,
@@ -392,25 +370,6 @@ export function JerarquiaPanel() {
 
     const buildDeptMenu = (dept: Departamento): MenuProps['items'] => [
         {
-            key: 'edit',
-            icon: <EditOutlined />,
-            label: 'Editar departamento',
-            onClick: ({ domEvent }) => {
-                domEvent.stopPropagation()
-                openEditDept(dept)
-            },
-        },
-        {
-            key: 'new-serv',
-            icon: <PlusOutlined />,
-            label: 'Nuevo servicio',
-            onClick: ({ domEvent }) => {
-                domEvent.stopPropagation()
-                openCreateServicio(dept.id, dept.areaId)
-            },
-        },
-        { type: 'divider' },
-        {
             key: 'delete',
             danger: true,
             icon: <DeleteOutlined />,
@@ -430,16 +389,6 @@ export function JerarquiaPanel() {
     ]
 
     const buildServicioMenu = (servicio: Servicio): MenuProps['items'] => [
-        {
-            key: 'edit',
-            icon: <EditOutlined />,
-            label: 'Editar servicio',
-            onClick: ({ domEvent }) => {
-                domEvent.stopPropagation()
-                openEditServicio(servicio)
-            },
-        },
-        { type: 'divider' },
         {
             key: 'delete',
             danger: true,
@@ -476,12 +425,16 @@ export function JerarquiaPanel() {
                 key: nodeKey('area', area.id),
                 title: (
                     <JerarquiaTreeNodeTitle
+                        level="area"
                         icon={<BankOutlined />}
                         nombre={area.nombre}
                         codigo={area.codigo}
                         countLabel={areaCountLabel}
                         menuItems={buildAreaMenu(areaEntity)}
                         deleting={deletingAreaId === area.id}
+                        onEdit={() => openEditArea(areaEntity)}
+                        onCreate={() => openCreateDept(area.id)}
+                        createLabel="Nuevo departamento"
                     />
                 ),
                 children: area.departamentos.map((dept) => {
@@ -499,12 +452,16 @@ export function JerarquiaPanel() {
                         key: nodeKey('departamento', dept.id),
                         title: (
                             <JerarquiaTreeNodeTitle
+                                level="departamento"
                                 icon={<ApartmentOutlined />}
                                 nombre={dept.nombre}
                                 codigo={dept.codigo}
                                 countLabel={deptCountLabel}
                                 menuItems={buildDeptMenu(deptEntity)}
                                 deleting={deletingDeptId === dept.id}
+                                onEdit={() => openEditDept(deptEntity)}
+                                onCreate={() => openCreateServicio(dept.id, dept.areaId)}
+                                createLabel="Nuevo servicio"
                             />
                         ),
                         children: dept.servicios.map((servicio) => {
@@ -516,12 +473,14 @@ export function JerarquiaPanel() {
                                 isLeaf: true,
                                 title: (
                                     <JerarquiaTreeNodeTitle
+                                        level="servicio"
                                         icon={<ExperimentOutlined />}
                                         nombre={servicio.nombre}
                                         codigo={servicio.codigo}
                                         countLabel={empleados ?? undefined}
                                         menuItems={buildServicioMenu(servicioEntity)}
                                         deleting={deletingServicioId === servicio.id}
+                                        onEdit={() => openEditServicio(servicioEntity)}
                                     />
                                 ),
                             }
@@ -661,54 +620,7 @@ export function JerarquiaPanel() {
                     nombre={selectedArea.nombre}
                     hierarchy={[{ label: 'Área', nombre: selectedArea.nombre }]}
                     descripcion={selectedArea.descripcion}
-                    actions={[
-                        {
-                            label: 'Editar',
-                            icon: <EditOutlined />,
-                            onClick: () => openEditArea(selectedArea),
-                        },
-                        {
-                            label: 'Nuevo departamento',
-                            icon: <PlusOutlined />,
-                            onClick: () => openCreateDept(selectedArea.id),
-                            primary: true,
-                        },
-                    ]}
                     stats={<DepartmentStats items={stats} />}
-                />
-
-                <ServicesCard
-                    title="Departamentos"
-                    sectionIcon={<ApartmentOutlined />}
-                    count={selectedAreaNode.departamentos.length}
-                    emptyDescription="Esta área no tiene departamentos"
-                    emptyActionLabel="Agregar departamento"
-                    onEmptyAction={() => openCreateDept(selectedArea.id)}
-                    items={selectedAreaNode.departamentos.map((dept) => {
-                        const servCount = dept.servicios.length
-                        const meta = [
-                            `${servCount} servicio${servCount === 1 ? '' : 's'}`,
-                            formatEmpleados(dept.empleadosCount),
-                        ]
-                            .filter(Boolean)
-                            .join(' · ')
-
-                        return {
-                            id: dept.id,
-                            icon: <ApartmentOutlined />,
-                            nombre: dept.nombre,
-                            codigo: dept.codigo,
-                            meta,
-                            selected: selectedDept?.id === dept.id,
-                            onClick: () =>
-                                syncSelection(
-                                    'departamento',
-                                    selectedArea,
-                                    toDepartamento(dept, selectedArea.nombre),
-                                    null,
-                                ),
-                        }
-                    })}
                 />
 
                 <JerarquiaEmpleadosSection
@@ -739,47 +651,7 @@ export function JerarquiaPanel() {
                         { label: 'Departamento', nombre: selectedDept.nombre },
                     ]}
                     descripcion={selectedDept.descripcion}
-                    actions={[
-                        {
-                            label: 'Editar',
-                            icon: <EditOutlined />,
-                            onClick: () => openEditDept(selectedDept),
-                        },
-                        {
-                            label: 'Nuevo servicio',
-                            icon: <PlusOutlined />,
-                            onClick: () =>
-                                openCreateServicio(selectedDept.id, selectedDept.areaId),
-                            primary: true,
-                        },
-                    ]}
                     stats={<DepartmentStats items={stats} />}
-                />
-
-                <ServicesCard
-                    title="Servicios"
-                    sectionIcon={<ExperimentOutlined />}
-                    count={selectedDeptNode.servicios.length}
-                    emptyDescription="Este departamento no tiene servicios"
-                    emptyActionLabel="Agregar servicio"
-                    onEmptyAction={() =>
-                        openCreateServicio(selectedDept.id, selectedDept.areaId)
-                    }
-                    items={selectedDeptNode.servicios.map((servicio) => ({
-                        id: servicio.id,
-                        icon: <ExperimentOutlined />,
-                        nombre: servicio.nombre,
-                        codigo: servicio.codigo,
-                        meta: formatEmpleados(servicio.empleadosCount),
-                        selected: selectedServicio?.id === servicio.id,
-                        onClick: () =>
-                            syncSelection(
-                                'servicio',
-                                selectedArea,
-                                selectedDept,
-                                toServicio(servicio, selectedDept.nombre),
-                            ),
-                    }))}
                 />
 
                 <JerarquiaEmpleadosSection
@@ -810,13 +682,6 @@ export function JerarquiaPanel() {
                         { label: 'Servicio', nombre: selectedServicio.nombre },
                     ]}
                     descripcion={selectedServicio.descripcion}
-                    actions={[
-                        {
-                            label: 'Editar',
-                            icon: <EditOutlined />,
-                            onClick: () => openEditServicio(selectedServicio),
-                        },
-                    ]}
                     stats={<DepartmentStats items={stats} />}
                 />
 
@@ -854,10 +719,10 @@ export function JerarquiaPanel() {
                 open={hasSelection}
                 onClose={() => syncSelection(null, null, null, null)}
                 placement="right"
-                width={520}
+                width={420}
                 destroyOnHidden
                 className="jerarquia-explorer__detail-drawer"
-                styles={{ body: { padding: '12px 16px' } }}
+                styles={{ body: { padding: '10px 12px' } }}
             >
                 <div className="jerarquia-explorer__detail-drawer-breadcrumb">
                     <Breadcrumb items={breadcrumbItems} />
