@@ -78,38 +78,36 @@ export function CatalogoRrhhView({ section }: CatalogoRrhhViewProps) {
     const isSaving = config.create.isPending || config.update.isPending
 
     return (
-        <div className="module-object-page__panel">
-            <CatalogoSimplePanel
-                title={meta.title}
-                subtitle={meta.description}
-                entityLabel={meta.entityLabel}
-                newButtonLabel={meta.newButtonLabel}
-                searchPlaceholder={meta.searchPlaceholder}
-                items={config.data.data?.items ?? []}
-                total={config.data.data?.totalRecords ?? 0}
-                page={page}
-                pageSize={pageSize}
-                search={search}
-                loading={config.data.isFetching}
-                isSaving={isSaving}
-                onPageChange={(nextPage, nextPageSize) => {
-                    setPage(nextPage)
-                    setPageSize(nextPageSize)
-                }}
-                onSearch={(value) => {
-                    setSearch(value)
-                    setPage(1)
-                }}
-                onCreate={async (values) => {
-                    await config.create.mutateAsync(toPayload(values))
-                }}
-                onUpdate={async (id, values) => {
-                    await config.update.mutateAsync({ id, data: toPayload(values) })
-                }}
-                onDelete={async (id) => {
-                    await config.delete.mutateAsync(id)
-                }}
-            />
-        </div>
+        <CatalogoSimplePanel
+            title={meta.title}
+            subtitle={meta.description}
+            entityLabel={meta.entityLabel}
+            newButtonLabel={meta.newButtonLabel}
+            searchPlaceholder={meta.searchPlaceholder}
+            items={config.data.data?.items ?? []}
+            total={config.data.data?.totalRecords ?? 0}
+            page={page}
+            pageSize={pageSize}
+            search={search}
+            loading={config.data.isFetching}
+            isSaving={isSaving}
+            onPageChange={(nextPage, nextPageSize) => {
+                setPage(nextPage)
+                setPageSize(nextPageSize)
+            }}
+            onSearch={(value) => {
+                setSearch(value)
+                setPage(1)
+            }}
+            onCreate={async (values) => {
+                await config.create.mutateAsync(toPayload(values))
+            }}
+            onUpdate={async (id, values) => {
+                await config.update.mutateAsync({ id, data: toPayload(values) })
+            }}
+            onDelete={async (id) => {
+                await config.delete.mutateAsync(id)
+            }}
+        />
     )
 }

@@ -3,7 +3,7 @@ import {
     createColumnHelper,
     type ColumnDef,
 } from '@tanstack/react-table'
-import { Button, Flex, Grid, Input, Popconfirm, Space, Tag, Typography, theme } from 'antd'
+import { Button, Flex, Input, Popconfirm, Space, Tag, theme } from 'antd'
 import {
     DeleteOutlined,
     EditOutlined,
@@ -16,12 +16,7 @@ import { CatalogoBaseFormModal } from './CatalogoBaseFormModal'
 import type { CatalogoBaseFormValues } from '../schemas/catalogo-clinico.schema'
 import type { CatalogoBase } from '../types/catalogo-clinico.types'
 
-const { Text } = Typography
-const { useBreakpoint } = Grid
-
 type CatalogoSimplePanelProps = {
-    title: string
-    subtitle: string
     entityLabel: string
     newButtonLabel: string
     searchPlaceholder: string
@@ -39,13 +34,14 @@ type CatalogoSimplePanelProps = {
     onDelete: (id: string) => Promise<void>
     /** Acciones adicionales por fila (antes de editar/eliminar). */
     extraRowActions?: (item: CatalogoBase) => React.ReactNode
+    /** @deprecated El título/subtítulo ya no se muestran; la sección activa está en el header del módulo. */
+    title?: string
+    subtitle?: string
 }
 
 const columnHelper = createColumnHelper<CatalogoBase>()
 
 export function CatalogoSimplePanel({
-    title,
-    subtitle,
     entityLabel,
     newButtonLabel,
     searchPlaceholder,
@@ -64,8 +60,6 @@ export function CatalogoSimplePanel({
     extraRowActions,
 }: CatalogoSimplePanelProps) {
     const { token } = theme.useToken()
-    const screens = useBreakpoint()
-    const isMobile = !screens.md
     const [searchInput, setSearchInput] = useState(search)
     const [modalOpen, setModalOpen] = useState(false)
     const [editing, setEditing] = useState<CatalogoBase | null>(null)
@@ -80,6 +74,10 @@ export function CatalogoSimplePanel({
 
         return () => window.clearTimeout(timer)
     }, [searchInput])
+
+    const caption = `${total} registro${total === 1 ? '' : 's'}${
+        search ? ` · "${search}"` : ''
+    }`
 
     const columns = useMemo(
         () =>
@@ -98,17 +96,19 @@ export function CatalogoSimplePanel({
                 }),
                 columnHelper.display({
                     id: 'actions',
-                    header: 'Acciones',
-                    size: extraRowActions ? 160 : 120,
+                    header: '',
+                    size: extraRowActions ? 120 : 88,
                     meta: { align: 'right', headerAlign: 'right' },
                     cell: ({ row }) => {
                         const item = row.original
                         return (
-                            <Space size="small">
+                            <Space size={4}>
                                 {extraRowActions?.(item)}
                                 <Button
                                     type="text"
+                                    size="small"
                                     icon={<EditOutlined />}
+                                    aria-label={`Editar ${item.nombre}`}
                                     onClick={() => {
                                         setEditing(item)
                                         setModalOpen(true)
@@ -134,8 +134,10 @@ export function CatalogoSimplePanel({
                                 >
                                     <Button
                                         type="text"
+                                        size="small"
                                         danger
                                         icon={<DeleteOutlined />}
+                                        aria-label={`Desactivar ${item.nombre}`}
                                         loading={deletingId === item.id}
                                     />
                                 </Popconfirm>
@@ -163,66 +165,68 @@ export function CatalogoSimplePanel({
     }
 
     return (
-        <div className="catalogo-clinico-panel">
-            <div className="catalogo-clinico-panel__head">
-                <div className="catalogo-clinico-panel__head-text">
-                    <Text strong className="catalogo-clinico-panel__title">
-                        {title}
-                    </Text>
-                    <Text type="secondary" className="catalogo-clinico-panel__subtitle">
-                        {subtitle}
-                    </Text>
+        <>
+            <div className="rrhh-section-panel rrhh-catalogo">
+                <div className="rrhh-section-panel__filters">
+                    <Flex
+                        gap={6}
+                        wrap="wrap"
+                        align="center"
+                        className="rrhh-catalogo__filters"
+                        role="search"
+                        aria-label={`Filtros de ${entityLabel}`}
+                    >
+                        <Input
+                            allowClear
+                            size="small"
+                            className="rrhh-catalogo__filter-search"
+                            prefix={
+                                <SearchOutlined style={{ color: token.colorTextQuaternary }} />
+                            }
+                            placeholder={searchPlaceholder}
+                            value={searchInput}
+                            onChange={(e) => setSearchInput(e.target.value)}
+                            onPressEnter={() => onSearch(searchInput.trim())}
+                            onClear={() => {
+                                setSearchInput('')
+                                onSearch('')
+                            }}
+                            aria-label={`Buscar ${entityLabel}`}
+                        />
+                    </Flex>
+                    <Flex gap={6} wrap="wrap" align="center" className="rrhh-section-panel__actions">
+                        <Button
+                            type="primary"
+                            size="small"
+                            icon={<PlusOutlined />}
+                            onClick={() => {
+                                setEditing(null)
+                                setModalOpen(true)
+                            }}
+                            aria-label={newButtonLabel}
+                        >
+                            {newButtonLabel}
+                        </Button>
+                    </Flex>
                 </div>
-                <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    block={isMobile}
-                    className="catalogo-clinico-panel__create-btn"
-                    onClick={() => {
-                        setEditing(null)
-                        setModalOpen(true)
-                    }}
-                >
-                    {newButtonLabel}
-                </Button>
-            </div>
-
-            <div className="catalogo-clinico-panel__search">
-                <Input
-                    allowClear
-                    prefix={<SearchOutlined style={{ color: token.colorTextQuaternary }} />}
-                    placeholder={searchPlaceholder}
-                    value={searchInput}
-                    onChange={(e) => setSearchInput(e.target.value)}
-                    onPressEnter={() => onSearch(searchInput.trim())}
-                    onClear={() => {
-                        setSearchInput('')
-                        onSearch('')
-                    }}
-                />
-            </div>
-
-            <div className="catalogo-clinico-panel__body">
-                <Flex justify="space-between" align="center" className="catalogo-clinico-panel__meta">
-                    <Text type="secondary">
-                        {total} registro{total === 1 ? '' : 's'}
-                        {search ? ` · "${search}"` : ''}
-                    </Text>
-                </Flex>
-
-                <AppDataTable
-                    data={items}
-                    columns={columns}
-                    loading={loading}
-                    emptyText={`No hay ${entityLabel.toLowerCase()}s registrados.`}
-                    getRowId={(row) => String(row.id)}
-                    pagination={{
-                        page,
-                        pageSize,
-                        total,
-                        onChange: onPageChange,
-                    }}
-                />
+                <div className="rrhh-section-panel__body">
+                    <p className="rrhh-section-panel__caption rrhh-catalogo__caption">{caption}</p>
+                    <AppDataTable
+                        className="rrhh-catalogo__table"
+                        data={items}
+                        columns={columns}
+                        loading={loading}
+                        emptyText={`No hay ${entityLabel.toLowerCase()}s registrados.`}
+                        getRowId={(row) => String(row.id)}
+                        pagination={{
+                            page,
+                            pageSize,
+                            total,
+                            pageSizeOptions: [10, 20, 50],
+                            onChange: onPageChange,
+                        }}
+                    />
+                </div>
             </div>
 
             <CatalogoBaseFormModal
@@ -233,6 +237,6 @@ export function CatalogoSimplePanel({
                 onClose={closeModal}
                 onSubmit={handleSubmit}
             />
-        </div>
+        </>
     )
 }
