@@ -1504,6 +1504,57 @@ body {
     white-space: nowrap;
 }
 
+.app-data-table__th--sortable {
+    user-select: none;
+}
+
+.app-data-table__sort-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    cursor: pointer;
+}
+
+.app-data-table__sort-btn:focus-visible {
+    outline: 2px solid rgba(22, 119, 255, 0.35);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+.app-data-table__sort-icon {
+    font-size: 10px;
+    opacity: 0.7;
+}
+
+.app-data-table__sort-idle {
+    width: 10px;
+    height: 10px;
+    display: inline-block;
+    opacity: 0.25;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-bottom: 5px solid currentColor;
+}
+
+.app-data-table__tr--skeleton .app-data-table__td {
+    padding-block: 14px;
+}
+
+.app-data-table__tr--skeleton .ant-skeleton-paragraph {
+    margin: 0 !important;
+}
+
+.app-data-table__tr--skeleton .ant-skeleton-paragraph > li {
+    height: 12px !important;
+}
+
 .app-data-table__td {
     padding: 12px 16px;
     color: rgba(15, 23, 42, 0.88);
@@ -4935,16 +4986,12 @@ body {
 }
 
 .seguridad-user-cell__avatar {
-    width: 30px;
-    height: 30px;
-    display: grid;
-    place-items: center;
-    border-radius: 8px;
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--ant-color-primary);
-    background: rgba(22, 119, 255, 0.1);
     flex-shrink: 0;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    color: rgba(15, 23, 42, 0.7) !important;
+    background: #eef2f7 !important;
+    border: 1px solid #e2e8f0;
 }
 
 .seguridad-user-cell__name {
@@ -4959,14 +5006,17 @@ body {
 
 .seguridad-role-tag {
     margin: 0;
-    border: none;
+    border: 1px solid #e2e8f0;
     border-radius: 999px;
     padding: 0 8px;
     font-size: 11px;
     font-weight: 600;
     line-height: 20px;
-    color: var(--ant-color-primary);
-    background: rgba(22, 119, 255, 0.1);
+    color: rgba(15, 23, 42, 0.7);
+    background: #f8fafc;
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .seguridad-role-tag--large {
@@ -5101,12 +5151,30 @@ body {
 
 /* ── Seguridad usuarios — filtros y tabla ── */
 
+.seguridad-usuarios__header-icon {
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    font-size: 14px;
+    color: rgba(15, 23, 42, 0.65);
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    flex-shrink: 0;
+}
+
+.seguridad-section-panel__filters {
+    padding: 0 14px 10px;
+}
+
 .seguridad-usuarios__filters {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 8px;
     min-width: 0;
+    width: 100%;
 }
 
 .seguridad-usuarios__filters--panel {
@@ -5115,32 +5183,39 @@ body {
 }
 
 .seguridad-usuarios__filter-search {
-    flex: 1 1 200px;
-    min-width: 160px;
-    max-width: 280px;
+    flex: 1 1 220px;
+    min-width: 180px;
+    max-width: 320px;
 }
 
 .seguridad-usuarios__filter-select {
-    flex: 0 1 140px;
-    min-width: 120px;
+    flex: 0 1 150px;
+    min-width: 130px;
 }
 
 .seguridad-usuarios__filter-clear {
-    padding-inline: 4px;
+    padding-inline: 8px;
+    color: rgba(15, 23, 42, 0.55);
+}
+
+.seguridad-usuarios__filter-clear:focus-visible {
+    outline: 2px solid rgba(22, 119, 255, 0.35);
+    outline-offset: 2px;
 }
 
 .seguridad-usuarios__table .app-data-table__wrapper {
     border-color: #e2e8f0;
-    border-radius: 10px;
+    border-radius: 12px;
     max-height: calc(100vh - 280px);
     overflow: auto;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
 }
 
 .seguridad-usuarios__table .app-data-table__th {
     position: sticky;
     top: 0;
     z-index: 2;
-    padding: 8px 12px;
+    padding: 10px 12px;
     font-size: 11px;
     background: #f8fafc;
     border-bottom-color: #e2e8f0;
@@ -5148,13 +5223,30 @@ body {
 }
 
 .seguridad-usuarios__table .app-data-table__td {
-    padding: 7px 12px;
+    padding: 10px 12px;
     font-size: 13px;
     border-bottom-color: #f1f5f9;
 }
 
 .seguridad-usuarios__table .app-data-table__tr:hover .app-data-table__td {
-    background: #eff6ff;
+    background: #f8fafc;
+}
+
+.seguridad-usuarios__empty {
+    padding: 28px 16px 36px;
+}
+
+.seguridad-usuarios__empty-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 8px;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    font-size: 22px;
+    color: rgba(15, 23, 42, 0.45);
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
 }
 
 .seguridad-user-cell__text {
@@ -5170,6 +5262,16 @@ body {
     min-width: 0;
 }
 
+.seguridad-user-cell__persona-row {
+    min-width: 0;
+}
+
+.seguridad-user-cell__meta-icon {
+    flex-shrink: 0;
+    font-size: 12px;
+    color: rgba(15, 23, 42, 0.4);
+}
+
 .seguridad-user-cell__persona-name {
     font-size: 13px;
     line-height: 1.3;
@@ -5178,11 +5280,20 @@ body {
 .seguridad-user-cell__persona-doc {
     font-size: 11px;
     line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.seguridad-user-cell__persona-empty {
+.seguridad-user-cell__persona-empty,
+.seguridad-user-cell__meta-empty {
     font-size: 12px;
     font-style: italic;
+}
+
+.seguridad-user-cell__meta {
+    font-size: 12px;
+    color: rgba(15, 23, 42, 0.65);
 }
 
 .seguridad-user-cell__roles {
@@ -5193,22 +5304,35 @@ body {
 
 .seguridad-status-tag {
     margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     border-radius: 999px;
-    padding: 0 8px;
+    padding: 0 10px;
     font-size: 11px;
     font-weight: 600;
-    line-height: 20px;
-    border: none;
+    line-height: 22px;
+    border: 1px solid transparent;
+}
+
+.seguridad-status-tag__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.85;
 }
 
 .seguridad-status-tag--active {
-    color: #15803d;
-    background: #dcfce7;
+    color: #166534;
+    background: #f0fdf4;
+    border-color: #bbf7d0;
 }
 
 .seguridad-status-tag--inactive {
     color: #64748b;
-    background: #f1f5f9;
+    background: #f8fafc;
+    border-color: #e2e8f0;
 }
 
 .seguridad-user-actions {
@@ -5220,9 +5344,10 @@ body {
     color: rgba(15, 23, 42, 0.55);
 }
 
-.seguridad-user-actions__trigger:hover {
+.seguridad-user-actions__trigger:hover,
+.seguridad-user-actions__trigger:focus-visible {
     color: var(--ant-color-primary);
-    background: #eff6ff !important;
+    background: #f1f5f9 !important;
 }
 
 .seguridad-user-actions__danger-label {
@@ -5377,8 +5502,20 @@ body {
     }
 
     .seguridad-section-panel__actions {
-        flex-direction: column;
-        align-items: stretch !important;
+        flex-direction: row;
+        align-items: center !important;
+        justify-content: flex-end;
+    }
+
+    .seguridad-usuarios__table .app-data-table__wrapper {
+        max-height: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .seguridad-usuarios__table .app-data-table__th,
+    .seguridad-usuarios__table .app-data-table__td {
+        padding-inline: 10px;
     }
 }
 

@@ -83,6 +83,28 @@ public sealed class PersonaService(
             .FirstOrDefaultAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyDictionary<Guid, PersonaResponse>> GetByIdsAsync(
+        IEnumerable<Guid> ids,
+        CancellationToken cancellationToken = default)
+    {
+        var idList = ids.Distinct().ToList();
+
+        if (idList.Count == 0)
+            return new Dictionary<Guid, PersonaResponse>();
+
+        var items = await context.Personas
+            .AsNoTracking()
+            .Include(x => x.TipoDocumento)
+            .Include(x => x.ExtensionDocumento)
+            .Include(x => x.Sexo)
+            .Include(x => x.EstadoCivil)
+            .Where(x => idList.Contains(x.Id))
+            .Select(x => ToResponse(x))
+            .ToListAsync(cancellationToken);
+
+        return items.ToDictionary(x => x.Id);
+    }
+
     public async Task<PersonaResponse> CreateAsync(
         CreatePersonaRequest request,
         CancellationToken cancellationToken = default)

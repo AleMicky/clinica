@@ -1,7 +1,10 @@
-import { Button, Input, Select, theme } from 'antd'
-import { FilterOutlined, SearchOutlined } from '@ant-design/icons'
+import { memo } from 'react'
+import { Button, Flex, Input, Select, Tooltip, theme } from 'antd'
+import { ClearOutlined, SearchOutlined } from '@ant-design/icons'
 
-export type StatusFilter = 'all' | 'activo' | 'inactivo'
+import type { StatusFilter } from '../hooks/use-users-filters'
+
+export type { StatusFilter }
 
 type UsersFiltersBarProps = {
     searchInput: string
@@ -17,7 +20,7 @@ type UsersFiltersBarProps = {
     className?: string
 }
 
-export function UsersFiltersBar({
+export const UsersFiltersBar = memo(function UsersFiltersBar({
     searchInput,
     roleFilter,
     statusFilter,
@@ -33,13 +36,20 @@ export function UsersFiltersBar({
     const { token } = theme.useToken()
 
     return (
-        <div className={className}>
+        <Flex
+            gap={8}
+            wrap="wrap"
+            align="center"
+            className={className}
+            role="search"
+            aria-label="Filtros de usuarios"
+        >
             <Input
                 allowClear
-                size="small"
+                size="middle"
                 className="seguridad-usuarios__filter-search"
                 prefix={<SearchOutlined style={{ color: token.colorTextQuaternary }} />}
-                placeholder="Buscar por usuario o persona…"
+                placeholder="Buscar usuario, persona o documento…"
                 value={searchInput}
                 onChange={(event) => onSearchInputChange(event.target.value)}
                 onPressEnter={() => onSearch(searchInput)}
@@ -47,18 +57,20 @@ export function UsersFiltersBar({
                     onSearchInputChange('')
                     onSearch('')
                 }}
+                aria-label="Buscar usuario"
             />
             <Select
                 allowClear
-                size="small"
+                size="middle"
                 className="seguridad-usuarios__filter-select"
-                placeholder="Rol"
+                placeholder="Filtrar por rol"
                 value={roleFilter ?? undefined}
                 options={roleOptions.map((role) => ({ label: role, value: role }))}
                 onChange={(value) => onRoleFilterChange(value ?? null)}
+                aria-label="Filtrar por rol"
             />
             <Select
-                size="small"
+                size="middle"
                 className="seguridad-usuarios__filter-select"
                 placeholder="Estado"
                 value={statusFilter}
@@ -68,18 +80,25 @@ export function UsersFiltersBar({
                     { label: 'Inactivos', value: 'inactivo' },
                 ]}
                 onChange={onStatusFilterChange}
+                aria-label="Filtrar por estado"
             />
             {hasActiveFilters ? (
-                <Button
-                    type="link"
-                    size="small"
-                    icon={<FilterOutlined />}
-                    onClick={onClearFilters}
-                    className="seguridad-usuarios__filter-clear"
-                >
-                    Limpiar
-                </Button>
+                <Tooltip title="Quitar filtros de rol y estado">
+                    <Button
+                        type="text"
+                        size="middle"
+                        icon={<ClearOutlined />}
+                        onClick={onClearFilters}
+                        className="seguridad-usuarios__filter-clear"
+                        aria-label="Limpiar filtros"
+                    >
+                        Limpiar
+                    </Button>
+                </Tooltip>
             ) : null}
-        </div>
+        </Flex>
     )
-}
+})
+
+/** Alias semántico solicitado en la arquitectura. */
+export const UsersFilters = UsersFiltersBar

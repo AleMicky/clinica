@@ -14,8 +14,11 @@ function filterUsers(user: User, search: string) {
     return (
         user.userName.toLowerCase().includes(search) ||
         user.nombreCompleto.toLowerCase().includes(search) ||
+        (user.email?.toLowerCase().includes(search) ?? false) ||
         (user.personaNombreCompleto?.toLowerCase().includes(search) ?? false) ||
         (user.personaNumeroDocumento?.toLowerCase().includes(search) ?? false) ||
+        (user.personaTipoDocumentoNombre?.toLowerCase().includes(search) ?? false) ||
+        (user.personaTelefono?.toLowerCase().includes(search) ?? false) ||
         user.roles.some((role) => role.toLowerCase().includes(search))
     )
 }

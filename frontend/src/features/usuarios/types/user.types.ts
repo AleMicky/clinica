@@ -8,6 +8,11 @@ export type User = {
     personaId?: string | null
     personaNombreCompleto?: string | null
     personaNumeroDocumento?: string | null
+    personaTipoDocumentoNombre?: string | null
+    personaTelefono?: string | null
+    personaExtensionDocumentoNombre?: string | null
+    personaComplementoDocumento?: string | null
+    createdAt?: string | null
 }
 
 export type UpdateUserPayload = {

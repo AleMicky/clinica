@@ -12,4 +12,8 @@ public interface IPersonaService : ICrudService<Guid,
     Task<PagedResult<PersonaResponse>> GetPagedAsync(
         PersonaPagedRequest request,
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyDictionary<Guid, PersonaResponse>> GetByIdsAsync(
+        IEnumerable<Guid> ids,
+        CancellationToken cancellationToken = default);
 }

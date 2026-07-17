@@ -1,26 +1,21 @@
-import { useMemo } from 'react'
+import { memo, useMemo } from 'react'
 import {
     createColumnHelper,
     type ColumnDef,
+    type OnChangeFn,
+    type SortingState,
 } from '@tanstack/react-table'
-import {
-    Button,
-    Dropdown,
-    Modal,
-    Tag,
-    Typography,
-} from 'antd'
-import type { MenuProps } from 'antd'
-import {
-    DeleteOutlined,
-    EditOutlined,
-    LockOutlined,
-    MoreOutlined,
-    UnlockOutlined,
-} from '@ant-design/icons'
+import { Avatar, Flex, Typography } from 'antd'
+import { CalendarOutlined } from '@ant-design/icons'
 
 import { AppDataTable } from '../../../shared/components/ui/data-table/AppDataTable'
 import type { User } from '../types/user.types'
+import { formatOptionalDate, getUserInitials } from '../utils/user-display'
+import { EmptyUsers } from './EmptyUsers'
+import { PersonaCell, UserEmailMeta } from './PersonaCell'
+import { UserActionsDropdown } from './UserActionsDropdown'
+import { UserRolesCell } from './UserRoleTag'
+import { UserStatusBadge } from './UserStatusBadge'
 
 type UsersTableProps = {
     users: User[]
@@ -28,34 +23,28 @@ type UsersTableProps = {
     total: number
     page: number
     pageSize: number
+    sorting: SortingState
+    onSortingChange: OnChangeFn<SortingState>
     onPageChange: (page: number, pageSize: number) => void
     onEdit: (user: User) => void
     onDelete: (user: User) => void
     onToggleActive: (user: User) => void
     deletingId: string | null
     togglingId: string | null
+    hasFilters?: boolean
+    onClearFilters?: () => void
+    onCreate?: () => void
     className?: string
 }
 
 const columnHelper = createColumnHelper<User>()
 
-function getInitials(name: string, userName: string) {
-    const source = name.trim() || userName.trim()
-    const parts = source.split(/\s+/).filter(Boolean)
-
-    if (parts.length >= 2) {
-        return `${parts[0][0] ?? ''}${parts[1][0] ?? ''}`.toUpperCase()
-    }
-
-    return source.slice(0, 2).toUpperCase()
-}
-
-function UserIdentityCell({ user }: { user: User }) {
+const UserIdentityCell = memo(function UserIdentityCell({ user }: { user: User }) {
     return (
         <div className="seguridad-user-cell">
-            <span className="seguridad-user-cell__avatar" aria-hidden>
-                {getInitials(user.nombreCompleto, user.userName)}
-            </span>
+            <Avatar size={32} className="seguridad-user-cell__avatar" aria-hidden>
+                {getUserInitials(user.nombreCompleto, user.userName)}
+            </Avatar>
             <span className="seguridad-user-cell__text">
                 <Typography.Text strong className="seguridad-user-cell__name">
                     {user.nombreCompleto}
@@ -63,189 +52,109 @@ function UserIdentityCell({ user }: { user: User }) {
                 <Typography.Text type="secondary" className="seguridad-user-cell__username">
                     @{user.userName}
                 </Typography.Text>
+                <UserEmailMeta email={user.email} />
             </span>
         </div>
     )
-}
+})
 
-function PersonaCell({ user }: { user: User }) {
-    if (!user.personaId) {
+const CreatedAtCell = memo(function CreatedAtCell({ value }: { value?: string | null }) {
+    const formatted = formatOptionalDate(value)
+
+    if (!formatted) {
         return (
-            <Typography.Text type="secondary" className="seguridad-user-cell__persona-empty">
-                Sin persona
+            <Typography.Text type="secondary" className="seguridad-user-cell__meta-empty">
+                —
             </Typography.Text>
         )
     }
 
     return (
-        <div className="seguridad-user-cell__persona">
-            <Typography.Text className="seguridad-user-cell__persona-name">
-                {user.personaNombreCompleto ?? user.nombreCompleto}
-            </Typography.Text>
-            {user.personaNumeroDocumento ? (
-                <Typography.Text type="secondary" className="seguridad-user-cell__persona-doc">
-                    {user.personaNumeroDocumento}
-                </Typography.Text>
-            ) : null}
-        </div>
+        <Flex align="center" gap={6}>
+            <CalendarOutlined className="seguridad-user-cell__meta-icon" aria-hidden />
+            <Typography.Text className="seguridad-user-cell__meta">{formatted}</Typography.Text>
+        </Flex>
     )
-}
+})
 
-function UserActionsCell({
-    user,
-    onEdit,
-    onDelete,
-    onToggleActive,
-    deletingId,
-    togglingId,
-}: {
-    user: User
-    onEdit: (user: User) => void
-    onDelete: (user: User) => void
-    onToggleActive: (user: User) => void
-    deletingId: string | null
-    togglingId: string | null
-}) {
-    const isBusy = deletingId === user.id || togglingId === user.id
-
-    const handleDeleteClick = () => {
-        Modal.confirm({
-            title: 'Desactivar usuario',
-            content: `¿Desea desactivar al usuario "${user.userName}"?`,
-            okText: 'Desactivar',
-            cancelText: 'Cancelar',
-            okButtonProps: { danger: true },
-            onOk: () => onDelete(user),
-        })
-    }
-
-    const menuItems: MenuProps['items'] = [
-        {
-            key: 'edit',
-            icon: <EditOutlined />,
-            label: 'Editar',
-            onClick: () => onEdit(user),
-        },
-        {
-            key: 'toggle',
-            icon: user.activo ? <LockOutlined /> : <UnlockOutlined />,
-            label: user.activo ? 'Bloquear' : 'Activar',
-            disabled: isBusy,
-            onClick: () => onToggleActive(user),
-        },
-        { type: 'divider' },
-        {
-            key: 'delete',
-            icon: <DeleteOutlined />,
-            label: 'Desactivar',
-            danger: true,
-            disabled: !user.activo || isBusy,
-            onClick: handleDeleteClick,
-        },
-    ]
-
-    return (
-        <div className="seguridad-user-actions">
-            <Dropdown
-                menu={{ items: menuItems }}
-                trigger={['click']}
-                placement="bottomRight"
-            >
-                <Button
-                    type="text"
-                    size="small"
-                    icon={<MoreOutlined />}
-                    loading={isBusy}
-                    aria-label={`Acciones para ${user.userName}`}
-                    className="seguridad-user-actions__trigger"
-                />
-            </Dropdown>
-        </div>
-    )
-}
-
-export function UsersTable({
+export const UsersTable = memo(function UsersTable({
     users,
     loading,
     total,
     page,
     pageSize,
+    sorting,
+    onSortingChange,
     onPageChange,
     onEdit,
     onDelete,
     onToggleActive,
     deletingId,
     togglingId,
+    hasFilters = false,
+    onClearFilters,
+    onCreate,
     className,
 }: UsersTableProps) {
     const columns = useMemo(
-        () => [
-            columnHelper.display({
-                id: 'identity',
-                header: 'Usuario',
-                cell: ({ row }) => <UserIdentityCell user={row.original} />,
-            }),
-            columnHelper.display({
-                id: 'persona',
-                header: 'Persona asociada',
-                cell: ({ row }) => <PersonaCell user={row.original} />,
-            }),
-            columnHelper.accessor('roles', {
-                header: 'Rol',
-                size: 140,
-                cell: ({ getValue }) => {
-                    const roles = getValue()
+        () =>
+            [
+                columnHelper.accessor('nombreCompleto', {
+                    id: 'identity',
+                    header: 'Usuario',
+                    enableSorting: true,
+                    cell: ({ row }) => <UserIdentityCell user={row.original} />,
+                }),
+                columnHelper.display({
+                    id: 'persona',
+                    header: 'Persona relacionada',
+                    enableSorting: true,
+                    cell: ({ row }) => <PersonaCell user={row.original} />,
+                }),
+                columnHelper.accessor('roles', {
+                    header: 'Rol',
+                    size: 140,
+                    enableSorting: true,
+                    cell: ({ getValue }) => <UserRolesCell roles={getValue()} />,
+                }),
+                columnHelper.accessor('activo', {
+                    header: 'Estado',
+                    size: 110,
+                    enableSorting: true,
+                    cell: ({ getValue }) => <UserStatusBadge activo={getValue()} />,
+                }),
+                columnHelper.accessor('createdAt', {
+                    id: 'fechaCreacion',
+                    header: 'Creación',
+                    size: 130,
+                    enableSorting: true,
+                    cell: ({ getValue }) => <CreatedAtCell value={getValue()} />,
+                }),
+                columnHelper.display({
+                    id: 'actions',
+                    header: '',
+                    size: 56,
+                    enableSorting: false,
+                    meta: {
+                        align: 'right',
+                        headerAlign: 'right',
+                    },
+                    cell: ({ row }) => {
+                        const user = row.original
+                        const busy = deletingId === user.id || togglingId === user.id
 
-                    if (roles.length === 0) {
-                        return <Typography.Text type="secondary">—</Typography.Text>
-                    }
-
-                    return (
-                        <div className="seguridad-user-cell__roles">
-                            {roles.map((role) => (
-                                <Tag key={role} className="seguridad-role-tag">
-                                    {role}
-                                </Tag>
-                            ))}
-                        </div>
-                    )
-                },
-            }),
-            columnHelper.accessor('activo', {
-                header: 'Estado',
-                size: 100,
-                cell: ({ getValue }) => (
-                    <Tag
-                        className={
-                            getValue()
-                                ? 'seguridad-status-tag seguridad-status-tag--active'
-                                : 'seguridad-status-tag seguridad-status-tag--inactive'
-                        }
-                    >
-                        {getValue() ? 'Activo' : 'Inactivo'}
-                    </Tag>
-                ),
-            }),
-            columnHelper.display({
-                id: 'actions',
-                header: '',
-                size: 56,
-                meta: {
-                    align: 'right',
-                    headerAlign: 'right',
-                },
-                cell: ({ row }) => (
-                    <UserActionsCell
-                        user={row.original}
-                        onEdit={onEdit}
-                        onDelete={onDelete}
-                        onToggleActive={onToggleActive}
-                        deletingId={deletingId}
-                        togglingId={togglingId}
-                    />
-                ),
-            }),
-        ] as ColumnDef<User, unknown>[],
+                        return (
+                            <UserActionsDropdown
+                                user={user}
+                                busy={busy}
+                                onEdit={onEdit}
+                                onDelete={onDelete}
+                                onToggleActive={onToggleActive}
+                            />
+                        )
+                    },
+                }),
+            ] as ColumnDef<User, unknown>[],
         [onEdit, onDelete, onToggleActive, deletingId, togglingId],
     )
 
@@ -255,8 +164,17 @@ export function UsersTable({
             data={users}
             columns={columns}
             loading={loading}
-            emptyText="No hay usuarios registrados."
+            emptyContent={
+                <EmptyUsers
+                    hasFilters={hasFilters}
+                    onClearFilters={onClearFilters}
+                    onCreate={onCreate}
+                />
+            }
             getRowId={(row) => String(row.id)}
+            sorting={sorting}
+            onSortingChange={onSortingChange}
+            skeletonRows={pageSize > 10 ? 8 : 5}
             pagination={{
                 page,
                 pageSize,
@@ -266,4 +184,4 @@ export function UsersTable({
             }}
         />
     )
-}
+})

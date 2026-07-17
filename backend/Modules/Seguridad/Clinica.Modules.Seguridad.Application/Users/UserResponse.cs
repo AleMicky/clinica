@@ -9,5 +9,10 @@ public sealed record UserResponse(
     IReadOnlyList<string> Roles,
     Guid? PersonaId = null,
     string? PersonaNombreCompleto = null,
-    string? PersonaNumeroDocumento = null
+    string? PersonaNumeroDocumento = null,
+    string? PersonaTipoDocumentoNombre = null,
+    string? PersonaTelefono = null,
+    string? PersonaExtensionDocumentoNombre = null,
+    string? PersonaComplementoDocumento = null,
+    DateTime? CreatedAt = null
 );

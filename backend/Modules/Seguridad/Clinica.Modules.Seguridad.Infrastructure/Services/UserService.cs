@@ -1,4 +1,5 @@
 using Clinica.Modules.Personas.Application.Abstractions;
+using Clinica.Modules.Personas.Application.Personas;
 using Clinica.Modules.Seguridad.Application.Abstractions;
 using Clinica.Modules.Seguridad.Application.Users;
 using Clinica.Modules.Seguridad.Infrastructure.Identity;
@@ -74,12 +75,25 @@ public sealed class UserService(
             .OrderBy(x => x.NombreCompleto)
             .ToListAsync(cancellationToken);
 
-        var responses = new List<UserResponse>();
+        var personaIds = users
+            .Where(x => x.PersonaId.HasValue)
+            .Select(x => x.PersonaId!.Value)
+            .Distinct()
+            .ToList();
+
+        var personasById = await personaService.GetByIdsAsync(personaIds, cancellationToken);
+
+        var responses = new List<UserResponse>(users.Count);
 
         foreach (var user in users)
         {
             var roles = await userManager.GetRolesAsync(user);
-            responses.Add(await MapToResponseAsync(user, roles, cancellationToken));
+            PersonaResponse? persona = null;
+
+            if (user.PersonaId is { } personaId)
+                personasById.TryGetValue(personaId, out persona);
+
+            responses.Add(MapToResponse(user, roles, persona));
         }
 
         return responses;
@@ -198,20 +212,19 @@ public sealed class UserService(
         IList<string> roles,
         CancellationToken cancellationToken)
     {
-        string? personaNombreCompleto = null;
-        string? personaNumeroDocumento = null;
+        PersonaResponse? persona = null;
 
         if (user.PersonaId is { } personaId)
-        {
-            var persona = await personaService.GetByIdAsync(personaId, cancellationToken);
+            persona = await personaService.GetByIdAsync(personaId, cancellationToken);
 
-            if (persona is not null)
-            {
-                personaNombreCompleto = persona.NombreCompleto;
-                personaNumeroDocumento = persona.NumeroDocumento;
-            }
-        }
+        return MapToResponse(user, roles, persona);
+    }
 
+    private static UserResponse MapToResponse(
+        ApplicationUser user,
+        IList<string> roles,
+        PersonaResponse? persona)
+    {
         return new UserResponse(
             user.Id,
             user.UserName ?? string.Empty,
@@ -220,7 +233,15 @@ public sealed class UserService(
             user.Activo,
             roles.ToList(),
             user.PersonaId,
-            personaNombreCompleto,
-            personaNumeroDocumento);
+            persona?.NombreCompleto,
+            persona?.NumeroDocumento,
+            persona?.TipoDocumentoNombre,
+            NullIfWhiteSpace(persona?.Telefono),
+            persona?.ExtensionDocumentoNombre,
+            persona?.ComplementoDocumento,
+            user.CreatedAt);
     }
+
+    private static string? NullIfWhiteSpace(string? value)
+        => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }
