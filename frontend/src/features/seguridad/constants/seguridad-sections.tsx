@@ -1,4 +1,4 @@
-import { SafetyCertificateOutlined, TeamOutlined, UserOutlined } from '@ant-design/icons'
+import { SafetyCertificateOutlined, UserOutlined } from '@ant-design/icons'
 
 export type SeguridadPageSection = {
     path: string
@@ -6,7 +6,7 @@ export type SeguridadPageSection = {
     icon: React.ReactNode
 }
 
-export const seguridadPageSections: SeguridadPageSection[] = [
+const seguridadPageSections: SeguridadPageSection[] = [
     {
         path: '/seguridad/usuarios',
         title: 'Usuarios',
@@ -27,8 +27,3 @@ export function getSeguridadActiveSection(pathname: string): SeguridadPageSectio
         ) ?? null
     )
 }
-
-export const seguridadStatsIcons = {
-    users: TeamOutlined,
-    roles: SafetyCertificateOutlined,
-} as const

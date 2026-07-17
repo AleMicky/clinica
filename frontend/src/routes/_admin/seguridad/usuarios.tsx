@@ -6,5 +6,5 @@ export const Route = createFileRoute('/_admin/seguridad/usuarios')({
 })
 
 function UsuariosPage() {
-    return <UsuariosView embedded />
+    return <UsuariosView />
 }

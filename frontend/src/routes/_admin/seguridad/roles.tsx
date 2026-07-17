@@ -6,5 +6,5 @@ export const Route = createFileRoute('/_admin/seguridad/roles')({
 })
 
 function RolesPage() {
-    return <RolesView embedded />
+    return <RolesView />
 }

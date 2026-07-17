@@ -22,7 +22,6 @@ export function useUsersView() {
 
     const allUsers = data?.items ?? []
     const totalUsers = data?.totalRecords ?? 0
-    const totalRoles = rolesData?.totalRecords ?? rolesData?.items.length ?? 0
 
     const roleOptions = useMemo(
         () => rolesData?.items.map((role) => role.name) ?? [],
@@ -50,8 +49,6 @@ export function useUsersView() {
 
     return {
         loading: isFetching,
-        totalUsers,
-        totalRoles,
         roleOptions,
         caption,
         filters: {
