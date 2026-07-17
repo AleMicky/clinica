@@ -46,7 +46,7 @@ export const UsersFiltersBar = memo(function UsersFiltersBar({
         >
             <Input
                 allowClear
-                size="middle"
+                size="small"
                 className="seguridad-usuarios__filter-search"
                 prefix={<SearchOutlined style={{ color: token.colorTextQuaternary }} />}
                 placeholder="Buscar usuario, persona o documento…"
@@ -61,7 +61,7 @@ export const UsersFiltersBar = memo(function UsersFiltersBar({
             />
             <Select
                 allowClear
-                size="middle"
+                size="small"
                 className="seguridad-usuarios__filter-select"
                 placeholder="Filtrar por rol"
                 value={roleFilter ?? undefined}
@@ -70,7 +70,7 @@ export const UsersFiltersBar = memo(function UsersFiltersBar({
                 aria-label="Filtrar por rol"
             />
             <Select
-                size="middle"
+                size="small"
                 className="seguridad-usuarios__filter-select"
                 placeholder="Estado"
                 value={statusFilter}
@@ -86,7 +86,7 @@ export const UsersFiltersBar = memo(function UsersFiltersBar({
                 <Tooltip title="Quitar filtros de rol y estado">
                     <Button
                         type="text"
-                        size="middle"
+                        size="small"
                         icon={<ClearOutlined />}
                         onClick={onClearFilters}
                         className="seguridad-usuarios__filter-clear"

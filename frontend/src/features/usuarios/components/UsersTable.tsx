@@ -12,7 +12,7 @@ import { AppDataTable } from '../../../shared/components/ui/data-table/AppDataTa
 import type { User } from '../types/user.types'
 import { formatOptionalDate, getUserInitials } from '../utils/user-display'
 import { EmptyUsers } from './EmptyUsers'
-import { PersonaCell, UserEmailMeta } from './PersonaCell'
+import { PersonaCell } from './PersonaCell'
 import { UserActionsDropdown } from './UserActionsDropdown'
 import { UserRolesCell } from './UserRoleTag'
 import { UserStatusBadge } from './UserStatusBadge'
@@ -42,7 +42,7 @@ const columnHelper = createColumnHelper<User>()
 const UserIdentityCell = memo(function UserIdentityCell({ user }: { user: User }) {
     return (
         <div className="seguridad-user-cell">
-            <Avatar size={32} className="seguridad-user-cell__avatar" aria-hidden>
+            <Avatar size={28} className="seguridad-user-cell__avatar" aria-hidden>
                 {getUserInitials(user.nombreCompleto, user.userName)}
             </Avatar>
             <span className="seguridad-user-cell__text">
@@ -51,8 +51,8 @@ const UserIdentityCell = memo(function UserIdentityCell({ user }: { user: User }
                 </Typography.Text>
                 <Typography.Text type="secondary" className="seguridad-user-cell__username">
                     @{user.userName}
+                    {user.email?.trim() ? ` · ${user.email.trim()}` : ''}
                 </Typography.Text>
-                <UserEmailMeta email={user.email} />
             </span>
         </div>
     )

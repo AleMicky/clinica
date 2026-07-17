@@ -4744,6 +4744,13 @@ body {
 .seguridad-section-panel {
     display: flex;
     flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
 }
 
 .seguridad-section-panel__head {
@@ -4751,9 +4758,18 @@ body {
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    padding: 10px 14px;
+    padding: 8px 12px;
     border-bottom: 1px solid rgba(15, 23, 42, 0.06);
     background: rgba(248, 250, 252, 0.6);
+}
+
+.seguridad-section-panel__toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-shrink: 0;
+    min-width: 0;
 }
 
 .seguridad-section-panel__head-text {
@@ -4769,18 +4785,27 @@ body {
 
 .seguridad-section-panel__caption {
     display: block;
-    font-size: 11px;
-    line-height: 1.35;
+    font-size: 12px;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .seguridad-section-panel__actions {
-    flex: 1;
+    flex-shrink: 0;
     justify-content: flex-end;
     min-width: 0;
 }
 
 .seguridad-section-panel__body {
-    padding: 10px 14px 14px;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 8px 12px 10px;
+    gap: 6px;
 }
 
 .seguridad-user-cell {
@@ -4801,12 +4826,18 @@ body {
 
 .seguridad-user-cell__name {
     font-size: 13px;
-    line-height: 1.3;
+    line-height: 1.25;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .seguridad-user-cell__username {
     font-size: 11px;
-    line-height: 1.3;
+    line-height: 1.25;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .seguridad-role-tag {
@@ -4855,45 +4886,74 @@ body {
     }
 }
 
-/* ── Seguridad module — header compacto ── */
+/* ── Seguridad module — header compacto + sin scroll de página ── */
+
+.admin-layout__content-inner:has(.seguridad-module) {
+    display: flex;
+    flex-direction: column;
+    height: calc(100dvh - 44px - clamp(8px, 1.5vw, 12px) * 2);
+    max-height: calc(100dvh - 44px - clamp(8px, 1.5vw, 12px) * 2);
+    min-height: 0;
+    overflow: hidden;
+}
+
+.seguridad-module {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.seguridad-module .module-object-page {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    gap: 10px;
+}
+
+.seguridad-module .module-object-page__header > .ant-flex {
+    gap: 10px !important;
+}
 
 .seguridad-module .module-object-page__header {
-    padding: 10px 14px;
-    border-radius: 12px;
+    flex-shrink: 0;
+    padding: 8px 12px;
+    border-radius: 10px;
     background: #ffffff;
     border: 1px solid #e2e8f0;
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
 }
 
 .seguridad-module .module-object-page__header-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    font-size: 16px;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    font-size: 15px;
 }
 
 .seguridad-module .module-object-page__title {
     margin: 0 !important;
-    font-size: 17px !important;
-    line-height: 1.3 !important;
+    font-size: 16px !important;
+    line-height: 1.25 !important;
 }
 
 .seguridad-module .module-object-page__subtitle {
     font-size: 12px;
-    line-height: 1.35;
+    line-height: 1.3;
     max-width: 48ch;
 }
 
 .seguridad-module .module-object-page__stat {
     gap: 6px;
-    padding: 5px 12px;
+    padding: 4px 10px;
     font-size: 12px;
     background: #f8fafc;
     border-color: #e2e8f0;
 }
 
 .seguridad-module__stat-value {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 700;
     color: var(--ant-color-primary);
 }
@@ -4903,21 +4963,62 @@ body {
 }
 
 .seguridad-module .module-object-page__section-badge {
-    padding: 8px 12px;
+    padding: 6px 10px;
     background: #f8fafc;
     border-color: #e2e8f0;
 }
 
 .seguridad-module .module-object-page__section-badge-icon {
-    width: 30px;
-    height: 30px;
-    font-size: 14px;
+    width: 26px;
+    height: 26px;
+    font-size: 13px;
 }
 
 .seguridad-module .module-object-page__workspace {
-    background: #f8fafc;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
+}
+
+.seguridad-module .module-object-page__content {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.seguridad-module .module-section-panel {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
     border-radius: 12px;
-    padding: 2px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.seguridad-module .module-section-panel__header {
+    flex-shrink: 0;
+    padding: 8px 12px;
+}
+
+.seguridad-module .module-section-panel__search {
+    flex-shrink: 0;
+    padding: 0 12px 8px;
+    max-width: 280px;
+}
+
+.seguridad-module .module-section-panel__body {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding: 0 12px 10px;
 }
 
 /* ── Seguridad usuarios — filtros y tabla ── */
@@ -4936,31 +5037,38 @@ body {
 }
 
 .seguridad-section-panel__filters {
-    padding: 0 14px 10px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-shrink: 0;
+    padding: 8px 12px;
+    border-bottom: 1px solid #f1f5f9;
 }
 
 .seguridad-usuarios__filters {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     min-width: 0;
-    width: 100%;
+    flex: 1 1 auto;
 }
 
 .seguridad-usuarios__filter-search {
-    flex: 1 1 220px;
-    min-width: 180px;
-    max-width: 320px;
+    flex: 1 1 200px;
+    min-width: 160px;
+    max-width: 280px;
 }
 
 .seguridad-usuarios__filter-select {
-    flex: 0 1 150px;
-    min-width: 130px;
+    flex: 0 1 130px;
+    min-width: 110px;
 }
 
 .seguridad-usuarios__filter-clear {
-    padding-inline: 8px;
+    padding-inline: 6px;
     color: rgba(15, 23, 42, 0.55);
 }
 
@@ -4969,19 +5077,40 @@ body {
     outline-offset: 2px;
 }
 
+.seguridad-usuarios__caption {
+    flex-shrink: 0;
+    margin: 0;
+    color: rgba(15, 23, 42, 0.55);
+}
+
+.seguridad-usuarios__table {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
 .seguridad-usuarios__table .app-data-table__wrapper {
+    flex: 1;
+    min-height: 0;
     border-color: #e2e8f0;
-    border-radius: 12px;
-    max-height: calc(100vh - 280px);
+    border-radius: 10px;
+    max-height: none;
     overflow: auto;
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    box-shadow: none;
+}
+
+.seguridad-usuarios__table .app-data-table__pagination {
+    flex-shrink: 0;
+    padding-top: 0;
 }
 
 .seguridad-usuarios__table .app-data-table__th {
     position: sticky;
     top: 0;
     z-index: 2;
-    padding: 10px 12px;
+    padding: 7px 10px;
     font-size: 11px;
     background: #f8fafc;
     border-bottom-color: #e2e8f0;
@@ -4989,9 +5118,10 @@ body {
 }
 
 .seguridad-usuarios__table .app-data-table__td {
-    padding: 10px 12px;
+    padding: 6px 10px;
     font-size: 13px;
     border-bottom-color: #f1f5f9;
+    vertical-align: middle;
 }
 
 .seguridad-usuarios__table .app-data-table__tr:hover .app-data-table__td {
@@ -4999,17 +5129,17 @@ body {
 }
 
 .seguridad-usuarios__empty {
-    padding: 28px 16px 36px;
+    padding: 24px 16px 28px;
 }
 
 .seguridad-usuarios__empty-icon {
-    width: 48px;
-    height: 48px;
+    width: 44px;
+    height: 44px;
     margin: 0 auto 8px;
     display: grid;
     place-items: center;
-    border-radius: 12px;
-    font-size: 22px;
+    border-radius: 10px;
+    font-size: 20px;
     color: rgba(15, 23, 42, 0.45);
     background: #f1f5f9;
     border: 1px solid #e2e8f0;
@@ -5304,21 +5434,49 @@ body {
         max-width: none;
     }
 
+    .seguridad-section-panel__filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .seguridad-section-panel__toolbar {
+        width: 100%;
+    }
+
     .seguridad-section-panel__actions {
         flex-direction: row;
         align-items: center !important;
         justify-content: flex-end;
-    }
-
-    .seguridad-usuarios__table .app-data-table__wrapper {
-        max-height: none;
+        margin-left: auto;
     }
 }
 
 @media (max-width: 768px) {
     .seguridad-usuarios__table .app-data-table__th,
     .seguridad-usuarios__table .app-data-table__td {
-        padding-inline: 10px;
+        padding-inline: 8px;
+    }
+
+    .admin-layout__content-inner:has(.seguridad-module) {
+        height: auto;
+        max-height: none;
+        overflow: visible;
+    }
+
+    .seguridad-module,
+    .seguridad-module .module-object-page,
+    .seguridad-module .module-object-page__workspace,
+    .seguridad-module .module-object-page__content,
+    .seguridad-section-panel,
+    .seguridad-section-panel__body,
+    .seguridad-usuarios__table {
+        overflow: visible;
+        flex: none;
+        min-height: 0;
+    }
+
+    .seguridad-usuarios__table .app-data-table__wrapper {
+        max-height: none;
     }
 }
 

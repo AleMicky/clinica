@@ -1,11 +1,6 @@
 import { memo } from 'react'
 import { Flex, Tooltip, Typography } from 'antd'
-import {
-    IdcardOutlined,
-    MailOutlined,
-    PhoneOutlined,
-    UserOutlined,
-} from '@ant-design/icons'
+import { MailOutlined } from '@ant-design/icons'
 
 import type { User } from '../types/user.types'
 import { formatPersonaDocumento } from '../utils/user-display'
@@ -25,40 +20,23 @@ export const PersonaCell = memo(function PersonaCell({ user }: PersonaCellProps)
 
     const documento = formatPersonaDocumento(user)
     const telefono = user.personaTelefono?.trim() || null
+    const nombre = user.personaNombreCompleto ?? user.nombreCompleto
+    const meta = [documento, telefono].filter(Boolean).join(' · ')
 
     return (
         <div className="seguridad-user-cell__persona">
-            <Flex align="center" gap={6} className="seguridad-user-cell__persona-row">
-                <UserOutlined className="seguridad-user-cell__meta-icon" aria-hidden />
-                <Typography.Text className="seguridad-user-cell__persona-name">
-                    {user.personaNombreCompleto ?? user.nombreCompleto}
-                </Typography.Text>
-            </Flex>
-
-            {documento ? (
-                <Flex align="center" gap={6} className="seguridad-user-cell__persona-row">
-                    <IdcardOutlined className="seguridad-user-cell__meta-icon" aria-hidden />
-                    <Tooltip title={documento}>
-                        <Typography.Text
-                            type="secondary"
-                            className="seguridad-user-cell__persona-doc"
-                        >
-                            {documento}
-                        </Typography.Text>
-                    </Tooltip>
-                </Flex>
-            ) : null}
-
-            {telefono ? (
-                <Flex align="center" gap={6} className="seguridad-user-cell__persona-row">
-                    <PhoneOutlined className="seguridad-user-cell__meta-icon" aria-hidden />
+            <Typography.Text className="seguridad-user-cell__persona-name">
+                {nombre}
+            </Typography.Text>
+            {meta ? (
+                <Tooltip title={meta}>
                     <Typography.Text
                         type="secondary"
                         className="seguridad-user-cell__persona-doc"
                     >
-                        {telefono}
+                        {meta}
                     </Typography.Text>
-                </Flex>
+                </Tooltip>
             ) : null}
         </div>
     )

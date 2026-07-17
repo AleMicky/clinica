@@ -11,7 +11,6 @@ export function UsuariosView() {
     return (
         <>
             <div className="seguridad-section-panel seguridad-usuarios">
-                <UsersHeader caption={caption} onCreate={formModal.openCreateModal} />
                 <div className="seguridad-section-panel__filters">
                     <UsersFiltersBar
                         searchInput={filters.searchInput}
@@ -25,8 +24,12 @@ export function UsuariosView() {
                         onStatusFilterChange={filters.onStatusFilterChange}
                         onClearFilters={filters.onClearFilters}
                     />
+                    <UsersHeader onCreate={formModal.openCreateModal} />
                 </div>
                 <div className="seguridad-section-panel__body">
+                    <p className="seguridad-section-panel__caption seguridad-usuarios__caption">
+                        {caption}
+                    </p>
                     <UsersTable
                         users={table.users}
                         loading={loading}
