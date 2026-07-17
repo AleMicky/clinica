@@ -1999,7 +1999,8 @@ body {
     gap: 6px;
 }
 
-.rrhh-empleados__filters {
+.rrhh-empleados__filters,
+.rrhh-medicos__filters {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -2008,29 +2009,34 @@ body {
     flex: 1 1 auto;
 }
 
-.rrhh-empleados__filter-search {
+.rrhh-empleados__filter-search,
+.rrhh-medicos__filter-search {
     flex: 1 1 200px;
     min-width: 160px;
     max-width: 280px;
 }
 
-.rrhh-empleados__filter-select {
+.rrhh-empleados__filter-select,
+.rrhh-medicos__filter-select {
     flex: 0 1 140px;
     min-width: 120px;
 }
 
-.rrhh-empleados__filter-clear {
+.rrhh-empleados__filter-clear,
+.rrhh-medicos__filter-clear {
     padding-inline: 6px;
     color: rgba(15, 23, 42, 0.55);
 }
 
-.rrhh-empleados__caption {
+.rrhh-empleados__caption,
+.rrhh-medicos__caption {
     flex-shrink: 0;
     margin: 0;
     color: rgba(15, 23, 42, 0.55);
 }
 
-.rrhh-empleados__table {
+.rrhh-empleados__table,
+.rrhh-medicos__table {
     flex: 1;
     min-height: 0;
     display: flex;
@@ -2038,7 +2044,8 @@ body {
     gap: 8px;
 }
 
-.rrhh-empleados__table .app-data-table__wrapper {
+.rrhh-empleados__table .app-data-table__wrapper,
+.rrhh-medicos__table .app-data-table__wrapper {
     flex: 1;
     min-height: 0;
     border-color: #e2e8f0;
@@ -2048,12 +2055,14 @@ body {
     box-shadow: none;
 }
 
-.rrhh-empleados__table .app-data-table__pagination {
+.rrhh-empleados__table .app-data-table__pagination,
+.rrhh-medicos__table .app-data-table__pagination {
     flex-shrink: 0;
     padding-top: 0;
 }
 
-.rrhh-empleados__table .app-data-table__th {
+.rrhh-empleados__table .app-data-table__th,
+.rrhh-medicos__table .app-data-table__th {
     position: sticky;
     top: 0;
     z-index: 2;
@@ -2064,14 +2073,16 @@ body {
     box-shadow: 0 1px 0 #e2e8f0;
 }
 
-.rrhh-empleados__table .app-data-table__td {
+.rrhh-empleados__table .app-data-table__td,
+.rrhh-medicos__table .app-data-table__td {
     padding: 6px 10px;
     font-size: 13px;
     border-bottom-color: #f1f5f9;
     vertical-align: middle;
 }
 
-.rrhh-empleados__table .app-data-table__tr:hover .app-data-table__td {
+.rrhh-empleados__table .app-data-table__tr:hover .app-data-table__td,
+.rrhh-medicos__table .app-data-table__tr:hover .app-data-table__td {
     background: #f8fafc;
 }
 
@@ -2087,23 +2098,28 @@ body {
     border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
-[data-theme='dark'] .rrhh-empleados__table .app-data-table__th {
+[data-theme='dark'] .rrhh-empleados__table .app-data-table__th,
+[data-theme='dark'] .rrhh-medicos__table .app-data-table__th {
     background: #0d1117;
     border-bottom-color: rgba(255, 255, 255, 0.08);
     box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
-[data-theme='dark'] .rrhh-empleados__table .app-data-table__td {
+[data-theme='dark'] .rrhh-empleados__table .app-data-table__td,
+[data-theme='dark'] .rrhh-medicos__table .app-data-table__td {
     border-bottom-color: rgba(255, 255, 255, 0.06);
 }
 
-[data-theme='dark'] .rrhh-empleados__table .app-data-table__tr:hover .app-data-table__td {
+[data-theme='dark'] .rrhh-empleados__table .app-data-table__tr:hover .app-data-table__td,
+[data-theme='dark'] .rrhh-medicos__table .app-data-table__tr:hover .app-data-table__td {
     background: rgba(255, 255, 255, 0.03);
 }
 
 @media (max-width: 992px) {
     .rrhh-empleados__filter-search,
-    .rrhh-empleados__filter-select {
+    .rrhh-empleados__filter-select,
+    .rrhh-medicos__filter-search,
+    .rrhh-medicos__filter-select {
         flex: 1 1 100%;
         max-width: none;
     }
@@ -2132,18 +2148,22 @@ body {
     .rrhh-module .module-object-page__content,
     .rrhh-section-panel,
     .rrhh-section-panel__body,
-    .rrhh-empleados__table {
+    .rrhh-empleados__table,
+    .rrhh-medicos__table {
         overflow: visible;
         flex: none;
         min-height: 0;
     }
 
-    .rrhh-empleados__table .app-data-table__wrapper {
+    .rrhh-empleados__table .app-data-table__wrapper,
+    .rrhh-medicos__table .app-data-table__wrapper {
         max-height: none;
     }
 
     .rrhh-empleados__table .app-data-table__th,
-    .rrhh-empleados__table .app-data-table__td {
+    .rrhh-empleados__table .app-data-table__td,
+    .rrhh-medicos__table .app-data-table__th,
+    .rrhh-medicos__table .app-data-table__td {
         padding-inline: 8px;
     }
 }

@@ -14,16 +14,7 @@ import {
     type ServicioFormValues,
 } from '../../catalogo-clinico/schemas/catalogo-clinico.schema'
 import type { Area, Departamento, Servicio } from '../../catalogo-clinico/types/catalogo-clinico.types'
-
-function getFieldError(errors: unknown[]) {
-    return errors
-        .map((error) =>
-            typeof error === 'string'
-                ? error
-                : (error as { message: string }).message,
-        )
-        .join(', ')
-}
+import { getFieldError } from '../utils/form-errors'
 
 type DrawerFooterProps = {
     loading: boolean

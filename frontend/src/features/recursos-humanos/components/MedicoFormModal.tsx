@@ -10,6 +10,7 @@ import {
     type MedicoFormValues,
 } from '../schemas/medico.schema'
 import type { Medico } from '../types/medico.types'
+import { getFieldError } from '../utils/form-errors'
 
 type MedicoFormModalProps = {
     open: boolean
@@ -17,16 +18,6 @@ type MedicoFormModalProps = {
     loading: boolean
     onClose: () => void
     onSubmit: (values: MedicoFormValues) => Promise<void>
-}
-
-function getFieldError(errors: unknown[]) {
-    return errors
-        .map((error) =>
-            typeof error === 'string'
-                ? error
-                : (error as { message: string }).message,
-        )
-        .join(', ')
 }
 
 const LOOKUP_QUERY = { page: 1, pageSize: 200 }

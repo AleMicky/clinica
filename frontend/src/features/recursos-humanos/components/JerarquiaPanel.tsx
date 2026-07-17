@@ -3,7 +3,6 @@ import type { DataNode } from 'antd/es/tree'
 import {
     Breadcrumb,
     Button,
-    Dropdown,
     Empty,
     Flex,
     Grid,
@@ -23,7 +22,6 @@ import {
     DeleteOutlined,
     EditOutlined,
     ExperimentOutlined,
-    MoreOutlined,
     NodeIndexOutlined,
     PlusOutlined,
     SearchOutlined,
@@ -47,255 +45,29 @@ import type {
 } from '../../catalogo-clinico/schemas/catalogo-clinico.schema'
 import type { Area, Departamento, Servicio } from '../../catalogo-clinico/types/catalogo-clinico.types'
 import { useJerarquiaOrganizacional } from '../hooks/jerarquia.hooks'
-import type {
-    JerarquiaAreaNode,
-    JerarquiaDepartamentoNode,
-    JerarquiaServicioNode,
-} from '../types/jerarquia.types'
+import {
+    collectExpandedKeys,
+    countAreaServicios,
+    filterJerarquiaTree,
+    formatEmpleados,
+    nodeKey,
+    parseNodeKey,
+    toArea,
+    toBasePayload,
+    toDepartamento,
+    toServicio,
+    type JerarquiaSelectionKind,
+} from '../utils/jerarquia-tree'
+import { JerarquiaChildCard } from './JerarquiaChildCard'
 import {
     JerarquiaAreaDrawer,
     JerarquiaDepartamentoDrawer,
     JerarquiaServicioDrawer,
 } from './JerarquiaFormDrawers'
+import { JerarquiaTreeNodeTitle } from './JerarquiaTreeNodeTitle'
 
 const { Text, Paragraph, Title } = Typography
 const { useBreakpoint } = Grid
-
-type NodeKind = 'area' | 'departamento' | 'servicio'
-type SelectionKind = NodeKind | null
-
-function nodeKey(kind: NodeKind, id: string) {
-    return `${kind}:${id}`
-}
-
-function parseNodeKey(key: string): { kind: NodeKind; id: string } | null {
-    const [kind, id] = key.split(':')
-    if (!id || (kind !== 'area' && kind !== 'departamento' && kind !== 'servicio')) {
-        return null
-    }
-    return { kind, id }
-}
-
-function toArea(node: JerarquiaAreaNode): Area {
-    return {
-        id: node.id,
-        codigo: node.codigo,
-        nombre: node.nombre,
-        descripcion: node.descripcion || null,
-    }
-}
-
-function toDepartamento(node: JerarquiaDepartamentoNode, areaNombre: string): Departamento {
-    return {
-        id: node.id,
-        areaId: node.areaId,
-        areaNombre,
-        codigo: node.codigo,
-        nombre: node.nombre,
-        descripcion: node.descripcion || null,
-    }
-}
-
-function toServicio(node: JerarquiaServicioNode, departamentoNombre: string): Servicio {
-    return {
-        id: node.id,
-        departamentoId: node.departamentoId,
-        departamentoNombre,
-        codigo: node.codigo,
-        nombre: node.nombre,
-        descripcion: node.descripcion || null,
-    }
-}
-
-function toBasePayload(values: CatalogoBaseFormValues) {
-    return {
-        codigo: values.codigo,
-        nombre: values.nombre,
-        descripcion: values.descripcion?.trim() || '',
-    }
-}
-
-function matchesQuery(value: string, query: string) {
-    return value.toLowerCase().includes(query)
-}
-
-function filterJerarquiaTree(
-    areas: JerarquiaAreaNode[],
-    query: string,
-): JerarquiaAreaNode[] {
-    const normalized = query.trim().toLowerCase()
-    if (!normalized) return areas
-
-    return areas
-        .map((area) => {
-            const areaMatch =
-                matchesQuery(area.nombre, normalized) ||
-                matchesQuery(area.codigo, normalized)
-
-            const departamentos = area.departamentos
-                .map((dept) => {
-                    const deptMatch =
-                        matchesQuery(dept.nombre, normalized) ||
-                        matchesQuery(dept.codigo, normalized)
-
-                    const servicios = dept.servicios.filter(
-                        (servicio) =>
-                            matchesQuery(servicio.nombre, normalized) ||
-                            matchesQuery(servicio.codigo, normalized),
-                    )
-
-                    if (deptMatch) return dept
-                    if (servicios.length > 0) return { ...dept, servicios }
-                    return null
-                })
-                .filter((dept): dept is JerarquiaDepartamentoNode => dept !== null)
-
-            if (areaMatch) return area
-            if (departamentos.length > 0) return { ...area, departamentos }
-            return null
-        })
-        .filter((area): area is JerarquiaAreaNode => area !== null)
-}
-
-function collectExpandedKeys(areas: JerarquiaAreaNode[], query: string): string[] {
-    const normalized = query.trim().toLowerCase()
-    if (!normalized) return []
-
-    const keys: string[] = []
-
-    for (const area of areas) {
-        let expandArea = false
-
-        for (const dept of area.departamentos) {
-            const deptMatch =
-                matchesQuery(dept.nombre, normalized) ||
-                matchesQuery(dept.codigo, normalized)
-            const servicioMatch = dept.servicios.some(
-                (servicio) =>
-                    matchesQuery(servicio.nombre, normalized) ||
-                    matchesQuery(servicio.codigo, normalized),
-            )
-
-            if (deptMatch || servicioMatch) {
-                expandArea = true
-                keys.push(nodeKey('departamento', dept.id))
-            }
-        }
-
-        const areaMatch =
-            matchesQuery(area.nombre, normalized) ||
-            matchesQuery(area.codigo, normalized)
-
-        if (expandArea || areaMatch) {
-            keys.push(nodeKey('area', area.id))
-        }
-    }
-
-    return keys
-}
-
-function countAreaServicios(area: JerarquiaAreaNode) {
-    return area.departamentos.reduce((total, dept) => total + dept.servicios.length, 0)
-}
-
-function formatEmpleados(count?: number | null) {
-    if (count == null) return null
-    return `${count} empleado${count === 1 ? '' : 's'}`
-}
-
-type ChildCardProps = {
-    icon: React.ReactNode
-    nombre: string
-    codigo: string
-    meta?: string | null
-    selected?: boolean
-    onClick: () => void
-}
-
-function ChildCard({ icon, nombre, codigo, meta, selected, onClick }: ChildCardProps) {
-    return (
-        <button
-            type="button"
-            className={[
-                'jerarquia-explorer__child-card',
-                selected ? 'jerarquia-explorer__child-card--selected' : '',
-            ]
-                .filter(Boolean)
-                .join(' ')}
-            onClick={onClick}
-        >
-            <span className="jerarquia-explorer__child-card-icon" aria-hidden>
-                {icon}
-            </span>
-            <span className="jerarquia-explorer__child-card-body">
-                <Text strong className="jerarquia-explorer__child-card-name">
-                    {nombre}
-                </Text>
-                <Text type="secondary" className="jerarquia-explorer__child-card-code">
-                    {codigo}
-                </Text>
-                {meta ? (
-                    <Text type="secondary" className="jerarquia-explorer__child-card-meta">
-                        {meta}
-                    </Text>
-                ) : null}
-            </span>
-        </button>
-    )
-}
-
-type TreeTitleProps = {
-    icon: React.ReactNode
-    nombre: string
-    codigo: string
-    countLabel?: string
-    menuItems: MenuProps['items']
-    deleting?: boolean
-}
-
-function TreeNodeTitle({
-    icon,
-    nombre,
-    codigo,
-    countLabel,
-    menuItems,
-    deleting,
-}: TreeTitleProps) {
-    return (
-        <div className="jerarquia-explorer__tree-node">
-            <span className="jerarquia-explorer__tree-node-icon" aria-hidden>
-                {icon}
-            </span>
-            <span className="jerarquia-explorer__tree-node-content">
-                <Text className="jerarquia-explorer__tree-node-name">{nombre}</Text>
-                <Tag className="jerarquia-explorer__tree-node-tag" variant="filled">
-                    {codigo}
-                </Tag>
-                {countLabel ? (
-                    <Text type="secondary" className="jerarquia-explorer__tree-node-count">
-                        {countLabel}
-                    </Text>
-                ) : null}
-            </span>
-            <span className="jerarquia-explorer__tree-node-actions">
-                <Dropdown
-                    menu={{ items: menuItems }}
-                    trigger={['click']}
-                    placement="bottomRight"
-                >
-                    <Button
-                        type="text"
-                        size="small"
-                        icon={<MoreOutlined />}
-                        loading={deleting}
-                        onClick={(event) => event.stopPropagation()}
-                        aria-label="Acciones"
-                    />
-                </Dropdown>
-            </span>
-        </div>
-    )
-}
 
 export function JerarquiaPanel() {
     const { token } = theme.useToken()
@@ -310,7 +82,7 @@ export function JerarquiaPanel() {
     const [selectedArea, setSelectedArea] = useState<Area | null>(null)
     const [selectedDept, setSelectedDept] = useState<Departamento | null>(null)
     const [selectedServicio, setSelectedServicio] = useState<Servicio | null>(null)
-    const [selectionKind, setSelectionKind] = useState<SelectionKind>(null)
+    const [selectionKind, setSelectionKind] = useState<JerarquiaSelectionKind>(null)
 
     const [areaDrawerOpen, setAreaDrawerOpen] = useState(false)
     const [editingArea, setEditingArea] = useState<Area | null>(null)
@@ -441,7 +213,7 @@ export function JerarquiaPanel() {
     }, [treeSearch, areaNodes])
 
     const syncSelection = useCallback(
-        (kind: SelectionKind, area: Area | null, dept: Departamento | null, servicio: Servicio | null) => {
+        (kind: JerarquiaSelectionKind, area: Area | null, dept: Departamento | null, servicio: Servicio | null) => {
             setSelectionKind(kind)
             setSelectedArea(area)
             setSelectedDept(dept)
@@ -710,7 +482,7 @@ export function JerarquiaPanel() {
             return {
                 key: nodeKey('area', area.id),
                 title: (
-                    <TreeNodeTitle
+                    <JerarquiaTreeNodeTitle
                         icon={<BankOutlined />}
                         nombre={area.nombre}
                         codigo={area.codigo}
@@ -726,7 +498,7 @@ export function JerarquiaPanel() {
                     return {
                         key: nodeKey('departamento', dept.id),
                         title: (
-                            <TreeNodeTitle
+                            <JerarquiaTreeNodeTitle
                                 icon={<ApartmentOutlined />}
                                 nombre={dept.nombre}
                                 codigo={dept.codigo}
@@ -743,7 +515,7 @@ export function JerarquiaPanel() {
                                 key: nodeKey('servicio', servicio.id),
                                 isLeaf: true,
                                 title: (
-                                    <TreeNodeTitle
+                                    <JerarquiaTreeNodeTitle
                                         icon={<ExperimentOutlined />}
                                         nombre={servicio.nombre}
                                         codigo={servicio.codigo}
@@ -1024,7 +796,7 @@ export function JerarquiaPanel() {
                                     .join(' · ')
 
                                 return (
-                                    <ChildCard
+                                    <JerarquiaChildCard
                                         key={dept.id}
                                         icon={<ApartmentOutlined />}
                                         nombre={dept.nombre}
@@ -1129,7 +901,7 @@ export function JerarquiaPanel() {
                     ) : (
                         <div className="jerarquia-explorer__child-grid">
                             {selectedDeptNode.servicios.map((servicio) => (
-                                <ChildCard
+                                <JerarquiaChildCard
                                     key={servicio.id}
                                     icon={<ExperimentOutlined />}
                                     nombre={servicio.nombre}

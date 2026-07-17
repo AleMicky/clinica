@@ -21,6 +21,7 @@ type MedicosTableProps = {
     onEdit: (medico: Medico) => void
     onDelete: (medico: Medico) => void
     deletingId: string | null
+    className?: string
 }
 
 const columnHelper = createColumnHelper<Medico>()
@@ -35,6 +36,7 @@ export function MedicosTable({
     onEdit,
     onDelete,
     deletingId,
+    className,
 }: MedicosTableProps) {
     const columns = useMemo(
         () => [
@@ -134,6 +136,7 @@ export function MedicosTable({
 
     return (
         <AppDataTable
+            className={className}
             data={medicos}
             columns={columns}
             loading={loading}

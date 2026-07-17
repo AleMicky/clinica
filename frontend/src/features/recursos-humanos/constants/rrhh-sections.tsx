@@ -7,15 +7,13 @@ import {
     UserOutlined,
 } from '@ant-design/icons'
 
-import type { RrhhCatalogSection } from '../types/rrhh.types'
-
 export type RrhhPageSection = {
     path: string
     title: string
     icon: React.ReactNode
 }
 
-export const rrhhPageSections: RrhhPageSection[] = [
+const rrhhPageSections: RrhhPageSection[] = [
     {
         path: '/recursos-humanos/empleados',
         title: 'Empleados',
@@ -56,9 +54,3 @@ export function getRrhhActiveSection(pathname: string): RrhhPageSection | null {
         ) ?? null
     )
 }
-
-export type { RrhhCatalogSection }
-
-export {
-    rrhhCatalogSectionMeta,
-} from '../types/rrhh.types'

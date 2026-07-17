@@ -18,6 +18,7 @@ import {
     type EmpleadoFormValues,
 } from '../schemas/empleado.schema'
 import type { Empleado } from '../types/empleado.types'
+import { getFieldError } from '../utils/form-errors'
 
 const { Text } = Typography
 
@@ -27,16 +28,6 @@ type EmpleadoFormModalProps = {
     loading: boolean
     onClose: () => void
     onSubmit: (values: EmpleadoFormValues) => Promise<void>
-}
-
-function getFieldError(errors: unknown[]) {
-    return errors
-        .map((error) =>
-            typeof error === 'string'
-                ? error
-                : (error as { message: string }).message,
-        )
-        .join(', ')
 }
 
 const LOOKUP_QUERY = { page: 1, pageSize: 200 }
