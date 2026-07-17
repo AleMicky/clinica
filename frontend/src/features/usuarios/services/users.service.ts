@@ -29,6 +29,14 @@ export class UsersService {
         return paginateList(users, query, filterUsers)
     }
 
+    async isUserNameTaken(userName: string): Promise<boolean> {
+        const normalized = userName.trim().toLowerCase()
+        if (!normalized) return false
+
+        const users = await get<User[]>(userEndpoints.root)
+        return users.some((user) => user.userName.toLowerCase() === normalized)
+    }
+
     createWithPersona(data: CreateUsuarioPersonaApiPayload) {
         return post<UsuarioPersona, CreateUsuarioPersonaApiPayload>(
             userEndpoints.conPersona,

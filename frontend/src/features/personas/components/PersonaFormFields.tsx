@@ -44,10 +44,25 @@ function fieldName(prefix: string | undefined, name: string) {
     return prefix ? `${prefix}.${name}` : name
 }
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
+function SectionTitle({
+    children,
+    spaced = false,
+}: {
+    children: React.ReactNode
+    spaced?: boolean
+}) {
     return (
         <Col span={24}>
-            <Text className="usuario-drawer__section-title">{children}</Text>
+            <div
+                className={[
+                    'usuario-drawer__section-title-wrap',
+                    spaced ? 'usuario-drawer__section-title-wrap--spaced' : '',
+                ]
+                    .filter(Boolean)
+                    .join(' ')}
+            >
+                <Text className="usuario-drawer__section-title">{children}</Text>
+            </div>
         </Col>
     )
 }
@@ -67,7 +82,7 @@ export function PersonaFormFields({
 
     const disabled = loading || loadingCatalogos
     const showSections = variant === 'sections'
-    const gutter: [number, number] = showSections ? [12, 0] : [12, 0]
+    const gutter: [number, number] = showSections ? [10, 0] : [12, 0]
     const colProps = showSections ? { xs: 24, sm: 12 } : { xs: 24, sm: 12 }
 
     return (
@@ -167,7 +182,7 @@ export function PersonaFormFields({
                 </form.Field>
             </Col>
 
-            {showSections ? <SectionTitle>Datos personales</SectionTitle> : null}
+            {showSections ? <SectionTitle spaced>Datos personales</SectionTitle> : null}
 
             <Col {...colProps}>
                 <form.Field name={fieldName(fieldPrefix, 'nombres')}>
@@ -334,7 +349,7 @@ export function PersonaFormFields({
                 </form.Field>
             </Col>
 
-            {showSections ? <SectionTitle>Contacto</SectionTitle> : null}
+            {showSections ? <SectionTitle spaced>Contacto</SectionTitle> : null}
 
             <Col {...colProps}>
                 <form.Field name={fieldName(fieldPrefix, 'telefono')}>
@@ -371,13 +386,14 @@ export function PersonaFormFields({
                         return (
                             <Form.Item
                                 label="Dirección"
-                                required
                                 validateStatus={error ? 'error' : undefined}
                                 help={error || undefined}
                             >
                                 <Input.TextArea
-                                    rows={showSections ? 2 : 2}
-                                    placeholder="Dirección de domicilio"
+                                    rows={1}
+                                    autoSize={{ minRows: 1, maxRows: 2 }}
+                                    className="usuario-drawer__textarea"
+                                    placeholder="Opcional"
                                     value={field.state.value}
                                     onChange={(event) =>
                                         field.handleChange(event.target.value)

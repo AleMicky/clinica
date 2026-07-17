@@ -19,10 +19,9 @@ public sealed class UserService(
         CreateUserRequest request,
         CancellationToken cancellationToken = default)
     {
-        var userNameExists = await userManager.Users
-            .AnyAsync(x => x.UserName == request.UserName, cancellationToken);
+        var existingUser = await userManager.FindByNameAsync(request.UserName.Trim());
 
-        if (userNameExists)
+        if (existingUser is not null)
             throw new BadRequestException($"El usuario '{request.UserName}' ya existe.");
 
         if (!string.IsNullOrWhiteSpace(request.Email))

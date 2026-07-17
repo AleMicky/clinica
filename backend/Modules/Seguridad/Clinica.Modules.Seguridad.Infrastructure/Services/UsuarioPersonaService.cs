@@ -100,10 +100,10 @@ public sealed class UsuarioPersonaService(
         string userName,
         CancellationToken cancellationToken)
     {
-        var exists = await userManager.Users
-            .AnyAsync(x => x.UserName == userName, cancellationToken);
+        _ = cancellationToken;
+        var existing = await userManager.FindByNameAsync(userName);
 
-        if (exists)
+        if (existing is not null)
             throw new BadRequestException($"El usuario '{userName}' ya existe.");
     }
 

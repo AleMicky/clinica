@@ -36,11 +36,10 @@ export const personaSchema = z.object({
         .trim()
         .min(1, 'El teléfono es obligatorio.')
         .max(20, 'No puede superar los 20 caracteres.'),
-    direccion: z
-        .string()
-        .trim()
-        .min(1, 'La dirección es obligatoria.')
-        .max(500, 'No puede superar los 500 caracteres.'),
+    direccion: optionalText.max(
+        500,
+        'No puede superar los 500 caracteres.',
+    ),
 })
 
 export type PersonaFormInput = z.infer<typeof personaSchema>

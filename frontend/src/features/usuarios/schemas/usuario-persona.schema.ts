@@ -112,7 +112,7 @@ export function toCreateUsuarioPersonaPayload(
             sexoId: values.sexoId!,
             estadoCivilId: values.estadoCivilId!,
             telefono: values.telefono!,
-            direccion: values.direccion!,
+            direccion: values.direccion ?? '',
         }),
     }
 }

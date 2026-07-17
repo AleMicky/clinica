@@ -48,7 +48,7 @@ export function UserAccesoFields({
                             validateStatus={error ? 'error' : undefined}
                             help={
                                 error ||
-                                'Se genera automáticamente; puede editarlo manualmente.'
+                                'Debe ser único. Se genera automáticamente; puede editarlo.'
                             }
                         >
                             <Input

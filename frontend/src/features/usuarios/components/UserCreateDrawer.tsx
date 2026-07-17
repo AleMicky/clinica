@@ -25,13 +25,14 @@ export function UserCreateDrawer({
     onCreate,
 }: UserCreateDrawerProps) {
     const screens = useBreakpoint()
-    const drawerWidth = screens.md ? 720 : '95%'
+    const drawerWidth = screens.md ? 640 : '95%'
 
     const {
         form,
         values,
         currentStep,
         isLastStep,
+        checkingUserName,
         handleNextStep,
         handlePrevStep,
         handleSubmit,
@@ -40,9 +41,11 @@ export function UserCreateDrawer({
     } = useUserCreateForm({ open, onCreate })
 
     const handleClose = () => {
-        if (loading) return
+        if (loading || checkingUserName) return
         onClose()
     }
+
+    const isBusy = loading || checkingUserName
 
     return (
         <Drawer
@@ -60,13 +63,13 @@ export function UserCreateDrawer({
                 >
                     <div>
                         {currentStep > 0 ? (
-                            <Button onClick={handlePrevStep} disabled={loading}>
+                            <Button onClick={handlePrevStep} disabled={isBusy}>
                                 Anterior
                             </Button>
                         ) : null}
                     </div>
                     <Flex gap={8}>
-                        <Button onClick={handleClose} disabled={loading}>
+                        <Button onClick={handleClose} disabled={isBusy}>
                             Cancelar
                         </Button>
                         {isLastStep ? (
@@ -80,7 +83,8 @@ export function UserCreateDrawer({
                         ) : (
                             <Button
                                 type="primary"
-                                onClick={handleNextStep}
+                                onClick={() => void handleNextStep()}
+                                loading={checkingUserName}
                                 disabled={loading}
                             >
                                 Siguiente
@@ -106,7 +110,7 @@ export function UserCreateDrawer({
                     <div className="usuario-drawer__step">
                         <PersonaFormFields
                             form={form}
-                            loading={loading}
+                            loading={isBusy}
                             variant="sections"
                         />
                     </div>
@@ -115,7 +119,7 @@ export function UserCreateDrawer({
                 {currentStep === 1 ? (
                     <UserAccesoFields
                         form={form}
-                        loading={loading}
+                        loading={isBusy}
                         roleOptions={roleOptions}
                         personaHint={{
                             numeroDocumento: values.numeroDocumento,

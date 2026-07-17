@@ -1,10 +1,9 @@
 import { memo, useMemo } from 'react'
-import { Button, Dropdown, Tooltip } from 'antd'
+import { Button, Dropdown } from 'antd'
 import type { MenuProps } from 'antd'
 import {
     DeleteOutlined,
     EditOutlined,
-    KeyOutlined,
     LockOutlined,
     MoreOutlined,
     UnlockOutlined,
@@ -18,7 +17,6 @@ type UserActionsDropdownProps = {
     onEdit: (user: User) => void
     onToggleActive: (user: User) => void
     onDelete: (user: User) => void
-    onResetPassword?: (user: User) => void
 }
 
 export const UserActionsDropdown = memo(function UserActionsDropdown({
@@ -27,7 +25,6 @@ export const UserActionsDropdown = memo(function UserActionsDropdown({
     onEdit,
     onToggleActive,
     onDelete,
-    onResetPassword,
 }: UserActionsDropdownProps) {
     const menuItems: MenuProps['items'] = useMemo(
         () => [
@@ -36,17 +33,6 @@ export const UserActionsDropdown = memo(function UserActionsDropdown({
                 icon: <EditOutlined />,
                 label: 'Editar',
                 onClick: () => onEdit(user),
-            },
-            {
-                key: 'reset-password',
-                icon: <KeyOutlined />,
-                label: (
-                    <Tooltip title="Próximamente" placement="left">
-                        <span>Restablecer contraseña</span>
-                    </Tooltip>
-                ),
-                disabled: true,
-                onClick: onResetPassword ? () => onResetPassword(user) : undefined,
             },
             {
                 key: 'toggle',
@@ -65,7 +51,7 @@ export const UserActionsDropdown = memo(function UserActionsDropdown({
                 onClick: () => onDelete(user),
             },
         ],
-        [busy, onDelete, onEdit, onResetPassword, onToggleActive, user],
+        [busy, onDelete, onEdit, onToggleActive, user],
     )
 
     return (

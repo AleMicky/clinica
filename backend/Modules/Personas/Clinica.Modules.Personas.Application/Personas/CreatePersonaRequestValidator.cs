@@ -15,6 +15,6 @@ public class CreatePersonaRequestValidator : AbstractValidator<CreatePersonaRequ
         RuleFor(x => x.SexoId).NotEmpty();
         RuleFor(x => x.EstadoCivilId).NotEmpty();
         RuleFor(x => x.Telefono).NotEmpty().MaximumLength(20);
-        RuleFor(x => x.Direccion).NotEmpty().MaximumLength(500);
+        RuleFor(x => x.Direccion).MaximumLength(500);
     }
 }

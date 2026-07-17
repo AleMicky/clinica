@@ -5358,37 +5358,47 @@ body {
 /* ── Usuario drawer (crear/editar) ── */
 
 .usuario-drawer .ant-drawer-body {
-    padding: 16px 20px;
+    padding: 12px 16px;
     background: #f8fafc;
 }
 
 .usuario-drawer .ant-drawer-header {
     border-bottom-color: #e2e8f0;
+    padding: 12px 16px;
 }
 
 .usuario-drawer .ant-drawer-footer {
     border-top-color: #e2e8f0;
     background: #ffffff;
-    padding: 12px 20px;
+    padding: 10px 16px;
 }
 
 .usuario-drawer__steps {
-    margin-bottom: 16px;
-    padding: 12px 14px;
-    border-radius: 10px;
+    margin-bottom: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
     background: #ffffff;
     border: 1px solid #e2e8f0;
+}
+
+.usuario-drawer__steps .ant-steps-item-title {
+    font-size: 12px !important;
+    line-height: 1.2 !important;
 }
 
 .usuario-drawer__form {
     background: #ffffff;
     border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 14px 16px;
+    border-radius: 8px;
+    padding: 10px 12px 2px;
 }
 
 .usuario-drawer__form--compact .ant-form-item {
-    margin-bottom: 12px;
+    margin-bottom: 8px;
+}
+
+.usuario-drawer__form--compact .ant-form-item-label {
+    padding-bottom: 2px !important;
 }
 
 .usuario-drawer__form--compact .ant-form-item-label > label {
@@ -5396,12 +5406,23 @@ body {
     height: auto;
 }
 
+.usuario-drawer__form--compact .ant-form-item-explain,
+.usuario-drawer__form--compact .ant-form-item-extra {
+    font-size: 11px;
+    min-height: 0;
+    line-height: 1.3;
+}
+
+.usuario-drawer__form--compact .ant-form-item-explain-connected {
+    margin-top: 2px;
+}
+
 .usuario-drawer__step {
     min-height: 0;
 }
 
 .usuario-drawer__step-alert {
-    margin-bottom: 12px;
+    margin-bottom: 8px;
 }
 
 .usuario-drawer__step-errors {
@@ -5422,12 +5443,29 @@ body {
 
 .usuario-drawer__section-title {
     display: block;
-    margin: 4px 0 2px;
-    font-size: 11px;
+    margin: 2px 0 0;
+    font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
     color: rgba(15, 23, 42, 0.45);
+}
+
+.usuario-drawer__section-title-wrap {
+    margin-bottom: 4px;
+}
+
+.usuario-drawer__section-title-wrap--spaced {
+    margin-top: 6px;
+    padding-top: 8px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.usuario-drawer__textarea.ant-input {
+    min-height: 40px;
+    padding-block: 4px 6px;
+    line-height: 1.35;
+    resize: vertical;
 }
 
 .usuario-drawer__persona-card {
@@ -5492,6 +5530,10 @@ body {
 [data-theme='dark'] .usuario-drawer__summary-card {
     background: #161b22;
     border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .usuario-drawer__section-title-wrap--spaced {
+    border-top-color: rgba(255, 255, 255, 0.08);
 }
 
 @media (max-width: 992px) {
