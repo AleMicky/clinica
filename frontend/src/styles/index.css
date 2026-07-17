@@ -4097,9 +4097,9 @@ body {
 }
 
 .jerarquia-explorer__sidebar {
-    width: 340px;
+    width: 300px;
     min-width: 280px;
-    max-width: 380px;
+    max-width: 320px;
     display: flex;
     flex-direction: column;
     min-height: 0;
@@ -4110,10 +4110,10 @@ body {
 
 .jerarquia-explorer__sidebar-head {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: 10px;
-    padding: 12px 12px 10px;
+    padding: 10px 12px;
     border-bottom: 1px solid #e2e8f0;
     flex-shrink: 0;
 }
@@ -4121,32 +4121,52 @@ body {
 .jerarquia-explorer__sidebar-icon {
     font-size: 16px;
     color: var(--ant-color-primary);
-    margin-top: 2px;
+    flex-shrink: 0;
 }
 
 .jerarquia-explorer__sidebar-title {
     display: block;
     font-size: 13px;
+    font-weight: 600;
     line-height: 1.25;
+    color: #0f172a;
 }
 
 .jerarquia-explorer__sidebar-caption {
     display: block;
     font-size: 11px;
     line-height: 1.3;
+    color: #64748b;
+    margin-top: 1px;
 }
 
 .jerarquia-explorer__sidebar-search {
-    padding: 8px 10px;
+    padding: 8px 12px;
     border-bottom: 1px solid #e2e8f0;
     flex-shrink: 0;
+}
+
+.jerarquia-explorer__search-input.ant-input-affix-wrapper {
+    border-radius: 8px;
+    border-color: #e2e8f0;
+    padding-block: 4px;
+    box-shadow: none;
+}
+
+.jerarquia-explorer__search-input.ant-input-affix-wrapper:hover,
+.jerarquia-explorer__search-input.ant-input-affix-wrapper-focused {
+    border-color: rgba(22, 119, 255, 0.45);
+}
+
+.jerarquia-explorer__search-input .ant-input {
+    font-size: 13px;
 }
 
 .jerarquia-explorer__sidebar-body {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    padding: 6px 4px 10px;
+    padding: 6px 6px 10px;
 }
 
 .jerarquia-explorer__sidebar-loading,
@@ -4159,25 +4179,40 @@ body {
     font-size: 13px;
 }
 
+.jerarquia-explorer__tree .ant-tree-list-holder-inner {
+    gap: 0;
+}
+
+.jerarquia-explorer__tree .ant-tree-indent-unit {
+    width: 16px;
+}
+
 .jerarquia-explorer__tree .ant-tree-treenode {
     width: 100%;
-    padding: 1px 0;
+    padding: 2px 0;
     align-items: center;
+}
+
+.jerarquia-explorer__tree .ant-tree-switcher {
+    width: 20px;
+    line-height: 28px;
+    align-self: center;
 }
 
 .jerarquia-explorer__tree .ant-tree-node-content-wrapper {
     flex: 1;
     min-width: 0;
-    border-radius: 8px;
+    border-radius: 6px;
     border-left: 3px solid transparent;
     padding: 4px 6px 4px 4px;
+    margin-inline-start: 0;
     transition:
         background 0.15s ease,
         border-color 0.15s ease;
 }
 
 .jerarquia-explorer__tree .ant-tree-node-content-wrapper:hover {
-    background: #eff6ff;
+    background: #f1f5f9;
 }
 
 .jerarquia-explorer__tree .ant-tree-node-content-wrapper.ant-tree-node-selected {
@@ -4193,7 +4228,7 @@ body {
 .jerarquia-explorer__tree-node {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     min-width: 0;
     width: 100%;
 }
@@ -4201,9 +4236,10 @@ body {
 .jerarquia-explorer__tree-node-icon {
     flex-shrink: 0;
     width: 18px;
+    height: 18px;
     display: grid;
     place-items: center;
-    color: rgba(15, 23, 42, 0.55);
+    color: #64748b;
     font-size: 13px;
 }
 
@@ -4211,14 +4247,23 @@ body {
     flex: 1;
     min-width: 0;
     display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+}
+
+.jerarquia-explorer__tree-node-primary {
+    display: flex;
     align-items: center;
     gap: 6px;
-    flex-wrap: wrap;
+    min-width: 0;
+    max-width: 100%;
 }
 
 .jerarquia-explorer__tree-node-name {
-    font-size: 13px;
+    font-size: 12.5px;
     line-height: 1.3;
+    color: #0f172a;
     max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -4230,13 +4275,20 @@ body {
     font-size: 10px;
     line-height: 16px;
     padding: 0 5px;
+    border: none;
     border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-weight: 500;
+    letter-spacing: 0.02em;
     background: rgba(15, 23, 42, 0.06);
-    color: rgba(15, 23, 42, 0.65);
+    color: #475569;
+    flex-shrink: 0;
 }
 
 .jerarquia-explorer__tree-node-count {
-    font-size: 11px;
+    font-size: 10.5px;
+    line-height: 1.25;
+    color: #94a3b8;
     white-space: nowrap;
 }
 
@@ -4262,14 +4314,14 @@ body {
 
 .jerarquia-explorer__main-breadcrumb {
     flex-shrink: 0;
-    padding: 10px 16px;
+    padding: 7px 14px;
     border-bottom: 1px solid #e2e8f0;
     background: #fff;
 }
 
 .jerarquia-explorer__crumb-static {
-    color: rgba(15, 23, 42, 0.55);
-    font-size: 13px;
+    color: #64748b;
+    font-size: 12.5px;
 }
 
 .jerarquia-explorer__crumb {
@@ -4278,7 +4330,7 @@ body {
     background: none;
     color: var(--ant-color-primary);
     font: inherit;
-    font-size: 13px;
+    font-size: 12.5px;
     cursor: pointer;
     max-width: 180px;
     overflow: hidden;
@@ -4296,52 +4348,58 @@ body {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    padding: 14px 16px 16px;
+    padding: 12px 14px 14px;
 }
 
 .jerarquia-explorer__detail-empty {
-    min-height: 320px;
+    min-height: 260px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 12px;
-    border-radius: 12px;
+    gap: 10px;
+    border-radius: 10px;
     border: 1px dashed #e2e8f0;
     background: #fff;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
 }
 
 .jerarquia-explorer__detail-empty-visual {
-    width: 64px;
-    height: 64px;
+    width: 48px;
+    height: 48px;
     display: grid;
     place-items: center;
     border-radius: 50%;
-    font-size: 28px;
+    font-size: 22px;
     color: rgba(22, 119, 255, 0.45);
     background: rgba(22, 119, 255, 0.08);
 }
 
 .jerarquia-explorer__detail-hero {
-    padding: 16px;
-    border-radius: 12px;
+    padding: 12px 14px;
+    border-radius: 10px;
     border: 1px solid #e2e8f0;
     background: #fff;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-    margin-bottom: 14px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
 }
 
-.jerarquia-explorer__detail-hero--solo {
-    margin-bottom: 0;
+.jerarquia-explorer__detail-main {
+    min-width: 0;
+    flex: 1;
+}
+
+.jerarquia-explorer__detail-copy {
+    min-width: 0;
 }
 
 .jerarquia-explorer__detail-badge {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     display: grid;
     place-items: center;
-    border-radius: 10px;
-    font-size: 18px;
+    border-radius: 9px;
+    font-size: 15px;
     color: var(--ant-color-primary);
     background: rgba(22, 119, 255, 0.1);
     flex-shrink: 0;
@@ -4349,84 +4407,263 @@ body {
 
 .jerarquia-explorer__detail-code-tag {
     margin: 0 0 4px;
-    font-size: 11px;
+    font-size: 10px;
+    line-height: 16px;
+    padding: 0 6px;
+    border: none;
+    border-radius: 4px;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-weight: 500;
+    letter-spacing: 0.02em;
     background: rgba(15, 23, 42, 0.06);
-    color: rgba(15, 23, 42, 0.72);
+    color: #475569;
 }
 
 .jerarquia-explorer__detail-title {
-    margin: 0 0 4px !important;
-    font-size: 18px !important;
+    margin: 0 0 2px !important;
+    font-size: 17px !important;
+    font-weight: 600 !important;
     line-height: 1.25 !important;
+    color: #0f172a !important;
 }
 
 .jerarquia-explorer__detail-parent {
     display: block;
     font-size: 12px;
-    margin-bottom: 4px;
+    line-height: 1.3;
+    color: #64748b;
+    margin-bottom: 0;
 }
 
 .jerarquia-explorer__detail-description {
     margin: 6px 0 0 !important;
-    font-size: 13px;
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: #64748b;
     max-width: 56ch;
 }
 
 .jerarquia-explorer__detail-actions {
     flex-shrink: 0;
+    margin-left: auto;
+}
+
+.jerarquia-explorer__detail-actions .ant-btn {
+    height: 30px;
+    padding-inline: 12px;
+    font-size: 12.5px;
+    border-radius: 6px;
 }
 
 .jerarquia-explorer__stats-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 14px;
-    padding-top: 12px;
-    border-top: 1px solid #e2e8f0;
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #f1f5f9;
 }
 
 .jerarquia-explorer__stat {
-    min-width: 100px;
-    padding: 8px 12px;
+    min-width: 96px;
+    padding: 8px 10px;
     border-radius: 8px;
     background: #f8fafc;
     border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
 }
 
 .jerarquia-explorer__stat-label {
     display: block;
     font-size: 11px;
     line-height: 1.2;
+    color: #64748b;
     margin-bottom: 2px;
 }
 
 .jerarquia-explorer__stat-value {
-    font-size: 14px;
+    font-size: 18px;
+    font-weight: 600;
     line-height: 1.2;
+    color: #0f172a;
+    font-variant-numeric: tabular-nums;
 }
 
 .jerarquia-explorer__detail-section {
-    border-radius: 12px;
+    border-radius: 10px;
     border: 1px solid #e2e8f0;
     background: #fff;
-    padding: 14px;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+
+.jerarquia-explorer__detail-section:last-child {
+    margin-bottom: 0;
+}
+
+.jerarquia-explorer__section-head,
+.jerarquia-explorer__empleados-head {
+    margin-bottom: 8px;
+}
+
+.jerarquia-explorer__section-icon {
+    width: 24px;
+    height: 24px;
+    display: grid;
+    place-items: center;
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--ant-color-primary);
+    background: rgba(22, 119, 255, 0.1);
+    flex-shrink: 0;
+}
+
+.jerarquia-explorer__section-icon-inline {
+    display: inline-flex;
+    align-items: center;
+    font-size: 13px;
+    color: var(--ant-color-primary);
+    line-height: 1;
 }
 
 .jerarquia-explorer__section-title {
     display: block;
     font-size: 13px;
-    margin-bottom: 10px;
+    font-weight: 600;
+    line-height: 1.25;
+    color: #0f172a;
+    margin-bottom: 0;
+}
+
+.jerarquia-explorer__section-caption {
+    display: block;
+    font-size: 11px;
+    line-height: 1.25;
+    color: #94a3b8;
+    margin-top: 0;
+}
+
+.jerarquia-explorer__section-count {
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    color: #64748b;
 }
 
 .jerarquia-explorer__section-empty {
-    padding: 16px 8px;
+    padding: 8px 4px;
+}
+
+.jerarquia-explorer__section-empty .ant-empty {
+    margin-block: 4px;
+}
+
+.jerarquia-explorer__section-empty .ant-empty-description {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.jerarquia-explorer__empleados-loading {
+    padding: 2px 0;
+}
+
+.jerarquia-explorer__empleados-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.jerarquia-explorer__empleado {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 10px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: #f8fafc;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.jerarquia-explorer__empleado:hover {
+    background: #fff;
+    border-color: #e2e8f0;
+}
+
+.jerarquia-explorer__empleado-avatar {
+    flex-shrink: 0;
+    background: linear-gradient(145deg, #3b82f6, #1d4ed8);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.jerarquia-explorer__empleado-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.jerarquia-explorer__empleado-line {
+    min-width: 0;
+}
+
+.jerarquia-explorer__empleado-name {
+    font-size: 13px;
+    line-height: 1.3;
+    color: #0f172a;
+    min-width: 0;
+}
+
+.jerarquia-explorer__empleado-meta {
+    font-size: 11.5px;
+    line-height: 1.3;
+    color: #64748b;
+    max-width: 100%;
+}
+
+.jerarquia-explorer__empleado-medico-tag {
+    margin: 0;
+    font-size: 10px;
+    line-height: 16px;
+    padding-inline: 5px;
+    border: none;
+    border-radius: 4px;
+    background: rgba(16, 185, 129, 0.12);
+    color: #047857;
+    flex-shrink: 0;
+}
+
+.jerarquia-explorer__empleado-code {
+    flex-shrink: 0;
+    margin: 0;
+    font-size: 10px;
+    line-height: 16px;
+    padding: 0 6px;
+    border: none;
+    border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    background: rgba(15, 23, 42, 0.06);
+    color: #475569;
+}
+
+.jerarquia-explorer__empleados-pagination {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #f1f5f9;
 }
 
 .jerarquia-explorer__child-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 8px;
 }
 
@@ -4436,11 +4673,12 @@ body {
     gap: 10px;
     width: 100%;
     padding: 10px 12px;
-    border-radius: 10px;
+    border-radius: 8px;
     border: 1px solid #e2e8f0;
     background: #fff;
     text-align: left;
     cursor: pointer;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
     transition:
         border-color 0.15s ease,
         background 0.15s ease,
@@ -4448,15 +4686,15 @@ body {
 }
 
 .jerarquia-explorer__child-card:hover {
-    border-color: rgba(22, 119, 255, 0.25);
-    background: #eff6ff;
-    box-shadow: 0 2px 6px rgba(22, 119, 255, 0.06);
+    border-color: rgba(22, 119, 255, 0.22);
+    background: #f8fafc;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
 }
 
 .jerarquia-explorer__child-card--selected {
     border-color: rgba(22, 119, 255, 0.35);
     background: #eff6ff;
-    box-shadow: 0 0 0 1px rgba(22, 119, 255, 0.12);
+    box-shadow: inset 3px 0 0 var(--ant-color-primary);
 }
 
 .jerarquia-explorer__child-card-icon {
@@ -4465,8 +4703,8 @@ body {
     height: 28px;
     display: grid;
     place-items: center;
-    border-radius: 8px;
-    font-size: 14px;
+    border-radius: 7px;
+    font-size: 13px;
     color: var(--ant-color-primary);
     background: rgba(22, 119, 255, 0.1);
 }
@@ -4475,22 +4713,45 @@ body {
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 3px;
+    flex: 1;
+}
+
+.jerarquia-explorer__child-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    min-width: 0;
 }
 
 .jerarquia-explorer__child-card-name {
     font-size: 13px;
+    font-weight: 600;
     line-height: 1.3;
+    color: #0f172a;
+    min-width: 0;
 }
 
 .jerarquia-explorer__child-card-code {
-    font-size: 11px;
+    margin: 0;
+    flex-shrink: 0;
+    font-size: 10px;
+    line-height: 16px;
+    padding: 0 5px;
+    border: none;
+    border-radius: 4px;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    background: rgba(15, 23, 42, 0.06);
+    color: #475569;
 }
 
 .jerarquia-explorer__child-card-meta {
-    font-size: 11px;
+    font-size: 11.5px;
     line-height: 1.3;
+    color: #64748b;
 }
 
 .jerarquia-explorer__mobile-nav {
@@ -4502,6 +4763,18 @@ body {
     margin-bottom: 12px;
 }
 
+@media (max-width: 1200px) {
+    .jerarquia-explorer__sidebar {
+        width: 280px;
+        min-width: 260px;
+        max-width: 300px;
+    }
+
+    .jerarquia-explorer__child-grid {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    }
+}
+
 @media (max-width: 991px) {
     .jerarquia-explorer__split {
         flex-direction: column;
@@ -4510,14 +4783,28 @@ body {
     .jerarquia-explorer__sidebar {
         width: 100%;
         max-width: none;
-        min-height: 280px;
-        max-height: 45vh;
+        min-width: 0;
+        min-height: 260px;
+        max-height: 42vh;
         border-right: none;
         border-bottom: 1px solid #e2e8f0;
     }
 
     .jerarquia-explorer__main {
         min-height: 320px;
+    }
+
+    .jerarquia-explorer__main-body {
+        padding: 10px 12px 12px;
+    }
+
+    .jerarquia-explorer__detail-actions {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .jerarquia-explorer__detail-actions .ant-btn {
+        flex: 1;
     }
 }
 
@@ -4531,7 +4818,8 @@ body {
 [data-theme='dark'] .jerarquia-explorer__detail-hero,
 [data-theme='dark'] .jerarquia-explorer__detail-section,
 [data-theme='dark'] .jerarquia-explorer__child-card,
-[data-theme='dark'] .jerarquia-explorer__detail-empty {
+[data-theme='dark'] .jerarquia-explorer__detail-empty,
+[data-theme='dark'] .jerarquia-explorer__empleado {
     background: #161b22;
     border-color: rgba(255, 255, 255, 0.08);
 }
@@ -4540,14 +4828,75 @@ body {
     background: #0f1419;
 }
 
-[data-theme='dark'] .jerarquia-explorer__tree .ant-tree-node-content-wrapper:hover,
+[data-theme='dark'] .jerarquia-explorer__tree .ant-tree-node-content-wrapper:hover {
+    background: rgba(255, 255, 255, 0.04) !important;
+}
+
 [data-theme='dark'] .jerarquia-explorer__tree .ant-tree-node-content-wrapper.ant-tree-node-selected {
     background: rgba(22, 119, 255, 0.12) !important;
 }
 
+[data-theme='dark'] .jerarquia-explorer__sidebar-title,
+[data-theme='dark'] .jerarquia-explorer__detail-title,
+[data-theme='dark'] .jerarquia-explorer__section-title,
+[data-theme='dark'] .jerarquia-explorer__tree-node-name,
+[data-theme='dark'] .jerarquia-explorer__child-card-name,
+[data-theme='dark'] .jerarquia-explorer__empleado-name,
+[data-theme='dark'] .jerarquia-explorer__stat-value {
+    color: rgba(255, 255, 255, 0.92) !important;
+}
+
+[data-theme='dark'] .jerarquia-explorer__sidebar-caption,
+[data-theme='dark'] .jerarquia-explorer__detail-parent,
+[data-theme='dark'] .jerarquia-explorer__detail-description,
+[data-theme='dark'] .jerarquia-explorer__child-card-meta,
+[data-theme='dark'] .jerarquia-explorer__empleado-meta,
+[data-theme='dark'] .jerarquia-explorer__stat-label,
+[data-theme='dark'] .jerarquia-explorer__tree-node-count,
+[data-theme='dark'] .jerarquia-explorer__section-count {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+[data-theme='dark'] .jerarquia-explorer__tree-node-icon {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+[data-theme='dark'] .jerarquia-explorer__tree-node-tag,
+[data-theme='dark'] .jerarquia-explorer__detail-code-tag,
+[data-theme='dark'] .jerarquia-explorer__child-card-code,
+[data-theme='dark'] .jerarquia-explorer__empleado-code {
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.65);
+}
+
+[data-theme='dark'] .jerarquia-explorer__search-input.ant-input-affix-wrapper {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.03);
+}
+
 [data-theme='dark'] .jerarquia-explorer__child-card:hover,
-[data-theme='dark'] .jerarquia-explorer__child-card--selected {
+[data-theme='dark'] .jerarquia-explorer__child-card--selected,
+[data-theme='dark'] .jerarquia-explorer__empleado:hover {
     background: rgba(22, 119, 255, 0.1);
+}
+
+[data-theme='dark'] .jerarquia-explorer__empleado {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme='dark'] .jerarquia-explorer__empleado-medico-tag {
+    background: rgba(16, 185, 129, 0.18);
+    color: #6ee7b7;
+}
+
+[data-theme='dark'] .jerarquia-explorer__section-icon {
+    background: rgba(22, 119, 255, 0.16);
+}
+
+[data-theme='dark'] .jerarquia-explorer__stat {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: none;
 }
 
 /* Lista de grupos (panel maestro) */

@@ -40,6 +40,7 @@ export type EmpleadoQuery = {
     search?: string
     areaId?: EntityId
     departamentoId?: EntityId
+    servicioId?: EntityId
 }
 
 export type CreateEmpleadoPayload = {

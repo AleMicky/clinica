@@ -6,13 +6,8 @@ import {
     Empty,
     Flex,
     Grid,
-    Input,
     Modal,
-    Skeleton,
-    Tag,
-    Tree,
     Typography,
-    theme,
 } from 'antd'
 import type { MenuProps } from 'antd'
 import {
@@ -24,7 +19,6 @@ import {
     ExperimentOutlined,
     NodeIndexOutlined,
     PlusOutlined,
-    SearchOutlined,
 } from '@ant-design/icons'
 
 import {
@@ -58,19 +52,22 @@ import {
     toServicio,
     type JerarquiaSelectionKind,
 } from '../utils/jerarquia-tree'
-import { JerarquiaChildCard } from './JerarquiaChildCard'
+import { DepartmentHeader } from './DepartmentHeader'
+import { DepartmentStats } from './DepartmentStats'
+import { JerarquiaEmpleadosSection } from './JerarquiaEmpleadosSection'
 import {
     JerarquiaAreaDrawer,
     JerarquiaDepartamentoDrawer,
     JerarquiaServicioDrawer,
 } from './JerarquiaFormDrawers'
 import { JerarquiaTreeNodeTitle } from './JerarquiaTreeNodeTitle'
+import { OrganizationTree } from './OrganizationTree'
+import { ServicesCard } from './ServicesCard'
 
-const { Text, Paragraph, Title } = Typography
+const { Text, Paragraph } = Typography
 const { useBreakpoint } = Grid
 
 export function JerarquiaPanel() {
-    const { token } = theme.useToken()
     const screens = useBreakpoint()
     const isMobile = !screens.lg
 
@@ -478,6 +475,14 @@ export function JerarquiaPanel() {
             const areaEntity = toArea(area)
             const serviciosCount = countAreaServicios(area)
             const deptCount = area.departamentos.length
+            const areaEmpleados = formatEmpleados(area.empleadosCount)
+            const areaCountLabel = [
+                `${deptCount} depto${deptCount === 1 ? '' : 's'}`,
+                `${serviciosCount} serv.`,
+                areaEmpleados,
+            ]
+                .filter(Boolean)
+                .join(' · ')
 
             return {
                 key: nodeKey('area', area.id),
@@ -486,7 +491,7 @@ export function JerarquiaPanel() {
                         icon={<BankOutlined />}
                         nombre={area.nombre}
                         codigo={area.codigo}
-                        countLabel={`${deptCount} depto${deptCount === 1 ? '' : 's'} · ${serviciosCount} serv.`}
+                        countLabel={areaCountLabel}
                         menuItems={buildAreaMenu(areaEntity)}
                         deleting={deletingAreaId === area.id}
                     />
@@ -494,6 +499,13 @@ export function JerarquiaPanel() {
                 children: area.departamentos.map((dept) => {
                     const deptEntity = toDepartamento(dept, area.nombre)
                     const servCount = dept.servicios.length
+                    const deptEmpleados = formatEmpleados(dept.empleadosCount)
+                    const deptCountLabel = [
+                        `${servCount} servicio${servCount === 1 ? '' : 's'}`,
+                        deptEmpleados,
+                    ]
+                        .filter(Boolean)
+                        .join(' · ')
 
                     return {
                         key: nodeKey('departamento', dept.id),
@@ -502,7 +514,7 @@ export function JerarquiaPanel() {
                                 icon={<ApartmentOutlined />}
                                 nombre={dept.nombre}
                                 codigo={dept.codigo}
-                                countLabel={`${servCount} servicio${servCount === 1 ? '' : 's'}`}
+                                countLabel={deptCountLabel}
                                 menuItems={buildDeptMenu(deptEntity)}
                                 deleting={deletingDeptId === dept.id}
                             />
@@ -622,92 +634,24 @@ export function JerarquiaPanel() {
     }, [selectedArea, selectedDept, selectedServicio, selectionKind, syncSelection])
 
     const renderTreePanel = () => (
-        <aside className="jerarquia-explorer__sidebar">
-            <div className="jerarquia-explorer__sidebar-head">
-                <Flex align="center" gap={8}>
-                    <NodeIndexOutlined className="jerarquia-explorer__sidebar-icon" />
-                    <div>
-                        <Text strong className="jerarquia-explorer__sidebar-title">
-                            Explorador organizacional
-                        </Text>
-                        <Text type="secondary" className="jerarquia-explorer__sidebar-caption">
-                            {areaNodes.length} área{areaNodes.length === 1 ? '' : 's'}
-                        </Text>
-                    </div>
-                </Flex>
-                <Button
-                    type="primary"
-                    size="small"
-                    icon={<PlusOutlined />}
-                    onClick={openCreateArea}
-                >
-                    Área
-                </Button>
-            </div>
-
-            <div className="jerarquia-explorer__sidebar-search">
-                <Input
-                    allowClear
-                    size="small"
-                    prefix={<SearchOutlined style={{ color: token.colorTextQuaternary }} />}
-                    placeholder="Buscar área, departamento o servicio…"
-                    value={treeSearchInput}
-                    onChange={(event) => setTreeSearchInput(event.target.value)}
-                    onClear={() => {
-                        setTreeSearchInput('')
-                        setTreeSearch('')
-                    }}
-                />
-            </div>
-
-            <div className="jerarquia-explorer__sidebar-body">
-                {loadingJerarquia ? (
-                    <div className="jerarquia-explorer__sidebar-loading">
-                        <Skeleton active paragraph={{ rows: 8 }} />
-                    </div>
-                ) : areaNodes.length === 0 ? (
-                    <div className="jerarquia-explorer__sidebar-empty">
-                        <Empty
-                            image={Empty.PRESENTED_IMAGE_SIMPLE}
-                            description="No hay áreas registradas"
-                        >
-                            <Button type="primary" icon={<PlusOutlined />} onClick={openCreateArea}>
-                                Crear primera área
-                            </Button>
-                        </Empty>
-                    </div>
-                ) : filteredAreaNodes.length === 0 ? (
-                    <div className="jerarquia-explorer__sidebar-empty">
-                        <Empty
-                            image={Empty.PRESENTED_IMAGE_SIMPLE}
-                            description="Sin coincidencias en la búsqueda"
-                        />
-                    </div>
-                ) : (
-                    <Tree
-                        blockNode
-                        showLine={{ showLeafIcon: false }}
-                        treeData={treeData}
-                        selectedKeys={selectedKeys}
-                        expandedKeys={expandedKeys}
-                        onExpand={(keys) => setExpandedKeys(keys.map(String))}
-                        onSelect={(keys) => handleTreeSelect(keys)}
-                        className="jerarquia-explorer__tree"
-                    />
-                )}
-            </div>
-        </aside>
-    )
-
-    const renderStat = (label: string, value: string | number) => (
-        <div className="jerarquia-explorer__stat">
-            <Text type="secondary" className="jerarquia-explorer__stat-label">
-                {label}
-            </Text>
-            <Text strong className="jerarquia-explorer__stat-value">
-                {value}
-            </Text>
-        </div>
+        <OrganizationTree
+            areaCount={areaNodes.length}
+            treeSearchInput={treeSearchInput}
+            loading={loadingJerarquia}
+            hasAreas={areaNodes.length > 0}
+            hasFilteredAreas={filteredAreaNodes.length > 0}
+            treeData={treeData}
+            selectedKeys={selectedKeys}
+            expandedKeys={expandedKeys}
+            onCreateArea={openCreateArea}
+            onSearchChange={setTreeSearchInput}
+            onSearchClear={() => {
+                setTreeSearchInput('')
+                setTreeSearch('')
+            }}
+            onExpand={setExpandedKeys}
+            onSelect={handleTreeSelect}
+        />
     )
 
     const renderAreaDetail = () => {
@@ -715,108 +659,73 @@ export function JerarquiaPanel() {
 
         const serviciosTotal = countAreaServicios(selectedAreaNode)
         const empleados = formatEmpleados(selectedAreaNode.empleadosCount)
+        const stats = [
+            { label: 'Departamentos', value: selectedAreaNode.departamentos.length },
+            { label: 'Servicios', value: serviciosTotal },
+            ...(empleados ? [{ label: 'Empleados', value: empleados }] : []),
+        ]
 
         return (
             <>
-                <div className="jerarquia-explorer__detail-hero">
-                    <Flex align="flex-start" justify="space-between" gap={16} wrap="wrap">
-                        <Flex align="flex-start" gap={12} className="jerarquia-explorer__detail-main">
-                            <div className="jerarquia-explorer__detail-badge" aria-hidden>
-                                <BankOutlined />
-                            </div>
-                            <div>
-                                <Tag className="jerarquia-explorer__detail-code-tag" variant="filled">
-                                    {selectedArea.codigo}
-                                </Tag>
-                                <Title level={4} className="jerarquia-explorer__detail-title">
-                                    {selectedArea.nombre}
-                                </Title>
-                                {selectedArea.descripcion ? (
-                                    <Paragraph
-                                        type="secondary"
-                                        className="jerarquia-explorer__detail-description"
-                                    >
-                                        {selectedArea.descripcion}
-                                    </Paragraph>
-                                ) : null}
-                            </div>
-                        </Flex>
-                        <Flex gap={8} wrap="wrap" className="jerarquia-explorer__detail-actions">
-                            <Button
-                                icon={<EditOutlined />}
-                                onClick={() => openEditArea(selectedArea)}
-                            >
-                                Editar
-                            </Button>
-                            <Button
-                                type="primary"
-                                icon={<PlusOutlined />}
-                                onClick={() => openCreateDept(selectedArea.id)}
-                            >
-                                Nuevo departamento
-                            </Button>
-                        </Flex>
-                    </Flex>
+                <DepartmentHeader
+                    icon={<BankOutlined />}
+                    codigo={selectedArea.codigo}
+                    nombre={selectedArea.nombre}
+                    descripcion={selectedArea.descripcion}
+                    actions={[
+                        {
+                            label: 'Editar',
+                            icon: <EditOutlined />,
+                            onClick: () => openEditArea(selectedArea),
+                        },
+                        {
+                            label: 'Nuevo departamento',
+                            icon: <PlusOutlined />,
+                            onClick: () => openCreateDept(selectedArea.id),
+                            primary: true,
+                        },
+                    ]}
+                    stats={<DepartmentStats items={stats} />}
+                />
 
-                    <div className="jerarquia-explorer__stats-row">
-                        {renderStat('Departamentos', selectedAreaNode.departamentos.length)}
-                        {renderStat('Servicios', serviciosTotal)}
-                        {empleados ? renderStat('Empleados', empleados) : null}
-                    </div>
-                </div>
+                <ServicesCard
+                    title="Departamentos"
+                    sectionIcon={<ApartmentOutlined />}
+                    count={selectedAreaNode.departamentos.length}
+                    emptyDescription="Esta área no tiene departamentos"
+                    emptyActionLabel="Agregar departamento"
+                    onEmptyAction={() => openCreateDept(selectedArea.id)}
+                    items={selectedAreaNode.departamentos.map((dept) => {
+                        const servCount = dept.servicios.length
+                        const meta = [
+                            `${servCount} servicio${servCount === 1 ? '' : 's'}`,
+                            formatEmpleados(dept.empleadosCount),
+                        ]
+                            .filter(Boolean)
+                            .join(' · ')
 
-                <div className="jerarquia-explorer__detail-section">
-                    <Text strong className="jerarquia-explorer__section-title">
-                        Departamentos
-                    </Text>
-                    {selectedAreaNode.departamentos.length === 0 ? (
-                        <div className="jerarquia-explorer__section-empty">
-                            <Empty
-                                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                                description="Esta área no tiene departamentos"
-                            >
-                                <Button
-                                    type="primary"
-                                    icon={<PlusOutlined />}
-                                    onClick={() => openCreateDept(selectedArea.id)}
-                                >
-                                    Agregar departamento
-                                </Button>
-                            </Empty>
-                        </div>
-                    ) : (
-                        <div className="jerarquia-explorer__child-grid">
-                            {selectedAreaNode.departamentos.map((dept) => {
-                                const servCount = dept.servicios.length
-                                const meta = [
-                                    `${servCount} servicio${servCount === 1 ? '' : 's'}`,
-                                    formatEmpleados(dept.empleadosCount),
-                                ]
-                                    .filter(Boolean)
-                                    .join(' · ')
+                        return {
+                            id: dept.id,
+                            icon: <ApartmentOutlined />,
+                            nombre: dept.nombre,
+                            codigo: dept.codigo,
+                            meta,
+                            selected: selectedDept?.id === dept.id,
+                            onClick: () =>
+                                syncSelection(
+                                    'departamento',
+                                    selectedArea,
+                                    toDepartamento(dept, selectedArea.nombre),
+                                    null,
+                                ),
+                        }
+                    })}
+                />
 
-                                return (
-                                    <JerarquiaChildCard
-                                        key={dept.id}
-                                        icon={<ApartmentOutlined />}
-                                        nombre={dept.nombre}
-                                        codigo={dept.codigo}
-                                        meta={meta}
-                                        selected={selectedDept?.id === dept.id}
-                                        onClick={() =>
-                                            syncSelection(
-                                                'departamento',
-                                                selectedArea,
-                                                toDepartamento(dept, selectedArea.nombre),
-                                                null,
-                                            )
-                                        }
-                                    />
-                                )
-                            })}
-                        </div>
-                    )}
-                </div>
+                <JerarquiaEmpleadosSection
+                    areaId={selectedArea.id}
+                    compactMeta
+                />
             </>
         )
     }
@@ -825,102 +734,66 @@ export function JerarquiaPanel() {
         if (!selectedArea || !selectedDept || !selectedDeptNode) return null
 
         const empleados = formatEmpleados(selectedDeptNode.empleadosCount)
+        const stats = [
+            { label: 'Servicios', value: selectedDeptNode.servicios.length },
+            ...(empleados ? [{ label: 'Empleados', value: empleados }] : []),
+        ]
 
         return (
             <>
-                <div className="jerarquia-explorer__detail-hero">
-                    <Flex align="flex-start" justify="space-between" gap={16} wrap="wrap">
-                        <Flex align="flex-start" gap={12} className="jerarquia-explorer__detail-main">
-                            <div className="jerarquia-explorer__detail-badge" aria-hidden>
-                                <ApartmentOutlined />
-                            </div>
-                            <div>
-                                <Tag className="jerarquia-explorer__detail-code-tag" variant="filled">
-                                    {selectedDept.codigo}
-                                </Tag>
-                                <Title level={4} className="jerarquia-explorer__detail-title">
-                                    {selectedDept.nombre}
-                                </Title>
-                                <Text type="secondary" className="jerarquia-explorer__detail-parent">
-                                    Área: {selectedArea.nombre}
-                                </Text>
-                                {selectedDept.descripcion ? (
-                                    <Paragraph
-                                        type="secondary"
-                                        className="jerarquia-explorer__detail-description"
-                                    >
-                                        {selectedDept.descripcion}
-                                    </Paragraph>
-                                ) : null}
-                            </div>
-                        </Flex>
-                        <Flex gap={8} wrap="wrap" className="jerarquia-explorer__detail-actions">
-                            <Button
-                                icon={<EditOutlined />}
-                                onClick={() => openEditDept(selectedDept)}
-                            >
-                                Editar
-                            </Button>
-                            <Button
-                                type="primary"
-                                icon={<PlusOutlined />}
-                                onClick={() => openCreateServicio(selectedDept.id, selectedDept.areaId)}
-                            >
-                                Nuevo servicio
-                            </Button>
-                        </Flex>
-                    </Flex>
+                <DepartmentHeader
+                    icon={<ApartmentOutlined />}
+                    codigo={selectedDept.codigo}
+                    nombre={selectedDept.nombre}
+                    parentLabel={`Área: ${selectedArea.nombre}`}
+                    descripcion={selectedDept.descripcion}
+                    actions={[
+                        {
+                            label: 'Editar',
+                            icon: <EditOutlined />,
+                            onClick: () => openEditDept(selectedDept),
+                        },
+                        {
+                            label: 'Nuevo servicio',
+                            icon: <PlusOutlined />,
+                            onClick: () =>
+                                openCreateServicio(selectedDept.id, selectedDept.areaId),
+                            primary: true,
+                        },
+                    ]}
+                    stats={<DepartmentStats items={stats} />}
+                />
 
-                    <div className="jerarquia-explorer__stats-row">
-                        {renderStat('Servicios', selectedDeptNode.servicios.length)}
-                        {empleados ? renderStat('Empleados', empleados) : null}
-                    </div>
-                </div>
+                <ServicesCard
+                    title="Servicios"
+                    sectionIcon={<ExperimentOutlined />}
+                    count={selectedDeptNode.servicios.length}
+                    emptyDescription="Este departamento no tiene servicios"
+                    emptyActionLabel="Agregar servicio"
+                    onEmptyAction={() =>
+                        openCreateServicio(selectedDept.id, selectedDept.areaId)
+                    }
+                    items={selectedDeptNode.servicios.map((servicio) => ({
+                        id: servicio.id,
+                        icon: <ExperimentOutlined />,
+                        nombre: servicio.nombre,
+                        codigo: servicio.codigo,
+                        meta: formatEmpleados(servicio.empleadosCount),
+                        selected: selectedServicio?.id === servicio.id,
+                        onClick: () =>
+                            syncSelection(
+                                'servicio',
+                                selectedArea,
+                                selectedDept,
+                                toServicio(servicio, selectedDept.nombre),
+                            ),
+                    }))}
+                />
 
-                <div className="jerarquia-explorer__detail-section">
-                    <Text strong className="jerarquia-explorer__section-title">
-                        Servicios
-                    </Text>
-                    {selectedDeptNode.servicios.length === 0 ? (
-                        <div className="jerarquia-explorer__section-empty">
-                            <Empty
-                                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                                description="Este departamento no tiene servicios"
-                            >
-                                <Button
-                                    type="primary"
-                                    icon={<PlusOutlined />}
-                                    onClick={() =>
-                                        openCreateServicio(selectedDept.id, selectedDept.areaId)
-                                    }
-                                >
-                                    Agregar servicio
-                                </Button>
-                            </Empty>
-                        </div>
-                    ) : (
-                        <div className="jerarquia-explorer__child-grid">
-                            {selectedDeptNode.servicios.map((servicio) => (
-                                <JerarquiaChildCard
-                                    key={servicio.id}
-                                    icon={<ExperimentOutlined />}
-                                    nombre={servicio.nombre}
-                                    codigo={servicio.codigo}
-                                    meta={formatEmpleados(servicio.empleadosCount)}
-                                    selected={selectedServicio?.id === servicio.id}
-                                    onClick={() =>
-                                        syncSelection(
-                                            'servicio',
-                                            selectedArea,
-                                            selectedDept,
-                                            toServicio(servicio, selectedDept.nombre),
-                                        )
-                                    }
-                                />
-                            ))}
-                        </div>
-                    )}
-                </div>
+                <JerarquiaEmpleadosSection
+                    areaId={selectedArea.id}
+                    departamentoId={selectedDept.id}
+                />
             </>
         )
     }
@@ -931,50 +804,32 @@ export function JerarquiaPanel() {
         }
 
         const empleados = formatEmpleados(selectedServicioNode.servicio.empleadosCount)
+        const stats = empleados ? [{ label: 'Empleados', value: empleados }] : []
 
         return (
-            <div className="jerarquia-explorer__detail-hero jerarquia-explorer__detail-hero--solo">
-                <Flex align="flex-start" justify="space-between" gap={16} wrap="wrap">
-                    <Flex align="flex-start" gap={12} className="jerarquia-explorer__detail-main">
-                        <div className="jerarquia-explorer__detail-badge" aria-hidden>
-                            <ExperimentOutlined />
-                        </div>
-                        <div>
-                            <Tag className="jerarquia-explorer__detail-code-tag" variant="filled">
-                                {selectedServicio.codigo}
-                            </Tag>
-                            <Title level={4} className="jerarquia-explorer__detail-title">
-                                {selectedServicio.nombre}
-                            </Title>
-                            <Text type="secondary" className="jerarquia-explorer__detail-parent">
-                                {selectedArea.nombre} › {selectedDept.nombre}
-                            </Text>
-                            {selectedServicio.descripcion ? (
-                                <Paragraph
-                                    type="secondary"
-                                    className="jerarquia-explorer__detail-description"
-                                >
-                                    {selectedServicio.descripcion}
-                                </Paragraph>
-                            ) : null}
-                        </div>
-                    </Flex>
-                    <Flex gap={8} wrap="wrap" className="jerarquia-explorer__detail-actions">
-                        <Button
-                            icon={<EditOutlined />}
-                            onClick={() => openEditServicio(selectedServicio)}
-                        >
-                            Editar
-                        </Button>
-                    </Flex>
-                </Flex>
+            <>
+                <DepartmentHeader
+                    icon={<ExperimentOutlined />}
+                    codigo={selectedServicio.codigo}
+                    nombre={selectedServicio.nombre}
+                    parentLabel={`${selectedArea.nombre} › ${selectedDept.nombre}`}
+                    descripcion={selectedServicio.descripcion}
+                    actions={[
+                        {
+                            label: 'Editar',
+                            icon: <EditOutlined />,
+                            onClick: () => openEditServicio(selectedServicio),
+                        },
+                    ]}
+                    stats={<DepartmentStats items={stats} />}
+                />
 
-                {empleados ? (
-                    <div className="jerarquia-explorer__stats-row">
-                        {renderStat('Empleados', empleados)}
-                    </div>
-                ) : null}
-            </div>
+                <JerarquiaEmpleadosSection
+                    areaId={selectedArea.id}
+                    departamentoId={selectedDept.id}
+                    servicioId={selectedServicio.id}
+                />
+            </>
         )
     }
 
@@ -989,15 +844,15 @@ export function JerarquiaPanel() {
                         image={false}
                         description={
                             <Flex vertical gap={6} align="center">
-                                <Text strong style={{ fontSize: 16 }}>
+                                <Text strong style={{ fontSize: 14 }}>
                                     Seleccione un elemento
                                 </Text>
                                 <Paragraph
                                     type="secondary"
-                                    style={{ marginBottom: 0, maxWidth: 360, textAlign: 'center' }}
+                                    style={{ marginBottom: 0, maxWidth: 300, textAlign: 'center', fontSize: 12 }}
                                 >
                                     Elija un área, departamento o servicio en el árbol para ver su
-                                    detalle y administrar su jerarquía.
+                                    detalle, el personal asignado y administrar la jerarquía.
                                 </Paragraph>
                             </Flex>
                         }

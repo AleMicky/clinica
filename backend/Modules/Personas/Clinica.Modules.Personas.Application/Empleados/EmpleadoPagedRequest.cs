@@ -11,4 +11,6 @@ public sealed class EmpleadoPagedRequest : PagedRequest
     public Guid? AreaId { get; init; }
 
     public Guid? DepartamentoId { get; init; }
+
+    public Guid? ServicioId { get; init; }
 }

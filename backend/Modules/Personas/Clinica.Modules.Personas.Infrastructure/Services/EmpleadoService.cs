@@ -54,6 +54,9 @@ public sealed class EmpleadoService(
         if (request.DepartamentoId is { } departamentoId && departamentoId != Guid.Empty)
             query = query.Where(x => x.DepartamentoId == departamentoId);
 
+        if (request.ServicioId is { } servicioId && servicioId != Guid.Empty)
+            query = query.Where(x => x.ServicioId == servicioId);
+
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var search = request.Search.Trim();

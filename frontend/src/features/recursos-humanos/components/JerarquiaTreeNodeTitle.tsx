@@ -27,10 +27,12 @@ export function JerarquiaTreeNodeTitle({
                 {icon}
             </span>
             <span className="jerarquia-explorer__tree-node-content">
-                <Text className="jerarquia-explorer__tree-node-name">{nombre}</Text>
-                <Tag className="jerarquia-explorer__tree-node-tag" variant="filled">
-                    {codigo}
-                </Tag>
+                <span className="jerarquia-explorer__tree-node-primary">
+                    <Text className="jerarquia-explorer__tree-node-name">{nombre}</Text>
+                    <Tag className="jerarquia-explorer__tree-node-tag" variant="filled">
+                        {codigo}
+                    </Tag>
+                </span>
                 {countLabel ? (
                     <Text type="secondary" className="jerarquia-explorer__tree-node-count">
                         {countLabel}

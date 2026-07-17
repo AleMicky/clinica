@@ -1,4 +1,4 @@
-import { Typography } from 'antd'
+import { Tag, Typography } from 'antd'
 
 const { Text } = Typography
 
@@ -34,12 +34,14 @@ export function JerarquiaChildCard({
                 {icon}
             </span>
             <span className="jerarquia-explorer__child-card-body">
-                <Text strong className="jerarquia-explorer__child-card-name">
-                    {nombre}
-                </Text>
-                <Text type="secondary" className="jerarquia-explorer__child-card-code">
-                    {codigo}
-                </Text>
+                <span className="jerarquia-explorer__child-card-top">
+                    <Text strong className="jerarquia-explorer__child-card-name">
+                        {nombre}
+                    </Text>
+                    <Tag className="jerarquia-explorer__child-card-code" variant="filled">
+                        {codigo}
+                    </Tag>
+                </span>
                 {meta ? (
                     <Text type="secondary" className="jerarquia-explorer__child-card-meta">
                         {meta}
