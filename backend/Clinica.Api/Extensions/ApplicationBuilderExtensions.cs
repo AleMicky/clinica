@@ -13,16 +13,24 @@ namespace Clinica.Api.Extensions;
 public static class ApplicationBuilderExtensions
 {
     public static async Task<WebApplication> UseClinicaSeedAsync(
-        this WebApplication app)
+        this WebApplication app,
+        bool force = false)
     {
-        var runDbInit = app.Environment.IsDevelopment()
+        var runDbInit = force
+            || app.Environment.IsDevelopment()
             || app.Configuration.GetValue("CLINICA_RUN_DB_INIT", false);
 
         if (!runDbInit)
             return app;
 
+        var logger = app.Services
+            .GetRequiredService<ILoggerFactory>()
+            .CreateLogger("Startup");
+
         try
         {
+            logger.LogInformation("Iniciando migraciones y seeds...");
+
             await IdentitySeeder.SeedAsync(app.Services);
             await ParametrosDbSeeder.MigrateAsync(app.Services);
             await RecursosHumanosDbSeeder.MigrateAsync(app.Services);
@@ -31,16 +39,17 @@ public static class ApplicationBuilderExtensions
             await RecursosHumanosDbSeeder.SeedEmpleadosMedicosAsync(app.Services);
             await AtencionMedicaDbSeeder.MigrateAsync(app.Services);
             await WorkflowDbSeeder.MigrateAsync(app.Services);
+
+            logger.LogInformation("Migraciones y seeds completados.");
         }
         catch (Exception ex)
         {
-            var logger = app.Services
-                .GetRequiredService<ILoggerFactory>()
-                .CreateLogger("Startup");
-
             logger.LogError(
                 ex,
                 "No se pudo inicializar la base de datos. Verifica que SQL Server esté en ejecución.");
+
+            if (force)
+                throw;
         }
 
         return app;

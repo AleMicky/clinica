@@ -8,14 +8,12 @@ import {
     Dropdown,
     Modal,
     Tag,
-    Tooltip,
     Typography,
 } from 'antd'
 import type { MenuProps } from 'antd'
 import {
     DeleteOutlined,
     EditOutlined,
-    KeyOutlined,
     LockOutlined,
     MoreOutlined,
     UnlockOutlined,
@@ -134,16 +132,6 @@ function UserActionsCell({
             label: user.activo ? 'Bloquear' : 'Activar',
             disabled: isBusy,
             onClick: () => onToggleActive(user),
-        },
-        {
-            key: 'reset',
-            icon: <KeyOutlined />,
-            label: (
-                <Tooltip title="Función no disponible aún">
-                    <span>Restablecer contraseña</span>
-                </Tooltip>
-            ),
-            disabled: true,
         },
         { type: 'divider' },
         {

@@ -10,24 +10,9 @@ export type User = {
     personaNumeroDocumento?: string | null
 }
 
-export type CreateUserPayload = {
-    userName: string
-    nombreCompleto: string
-    password: string
-    rol: string
-}
-
 export type UpdateUserPayload = {
     nombreCompleto: string
     activo: boolean
-    email?: string | null
-}
-
-export type CreateUserApiPayload = {
-    userName: string
-    password: string
-    nombreCompleto: string
-    role?: string | null
     email?: string | null
 }
 

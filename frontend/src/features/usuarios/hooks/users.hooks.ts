@@ -7,7 +7,7 @@ import { notify } from '../../../shared/utils/notify'
 import { getApiErrorMessage } from '../../../shared/utils/api-error'
 import type { PagedQuery } from '../../../shared/types/pagination.types'
 import { usersService } from '../services/users.service'
-import type { CreateUserPayload, CreateUsuarioPersonaApiPayload, UpdateUserPayload } from '../types/user.types'
+import type { CreateUsuarioPersonaApiPayload, UpdateUserPayload } from '../types/user.types'
 
 function getRoleChanges(currentRoles: string[], nextRoles: string[]) {
     const current = new Set(currentRoles)
@@ -19,7 +19,7 @@ function getRoleChanges(currentRoles: string[], nextRoles: string[]) {
     }
 }
 
-export async function syncUserRoles(
+async function syncUserRoles(
     userId: string,
     currentRoles: string[],
     nextRoles: string[],
@@ -71,21 +71,6 @@ export function useCreateUserWithPersona() {
             void queryClient.invalidateQueries({ queryKey: queryKeys.users.all })
             void queryClient.invalidateQueries({ queryKey: queryKeys.personas.all })
             notify.success('Usuario creado', 'El usuario y la persona se registraron correctamente.')
-        },
-        onError: (error) => {
-            notify.error('Error al crear usuario', getApiErrorMessage(error))
-        },
-    })
-}
-
-export function useCreateUser() {
-    const queryClient = useQueryClient()
-
-    return useAppMutation({
-        mutationFn: (data: CreateUserPayload) => usersService.create(data),
-        onSuccess: () => {
-            void queryClient.invalidateQueries({ queryKey: queryKeys.users.all })
-            notify.success('Usuario creado', 'El usuario se registró correctamente.')
         },
         onError: (error) => {
             notify.error('Error al crear usuario', getApiErrorMessage(error))

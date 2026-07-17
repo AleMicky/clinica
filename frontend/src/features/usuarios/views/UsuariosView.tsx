@@ -3,22 +3,21 @@ import {
     Button,
     Flex,
     Grid,
-    Input,
-    Select,
     Statistic,
     Typography,
-    theme,
 } from 'antd'
 import {
-    FilterOutlined,
     PlusOutlined,
-    SearchOutlined,
     TeamOutlined,
     UserOutlined,
 } from '@ant-design/icons'
 
 import { useRoles } from '../../roles/hooks/roles.hooks'
 import { UserFormModal } from '../components/UserFormModal'
+import {
+    UsersFiltersBar,
+    type StatusFilter,
+} from '../components/UsersFiltersBar'
 import { UsersTable } from '../components/UsersTable'
 import {
     useCreateUserWithPersona,
@@ -39,14 +38,11 @@ const { useBreakpoint } = Grid
 const DEFAULT_PAGE_SIZE = 20
 const FETCH_PAGE_SIZE = 5000
 
-type StatusFilter = 'all' | 'activo' | 'inactivo'
-
 type UsuariosViewProps = {
     embedded?: boolean
 }
 
 export function UsuariosView({ embedded = false }: UsuariosViewProps) {
-    const { token } = theme.useToken()
     const screens = useBreakpoint()
     const isStacked = !screens.lg
 
@@ -149,12 +145,13 @@ export function UsuariosView({ embedded = false }: UsuariosViewProps) {
     const handleUpdate = async (values: UpdateUserFormValues) => {
         if (!editingUser) return
 
-        const payload = {
-            nombreCompleto: values.nombreCompleto,
-            activo: values.activo,
-        }
-
-        await updateUser.mutateAsync({ id: editingUser.id, data: payload })
+        await updateUser.mutateAsync({
+            id: editingUser.id,
+            data: {
+                nombreCompleto: values.nombreCompleto,
+                activo: values.activo,
+            },
+        })
         closeModal()
     }
 
@@ -221,54 +218,18 @@ export function UsuariosView({ embedded = false }: UsuariosViewProps) {
     )
 
     const filtersBar = (
-        <div className="seguridad-usuarios__filters">
-            <Input
-                allowClear
-                size="small"
-                className="seguridad-usuarios__filter-search"
-                prefix={<SearchOutlined style={{ color: token.colorTextQuaternary }} />}
-                placeholder="Buscar por usuario o persona…"
-                value={searchInput}
-                onChange={(event) => setSearchInput(event.target.value)}
-                onPressEnter={() => handleSearch(searchInput)}
-                onClear={() => {
-                    setSearchInput('')
-                    handleSearch('')
-                }}
-            />
-            <Select
-                allowClear
-                size="small"
-                className="seguridad-usuarios__filter-select"
-                placeholder="Rol"
-                value={roleFilter ?? undefined}
-                options={roleOptions.map((role) => ({ label: role, value: role }))}
-                onChange={(value) => handleRoleFilterChange(value ?? null)}
-            />
-            <Select
-                size="small"
-                className="seguridad-usuarios__filter-select"
-                placeholder="Estado"
-                value={statusFilter}
-                options={[
-                    { label: 'Todos', value: 'all' },
-                    { label: 'Activos', value: 'activo' },
-                    { label: 'Inactivos', value: 'inactivo' },
-                ]}
-                onChange={handleStatusFilterChange}
-            />
-            {hasActiveFilters ? (
-                <Button
-                    type="link"
-                    size="small"
-                    icon={<FilterOutlined />}
-                    onClick={clearFilters}
-                    className="seguridad-usuarios__filter-clear"
-                >
-                    Limpiar
-                </Button>
-            ) : null}
-        </div>
+        <UsersFiltersBar
+            searchInput={searchInput}
+            roleFilter={roleFilter}
+            statusFilter={statusFilter}
+            roleOptions={roleOptions}
+            hasActiveFilters={hasActiveFilters}
+            onSearchInputChange={setSearchInput}
+            onSearch={handleSearch}
+            onRoleFilterChange={handleRoleFilterChange}
+            onStatusFilterChange={handleStatusFilterChange}
+            onClearFilters={clearFilters}
+        />
     )
 
     const tableSection = (

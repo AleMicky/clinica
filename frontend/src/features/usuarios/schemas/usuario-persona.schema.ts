@@ -7,7 +7,7 @@ const accessFields = {
     userName: z.string().trim().optional(),
     email: z.union([
         z.literal(''),
-        z.string().trim().email('Ingrese un correo válido.'),
+        z.email('Ingrese un correo válido.'),
     ]),
     password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres.'),
     roles: z.array(z.string().trim()).min(1, 'Asigne al menos un rol.'),
@@ -15,8 +15,6 @@ const accessFields = {
 
 export const createUsuarioPersonaSchema = z
     .object({
-        modo: z.enum(['nueva', 'existente']),
-        personaId: z.string().trim().optional(),
         tipoDocumentoId: z.string().trim().optional(),
         numeroDocumento: z.string().trim().optional(),
         extensionDocumentoId: z.string().trim().optional(),
@@ -32,17 +30,6 @@ export const createUsuarioPersonaSchema = z
         ...accessFields,
     })
     .superRefine((data, ctx) => {
-        if (data.modo === 'existente') {
-            if (!data.personaId?.trim()) {
-                ctx.addIssue({
-                    code: z.ZodIssueCode.custom,
-                    message: 'Seleccione una persona existente.',
-                    path: ['personaId'],
-                })
-            }
-            return
-        }
-
         const personaResult = personaSchema.safeParse({
             tipoDocumentoId: data.tipoDocumentoId ?? '',
             numeroDocumento: data.numeroDocumento ?? '',
@@ -73,8 +60,6 @@ export type CreateUsuarioPersonaFormInput = z.infer<typeof createUsuarioPersonaS
 export type CreateUsuarioPersonaFormValues = z.output<typeof createUsuarioPersonaSchema>
 
 export const createUsuarioPersonaDefaultValues: CreateUsuarioPersonaFormInput = {
-    modo: 'nueva',
-    personaId: '',
     tipoDocumentoId: '',
     numeroDocumento: '',
     extensionDocumentoId: '',
@@ -109,33 +94,25 @@ export function toCreateUsuarioPersonaPayload(
 ): CreateUsuarioPersonaApiPayload {
     const email = values.email?.trim()
 
-    const payload: CreateUsuarioPersonaApiPayload = {
-        modo: values.modo,
+    return {
+        modo: 'nueva',
         userName: values.userName?.trim() || values.numeroDocumento?.trim() || '',
         password: values.password,
         email: email || undefined,
         roles: values.roles,
+        persona: toCreatePersonaPayload({
+            tipoDocumentoId: values.tipoDocumentoId!,
+            numeroDocumento: values.numeroDocumento!,
+            extensionDocumentoId: values.extensionDocumentoId ?? '',
+            complementoDocumento: values.complementoDocumento ?? '',
+            nombres: values.nombres!,
+            apellidoPaterno: values.apellidoPaterno!,
+            apellidoMaterno: values.apellidoMaterno ?? '',
+            fechaNacimiento: values.fechaNacimiento!,
+            sexoId: values.sexoId!,
+            estadoCivilId: values.estadoCivilId!,
+            telefono: values.telefono!,
+            direccion: values.direccion!,
+        }),
     }
-
-    if (values.modo === 'existente') {
-        payload.personaId = values.personaId
-        return payload
-    }
-
-    payload.persona = toCreatePersonaPayload({
-        tipoDocumentoId: values.tipoDocumentoId!,
-        numeroDocumento: values.numeroDocumento!,
-        extensionDocumentoId: values.extensionDocumentoId ?? '',
-        complementoDocumento: values.complementoDocumento ?? '',
-        nombres: values.nombres!,
-        apellidoPaterno: values.apellidoPaterno!,
-        apellidoMaterno: values.apellidoMaterno ?? '',
-        fechaNacimiento: values.fechaNacimiento!,
-        sexoId: values.sexoId!,
-        estadoCivilId: values.estadoCivilId!,
-        telefono: values.telefono!,
-        direccion: values.direccion!,
-    })
-
-    return payload
 }

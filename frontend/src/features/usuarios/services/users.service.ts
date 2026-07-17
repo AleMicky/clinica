@@ -3,8 +3,6 @@ import { userEndpoints } from '../../../shared/api/endpoints'
 import type { PagedQuery, PagedResult } from '../../../shared/types/pagination.types'
 import { paginateList } from '../../../shared/utils/pagination'
 import type {
-    CreateUserApiPayload,
-    CreateUserPayload,
     CreateUsuarioPersonaApiPayload,
     UpdateUserApiPayload,
     UpdateUserPayload,
@@ -26,21 +24,6 @@ export class UsersService {
     async getPaged(query: PagedQuery): Promise<PagedResult<User>> {
         const users = await get<User[]>(userEndpoints.root)
         return paginateList(users, query, filterUsers)
-    }
-
-    getById(id: string) {
-        return get<User>(userEndpoints.byId(id))
-    }
-
-    create(data: CreateUserPayload) {
-        const payload: CreateUserApiPayload = {
-            userName: data.userName,
-            password: data.password,
-            nombreCompleto: data.nombreCompleto,
-            role: data.rol,
-        }
-
-        return post<User, CreateUserApiPayload>(userEndpoints.root, payload)
     }
 
     createWithPersona(data: CreateUsuarioPersonaApiPayload) {

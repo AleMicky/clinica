@@ -1,8 +1,12 @@
-import { Col, Form, Input, Row, Select, Typography } from 'antd'
+import { Col, DatePicker, Form, Input, Row, Select, Typography } from 'antd'
+import dayjs from 'dayjs'
 
 import { useCatalogoGruposGrouped } from '../../parametros/catalogos/hooks/catalogo-grupos.hooks'
 
 const { Text } = Typography
+
+const DATE_VALUE_FORMAT = 'YYYY-MM-DD'
+const DATE_DISPLAY_FORMAT = 'DD/MM/YYYY'
 
 type PersonaFormFieldsProps = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -249,11 +253,21 @@ export function PersonaFormFields({
                                 validateStatus={error ? 'error' : undefined}
                                 help={error || undefined}
                             >
-                                <Input
-                                    type="date"
-                                    value={field.state.value}
-                                    onChange={(event) =>
-                                        field.handleChange(event.target.value)
+                                <DatePicker
+                                    style={{ width: '100%' }}
+                                    format={DATE_DISPLAY_FORMAT}
+                                    placeholder="Seleccione fecha"
+                                    value={
+                                        field.state.value
+                                            ? dayjs(field.state.value, DATE_VALUE_FORMAT)
+                                            : null
+                                    }
+                                    onChange={(date) =>
+                                        field.handleChange(
+                                            date
+                                                ? date.format(DATE_VALUE_FORMAT)
+                                                : '',
+                                        )
                                     }
                                     onBlur={field.handleBlur}
                                     disabled={loading}
