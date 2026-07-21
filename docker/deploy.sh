@@ -30,3 +30,5 @@ docker image prune -f
 
 echo ""
 echo "Deploy completado."
+echo "Revisa FRONTEND_ORIGIN en docker/.env para la URL pública."
+echo "API vía nginx: /api/  |  SQL: externo (SQLSERVER_CONNECTION_STRING)"
