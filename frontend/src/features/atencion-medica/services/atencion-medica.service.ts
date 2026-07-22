@@ -13,8 +13,6 @@ import type {
     AtencionRespuestaPagedQuery,
     CreateAtencionFormularioRespuestaPayload,
     CreateAtencionPayload,
-    CreateDiagnosticoAtencionPayload,
-    CreateDiagnosticoPayload,
     CreateEstudioPayload,
     CreateFormularioCampoPayload,
     CreateFormularioClinicoPayload,
@@ -26,9 +24,6 @@ import type {
     CreateSignoVitalPayload,
     CreateTipoAtencionPayload,
     CreateTratamientoPayload,
-    Diagnostico,
-    DiagnosticoAtencion,
-    DiagnosticoPagedQuery,
     EspecialidadLookup,
     Estudio,
     EstudioPagedQuery,
@@ -52,8 +47,6 @@ import type {
     Tratamiento,
     UpdateAtencionFormularioRespuestaPayload,
     UpdateAtencionPayload,
-    UpdateDiagnosticoAtencionPayload,
-    UpdateDiagnosticoPayload,
     UpdateEstudioPayload,
     UpdateFormularioCampoPayload,
     UpdateFormularioClinicoPayload,
@@ -168,34 +161,6 @@ export const especialidadesLookupService = {
     getPaged(query: PagedQuery) {
         return getPaged<EspecialidadLookup>(
             catalogoClinicoEndpoints.especialidades.root,
-            query,
-        )
-    },
-}
-
-export const diagnosticosService = {
-    ...createGuidCrudService<
-        Diagnostico,
-        CreateDiagnosticoPayload,
-        UpdateDiagnosticoPayload
-    >(atencionMedicaEndpoints.diagnosticos.root),
-    getPaged(query: DiagnosticoPagedQuery) {
-        return getPaged<Diagnostico>(
-            atencionMedicaEndpoints.diagnosticos.root,
-            query,
-        )
-    },
-}
-
-export const diagnosticoAtencionesService = {
-    ...createGuidCrudService<
-        DiagnosticoAtencion,
-        CreateDiagnosticoAtencionPayload,
-        UpdateDiagnosticoAtencionPayload
-    >(atencionMedicaEndpoints.diagnosticoAtenciones.root),
-    getPaged(query: AtencionChildPagedQuery) {
-        return getPaged<DiagnosticoAtencion>(
-            atencionMedicaEndpoints.diagnosticoAtenciones.root,
             query,
         )
     },

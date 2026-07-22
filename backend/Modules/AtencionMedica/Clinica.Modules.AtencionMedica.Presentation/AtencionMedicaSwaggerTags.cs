@@ -9,10 +9,7 @@ public static class AtencionMedicaSwaggerTags
     public const string FormularioSecciones = "AtencionMedica · Secciones de formulario";
     public const string FormularioCampos = "AtencionMedica · Campos de formulario";
     public const string Atenciones = "AtencionMedica · Atenciones";
-    public const string Recepcion = "AtencionMedica · Recepción";
     public const string AtencionRespuestas = "AtencionMedica · Respuestas de formulario";
-    public const string Diagnosticos = "AtencionMedica · Diagnósticos CIE-10";
-    public const string DiagnosticoAtenciones = "AtencionMedica · Diagnósticos de atención";
     public const string SignosVitales = "AtencionMedica · Signos vitales";
     public const string Tratamientos = "AtencionMedica · Tratamientos";
     public const string Estudios = "AtencionMedica · Estudios";

@@ -31,9 +31,6 @@ export function useAvanzarAtencionFlujo(atencionId: string) {
                 queryKey: queryKeys.workflow.instances.all,
             })
             void queryClient.invalidateQueries({
-                queryKey: queryKeys.atencionMedica.recepcion.pendientes,
-            })
-            void queryClient.invalidateQueries({
                 queryKey: queryKeys.atencionMedica.enfermeria.pendientes,
             })
             void queryClient.invalidateQueries({

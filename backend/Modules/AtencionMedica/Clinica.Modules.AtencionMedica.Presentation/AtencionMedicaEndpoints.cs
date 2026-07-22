@@ -25,10 +25,7 @@ public static class AtencionMedicaEndpoints
         group.MapAtencionEndpoints();
         group.MapAtencionFlujoEndpoints();
         group.MapBandejaAtencionEndpoints();
-        group.MapRecepcionEndpoints();
         group.MapAtencionFormularioRespuestaEndpoints();
-        group.MapDiagnosticoEndpoints();
-        group.MapDiagnosticoAtencionEndpoints();
         group.MapSignoVitalEndpoints();
         group.MapTratamientoEndpoints();
         group.MapEstudioEndpoints();

@@ -205,7 +205,7 @@ export function PacientesView() {
     }
 
     const handleNuevaAtencion = (_paciente: Paciente) => {
-        void navigate({ to: '/atencion-medica/recepcion' })
+        void navigate({ to: '/atenciones' })
     }
 
     const caption = `${totalFiltered} de ${totalPacientes} paciente${totalPacientes === 1 ? '' : 's'}${

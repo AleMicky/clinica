@@ -4,7 +4,6 @@ import {
     ApartmentOutlined,
     DashboardOutlined,
     ExperimentOutlined,
-    FileTextOutlined,
     FlagOutlined,
     HistoryOutlined,
     IdcardOutlined,
@@ -92,13 +91,6 @@ export const menuGroups: MenuGroup[] = [
                 roles: [AppRole.Admin, AppRole.Medico, AppRole.Recepcion],
             },
             {
-                key: '/atencion-medica/recepcion',
-                to: '/atencion-medica/recepcion',
-                icon: <SolutionOutlined />,
-                label: 'Recepción',
-                roles: [AppRole.Admin, AppRole.Recepcion],
-            },
-            {
                 key: '/atencion-medica/enfermeria',
                 to: '/atencion-medica/enfermeria',
                 icon: <ExperimentOutlined />,
@@ -117,13 +109,6 @@ export const menuGroups: MenuGroup[] = [
                 to: '/atenciones/tipos-atencion',
                 icon: <UnorderedListOutlined />,
                 label: 'Tipos de atención',
-                roles: [AppRole.Admin],
-            },
-            {
-                key: '/atenciones/diagnosticos',
-                to: '/atenciones/diagnosticos',
-                icon: <FileTextOutlined />,
-                label: 'Diagnósticos CIE-10',
                 roles: [AppRole.Admin],
             },
         ],
@@ -410,7 +395,6 @@ export type BreadcrumbSegment = {
 const ATENCION_CATALOG_PREFIXES = [
     '/atenciones/tipos-atencion',
     '/atenciones/formularios',
-    '/atenciones/diagnosticos',
 ] as const
 
 function isAtencionCatalogPath(pathname: string): boolean {

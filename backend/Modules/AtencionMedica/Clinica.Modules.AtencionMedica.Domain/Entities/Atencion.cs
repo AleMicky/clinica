@@ -33,7 +33,6 @@ public class Atencion : AuditableEntity
     public ICollection<AtencionFormularioRespuesta> Respuestas { get; set; } = [];
 
     public ICollection<SignoVital> SignosVitales { get; set; } = [];
-    public ICollection<DiagnosticoAtencion> Diagnosticos { get; set; } = [];
     public ICollection<Tratamiento> Tratamientos { get; set; } = [];
     public ICollection<Estudio> Estudios { get; set; } = [];
     public ICollection<Interconsulta> Interconsultas { get; set; } = [];

@@ -22,13 +22,10 @@ public static class DependencyInjection
         services.AddScoped<IFormularioSeccionService, FormularioSeccionService>();
         services.AddScoped<IFormularioCampoService, FormularioCampoService>();
         services.AddScoped<IAtencionService, AtencionService>();
-        services.AddScoped<IRecepcionAtencionService, RecepcionAtencionService>();
         services.AddScoped<IBandejaAtencionService, BandejaAtencionService>();
         services.AddScoped<IAtencionFlujoService, AtencionFlujoService>();
         services.AddScoped<IWorkflowService, AtencionWorkflowService>();
         services.AddScoped<IAtencionFormularioRespuestaService, AtencionFormularioRespuestaService>();
-        services.AddScoped<IDiagnosticoService, DiagnosticoService>();
-        services.AddScoped<IDiagnosticoAtencionService, DiagnosticoAtencionService>();
         services.AddScoped<ISignoVitalService, SignoVitalService>();
         services.AddScoped<ITratamientoService, TratamientoService>();
         services.AddScoped<IEstudioService, EstudioService>();

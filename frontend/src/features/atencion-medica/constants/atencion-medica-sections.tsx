@@ -1,9 +1,7 @@
 import {
     ExperimentOutlined,
-    FileTextOutlined,
     FormOutlined,
     MedicineBoxOutlined,
-    SolutionOutlined,
     UnorderedListOutlined,
 } from '@ant-design/icons'
 
@@ -18,11 +16,6 @@ export const atencionMedicaPageSections: AtencionMedicaPageSection[] = [
         path: '/atenciones',
         title: 'Atenciones',
         icon: <MedicineBoxOutlined />,
-    },
-    {
-        path: '/atencion-medica/recepcion',
-        title: 'Recepción',
-        icon: <SolutionOutlined />,
     },
     {
         path: '/atencion-medica/enfermeria',
@@ -43,11 +36,6 @@ export const atencionMedicaPageSections: AtencionMedicaPageSection[] = [
         path: '/atenciones/formularios',
         title: 'Formularios clínicos',
         icon: <FormOutlined />,
-    },
-    {
-        path: '/atenciones/diagnosticos',
-        title: 'Diagnósticos CIE-10',
-        icon: <FileTextOutlined />,
     },
 ]
 

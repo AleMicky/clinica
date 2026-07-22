@@ -10,8 +10,6 @@ import type { GuidCrudService } from '../../../shared/services/guid-crud.service
 import {
     atencionesService,
     atencionRespuestasService,
-    diagnosticoAtencionesService,
-    diagnosticosService,
     especialidadesLookupService,
     estudiosService,
     formularioCamposService,
@@ -32,7 +30,6 @@ import type {
     AtencionPagedQuery,
     AtencionRespuestaPagedQuery,
     CreateAtencionPayload,
-    DiagnosticoPagedQuery,
     EstudioPagedQuery,
     FormularioCampoPagedQuery,
     FormularioClinicoPagedQuery,
@@ -250,16 +247,6 @@ export const atencionRespuestasHooks = createGuidCrudHooks(
     },
 )
 
-export const diagnosticosCatalogoHooks = createGuidCrudHooks(
-    queryKeys.atencionMedica.diagnosticos.all,
-    diagnosticosService,
-    {
-        created: 'Diagnóstico registrado',
-        updated: 'Diagnóstico actualizado',
-        deleted: 'Diagnóstico eliminado',
-    },
-)
-
 export function useTiposCampoFormulario(query: PagedQuery = { page: 1, pageSize: 100 }) {
     return useAppQuery({
         queryKey: queryKeys.atencionMedica.tiposCampoFormulario.list(query),
@@ -341,13 +328,6 @@ export function useEspecialidadesLookup(query: PagedQuery = { page: 1, pageSize:
     })
 }
 
-export function useDiagnosticosCatalogo(query: DiagnosticoPagedQuery) {
-    return useAppQuery({
-        queryKey: queryKeys.atencionMedica.diagnosticos.list(query),
-        queryFn: () => diagnosticosService.getPaged(query),
-    })
-}
-
 // ── Datos clínicos por atención ─────────────────────────────────────
 
 export const signosVitalesHooks = createGuidCrudHooks(
@@ -357,16 +337,6 @@ export const signosVitalesHooks = createGuidCrudHooks(
         created: 'Signo vital registrado',
         updated: 'Signo vital actualizado',
         deleted: 'Signo vital eliminado',
-    },
-)
-
-export const diagnosticosAtencionHooks = createGuidCrudHooks(
-    queryKeys.atencionMedica.diagnosticoAtenciones.all,
-    diagnosticoAtencionesService,
-    {
-        created: 'Diagnóstico asociado',
-        updated: 'Diagnóstico actualizado',
-        deleted: 'Diagnóstico eliminado',
     },
 )
 
@@ -432,10 +402,6 @@ export const prescripcionDetallesHooks = createGuidCrudHooks(
 
 export function useSignosVitales(query: AtencionChildPagedQuery) {
     return signosVitalesHooks.useList(query)
-}
-
-export function useDiagnosticosAtencion(query: AtencionChildPagedQuery) {
-    return diagnosticosAtencionHooks.useList(query)
 }
 
 export function useTratamientos(query: AtencionChildPagedQuery) {

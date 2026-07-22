@@ -85,8 +85,6 @@ export const atencionMedicaEndpoints = {
     formularioSecciones: createEndpoints(`${api.atencionMedica}/formulario-secciones`),
     formularioCampos: createEndpoints(`${api.atencionMedica}/formulario-campos`),
     atencionRespuestas: createEndpoints(`${api.atencionMedica}/atencion-respuestas`),
-    diagnosticos: createEndpoints(`${api.atencionMedica}/diagnosticos`),
-    diagnosticoAtenciones: createEndpoints(`${api.atencionMedica}/diagnostico-atenciones`),
     signosVitales: createEndpoints(`${api.atencionMedica}/signos-vitales`),
     tratamientos: createEndpoints(`${api.atencionMedica}/tratamientos`),
     estudios: createEndpoints(`${api.atencionMedica}/estudios`),
@@ -94,10 +92,6 @@ export const atencionMedicaEndpoints = {
     interconsultas: createEndpoints(`${api.atencionMedica}/interconsultas`),
     prescripciones: createEndpoints(`${api.atencionMedica}/prescripciones`),
     prescripcionDetalles: createEndpoints(`${api.atencionMedica}/prescripcion-detalles`),
-    recepcion: createEndpoints(`${api.atencionMedica}/recepcion`, (root) => ({
-        pendientes: `${root}/pendientes`,
-        formulario: (tipoAtencionId: EntityId) => `${root}/formulario/${tipoAtencionId}`,
-    })),
     enfermeria: createEndpoints(`${api.atencionMedica}/enfermeria`, (root) => ({
         pendientes: `${root}/pendientes`,
     })),

@@ -36,7 +36,7 @@ function getPageHeader(pathname: string): {
     return {
         icon: <MedicineBoxOutlined />,
         title: 'Atención médica',
-        subtitle: 'Atenciones clínicas, formularios y catálogos diagnósticos',
+        subtitle: 'Atenciones clínicas y formularios',
     }
 }
 

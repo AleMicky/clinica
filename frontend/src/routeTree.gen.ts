@@ -38,9 +38,7 @@ import { Route as AdminRecursosHumanosEmpleadosRouteImport } from './routes/_adm
 import { Route as AdminRecursosHumanosCargosRouteImport } from './routes/_admin/recursos-humanos/cargos'
 import { Route as AdminAtencionesTiposAtencionRouteImport } from './routes/_admin/atenciones/tipos-atencion'
 import { Route as AdminAtencionesFormulariosRouteImport } from './routes/_admin/atenciones/formularios'
-import { Route as AdminAtencionesDiagnosticosRouteImport } from './routes/_admin/atenciones/diagnosticos'
 import { Route as AdminAtencionesAtencionIdRouteImport } from './routes/_admin/atenciones/$atencionId'
-import { Route as AdminAtencionMedicaRecepcionRouteImport } from './routes/_admin/atencion-medica/recepcion'
 import { Route as AdminAtencionMedicaEnfermeriaRouteImport } from './routes/_admin/atencion-medica/enfermeria'
 import { Route as AdminAtencionMedicaConsultaMedicaRouteImport } from './routes/_admin/atencion-medica/consulta-medica'
 import { Route as AdminAtencionMedicaEnfermeriaIndexRouteImport } from './routes/_admin/atencion-medica/enfermeria/index'
@@ -203,23 +201,11 @@ const AdminAtencionesFormulariosRoute =
     path: '/formularios',
     getParentRoute: () => AdminAtencionesRoute,
   } as any)
-const AdminAtencionesDiagnosticosRoute =
-  AdminAtencionesDiagnosticosRouteImport.update({
-    id: '/diagnosticos',
-    path: '/diagnosticos',
-    getParentRoute: () => AdminAtencionesRoute,
-  } as any)
 const AdminAtencionesAtencionIdRoute =
   AdminAtencionesAtencionIdRouteImport.update({
     id: '/$atencionId',
     path: '/$atencionId',
     getParentRoute: () => AdminAtencionesRoute,
-  } as any)
-const AdminAtencionMedicaRecepcionRoute =
-  AdminAtencionMedicaRecepcionRouteImport.update({
-    id: '/atencion-medica/recepcion',
-    path: '/atencion-medica/recepcion',
-    getParentRoute: () => AdminRoute,
   } as any)
 const AdminAtencionMedicaEnfermeriaRoute =
   AdminAtencionMedicaEnfermeriaRouteImport.update({
@@ -285,9 +271,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof AuthLoginRoute
   '/atencion-medica/consulta-medica': typeof AdminAtencionMedicaConsultaMedicaRouteWithChildren
   '/atencion-medica/enfermeria': typeof AdminAtencionMedicaEnfermeriaRouteWithChildren
-  '/atencion-medica/recepcion': typeof AdminAtencionMedicaRecepcionRoute
   '/atenciones/$atencionId': typeof AdminAtencionesAtencionIdRoute
-  '/atenciones/diagnosticos': typeof AdminAtencionesDiagnosticosRoute
   '/atenciones/formularios': typeof AdminAtencionesFormulariosRouteWithChildren
   '/atenciones/tipos-atencion': typeof AdminAtencionesTiposAtencionRoute
   '/recursos-humanos/cargos': typeof AdminRecursosHumanosCargosRoute
@@ -320,9 +304,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof AdminIndexRoute
   '/login': typeof AuthLoginRoute
-  '/atencion-medica/recepcion': typeof AdminAtencionMedicaRecepcionRoute
   '/atenciones/$atencionId': typeof AdminAtencionesAtencionIdRoute
-  '/atenciones/diagnosticos': typeof AdminAtencionesDiagnosticosRoute
   '/atenciones/formularios': typeof AdminAtencionesFormulariosRouteWithChildren
   '/atenciones/tipos-atencion': typeof AdminAtencionesTiposAtencionRoute
   '/recursos-humanos/cargos': typeof AdminRecursosHumanosCargosRoute
@@ -364,9 +346,7 @@ export interface FileRoutesById {
   '/_admin/': typeof AdminIndexRoute
   '/_admin/atencion-medica/consulta-medica': typeof AdminAtencionMedicaConsultaMedicaRouteWithChildren
   '/_admin/atencion-medica/enfermeria': typeof AdminAtencionMedicaEnfermeriaRouteWithChildren
-  '/_admin/atencion-medica/recepcion': typeof AdminAtencionMedicaRecepcionRoute
   '/_admin/atenciones/$atencionId': typeof AdminAtencionesAtencionIdRoute
-  '/_admin/atenciones/diagnosticos': typeof AdminAtencionesDiagnosticosRoute
   '/_admin/atenciones/formularios': typeof AdminAtencionesFormulariosRouteWithChildren
   '/_admin/atenciones/tipos-atencion': typeof AdminAtencionesTiposAtencionRoute
   '/_admin/recursos-humanos/cargos': typeof AdminRecursosHumanosCargosRoute
@@ -407,9 +387,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/atencion-medica/consulta-medica'
     | '/atencion-medica/enfermeria'
-    | '/atencion-medica/recepcion'
     | '/atenciones/$atencionId'
-    | '/atenciones/diagnosticos'
     | '/atenciones/formularios'
     | '/atenciones/tipos-atencion'
     | '/recursos-humanos/cargos'
@@ -442,9 +420,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
-    | '/atencion-medica/recepcion'
     | '/atenciones/$atencionId'
-    | '/atenciones/diagnosticos'
     | '/atenciones/formularios'
     | '/atenciones/tipos-atencion'
     | '/recursos-humanos/cargos'
@@ -485,9 +461,7 @@ export interface FileRouteTypes {
     | '/_admin/'
     | '/_admin/atencion-medica/consulta-medica'
     | '/_admin/atencion-medica/enfermeria'
-    | '/_admin/atencion-medica/recepcion'
     | '/_admin/atenciones/$atencionId'
-    | '/_admin/atenciones/diagnosticos'
     | '/_admin/atenciones/formularios'
     | '/_admin/atenciones/tipos-atencion'
     | '/_admin/recursos-humanos/cargos'
@@ -728,26 +702,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAtencionesFormulariosRouteImport
       parentRoute: typeof AdminAtencionesRoute
     }
-    '/_admin/atenciones/diagnosticos': {
-      id: '/_admin/atenciones/diagnosticos'
-      path: '/diagnosticos'
-      fullPath: '/atenciones/diagnosticos'
-      preLoaderRoute: typeof AdminAtencionesDiagnosticosRouteImport
-      parentRoute: typeof AdminAtencionesRoute
-    }
     '/_admin/atenciones/$atencionId': {
       id: '/_admin/atenciones/$atencionId'
       path: '/$atencionId'
       fullPath: '/atenciones/$atencionId'
       preLoaderRoute: typeof AdminAtencionesAtencionIdRouteImport
       parentRoute: typeof AdminAtencionesRoute
-    }
-    '/_admin/atencion-medica/recepcion': {
-      id: '/_admin/atencion-medica/recepcion'
-      path: '/atencion-medica/recepcion'
-      fullPath: '/atencion-medica/recepcion'
-      preLoaderRoute: typeof AdminAtencionMedicaRecepcionRouteImport
-      parentRoute: typeof AdminRoute
     }
     '/_admin/atencion-medica/enfermeria': {
       id: '/_admin/atencion-medica/enfermeria'
@@ -832,7 +792,6 @@ const AdminAtencionesFormulariosRouteWithChildren =
 
 interface AdminAtencionesRouteChildren {
   AdminAtencionesAtencionIdRoute: typeof AdminAtencionesAtencionIdRoute
-  AdminAtencionesDiagnosticosRoute: typeof AdminAtencionesDiagnosticosRoute
   AdminAtencionesFormulariosRoute: typeof AdminAtencionesFormulariosRouteWithChildren
   AdminAtencionesTiposAtencionRoute: typeof AdminAtencionesTiposAtencionRoute
   AdminAtencionesIndexRoute: typeof AdminAtencionesIndexRoute
@@ -840,7 +799,6 @@ interface AdminAtencionesRouteChildren {
 
 const AdminAtencionesRouteChildren: AdminAtencionesRouteChildren = {
   AdminAtencionesAtencionIdRoute: AdminAtencionesAtencionIdRoute,
-  AdminAtencionesDiagnosticosRoute: AdminAtencionesDiagnosticosRoute,
   AdminAtencionesFormulariosRoute: AdminAtencionesFormulariosRouteWithChildren,
   AdminAtencionesTiposAtencionRoute: AdminAtencionesTiposAtencionRoute,
   AdminAtencionesIndexRoute: AdminAtencionesIndexRoute,
@@ -946,7 +904,6 @@ interface AdminRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
   AdminAtencionMedicaConsultaMedicaRoute: typeof AdminAtencionMedicaConsultaMedicaRouteWithChildren
   AdminAtencionMedicaEnfermeriaRoute: typeof AdminAtencionMedicaEnfermeriaRouteWithChildren
-  AdminAtencionMedicaRecepcionRoute: typeof AdminAtencionMedicaRecepcionRoute
   AdminUsuariosPerfilRoute: typeof AdminUsuariosPerfilRoute
   AdminCatalogosIndexRoute: typeof AdminCatalogosIndexRoute
   AdminPacientesIndexRoute: typeof AdminPacientesIndexRoute
@@ -968,7 +925,6 @@ const AdminRouteChildren: AdminRouteChildren = {
     AdminAtencionMedicaConsultaMedicaRouteWithChildren,
   AdminAtencionMedicaEnfermeriaRoute:
     AdminAtencionMedicaEnfermeriaRouteWithChildren,
-  AdminAtencionMedicaRecepcionRoute: AdminAtencionMedicaRecepcionRoute,
   AdminUsuariosPerfilRoute: AdminUsuariosPerfilRoute,
   AdminCatalogosIndexRoute: AdminCatalogosIndexRoute,
   AdminPacientesIndexRoute: AdminPacientesIndexRoute,

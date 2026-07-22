@@ -16,8 +16,9 @@ public static class ApplicationBuilderExtensions
         this WebApplication app,
         bool force = false)
     {
+        // Solo con --seed/--seed-only o CLINICA_RUN_DB_INIT=true (p. ej. Docker).
+        // No corre en cada arranque de Development para no retrasar dotnet watch.
         var runDbInit = force
-            || app.Environment.IsDevelopment()
             || app.Configuration.GetValue("CLINICA_RUN_DB_INIT", false);
 
         if (!runDbInit)

@@ -104,7 +104,6 @@ export const CONSULTA_MEDICA_WORKBENCH_CONFIG: EtapaWorkbenchConfig = {
     bandejaTo: '/atencion-medica/consulta-medica',
     tabKeys: [
         'formulario',
-        'diagnosticos',
         'tratamientos',
         'estudios',
         'interconsultas',

@@ -201,46 +201,6 @@ export type FormularioClinicoPagedQuery = PagedQuery & {
     tipoAtencionId?: Guid
 }
 
-// ── Diagnóstico CIE-10 ──────────────────────────────────────────────
-
-export type Diagnostico = {
-    id: Guid
-    codigoCie10: string
-    nombre: string
-    descripcion?: string | null
-}
-
-export type CreateDiagnosticoPayload = {
-    codigoCie10: string
-    nombre: string
-    descripcion?: string | null
-}
-
-export type UpdateDiagnosticoPayload = CreateDiagnosticoPayload
-
-export type DiagnosticoPagedQuery = PagedQuery & {
-    busqueda?: string
-}
-
-// ── Diagnóstico de atención ────────────────────────────────────────
-
-export type DiagnosticoAtencion = {
-    id: Guid
-    atencionId: Guid
-    diagnosticoId: Guid
-    esPrincipal: boolean
-    observaciones?: string | null
-}
-
-export type CreateDiagnosticoAtencionPayload = {
-    atencionId: Guid
-    diagnosticoId: Guid
-    esPrincipal?: boolean
-    observaciones?: string | null
-}
-
-export type UpdateDiagnosticoAtencionPayload = CreateDiagnosticoAtencionPayload
-
 export type AtencionChildPagedQuery = PagedQuery & {
     atencionId?: Guid
 }

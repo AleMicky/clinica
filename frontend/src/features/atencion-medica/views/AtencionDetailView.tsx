@@ -10,7 +10,6 @@ import {
     Popconfirm,
     Select,
     Space,
-    Switch,
     Table,
     Tabs,
     Tag,
@@ -23,15 +22,12 @@ import { FormularioClinicoTab } from '../components/FormularioClinicoTab'
 import { AtencionFlujoPanel } from '../components/AtencionFlujoPanel'
 import { EstudiosTab } from '../components/EstudiosTab'
 import {
-    diagnosticosAtencionHooks,
     interconsultasHooks,
     prescripcionDetallesHooks,
     prescripcionesHooks,
     signosVitalesHooks,
     tratamientosHooks,
     useAtencion,
-    useDiagnosticosAtencion,
-    useDiagnosticosCatalogo,
     useEspecialidadesLookup,
     useInterconsultas,
     usePrescripcionDetalles,
@@ -41,7 +37,6 @@ import {
 } from '../hooks/atencion-medica.hooks'
 import type {
     Atencion,
-    DiagnosticoAtencion,
     Interconsulta,
     Prescripcion,
     PrescripcionDetalle,
@@ -186,123 +181,6 @@ function SignosVitalesTab({ atencionId }: { atencionId: string }) {
                             <InputNumber min={3} max={15} style={{ width: 120 }} />
                         </Form.Item>
                     </Flex>
-                </Form>
-            </Modal>
-        </>
-    )
-}
-
-// ── Diagnósticos ────────────────────────────────────────────────────
-
-function DiagnosticosTab({ atencionId }: { atencionId: string }) {
-    const { data, isFetching } = useDiagnosticosAtencion({ atencionId, page: 1, pageSize: 50 })
-    const { data: catalogo } = useDiagnosticosCatalogo({ page: 1, pageSize: 200 })
-    const createMutation = diagnosticosAtencionHooks.useCreate()
-    const updateMutation = diagnosticosAtencionHooks.useUpdate()
-    const deleteMutation = diagnosticosAtencionHooks.useDelete()
-    const [modalOpen, setModalOpen] = useState(false)
-    const [editing, setEditing] = useState<DiagnosticoAtencion | null>(null)
-    const [form] = Form.useForm()
-
-    const diagnosticoMap = useMemo(() => {
-        const map = new Map<string, string>()
-        catalogo?.items.forEach((d) => map.set(d.id, `${d.codigoCie10} — ${d.nombre}`))
-        return map
-    }, [catalogo])
-
-    const openCreate = () => {
-        setEditing(null)
-        form.resetFields()
-        form.setFieldValue('esPrincipal', false)
-        setModalOpen(true)
-    }
-
-    const openEdit = (item: DiagnosticoAtencion) => {
-        setEditing(item)
-        form.setFieldsValue(item)
-        setModalOpen(true)
-    }
-
-    const handleSubmit = async () => {
-        const values = await form.validateFields()
-        const payload = { atencionId, ...values }
-
-        if (editing) {
-            await updateMutation.mutateAsync({ id: editing.id, data: payload })
-        } else {
-            await createMutation.mutateAsync(payload)
-        }
-
-        setModalOpen(false)
-    }
-
-    return (
-        <>
-            <Flex justify="flex-end" style={{ marginBottom: 12 }}>
-                <Button type="primary" size="small" icon={<PlusOutlined />} onClick={openCreate}>
-                    Asociar diagnóstico
-                </Button>
-            </Flex>
-            <Table
-                rowKey="id"
-                loading={isFetching}
-                dataSource={data?.items ?? []}
-                size="small"
-                pagination={false}
-                columns={[
-                    {
-                        title: 'Diagnóstico',
-                        dataIndex: 'diagnosticoId',
-                        render: (id: string) => diagnosticoMap.get(id) ?? id,
-                    },
-                    {
-                        title: 'Principal',
-                        dataIndex: 'esPrincipal',
-                        render: (v: boolean) => (v ? <Tag color="blue">Sí</Tag> : 'No'),
-                    },
-                    { title: 'Observaciones', dataIndex: 'observaciones', render: (v) => v || '—' },
-                    {
-                        title: 'Acciones',
-                        width: 100,
-                        render: (_, row) => (
-                            <Space>
-                                <Button type="text" icon={<EditOutlined />} onClick={() => openEdit(row)} />
-                                <Popconfirm title="¿Eliminar?" onConfirm={() => deleteMutation.mutate(row.id)}>
-                                    <Button type="text" danger icon={<DeleteOutlined />} />
-                                </Popconfirm>
-                            </Space>
-                        ),
-                    },
-                ]}
-            />
-            <Modal
-                title={editing ? 'Editar diagnóstico' : 'Asociar diagnóstico'}
-                open={modalOpen}
-                onCancel={() => setModalOpen(false)}
-                onOk={() => void handleSubmit()}
-                confirmLoading={createMutation.isPending || updateMutation.isPending}
-            >
-                <Form form={form} layout="vertical">
-                    <Form.Item
-                        name="diagnosticoId"
-                        label="Diagnóstico CIE-10"
-                        rules={[{ required: true, message: 'Seleccione un diagnóstico' }]}
-                    >
-                        <Select
-                            showSearch
-                            optionFilterProp="label"
-                            options={catalogo?.items.map((d) => ({
-                                value: d.id,
-                                label: `${d.codigoCie10} — ${d.nombre}`,
-                            }))}
-                        />
-                    </Form.Item>
-                    <Form.Item name="esPrincipal" label="¿Es principal?" valuePropName="checked">
-                        <Switch />
-                    </Form.Item>
-                    <Form.Item name="observaciones" label="Observaciones">
-                        <Input.TextArea rows={2} />
-                    </Form.Item>
                 </Form>
             </Modal>
         </>
@@ -783,11 +661,6 @@ export function AtencionDetailTabs({
             key: 'signos',
             label: 'Signos vitales',
             children: <SignosVitalesTab atencionId={atencion.id} />,
-        },
-        {
-            key: 'diagnosticos',
-            label: 'Diagnósticos',
-            children: <DiagnosticosTab atencionId={atencion.id} />,
         },
         {
             key: 'tratamientos',

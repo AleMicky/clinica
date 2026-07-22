@@ -21,8 +21,6 @@ public class AtencionMedicaDbContext : DbContext
     public DbSet<NumeracionAtencion> NumeracionesAtencion => Set<NumeracionAtencion>();
     public DbSet<Atencion> Atenciones => Set<Atencion>();
     public DbSet<AtencionFormularioRespuesta> AtencionFormularioRespuestas => Set<AtencionFormularioRespuesta>();
-    public DbSet<Diagnostico> Diagnosticos => Set<Diagnostico>();
-    public DbSet<DiagnosticoAtencion> DiagnosticoAtenciones => Set<DiagnosticoAtencion>();
     public DbSet<SignoVital> SignosVitales => Set<SignoVital>();
     public DbSet<Tratamiento> Tratamientos => Set<Tratamiento>();
     public DbSet<Estudio> Estudios => Set<Estudio>();
