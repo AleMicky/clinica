@@ -75,10 +75,7 @@ export const catalogoClinicoEndpoints = {
 } as const
 
 export const atencionMedicaEndpoints = {
-    atenciones: createEndpoints(`${api.atencionMedica}/atenciones`, (root) => ({
-        flujoCompletitud: (id: EntityId) => `${root}/${id}/flujo/completitud`,
-        flujoAvanzar: (id: EntityId) => `${root}/${id}/flujo/avanzar`,
-    })),
+    atenciones: createEndpoints(`${api.atencionMedica}/atenciones`),
     tiposAtencion: createEndpoints(`${api.atencionMedica}/tipos-atencion`),
     tiposCampoFormulario: createEndpoints(`${api.atencionMedica}/tipos-campo-formulario`),
     formulariosClinicos: createEndpoints(`${api.atencionMedica}/formularios-clinicos`),

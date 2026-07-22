@@ -23,8 +23,6 @@ public static class DependencyInjection
         services.AddScoped<IFormularioCampoService, FormularioCampoService>();
         services.AddScoped<IAtencionService, AtencionService>();
         services.AddScoped<IBandejaAtencionService, BandejaAtencionService>();
-        services.AddScoped<IAtencionFlujoService, AtencionFlujoService>();
-        services.AddScoped<IWorkflowService, AtencionWorkflowService>();
         services.AddScoped<IAtencionFormularioRespuestaService, AtencionFormularioRespuestaService>();
 
         return services;

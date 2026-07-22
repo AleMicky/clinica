@@ -2,7 +2,6 @@ import { ArrowLeftOutlined } from '@ant-design/icons'
 import { Button, Descriptions, Flex, Tag, Typography } from 'antd'
 import { Link } from '@tanstack/react-router'
 
-import { AtencionFlujoPanel } from '../components/AtencionFlujoPanel'
 import { useAtencion } from '../hooks/atencion-medica.hooks'
 import { AtencionDetailTabs } from './AtencionDetailView'
 import { formatDateTime } from '../utils/format'
@@ -57,10 +56,6 @@ export function EtapaAtencionWorkbenchView({
             </header>
 
             <div className="admin-page__workspace">
-                <section className="admin-page__panel" style={{ marginBottom: 16 }}>
-                    <AtencionFlujoPanel atencionId={atencion.id} />
-                </section>
-
                 <section className="admin-page__panel" style={{ marginBottom: 16 }}>
                     <Descriptions size="small" column={{ xs: 1, sm: 2, lg: 3 }}>
                         <Descriptions.Item label="Trámite">

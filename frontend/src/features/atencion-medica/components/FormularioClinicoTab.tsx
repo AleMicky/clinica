@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
 import {
     Button,
     Checkbox,
@@ -9,7 +8,6 @@ import {
     InputNumber,
     Select,
     Spin,
-    Tag,
     Typography,
 } from 'antd'
 
@@ -19,14 +17,12 @@ import {
     useFormularioEstructura,
     useTiposCampoFormulario,
 } from '../hooks/atencion-medica.hooks'
-import { useAtencionFlujoCompletitud } from '../hooks/useAtencionFlujo'
 import type {
     Atencion,
     AtencionFormularioRespuesta,
     FormularioCampo,
     TipoCampoFormulario,
 } from '../types/atencion-medica.types'
-import { queryKeys } from '../../../shared/constants/query-keys'
 
 const { Text, Title } = Typography
 
@@ -175,10 +171,6 @@ function renderFieldInput(
 export function FormularioClinicoTab({ atencion, etapaForzada }: FormularioClinicoTabProps) {
     const [form] = Form.useForm()
     const [saving, setSaving] = useState(false)
-    const [mostrarTodas, setMostrarTodas] = useState(false)
-
-    const { data: completitud } = useAtencionFlujoCompletitud(atencion.id)
-    const etapaActual = etapaForzada ?? completitud?.etapaActual
 
     const { secciones, campos, isFetching: loadingEstructura } = useFormularioEstructura(
         atencion.formularioClinicoId ?? undefined,
@@ -186,11 +178,9 @@ export function FormularioClinicoTab({ atencion, etapaForzada }: FormularioClini
 
     const seccionesVisibles = useMemo(() => {
         const visibles = secciones.filter((s) => s.visible !== false)
-        if (!etapaActual) return visibles
-        if (etapaForzada) return visibles.filter((s) => s.etapaFlujo === etapaForzada)
-        if (mostrarTodas) return visibles
-        return visibles.filter((s) => s.etapaFlujo === etapaActual)
-    }, [etapaActual, etapaForzada, mostrarTodas, secciones])
+        if (!etapaForzada) return visibles
+        return visibles.filter((s) => s.etapaFlujo === etapaForzada)
+    }, [etapaForzada, secciones])
 
     const camposPorSeccion = useMemo(() => {
         const map = new Map<string, FormularioCampo[]>()
@@ -230,7 +220,6 @@ export function FormularioClinicoTab({ atencion, etapaForzada }: FormularioClini
 
     const createMutation = atencionRespuestasHooks.useCreate()
     const updateMutation = atencionRespuestasHooks.useUpdate()
-    const queryClient = useQueryClient()
 
     const formReady = !loadingEstructura && !loadingRespuestas && secciones.length > 0
 
@@ -275,9 +264,6 @@ export function FormularioClinicoTab({ atencion, etapaForzada }: FormularioClini
             }
         } finally {
             setSaving(false)
-            void queryClient.invalidateQueries({
-                queryKey: queryKeys.atencionMedica.flujo.completitud(atencion.id),
-            })
         }
     }
 
@@ -300,17 +286,6 @@ export function FormularioClinicoTab({ atencion, etapaForzada }: FormularioClini
             layout="vertical"
             initialValues={initialValues}
         >
-            {etapaActual && !etapaForzada ? (
-                <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
-                    <Text type="secondary">
-                        Mostrando secciones de la etapa: <Tag>{etapaActual}</Tag>
-                    </Text>
-                    <Button type="link" size="small" onClick={() => setMostrarTodas((v) => !v)}>
-                        {mostrarTodas ? 'Solo etapa actual' : 'Ver todas las secciones'}
-                    </Button>
-                </Flex>
-            ) : null}
-
             {seccionesVisibles.map((seccion) => {
                 const seccionCampos = camposPorSeccion.get(seccion.id) ?? []
 

@@ -3,7 +3,6 @@ import { ArrowLeftOutlined } from '@ant-design/icons'
 import { Link } from '@tanstack/react-router'
 
 import { FormularioClinicoTab } from '../components/FormularioClinicoTab'
-import { AtencionFlujoPanel } from '../components/AtencionFlujoPanel'
 import { useAtencion } from '../hooks/atencion-medica.hooks'
 import type { Atencion } from '../types/atencion-medica.types'
 import { formatDateTime } from '../utils/format'
@@ -78,10 +77,6 @@ export function AtencionDetailView({ atencionId }: AtencionDetailViewProps) {
             </header>
 
             <div className="admin-page__workspace">
-                <section className="admin-page__panel" style={{ marginBottom: 16 }}>
-                    <AtencionFlujoPanel atencionId={atencion.id} />
-                </section>
-
                 <section className="admin-page__panel" style={{ marginBottom: 16 }}>
                     <Descriptions size="small" column={{ xs: 1, sm: 2, lg: 3 }}>
                         <Descriptions.Item label="Trámite">

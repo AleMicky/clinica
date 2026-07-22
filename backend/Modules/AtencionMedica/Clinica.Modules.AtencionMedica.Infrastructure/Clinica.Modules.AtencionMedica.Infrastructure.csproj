@@ -6,7 +6,6 @@
     <ProjectReference Include="..\..\Parametros\Clinica.Modules.Parametros.Domain\Clinica.Modules.Parametros.Domain.csproj" />
     <ProjectReference Include="..\..\Personas\Clinica.Modules.Personas.Domain\Clinica.Modules.Personas.Domain.csproj" />
     <ProjectReference Include="..\..\RecursosHumanos\Clinica.Modules.RecursosHumanos.Domain\Clinica.Modules.RecursosHumanos.Domain.csproj" />
-    <ProjectReference Include="..\..\Workflow\Clinica.Modules.Workflow.Application\Clinica.Modules.Workflow.Application.csproj" />
     <ProjectReference Include="..\..\..\Clinica.SharedKernel\Clinica.SharedKernel.csproj" />
   </ItemGroup>
 
