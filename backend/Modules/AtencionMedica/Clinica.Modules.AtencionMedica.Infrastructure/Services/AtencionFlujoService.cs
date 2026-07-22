@@ -95,16 +95,13 @@ public sealed class AtencionFlujoService(
             actionCode);
     }
 
-    private async Task<AtencionEntity> LoadAtencionAsync(
-        Guid atencionId,
-        CancellationToken cancellationToken)
+    private async Task<AtencionEntity> LoadAtencionAsync(Guid atencionId, CancellationToken cancellationToken)
     {
         return await context.Atenciones
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == atencionId, cancellationToken)
             ?? throw new NotFoundException("La atención no existe.");
     }
-
     private async Task<IReadOnlyCollection<SeccionCompletitudResponse>> BuildSeccionesCompletitudAsync(
         AtencionEntity atencion,
         CancellationToken cancellationToken)
