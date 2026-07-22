@@ -28,7 +28,6 @@ const { Text, Title } = Typography
 
 type FormularioClinicoTabProps = {
     atencion: Atencion
-    etapaForzada?: string
 }
 
 function parseOpciones(json?: string | null): { value: string; label: string }[] {
@@ -168,7 +167,7 @@ function renderFieldInput(
     }
 }
 
-export function FormularioClinicoTab({ atencion, etapaForzada }: FormularioClinicoTabProps) {
+export function FormularioClinicoTab({ atencion }: FormularioClinicoTabProps) {
     const [form] = Form.useForm()
     const [saving, setSaving] = useState(false)
 
@@ -176,11 +175,10 @@ export function FormularioClinicoTab({ atencion, etapaForzada }: FormularioClini
         atencion.formularioClinicoId ?? undefined,
     )
 
-    const seccionesVisibles = useMemo(() => {
-        const visibles = secciones.filter((s) => s.visible !== false)
-        if (!etapaForzada) return visibles
-        return visibles.filter((s) => s.etapaFlujo === etapaForzada)
-    }, [etapaForzada, secciones])
+    const seccionesVisibles = useMemo(
+        () => secciones.filter((s) => s.visible !== false),
+        [secciones],
+    )
 
     const camposPorSeccion = useMemo(() => {
         const map = new Map<string, FormularioCampo[]>()

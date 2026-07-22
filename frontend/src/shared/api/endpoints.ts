@@ -82,12 +82,6 @@ export const atencionMedicaEndpoints = {
     formularioSecciones: createEndpoints(`${api.atencionMedica}/formulario-secciones`),
     formularioCampos: createEndpoints(`${api.atencionMedica}/formulario-campos`),
     atencionRespuestas: createEndpoints(`${api.atencionMedica}/atencion-respuestas`),
-    enfermeria: createEndpoints(`${api.atencionMedica}/enfermeria`, (root) => ({
-        pendientes: `${root}/pendientes`,
-    })),
-    consultaMedica: createEndpoints(`${api.atencionMedica}/consulta-medica`, (root) => ({
-        pendientes: `${root}/pendientes`,
-    })),
 } as const
 
 export const workflowEndpoints = {

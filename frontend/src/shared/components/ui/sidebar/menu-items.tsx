@@ -91,20 +91,6 @@ export const menuGroups: MenuGroup[] = [
                 roles: [AppRole.Admin, AppRole.Medico, AppRole.Recepcion],
             },
             {
-                key: '/atencion-medica/enfermeria',
-                to: '/atencion-medica/enfermeria',
-                icon: <ExperimentOutlined />,
-                label: 'Enfermería',
-                roles: [AppRole.Admin, AppRole.Enfermeria],
-            },
-            {
-                key: '/atencion-medica/consulta-medica',
-                to: '/atencion-medica/consulta-medica',
-                icon: <MedicineBoxOutlined />,
-                label: 'Consulta médica',
-                roles: [AppRole.Admin, AppRole.Medico],
-            },
-            {
                 key: '/atenciones/tipos-atencion',
                 to: '/atenciones/tipos-atencion',
                 icon: <UnorderedListOutlined />,

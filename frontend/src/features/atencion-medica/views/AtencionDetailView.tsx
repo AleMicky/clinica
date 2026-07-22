@@ -13,25 +13,18 @@ type AtencionDetailTabsProps = {
     atencion: Atencion
     visibleTabKeys?: string[]
     defaultActiveKey?: string
-    etapaFormulario?: string
 }
 
 export function AtencionDetailTabs({
     atencion,
     visibleTabKeys,
     defaultActiveKey = 'formulario',
-    etapaFormulario,
 }: AtencionDetailTabsProps) {
     const tabItems = [
         {
             key: 'formulario',
             label: 'Formulario clínico',
-            children: (
-                <FormularioClinicoTab
-                    atencion={atencion}
-                    etapaForzada={etapaFormulario}
-                />
-            ),
+            children: <FormularioClinicoTab atencion={atencion} />,
         },
     ]
 

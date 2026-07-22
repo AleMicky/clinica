@@ -11,9 +11,7 @@ namespace Clinica.Modules.AtencionMedica.Infrastructure.Services;
 public sealed class TipoCampoFormularioService(AtencionMedicaDbContext context)
     : ITipoCampoFormularioService
 {
-    public async Task<PagedResult<TipoCampoFormularioResponse>> GetPagedAsync(
-        PagedRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<PagedResult<TipoCampoFormularioResponse>> GetPagedAsync(PagedRequest request, CancellationToken cancellationToken = default)
     {
         var page = request.Page <= 0 ? 1 : request.Page;
         var pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
@@ -30,10 +28,8 @@ public sealed class TipoCampoFormularioService(AtencionMedicaDbContext context)
 
         return new PagedResult<TipoCampoFormularioResponse>(items, total, page, pageSize);
     }
-
-    public async Task<TipoCampoFormularioResponse?> GetByIdAsync(
-        Guid id,
-        CancellationToken cancellationToken = default)
+    
+    public async Task<TipoCampoFormularioResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await context.TiposCampoFormulario
             .AsNoTracking()
@@ -42,9 +38,7 @@ public sealed class TipoCampoFormularioService(AtencionMedicaDbContext context)
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<TipoCampoFormularioResponse> CreateAsync(
-        CreateTipoCampoFormularioRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<TipoCampoFormularioResponse> CreateAsync(CreateTipoCampoFormularioRequest request, CancellationToken cancellationToken = default)
     {
         var codigo = Normalize(request.Codigo);
         await EnsureCodigoIsUniqueAsync(codigo, null, cancellationToken);
@@ -67,10 +61,7 @@ public sealed class TipoCampoFormularioService(AtencionMedicaDbContext context)
         return ToResponse(entity);
     }
 
-    public async Task<TipoCampoFormularioResponse> UpdateAsync(
-        Guid id,
-        UpdateTipoCampoFormularioRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<TipoCampoFormularioResponse> UpdateAsync(Guid id, UpdateTipoCampoFormularioRequest request, CancellationToken cancellationToken = default)
     {
         var entity = await context.TiposCampoFormulario
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
@@ -107,10 +98,7 @@ public sealed class TipoCampoFormularioService(AtencionMedicaDbContext context)
         await context.SaveChangesAsync(cancellationToken);
     }
 
-    private async Task EnsureCodigoIsUniqueAsync(
-        string codigo,
-        Guid? currentId,
-        CancellationToken cancellationToken)
+    private async Task EnsureCodigoIsUniqueAsync(string codigo, Guid? currentId, CancellationToken cancellationToken)
     {
         var exists = await context.TiposCampoFormulario.AnyAsync(
             x => x.Codigo == codigo && (!currentId.HasValue || x.Id != currentId.Value),

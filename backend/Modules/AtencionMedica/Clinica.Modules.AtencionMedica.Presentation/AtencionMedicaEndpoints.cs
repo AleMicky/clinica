@@ -23,7 +23,6 @@ public static class AtencionMedicaEndpoints
         group.MapFormularioSeccionEndpoints();
         group.MapFormularioCampoEndpoints();
         group.MapAtencionEndpoints();
-        group.MapBandejaAtencionEndpoints();
         group.MapAtencionFormularioRespuestaEndpoints();
 
         return app;
