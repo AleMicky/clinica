@@ -85,13 +85,6 @@ export const atencionMedicaEndpoints = {
     formularioSecciones: createEndpoints(`${api.atencionMedica}/formulario-secciones`),
     formularioCampos: createEndpoints(`${api.atencionMedica}/formulario-campos`),
     atencionRespuestas: createEndpoints(`${api.atencionMedica}/atencion-respuestas`),
-    signosVitales: createEndpoints(`${api.atencionMedica}/signos-vitales`),
-    tratamientos: createEndpoints(`${api.atencionMedica}/tratamientos`),
-    estudios: createEndpoints(`${api.atencionMedica}/estudios`),
-    resultadosEstudio: createEndpoints(`${api.atencionMedica}/resultados-estudio`),
-    interconsultas: createEndpoints(`${api.atencionMedica}/interconsultas`),
-    prescripciones: createEndpoints(`${api.atencionMedica}/prescripciones`),
-    prescripcionDetalles: createEndpoints(`${api.atencionMedica}/prescripcion-detalles`),
     enfermeria: createEndpoints(`${api.atencionMedica}/enfermeria`, (root) => ({
         pendientes: `${root}/pendientes`,
     })),

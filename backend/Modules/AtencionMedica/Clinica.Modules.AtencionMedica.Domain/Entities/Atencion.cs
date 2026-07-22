@@ -6,7 +6,6 @@ public class Atencion : AuditableEntity
 {
     public string NumeroAtencion { get; set; } = string.Empty;
     public Guid PacienteId { get; set; }
-
     public Guid TipoAtencionId { get; set; }
     public TipoAtencion TipoAtencion { get; set; } = null!;
 
@@ -31,10 +30,4 @@ public class Atencion : AuditableEntity
     public string? NumeroAfiliacion { get; set; }
 
     public ICollection<AtencionFormularioRespuesta> Respuestas { get; set; } = [];
-
-    public ICollection<SignoVital> SignosVitales { get; set; } = [];
-    public ICollection<Tratamiento> Tratamientos { get; set; } = [];
-    public ICollection<Estudio> Estudios { get; set; } = [];
-    public ICollection<Interconsulta> Interconsultas { get; set; } = [];
-    public ICollection<Prescripcion> Prescripciones { get; set; } = [];
 }

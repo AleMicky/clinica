@@ -146,24 +146,6 @@ export const queryKeys = {
             list: (query: PagedQuery) =>
                 ['atencion-medica', 'especialidades-lookup', 'list', query] as const,
         },
-        signosVitales: {
-            all: ['atencion-medica', 'signos-vitales'] as const,
-        },
-        tratamientos: {
-            all: ['atencion-medica', 'tratamientos'] as const,
-        },
-        estudios: {
-            all: ['atencion-medica', 'estudios'] as const,
-        },
-        resultadosEstudio: {
-            all: ['atencion-medica', 'resultados-estudio'] as const,
-        },
-        interconsultas: {
-            all: ['atencion-medica', 'interconsultas'] as const,
-        },
-        prescripciones: {
-            all: ['atencion-medica', 'prescripciones'] as const,
-        },
         flujo: {
             completitud: (atencionId: string) =>
                 ['atencion-medica', 'flujo', 'completitud', atencionId] as const,
@@ -173,9 +155,6 @@ export const queryKeys = {
         },
         consultaMedica: {
             pendientes: ['atencion-medica', 'consulta-medica', 'pendientes'] as const,
-        },
-        prescripcionDetalles: {
-            all: ['atencion-medica', 'prescripcion-detalles'] as const,
         },
     },
     workflow: {

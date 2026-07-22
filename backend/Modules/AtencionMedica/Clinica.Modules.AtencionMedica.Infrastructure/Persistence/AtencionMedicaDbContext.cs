@@ -1,5 +1,4 @@
 using Clinica.Modules.AtencionMedica.Domain.Entities;
-using Clinica.Modules.Parametros.Domain.Entities;
 using Clinica.Modules.Personas.Domain.Entities;
 using Clinica.Modules.RecursosHumanos.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -21,13 +20,6 @@ public class AtencionMedicaDbContext : DbContext
     public DbSet<NumeracionAtencion> NumeracionesAtencion => Set<NumeracionAtencion>();
     public DbSet<Atencion> Atenciones => Set<Atencion>();
     public DbSet<AtencionFormularioRespuesta> AtencionFormularioRespuestas => Set<AtencionFormularioRespuesta>();
-    public DbSet<SignoVital> SignosVitales => Set<SignoVital>();
-    public DbSet<Tratamiento> Tratamientos => Set<Tratamiento>();
-    public DbSet<Estudio> Estudios => Set<Estudio>();
-    public DbSet<ResultadoEstudio> ResultadosEstudio => Set<ResultadoEstudio>();
-    public DbSet<Interconsulta> Interconsultas => Set<Interconsulta>();
-    public DbSet<Prescripcion> Prescripciones => Set<Prescripcion>();
-    public DbSet<PrescripcionDetalle> PrescripcionDetalles => Set<PrescripcionDetalle>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -43,13 +35,6 @@ public class AtencionMedicaDbContext : DbContext
             entity.HasKey(x => x.Id);
             entity.Ignore(x => x.Persona);
             entity.Ignore(x => x.GrupoSanguineo);
-        });
-
-        modelBuilder.Entity<CatalogoItem>(entity =>
-        {
-            entity.ToTable("CatalogoItems", t => t.ExcludeFromMigrations());
-            entity.HasKey(x => x.Id);
-            entity.Ignore(x => x.CatalogoGrupo);
         });
 
         modelBuilder.Entity<Especialidad>(entity =>

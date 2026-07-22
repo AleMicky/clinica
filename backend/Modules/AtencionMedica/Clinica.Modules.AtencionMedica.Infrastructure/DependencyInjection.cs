@@ -26,13 +26,6 @@ public static class DependencyInjection
         services.AddScoped<IAtencionFlujoService, AtencionFlujoService>();
         services.AddScoped<IWorkflowService, AtencionWorkflowService>();
         services.AddScoped<IAtencionFormularioRespuestaService, AtencionFormularioRespuestaService>();
-        services.AddScoped<ISignoVitalService, SignoVitalService>();
-        services.AddScoped<ITratamientoService, TratamientoService>();
-        services.AddScoped<IEstudioService, EstudioService>();
-        services.AddScoped<IResultadoEstudioService, ResultadoEstudioService>();
-        services.AddScoped<IInterconsultaService, InterconsultaService>();
-        services.AddScoped<IPrescripcionService, PrescripcionService>();
-        services.AddScoped<IPrescripcionDetalleService, PrescripcionDetalleService>();
 
         return services;
     }

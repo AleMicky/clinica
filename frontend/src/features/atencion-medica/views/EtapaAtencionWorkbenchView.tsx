@@ -90,24 +90,18 @@ export function EtapaAtencionWorkbenchView({
 
 export const ENFERMERIA_WORKBENCH_CONFIG: EtapaWorkbenchConfig = {
     titulo: 'Atención de enfermería',
-    subtitulo: 'Signos vitales y datos de enfermería',
+    subtitulo: 'Datos de enfermería',
     etapaFlujo: 'ENFERMERIA',
     bandejaTo: '/atencion-medica/enfermeria',
-    tabKeys: ['formulario', 'signos'],
-    defaultTab: 'signos',
+    tabKeys: ['formulario'],
+    defaultTab: 'formulario',
 }
 
 export const CONSULTA_MEDICA_WORKBENCH_CONFIG: EtapaWorkbenchConfig = {
     titulo: 'Consulta médica',
-    subtitulo: 'Historia clínica y plan de tratamiento',
+    subtitulo: 'Historia clínica',
     etapaFlujo: 'CONSULTA_MEDICA',
     bandejaTo: '/atencion-medica/consulta-medica',
-    tabKeys: [
-        'formulario',
-        'tratamientos',
-        'estudios',
-        'interconsultas',
-        'prescripciones',
-    ],
+    tabKeys: ['formulario'],
     defaultTab: 'formulario',
 }

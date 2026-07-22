@@ -8,25 +8,15 @@ import { createGuidCrudService } from '../../../shared/services/guid-crud.servic
 import type { PagedQuery } from '../../../shared/types/pagination.types'
 import type {
     Atencion,
-    AtencionChildPagedQuery,
     AtencionPagedQuery,
     AtencionRespuestaPagedQuery,
     CreateAtencionFormularioRespuestaPayload,
     CreateAtencionPayload,
-    CreateEstudioPayload,
     CreateFormularioCampoPayload,
     CreateFormularioClinicoPayload,
     CreateFormularioSeccionPayload,
-    CreateInterconsultaPayload,
-    CreatePrescripcionDetallePayload,
-    CreatePrescripcionPayload,
-    CreateResultadoEstudioPayload,
-    CreateSignoVitalPayload,
     CreateTipoAtencionPayload,
-    CreateTratamientoPayload,
     EspecialidadLookup,
-    Estudio,
-    EstudioPagedQuery,
     FormularioCampo,
     FormularioCampoPagedQuery,
     FormularioClinico,
@@ -34,30 +24,15 @@ import type {
     FormularioSeccion,
     FormularioSeccionPagedQuery,
     AtencionFormularioRespuesta,
-    Interconsulta,
     PacienteLookup,
-    Prescripcion,
-    PrescripcionDetalle,
-    PrescripcionDetallePagedQuery,
-    ResultadoEstudio,
-    ResultadoEstudioPagedQuery,
-    SignoVital,
     TipoAtencion,
     TipoCampoFormulario,
-    Tratamiento,
     UpdateAtencionFormularioRespuestaPayload,
     UpdateAtencionPayload,
-    UpdateEstudioPayload,
     UpdateFormularioCampoPayload,
     UpdateFormularioClinicoPayload,
     UpdateFormularioSeccionPayload,
-    UpdateInterconsultaPayload,
-    UpdatePrescripcionDetallePayload,
-    UpdatePrescripcionPayload,
-    UpdateResultadoEstudioPayload,
-    UpdateSignoVitalPayload,
     UpdateTipoAtencionPayload,
-    UpdateTratamientoPayload,
 } from '../types/atencion-medica.types'
 
 export const atencionesService = {
@@ -166,95 +141,3 @@ export const especialidadesLookupService = {
     },
 }
 
-export const signosVitalesService = {
-    ...createGuidCrudService<
-        SignoVital,
-        CreateSignoVitalPayload,
-        UpdateSignoVitalPayload
-    >(atencionMedicaEndpoints.signosVitales.root),
-    getPaged(query: AtencionChildPagedQuery) {
-        return getPaged<SignoVital>(
-            atencionMedicaEndpoints.signosVitales.root,
-            query,
-        )
-    },
-}
-
-export const tratamientosService = {
-    ...createGuidCrudService<
-        Tratamiento,
-        CreateTratamientoPayload,
-        UpdateTratamientoPayload
-    >(atencionMedicaEndpoints.tratamientos.root),
-    getPaged(query: AtencionChildPagedQuery) {
-        return getPaged<Tratamiento>(
-            atencionMedicaEndpoints.tratamientos.root,
-            query,
-        )
-    },
-}
-
-export const estudiosService = {
-    ...createGuidCrudService<Estudio, CreateEstudioPayload, UpdateEstudioPayload>(
-        atencionMedicaEndpoints.estudios.root,
-    ),
-    getPaged(query: EstudioPagedQuery) {
-        return getPaged<Estudio>(atencionMedicaEndpoints.estudios.root, query)
-    },
-}
-
-export const resultadosEstudioService = {
-    ...createGuidCrudService<
-        ResultadoEstudio,
-        CreateResultadoEstudioPayload,
-        UpdateResultadoEstudioPayload
-    >(atencionMedicaEndpoints.resultadosEstudio.root),
-    getPaged(query: ResultadoEstudioPagedQuery) {
-        return getPaged<ResultadoEstudio>(
-            atencionMedicaEndpoints.resultadosEstudio.root,
-            query,
-        )
-    },
-}
-
-export const interconsultasService = {
-    ...createGuidCrudService<
-        Interconsulta,
-        CreateInterconsultaPayload,
-        UpdateInterconsultaPayload
-    >(atencionMedicaEndpoints.interconsultas.root),
-    getPaged(query: AtencionChildPagedQuery) {
-        return getPaged<Interconsulta>(
-            atencionMedicaEndpoints.interconsultas.root,
-            query,
-        )
-    },
-}
-
-export const prescripcionesService = {
-    ...createGuidCrudService<
-        Prescripcion,
-        CreatePrescripcionPayload,
-        UpdatePrescripcionPayload
-    >(atencionMedicaEndpoints.prescripciones.root),
-    getPaged(query: AtencionChildPagedQuery) {
-        return getPaged<Prescripcion>(
-            atencionMedicaEndpoints.prescripciones.root,
-            query,
-        )
-    },
-}
-
-export const prescripcionDetallesService = {
-    ...createGuidCrudService<
-        PrescripcionDetalle,
-        CreatePrescripcionDetallePayload,
-        UpdatePrescripcionDetallePayload
-    >(atencionMedicaEndpoints.prescripcionDetalles.root),
-    getPaged(query: PrescripcionDetallePagedQuery) {
-        return getPaged<PrescripcionDetalle>(
-            atencionMedicaEndpoints.prescripcionDetalles.root,
-            query,
-        )
-    },
-}

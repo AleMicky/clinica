@@ -11,31 +11,20 @@ import {
     atencionesService,
     atencionRespuestasService,
     especialidadesLookupService,
-    estudiosService,
     formularioCamposService,
     formularioSeccionesService,
     formulariosClinicosService,
-    interconsultasService,
     pacientesLookupService,
-    prescripcionDetallesService,
-    prescripcionesService,
-    resultadosEstudioService,
-    signosVitalesService,
     tiposAtencionService,
     tiposCampoFormularioService,
-    tratamientosService,
 } from '../services/atencion-medica.service'
 import type {
-    AtencionChildPagedQuery,
     AtencionPagedQuery,
     AtencionRespuestaPagedQuery,
     CreateAtencionPayload,
-    EstudioPagedQuery,
     FormularioCampoPagedQuery,
     FormularioClinicoPagedQuery,
     FormularioSeccionPagedQuery,
-    PrescripcionDetallePagedQuery,
-    ResultadoEstudioPagedQuery,
     UpdateAtencionPayload,
 } from '../types/atencion-medica.types'
 
@@ -328,102 +317,3 @@ export function useEspecialidadesLookup(query: PagedQuery = { page: 1, pageSize:
     })
 }
 
-// ── Datos clínicos por atención ─────────────────────────────────────
-
-export const signosVitalesHooks = createGuidCrudHooks(
-    queryKeys.atencionMedica.signosVitales.all,
-    signosVitalesService,
-    {
-        created: 'Signo vital registrado',
-        updated: 'Signo vital actualizado',
-        deleted: 'Signo vital eliminado',
-    },
-)
-
-export const tratamientosHooks = createGuidCrudHooks(
-    queryKeys.atencionMedica.tratamientos.all,
-    tratamientosService,
-    {
-        created: 'Tratamiento registrado',
-        updated: 'Tratamiento actualizado',
-        deleted: 'Tratamiento eliminado',
-    },
-)
-
-export const estudiosHooks = createGuidCrudHooks(
-    queryKeys.atencionMedica.estudios.all,
-    estudiosService,
-    {
-        created: 'Estudio solicitado',
-        updated: 'Estudio actualizado',
-        deleted: 'Estudio eliminado',
-    },
-)
-
-export const resultadosEstudioHooks = createGuidCrudHooks(
-    queryKeys.atencionMedica.resultadosEstudio.all,
-    resultadosEstudioService,
-    {
-        created: 'Resultado registrado',
-        updated: 'Resultado actualizado',
-        deleted: 'Resultado eliminado',
-    },
-)
-
-export const interconsultasHooks = createGuidCrudHooks(
-    queryKeys.atencionMedica.interconsultas.all,
-    interconsultasService,
-    {
-        created: 'Interconsulta registrada',
-        updated: 'Interconsulta actualizada',
-        deleted: 'Interconsulta eliminada',
-    },
-)
-
-export const prescripcionesHooks = createGuidCrudHooks(
-    queryKeys.atencionMedica.prescripciones.all,
-    prescripcionesService,
-    {
-        created: 'Prescripción registrada',
-        updated: 'Prescripción actualizada',
-        deleted: 'Prescripción eliminada',
-    },
-)
-
-export const prescripcionDetallesHooks = createGuidCrudHooks(
-    queryKeys.atencionMedica.prescripcionDetalles.all,
-    prescripcionDetallesService,
-    {
-        created: 'Medicamento agregado',
-        updated: 'Medicamento actualizado',
-        deleted: 'Medicamento eliminado',
-    },
-)
-
-export function useSignosVitales(query: AtencionChildPagedQuery) {
-    return signosVitalesHooks.useList(query)
-}
-
-export function useTratamientos(query: AtencionChildPagedQuery) {
-    return tratamientosHooks.useList(query)
-}
-
-export function useEstudios(query: EstudioPagedQuery) {
-    return estudiosHooks.useList(query)
-}
-
-export function useResultadosEstudio(query: ResultadoEstudioPagedQuery) {
-    return resultadosEstudioHooks.useList(query)
-}
-
-export function useInterconsultas(query: AtencionChildPagedQuery) {
-    return interconsultasHooks.useList(query)
-}
-
-export function usePrescripciones(query: AtencionChildPagedQuery) {
-    return prescripcionesHooks.useList(query)
-}
-
-export function usePrescripcionDetalles(query: PrescripcionDetallePagedQuery) {
-    return prescripcionDetallesHooks.useList(query)
-}
