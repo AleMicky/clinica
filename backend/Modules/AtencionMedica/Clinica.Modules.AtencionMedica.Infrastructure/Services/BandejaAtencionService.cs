@@ -1,6 +1,5 @@
 using Clinica.Modules.AtencionMedica.Application.Abstractions;
 using Clinica.Modules.AtencionMedica.Application.Atenciones;
-using Clinica.Modules.AtencionMedica.Domain.Constants;
 using Clinica.Modules.AtencionMedica.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,7 +11,7 @@ public sealed class BandejaAtencionService(AtencionMedicaDbContext context) : IB
         CancellationToken cancellationToken = default)
     {
         return GetPendientesPorEstadosAsync(
-            [AtencionEstados.Enfermeria, AtencionEstados.Triaje],
+            ["ENFERMERIA", "TRIAJE"],
             cancellationToken);
     }
 
@@ -20,7 +19,7 @@ public sealed class BandejaAtencionService(AtencionMedicaDbContext context) : IB
         CancellationToken cancellationToken = default)
     {
         return GetPendientesPorEstadosAsync(
-            [AtencionEstados.ConsultaMedica],
+            ["CONSULTA_MEDICA"],
             cancellationToken);
     }
 

@@ -1,4 +1,3 @@
-using Clinica.Modules.AtencionMedica.Domain.Constants;
 using Clinica.Modules.AtencionMedica.Domain.Entities;
 using Clinica.Modules.AtencionMedica.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -125,14 +124,14 @@ public static class AtencionMedicaDbSeeder
             "FORM_CONSULTA_EXTERNA",
             "Hoja de Consulta Externa",
             [
-                new("DATOS_GENERALES", "Datos generales", 0, AtencionEtapasFlujo.Recepcion,
+                new("DATOS_GENERALES", "Datos generales", 0, "RECEPCION",
                 [
                     Campo("historia_clinica", "Historia Clínica", "TEXT", 1, true),
                     Campo("fecha", "Fecha", "DATE", 2, true),
                     Campo("hora", "Hora", "TIME", 3, true),
                     Campo("servicio", "Servicio", "TEXT", 4)
                 ]),
-                new("DATOS_PACIENTE", "Datos del paciente", 1, AtencionEtapasFlujo.Recepcion,
+                new("DATOS_PACIENTE", "Datos del paciente", 1, "RECEPCION",
                 [
                     Campo("apellido_paterno", "Apellido Paterno", "TEXT", 1),
                     Campo("apellido_materno", "Apellido Materno", "TEXT", 2),
@@ -146,12 +145,12 @@ public static class AtencionMedicaDbSeeder
                     Campo("telefono", "Teléfono", "TEXT", 10),
                     Campo("profesion_ocupacion", "Profesión / Ocupación", "TEXT", 11)
                 ]),
-                new("DATOS_CLINICOS_RECEPCION", "Datos clínicos (recepción)", 2, AtencionEtapasFlujo.Recepcion,
+                new("DATOS_CLINICOS_RECEPCION", "Datos clínicos (recepción)", 2, "RECEPCION",
                 [
                     Campo("motivo_consulta", "Motivo de Consulta", "TEXTAREA", 1, true),
                     Campo("observaciones_iniciales", "Observaciones Iniciales", "TEXTAREA", 2)
                 ]),
-                new("SIGNOS_VITALES", "Signos vitales (enfermería)", 3, AtencionEtapasFlujo.Enfermeria,
+                new("SIGNOS_VITALES", "Signos vitales (enfermería)", 3, "ENFERMERIA",
                 [
                     Campo("peso", "Peso", "DECIMAL", 1),
                     Campo("talla", "Talla", "DECIMAL", 2),
@@ -163,7 +162,7 @@ public static class AtencionMedicaDbSeeder
                     Campo("saturacion_oxigeno", "Saturación de Oxígeno", "DECIMAL", 8),
                     Campo("glucemia", "Glucemia", "DECIMAL", 9)
                 ]),
-                new("CONSULTA_MEDICA", "Consulta médica", 4, AtencionEtapasFlujo.ConsultaMedica,
+                new("CONSULTA_MEDICA", "Consulta médica", 4, "CONSULTA_MEDICA",
                 [
                     Campo("enfermedad_actual", "Enfermedad Actual", "TEXTAREA", 1),
                     Campo("antecedentes_personales", "Antecedentes Personales", "TEXTAREA", 2),
@@ -191,13 +190,13 @@ public static class AtencionMedicaDbSeeder
             "FORM_EMERGENCIA",
             "Historia Clínica de Emergencias",
             [
-                new("DATOS_GENERALES", "Datos generales", 0, AtencionEtapasFlujo.Recepcion,
+                new("DATOS_GENERALES", "Datos generales", 0, "RECEPCION",
                 [
                     Campo("historia_clinica", "Historia Clínica", "TEXT", 1, true),
                     Campo("fecha_atencion", "Fecha Atención", "DATE", 2, true),
                     Campo("hora_atencion", "Hora Atención", "TIME", 3, true)
                 ]),
-                new("DATOS_PACIENTE", "Datos del paciente", 1, AtencionEtapasFlujo.Recepcion,
+                new("DATOS_PACIENTE", "Datos del paciente", 1, "RECEPCION",
                 [
                     Campo("apellidos", "Apellidos", "TEXT", 1, true),
                     Campo("nombres", "Nombres", "TEXT", 2, true),
@@ -209,27 +208,27 @@ public static class AtencionMedicaDbSeeder
                     Campo("direccion", "Dirección", "TEXT", 8),
                     Campo("telefono", "Teléfono", "TEXT", 9)
                 ]),
-                new("INGRESO", "Ingreso", 2, AtencionEtapasFlujo.Recepcion,
+                new("INGRESO", "Ingreso", 2, "RECEPCION",
                 [
                     Campo("referido_de", "Referido de", "TEXT", 1),
                     Campo("modo_ingreso", "Modo de Ingreso", "SELECT", 2, opcionesJson: ModoIngresoOpcionesJson),
                     Campo("acompanado_por", "Acompañado por", "SELECT", 3, opcionesJson: AcompanadoPorOpcionesJson),
                     Campo("otros", "Otros", "TEXT", 4)
                 ]),
-                new("DATOS_ACCIDENTE", "Datos del accidente", 3, AtencionEtapasFlujo.Recepcion,
+                new("DATOS_ACCIDENTE", "Datos del accidente", 3, "RECEPCION",
                 [
                     Campo("accidente_en", "Accidente en", "SELECT", 1, opcionesJson: AccidenteEnOpcionesJson),
                     Campo("tipo_accidente", "Tipo de Accidente", "SELECT", 2, opcionesJson: TipoAccidenteOpcionesJson),
                     Campo("notificacion_policial", "Notificación Policial", "RADIO", 3, opcionesJson: SiNoOpcionesJson),
                     Campo("responsable_policial", "Responsable Policial", "TEXT", 4)
                 ]),
-                new("HISTORIA_CLINICA_RECEPCION", "Historia clínica (recepción)", 4, AtencionEtapasFlujo.Recepcion,
+                new("HISTORIA_CLINICA_RECEPCION", "Historia clínica (recepción)", 4, "RECEPCION",
                 [
                     Campo("fuente_historia", "Fuente de la Historia", "TEXT", 1),
                     Campo("motivo_consulta", "Motivo de Consulta", "TEXTAREA", 2, true),
                     Campo("enfermedad_actual", "Enfermedad Actual", "TEXTAREA", 3)
                 ]),
-                new("SIGNOS_VITALES", "Signos vitales", 5, AtencionEtapasFlujo.Enfermeria,
+                new("SIGNOS_VITALES", "Signos vitales", 5, "ENFERMERIA",
                 [
                     Campo("fc", "Frecuencia Cardíaca", "NUMBER", 1),
                     Campo("fr", "Frecuencia Respiratoria", "NUMBER", 2),
@@ -239,39 +238,39 @@ public static class AtencionMedicaDbSeeder
                     Campo("glucemia_capilar", "Glucemia Capilar", "DECIMAL", 6),
                     Campo("glasgow", "Escala de Glasgow", "NUMBER", 7)
                 ]),
-                new("EXAMEN_FISICO", "Examen físico", 6, AtencionEtapasFlujo.ConsultaMedica,
+                new("EXAMEN_FISICO", "Examen físico", 6, "CONSULTA_MEDICA",
                 [
                     Campo("estado_general", "Estado General", "TEXTAREA", 1),
                     Campo("examen_clinico", "Examen Clínico", "TEXTAREA", 2)
                 ]),
-                new("DIAGNOSTICO", "Diagnóstico", 7, AtencionEtapasFlujo.ConsultaMedica,
+                new("DIAGNOSTICO", "Diagnóstico", 7, "CONSULTA_MEDICA",
                 [
                     Campo("diagnostico_principal", "Diagnóstico Principal", "TEXTAREA", 1),
                     Campo("diagnostico_secundario", "Diagnóstico Secundario", "TEXTAREA", 2)
                 ]),
-                new("TRATAMIENTO", "Tratamiento", 8, AtencionEtapasFlujo.ConsultaMedica,
+                new("TRATAMIENTO", "Tratamiento", 8, "CONSULTA_MEDICA",
                 [
                     Campo("conducta", "Conducta", "TEXTAREA", 1),
                     Campo("tratamiento", "Tratamiento", "TEXTAREA", 2)
                 ]),
-                new("ESTUDIOS", "Estudios", 9, AtencionEtapasFlujo.ConsultaMedica,
+                new("ESTUDIOS", "Estudios", 9, "CONSULTA_MEDICA",
                 [
                     Campo("laboratorio", "Laboratorio", "TEXTAREA", 1),
                     Campo("imagenologia", "Imagenología", "TEXTAREA", 2),
                     Campo("otros_estudios", "Otros Estudios", "TEXTAREA", 3)
                 ]),
-                new("INTERCONSULTA", "Interconsulta", 10, AtencionEtapasFlujo.ConsultaMedica,
+                new("INTERCONSULTA", "Interconsulta", 10, "CONSULTA_MEDICA",
                 [
                     Campo("especialidad", "Especialidad", "TEXT", 1),
                     Campo("hora_interconsulta", "Hora", "TIME", 2),
                     Campo("observaciones_interconsulta", "Observaciones", "TEXTAREA", 3)
                 ]),
-                new("REFERENCIA", "Referencia", 11, AtencionEtapasFlujo.ConsultaMedica,
+                new("REFERENCIA", "Referencia", 11, "CONSULTA_MEDICA",
                 [
                     Campo("referido_a", "Referido a", "TEXT", 1),
                     Campo("motivo_referencia", "Motivo de Referencia", "TEXTAREA", 2)
                 ]),
-                new("EGRESO", "Egreso", 12, AtencionEtapasFlujo.ConsultaMedica,
+                new("EGRESO", "Egreso", 12, "CONSULTA_MEDICA",
                 [
                     Campo("condicion_egreso", "Condición de Egreso", "TEXT", 1),
                     Campo("recomendaciones", "Recomendaciones", "TEXTAREA", 2),
@@ -291,11 +290,11 @@ public static class AtencionMedicaDbSeeder
             "FORM_INTERNACION",
             "Formulario de Internación y Egreso",
             [
-                new("DATOS_GENERALES", "Datos generales", 0, AtencionEtapasFlujo.Recepcion,
+                new("DATOS_GENERALES", "Datos generales", 0, "RECEPCION",
                 [
                     Campo("historia_clinica", "Historia Clínica", "TEXT", 1, true)
                 ]),
-                new("DATOS_PACIENTE", "Datos del paciente", 1, AtencionEtapasFlujo.Recepcion,
+                new("DATOS_PACIENTE", "Datos del paciente", 1, "RECEPCION",
                 [
                     Campo("apellido_paterno", "Apellido Paterno", "TEXT", 1, true),
                     Campo("apellido_materno", "Apellido Materno", "TEXT", 2),
@@ -312,7 +311,7 @@ public static class AtencionMedicaDbSeeder
                     Campo("lugar_trabajo", "Lugar de Trabajo", "TEXT", 13),
                     Campo("telefono_trabajo", "Teléfono del Trabajo", "TEXT", 14)
                 ]),
-                new("RESPONSABLE_1", "Responsable 1", 2, AtencionEtapasFlujo.Recepcion,
+                new("RESPONSABLE_1", "Responsable 1", 2, "RECEPCION",
                 [
                     Campo("responsable1_nombre", "Nombre Completo", "TEXT", 1),
                     Campo("responsable1_parentesco", "Parentesco", "TEXT", 2),
@@ -320,7 +319,7 @@ public static class AtencionMedicaDbSeeder
                     Campo("responsable1_telefono", "Teléfono", "TEXT", 4),
                     Campo("responsable1_documento", "Documento de Identidad", "TEXT", 5)
                 ]),
-                new("RESPONSABLE_2", "Responsable 2", 3, AtencionEtapasFlujo.Recepcion,
+                new("RESPONSABLE_2", "Responsable 2", 3, "RECEPCION",
                 [
                     Campo("responsable2_nombre", "Nombre Completo", "TEXT", 1),
                     Campo("responsable2_parentesco", "Parentesco", "TEXT", 2),
@@ -328,7 +327,7 @@ public static class AtencionMedicaDbSeeder
                     Campo("responsable2_telefono", "Teléfono", "TEXT", 4),
                     Campo("responsable2_documento", "Documento de Identidad", "TEXT", 5)
                 ]),
-                new("INTERNACION", "Internación", 4, AtencionEtapasFlujo.ConsultaMedica,
+                new("INTERNACION", "Internación", 4, "CONSULTA_MEDICA",
                 [
                     Campo("personal_solicita_internacion", "Personal de Salud que solicita la Internación", "TEXT", 1),
                     Campo("medico_tratante", "Médico Tratante", "TEXT", 2),
@@ -337,7 +336,7 @@ public static class AtencionMedicaDbSeeder
                     Campo("hora_ingreso", "Hora de Ingreso", "TIME", 5),
                     Campo("firma_sello_admision", "Firma y Sello de Admisión", "TEXT", 6)
                 ]),
-                new("EGRESO", "Egreso", 5, AtencionEtapasFlujo.ConsultaMedica,
+                new("EGRESO", "Egreso", 5, "CONSULTA_MEDICA",
                 [
                     Campo("diagnostico_egreso", "Diagnóstico de Egreso", "TEXTAREA", 1),
                     Campo("procedimientos_realizados", "Procedimientos Realizados", "TEXTAREA", 2),
@@ -350,7 +349,7 @@ public static class AtencionMedicaDbSeeder
                     Campo("firma_sello_egreso", "Firma y Sello", "TEXT", 9),
                     Campo("firma_sello_medico_tratante", "Firma y Sello del Médico Tratante", "TEXT", 10)
                 ]),
-                new("RECIEN_NACIDO", "Recién nacido", 6, AtencionEtapasFlujo.ConsultaMedica,
+                new("RECIEN_NACIDO", "Recién nacido", 6, "CONSULTA_MEDICA",
                 [
                     Campo("tipo_nacimiento", "Tipo de Nacimiento", "TEXT", 1),
                     Campo("fecha_nacimiento_rn", "Fecha de Nacimiento", "DATE", 2),
