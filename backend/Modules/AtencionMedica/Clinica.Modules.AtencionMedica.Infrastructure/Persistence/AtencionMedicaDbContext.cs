@@ -21,6 +21,7 @@ public class AtencionMedicaDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.HasDefaultSchema("atencion_medica");
         ConfigureExternalEntities(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AtencionMedicaDbContext).Assembly);
     }
@@ -29,7 +30,7 @@ public class AtencionMedicaDbContext : DbContext
     {
         modelBuilder.Entity<Persona>(entity =>
         {
-            entity.ToTable("Personas", t => t.ExcludeFromMigrations());
+            entity.ToTable("Personas", "personas", t => t.ExcludeFromMigrations());
             entity.HasKey(x => x.Id);
             entity.Ignore(x => x.TipoDocumento);
             entity.Ignore(x => x.ExtensionDocumento);
@@ -40,7 +41,7 @@ public class AtencionMedicaDbContext : DbContext
 
         modelBuilder.Entity<Paciente>(entity =>
         {
-            entity.ToTable("Pacientes", t => t.ExcludeFromMigrations());
+            entity.ToTable("Pacientes", "personas", t => t.ExcludeFromMigrations());
             entity.HasKey(x => x.Id);
             entity.HasOne(x => x.Persona)
                 .WithMany()
@@ -50,7 +51,7 @@ public class AtencionMedicaDbContext : DbContext
 
         modelBuilder.Entity<Medico>(entity =>
         {
-            entity.ToTable("Medicos", t => t.ExcludeFromMigrations());
+            entity.ToTable("Medicos", "personas", t => t.ExcludeFromMigrations());
             entity.HasKey(x => x.Id);
             entity.Ignore(x => x.Empleado);
             entity.Ignore(x => x.Especialidades);

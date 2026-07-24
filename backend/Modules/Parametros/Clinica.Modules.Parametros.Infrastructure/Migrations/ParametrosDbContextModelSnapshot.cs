@@ -17,6 +17,7 @@ namespace Clinica.Modules.Parametros.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
+                .HasDefaultSchema("parametros")
                 .HasAnnotation("ProductVersion", "10.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
@@ -69,7 +70,7 @@ namespace Clinica.Modules.Parametros.Infrastructure.Migrations
                     b.HasIndex("Codigo")
                         .IsUnique();
 
-                    b.ToTable("CatalogoGrupos", (string)null);
+                    b.ToTable("CatalogoGrupos", "parametros");
                 });
 
             modelBuilder.Entity("Clinica.Modules.Parametros.Domain.Entities.CatalogoItem", b =>
@@ -125,7 +126,7 @@ namespace Clinica.Modules.Parametros.Infrastructure.Migrations
                     b.HasIndex("CatalogoGrupoId", "Codigo")
                         .IsUnique();
 
-                    b.ToTable("CatalogoItems", (string)null);
+                    b.ToTable("CatalogoItems", "parametros");
                 });
 
             modelBuilder.Entity("Clinica.Modules.Parametros.Domain.Entities.Correlativo", b =>
@@ -167,7 +168,7 @@ namespace Clinica.Modules.Parametros.Infrastructure.Migrations
                     b.HasIndex("Codigo", "Gestion")
                         .IsUnique();
 
-                    b.ToTable("Correlativos", (string)null);
+                    b.ToTable("Correlativos", "parametros");
                 });
 
             modelBuilder.Entity("Clinica.Modules.Parametros.Domain.Entities.CatalogoItem", b =>

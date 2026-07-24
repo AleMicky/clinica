@@ -25,6 +25,7 @@ public class RecursosHumanosDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.HasDefaultSchema("recursos_humanos");
         ConfigureExternalEntities(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(RecursosHumanosDbContext).Assembly);
     }
@@ -33,7 +34,7 @@ public class RecursosHumanosDbContext : DbContext
     {
         modelBuilder.Entity<Clinica.Modules.Personas.Domain.Entities.MedicoEspecialidad>(entity =>
         {
-            entity.ToTable("MedicoEspecialidades", t => t.ExcludeFromMigrations());
+            entity.ToTable("MedicoEspecialidades", "personas", t => t.ExcludeFromMigrations());
             entity.HasKey(x => x.Id);
             entity.Ignore(x => x.Medico);
             entity.Ignore(x => x.Especialidad);
@@ -41,7 +42,7 @@ public class RecursosHumanosDbContext : DbContext
 
         modelBuilder.Entity<Empleado>(entity =>
         {
-            entity.ToTable("Empleados", t => t.ExcludeFromMigrations());
+            entity.ToTable("Empleados", "personas", t => t.ExcludeFromMigrations());
             entity.HasKey(x => x.Id);
             entity.Ignore(x => x.Persona);
             entity.Ignore(x => x.Area);

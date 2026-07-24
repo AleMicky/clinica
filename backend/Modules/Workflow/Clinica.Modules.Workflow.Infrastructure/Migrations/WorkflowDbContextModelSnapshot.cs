@@ -17,6 +17,7 @@ namespace Clinica.Modules.Workflow.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
+                .HasDefaultSchema("workflow")
                 .HasAnnotation("ProductVersion", "10.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
@@ -84,7 +85,7 @@ namespace Clinica.Modules.Workflow.Infrastructure.Migrations
                     b.HasIndex("Code")
                         .IsUnique();
 
-                    b.ToTable("WorkflowDefinitions", (string)null);
+                    b.ToTable("WorkflowDefinitions", "workflow");
                 });
 
             modelBuilder.Entity("Clinica.Modules.Workflow.Domain.Entities.WorkflowHistory", b =>
@@ -160,7 +161,7 @@ namespace Clinica.Modules.Workflow.Infrastructure.Migrations
 
                     b.HasIndex("WorkflowInstanceId");
 
-                    b.ToTable("WorkflowHistories", (string)null);
+                    b.ToTable("WorkflowHistories", "workflow");
                 });
 
             modelBuilder.Entity("Clinica.Modules.Workflow.Domain.Entities.WorkflowInstance", b =>
@@ -239,7 +240,7 @@ namespace Clinica.Modules.Workflow.Infrastructure.Migrations
                     b.HasIndex("ReferenceModule", "ReferenceEntity", "ReferenceId")
                         .IsUnique();
 
-                    b.ToTable("WorkflowInstances", (string)null);
+                    b.ToTable("WorkflowInstances", "workflow");
                 });
 
             modelBuilder.Entity("Clinica.Modules.Workflow.Domain.Entities.WorkflowState", b =>
@@ -306,7 +307,7 @@ namespace Clinica.Modules.Workflow.Infrastructure.Migrations
                     b.HasIndex("WorkflowDefinitionId", "Code")
                         .IsUnique();
 
-                    b.ToTable("WorkflowStates", (string)null);
+                    b.ToTable("WorkflowStates", "workflow");
                 });
 
             modelBuilder.Entity("Clinica.Modules.Workflow.Domain.Entities.WorkflowTransition", b =>
@@ -381,7 +382,7 @@ namespace Clinica.Modules.Workflow.Infrastructure.Migrations
                     b.HasIndex("WorkflowDefinitionId", "FromStateId", "ActionCode")
                         .IsUnique();
 
-                    b.ToTable("WorkflowTransitions", (string)null);
+                    b.ToTable("WorkflowTransitions", "workflow");
                 });
 
             modelBuilder.Entity("Clinica.Modules.Workflow.Domain.Entities.WorkflowHistory", b =>

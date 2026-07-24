@@ -17,6 +17,7 @@ namespace Clinica.Modules.Personas.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
+                .HasDefaultSchema("personas")
                 .HasAnnotation("ProductVersion", "10.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
@@ -57,7 +58,7 @@ namespace Clinica.Modules.Personas.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("CatalogoGrupos", null, t =>
+                    b.ToTable("CatalogoGrupos", "parametros", t =>
                         {
                             t.ExcludeFromMigrations();
                         });
@@ -104,7 +105,7 @@ namespace Clinica.Modules.Personas.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("CatalogoItems", null, t =>
+                    b.ToTable("CatalogoItems", "parametros", t =>
                         {
                             t.ExcludeFromMigrations();
                         });
@@ -170,7 +171,7 @@ namespace Clinica.Modules.Personas.Infrastructure.Migrations
 
                     b.HasIndex("PersonaId");
 
-                    b.ToTable("ContactosEmergencia", (string)null);
+                    b.ToTable("ContactosEmergencia", "personas");
                 });
 
             modelBuilder.Entity("Clinica.Modules.Personas.Domain.Entities.Empleado", b =>
@@ -244,7 +245,7 @@ namespace Clinica.Modules.Personas.Infrastructure.Migrations
 
                     b.HasIndex("ServicioId");
 
-                    b.ToTable("Empleados", (string)null);
+                    b.ToTable("Empleados", "personas");
                 });
 
             modelBuilder.Entity("Clinica.Modules.Personas.Domain.Entities.Medico", b =>
@@ -294,7 +295,7 @@ namespace Clinica.Modules.Personas.Infrastructure.Migrations
                     b.HasIndex("MatriculaProfesional")
                         .IsUnique();
 
-                    b.ToTable("Medicos", (string)null);
+                    b.ToTable("Medicos", "personas");
                 });
 
             modelBuilder.Entity("Clinica.Modules.Personas.Domain.Entities.MedicoEspecialidad", b =>
@@ -344,7 +345,7 @@ namespace Clinica.Modules.Personas.Infrastructure.Migrations
                     b.HasIndex("MedicoId", "EspecialidadId")
                         .IsUnique();
 
-                    b.ToTable("MedicoEspecialidades", (string)null);
+                    b.ToTable("MedicoEspecialidades", "personas");
                 });
 
             modelBuilder.Entity("Clinica.Modules.Personas.Domain.Entities.Paciente", b =>
@@ -390,7 +391,7 @@ namespace Clinica.Modules.Personas.Infrastructure.Migrations
                     b.HasIndex("PersonaId")
                         .IsUnique();
 
-                    b.ToTable("Pacientes", (string)null);
+                    b.ToTable("Pacientes", "personas");
                 });
 
             modelBuilder.Entity("Clinica.Modules.Personas.Domain.Entities.Persona", b =>
@@ -480,7 +481,7 @@ namespace Clinica.Modules.Personas.Infrastructure.Migrations
                     b.HasIndex("TipoDocumentoId", "NumeroDocumento")
                         .IsUnique();
 
-                    b.ToTable("Personas", (string)null);
+                    b.ToTable("Personas", "personas");
                 });
 
             modelBuilder.Entity("Clinica.Modules.RecursosHumanos.Domain.Entities.Area", b =>
@@ -517,7 +518,7 @@ namespace Clinica.Modules.Personas.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Areas", null, t =>
+                    b.ToTable("Areas", "recursos_humanos", t =>
                         {
                             t.ExcludeFromMigrations();
                         });
@@ -557,7 +558,7 @@ namespace Clinica.Modules.Personas.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Cargos", null, t =>
+                    b.ToTable("Cargos", "recursos_humanos", t =>
                         {
                             t.ExcludeFromMigrations();
                         });
@@ -600,7 +601,7 @@ namespace Clinica.Modules.Personas.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Departamentos", null, t =>
+                    b.ToTable("Departamentos", "recursos_humanos", t =>
                         {
                             t.ExcludeFromMigrations();
                         });
@@ -640,7 +641,7 @@ namespace Clinica.Modules.Personas.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Especialidades", null, t =>
+                    b.ToTable("Especialidades", "recursos_humanos", t =>
                         {
                             t.ExcludeFromMigrations();
                         });
@@ -680,7 +681,7 @@ namespace Clinica.Modules.Personas.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Profesiones", null, t =>
+                    b.ToTable("Profesiones", "recursos_humanos", t =>
                         {
                             t.ExcludeFromMigrations();
                         });
@@ -725,7 +726,7 @@ namespace Clinica.Modules.Personas.Infrastructure.Migrations
 
                     b.HasIndex("DepartamentoId");
 
-                    b.ToTable("Servicios", null, t =>
+                    b.ToTable("Servicios", "recursos_humanos", t =>
                         {
                             t.ExcludeFromMigrations();
                         });

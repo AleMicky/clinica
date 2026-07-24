@@ -21,6 +21,7 @@ public class PersonasDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.HasDefaultSchema("personas");
         ConfigureExternalEntities(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(PersonasDbContext).Assembly);
     }
@@ -29,52 +30,52 @@ public class PersonasDbContext : DbContext
     {
         modelBuilder.Entity<CatalogoGrupo>(entity =>
         {
-            entity.ToTable("CatalogoGrupos", t => t.ExcludeFromMigrations());
+            entity.ToTable("CatalogoGrupos", "parametros", t => t.ExcludeFromMigrations());
             entity.HasKey(x => x.Id);
         });
 
         modelBuilder.Entity<CatalogoItem>(entity =>
         {
-            entity.ToTable("CatalogoItems", t => t.ExcludeFromMigrations());
+            entity.ToTable("CatalogoItems", "parametros", t => t.ExcludeFromMigrations());
             entity.HasKey(x => x.Id);
             entity.Ignore(x => x.CatalogoGrupo);
         });
 
         modelBuilder.Entity<Area>(entity =>
         {
-            entity.ToTable("Areas", t => t.ExcludeFromMigrations());
+            entity.ToTable("Areas", "recursos_humanos", t => t.ExcludeFromMigrations());
             entity.HasKey(x => x.Id);
             entity.Ignore(x => x.Departamentos);
         });
 
         modelBuilder.Entity<Departamento>(entity =>
         {
-            entity.ToTable("Departamentos", t => t.ExcludeFromMigrations());
+            entity.ToTable("Departamentos", "recursos_humanos", t => t.ExcludeFromMigrations());
             entity.HasKey(x => x.Id);
             entity.Ignore(x => x.Area);
         });
 
         modelBuilder.Entity<Servicio>(entity =>
         {
-            entity.ToTable("Servicios", t => t.ExcludeFromMigrations());
+            entity.ToTable("Servicios", "recursos_humanos", t => t.ExcludeFromMigrations());
             entity.HasKey(x => x.Id);
         });
 
         modelBuilder.Entity<Profesion>(entity =>
         {
-            entity.ToTable("Profesiones", t => t.ExcludeFromMigrations());
+            entity.ToTable("Profesiones", "recursos_humanos", t => t.ExcludeFromMigrations());
             entity.HasKey(x => x.Id);
         });
 
         modelBuilder.Entity<Cargo>(entity =>
         {
-            entity.ToTable("Cargos", t => t.ExcludeFromMigrations());
+            entity.ToTable("Cargos", "recursos_humanos", t => t.ExcludeFromMigrations());
             entity.HasKey(x => x.Id);
         });
 
         modelBuilder.Entity<Especialidad>(entity =>
         {
-            entity.ToTable("Especialidades", t => t.ExcludeFromMigrations());
+            entity.ToTable("Especialidades", "recursos_humanos", t => t.ExcludeFromMigrations());
             entity.HasKey(x => x.Id);
         });
     }

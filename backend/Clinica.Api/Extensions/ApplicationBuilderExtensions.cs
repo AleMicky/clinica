@@ -1,12 +1,19 @@
 using Clinica.Api.Infrastructure;
 using Clinica.Api.Middleware;
+using Clinica.Modules.AtencionMedica.Infrastructure.Persistence;
 using Clinica.Modules.AtencionMedica.Infrastructure.Seed;
+using Clinica.Modules.Parametros.Infrastructure.Persistence;
 using Clinica.Modules.Parametros.Infrastructure.Seed;
+using Clinica.Modules.Personas.Infrastructure.Persistence;
 using Clinica.Modules.Personas.Infrastructure.Seed;
+using Clinica.Modules.RecursosHumanos.Infrastructure.Persistence;
 using Clinica.Modules.RecursosHumanos.Infrastructure.Seed;
+using Clinica.Modules.Seguridad.Infrastructure.Persistence;
 using Clinica.Modules.Seguridad.Infrastructure.Seed;
+using Clinica.Modules.Workflow.Infrastructure.Persistence;
 using Clinica.Modules.Workflow.Infrastructure.Seed;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.EntityFrameworkCore;
 
 namespace Clinica.Api.Extensions;
 
@@ -16,21 +23,37 @@ public static class ApplicationBuilderExtensions
         this WebApplication app,
         bool force = false)
     {
-        // Solo con --seed/--seed-only o CLINICA_RUN_DB_INIT=true (p. ej. Docker).
-        // No corre en cada arranque de Development para no retrasar dotnet watch.
+        var logger = app.Services
+            .GetRequiredService<ILoggerFactory>()
+            .CreateLogger("Startup");
+
+        // Las migraciones corren siempre para mantener el schema alineado con el código.
+        try
+        {
+            logger.LogInformation("Aplicando migraciones pendientes...");
+            await ApplyPendingMigrationsAsync(app.Services);
+            logger.LogInformation("Migraciones aplicadas.");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(
+                ex,
+                "No se pudieron aplicar las migraciones. Verifica que SQL Server esté en ejecución.");
+
+            if (force)
+                throw;
+        }
+
+        // Seeds solo con --seed/--seed-only o CLINICA_RUN_DB_INIT=true (p. ej. Docker).
         var runDbInit = force
             || app.Configuration.GetValue("CLINICA_RUN_DB_INIT", false);
 
         if (!runDbInit)
             return app;
 
-        var logger = app.Services
-            .GetRequiredService<ILoggerFactory>()
-            .CreateLogger("Startup");
-
         try
         {
-            logger.LogInformation("Iniciando migraciones y seeds...");
+            logger.LogInformation("Iniciando seeds...");
 
             await IdentitySeeder.SeedAsync(app.Services);
             await ParametrosDbSeeder.MigrateAsync(app.Services);
@@ -41,7 +64,7 @@ public static class ApplicationBuilderExtensions
             await AtencionMedicaDbSeeder.MigrateAsync(app.Services);
             await WorkflowDbSeeder.MigrateAsync(app.Services);
 
-            logger.LogInformation("Migraciones y seeds completados.");
+            logger.LogInformation("Seeds completados.");
         }
         catch (Exception ex)
         {
@@ -54,6 +77,19 @@ public static class ApplicationBuilderExtensions
         }
 
         return app;
+    }
+
+    private static async Task ApplyPendingMigrationsAsync(IServiceProvider services)
+    {
+        await using var scope = services.CreateAsyncScope();
+        var sp = scope.ServiceProvider;
+
+        await sp.GetRequiredService<SeguridadDbContext>().Database.MigrateAsync();
+        await sp.GetRequiredService<ParametrosDbContext>().Database.MigrateAsync();
+        await sp.GetRequiredService<RecursosHumanosDbContext>().Database.MigrateAsync();
+        await sp.GetRequiredService<PersonasDbContext>().Database.MigrateAsync();
+        await sp.GetRequiredService<AtencionMedicaDbContext>().Database.MigrateAsync();
+        await sp.GetRequiredService<WorkflowDbContext>().Database.MigrateAsync();
     }
 
     public static WebApplication UseClinicaPipeline(this WebApplication app)

@@ -17,6 +17,7 @@ namespace Clinica.Modules.RecursosHumanos.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
+                .HasDefaultSchema("recursos_humanos")
                 .HasAnnotation("ProductVersion", "10.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
@@ -68,7 +69,7 @@ namespace Clinica.Modules.RecursosHumanos.Infrastructure.Migrations
                     b.HasIndex("Codigo")
                         .IsUnique();
 
-                    b.ToTable("Areas", (string)null);
+                    b.ToTable("Areas", "recursos_humanos");
                 });
 
             modelBuilder.Entity("Clinica.Modules.RecursosHumanos.Domain.Entities.Cargo", b =>
@@ -117,7 +118,7 @@ namespace Clinica.Modules.RecursosHumanos.Infrastructure.Migrations
                     b.HasIndex("Codigo")
                         .IsUnique();
 
-                    b.ToTable("Cargos", (string)null);
+                    b.ToTable("Cargos", "recursos_humanos");
                 });
 
             modelBuilder.Entity("Clinica.Modules.RecursosHumanos.Domain.Entities.Departamento", b =>
@@ -171,7 +172,7 @@ namespace Clinica.Modules.RecursosHumanos.Infrastructure.Migrations
                     b.HasIndex("Codigo")
                         .IsUnique();
 
-                    b.ToTable("Departamentos", (string)null);
+                    b.ToTable("Departamentos", "recursos_humanos");
                 });
 
             modelBuilder.Entity("Clinica.Modules.RecursosHumanos.Domain.Entities.Especialidad", b =>
@@ -220,7 +221,7 @@ namespace Clinica.Modules.RecursosHumanos.Infrastructure.Migrations
                     b.HasIndex("Codigo")
                         .IsUnique();
 
-                    b.ToTable("Especialidades", (string)null);
+                    b.ToTable("Especialidades", "recursos_humanos");
                 });
 
             modelBuilder.Entity("Clinica.Modules.RecursosHumanos.Domain.Entities.Profesion", b =>
@@ -269,7 +270,7 @@ namespace Clinica.Modules.RecursosHumanos.Infrastructure.Migrations
                     b.HasIndex("Codigo")
                         .IsUnique();
 
-                    b.ToTable("Profesiones", (string)null);
+                    b.ToTable("Profesiones", "recursos_humanos");
                 });
 
             modelBuilder.Entity("Clinica.Modules.RecursosHumanos.Domain.Entities.Servicio", b =>
@@ -323,7 +324,7 @@ namespace Clinica.Modules.RecursosHumanos.Infrastructure.Migrations
                     b.HasIndex("DepartamentoId", "Codigo")
                         .IsUnique();
 
-                    b.ToTable("Servicios", (string)null);
+                    b.ToTable("Servicios", "recursos_humanos");
                 });
 
             modelBuilder.Entity("Clinica.Modules.RecursosHumanos.Domain.Entities.Departamento", b =>
