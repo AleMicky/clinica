@@ -32,7 +32,7 @@ import {
 import { PacienteSearchBox } from './PacienteSearchBox'
 import { TipoAtencionCardSwitch } from './TipoAtencionCardSwitch'
 
-const { Text, Title } = Typography
+const { Text } = Typography
 
 function formatFechaAtencion(value: string) {
     const date = new Date(value)
@@ -101,7 +101,6 @@ export const AtencionRecepcionForm = forwardRef<
             ...recepcionDefaultValues,
             fechaAtencion: nowFechaAtencion(),
         },
-        // Cast: Zod input (optional defaults) no coincide 1:1 con los valores del form.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         validators: { onSubmit: recepcionFormSchema as any },
         onSubmit: async ({ value }) => {
@@ -174,213 +173,183 @@ export const AtencionRecepcionForm = forwardRef<
     const tipos = tiposData?.items ?? []
 
     return (
-        <Form layout="vertical" requiredMark={false} className="atencion-recepcion-form">
-            <header className="atenciones-recepcion-view__hero">
-                <div className="atenciones-recepcion-view__hero-icon" aria-hidden>
-                    <UserAddOutlined />
-                </div>
-                <div className="atenciones-recepcion-view__hero-text">
-                    <Title level={4} className="atenciones-recepcion-view__hero-title">
-                        Nueva recepción
-                    </Title>
-                    <Text
-                        type="secondary"
-                        className="atenciones-recepcion-view__hero-subtitle"
-                    >
-                        Busque o complete al paciente, elija el tipo y recepcione con un
-                        solo botón.
-                    </Text>
+        <Form
+            layout="vertical"
+            requiredMark={false}
+            size="middle"
+            className="atencion-recepcion-form atencion-recepcion-form--compact"
+        >
+            <header className="atenciones-recepcion-view__hero atenciones-recepcion-view__hero--compact">
+                <div className="atenciones-recepcion-view__hero-main">
+                    <div className="atenciones-recepcion-view__hero-icon" aria-hidden>
+                        <UserAddOutlined />
+                    </div>
+                    <div className="atenciones-recepcion-view__hero-text">
+                        <p className="atenciones-recepcion-view__hero-title">
+                            Nueva recepción
+                        </p>
+                        <Text
+                            type="secondary"
+                            className="atenciones-recepcion-view__hero-subtitle"
+                        >
+                            Paciente → tipo → recepcionar
+                        </Text>
+                    </div>
                 </div>
                 <div className="atenciones-recepcion-view__hero-fecha" aria-live="polite">
-                    <span className="atenciones-recepcion-view__hero-fecha-label">
-                        <CalendarOutlined />
-                        Fecha de atención
-                    </span>
-                    <span className="atenciones-recepcion-view__hero-fecha-value">
-                        {formatFechaAtencion(fechaAtencion)}
-                    </span>
+                    <CalendarOutlined />
+                    <span>{formatFechaAtencion(fechaAtencion)}</span>
                 </div>
             </header>
 
-            <div className="atencion-recepcion-form__section">
-                <div className="atencion-recepcion-form__section-head">
-                    <span className="atencion-recepcion-form__step">1</span>
-                    <div>
+            <div className="atencion-recepcion-form__grid">
+                <section className="atencion-recepcion-form__section">
+                    <div className="atencion-recepcion-form__section-head">
+                        <span className="atencion-recepcion-form__step">1</span>
                         <p className="atencion-recepcion-form__section-title">Paciente</p>
-                        <p className="atencion-recepcion-form__section-hint">
-                            Busque al paciente para ver su ficha, o regístrelo si no
-                            existe
+                    </div>
+
+                    {modoPaciente === 'existente' ? (
+                        <form.Field key={`paciente-${formKey}`} name="pacienteId">
+                            {(field) => {
+                                const error = getFieldError(field.state.meta.errors)
+
+                                return (
+                                    <PacienteSearchBox
+                                        value={field.state.value || undefined}
+                                        error={error || undefined}
+                                        disabled={loading}
+                                        label={null}
+                                        onBlur={field.handleBlur}
+                                        onChange={(paciente) => {
+                                            field.handleChange(paciente?.id ?? '')
+                                        }}
+                                        onRegistrar={iniciarRegistro}
+                                    />
+                                )
+                            }}
+                        </form.Field>
+                    ) : (
+                        <div className="paciente-search-box__inline paciente-search-box__inline--compact">
+                            <div className="paciente-search-box__inline-head">
+                                <div className="paciente-search-box__inline-title">
+                                    <UserAddOutlined />
+                                    <p className="paciente-search-box__inline-heading">
+                                        Paciente nuevo
+                                    </p>
+                                </div>
+                                <Button
+                                    type="link"
+                                    size="small"
+                                    icon={<CloseOutlined />}
+                                    onClick={volverABuscar}
+                                    disabled={loading}
+                                >
+                                    Buscar otro
+                                </Button>
+                            </div>
+
+                            <PersonaFormFields
+                                form={form}
+                                loading={loading}
+                                fieldPrefix="pacienteNuevo"
+                                variant="default"
+                            />
+                        </div>
+                    )}
+                </section>
+
+                <section className="atencion-recepcion-form__section atencion-recepcion-form__section--tipo">
+                    <div className="atencion-recepcion-form__section-head">
+                        <span className="atencion-recepcion-form__step">2</span>
+                        <p className="atencion-recepcion-form__section-title">
+                            Tipo de atención
                         </p>
                     </div>
-                </div>
 
-                {modoPaciente === 'existente' ? (
-                    <form.Field key={`paciente-${formKey}`} name="pacienteId">
+                    <form.Field name="tipoAtencionId">
                         {(field) => {
                             const error = getFieldError(field.state.meta.errors)
 
                             return (
-                                <PacienteSearchBox
-                                    value={field.state.value || undefined}
-                                    error={error || undefined}
-                                    disabled={loading}
-                                    label={null}
-                                    onBlur={field.handleBlur}
-                                    onChange={(paciente) => {
-                                        field.handleChange(paciente?.id ?? '')
-                                    }}
-                                    onRegistrar={iniciarRegistro}
-                                />
+                                <Form.Item
+                                    className="atencion-recepcion-form__tipo-item"
+                                    validateStatus={error ? 'error' : undefined}
+                                    help={error || undefined}
+                                >
+                                    <TipoAtencionCardSwitch
+                                        tipos={tipos}
+                                        value={field.state.value || undefined}
+                                        loading={loadingTipos}
+                                        disabled={loading}
+                                        error={error || undefined}
+                                        onBlur={field.handleBlur}
+                                        onChange={(tipoId) => {
+                                            field.handleChange(tipoId)
+                                            setTipoAtencionId(tipoId)
+                                        }}
+                                    />
+                                </Form.Item>
                             )
                         }}
                     </form.Field>
-                ) : (
-                    <div className="paciente-search-box__inline">
-                        <div className="paciente-search-box__inline-head">
-                            <div className="paciente-search-box__inline-title">
-                                <UserAddOutlined />
-                                <div>
-                                    <p className="paciente-search-box__inline-heading">
-                                        Datos del paciente nuevo
-                                    </p>
-                                    <p className="paciente-search-box__inline-hint">
-                                        Mismos datos que en Pacientes; se registra al
-                                        pulsar Recepcionar
-                                    </p>
-                                </div>
-                            </div>
-                            <Button
-                                type="text"
-                                icon={<CloseOutlined />}
-                                onClick={volverABuscar}
-                                disabled={loading}
-                            >
-                                Buscar
-                            </Button>
+
+                    {tipoAtencionIdForQuery ? (
+                        <div
+                            className={[
+                                'atencion-recepcion-form__formulario-activo',
+                                !loadingFormularios && !formularioActivo
+                                    ? 'atencion-recepcion-form__formulario-activo--empty'
+                                    : '',
+                            ]
+                                .filter(Boolean)
+                                .join(' ')}
+                        >
+                            {loadingFormularios ? (
+                                <Text type="secondary">Buscando formulario…</Text>
+                            ) : formularioActivo ? (
+                                <>
+                                    <FileTextOutlined />
+                                    <Text ellipsis className="atencion-recepcion-form__formulario-nombre">
+                                        {formularioActivo.nombre}
+                                    </Text>
+                                    <Tag color="success">Activo</Tag>
+                                </>
+                            ) : (
+                                <Text type="danger">Sin formulario activo</Text>
+                            )}
                         </div>
+                    ) : null}
 
-                        <PersonaFormFields
-                            form={form}
-                            loading={loading}
-                            fieldPrefix="pacienteNuevo"
-                            variant="sections"
-                        />
-                    </div>
-                )}
-            </div>
-
-            <div className="atencion-recepcion-form__section">
-                <div className="atencion-recepcion-form__section-head">
-                    <span className="atencion-recepcion-form__step">2</span>
-                    <div>
-                        <p className="atencion-recepcion-form__section-title">
-                            Tipo de atención
-                        </p>
-                        <p className="atencion-recepcion-form__section-hint">
-                            El formulario clínico activo se asigna automáticamente
-                        </p>
-                    </div>
-                </div>
-
-                <form.Field name="tipoAtencionId">
-                    {(field) => {
-                        const error = getFieldError(field.state.meta.errors)
-
-                        return (
+                    <form.Field name="observaciones">
+                        {(field) => (
                             <Form.Item
-                                validateStatus={error ? 'error' : undefined}
-                                help={error || undefined}
+                                label="Observaciones"
+                                className="atencion-recepcion-form__obs-item"
                             >
-                                <TipoAtencionCardSwitch
-                                    tipos={tipos}
-                                    value={field.state.value || undefined}
-                                    loading={loadingTipos}
-                                    disabled={loading}
-                                    error={error || undefined}
+                                <Input.TextArea
+                                    rows={2}
+                                    placeholder="Opcional"
+                                    value={field.state.value}
+                                    onChange={(event) =>
+                                        field.handleChange(event.target.value)
+                                    }
                                     onBlur={field.handleBlur}
-                                    onChange={(tipoId) => {
-                                        field.handleChange(tipoId)
-                                        setTipoAtencionId(tipoId)
-                                    }}
+                                    disabled={loading}
                                 />
                             </Form.Item>
-                        )
-                    }}
-                </form.Field>
-
-                {tipoAtencionIdForQuery ? (
-                    <div
-                        className={[
-                            'atencion-recepcion-form__formulario-activo',
-                            !loadingFormularios && !formularioActivo
-                                ? 'atencion-recepcion-form__formulario-activo--empty'
-                                : '',
-                        ]
-                            .filter(Boolean)
-                            .join(' ')}
-                    >
-                        {loadingFormularios ? (
-                            <Text type="secondary">Cargando formulario activo…</Text>
-                        ) : formularioActivo ? (
-                            <>
-                                <FileTextOutlined />
-                                <div>
-                                    <Text type="secondary" style={{ fontSize: 12 }}>
-                                        Formulario clínico
-                                    </Text>
-                                    <div className="atencion-recepcion-form__formulario-activo-row">
-                                        <Text strong>{formularioActivo.nombre}</Text>
-                                        <Tag color="success">Activo</Tag>
-                                        <Tag>
-                                            {formularioActivo.codigo} · v
-                                            {formularioActivo.version}
-                                        </Tag>
-                                    </div>
-                                </div>
-                            </>
-                        ) : (
-                            <Text type="danger">
-                                No hay un formulario clínico activo para este tipo.
-                            </Text>
                         )}
-                    </div>
-                ) : null}
-            </div>
-
-            <div className="atencion-recepcion-form__section">
-                <div className="atencion-recepcion-form__section-head">
-                    <span className="atencion-recepcion-form__step">3</span>
-                    <div>
-                        <p className="atencion-recepcion-form__section-title">Detalle</p>
-                        <p className="atencion-recepcion-form__section-hint">
-                            Observaciones opcionales de la recepción
-                        </p>
-                    </div>
-                </div>
-
-                <form.Field name="observaciones">
-                    {(field) => (
-                        <Form.Item label="Observaciones">
-                            <Input.TextArea
-                                rows={2}
-                                placeholder="Opcional"
-                                value={field.state.value}
-                                onChange={(event) => field.handleChange(event.target.value)}
-                                onBlur={field.handleBlur}
-                                disabled={loading}
-                            />
-                        </Form.Item>
-                    )}
-                </form.Field>
+                    </form.Field>
+                </section>
             </div>
 
             <Flex
                 justify="flex-end"
-                gap={12}
+                gap={8}
                 wrap="wrap"
                 className="atencion-recepcion-form__actions"
             >
-                <Space wrap>
+                <Space wrap size={8}>
                     <Button
                         icon={<ClearOutlined />}
                         onClick={resetForm}
@@ -390,7 +359,6 @@ export const AtencionRecepcionForm = forwardRef<
                     </Button>
                     <Button
                         type="primary"
-                        size="large"
                         icon={<CheckCircleOutlined />}
                         loading={loading}
                         disabled={!formularioActivo && Boolean(tipoAtencionIdForQuery)}
