@@ -4,6 +4,7 @@ using Clinica.Modules.AtencionMedica.Application.TiposAtencion;
 using Clinica.Modules.AtencionMedica.Domain.Entities;
 using Clinica.Modules.AtencionMedica.Infrastructure.Persistence;
 using Clinica.SharedKernel.Crud;
+using Clinica.SharedKernel.Exceptions;
 using Clinica.SharedKernel.Persistence;
 using Clinica.SharedKernel.Text;
 using Microsoft.EntityFrameworkCore;
@@ -76,6 +77,25 @@ public sealed class TipoAtencionService(AtencionMedicaDbContext context)
         await context.SaveChangesAsync(cancellationToken);
 
         return MapToResponse(entity);
+    }
+
+    protected override async Task OnBeforeDeleteAsync(
+        TipoAtencion entity,
+        CancellationToken cancellationToken)
+    {
+        var usadoEnAtenciones = await context.Atenciones
+            .AnyAsync(x => x.TipoAtencionId == entity.Id, cancellationToken);
+
+        if (usadoEnAtenciones)
+            throw new BusinessException(
+                "No se puede eliminar el tipo de atención porque tiene atenciones asociadas.");
+
+        var usadoEnFormularios = await context.FormulariosClinicos
+            .AnyAsync(x => x.TipoAtencionId == entity.Id, cancellationToken);
+
+        if (usadoEnFormularios)
+            throw new BusinessException(
+                "No se puede eliminar el tipo de atención porque tiene formularios clínicos asociados.");
     }
 
     private static void ApplyVisualFields(TipoAtencion entity, string color, string? icono)
