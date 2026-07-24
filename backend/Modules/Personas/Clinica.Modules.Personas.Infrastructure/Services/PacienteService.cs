@@ -38,13 +38,12 @@ public sealed class PacienteService(
 
         var total = await query.CountAsync(cancellationToken);
 
-        var rows = await Project(query)
+        var items = await query
             .OrderByDescending(x => x.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
+            .ProjectToResponse()
             .ToListAsync(cancellationToken);
-
-        var items = rows.Select(MapResponse).ToList();
 
         return new PagedResult<PacienteResponse>(items, total, page, pageSize);
     }
@@ -53,10 +52,11 @@ public sealed class PacienteService(
         Guid id,
         CancellationToken cancellationToken = default)
     {
-        var row = await Project(context.Pacientes.AsNoTracking().Where(x => x.Id == id))
+        return await context.Pacientes
+            .AsNoTracking()
+            .Where(x => x.Id == id)
+            .ProjectToResponse()
             .FirstOrDefaultAsync(cancellationToken);
-
-        return row is null ? null : MapResponse(row);
     }
 
     public async Task<PacienteResponse> CreateAsync(
@@ -102,7 +102,7 @@ public sealed class PacienteService(
         await context.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
-        return ToResponse(entity.Id, entity.PersonaId, entity.NumeroHistoriaClinica, persona);
+        return PacienteMapper.ToResponse(persona, entity.Id, entity.NumeroHistoriaClinica);
     }
 
     public async Task<PacienteResponse> UpdateAsync(
@@ -136,7 +136,7 @@ public sealed class PacienteService(
         // La historia clínica no se edita: se conserva el valor existente.
         await transaction.CommitAsync(cancellationToken);
 
-        return ToResponse(entity.Id, entity.PersonaId, entity.NumeroHistoriaClinica, persona);
+        return PacienteMapper.ToResponse(persona, entity.Id, entity.NumeroHistoriaClinica);
     }
 
     public async Task DeleteAsync(
@@ -189,35 +189,6 @@ public sealed class PacienteService(
         }
 
         return query;
-    }
-
-    private static IQueryable<PacienteListRow> Project(IQueryable<Paciente> query)
-    {
-        return query.Select(x => new PacienteListRow
-        {
-            Id = x.Id,
-            PersonaId = x.PersonaId,
-            CreatedAt = x.CreatedAt,
-            NumeroHistoriaClinica = x.NumeroHistoriaClinica,
-            TipoDocumentoId = x.Persona.TipoDocumentoId,
-            TipoDocumentoNombre = x.Persona.TipoDocumento.Nombre,
-            NumeroDocumento = x.Persona.NumeroDocumento,
-            ExtensionDocumentoId = x.Persona.ExtensionDocumentoId,
-            ExtensionDocumentoNombre = x.Persona.ExtensionDocumento != null
-                ? x.Persona.ExtensionDocumento.Nombre
-                : null,
-            ComplementoDocumento = x.Persona.ComplementoDocumento,
-            Nombres = x.Persona.Nombres,
-            ApellidoPaterno = x.Persona.ApellidoPaterno,
-            ApellidoMaterno = x.Persona.ApellidoMaterno,
-            FechaNacimiento = x.Persona.FechaNacimiento,
-            SexoId = x.Persona.SexoId,
-            SexoNombre = x.Persona.Sexo.Nombre,
-            EstadoCivilId = x.Persona.EstadoCivilId,
-            EstadoCivilNombre = x.Persona.EstadoCivil.Nombre,
-            Telefono = x.Persona.Telefono,
-            Direccion = x.Persona.Direccion
-        });
     }
 
     private async Task EnsurePersonaNotPacienteAsync(
@@ -275,86 +246,5 @@ public sealed class PacienteService(
                     x.NumeroHistoriaClinica == numeroHistoriaClinica &&
                     (!currentId.HasValue || x.Id != currentId.Value),
                 cancellationToken);
-    }
-
-    private static PacienteResponse MapResponse(PacienteListRow row)
-    {
-        var nombreCompleto =
-            $"{row.Nombres} {row.ApellidoPaterno} {row.ApellidoMaterno}".Trim();
-
-        return new PacienteResponse(
-            row.Id,
-            row.PersonaId,
-            nombreCompleto,
-            row.NumeroHistoriaClinica,
-            row.TipoDocumentoId,
-            row.TipoDocumentoNombre,
-            row.NumeroDocumento,
-            row.ExtensionDocumentoId,
-            row.ExtensionDocumentoNombre,
-            row.ComplementoDocumento,
-            row.Nombres,
-            row.ApellidoPaterno,
-            row.ApellidoMaterno,
-            row.FechaNacimiento,
-            row.SexoId,
-            row.SexoNombre,
-            row.EstadoCivilId,
-            row.EstadoCivilNombre,
-            row.Telefono,
-            row.Direccion);
-    }
-
-    private static PacienteResponse ToResponse(
-        Guid id,
-        Guid personaId,
-        string numeroHistoriaClinica,
-        PersonaResponse persona)
-    {
-        return new PacienteResponse(
-            id,
-            personaId,
-            persona.NombreCompleto,
-            numeroHistoriaClinica,
-            persona.TipoDocumentoId,
-            persona.TipoDocumentoNombre,
-            persona.NumeroDocumento,
-            persona.ExtensionDocumentoId,
-            persona.ExtensionDocumentoNombre,
-            persona.ComplementoDocumento,
-            persona.Nombres,
-            persona.ApellidoPaterno,
-            persona.ApellidoMaterno,
-            persona.FechaNacimiento,
-            persona.SexoId,
-            persona.SexoNombre,
-            persona.EstadoCivilId,
-            persona.EstadoCivilNombre,
-            persona.Telefono,
-            persona.Direccion);
-    }
-
-    private sealed class PacienteListRow
-    {
-        public Guid Id { get; init; }
-        public Guid PersonaId { get; init; }
-        public DateTime CreatedAt { get; init; }
-        public string NumeroHistoriaClinica { get; init; } = string.Empty;
-        public Guid TipoDocumentoId { get; init; }
-        public string TipoDocumentoNombre { get; init; } = string.Empty;
-        public string NumeroDocumento { get; init; } = string.Empty;
-        public Guid? ExtensionDocumentoId { get; init; }
-        public string? ExtensionDocumentoNombre { get; init; }
-        public string? ComplementoDocumento { get; init; }
-        public string Nombres { get; init; } = string.Empty;
-        public string ApellidoPaterno { get; init; } = string.Empty;
-        public string ApellidoMaterno { get; init; } = string.Empty;
-        public DateOnly FechaNacimiento { get; init; }
-        public Guid SexoId { get; init; }
-        public string SexoNombre { get; init; } = string.Empty;
-        public Guid EstadoCivilId { get; init; }
-        public string EstadoCivilNombre { get; init; } = string.Empty;
-        public string Telefono { get; init; } = string.Empty;
-        public string Direccion { get; init; } = string.Empty;
     }
 }
