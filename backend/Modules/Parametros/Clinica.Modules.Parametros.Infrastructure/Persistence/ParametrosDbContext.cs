@@ -14,6 +14,8 @@ public class ParametrosDbContext : DbContext
 
     public DbSet<CatalogoItem> CatalogoItems => Set<CatalogoItem>();
 
+    public DbSet<Correlativo> Correlativos => Set<Correlativo>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ParametrosDbContext).Assembly);

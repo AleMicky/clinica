@@ -18,6 +18,7 @@ public static class DependencyInjection
 
         services.AddScoped<ICatalogoGrupoService, CatalogoGrupoService>();
         services.AddScoped<ICatalogoItemService, CatalogoItemService>();
+        services.AddScoped<ICorrelativoService, CorrelativoService>();
 
         return services;
     }
