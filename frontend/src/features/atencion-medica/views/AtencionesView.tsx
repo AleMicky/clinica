@@ -2,10 +2,9 @@ import { useEffect, useState } from 'react'
 import {
     FormOutlined,
     UnorderedListOutlined,
-    UserAddOutlined,
 } from '@ant-design/icons'
 import { useQueryClient } from '@tanstack/react-query'
-import { Badge, Tabs, Typography } from 'antd'
+import { Badge, Tabs } from 'antd'
 
 import { ModuleSectionPanel } from '../../../shared/components/ui/module-page/ModuleSectionPanel'
 import { queryKeys } from '../../../shared/constants/query-keys'
@@ -27,8 +26,6 @@ import {
     type RecepcionFormValues,
 } from '../schemas/atencion.schema'
 import type { Atencion } from '../types/atencion-medica.types'
-
-const { Text, Title } = Typography
 
 const DEFAULT_PAGE_SIZE = 20
 
@@ -126,30 +123,6 @@ export function AtencionesView() {
                         ),
                         children: (
                             <div className="atenciones-recepcion-view__recepcion">
-                                <header className="atenciones-recepcion-view__hero">
-                                    <div
-                                        className="atenciones-recepcion-view__hero-icon"
-                                        aria-hidden
-                                    >
-                                        <UserAddOutlined />
-                                    </div>
-                                    <div className="atenciones-recepcion-view__hero-text">
-                                        <Title
-                                            level={4}
-                                            className="atenciones-recepcion-view__hero-title"
-                                        >
-                                            Nueva recepción
-                                        </Title>
-                                        <Text
-                                            type="secondary"
-                                            className="atenciones-recepcion-view__hero-subtitle"
-                                        >
-                                            Busque o complete al paciente, elija el tipo y
-                                            recepcione con un solo botón.
-                                        </Text>
-                                    </div>
-                                </header>
-
                                 <div className="atenciones-recepcion-view__form-card">
                                     <AtencionRecepcionForm
                                         loading={recepcionarAtencion.isPending}

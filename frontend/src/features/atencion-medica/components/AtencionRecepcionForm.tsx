@@ -5,13 +5,13 @@ import {
     Flex,
     Form,
     Input,
-    Select,
     Space,
     Tag,
     Typography,
 } from 'antd'
 import {
     ClearOutlined,
+    CalendarOutlined,
     CheckCircleOutlined,
     CloseOutlined,
     FileTextOutlined,
@@ -30,8 +30,26 @@ import {
     type RecepcionFormValues,
 } from '../schemas/atencion.schema'
 import { PacienteSearchBox } from './PacienteSearchBox'
+import { TipoAtencionCardSwitch } from './TipoAtencionCardSwitch'
 
-const { Text } = Typography
+const { Text, Title } = Typography
+
+function formatFechaAtencion(value: string) {
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) return value
+
+    return date.toLocaleString('es-BO', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    })
+}
+
+function nowFechaAtencion() {
+    return new Date().toISOString().slice(0, 16)
+}
 
 export type AtencionRecepcionFormHandle = {
     submit: () => void
@@ -79,7 +97,10 @@ export const AtencionRecepcionForm = forwardRef<
     const { data: catalogos } = useCatalogoGruposGrouped()
 
     const form = useForm({
-        defaultValues: recepcionDefaultValues,
+        defaultValues: {
+            ...recepcionDefaultValues,
+            fechaAtencion: nowFechaAtencion(),
+        },
         // Cast: Zod input (optional defaults) no coincide 1:1 con los valores del form.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         validators: { onSubmit: recepcionFormSchema as any },
@@ -90,6 +111,7 @@ export const AtencionRecepcionForm = forwardRef<
     })
 
     const modoPaciente = useStore(form.store, (state) => state.values.modoPaciente)
+    const fechaAtencion = useStore(form.store, (state) => state.values.fechaAtencion)
     const tipoAtencionIdForQuery = tipoAtencionId || undefined
 
     const { data: formulariosData, isFetching: loadingFormularios } =
@@ -106,7 +128,10 @@ export const AtencionRecepcionForm = forwardRef<
     }, [formulariosData?.items])
 
     const resetForm = () => {
-        form.reset(recepcionDefaultValues)
+        form.reset({
+            ...recepcionDefaultValues,
+            fechaAtencion: nowFechaAtencion(),
+        })
         setTipoAtencionId('')
         setFormKey((key) => key + 1)
     }
@@ -146,14 +171,37 @@ export const AtencionRecepcionForm = forwardRef<
         setFormKey((key) => key + 1)
     }
 
-    const tipoOptions =
-        tiposData?.items.map((tipo) => ({
-            value: tipo.id,
-            label: `${tipo.codigo} — ${tipo.nombre}`,
-        })) ?? []
+    const tipos = tiposData?.items ?? []
 
     return (
         <Form layout="vertical" requiredMark={false} className="atencion-recepcion-form">
+            <header className="atenciones-recepcion-view__hero">
+                <div className="atenciones-recepcion-view__hero-icon" aria-hidden>
+                    <UserAddOutlined />
+                </div>
+                <div className="atenciones-recepcion-view__hero-text">
+                    <Title level={4} className="atenciones-recepcion-view__hero-title">
+                        Nueva recepción
+                    </Title>
+                    <Text
+                        type="secondary"
+                        className="atenciones-recepcion-view__hero-subtitle"
+                    >
+                        Busque o complete al paciente, elija el tipo y recepcione con un
+                        solo botón.
+                    </Text>
+                </div>
+                <div className="atenciones-recepcion-view__hero-fecha" aria-live="polite">
+                    <span className="atenciones-recepcion-view__hero-fecha-label">
+                        <CalendarOutlined />
+                        Fecha de atención
+                    </span>
+                    <span className="atenciones-recepcion-view__hero-fecha-value">
+                        {formatFechaAtencion(fechaAtencion)}
+                    </span>
+                </div>
+            </header>
+
             <div className="atencion-recepcion-form__section">
                 <div className="atencion-recepcion-form__section-head">
                     <span className="atencion-recepcion-form__step">1</span>
@@ -240,24 +288,20 @@ export const AtencionRecepcionForm = forwardRef<
 
                         return (
                             <Form.Item
-                                label="Tipo de atención"
                                 validateStatus={error ? 'error' : undefined}
                                 help={error || undefined}
                             >
-                                <Select
-                                    showSearch
-                                    size="large"
-                                    placeholder="Seleccione el tipo"
-                                    optionFilterProp="label"
-                                    options={tipoOptions}
+                                <TipoAtencionCardSwitch
+                                    tipos={tipos}
                                     value={field.state.value || undefined}
-                                    onChange={(value) => {
-                                        field.handleChange(value)
-                                        setTipoAtencionId(value)
-                                    }}
-                                    onBlur={field.handleBlur}
-                                    disabled={loading}
                                     loading={loadingTipos}
+                                    disabled={loading}
+                                    error={error || undefined}
+                                    onBlur={field.handleBlur}
+                                    onChange={(tipoId) => {
+                                        field.handleChange(tipoId)
+                                        setTipoAtencionId(tipoId)
+                                    }}
                                 />
                             </Form.Item>
                         )
@@ -309,35 +353,10 @@ export const AtencionRecepcionForm = forwardRef<
                     <div>
                         <p className="atencion-recepcion-form__section-title">Detalle</p>
                         <p className="atencion-recepcion-form__section-hint">
-                            Fecha y observaciones (opcional)
+                            Observaciones opcionales de la recepción
                         </p>
                     </div>
                 </div>
-
-                <form.Field name="fechaAtencion">
-                    {(field) => {
-                        const error = getFieldError(field.state.meta.errors)
-
-                        return (
-                            <Form.Item
-                                label="Fecha de atención"
-                                validateStatus={error ? 'error' : undefined}
-                                help={error || undefined}
-                            >
-                                <Input
-                                    type="datetime-local"
-                                    size="large"
-                                    value={field.state.value}
-                                    onChange={(event) =>
-                                        field.handleChange(event.target.value)
-                                    }
-                                    onBlur={field.handleBlur}
-                                    disabled={loading}
-                                />
-                            </Form.Item>
-                        )
-                    }}
-                </form.Field>
 
                 <form.Field name="observaciones">
                     {(field) => (
