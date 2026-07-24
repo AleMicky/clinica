@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import {
     Button,
@@ -26,12 +26,10 @@ import {
     usePacientes,
     useUpdatePaciente,
 } from '../hooks/pacientes.hooks'
-import { usePersonas } from '../../personas/hooks/personas.hooks'
 import {
     toCreatePacientePayload,
     toUpdatePacientePayload,
     type PacienteFormValues,
-    type PacienteUpdateFormValues,
 } from '../schemas/paciente.schema'
 import {
     calcularEdadPaciente,
@@ -43,7 +41,6 @@ const { Title, Text } = Typography
 const { useBreakpoint } = Grid
 
 const DEFAULT_PAGE_SIZE = 20
-const FETCH_PAGE_SIZE = 5000
 
 function formatDate(value: string) {
     const date = new Date(value)
@@ -61,6 +58,8 @@ export function PacientesView() {
     const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
     const [search, setSearch] = useState('')
     const [searchInput, setSearchInput] = useState('')
+    const [hcFilterInput, setHcFilterInput] = useState('')
+    const [docFilterInput, setDocFilterInput] = useState('')
     const [hcFilter, setHcFilter] = useState('')
     const [docFilter, setDocFilter] = useState('')
     const [drawerOpen, setDrawerOpen] = useState(false)
@@ -68,79 +67,22 @@ export function PacientesView() {
     const [viewingPaciente, setViewingPaciente] = useState<Paciente | null>(null)
     const [deletingId, setDeletingId] = useState<string | null>(null)
 
-    const { data, isFetching: isFetchingPacientes } = usePacientes({
-        page: 1,
-        pageSize: FETCH_PAGE_SIZE,
+    const { data, isFetching } = usePacientes({
+        page,
+        pageSize,
         search: search || undefined,
-    })
-
-    const { data: personasData, isFetching: isFetchingPersonas } = usePersonas({
-        page: 1,
-        pageSize: FETCH_PAGE_SIZE,
+        numeroHistoriaClinica: hcFilter || undefined,
+        numeroDocumento: docFilter || undefined,
     })
 
     const createPaciente = useCreatePaciente()
     const updatePaciente = useUpdatePaciente()
     const deletePaciente = useDeletePaciente()
 
-    const isFetching = isFetchingPacientes || isFetchingPersonas
+    const hasActiveFilters = Boolean(hcFilter || docFilter)
 
-    const hasActiveFilters = Boolean(hcFilter.trim() || docFilter.trim())
-
-    const pacientesEnriquecidos = useMemo(() => {
-        const personasById = new Map(
-            (personasData?.items ?? []).map((persona) => [persona.id, persona] as const),
-        )
-
-        return (data?.items ?? []).map((paciente) => {
-            const persona = personasById.get(paciente.personaId)
-            if (!persona) return paciente
-
-            return {
-                ...paciente,
-                personaNombreCompleto:
-                    paciente.personaNombreCompleto || persona.nombreCompleto,
-                tipoDocumentoNombre: persona.tipoDocumentoNombre,
-                numeroDocumento: persona.numeroDocumento,
-                extensionDocumentoNombre: persona.extensionDocumentoNombre,
-                complementoDocumento: persona.complementoDocumento,
-                fechaNacimiento: persona.fechaNacimiento,
-                sexoNombre: persona.sexoNombre,
-                telefono: persona.telefono,
-                direccion: persona.direccion,
-            } satisfies Paciente
-        })
-    }, [data?.items, personasData?.items])
-
-    const filteredPacientes = useMemo(() => {
-        let list = pacientesEnriquecidos
-
-        if (hcFilter.trim()) {
-            const term = hcFilter.trim().toLowerCase()
-            list = list.filter((paciente) =>
-                paciente.numeroHistoriaClinica.toLowerCase().includes(term),
-            )
-        }
-
-        if (docFilter.trim()) {
-            const term = docFilter.trim().toLowerCase()
-            list = list.filter((paciente) => {
-                const documento = formatPacienteDocumento(paciente).toLowerCase()
-                const numero = paciente.numeroDocumento?.toLowerCase() ?? ''
-                return documento.includes(term) || numero.includes(term)
-            })
-        }
-
-        return list
-    }, [pacientesEnriquecidos, hcFilter, docFilter])
-
+    const pacientes = data?.items ?? []
     const totalPacientes = data?.totalRecords ?? 0
-    const totalFiltered = filteredPacientes.length
-
-    const pacientes = useMemo(() => {
-        const start = (page - 1) * pageSize
-        return filteredPacientes.slice(start, start + pageSize)
-    }, [filteredPacientes, page, pageSize])
 
     const isSaving = createPaciente.isPending || updatePaciente.isPending
 
@@ -161,6 +103,28 @@ export function PacientesView() {
         return () => window.clearTimeout(timer)
     }, [searchInput])
 
+    useEffect(() => {
+        const next = hcFilterInput.trim()
+        const timer = window.setTimeout(() => {
+            if (next === hcFilter) return
+            setHcFilter(next)
+            setPage(1)
+        }, 300)
+
+        return () => window.clearTimeout(timer)
+    }, [hcFilterInput, hcFilter])
+
+    useEffect(() => {
+        const next = docFilterInput.trim()
+        const timer = window.setTimeout(() => {
+            if (next === docFilter) return
+            setDocFilter(next)
+            setPage(1)
+        }, 300)
+
+        return () => window.clearTimeout(timer)
+    }, [docFilterInput, docFilter])
+
     const openCreateDrawer = () => {
         setEditingPaciente(null)
         setDrawerOpen(true)
@@ -177,14 +141,18 @@ export function PacientesView() {
         setEditingPaciente(null)
     }
 
-    const handleSubmit = async (values: PacienteFormValues | PacienteUpdateFormValues) => {
+    const handleSubmit = async (values: PacienteFormValues) => {
         if (editingPaciente) {
             await updatePaciente.mutateAsync({
                 id: editingPaciente.id,
-                data: toUpdatePacientePayload(values as PacienteUpdateFormValues),
+                data: toUpdatePacientePayload(
+                    values,
+                    editingPaciente.personaId,
+                    editingPaciente.numeroHistoriaClinica,
+                ),
             })
         } else {
-            await createPaciente.mutateAsync(toCreatePacientePayload(values as PacienteFormValues))
+            await createPaciente.mutateAsync(toCreatePacientePayload(values))
         }
 
         closeDrawer()
@@ -206,6 +174,8 @@ export function PacientesView() {
     }
 
     const clearFilters = () => {
+        setHcFilterInput('')
+        setDocFilterInput('')
         setHcFilter('')
         setDocFilter('')
         setPage(1)
@@ -215,7 +185,7 @@ export function PacientesView() {
         void navigate({ to: '/atenciones' })
     }
 
-    const caption = `${totalFiltered} de ${totalPacientes} paciente${totalPacientes === 1 ? '' : 's'}${
+    const caption = `${totalPacientes} paciente${totalPacientes === 1 ? '' : 's'}${
         search ? ` · "${search}"` : ''
     }`
 
@@ -279,10 +249,9 @@ export function PacientesView() {
                                 size="small"
                                 className="pacientes-module__filter-input"
                                 placeholder="Historia clínica"
-                                value={hcFilter}
+                                value={hcFilterInput}
                                 onChange={(event) => {
-                                    setHcFilter(event.target.value)
-                                    setPage(1)
+                                    setHcFilterInput(event.target.value)
                                 }}
                             />
 
@@ -291,10 +260,9 @@ export function PacientesView() {
                                 size="small"
                                 className="pacientes-module__filter-input"
                                 placeholder="Documento"
-                                value={docFilter}
+                                value={docFilterInput}
                                 onChange={(event) => {
-                                    setDocFilter(event.target.value)
-                                    setPage(1)
+                                    setDocFilterInput(event.target.value)
                                 }}
                             />
 
@@ -330,7 +298,7 @@ export function PacientesView() {
                         <PacientesTable
                             pacientes={pacientes}
                             loading={isFetching}
-                            total={totalFiltered}
+                            total={totalPacientes}
                             page={page}
                             pageSize={pageSize}
                             onPageChange={handlePageChange}

@@ -109,18 +109,19 @@ public sealed class PersonaService(
         CreatePersonaRequest request,
         CancellationToken cancellationToken = default)
     {
-        await EnsureCatalogoItemExistsAsync(request.TipoDocumentoId, cancellationToken);
-
-        if (request.ExtensionDocumentoId is { } extensionId)
-            await EnsureCatalogoItemExistsAsync(extensionId, cancellationToken);
-
-        await EnsureCatalogoItemExistsAsync(request.SexoId, cancellationToken);
-        await EnsureCatalogoItemExistsAsync(request.EstadoCivilId, cancellationToken);
+        var catalogos = await ResolveCatalogosAsync(
+            request.TipoDocumentoId,
+            request.ExtensionDocumentoId,
+            request.SexoId,
+            request.EstadoCivilId,
+            cancellationToken);
 
         var numeroDocumento = Normalize(request.NumeroDocumento);
+        var complementoDocumento = NormalizeOptional(request.ComplementoDocumento);
         await EnsureDocumentoIsUniqueAsync(
             request.TipoDocumentoId,
             numeroDocumento,
+            complementoDocumento,
             null,
             cancellationToken);
 
@@ -129,7 +130,7 @@ public sealed class PersonaService(
             TipoDocumentoId = request.TipoDocumentoId,
             NumeroDocumento = numeroDocumento,
             ExtensionDocumentoId = request.ExtensionDocumentoId,
-            ComplementoDocumento = NormalizeOptional(request.ComplementoDocumento),
+            ComplementoDocumento = complementoDocumento,
             Nombres = Normalize(request.Nombres),
             ApellidoPaterno = Normalize(request.ApellidoPaterno),
             ApellidoMaterno = Normalize(request.ApellidoMaterno),
@@ -143,7 +144,7 @@ public sealed class PersonaService(
         context.Personas.Add(entity);
         await context.SaveChangesAsync(cancellationToken);
 
-        return (await GetByIdAsync(entity.Id, cancellationToken))!;
+        return ToResponse(entity, catalogos);
     }
 
     public async Task<PersonaResponse> UpdateAsync(
@@ -157,25 +158,26 @@ public sealed class PersonaService(
         if (entity is null)
             throw new NotFoundException("Persona no encontrada.");
 
-        await EnsureCatalogoItemExistsAsync(request.TipoDocumentoId, cancellationToken);
-
-        if (request.ExtensionDocumentoId is { } extensionId)
-            await EnsureCatalogoItemExistsAsync(extensionId, cancellationToken);
-
-        await EnsureCatalogoItemExistsAsync(request.SexoId, cancellationToken);
-        await EnsureCatalogoItemExistsAsync(request.EstadoCivilId, cancellationToken);
+        var catalogos = await ResolveCatalogosAsync(
+            request.TipoDocumentoId,
+            request.ExtensionDocumentoId,
+            request.SexoId,
+            request.EstadoCivilId,
+            cancellationToken);
 
         var numeroDocumento = Normalize(request.NumeroDocumento);
+        var complementoDocumento = NormalizeOptional(request.ComplementoDocumento);
         await EnsureDocumentoIsUniqueAsync(
             request.TipoDocumentoId,
             numeroDocumento,
+            complementoDocumento,
             id,
             cancellationToken);
 
         entity.TipoDocumentoId = request.TipoDocumentoId;
         entity.NumeroDocumento = numeroDocumento;
         entity.ExtensionDocumentoId = request.ExtensionDocumentoId;
-        entity.ComplementoDocumento = NormalizeOptional(request.ComplementoDocumento);
+        entity.ComplementoDocumento = complementoDocumento;
         entity.Nombres = Normalize(request.Nombres);
         entity.ApellidoPaterno = Normalize(request.ApellidoPaterno);
         entity.ApellidoMaterno = Normalize(request.ApellidoMaterno);
@@ -187,7 +189,7 @@ public sealed class PersonaService(
 
         await context.SaveChangesAsync(cancellationToken);
 
-        return (await GetByIdAsync(entity.Id, cancellationToken))!;
+        return ToResponse(entity, catalogos);
     }
 
     public async Task DeleteAsync(
@@ -204,33 +206,57 @@ public sealed class PersonaService(
         await context.SaveChangesAsync(cancellationToken);
     }
 
-    private async Task EnsureCatalogoItemExistsAsync(
-        Guid catalogoItemId,
+    private async Task<IReadOnlyDictionary<Guid, string>> ResolveCatalogosAsync(
+        Guid tipoDocumentoId,
+        Guid? extensionDocumentoId,
+        Guid sexoId,
+        Guid estadoCivilId,
         CancellationToken cancellationToken)
     {
-        var exists = await context.Set<CatalogoItem>()
-            .AnyAsync(x => x.Id == catalogoItemId, cancellationToken);
+        var ids = new List<Guid> { tipoDocumentoId, sexoId, estadoCivilId };
+        if (extensionDocumentoId is { } extensionId)
+            ids.Add(extensionId);
 
-        if (!exists)
+        var catalogos = await context.Set<CatalogoItem>()
+            .AsNoTracking()
+            .Where(x => ids.Contains(x.Id))
+            .Select(x => new { x.Id, x.Nombre })
+            .ToDictionaryAsync(x => x.Id, x => x.Nombre, cancellationToken);
+
+        if (!catalogos.ContainsKey(tipoDocumentoId) ||
+            !catalogos.ContainsKey(sexoId) ||
+            !catalogos.ContainsKey(estadoCivilId) ||
+            (extensionDocumentoId is { } extId && !catalogos.ContainsKey(extId)))
+        {
             throw new BusinessException("El ítem de catálogo no existe.");
+        }
+
+        return catalogos;
     }
 
     private async Task EnsureDocumentoIsUniqueAsync(
         Guid tipoDocumentoId,
         string numeroDocumento,
+        string? complementoDocumento,
         Guid? currentId,
         CancellationToken cancellationToken)
     {
+        var documentoKey = BuildDocumentoKey(numeroDocumento, complementoDocumento);
+
         var exists = await context.Personas
             .AnyAsync(x =>
                     x.TipoDocumentoId == tipoDocumentoId &&
-                    x.NumeroDocumento == numeroDocumento &&
+                    (x.NumeroDocumento + (x.ComplementoDocumento ?? "")) == documentoKey &&
                     (!currentId.HasValue || x.Id != currentId.Value),
                 cancellationToken);
 
         if (exists)
-            throw new BusinessException("El documento ya está registrado.");
+            throw new BusinessException(
+                "El documento ya está registrado o se está utilizando.");
     }
+
+    private static string BuildDocumentoKey(string numeroDocumento, string? complementoDocumento)
+        => numeroDocumento + (complementoDocumento ?? string.Empty);
 
     private static string Normalize(string value) => value.Trim();
 
@@ -241,6 +267,39 @@ public sealed class PersonaService(
 
         var trimmed = value.Trim();
         return string.IsNullOrEmpty(trimmed) ? null : trimmed;
+    }
+
+    private static PersonaResponse ToResponse(
+        Persona entity,
+        IReadOnlyDictionary<Guid, string> catalogos)
+    {
+        catalogos.TryGetValue(entity.TipoDocumentoId, out var tipoDocumentoNombre);
+        catalogos.TryGetValue(entity.SexoId, out var sexoNombre);
+        catalogos.TryGetValue(entity.EstadoCivilId, out var estadoCivilNombre);
+
+        string? extensionNombre = null;
+        if (entity.ExtensionDocumentoId is { } extensionId)
+            catalogos.TryGetValue(extensionId, out extensionNombre);
+
+        return new PersonaResponse(
+            entity.Id,
+            entity.TipoDocumentoId,
+            tipoDocumentoNombre ?? string.Empty,
+            entity.NumeroDocumento,
+            entity.ExtensionDocumentoId,
+            extensionNombre,
+            entity.ComplementoDocumento,
+            entity.Nombres,
+            entity.ApellidoPaterno,
+            entity.ApellidoMaterno,
+            PersonaNaming.NombreCompleto(entity),
+            entity.FechaNacimiento,
+            entity.SexoId,
+            sexoNombre ?? string.Empty,
+            entity.EstadoCivilId,
+            estadoCivilNombre ?? string.Empty,
+            entity.Telefono,
+            entity.Direccion);
     }
 
     private static PersonaResponse ToResponse(Persona entity)

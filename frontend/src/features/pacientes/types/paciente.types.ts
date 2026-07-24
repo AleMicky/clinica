@@ -1,4 +1,7 @@
-import type { CreatePersonaPayload } from '../../personas/types/persona.types'
+import type {
+    CreatePersonaPayload,
+    UpdatePersonaPayload,
+} from '../../personas/types/persona.types'
 
 export type EntityId = string
 
@@ -7,26 +10,42 @@ export type Paciente = {
     personaId: EntityId
     personaNombreCompleto: string
     numeroHistoriaClinica: string
+    tipoDocumentoId: EntityId
     tipoDocumentoNombre: string
     numeroDocumento: string
+    extensionDocumentoId?: EntityId | null
     extensionDocumentoNombre?: string | null
     complementoDocumento?: string | null
+    nombres: string
+    apellidoPaterno: string
+    apellidoMaterno: string
     fechaNacimiento: string
+    sexoId: EntityId
     sexoNombre: string
+    estadoCivilId: EntityId
+    estadoCivilNombre: string
     telefono: string
     direccion: string
 }
 
+export type PacientePagedQuery = {
+    page?: number
+    pageSize?: number
+    search?: string
+    numeroHistoriaClinica?: string
+    numeroDocumento?: string
+}
+
 export type CreatePacientePayload = {
-    modo: 'nueva' | 'existente'
-    personaId?: EntityId
-    persona?: CreatePersonaPayload
+    modo: 'nueva'
+    persona: CreatePersonaPayload
     numeroHistoriaClinica?: string
 }
 
 export type UpdatePacientePayload = {
     personaId: EntityId
     numeroHistoriaClinica: string
+    persona: UpdatePersonaPayload
 }
 
 export function formatPacienteDocumento(paciente: Paciente) {

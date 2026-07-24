@@ -32,41 +32,19 @@ public sealed class PacienteService(
         CancellationToken cancellationToken = default)
     {
         var page = request.Page <= 0 ? 1 : request.Page;
-        var pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
+        var pageSize = request.PageSize <= 0 ? 10 : Math.Min(request.PageSize, 100);
 
-        var query = context.Pacientes
-            .AsNoTracking()
-            .AsQueryable();
-
-        if (request.PersonaId is { } personaId && personaId != Guid.Empty)
-            query = query.Where(x => x.PersonaId == personaId);
-
-        if (!string.IsNullOrWhiteSpace(request.Search))
-        {
-            var search = request.Search.Trim();
-            query = query.Where(x =>
-                x.NumeroHistoriaClinica.Contains(search) ||
-                x.Persona.Nombres.Contains(search) ||
-                x.Persona.ApellidoPaterno.Contains(search) ||
-                x.Persona.ApellidoMaterno.Contains(search) ||
-                x.Persona.NumeroDocumento.Contains(search));
-        }
+        var query = ApplyFilters(context.Pacientes.AsNoTracking(), request);
 
         var total = await query.CountAsync(cancellationToken);
 
-        var entities = await query
+        var rows = await Project(query)
             .OrderByDescending(x => x.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);
 
-        var personas = await personaService.GetByIdsAsync(
-            entities.Select(x => x.PersonaId),
-            cancellationToken);
-
-        var items = entities
-            .Select(x => ToResponse(x, personas.GetValueOrDefault(x.PersonaId)))
-            .ToList();
+        var items = rows.Select(MapResponse).ToList();
 
         return new PagedResult<PacienteResponse>(items, total, page, pageSize);
     }
@@ -75,72 +53,56 @@ public sealed class PacienteService(
         Guid id,
         CancellationToken cancellationToken = default)
     {
-        var entity = await context.Pacientes
-            .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        var row = await Project(context.Pacientes.AsNoTracking().Where(x => x.Id == id))
+            .FirstOrDefaultAsync(cancellationToken);
 
-        if (entity is null)
-            return null;
-
-        var personas = await personaService.GetByIdsAsync(
-            [entity.PersonaId],
-            cancellationToken);
-
-        return ToResponse(entity, personas.GetValueOrDefault(entity.PersonaId));
+        return row is null ? null : MapResponse(row);
     }
 
     public async Task<PacienteResponse> CreateAsync(
         CreatePacienteRequest request,
         CancellationToken cancellationToken = default)
     {
+        if (request.Modo == "nueva" && request.Persona is null)
+            throw new BusinessException("Debe completar los datos de la nueva persona.");
+
+        if (request.Modo == "existente" &&
+            (request.PersonaId is not { } existingPersonaId || existingPersonaId == Guid.Empty))
+            throw new BusinessException("Debe seleccionar una persona existente.");
+
+        await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
+
         PersonaResponse persona;
-        var personaCreated = false;
 
         if (request.Modo == "nueva")
         {
-            if (request.Persona is null)
-                throw new BusinessException("Debe completar los datos de la nueva persona.");
-
-            persona = await personaService.CreateAsync(request.Persona, cancellationToken);
-            personaCreated = true;
+            persona = await personaService.CreateAsync(request.Persona!, cancellationToken);
         }
         else
         {
-            if (request.PersonaId is not { } personaId || personaId == Guid.Empty)
-                throw new BusinessException("Debe seleccionar una persona existente.");
-
-            persona = await personaService.GetByIdAsync(personaId, cancellationToken)
+            persona = await personaService.GetByIdAsync(request.PersonaId!.Value, cancellationToken)
                       ?? throw new NotFoundException("Persona no encontrada.");
         }
 
-        try
+        await EnsurePersonaNotPacienteAsync(persona.Id, null, cancellationToken);
+
+        var numeroHistoria = await ResolveNumeroHistoriaClinicaAsync(
+            request.NumeroHistoriaClinica,
+            persona,
+            null,
+            cancellationToken);
+
+        var entity = new Paciente
         {
-            await EnsurePersonaNotPacienteAsync(persona.Id, null, cancellationToken);
+            PersonaId = persona.Id,
+            NumeroHistoriaClinica = numeroHistoria
+        };
 
-            var numeroHistoria = await ResolveNumeroHistoriaClinicaAsync(
-                request.NumeroHistoriaClinica,
-                persona,
-                null,
-                cancellationToken);
+        context.Pacientes.Add(entity);
+        await context.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
 
-            var entity = new Paciente
-            {
-                PersonaId = persona.Id,
-                NumeroHistoriaClinica = numeroHistoria
-            };
-
-            context.Pacientes.Add(entity);
-            await context.SaveChangesAsync(cancellationToken);
-
-            return (await GetByIdAsync(entity.Id, cancellationToken))!;
-        }
-        catch
-        {
-            if (personaCreated)
-                await personaService.DeleteAsync(persona.Id, cancellationToken);
-
-            throw;
-        }
+        return ToResponse(entity.Id, entity.PersonaId, entity.NumeroHistoriaClinica, persona);
     }
 
     public async Task<PacienteResponse> UpdateAsync(
@@ -154,18 +116,27 @@ public sealed class PacienteService(
         if (entity is null)
             throw new NotFoundException("Paciente no encontrado.");
 
-        await EnsurePersonaExistsAsync(request.PersonaId, cancellationToken);
-        await EnsurePersonaNotPacienteAsync(request.PersonaId, id, cancellationToken);
+        if (request.PersonaId != entity.PersonaId)
+            throw new BusinessException("No se puede cambiar la persona asociada al paciente.");
 
-        var numeroHistoria = Normalize(request.NumeroHistoriaClinica);
-        await EnsureHistoriaClinicaIsUniqueAsync(numeroHistoria, id, cancellationToken);
+        await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
 
-        entity.PersonaId = request.PersonaId;
-        entity.NumeroHistoriaClinica = numeroHistoria;
+        PersonaResponse persona;
 
-        await context.SaveChangesAsync(cancellationToken);
+        if (request.Persona is not null)
+        {
+            persona = await personaService.UpdateAsync(entity.PersonaId, request.Persona, cancellationToken);
+        }
+        else
+        {
+            persona = await personaService.GetByIdAsync(entity.PersonaId, cancellationToken)
+                      ?? throw new NotFoundException("Persona no encontrada.");
+        }
 
-        return (await GetByIdAsync(entity.Id, cancellationToken))!;
+        // La historia clínica no se edita: se conserva el valor existente.
+        await transaction.CommitAsync(cancellationToken);
+
+        return ToResponse(entity.Id, entity.PersonaId, entity.NumeroHistoriaClinica, persona);
     }
 
     public async Task DeleteAsync(
@@ -182,15 +153,71 @@ public sealed class PacienteService(
         await context.SaveChangesAsync(cancellationToken);
     }
 
-    private async Task EnsurePersonaExistsAsync(
-        Guid personaId,
-        CancellationToken cancellationToken)
+    private static IQueryable<Paciente> ApplyFilters(
+        IQueryable<Paciente> query,
+        PacientePagedRequest request)
     {
-        var exists = await context.Personas
-            .AnyAsync(x => x.Id == personaId, cancellationToken);
+        if (request.PersonaId is { } personaId && personaId != Guid.Empty)
+            query = query.Where(x => x.PersonaId == personaId);
 
-        if (!exists)
-            throw new BusinessException("La persona no existe.");
+        if (!string.IsNullOrWhiteSpace(request.NumeroHistoriaClinica))
+        {
+            var hc = request.NumeroHistoriaClinica.Trim();
+            query = query.Where(x => x.NumeroHistoriaClinica.Contains(hc));
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.NumeroDocumento))
+        {
+            var documento = request.NumeroDocumento.Trim();
+            query = query.Where(x =>
+                x.Persona.NumeroDocumento.Contains(documento) ||
+                (x.Persona.ComplementoDocumento != null &&
+                 x.Persona.ComplementoDocumento.Contains(documento)));
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            var search = request.Search.Trim();
+            query = query.Where(x =>
+                x.NumeroHistoriaClinica.Contains(search) ||
+                x.Persona.Nombres.Contains(search) ||
+                x.Persona.ApellidoPaterno.Contains(search) ||
+                x.Persona.ApellidoMaterno.Contains(search) ||
+                x.Persona.NumeroDocumento.Contains(search) ||
+                (x.Persona.ComplementoDocumento != null &&
+                 x.Persona.ComplementoDocumento.Contains(search)));
+        }
+
+        return query;
+    }
+
+    private static IQueryable<PacienteListRow> Project(IQueryable<Paciente> query)
+    {
+        return query.Select(x => new PacienteListRow
+        {
+            Id = x.Id,
+            PersonaId = x.PersonaId,
+            CreatedAt = x.CreatedAt,
+            NumeroHistoriaClinica = x.NumeroHistoriaClinica,
+            TipoDocumentoId = x.Persona.TipoDocumentoId,
+            TipoDocumentoNombre = x.Persona.TipoDocumento.Nombre,
+            NumeroDocumento = x.Persona.NumeroDocumento,
+            ExtensionDocumentoId = x.Persona.ExtensionDocumentoId,
+            ExtensionDocumentoNombre = x.Persona.ExtensionDocumento != null
+                ? x.Persona.ExtensionDocumento.Nombre
+                : null,
+            ComplementoDocumento = x.Persona.ComplementoDocumento,
+            Nombres = x.Persona.Nombres,
+            ApellidoPaterno = x.Persona.ApellidoPaterno,
+            ApellidoMaterno = x.Persona.ApellidoMaterno,
+            FechaNacimiento = x.Persona.FechaNacimiento,
+            SexoId = x.Persona.SexoId,
+            SexoNombre = x.Persona.Sexo.Nombre,
+            EstadoCivilId = x.Persona.EstadoCivilId,
+            EstadoCivilNombre = x.Persona.EstadoCivil.Nombre,
+            Telefono = x.Persona.Telefono,
+            Direccion = x.Persona.Direccion
+        });
     }
 
     private async Task EnsurePersonaNotPacienteAsync(
@@ -220,7 +247,7 @@ public sealed class PacienteService(
                 persona.ApellidoPaterno,
                 persona.ApellidoMaterno,
                 persona.NumeroDocumento)
-            : Normalize(requestedNumero);
+            : requestedNumero.Trim();
 
         var candidate = baseNumero;
         var suffix = 1;
@@ -250,48 +277,84 @@ public sealed class PacienteService(
                 cancellationToken);
     }
 
-    private async Task EnsureHistoriaClinicaIsUniqueAsync(
-        string numeroHistoriaClinica,
-        Guid? currentId,
-        CancellationToken cancellationToken)
+    private static PacienteResponse MapResponse(PacienteListRow row)
     {
-        if (await HistoriaClinicaExistsAsync(numeroHistoriaClinica, currentId, cancellationToken))
-            throw new BusinessException("El número de historia clínica ya existe.");
-    }
-
-    private static string Normalize(string value) => value.Trim();
-
-    private static PacienteResponse ToResponse(Paciente entity, PersonaResponse? persona)
-    {
-        if (persona is null)
-        {
-            return new PacienteResponse(
-                entity.Id,
-                entity.PersonaId,
-                string.Empty,
-                entity.NumeroHistoriaClinica,
-                string.Empty,
-                string.Empty,
-                null,
-                null,
-                default,
-                string.Empty,
-                string.Empty,
-                string.Empty);
-        }
+        var nombreCompleto =
+            $"{row.Nombres} {row.ApellidoPaterno} {row.ApellidoMaterno}".Trim();
 
         return new PacienteResponse(
-            entity.Id,
-            entity.PersonaId,
+            row.Id,
+            row.PersonaId,
+            nombreCompleto,
+            row.NumeroHistoriaClinica,
+            row.TipoDocumentoId,
+            row.TipoDocumentoNombre,
+            row.NumeroDocumento,
+            row.ExtensionDocumentoId,
+            row.ExtensionDocumentoNombre,
+            row.ComplementoDocumento,
+            row.Nombres,
+            row.ApellidoPaterno,
+            row.ApellidoMaterno,
+            row.FechaNacimiento,
+            row.SexoId,
+            row.SexoNombre,
+            row.EstadoCivilId,
+            row.EstadoCivilNombre,
+            row.Telefono,
+            row.Direccion);
+    }
+
+    private static PacienteResponse ToResponse(
+        Guid id,
+        Guid personaId,
+        string numeroHistoriaClinica,
+        PersonaResponse persona)
+    {
+        return new PacienteResponse(
+            id,
+            personaId,
             persona.NombreCompleto,
-            entity.NumeroHistoriaClinica,
+            numeroHistoriaClinica,
+            persona.TipoDocumentoId,
             persona.TipoDocumentoNombre,
             persona.NumeroDocumento,
+            persona.ExtensionDocumentoId,
             persona.ExtensionDocumentoNombre,
             persona.ComplementoDocumento,
+            persona.Nombres,
+            persona.ApellidoPaterno,
+            persona.ApellidoMaterno,
             persona.FechaNacimiento,
+            persona.SexoId,
             persona.SexoNombre,
+            persona.EstadoCivilId,
+            persona.EstadoCivilNombre,
             persona.Telefono,
             persona.Direccion);
+    }
+
+    private sealed class PacienteListRow
+    {
+        public Guid Id { get; init; }
+        public Guid PersonaId { get; init; }
+        public DateTime CreatedAt { get; init; }
+        public string NumeroHistoriaClinica { get; init; } = string.Empty;
+        public Guid TipoDocumentoId { get; init; }
+        public string TipoDocumentoNombre { get; init; } = string.Empty;
+        public string NumeroDocumento { get; init; } = string.Empty;
+        public Guid? ExtensionDocumentoId { get; init; }
+        public string? ExtensionDocumentoNombre { get; init; }
+        public string? ComplementoDocumento { get; init; }
+        public string Nombres { get; init; } = string.Empty;
+        public string ApellidoPaterno { get; init; } = string.Empty;
+        public string ApellidoMaterno { get; init; } = string.Empty;
+        public DateOnly FechaNacimiento { get; init; }
+        public Guid SexoId { get; init; }
+        public string SexoNombre { get; init; } = string.Empty;
+        public Guid EstadoCivilId { get; init; }
+        public string EstadoCivilNombre { get; init; } = string.Empty;
+        public string Telefono { get; init; } = string.Empty;
+        public string Direccion { get; init; } = string.Empty;
     }
 }

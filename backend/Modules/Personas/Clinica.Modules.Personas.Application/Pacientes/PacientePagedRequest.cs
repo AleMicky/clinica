@@ -7,4 +7,8 @@ public sealed class PacientePagedRequest : PagedRequest
     public string? Search { get; init; }
 
     public Guid? PersonaId { get; init; }
+
+    public string? NumeroHistoriaClinica { get; init; }
+
+    public string? NumeroDocumento { get; init; }
 }

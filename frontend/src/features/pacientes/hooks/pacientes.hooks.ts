@@ -5,14 +5,14 @@ import { useAppQuery } from '../../../shared/hooks/use-app-query'
 import { queryKeys } from '../../../shared/constants/query-keys'
 import { notify } from '../../../shared/utils/notify'
 import { getApiErrorMessage } from '../../../shared/utils/api-error'
-import type { PagedQuery } from '../../../shared/types/pagination.types'
 import { pacientesService } from '../services/pacientes.service'
 import type {
     CreatePacientePayload,
+    PacientePagedQuery,
     UpdatePacientePayload,
 } from '../types/paciente.types'
 
-export function usePacientes(query: PagedQuery) {
+export function usePacientes(query: PacientePagedQuery) {
     return useAppQuery({
         queryKey: queryKeys.pacientes.list(query),
         queryFn: () => pacientesService.getPaged(query),

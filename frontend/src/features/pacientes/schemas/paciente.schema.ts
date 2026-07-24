@@ -1,21 +1,15 @@
 import { z } from 'zod'
 
-import { personaSchema, toCreatePersonaPayload } from '../../personas/schemas/persona.schema'
+import {
+    personaSchema,
+    toCreatePersonaPayload,
+    toUpdatePersonaPayload,
+} from '../../personas/schemas/persona.schema'
 
 const optionalText = z.string().trim()
 
-export const pacienteUpdateSchema = z.object({
-    personaId: z.string().trim().min(1, 'Seleccione una persona.'),
-    numeroHistoriaClinica: z
-        .string()
-        .trim()
-        .min(1, 'El número de historia clínica es obligatorio.')
-        .max(30, 'No puede superar los 30 caracteres.'),
-})
-
-export const pacienteCreateSchema = z
+export const pacienteFormSchema = z
     .object({
-        modo: z.enum(['nueva', 'existente']),
         personaId: z.string().trim().optional(),
         tipoDocumentoId: z.string().trim().optional(),
         numeroDocumento: z.string().trim().optional(),
@@ -35,17 +29,6 @@ export const pacienteCreateSchema = z
         ),
     })
     .superRefine((data, ctx) => {
-        if (data.modo === 'existente') {
-            if (!data.personaId?.trim()) {
-                ctx.addIssue({
-                    code: z.ZodIssueCode.custom,
-                    message: 'Seleccione una persona existente.',
-                    path: ['personaId'],
-                })
-            }
-            return
-        }
-
         const personaResult = personaSchema.safeParse({
             tipoDocumentoId: data.tipoDocumentoId ?? '',
             numeroDocumento: data.numeroDocumento ?? '',
@@ -72,14 +55,15 @@ export const pacienteCreateSchema = z
         }
     })
 
-export const pacienteSchema = pacienteCreateSchema
+export const pacienteCreateSchema = pacienteFormSchema
+export const pacienteUpdateSchema = pacienteFormSchema
+export const pacienteSchema = pacienteFormSchema
 
-export type PacienteFormInput = z.infer<typeof pacienteCreateSchema>
-export type PacienteFormValues = z.output<typeof pacienteCreateSchema>
-export type PacienteUpdateFormValues = z.output<typeof pacienteUpdateSchema>
+export type PacienteFormInput = z.infer<typeof pacienteFormSchema>
+export type PacienteFormValues = z.output<typeof pacienteFormSchema>
+export type PacienteUpdateFormValues = PacienteFormValues
 
 export const pacienteDefaultValues: PacienteFormInput = {
-    modo: 'nueva',
     personaId: '',
     tipoDocumentoId: '',
     numeroDocumento: '',
@@ -128,24 +112,8 @@ export function buildNumeroHistoriaClinicaPreview(values: {
     return `${iniciales}${documento}`
 }
 
-export function toCreatePacientePayload(
-    values: PacienteFormValues,
-): import('../types/paciente.types').CreatePacientePayload {
-    const payload: import('../types/paciente.types').CreatePacientePayload = {
-        modo: values.modo,
-    }
-
-    const numeroHistoria = values.numeroHistoriaClinica?.trim()
-    if (numeroHistoria) {
-        payload.numeroHistoriaClinica = numeroHistoria
-    }
-
-    if (values.modo === 'existente') {
-        payload.personaId = values.personaId
-        return payload
-    }
-
-    payload.persona = toCreatePersonaPayload({
+function toPersonaFormValues(values: PacienteFormValues) {
+    return {
         tipoDocumentoId: values.tipoDocumentoId!,
         numeroDocumento: values.numeroDocumento!,
         extensionDocumentoId: values.extensionDocumentoId ?? '',
@@ -158,16 +126,33 @@ export function toCreatePacientePayload(
         estadoCivilId: values.estadoCivilId!,
         telefono: values.telefono!,
         direccion: values.direccion!,
-    })
+    }
+}
+
+export function toCreatePacientePayload(
+    values: PacienteFormValues,
+): import('../types/paciente.types').CreatePacientePayload {
+    const payload: import('../types/paciente.types').CreatePacientePayload = {
+        modo: 'nueva',
+        persona: toCreatePersonaPayload(toPersonaFormValues(values)),
+    }
+
+    const numeroHistoria = values.numeroHistoriaClinica?.trim()
+    if (numeroHistoria) {
+        payload.numeroHistoriaClinica = numeroHistoria
+    }
 
     return payload
 }
 
 export function toUpdatePacientePayload(
-    values: PacienteUpdateFormValues,
+    values: PacienteFormValues,
+    personaId: string,
+    numeroHistoriaClinica: string,
 ): import('../types/paciente.types').UpdatePacientePayload {
     return {
-        personaId: values.personaId,
-        numeroHistoriaClinica: values.numeroHistoriaClinica.trim(),
+        personaId,
+        numeroHistoriaClinica,
+        persona: toUpdatePersonaPayload(toPersonaFormValues(values)),
     }
 }

@@ -1,14 +1,14 @@
 import { del, get, getPaged, post, put } from '../../../shared/api/http'
 import { pacienteEndpoints } from '../../../shared/api/endpoints'
-import type { PagedQuery } from '../../../shared/types/pagination.types'
 import type {
     CreatePacientePayload,
     Paciente,
+    PacientePagedQuery,
     UpdatePacientePayload,
 } from '../types/paciente.types'
 
 export class PacientesService {
-    getPaged(query: PagedQuery) {
+    getPaged(query: PacientePagedQuery) {
         return getPaged<Paciente>(pacienteEndpoints.root, query)
     }
 
