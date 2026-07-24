@@ -27,8 +27,6 @@ export function usePacientesView() {
         page: filters.page,
         pageSize: filters.pageSize,
         search: filters.search || undefined,
-        numeroHistoriaClinica: filters.hcFilter || undefined,
-        numeroDocumento: filters.docFilter || undefined,
     })
 
     const createPaciente = useCreatePaciente()
@@ -110,14 +108,9 @@ export function usePacientesView() {
         totalPacientes,
         filters: {
             searchInput: filters.searchInput,
-            hcFilterInput: filters.hcFilterInput,
-            docFilterInput: filters.docFilterInput,
             hasActiveFilters: filters.hasActiveFilters,
             onSearchInputChange: filters.handleSearchInputChange,
             onSearch: filters.handleSearch,
-            onHcFilterInputChange: filters.handleHcFilterInputChange,
-            onDocFilterInputChange: filters.handleDocFilterInputChange,
-            onClearFilters: filters.clearFilters,
         },
         table: {
             pacientes,

@@ -39,14 +39,8 @@ export function PacientesView() {
                     <div className="rrhh-section-panel__filters">
                         <PacientesFiltersBar
                             searchInput={filters.searchInput}
-                            hcFilterInput={filters.hcFilterInput}
-                            docFilterInput={filters.docFilterInput}
-                            hasActiveFilters={filters.hasActiveFilters}
                             onSearchInputChange={filters.onSearchInputChange}
                             onSearch={filters.onSearch}
-                            onHcFilterInputChange={filters.onHcFilterInputChange}
-                            onDocFilterInputChange={filters.onDocFilterInputChange}
-                            onClearFilters={filters.onClearFilters}
                         />
                         <PacientesHeader onCreate={formModal.openCreateModal} />
                     </div>

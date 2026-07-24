@@ -8,10 +8,6 @@ export function usePacientesFilters() {
     const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
     const [search, setSearch] = useState('')
     const [searchInput, setSearchInput] = useState('')
-    const [hcFilterInput, setHcFilterInput] = useState('')
-    const [docFilterInput, setDocFilterInput] = useState('')
-    const [hcFilter, setHcFilter] = useState('')
-    const [docFilter, setDocFilter] = useState('')
 
     const onSearchRef = useRef((value: string) => {
         setSearch(value.trim())
@@ -33,29 +29,7 @@ export function usePacientesFilters() {
         return () => window.clearTimeout(timer)
     }, [searchInput])
 
-    useEffect(() => {
-        const next = hcFilterInput.trim()
-        const timer = window.setTimeout(() => {
-            if (next === hcFilter) return
-            setHcFilter(next)
-            setPage(1)
-        }, SEARCH_DEBOUNCE_MS)
-
-        return () => window.clearTimeout(timer)
-    }, [hcFilterInput, hcFilter])
-
-    useEffect(() => {
-        const next = docFilterInput.trim()
-        const timer = window.setTimeout(() => {
-            if (next === docFilter) return
-            setDocFilter(next)
-            setPage(1)
-        }, SEARCH_DEBOUNCE_MS)
-
-        return () => window.clearTimeout(timer)
-    }, [docFilterInput, docFilter])
-
-    const hasActiveFilters = Boolean(search || hcFilter || docFilter)
+    const hasActiveFilters = Boolean(search)
 
     const handleSearch = (value: string) => {
         setSearchInput(value)
@@ -67,14 +41,6 @@ export function usePacientesFilters() {
         setSearchInput(value)
     }
 
-    const handleHcFilterInputChange = (value: string) => {
-        setHcFilterInput(value)
-    }
-
-    const handleDocFilterInputChange = (value: string) => {
-        setDocFilterInput(value)
-    }
-
     const handlePageChange = (nextPage: number, nextPageSize: number) => {
         setPage(nextPage)
         setPageSize(nextPageSize)
@@ -83,10 +49,6 @@ export function usePacientesFilters() {
     const clearFilters = () => {
         setSearchInput('')
         setSearch('')
-        setHcFilterInput('')
-        setDocFilterInput('')
-        setHcFilter('')
-        setDocFilter('')
         setPage(1)
     }
 
@@ -95,15 +57,9 @@ export function usePacientesFilters() {
         pageSize,
         search,
         searchInput,
-        hcFilterInput,
-        docFilterInput,
-        hcFilter,
-        docFilter,
         hasActiveFilters,
         handleSearch,
         handleSearchInputChange,
-        handleHcFilterInputChange,
-        handleDocFilterInputChange,
         handlePageChange,
         clearFilters,
     }
