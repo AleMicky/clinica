@@ -2,6 +2,7 @@ using Clinica.Api.Infrastructure;
 using Clinica.Api.Middleware;
 using Clinica.Modules.AtencionMedica.Infrastructure.Persistence;
 using Clinica.Modules.AtencionMedica.Infrastructure.Seed;
+using Clinica.Modules.Laboratorio.Infrastructure.Persistence;
 using Clinica.Modules.Parametros.Infrastructure.Persistence;
 using Clinica.Modules.Parametros.Infrastructure.Seed;
 using Clinica.Modules.Personas.Infrastructure.Persistence;
@@ -90,6 +91,7 @@ public static class ApplicationBuilderExtensions
         await sp.GetRequiredService<PersonasDbContext>().Database.MigrateAsync();
         await sp.GetRequiredService<AtencionMedicaDbContext>().Database.MigrateAsync();
         await sp.GetRequiredService<WorkflowDbContext>().Database.MigrateAsync();
+        await sp.GetRequiredService<LaboratorioDbContext>().Database.MigrateAsync();
     }
 
     public static WebApplication UseClinicaPipeline(this WebApplication app)

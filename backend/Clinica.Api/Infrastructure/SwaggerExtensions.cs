@@ -16,7 +16,7 @@ public static class SwaggerExtensions
             {
                 Title = "Clinica API",
                 Version = DocumentName,
-                Description = "API del sistema de clínica — monolito modular con módulos Seguridad, Parámetros, Recursos Humanos, Personas, Atención Médica y Workflow."
+                Description = "API del sistema de clínica — monolito modular con módulos Seguridad, Parámetros, Recursos Humanos, Laboratorio, Personas, Atención Médica y Workflow."
             });
 
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -34,12 +34,36 @@ public static class SwaggerExtensions
                 [new OpenApiSecuritySchemeReference("Bearer", document)] = []
             });
 
+            // Evita colisiones entre DTOs homónimos de distintos módulos (p. ej. EspecialidadResponse).
+            options.CustomSchemaIds(type => BuildSchemaId(type));
+
             options.OrderActionsBy(api => $"{api.GroupName}_{api.RelativePath}");
             options.DocumentFilter<SeguridadTagOrderDocumentFilter>();
         });
 
         return services;
     }
+
+    private static string BuildSchemaId(Type type)
+    {
+        if (!type.IsGenericType)
+            return SanitizeSchemaId(type.FullName ?? type.Name);
+
+        var definitionName = type.GetGenericTypeDefinition().FullName!;
+        var tickIndex = definitionName.IndexOf('`');
+        if (tickIndex >= 0)
+            definitionName = definitionName[..tickIndex];
+
+        var argumentIds = string.Join("And", type.GetGenericArguments().Select(BuildSchemaId));
+        return SanitizeSchemaId($"{definitionName}Of{argumentIds}");
+    }
+
+    private static string SanitizeSchemaId(string value) =>
+        value
+            .Replace('+', '.')
+            .Replace('.', '_')
+            .Replace(',', '_')
+            .Replace(' ', '_');
 
     public static WebApplication UseClinicaSwagger(this WebApplication app)
     {
@@ -73,6 +97,8 @@ public static class SwaggerExtensions
             "RecursosHumanos · Especialidades",
             "RecursosHumanos · Departamentos",
             "RecursosHumanos · Servicios",
+            "Laboratorio",
+            "Laboratorio · Especialidades",
             "Personas",
             "Personas · Personas",
             "Personas · Pacientes",
