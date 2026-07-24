@@ -19,4 +19,11 @@ public sealed record AtencionResponse(
     string? ResponsableFinancieroTelefono,
     string? SeguroNombre,
     string? NumeroAfiliacion,
-    string? Observaciones);
+    string? Observaciones,
+    string PacienteNombre,
+    string NumeroHistoriaClinica,
+    string TipoAtencionNombre,
+    string TipoAtencionCodigo,
+    string TipoAtencionColor,
+    string? TipoAtencionIcono,
+    string? FormularioClinicoNombre);

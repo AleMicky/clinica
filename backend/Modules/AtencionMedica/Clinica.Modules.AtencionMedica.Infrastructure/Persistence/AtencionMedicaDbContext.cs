@@ -28,11 +28,25 @@ public class AtencionMedicaDbContext : DbContext
 
     private static void ConfigureExternalEntities(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Persona>(entity =>
+        {
+            entity.ToTable("Personas", t => t.ExcludeFromMigrations());
+            entity.HasKey(x => x.Id);
+            entity.Ignore(x => x.TipoDocumento);
+            entity.Ignore(x => x.ExtensionDocumento);
+            entity.Ignore(x => x.Sexo);
+            entity.Ignore(x => x.EstadoCivil);
+            entity.Ignore(x => x.ContactosEmergencia);
+        });
+
         modelBuilder.Entity<Paciente>(entity =>
         {
             entity.ToTable("Pacientes", t => t.ExcludeFromMigrations());
             entity.HasKey(x => x.Id);
-            entity.Ignore(x => x.Persona);
+            entity.HasOne(x => x.Persona)
+                .WithMany()
+                .HasForeignKey(x => x.PersonaId)
+                .OnDelete(DeleteBehavior.NoAction);
         });
 
         modelBuilder.Entity<Especialidad>(entity =>

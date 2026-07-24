@@ -154,7 +154,7 @@ export function AtencionesView() {
                             <ModuleSectionPanel
                                 title="Atenciones registradas"
                                 caption={`${totalAtenciones} registro${totalAtenciones === 1 ? '' : 's'}`}
-                                searchPlaceholder="Buscar por trámite u observaciones…"
+                                searchPlaceholder="Buscar por trámite, paciente, HC u observaciones…"
                                 searchValue={searchInput}
                                 onSearchChange={setSearchInput}
                                 onSearch={(value) => {

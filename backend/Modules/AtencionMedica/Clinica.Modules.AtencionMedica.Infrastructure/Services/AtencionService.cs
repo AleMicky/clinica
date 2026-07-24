@@ -45,10 +45,26 @@ public sealed class AtencionService(
         if (request.TipoAtencionId is { } tipoAtencionId && tipoAtencionId != Guid.Empty)
             query = query.Where(x => x.TipoAtencionId == tipoAtencionId);
 
-        return await query
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            var search = request.Search.Trim();
+            query = query.Where(a =>
+                a.NumeroAtencion.Contains(search)
+                || (a.Observaciones != null && a.Observaciones.Contains(search))
+                || context.Set<Paciente>().Any(p =>
+                    p.Id == a.PacienteId
+                    && (p.NumeroHistoriaClinica.Contains(search)
+                        || p.Persona.Nombres.Contains(search)
+                        || p.Persona.ApellidoPaterno.Contains(search)
+                        || p.Persona.ApellidoMaterno.Contains(search)
+                        || p.Persona.NumeroDocumento.Contains(search))));
+        }
+
+        var ordered = query
             .OrderByDescending(x => x.FechaAtencion)
-            .ThenBy(x => x.NumeroAtencion)
-            .Select(x => ToResponse(x))
+            .ThenBy(x => x.NumeroAtencion);
+
+        return await ProjectToResponse(ordered)
             .ToPagedResultAsync(request, cancellationToken);
     }
 
@@ -56,10 +72,8 @@ public sealed class AtencionService(
         Guid id,
         CancellationToken cancellationToken = default)
     {
-        return await context.Atenciones
-            .AsNoTracking()
-            .Where(x => x.Id == id)
-            .Select(x => ToResponse(x))
+        return await ProjectToResponse(
+                context.Atenciones.AsNoTracking().Where(x => x.Id == id))
             .FirstOrDefaultAsync(cancellationToken);
     }
 
@@ -145,7 +159,7 @@ public sealed class AtencionService(
         context.Atenciones.Add(entity);
         await context.SaveChangesAsync(cancellationToken);
 
-        return ToResponse(entity);
+        return await GetRequiredResponseAsync(entity.Id, cancellationToken);
     }
 
     public async Task<AtencionResponse> CreateAsync(
@@ -201,7 +215,7 @@ public sealed class AtencionService(
         context.Atenciones.Add(entity);
         await context.SaveChangesAsync(cancellationToken);
 
-        return ToResponse(entity);
+        return await GetRequiredResponseAsync(entity.Id, cancellationToken);
     }
 
     public async Task<AtencionResponse> UpdateAsync(
@@ -230,7 +244,7 @@ public sealed class AtencionService(
 
         await context.SaveChangesAsync(cancellationToken);
 
-        return ToResponse(entity);
+        return await GetRequiredResponseAsync(entity.Id, cancellationToken);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
@@ -283,25 +297,47 @@ public sealed class AtencionService(
             throw new BusinessException("El formulario no corresponde al tipo de atención.");
     }
 
-    private static AtencionResponse ToResponse(AtencionEntity entity) =>
-        new(
-            entity.Id,
-            entity.NumeroAtencion,
-            entity.PacienteId,
-            entity.TipoAtencionId,
-            entity.ServicioId,
-            entity.EspecialidadId,
-            entity.MedicoId,
-            entity.MotivoConsulta,
-            entity.FormularioClinicoId,
-            entity.FechaAtencion,
-            entity.FechaRecepcion,
-            entity.Estado,
-            entity.WorkflowInstanceId,
-            entity.ResponsableFinancieroNombre,
-            entity.ResponsableFinancieroDocumento,
-            entity.ResponsableFinancieroTelefono,
-            entity.SeguroNombre,
-            entity.NumeroAfiliacion,
-            entity.Observaciones);
+    private async Task<AtencionResponse> GetRequiredResponseAsync(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        return await ProjectToResponse(
+                context.Atenciones.AsNoTracking().Where(x => x.Id == id))
+            .FirstOrDefaultAsync(cancellationToken)
+            ?? throw new NotFoundException("Atención no encontrada.");
+    }
+
+    private IQueryable<AtencionResponse> ProjectToResponse(IQueryable<AtencionEntity> query)
+    {
+        return
+            from a in query
+            join p in context.Set<Paciente>().AsNoTracking() on a.PacienteId equals p.Id
+            select new AtencionResponse(
+                a.Id,
+                a.NumeroAtencion,
+                a.PacienteId,
+                a.TipoAtencionId,
+                a.ServicioId,
+                a.EspecialidadId,
+                a.MedicoId,
+                a.MotivoConsulta,
+                a.FormularioClinicoId,
+                a.FechaAtencion,
+                a.FechaRecepcion,
+                a.Estado,
+                a.WorkflowInstanceId,
+                a.ResponsableFinancieroNombre,
+                a.ResponsableFinancieroDocumento,
+                a.ResponsableFinancieroTelefono,
+                a.SeguroNombre,
+                a.NumeroAfiliacion,
+                a.Observaciones,
+                (p.Persona.Nombres + " " + p.Persona.ApellidoPaterno + " " + p.Persona.ApellidoMaterno).Trim(),
+                p.NumeroHistoriaClinica,
+                a.TipoAtencion.Nombre,
+                a.TipoAtencion.Codigo,
+                a.TipoAtencion.Color,
+                a.TipoAtencion.Icono,
+                a.FormularioClinico != null ? a.FormularioClinico.Nombre : null);
+    }
 }

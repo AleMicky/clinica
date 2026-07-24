@@ -174,6 +174,13 @@ export type Atencion = {
     seguroNombre?: string | null
     numeroAfiliacion?: string | null
     observaciones?: string | null
+    pacienteNombre?: string
+    numeroHistoriaClinica?: string
+    tipoAtencionNombre?: string
+    tipoAtencionCodigo?: string
+    tipoAtencionColor?: string
+    tipoAtencionIcono?: string | null
+    formularioClinicoNombre?: string | null
 }
 
 export type CreateAtencionPayload = {

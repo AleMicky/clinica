@@ -7685,6 +7685,75 @@ body {
     padding: 0;
 }
 
+.atenciones-table--compact .app-data-table__table {
+    font-size: 12.5px;
+}
+
+.atenciones-table--compact .app-data-table__th {
+    padding: 6px 10px;
+    font-size: 11px;
+}
+
+.atenciones-table--compact .app-data-table__td {
+    padding: 6px 10px;
+    vertical-align: middle;
+}
+
+.atencion-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.atencion-cell__numero {
+    font-size: 11.5px !important;
+    line-height: 1.25;
+}
+
+.atencion-cell__fecha,
+.atencion-cell__meta,
+.atencion-cell__obs {
+    font-size: 11.5px;
+    line-height: 1.25;
+    max-width: 160px;
+}
+
+.paciente-cell--compact {
+    gap: 8px;
+}
+
+.paciente-cell--compact .paciente-cell__avatar {
+    width: 26px;
+    height: 26px;
+    font-size: 10px;
+    border-radius: 6px;
+}
+
+.paciente-cell--compact .paciente-cell__name {
+    font-size: 12.5px;
+}
+
+.paciente-cell--compact .paciente-cell__sub {
+    font-size: 10.5px;
+}
+
+.atencion-tipo-tag.ant-tag {
+    margin-inline-end: 0;
+    font-size: 11.5px;
+    line-height: 1.3;
+    padding: 0 6px;
+    border-radius: 4px;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.atencion-actions .ant-btn {
+    width: 28px;
+    height: 28px;
+}
+
 .atenciones-recepcion-view .module-section-panel {
     min-height: 0;
     border: none;
