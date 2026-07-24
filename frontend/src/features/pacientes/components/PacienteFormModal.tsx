@@ -180,7 +180,7 @@ export function PacienteFormModal({
             <div className="paciente-drawer__scroll">
                 <Form
                     layout="vertical"
-                    requiredMark={false}
+                    requiredMark
                     className="paciente-drawer__form paciente-drawer__form--compact"
                 >
                     {isEditing ? (

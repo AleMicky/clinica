@@ -16,7 +16,6 @@ import {
     DeleteOutlined,
     EditOutlined,
     EyeOutlined,
-    MedicineBoxOutlined,
     MoreOutlined,
     TeamOutlined,
 } from '@ant-design/icons'
@@ -39,7 +38,6 @@ type PacientesTableProps = {
     onPageChange: (page: number, pageSize: number) => void
     onEdit: (paciente: Paciente) => void
     onViewFicha: (paciente: Paciente) => void
-    onNuevaAtencion: (paciente: Paciente) => void
     onDelete: (paciente: Paciente) => void
     onCreate: () => void
     deletingId: string | null
@@ -78,14 +76,12 @@ function PacienteActionsCell({
     paciente,
     onEdit,
     onViewFicha,
-    onNuevaAtencion,
     onDelete,
     deletingId,
 }: {
     paciente: Paciente
     onEdit: (paciente: Paciente) => void
     onViewFicha: (paciente: Paciente) => void
-    onNuevaAtencion: (paciente: Paciente) => void
     onDelete: (paciente: Paciente) => void
     deletingId: string | null
 }) {
@@ -114,12 +110,6 @@ function PacienteActionsCell({
             icon: <EyeOutlined />,
             label: 'Ver ficha',
             onClick: () => onViewFicha(paciente),
-        },
-        {
-            key: 'atencion',
-            icon: <MedicineBoxOutlined />,
-            label: 'Nueva atención',
-            onClick: () => onNuevaAtencion(paciente),
         },
         { type: 'divider' },
         {
@@ -154,7 +144,6 @@ export function PacientesTable({
     onPageChange,
     onEdit,
     onViewFicha,
-    onNuevaAtencion,
     onDelete,
     onCreate,
     deletingId,
@@ -219,14 +208,13 @@ export function PacientesTable({
                             paciente={row.original}
                             onEdit={onEdit}
                             onViewFicha={onViewFicha}
-                            onNuevaAtencion={onNuevaAtencion}
                             onDelete={onDelete}
                             deletingId={deletingId}
                         />
                     ),
                 }),
             ] as ColumnDef<Paciente, unknown>[],
-        [onEdit, onViewFicha, onNuevaAtencion, onDelete, deletingId],
+        [onEdit, onViewFicha, onDelete, deletingId],
     )
 
     const showCustomEmpty = !loading && pacientes.length === 0

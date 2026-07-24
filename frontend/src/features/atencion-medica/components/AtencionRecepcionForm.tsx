@@ -81,7 +81,7 @@ export const AtencionRecepcionForm = forwardRef<
     const [formKey, setFormKey] = useState(0)
 
     const { data: tiposData, isFetching: loadingTipos } = useTiposAtencion()
-    const { data: catalogos, isFetching: loadingCatalogos } = useCatalogoGruposGrouped()
+    const { data: catalogos, isPending: loadingCatalogos } = useCatalogoGruposGrouped()
 
     const form = useForm({
         defaultValues: recepcionDefaultValues,

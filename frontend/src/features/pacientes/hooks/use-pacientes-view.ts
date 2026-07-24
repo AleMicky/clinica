@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
 
 import {
     toCreatePacientePayload,
@@ -16,7 +15,6 @@ import {
 import { usePacientesFilters } from './use-pacientes-filters'
 
 export function usePacientesView() {
-    const navigate = useNavigate()
     const filters = usePacientesFilters()
     const [modalOpen, setModalOpen] = useState(false)
     const [editingPaciente, setEditingPaciente] = useState<Paciente | null>(null)
@@ -84,10 +82,6 @@ export function usePacientesView() {
         }
     }
 
-    const handleNuevaAtencion = (_paciente: Paciente) => {
-        void navigate({ to: '/atenciones' })
-    }
-
     const openFicha = (paciente: Paciente) => {
         setViewingPaciente(paciente)
     }
@@ -120,7 +114,6 @@ export function usePacientesView() {
             onPageChange: filters.handlePageChange,
             onEdit: openEditModal,
             onViewFicha: openFicha,
-            onNuevaAtencion: handleNuevaAtencion,
             onDelete: handleDelete,
             onCreate: openCreateModal,
             deletingId,

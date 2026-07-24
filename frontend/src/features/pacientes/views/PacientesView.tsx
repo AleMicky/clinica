@@ -1,7 +1,11 @@
+import { useEffect } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { Button, Descriptions, Modal } from 'antd'
 import { TeamOutlined } from '@ant-design/icons'
 
 import { ModuleObjectPage } from '../../../shared/components/ui/module-page/ModuleObjectPage'
+import { queryKeys } from '../../../shared/constants/query-keys'
+import { catalogoGruposService } from '../../parametros/catalogos/services/catalogo-grupos.service'
 import { PacienteFormModal } from '../components/PacienteFormModal'
 import { PacientesFiltersBar } from '../components/PacientesFiltersBar'
 import { PacientesHeader } from '../components/PacientesHeader'
@@ -19,8 +23,17 @@ function formatDate(value: string) {
 }
 
 export function PacientesView() {
+    const queryClient = useQueryClient()
     const { loading, caption, totalPacientes, filters, table, formModal, fichaModal } =
         usePacientesView()
+
+    useEffect(() => {
+        void queryClient.prefetchQuery({
+            queryKey: [...queryKeys.catalogoGrupos.all, 'grouped'] as const,
+            queryFn: () => catalogoGruposService.getGroupedItems(),
+            staleTime: 30 * 60 * 1000,
+        })
+    }, [queryClient])
 
     return (
         <div className="pacientes-module">
@@ -57,7 +70,6 @@ export function PacientesView() {
                             onPageChange={table.onPageChange}
                             onEdit={table.onEdit}
                             onViewFicha={table.onViewFicha}
-                            onNuevaAtencion={table.onNuevaAtencion}
                             onDelete={table.onDelete}
                             onCreate={table.onCreate}
                             deletingId={table.deletingId}

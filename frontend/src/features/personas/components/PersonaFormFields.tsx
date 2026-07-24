@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { Col, DatePicker, Form, Input, Row, Select, Typography } from 'antd'
 import dayjs from 'dayjs'
 
@@ -73,12 +74,21 @@ export function PersonaFormFields({
     fieldPrefix,
     variant = 'default',
 }: PersonaFormFieldsProps) {
-    const { data: catalogos, isFetching: loadingCatalogos } = useCatalogoGruposGrouped()
+    const { data: catalogos, isPending: loadingCatalogos } = useCatalogoGruposGrouped()
 
-    const tipoDocumentoOptions = getCatalogoOptions(catalogos, 'TIPO_DOCUMENTO')
-    const extensionDocumentoOptions = getCatalogoOptions(catalogos, 'EXTENSION_DOCUMENTO')
-    const sexoOptions = getCatalogoOptions(catalogos, 'SEXO')
-    const estadoCivilOptions = getCatalogoOptions(catalogos, 'ESTADO_CIVIL')
+    const tipoDocumentoOptions = useMemo(
+        () => getCatalogoOptions(catalogos, 'TIPO_DOCUMENTO'),
+        [catalogos],
+    )
+    const extensionDocumentoOptions = useMemo(
+        () => getCatalogoOptions(catalogos, 'EXTENSION_DOCUMENTO'),
+        [catalogos],
+    )
+    const sexoOptions = useMemo(() => getCatalogoOptions(catalogos, 'SEXO'), [catalogos])
+    const estadoCivilOptions = useMemo(
+        () => getCatalogoOptions(catalogos, 'ESTADO_CIVIL'),
+        [catalogos],
+    )
 
     const disabled = loading || loadingCatalogos
     const showSections = variant === 'sections'

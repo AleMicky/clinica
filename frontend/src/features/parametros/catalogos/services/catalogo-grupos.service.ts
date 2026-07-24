@@ -5,6 +5,7 @@ import type {
     CatalogoGrupo,
     CatalogoGrupoConItems,
     CatalogoItem,
+    CatalogoItemOption,
     CatalogoItemPagedQuery,
     CreateCatalogoGrupoPayload,
     UpdateCatalogoGrupoPayload,
@@ -33,14 +34,32 @@ export class CatalogoGruposService {
     }
 
     async getGroupedItems(): Promise<CatalogoGrupoConItems[]> {
-        const gruposResult = await this.getPaged({ page: 1, pageSize: 100 })
-        const grouped = await Promise.all(
-            gruposResult.items.map(async (grupo) => ({
-                ...grupo,
-                items: await this.getItemsByGrupo(grupo.id),
-            })),
-        )
-        return grouped
+        const [gruposResult, itemsResult] = await Promise.all([
+            this.getPaged({ page: 1, pageSize: 100 }),
+            getPaged<CatalogoItem>(catalogoItemEndpoints.root, {
+                page: 1,
+                pageSize: 500,
+            }),
+        ])
+
+        const itemsByGrupo = new Map<string, CatalogoItemOption[]>()
+
+        for (const item of itemsResult.items) {
+            const list = itemsByGrupo.get(item.catalogoGrupoId) ?? []
+            list.push({
+                id: item.id,
+                codigo: item.codigo,
+                nombre: item.nombre,
+                valor: item.valor,
+                orden: item.orden,
+            })
+            itemsByGrupo.set(item.catalogoGrupoId, list)
+        }
+
+        return gruposResult.items.map((grupo) => ({
+            ...grupo,
+            items: itemsByGrupo.get(grupo.id) ?? [],
+        }))
     }
 
     create(data: CreateCatalogoGrupoPayload) {
