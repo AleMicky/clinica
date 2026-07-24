@@ -7246,6 +7246,21 @@ body {
     width: min(360px, 100%);
 }
 
+.tipos-atencion-view__name-row {
+    min-width: 0;
+}
+
+.tipos-atencion-view__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    flex-shrink: 0;
+    font-size: 18px;
+}
+
 .tipos-atencion-view__name-cell {
     display: flex;
     flex-direction: column;
@@ -7270,6 +7285,13 @@ body {
 
 .tipos-atencion-view__actions {
     white-space: nowrap;
+}
+
+.tipo-atencion-form__color-input {
+    width: 100%;
+    height: 32px;
+    padding: 2px 4px;
+    cursor: pointer;
 }
 
 .tipos-atencion-view .app-data-table__table {
@@ -7582,6 +7604,90 @@ body {
 
 /* ── Paciente inline (recepción) ─────────────────────────────────── */
 
+.paciente-search-box__ficha {
+    margin-top: 2px;
+    padding: 14px 16px 12px;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid rgba(82, 196, 26, 0.28);
+    box-shadow: inset 0 0 0 1px rgba(82, 196, 26, 0.04);
+}
+
+.paciente-search-box__ficha-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.paciente-search-box__ficha-title {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    min-width: 0;
+}
+
+.paciente-search-box__ficha-icon {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    background: rgba(82, 196, 26, 0.1);
+    border: 1px solid rgba(82, 196, 26, 0.18);
+    color: #389e0d;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.paciente-search-box__ficha-heading {
+    min-width: 0;
+}
+
+.paciente-search-box__ficha-tag {
+    margin-inline-end: 0;
+}
+
+.paciente-search-box__ficha-name {
+    margin: 6px 0 0 !important;
+    font-size: 16px !important;
+    line-height: 1.3 !important;
+    color: rgba(15, 23, 42, 0.92);
+}
+
+.paciente-search-box__ficha-hc {
+    display: block;
+    margin-top: 2px;
+    font-size: 12px;
+}
+
+.paciente-search-box__ficha-grid {
+    margin-top: 2px;
+}
+
+.paciente-search-box__ficha-grid .ant-descriptions-item-label {
+    color: rgba(15, 23, 42, 0.5);
+}
+
+.paciente-search-box__empty {
+    margin-top: 12px;
+    padding: 18px 16px 16px;
+    border-radius: 12px;
+    background: rgba(250, 173, 20, 0.06);
+    border: 1px dashed rgba(250, 173, 20, 0.35);
+    text-align: center;
+}
+
+.paciente-search-box__empty .ant-empty {
+    margin-block: 0;
+}
+
+.paciente-search-box__empty .ant-empty-image {
+    margin-bottom: 8px;
+    height: 42px;
+}
+
 .paciente-search-box__inline {
     margin-top: 4px;
     padding: 14px 16px 12px;
@@ -7640,6 +7746,29 @@ body {
     border-top: 1px solid rgba(15, 23, 42, 0.06);
 }
 
+[data-theme='dark'] .paciente-search-box__ficha {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(82, 196, 26, 0.35);
+}
+
+[data-theme='dark'] .paciente-search-box__ficha-icon {
+    background: rgba(82, 196, 26, 0.14);
+    border-color: rgba(82, 196, 26, 0.28);
+}
+
+[data-theme='dark'] .paciente-search-box__ficha-name {
+    color: rgba(255, 255, 255, 0.92);
+}
+
+[data-theme='dark'] .paciente-search-box__ficha-grid .ant-descriptions-item-label {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+[data-theme='dark'] .paciente-search-box__empty {
+    background: rgba(250, 173, 20, 0.1);
+    border-color: rgba(250, 173, 20, 0.4);
+}
+
 [data-theme='dark'] .paciente-search-box__inline {
     background: rgba(255, 255, 255, 0.03);
     border-color: rgba(22, 119, 255, 0.35);
@@ -7663,6 +7792,7 @@ body {
 }
 
 @media (max-width: 767px) {
+    .paciente-search-box__ficha-head,
     .paciente-search-box__inline-head {
         flex-direction: column;
         align-items: stretch;

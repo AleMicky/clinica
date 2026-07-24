@@ -1,13 +1,10 @@
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from 'react'
+import { forwardRef, useImperativeHandle, useMemo, useState } from 'react'
 import { useForm, useStore } from '@tanstack/react-form'
 import {
     Button,
-    Col,
-    DatePicker,
     Flex,
     Form,
     Input,
-    Row,
     Select,
     Space,
     Tag,
@@ -20,9 +17,9 @@ import {
     FileTextOutlined,
     UserAddOutlined,
 } from '@ant-design/icons'
-import dayjs from 'dayjs'
 
 import { useCatalogoGruposGrouped } from '../../parametros/catalogos/hooks/catalogo-grupos.hooks'
+import { PersonaFormFields } from '../../personas/components/PersonaFormFields'
 import {
     useFormulariosClinicos,
     useTiposAtencion,
@@ -35,8 +32,6 @@ import {
 import { PacienteSearchBox } from './PacienteSearchBox'
 
 const { Text } = Typography
-const DATE_VALUE_FORMAT = 'YYYY-MM-DD'
-const DATE_DISPLAY_FORMAT = 'DD/MM/YYYY'
 
 export type AtencionRecepcionFormHandle = {
     submit: () => void
@@ -81,11 +76,13 @@ export const AtencionRecepcionForm = forwardRef<
     const [formKey, setFormKey] = useState(0)
 
     const { data: tiposData, isFetching: loadingTipos } = useTiposAtencion()
-    const { data: catalogos, isPending: loadingCatalogos } = useCatalogoGruposGrouped()
+    const { data: catalogos } = useCatalogoGruposGrouped()
 
     const form = useForm({
         defaultValues: recepcionDefaultValues,
-        validators: { onSubmit: recepcionFormSchema },
+        // Cast: Zod input (optional defaults) no coincide 1:1 con los valores del form.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        validators: { onSubmit: recepcionFormSchema as any },
         onSubmit: async ({ value }) => {
             await onSubmit(value)
             resetForm()
@@ -108,16 +105,6 @@ export const AtencionRecepcionForm = forwardRef<
         return [...activos].sort((a, b) => b.version - a.version)[0] ?? null
     }, [formulariosData?.items])
 
-    const tipoDocumentoOptions =
-        catalogos
-            ?.find((grupo) => grupo.codigo === 'TIPO_DOCUMENTO')
-            ?.items.map((item) => ({ label: item.nombre, value: item.id })) ?? []
-
-    const sexoOptions =
-        catalogos
-            ?.find((grupo) => grupo.codigo === 'SEXO')
-            ?.items.map((item) => ({ label: item.nombre, value: item.id })) ?? []
-
     const resetForm = () => {
         form.reset(recepcionDefaultValues)
         setTipoAtencionId('')
@@ -139,15 +126,17 @@ export const AtencionRecepcionForm = forwardRef<
             ['SOLTER', 'SOLTERO'],
         )
 
-        form.setFieldValue('modoPaciente', 'nuevo')
+        const esDocumento = /^\d+$/.test(searchTerm.trim())
+
         form.setFieldValue('pacienteId', '')
         form.setFieldValue('pacienteNuevo', {
             ...recepcionDefaultValues.pacienteNuevo!,
             tipoDocumentoId,
             estadoCivilId,
-            numeroDocumento: /^\d+$/.test(searchTerm) ? searchTerm : '',
-            nombres: /^\d+$/.test(searchTerm) ? '' : searchTerm,
+            numeroDocumento: esDocumento ? searchTerm.trim() : '',
+            nombres: esDocumento ? '' : searchTerm.trim(),
         })
+        form.setFieldValue('modoPaciente', 'nuevo')
     }
 
     const volverABuscar = () => {
@@ -163,9 +152,6 @@ export const AtencionRecepcionForm = forwardRef<
             label: `${tipo.codigo} — ${tipo.nombre}`,
         })) ?? []
 
-    const formDisabled = loading || loadingTipos || loadingCatalogos
-    const busy = formDisabled
-
     return (
         <Form layout="vertical" requiredMark={false} className="atencion-recepcion-form">
             <div className="atencion-recepcion-form__section">
@@ -174,8 +160,8 @@ export const AtencionRecepcionForm = forwardRef<
                     <div>
                         <p className="atencion-recepcion-form__section-title">Paciente</p>
                         <p className="atencion-recepcion-form__section-hint">
-                            Busque al paciente o complete sus datos; se registra al
-                            recepcionar
+                            Busque al paciente para ver su ficha, o regístrelo si no
+                            existe
                         </p>
                     </div>
                 </div>
@@ -189,7 +175,7 @@ export const AtencionRecepcionForm = forwardRef<
                                 <PacienteSearchBox
                                     value={field.state.value || undefined}
                                     error={error || undefined}
-                                    disabled={formDisabled}
+                                    disabled={loading}
                                     label={null}
                                     onBlur={field.handleBlur}
                                     onChange={(paciente) => {
@@ -210,8 +196,8 @@ export const AtencionRecepcionForm = forwardRef<
                                         Datos del paciente nuevo
                                     </p>
                                     <p className="paciente-search-box__inline-hint">
-                                        No se guarda todavía: se registra al pulsar
-                                        Recepcionar
+                                        Mismos datos que en Pacientes; se registra al
+                                        pulsar Recepcionar
                                     </p>
                                 </div>
                             </div>
@@ -225,206 +211,12 @@ export const AtencionRecepcionForm = forwardRef<
                             </Button>
                         </div>
 
-                        <Row gutter={[12, 0]}>
-                            <Col xs={24} sm={10}>
-                                <form.Field name="pacienteNuevo.tipoDocumentoId">
-                                    {(field) => {
-                                        const error = getFieldError(field.state.meta.errors)
-                                        return (
-                                            <Form.Item
-                                                label="Documento"
-                                                required
-                                                validateStatus={error ? 'error' : undefined}
-                                                help={error || undefined}
-                                            >
-                                                <Select
-                                                    showSearch
-                                                    optionFilterProp="label"
-                                                    options={tipoDocumentoOptions}
-                                                    value={field.state.value || undefined}
-                                                    onChange={field.handleChange}
-                                                    onBlur={field.handleBlur}
-                                                    disabled={busy}
-                                                />
-                                            </Form.Item>
-                                        )
-                                    }}
-                                </form.Field>
-                            </Col>
-                            <Col xs={24} sm={14}>
-                                <form.Field name="pacienteNuevo.numeroDocumento">
-                                    {(field) => {
-                                        const error = getFieldError(field.state.meta.errors)
-                                        return (
-                                            <Form.Item
-                                                label="Número"
-                                                required
-                                                validateStatus={error ? 'error' : undefined}
-                                                help={error || undefined}
-                                            >
-                                                <Input
-                                                    value={field.state.value}
-                                                    onChange={(event) =>
-                                                        field.handleChange(event.target.value)
-                                                    }
-                                                    onBlur={field.handleBlur}
-                                                    disabled={busy}
-                                                />
-                                            </Form.Item>
-                                        )
-                                    }}
-                                </form.Field>
-                            </Col>
-                            <Col xs={24} sm={12}>
-                                <form.Field name="pacienteNuevo.nombres">
-                                    {(field) => {
-                                        const error = getFieldError(field.state.meta.errors)
-                                        return (
-                                            <Form.Item
-                                                label="Nombres"
-                                                required
-                                                validateStatus={error ? 'error' : undefined}
-                                                help={error || undefined}
-                                            >
-                                                <Input
-                                                    value={field.state.value}
-                                                    onChange={(event) =>
-                                                        field.handleChange(event.target.value)
-                                                    }
-                                                    onBlur={field.handleBlur}
-                                                    disabled={busy}
-                                                />
-                                            </Form.Item>
-                                        )
-                                    }}
-                                </form.Field>
-                            </Col>
-                            <Col xs={24} sm={12}>
-                                <form.Field name="pacienteNuevo.apellidoPaterno">
-                                    {(field) => {
-                                        const error = getFieldError(field.state.meta.errors)
-                                        return (
-                                            <Form.Item
-                                                label="Apellido paterno"
-                                                required
-                                                validateStatus={error ? 'error' : undefined}
-                                                help={error || undefined}
-                                            >
-                                                <Input
-                                                    value={field.state.value}
-                                                    onChange={(event) =>
-                                                        field.handleChange(event.target.value)
-                                                    }
-                                                    onBlur={field.handleBlur}
-                                                    disabled={busy}
-                                                />
-                                            </Form.Item>
-                                        )
-                                    }}
-                                </form.Field>
-                            </Col>
-                            <Col xs={24} sm={12}>
-                                <form.Field name="pacienteNuevo.apellidoMaterno">
-                                    {(field) => (
-                                        <Form.Item label="Apellido materno">
-                                            <Input
-                                                placeholder="Opcional"
-                                                value={field.state.value}
-                                                onChange={(event) =>
-                                                    field.handleChange(event.target.value)
-                                                }
-                                                onBlur={field.handleBlur}
-                                                disabled={busy}
-                                            />
-                                        </Form.Item>
-                                    )}
-                                </form.Field>
-                            </Col>
-                            <Col xs={24} sm={12}>
-                                <form.Field name="pacienteNuevo.fechaNacimiento">
-                                    {(field) => {
-                                        const error = getFieldError(field.state.meta.errors)
-                                        return (
-                                            <Form.Item
-                                                label="Nacimiento"
-                                                required
-                                                validateStatus={error ? 'error' : undefined}
-                                                help={error || undefined}
-                                            >
-                                                <DatePicker
-                                                    style={{ width: '100%' }}
-                                                    format={DATE_DISPLAY_FORMAT}
-                                                    value={
-                                                        field.state.value
-                                                            ? dayjs(
-                                                                  field.state.value,
-                                                                  DATE_VALUE_FORMAT,
-                                                              )
-                                                            : null
-                                                    }
-                                                    onChange={(date) =>
-                                                        field.handleChange(
-                                                            date
-                                                                ? date.format(DATE_VALUE_FORMAT)
-                                                                : '',
-                                                        )
-                                                    }
-                                                    onBlur={field.handleBlur}
-                                                    disabled={busy}
-                                                />
-                                            </Form.Item>
-                                        )
-                                    }}
-                                </form.Field>
-                            </Col>
-                            <Col xs={24} sm={12}>
-                                <form.Field name="pacienteNuevo.sexoId">
-                                    {(field) => {
-                                        const error = getFieldError(field.state.meta.errors)
-                                        return (
-                                            <Form.Item
-                                                label="Sexo"
-                                                required
-                                                validateStatus={error ? 'error' : undefined}
-                                                help={error || undefined}
-                                            >
-                                                <Select
-                                                    options={sexoOptions}
-                                                    value={field.state.value || undefined}
-                                                    onChange={field.handleChange}
-                                                    onBlur={field.handleBlur}
-                                                    disabled={busy}
-                                                />
-                                            </Form.Item>
-                                        )
-                                    }}
-                                </form.Field>
-                            </Col>
-                            <Col xs={24} sm={12}>
-                                <form.Field name="pacienteNuevo.telefono">
-                                    {(field) => {
-                                        const error = getFieldError(field.state.meta.errors)
-                                        return (
-                                            <Form.Item
-                                                label="Teléfono"
-                                                required
-                                                validateStatus={error ? 'error' : undefined}
-                                                help={error || undefined}
-                                            >
-                                                <Input
-                                                    value={field.state.value}
-                                                    onChange={(event) =>
-                                                        field.handleChange(event.target.value)
-                                                    }
-                                                    onBlur={field.handleBlur}
-                                                    disabled={busy}
-                                                />
-                                            </Form.Item>
-                                        )
-                                    }}
-                                </form.Field>
-                            </Col>
-                        </Row>
+                        <PersonaFormFields
+                            form={form}
+                            loading={loading}
+                            fieldPrefix="pacienteNuevo"
+                            variant="sections"
+                        />
                     </div>
                 )}
             </div>
@@ -464,7 +256,7 @@ export const AtencionRecepcionForm = forwardRef<
                                         setTipoAtencionId(value)
                                     }}
                                     onBlur={field.handleBlur}
-                                    disabled={formDisabled}
+                                    disabled={loading}
                                     loading={loadingTipos}
                                 />
                             </Form.Item>
@@ -540,7 +332,7 @@ export const AtencionRecepcionForm = forwardRef<
                                         field.handleChange(event.target.value)
                                     }
                                     onBlur={field.handleBlur}
-                                    disabled={formDisabled}
+                                    disabled={loading}
                                 />
                             </Form.Item>
                         )
@@ -556,7 +348,7 @@ export const AtencionRecepcionForm = forwardRef<
                                 value={field.state.value}
                                 onChange={(event) => field.handleChange(event.target.value)}
                                 onBlur={field.handleBlur}
-                                disabled={formDisabled}
+                                disabled={loading}
                             />
                         </Form.Item>
                     )}
@@ -573,7 +365,7 @@ export const AtencionRecepcionForm = forwardRef<
                     <Button
                         icon={<ClearOutlined />}
                         onClick={resetForm}
-                        disabled={formDisabled}
+                        disabled={loading}
                     >
                         Limpiar
                     </Button>

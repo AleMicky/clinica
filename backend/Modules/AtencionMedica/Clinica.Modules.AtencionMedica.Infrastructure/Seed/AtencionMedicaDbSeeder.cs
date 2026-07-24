@@ -71,24 +71,33 @@ public static class AtencionMedicaDbSeeder
 
     private static async Task SeedTiposAtencionAsync(AtencionMedicaDbContext context)
     {
-        var items = new[]
+        var items = new (string Codigo, string Nombre, string Color, string Icono)[]
         {
-            ("CONSULTA_EXTERNA", "Consulta Externa"),
-            ("EMERGENCIA", "Emergencia"),
-            ("INTERNACION", "Internación")
+            ("CONSULTA_EXTERNA", "Consulta Externa", "#1677ff", "MedicineBoxOutlined"),
+            ("EMERGENCIA", "Emergencia", "#ff4d4f", "AlertOutlined"),
+            ("INTERNACION", "Internación", "#722ed1", "HomeOutlined")
         };
 
         foreach (var item in items)
         {
-            var exists = await context.TiposAtencion
-                .AnyAsync(x => x.Codigo == item.Item1);
+            var existing = await context.TiposAtencion
+                .FirstOrDefaultAsync(x => x.Codigo == item.Codigo);
 
-            if (exists) continue;
+            if (existing is not null)
+            {
+                if (string.IsNullOrWhiteSpace(existing.Color))
+                    existing.Color = item.Color;
+                if (string.IsNullOrWhiteSpace(existing.Icono))
+                    existing.Icono = item.Icono;
+                continue;
+            }
 
             context.TiposAtencion.Add(new TipoAtencion
             {
-                Codigo = item.Item1,
-                Nombre = item.Item2
+                Codigo = item.Codigo,
+                Nombre = item.Nombre,
+                Color = item.Color,
+                Icono = item.Icono
             });
         }
 

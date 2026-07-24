@@ -1,27 +1,18 @@
 import { z } from 'zod'
 
+import { personaSchema } from '../../personas/schemas/persona.schema'
 import type {
     RecepcionPacienteNuevoPayload,
     RecepcionarAtencionPayload,
     UpdateAtencionPayload,
 } from '../types/atencion-medica.types'
 
-const pacienteNuevoSchema = z.object({
-    tipoDocumentoId: z.string().trim().min(1, 'Seleccione el tipo de documento'),
-    numeroDocumento: z.string().trim().min(1, 'Ingrese el número de documento'),
-    nombres: z.string().trim().min(1, 'Ingrese los nombres'),
-    apellidoPaterno: z.string().trim().min(1, 'Ingrese el apellido paterno'),
-    apellidoMaterno: z.string().trim().optional().default(''),
-    fechaNacimiento: z.string().trim().min(1, 'Ingrese la fecha de nacimiento'),
-    sexoId: z.string().trim().min(1, 'Seleccione el sexo'),
-    estadoCivilId: z.string().trim().min(1, 'Estado civil requerido'),
-    telefono: z.string().trim().min(1, 'Ingrese el teléfono'),
-})
+const pacienteNuevoSchema = personaSchema
 
 export const recepcionFormSchema = z
     .object({
         modoPaciente: z.enum(['existente', 'nuevo']),
-        pacienteId: z.string().trim().optional().default(''),
+        pacienteId: z.string().trim().default(''),
         pacienteNuevo: pacienteNuevoSchema.partial().optional(),
         tipoAtencionId: z.string().trim().min(1, 'Seleccione un tipo de atención'),
         fechaAtencion: z.string().trim().min(1, 'La fecha es requerida'),
@@ -59,6 +50,8 @@ export const recepcionDefaultValues: RecepcionFormValues = {
     pacienteNuevo: {
         tipoDocumentoId: '',
         numeroDocumento: '',
+        extensionDocumentoId: '',
+        complementoDocumento: '',
         nombres: '',
         apellidoPaterno: '',
         apellidoMaterno: '',
@@ -66,6 +59,7 @@ export const recepcionDefaultValues: RecepcionFormValues = {
         sexoId: '',
         estadoCivilId: '',
         telefono: '',
+        direccion: '',
     },
     tipoAtencionId: '',
     fechaAtencion: new Date().toISOString().slice(0, 16),
@@ -90,6 +84,10 @@ export function toRecepcionarAtencionPayload(
     }
 
     const nuevo = values.pacienteNuevo!
+    const extensionDocumentoId = nuevo.extensionDocumentoId?.trim()
+    const complementoDocumento = (nuevo.complementoDocumento ?? '').trim()
+    const direccion = (nuevo.direccion ?? '').trim()
+
     const pacienteNuevo: RecepcionPacienteNuevoPayload = {
         tipoDocumentoId: nuevo.tipoDocumentoId!,
         numeroDocumento: nuevo.numeroDocumento!.trim(),
@@ -100,7 +98,9 @@ export function toRecepcionarAtencionPayload(
         sexoId: nuevo.sexoId!,
         estadoCivilId: nuevo.estadoCivilId!,
         telefono: nuevo.telefono!.trim(),
-        direccion: null,
+        direccion: direccion || null,
+        extensionDocumentoId: extensionDocumentoId || null,
+        complementoDocumento: complementoDocumento || null,
     }
 
     return {

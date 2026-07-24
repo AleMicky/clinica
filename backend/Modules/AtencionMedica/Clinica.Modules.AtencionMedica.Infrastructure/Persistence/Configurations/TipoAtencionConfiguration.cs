@@ -27,6 +27,14 @@ public sealed class TipoAtencionConfiguration : BaseEntityConfiguration<TipoAten
         builder.Property(x => x.Descripcion)
             .HasMaxLength(500);
 
+        builder.Property(x => x.Color)
+            .HasMaxLength(20)
+            .IsRequired()
+            .HasDefaultValue("#1677ff");
+
+        builder.Property(x => x.Icono)
+            .HasMaxLength(50);
+
         builder.Property(x => x.CreatedAt)
             .HasDefaultValueSql("GETUTCDATE()");
 

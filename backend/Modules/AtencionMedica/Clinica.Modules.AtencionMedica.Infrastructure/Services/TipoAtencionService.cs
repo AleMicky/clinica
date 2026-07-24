@@ -4,6 +4,8 @@ using Clinica.Modules.AtencionMedica.Application.TiposAtencion;
 using Clinica.Modules.AtencionMedica.Domain.Entities;
 using Clinica.Modules.AtencionMedica.Infrastructure.Persistence;
 using Clinica.SharedKernel.Crud;
+using Clinica.SharedKernel.Persistence;
+using Clinica.SharedKernel.Text;
 using Microsoft.EntityFrameworkCore;
 
 namespace Clinica.Modules.AtencionMedica.Infrastructure.Services;
@@ -17,10 +19,22 @@ public sealed class TipoAtencionService(AtencionMedicaDbContext context)
     protected override string NotFoundMessage => "Tipo de atención no encontrado.";
 
     protected override Expression<Func<TipoAtencion, TipoAtencionResponse>> ProjectToResponse =>
-        x => new TipoAtencionResponse(x.Id, x.Codigo, x.Nombre, x.Descripcion ?? string.Empty);
+        x => new TipoAtencionResponse(
+            x.Id,
+            x.Codigo,
+            x.Nombre,
+            x.Descripcion ?? string.Empty,
+            x.Color,
+            x.Icono);
 
     protected override TipoAtencionResponse MapToResponse(TipoAtencion entity) =>
-        new(entity.Id, entity.Codigo, entity.Nombre, entity.Descripcion ?? string.Empty);
+        new(
+            entity.Id,
+            entity.Codigo,
+            entity.Nombre,
+            entity.Descripcion ?? string.Empty,
+            entity.Color,
+            entity.Icono);
 
     protected override (string Codigo, string Nombre, string? Descripcion) ReadCreate(
         CreateTipoAtencionRequest request) =>
@@ -29,4 +43,44 @@ public sealed class TipoAtencionService(AtencionMedicaDbContext context)
     protected override (string Codigo, string Nombre, string? Descripcion) ReadUpdate(
         UpdateTipoAtencionRequest request) =>
         (request.Codigo, request.Nombre, request.Descripcion);
+
+    public override async Task<TipoAtencionResponse> CreateAsync(
+        CreateTipoAtencionRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var (codigo, nombre, descripcion) = NormalizeFields(ReadCreate(request));
+        await EnsureCodigoIsUniqueAsync(codigo, null, cancellationToken);
+
+        var entity = new TipoAtencion();
+        ApplyFields(entity, codigo, nombre, descripcion);
+        ApplyVisualFields(entity, request.Color, request.Icono);
+
+        Set.Add(entity);
+        await context.SaveChangesAsync(cancellationToken);
+
+        return MapToResponse(entity);
+    }
+
+    public override async Task<TipoAtencionResponse> UpdateAsync(
+        Guid id,
+        UpdateTipoAtencionRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await Set.GetRequiredAsync(id, NotFoundMessage, cancellationToken);
+
+        var (codigo, nombre, descripcion) = NormalizeFields(ReadUpdate(request));
+        await EnsureCodigoIsUniqueAsync(codigo, id, cancellationToken);
+
+        ApplyFields(entity, codigo, nombre, descripcion);
+        ApplyVisualFields(entity, request.Color, request.Icono);
+        await context.SaveChangesAsync(cancellationToken);
+
+        return MapToResponse(entity);
+    }
+
+    private static void ApplyVisualFields(TipoAtencion entity, string color, string? icono)
+    {
+        entity.Color = StringNormalize.Required(color);
+        entity.Icono = StringNormalize.Optional(icono);
+    }
 }

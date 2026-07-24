@@ -120,6 +120,7 @@ export function PersonaFormFields({
                                     onChange={(value) => field.handleChange(value)}
                                     onBlur={field.handleBlur}
                                     disabled={disabled}
+                                    loading={loadingCatalogos}
                                 />
                             </Form.Item>
                         )
@@ -168,6 +169,7 @@ export function PersonaFormFields({
                                 onChange={(value) => field.handleChange(value ?? '')}
                                 onBlur={field.handleBlur}
                                 disabled={disabled}
+                                loading={loadingCatalogos}
                             />
                         </Form.Item>
                     )}
@@ -324,6 +326,7 @@ export function PersonaFormFields({
                                     onChange={(value) => field.handleChange(value)}
                                     onBlur={field.handleBlur}
                                     disabled={disabled}
+                                    loading={loadingCatalogos}
                                 />
                             </Form.Item>
                         )
@@ -352,6 +355,7 @@ export function PersonaFormFields({
                                     onChange={(value) => field.handleChange(value)}
                                     onBlur={field.handleBlur}
                                     disabled={disabled}
+                                    loading={loadingCatalogos}
                                 />
                             </Form.Item>
                         )

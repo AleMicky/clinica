@@ -1,15 +1,19 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
     FormOutlined,
     UnorderedListOutlined,
     UserAddOutlined,
 } from '@ant-design/icons'
+import { useQueryClient } from '@tanstack/react-query'
 import { Badge, Tabs, Typography } from 'antd'
 
 import { ModuleSectionPanel } from '../../../shared/components/ui/module-page/ModuleSectionPanel'
+import { queryKeys } from '../../../shared/constants/query-keys'
+import { catalogoGruposService } from '../../parametros/catalogos/services/catalogo-grupos.service'
 import { AtencionFormModal } from '../components/AtencionFormModal'
 import { AtencionRecepcionForm } from '../components/AtencionRecepcionForm'
 import { AtencionesTable } from '../components/AtencionesTable'
+import { tiposAtencionService } from '../services/atencion-medica.service'
 import {
     useAtenciones,
     useDeleteAtencion,
@@ -31,6 +35,7 @@ const DEFAULT_PAGE_SIZE = 20
 type RecepcionTab = 'recepcion' | 'registros'
 
 export function AtencionesView() {
+    const queryClient = useQueryClient()
     const [activeTab, setActiveTab] = useState<RecepcionTab>('recepcion')
     const [page, setPage] = useState(1)
     const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
@@ -39,6 +44,21 @@ export function AtencionesView() {
     const [modalOpen, setModalOpen] = useState(false)
     const [editingAtencion, setEditingAtencion] = useState<Atencion | null>(null)
     const [deletingId, setDeletingId] = useState<string | null>(null)
+
+    useEffect(() => {
+        const tiposQuery = { page: 1, pageSize: 100 }
+
+        void queryClient.prefetchQuery({
+            queryKey: [...queryKeys.catalogoGrupos.all, 'grouped'] as const,
+            queryFn: () => catalogoGruposService.getGroupedItems(),
+            staleTime: 30 * 60 * 1000,
+        })
+        void queryClient.prefetchQuery({
+            queryKey: queryKeys.atencionMedica.tiposAtencion.list(tiposQuery),
+            queryFn: () => tiposAtencionService.getPaged(tiposQuery),
+            staleTime: 10 * 60 * 1000,
+        })
+    }, [queryClient])
 
     const { data, isFetching } = useAtenciones({
         page,

@@ -26,10 +26,13 @@ import {
 import { useNavigate } from '@tanstack/react-router'
 
 import { AppDataTable } from '../../../shared/components/ui/data-table/AppDataTable'
-import { CatalogoBaseFormModal } from '../../catalogo-clinico/components/CatalogoBaseFormModal'
-import type { CatalogoBaseFormValues } from '../../catalogo-clinico/schemas/catalogo-clinico.schema'
-import type { CatalogoBase } from '../../catalogo-clinico/types/catalogo-clinico.types'
+import { TipoAtencionFormModal } from '../components/TipoAtencionFormModal'
+import {
+    DEFAULT_TIPO_ATENCION_COLOR,
+    getTipoAtencionIcon,
+} from '../constants/tipo-atencion-icons'
 import { tiposAtencionHooks, useTiposAtencion } from '../hooks/atencion-medica.hooks'
+import type { TipoAtencionFormValues } from '../schemas/tipo-atencion.schema'
 import type { TipoAtencion } from '../types/atencion-medica.types'
 
 const { Text } = Typography
@@ -39,20 +42,13 @@ const DEFAULT_PAGE_SIZE = 20
 
 const columnHelper = createColumnHelper<TipoAtencion>()
 
-function toCatalogoBase(tipo: TipoAtencion): CatalogoBase {
-    return {
-        id: tipo.id,
-        codigo: tipo.codigo,
-        nombre: tipo.nombre,
-        descripcion: tipo.descripcion || null,
-    }
-}
-
-function toPayload(values: CatalogoBaseFormValues) {
+function toPayload(values: TipoAtencionFormValues) {
     return {
         codigo: values.codigo,
         nombre: values.nombre,
         descripcion: values.descripcion || '',
+        color: values.color,
+        icono: values.icono || null,
     }
 }
 
@@ -125,7 +121,7 @@ export function TiposAtencionView() {
         setEditing(null)
     }
 
-    const handleSubmit = async (values: CatalogoBaseFormValues) => {
+    const handleSubmit = async (values: TipoAtencionFormValues) => {
         if (editing) {
             await updateMutation.mutateAsync({ id: editing.id, data: toPayload(values) })
         } else {
@@ -141,16 +137,36 @@ export function TiposAtencionView() {
                     id: 'tipo',
                     header: 'Tipo de atención',
                     cell: ({ row }) => {
-                        const descripcion = row.original.descripcion?.trim()
+                        const tipo = row.original
+                        const descripcion = tipo.descripcion?.trim()
+                        const color = tipo.color || DEFAULT_TIPO_ATENCION_COLOR
+                        const Icon = getTipoAtencionIcon(tipo.icono)
+
                         return (
-                            <div className="tipos-atencion-view__name-cell">
-                                <Text strong className="tipos-atencion-view__name">
-                                    {row.original.nombre}
-                                </Text>
-                                <Text type="secondary" className="tipos-atencion-view__desc">
-                                    {descripcion || 'Sin descripción'}
-                                </Text>
-                            </div>
+                            <Flex
+                                gap={12}
+                                align="center"
+                                className="tipos-atencion-view__name-row"
+                            >
+                                <span
+                                    className="tipos-atencion-view__badge"
+                                    style={{
+                                        background: `${color}1a`,
+                                        color,
+                                    }}
+                                    aria-hidden
+                                >
+                                    <Icon />
+                                </span>
+                                <div className="tipos-atencion-view__name-cell">
+                                    <Text strong className="tipos-atencion-view__name">
+                                        {tipo.nombre}
+                                    </Text>
+                                    <Text type="secondary" className="tipos-atencion-view__desc">
+                                        {descripcion || 'Sin descripción'}
+                                    </Text>
+                                </div>
+                            </Flex>
                         )
                     },
                 }),
@@ -377,10 +393,9 @@ export function TiposAtencionView() {
                 {renderBody()}
             </div>
 
-            <CatalogoBaseFormModal
+            <TipoAtencionFormModal
                 open={modalOpen}
-                entityLabel="tipo de atención"
-                entity={editing ? toCatalogoBase(editing) : null}
+                entity={editing}
                 loading={isSaving}
                 onClose={closeModal}
                 onSubmit={handleSubmit}

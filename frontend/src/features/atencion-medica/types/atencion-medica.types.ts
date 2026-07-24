@@ -9,12 +9,16 @@ export type TipoAtencion = {
     codigo: string
     nombre: string
     descripcion: string
+    color: string
+    icono?: string | null
 }
 
 export type CreateTipoAtencionPayload = {
     codigo: string
     nombre: string
     descripcion?: string
+    color: string
+    icono?: string | null
 }
 
 export type UpdateTipoAtencionPayload = CreateTipoAtencionPayload
@@ -191,6 +195,8 @@ export type RecepcionPacienteNuevoPayload = {
     estadoCivilId: Guid
     telefono: string
     direccion?: string | null
+    extensionDocumentoId?: Guid | null
+    complementoDocumento?: string | null
 }
 
 export type RecepcionarAtencionPayload = {

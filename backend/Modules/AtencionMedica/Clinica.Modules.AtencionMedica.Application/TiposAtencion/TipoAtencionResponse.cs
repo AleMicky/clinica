@@ -4,4 +4,6 @@ public sealed record TipoAtencionResponse(
     Guid Id,
     string Codigo,
     string Nombre,
-    string Descripcion);
+    string Descripcion,
+    string Color,
+    string? Icono);
