@@ -3,9 +3,9 @@ import {
     Button,
     Descriptions,
     Empty,
+    Flex,
     Form,
     Select,
-    Space,
     Tag,
     Typography,
 } from 'antd'
@@ -26,7 +26,7 @@ import {
 import { useAppQuery } from '../../../shared/hooks/use-app-query'
 import { queryKeys } from '../../../shared/constants/query-keys'
 
-const { Text, Title } = Typography
+const { Text } = Typography
 
 export type PacienteSeleccionado = {
     id: string
@@ -47,7 +47,7 @@ type PacienteSearchBoxProps = {
 }
 
 function formatPacienteLabel(paciente: Paciente) {
-    return `${paciente.personaNombreCompleto} · HC ${paciente.numeroHistoriaClinica}`
+    return `${paciente.personaNombreCompleto} · Nro. cuenta ${paciente.numeroHistoriaClinica}`
 }
 
 function formatDate(value: string) {
@@ -64,6 +64,24 @@ function toSeleccionado(paciente: Paciente): PacienteSeleccionado {
         numeroHistoriaClinica: paciente.numeroHistoriaClinica,
         personaNombreCompleto: paciente.personaNombreCompleto,
     }
+}
+
+function PacienteOptionRow({ paciente }: { paciente: Paciente }) {
+    return (
+        <div className="paciente-search-box__option">
+            <span className="paciente-search-box__option-name">
+                {paciente.personaNombreCompleto}
+            </span>
+            <span className="paciente-search-box__option-meta">
+                <span className="paciente-search-box__option-cuenta">
+                    Nro. cuenta {paciente.numeroHistoriaClinica}
+                </span>
+                <span className="paciente-search-box__option-doc">
+                    {formatPacienteDocumento(paciente)}
+                </span>
+            </span>
+        </div>
+    )
 }
 
 export function PacienteSearchBox({
@@ -101,7 +119,6 @@ export function PacienteSearchBox({
         }
 
         if (!hasSearch) return
-
         if (loadingPacientes) return
 
         if ((pacientesData?.items.length ?? 0) === 0) {
@@ -167,16 +184,20 @@ export function PacienteSearchBox({
                                 >
                                     Paciente encontrado
                                 </Tag>
-                                <Title level={5} className="paciente-search-box__ficha-name">
+                                <p className="paciente-search-box__ficha-name">
                                     {paciente?.personaNombreCompleto ?? 'Cargando…'}
-                                </Title>
-                                <Text type="secondary" className="paciente-search-box__ficha-hc">
-                                    HC {paciente?.numeroHistoriaClinica ?? '—'}
-                                </Text>
+                                </p>
+                                <p className="paciente-search-box__ficha-hc">
+                                    Nro. cuenta{' '}
+                                    <strong>
+                                        {paciente?.numeroHistoriaClinica ?? '—'}
+                                    </strong>
+                                </p>
                             </div>
                         </div>
                         <Button
-                            type="button"
+                            type="default"
+                            size="small"
                             icon={<SwapOutlined />}
                             onClick={limpiarSeleccion}
                             disabled={disabled || loadingDetalle}
@@ -188,7 +209,7 @@ export function PacienteSearchBox({
                     {paciente ? (
                         <Descriptions
                             size="small"
-                            column={{ xs: 1, sm: 2 }}
+                            column={{ xs: 1, sm: 2, md: 3 }}
                             className="paciente-search-box__ficha-grid"
                             items={[
                                 {
@@ -243,16 +264,25 @@ export function PacienteSearchBox({
                 showSearch
                 allowClear
                 disabled={disabled}
+                className="paciente-search-box__select"
                 style={{ width: '100%' }}
                 size="large"
-                placeholder="Buscar por nombre, documento o HC"
+                placeholder="Buscar por nombre, documento o nro. cuenta"
                 suffixIcon={<SearchOutlined />}
                 filterOption={false}
+                optionLabelProp="label"
                 searchValue={pacienteSearch}
                 onSearch={setPacienteSearch}
                 onBlur={onBlur}
                 loading={loadingPacientes && hasSearch}
                 options={pacienteOptions}
+                optionRender={(option) => {
+                    const paciente = (
+                        option.data as { paciente?: Paciente }
+                    ).paciente
+                    if (!paciente) return option.label
+                    return <PacienteOptionRow paciente={paciente} />
+                }}
                 value={undefined}
                 onChange={(nextId) => {
                     if (!nextId) {
@@ -282,15 +312,18 @@ export function PacienteSearchBox({
                 <div
                     className="paciente-search-box__empty"
                     onMouseDown={(event) => {
-                        // Evita que el Select pierda el foco y limpie la búsqueda
-                        // antes de que el botón de registrar reciba el clic.
                         event.preventDefault()
                     }}
                 >
                     <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={null}>
-                        <Space direction="vertical" size={8} align="center">
-                            <Text strong>No se encontró el paciente</Text>
-                            <Text type="secondary">
+                        <Flex vertical align="center" gap={6}>
+                            <Text strong className="paciente-search-box__empty-title">
+                                No se encontró el paciente
+                            </Text>
+                            <Text
+                                type="secondary"
+                                className="paciente-search-box__empty-desc"
+                            >
                                 No hay coincidencias para «{termForRegister}». Puede
                                 registrarlo ahora y continuar la recepción.
                             </Text>
@@ -301,11 +334,12 @@ export function PacienteSearchBox({
                                     icon={<UserAddOutlined />}
                                     disabled={disabled}
                                     onClick={handleRegistrar}
+                                    className="paciente-search-box__empty-btn"
                                 >
                                     Registrar paciente nuevo
                                 </Button>
                             ) : null}
-                        </Space>
+                        </Flex>
                     </Empty>
                 </div>
             ) : null}
