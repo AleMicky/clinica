@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useForm } from '@tanstack/react-form'
-import { Col, Form, Input, Modal, Row, Select, Space } from 'antd'
+import { Col, Form, Input, Modal, Row, Tooltip } from 'antd'
 
 import {
     DEFAULT_TIPO_ATENCION_COLOR,
@@ -77,7 +77,7 @@ export function TipoAtencionFormModal({
             cancelText="Cancelar"
             confirmLoading={loading}
             destroyOnHidden
-            width={520}
+            width={560}
         >
             <Form layout="vertical" requiredMark={false} className="tipo-atencion-form">
                 <form.Field name="codigo">
@@ -131,7 +131,7 @@ export function TipoAtencionFormModal({
                 </form.Field>
 
                 <Row gutter={12}>
-                    <Col span={12}>
+                    <Col span={8}>
                         <form.Field name="color">
                             {(field) => {
                                 const error = getFieldError(field.state.meta.errors)
@@ -156,38 +156,72 @@ export function TipoAtencionFormModal({
                             }}
                         </form.Field>
                     </Col>
-                    <Col span={12}>
-                        <form.Field name="icono">
-                            {(field) => {
-                                const error = getFieldError(field.state.meta.errors)
-                                return (
-                                    <Form.Item
-                                        label="Icono"
-                                        validateStatus={error ? 'error' : undefined}
-                                        help={error || undefined}
-                                    >
-                                        <Select
-                                            value={field.state.value}
-                                            onChange={(value) => field.handleChange(value)}
-                                            onBlur={field.handleBlur}
-                                            disabled={loading}
-                                            optionLabelProp="label"
-                                            options={TIPO_ATENCION_ICON_OPTIONS.map(
-                                                (option) => ({
-                                                    value: option.value,
-                                                    label: (
-                                                        <Space size={8}>
-                                                            <option.Icon />
-                                                            <span>{option.label}</span>
-                                                        </Space>
-                                                    ),
-                                                }),
-                                            )}
-                                        />
-                                    </Form.Item>
-                                )
-                            }}
-                        </form.Field>
+                    <Col span={16}>
+                        <form.Subscribe selector={(state) => state.values.color}>
+                            {(color) => (
+                                <form.Field name="icono">
+                                    {(field) => {
+                                        const error = getFieldError(field.state.meta.errors)
+                                        return (
+                                            <Form.Item
+                                                label="Icono"
+                                                validateStatus={error ? 'error' : undefined}
+                                                help={error || 'Elija un icono para el tipo'}
+                                            >
+                                                <div
+                                                    className="tipo-atencion-form__icon-grid"
+                                                    role="listbox"
+                                                    aria-label="Selector de icono"
+                                                >
+                                                    {TIPO_ATENCION_ICON_OPTIONS.map(
+                                                        (option) => {
+                                                            const selected =
+                                                                field.state.value ===
+                                                                option.value
+                                                            return (
+                                                                <Tooltip
+                                                                    key={option.value}
+                                                                    title={option.label}
+                                                                >
+                                                                    <button
+                                                                        type="button"
+                                                                        role="option"
+                                                                        aria-selected={selected}
+                                                                        aria-label={option.label}
+                                                                        className={
+                                                                            selected
+                                                                                ? 'tipo-atencion-form__icon-btn tipo-atencion-form__icon-btn--selected'
+                                                                                : 'tipo-atencion-form__icon-btn'
+                                                                        }
+                                                                        style={
+                                                                            selected
+                                                                                ? {
+                                                                                      color,
+                                                                                      borderColor: color,
+                                                                                      background: `${color}14`,
+                                                                                  }
+                                                                                : undefined
+                                                                        }
+                                                                        disabled={loading}
+                                                                        onClick={() =>
+                                                                            field.handleChange(
+                                                                                option.value,
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <option.Icon />
+                                                                    </button>
+                                                                </Tooltip>
+                                                            )
+                                                        },
+                                                    )}
+                                                </div>
+                                            </Form.Item>
+                                        )
+                                    }}
+                                </form.Field>
+                            )}
+                        </form.Subscribe>
                     </Col>
                 </Row>
 
