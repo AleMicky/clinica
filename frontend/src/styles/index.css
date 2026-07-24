@@ -8257,6 +8257,14 @@ body {
     margin-top: 4px;
 }
 
+.paciente-search-box__register-link {
+    margin-top: 4px;
+}
+
+.paciente-search-box__register-link .ant-btn {
+    padding-inline: 0;
+}
+
 .paciente-search-box__inline {
     margin-top: 2px;
     padding: 10px 10px 4px;

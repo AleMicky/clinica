@@ -19,6 +19,7 @@ import {
     tiposCampoFormularioService,
 } from '../services/atencion-medica.service'
 import type {
+    Atencion,
     AtencionPagedQuery,
     AtencionRespuestaPagedQuery,
     CreateAtencionPayload,
@@ -141,14 +142,42 @@ export function useRecepcionarAtencion() {
     return useAppMutation({
         mutationFn: (data: RecepcionarAtencionPayload) =>
             atencionesService.recepcionar(data),
-        onSuccess: () => {
+        onSuccess: (atencion, variables) => {
+            queryClient.setQueriesData(
+                {
+                    queryKey: [...queryKeys.atencionMedica.atenciones.all, 'list'],
+                },
+                (current: { items: Atencion[]; totalRecords: number } | undefined) => {
+                    if (!current?.items) return current
+                    if (current.items.some((item) => item.id === atencion.id)) {
+                        return current
+                    }
+
+                    return {
+                        ...current,
+                        items: [atencion, ...current.items],
+                        totalRecords: current.totalRecords + 1,
+                    }
+                },
+            )
+
             void queryClient.invalidateQueries({
                 queryKey: queryKeys.atencionMedica.atenciones.all,
+                refetchType: 'active',
             })
-            void queryClient.invalidateQueries({ queryKey: queryKeys.pacientes.all })
+
+            if (variables.pacienteNuevo) {
+                void queryClient.invalidateQueries({
+                    queryKey: queryKeys.pacientes.all,
+                    refetchType: 'active',
+                })
+            }
+
             notify.success(
                 'Atención recepcionada',
-                'El paciente y la atención se registraron correctamente.',
+                variables.pacienteNuevo
+                    ? 'El paciente y la atención se registraron correctamente.'
+                    : 'La atención se registró correctamente.',
             )
         },
         onError: (error) => {

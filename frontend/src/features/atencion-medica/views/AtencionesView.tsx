@@ -57,7 +57,7 @@ export function AtencionesView() {
         })
     }, [queryClient])
 
-    const { data, isFetching } = useAtenciones({
+    const { data, isLoading, isFetching } = useAtenciones({
         page,
         pageSize,
         search: search || undefined,
@@ -68,6 +68,8 @@ export function AtencionesView() {
 
     const atenciones = data?.items ?? []
     const totalAtenciones = data?.totalRecords ?? 0
+    // Solo spinner en carga inicial; el refetch en segundo plano no bloquea la tabla.
+    const tableLoading = isLoading || (isFetching && !data)
 
     const openEditModal = (atencion: Atencion) => {
         setEditingAtencion(atencion)
@@ -112,6 +114,7 @@ export function AtencionesView() {
                 activeKey={activeTab}
                 onChange={(key) => setActiveTab(key as RecepcionTab)}
                 className="atenciones-recepcion-view__tabs"
+                destroyOnHidden
                 items={[
                     {
                         key: 'recepcion',
@@ -163,7 +166,7 @@ export function AtencionesView() {
                             >
                                 <AtencionesTable
                                     atenciones={atenciones}
-                                    loading={isFetching}
+                                    loading={tableLoading}
                                     total={totalAtenciones}
                                     page={page}
                                     pageSize={pageSize}

@@ -9,12 +9,16 @@ export function getFieldError(errors: unknown[]) {
 }
 
 export function collectFieldErrors(
-    issues: { path: (string | number)[]; message: string }[],
+    issues: { path: PropertyKey[]; message: string }[],
 ): Record<string, string> {
     const fieldErrors: Record<string, string> = {}
 
     for (const issue of issues) {
-        const field = String(issue.path[0] ?? '')
+        const field = issue.path
+            .filter((segment): segment is string | number => typeof segment !== 'symbol')
+            .map(String)
+            .filter(Boolean)
+            .join('.')
         if (field && !fieldErrors[field]) {
             fieldErrors[field] = issue.message
         }

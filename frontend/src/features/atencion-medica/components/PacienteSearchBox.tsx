@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import {
     Button,
     Descriptions,
-    Empty,
     Flex,
     Form,
     Select,
@@ -94,16 +93,27 @@ export function PacienteSearchBox({
     label = 'Paciente',
 }: PacienteSearchBoxProps) {
     const [pacienteSearch, setPacienteSearch] = useState('')
-    const [emptyTerm, setEmptyTerm] = useState<string | null>(null)
+    const [debouncedSearch, setDebouncedSearch] = useState('')
 
-    const searchTerm = pacienteSearch.trim()
+    useEffect(() => {
+        const timer = window.setTimeout(() => {
+            setDebouncedSearch(pacienteSearch.trim())
+        }, 300)
+
+        return () => window.clearTimeout(timer)
+    }, [pacienteSearch])
+
+    const searchTerm = debouncedSearch
     const hasSearch = searchTerm.length > 0
+    const isDebouncing =
+        pacienteSearch.trim() !== debouncedSearch && pacienteSearch.trim().length > 0
     const searchQuery = { page: 1, pageSize: 20, search: searchTerm }
 
     const { data: pacientesData, isFetching: loadingPacientes } = useAppQuery({
         queryKey: queryKeys.pacientes.list(searchQuery),
         queryFn: () => pacientesService.getPaged(searchQuery),
         enabled: hasSearch && !value,
+        staleTime: 60_000,
     })
 
     const { data: pacienteById, isFetching: loadingDetalle } = useAppQuery({
@@ -111,23 +121,6 @@ export function PacienteSearchBox({
         queryFn: () => pacientesService.getById(value!),
         enabled: Boolean(value),
     })
-
-    useEffect(() => {
-        if (value) {
-            setEmptyTerm(null)
-            return
-        }
-
-        if (!hasSearch) return
-        if (loadingPacientes) return
-
-        if ((pacientesData?.items.length ?? 0) === 0) {
-            setEmptyTerm(searchTerm)
-            return
-        }
-
-        setEmptyTerm(null)
-    }, [value, hasSearch, searchTerm, loadingPacientes, pacientesData?.items.length])
 
     const pacienteOptions = useMemo(() => {
         if (!hasSearch) return []
@@ -139,24 +132,29 @@ export function PacienteSearchBox({
         }))
     }, [hasSearch, pacientesData?.items])
 
-    const termForRegister = emptyTerm ?? searchTerm
-    const showEmptyCta = Boolean(emptyTerm) && !value
+    const sinResultados =
+        hasSearch &&
+        !isDebouncing &&
+        !loadingPacientes &&
+        (pacientesData?.items.length ?? 0) === 0
 
     const seleccionarPaciente = (paciente: Paciente) => {
         onChange(toSeleccionado(paciente))
         setPacienteSearch('')
-        setEmptyTerm(null)
+        setDebouncedSearch('')
     }
 
     const limpiarSeleccion = () => {
         onChange(null)
         setPacienteSearch('')
-        setEmptyTerm(null)
+        setDebouncedSearch('')
     }
 
     const handleRegistrar = () => {
-        if (!onRegistrar || !termForRegister) return
-        onRegistrar(termForRegister)
+        if (!onRegistrar || !sinResultados) return
+        onRegistrar(searchTerm)
+        setPacienteSearch('')
+        setDebouncedSearch('')
     }
 
     if (value) {
@@ -274,7 +272,7 @@ export function PacienteSearchBox({
                 searchValue={pacienteSearch}
                 onSearch={setPacienteSearch}
                 onBlur={onBlur}
-                loading={loadingPacientes && hasSearch}
+                loading={(loadingPacientes || isDebouncing) && hasSearch}
                 options={pacienteOptions}
                 optionRender={(option) => {
                     const paciente = (
@@ -288,7 +286,7 @@ export function PacienteSearchBox({
                     if (!nextId) {
                         onChange(null)
                         setPacienteSearch('')
-                        setEmptyTerm(null)
+                        setDebouncedSearch('')
                         return
                     }
 
@@ -298,51 +296,33 @@ export function PacienteSearchBox({
                     }
                 }}
                 notFoundContent={
-                    !hasSearch && !emptyTerm ? (
+                    !hasSearch && !pacienteSearch.trim() ? (
                         <Text type="secondary">Escriba para buscar un paciente</Text>
-                    ) : loadingPacientes ? (
+                    ) : loadingPacientes || isDebouncing ? (
                         <Text type="secondary">Buscando…</Text>
+                    ) : sinResultados && onRegistrar ? (
+                        <Flex vertical align="center" gap={8} style={{ padding: '8px 4px' }}>
+                            <Text type="secondary">Sin coincidencias</Text>
+                            <Button
+                                type="primary"
+                                size="small"
+                                htmlType="button"
+                                icon={<UserAddOutlined />}
+                                disabled={disabled}
+                                onMouseDown={(event) => {
+                                    event.preventDefault()
+                                    event.stopPropagation()
+                                    handleRegistrar()
+                                }}
+                            >
+                                Registrar paciente nuevo
+                            </Button>
+                        </Flex>
                     ) : (
                         <Text type="secondary">Sin coincidencias</Text>
                     )
                 }
             />
-
-            {showEmptyCta ? (
-                <div
-                    className="paciente-search-box__empty"
-                    onMouseDown={(event) => {
-                        event.preventDefault()
-                    }}
-                >
-                    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={null}>
-                        <Flex vertical align="center" gap={6}>
-                            <Text strong className="paciente-search-box__empty-title">
-                                No se encontró el paciente
-                            </Text>
-                            <Text
-                                type="secondary"
-                                className="paciente-search-box__empty-desc"
-                            >
-                                No hay coincidencias para «{termForRegister}». Puede
-                                registrarlo ahora y continuar la recepción.
-                            </Text>
-                            {onRegistrar ? (
-                                <Button
-                                    type="primary"
-                                    htmlType="button"
-                                    icon={<UserAddOutlined />}
-                                    disabled={disabled}
-                                    onClick={handleRegistrar}
-                                    className="paciente-search-box__empty-btn"
-                                >
-                                    Registrar paciente nuevo
-                                </Button>
-                            ) : null}
-                        </Flex>
-                    </Empty>
-                </div>
-            ) : null}
         </Form.Item>
     )
 }

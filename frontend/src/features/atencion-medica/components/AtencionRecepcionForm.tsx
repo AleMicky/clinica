@@ -21,6 +21,10 @@ import {
 import { useCatalogoGruposGrouped } from '../../parametros/catalogos/hooks/catalogo-grupos.hooks'
 import { PersonaFormFields } from '../../personas/components/PersonaFormFields'
 import {
+    applyFieldErrors,
+    collectFieldErrors,
+} from '../../usuarios/utils/form-errors'
+import {
     useFormulariosClinicos,
     useTiposAtencion,
 } from '../hooks/atencion-medica.hooks'
@@ -95,6 +99,7 @@ export const AtencionRecepcionForm = forwardRef<
 ) {
     const [tipoAtencionId, setTipoAtencionId] = useState('')
     const [formKey, setFormKey] = useState(0)
+    const [relojAhora, setRelojAhora] = useState(nowFechaAtencion)
 
     const { data: tiposData, isFetching: loadingTipos } = useTiposAtencion()
     const { data: catalogos } = useCatalogoGruposGrouped()
@@ -104,27 +109,25 @@ export const AtencionRecepcionForm = forwardRef<
             ...recepcionDefaultValues,
             fechaAtencion: nowFechaAtencion(),
         },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        validators: { onSubmit: recepcionFormSchema as any },
         onSubmit: async ({ value }) => {
-            await onSubmit(value)
+            const fechaAtencion = nowFechaAtencion()
+            form.setFieldValue('fechaAtencion', fechaAtencion)
+            await onSubmit({ ...value, fechaAtencion })
             resetForm()
         },
     })
 
     const modoPaciente = useStore(form.store, (state) => state.values.modoPaciente)
-    const fechaAtencion = useStore(form.store, (state) => state.values.fechaAtencion)
+    const formValues = useStore(form.store, (state) => state.values)
     const tipoAtencionIdForQuery = tipoAtencionId || undefined
 
+    // Reloj solo en estado local: evita re-render/validación del form cada segundo.
     useEffect(() => {
-        const tick = () => {
-            form.setFieldValue('fechaAtencion', nowFechaAtencion())
-        }
-
-        tick()
-        const timer = window.setInterval(tick, 1000)
+        const timer = window.setInterval(() => {
+            setRelojAhora(nowFechaAtencion())
+        }, 1000)
         return () => window.clearInterval(timer)
-    }, [form])
+    }, [])
 
     const { data: formulariosData, isFetching: loadingFormularios } =
         useFormulariosClinicos({
@@ -140,16 +143,40 @@ export const AtencionRecepcionForm = forwardRef<
     }, [formulariosData?.items])
 
     const resetForm = () => {
+        const ahora = nowFechaAtencion()
         form.reset({
             ...recepcionDefaultValues,
-            fechaAtencion: nowFechaAtencion(),
+            fechaAtencion: ahora,
         })
+        setRelojAhora(ahora)
         setTipoAtencionId('')
         setFormKey((key) => key + 1)
     }
 
+    const handleSubmitClick = () => {
+        const result = recepcionFormSchema.safeParse({
+            ...formValues,
+            fechaAtencion: nowFechaAtencion(),
+        })
+
+        if (!result.success) {
+            applyFieldErrors(
+                form,
+                collectFieldErrors(
+                    result.error.issues.map((issue) => ({
+                        path: issue.path,
+                        message: issue.message,
+                    })),
+                ),
+            )
+            return
+        }
+
+        void form.handleSubmit()
+    }
+
     useImperativeHandle(ref, () => ({
-        submit: () => void form.handleSubmit(),
+        submit: handleSubmitClick,
         reset: resetForm,
     }))
 
@@ -163,17 +190,19 @@ export const AtencionRecepcionForm = forwardRef<
             ['SOLTER', 'SOLTERO'],
         )
 
-        const esDocumento = /^\d+$/.test(searchTerm.trim())
+        const term = searchTerm.trim()
+        const esDocumento = /^\d+$/.test(term)
 
         form.setFieldValue('pacienteId', '')
         form.setFieldValue('pacienteNuevo', {
             ...recepcionDefaultValues.pacienteNuevo!,
             tipoDocumentoId,
             estadoCivilId,
-            numeroDocumento: esDocumento ? searchTerm.trim() : '',
-            nombres: esDocumento ? '' : searchTerm.trim(),
+            numeroDocumento: esDocumento ? term : '',
+            nombres: esDocumento ? '' : term,
         })
         form.setFieldValue('modoPaciente', 'nuevo')
+        setFormKey((key) => key + 1)
     }
 
     const volverABuscar = () => {
@@ -188,7 +217,7 @@ export const AtencionRecepcionForm = forwardRef<
     return (
         <Form
             layout="vertical"
-            requiredMark={false}
+            requiredMark
             size="middle"
             className="atencion-recepcion-form atencion-recepcion-form--compact"
         >
@@ -211,7 +240,7 @@ export const AtencionRecepcionForm = forwardRef<
                 </div>
                 <div className="atenciones-recepcion-view__hero-fecha" aria-live="polite">
                     <CalendarOutlined />
-                    <span>{formatFechaAtencion(fechaAtencion)}</span>
+                    <span>{formatFechaAtencion(relojAhora)}</span>
                 </div>
             </header>
 
@@ -243,7 +272,10 @@ export const AtencionRecepcionForm = forwardRef<
                             }}
                         </form.Field>
                     ) : (
-                        <div className="paciente-search-box__inline paciente-search-box__inline--compact">
+                        <div
+                            key={`nuevo-${formKey}`}
+                            className="paciente-search-box__inline paciente-search-box__inline--compact"
+                        >
                             <div className="paciente-search-box__inline-head">
                                 <div className="paciente-search-box__inline-title">
                                     <UserAddOutlined />
@@ -287,6 +319,7 @@ export const AtencionRecepcionForm = forwardRef<
                             return (
                                 <Form.Item
                                     className="atencion-recepcion-form__tipo-item"
+                                    required
                                     validateStatus={error ? 'error' : undefined}
                                     help={error || undefined}
                                 >
@@ -375,7 +408,7 @@ export const AtencionRecepcionForm = forwardRef<
                         icon={<CheckCircleOutlined />}
                         loading={loading}
                         disabled={!formularioActivo && Boolean(tipoAtencionIdForQuery)}
-                        onClick={() => void form.handleSubmit()}
+                        onClick={handleSubmitClick}
                     >
                         {submitLabel}
                     </Button>
