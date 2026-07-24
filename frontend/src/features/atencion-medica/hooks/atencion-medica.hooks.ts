@@ -25,6 +25,7 @@ import type {
     FormularioCampoPagedQuery,
     FormularioClinicoPagedQuery,
     FormularioSeccionPagedQuery,
+    RecepcionarAtencionPayload,
     UpdateAtencionPayload,
 } from '../types/atencion-medica.types'
 
@@ -130,6 +131,28 @@ export function useCreateAtencion() {
         },
         onError: (error) => {
             notify.error('Error al crear atención', getApiErrorMessage(error))
+        },
+    })
+}
+
+export function useRecepcionarAtencion() {
+    const queryClient = useQueryClient()
+
+    return useAppMutation({
+        mutationFn: (data: RecepcionarAtencionPayload) =>
+            atencionesService.recepcionar(data),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({
+                queryKey: queryKeys.atencionMedica.atenciones.all,
+            })
+            void queryClient.invalidateQueries({ queryKey: queryKeys.pacientes.all })
+            notify.success(
+                'Atención recepcionada',
+                'El paciente y la atención se registraron correctamente.',
+            )
+        },
+        onError: (error) => {
+            notify.error('Error al recepcionar', getApiErrorMessage(error))
         },
     })
 }

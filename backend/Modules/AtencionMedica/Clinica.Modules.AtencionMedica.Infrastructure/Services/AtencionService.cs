@@ -3,6 +3,9 @@ using Clinica.Modules.AtencionMedica.Application.Atenciones;
 using Clinica.Modules.AtencionMedica.Infrastructure.Persistence;
 using Clinica.Modules.Parametros.Application.Abstractions;
 using Clinica.Modules.Parametros.Application.Correlativos;
+using Clinica.Modules.Personas.Application.Abstractions;
+using Clinica.Modules.Personas.Application.Pacientes;
+using Clinica.Modules.Personas.Application.Personas;
 using Clinica.Modules.Personas.Domain.Entities;
 using Clinica.SharedKernel.Exceptions;
 using Clinica.SharedKernel.Pagination;
@@ -13,7 +16,8 @@ namespace Clinica.Modules.AtencionMedica.Infrastructure.Services;
 
 public sealed class AtencionService(
     AtencionMedicaDbContext context,
-    ICorrelativoService correlativoService) : IAtencionService
+    ICorrelativoService correlativoService,
+    IPacienteService pacienteService) : IAtencionService
 {
     public Task<PagedResult<AtencionResponse>> GetPagedAsync(
         PagedRequest request,
@@ -67,6 +71,91 @@ public sealed class AtencionService(
             .FirstOrDefaultAsync(cancellationToken);
     }
 
+    public async Task<AtencionResponse> RecepcionarAsync(
+        RecepcionarAtencionRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var tipo = await context.TiposAtencion
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == request.TipoAtencionId, cancellationToken)
+            ?? throw new BusinessException("El tipo de atención no existe.");
+
+        var formularioActivo = await context.FormulariosClinicos
+            .AsNoTracking()
+            .Where(x => x.TipoAtencionId == request.TipoAtencionId && x.Activo)
+            .OrderByDescending(x => x.Version)
+            .ThenByDescending(x => x.Codigo)
+            .FirstOrDefaultAsync(cancellationToken)
+            ?? throw new BusinessException(
+                "No hay un formulario clínico activo para este tipo de atención.");
+
+        Guid pacienteId;
+
+        if (request.PacienteId is { } existingPacienteId && existingPacienteId != Guid.Empty)
+        {
+            await EnsurePacienteExistsAsync(existingPacienteId, cancellationToken);
+            pacienteId = existingPacienteId;
+        }
+        else if (request.PacienteNuevo is { } nuevo)
+        {
+            var paciente = await pacienteService.CreateAsync(
+                new CreatePacienteRequest(
+                    Modo: "nueva",
+                    PersonaId: null,
+                    Persona: new CreatePersonaRequest(
+                        TipoDocumentoId: nuevo.TipoDocumentoId,
+                        NumeroDocumento: nuevo.NumeroDocumento,
+                        Nombres: nuevo.Nombres,
+                        ApellidoPaterno: nuevo.ApellidoPaterno,
+                        ApellidoMaterno: nuevo.ApellidoMaterno ?? string.Empty,
+                        FechaNacimiento: nuevo.FechaNacimiento,
+                        SexoId: nuevo.SexoId,
+                        EstadoCivilId: nuevo.EstadoCivilId,
+                        Telefono: nuevo.Telefono,
+                        Direccion: nuevo.Direccion ?? string.Empty,
+                        ExtensionDocumentoId: nuevo.ExtensionDocumentoId,
+                        ComplementoDocumento: nuevo.ComplementoDocumento),
+                    NumeroHistoriaClinica: null),
+                cancellationToken);
+
+            pacienteId = paciente.Id;
+        }
+        else
+        {
+            throw new BusinessException(
+                "Debe indicar un paciente existente o los datos del paciente nuevo.");
+        }
+
+        var fechaAtencion = request.FechaAtencion ?? DateTime.UtcNow;
+        var fechaRecepcion = DateTime.UtcNow;
+
+        var codigoCorrelativo = tipo.Codigo.Trim().ToUpperInvariant();
+        var prefijo = codigoCorrelativo.Length <= 20
+            ? codigoCorrelativo
+            : codigoCorrelativo[..20];
+
+        var correlativo = await correlativoService.GenerarAsync(
+            new GenerarCorrelativoRequest(codigoCorrelativo, Prefijo: prefijo),
+            cancellationToken);
+
+        var entity = new AtencionEntity
+        {
+            NumeroAtencion = correlativo.NumeroFormateado,
+            PacienteId = pacienteId,
+            TipoAtencionId = request.TipoAtencionId,
+            FormularioClinicoId = formularioActivo.Id,
+            FechaAtencion = fechaAtencion,
+            FechaRecepcion = fechaRecepcion,
+            Estado = "BORRADOR",
+            Observaciones = NormalizeOptional(request.Observaciones)
+        };
+
+        context.Atenciones.Add(entity);
+        await context.SaveChangesAsync(cancellationToken);
+
+        return ToResponse(entity);
+    }
+
     public async Task<AtencionResponse> CreateAsync(
         CreateAtencionRequest request,
         CancellationToken cancellationToken = default)
@@ -112,6 +201,7 @@ public sealed class AtencionService(
             TipoAtencionId = request.TipoAtencionId,
             FormularioClinicoId = request.FormularioClinicoId,
             FechaAtencion = request.FechaAtencion,
+            FechaRecepcion = DateTime.UtcNow,
             Estado = "BORRADOR",
             Observaciones = NormalizeOptional(request.Observaciones)
         };
@@ -140,7 +230,6 @@ public sealed class AtencionService(
             request.TipoAtencionId,
             cancellationToken);
 
-        
         entity.PacienteId = request.PacienteId;
         entity.TipoAtencionId = request.TipoAtencionId;
         entity.FormularioClinicoId = request.FormularioClinicoId;

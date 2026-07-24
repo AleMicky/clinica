@@ -75,7 +75,9 @@ export const catalogoClinicoEndpoints = {
 } as const
 
 export const atencionMedicaEndpoints = {
-    atenciones: createEndpoints(`${api.atencionMedica}/atenciones`),
+    atenciones: createEndpoints(`${api.atencionMedica}/atenciones`, (root) => ({
+        recepcionar: `${root}/recepcionar`,
+    })),
     tiposAtencion: createEndpoints(`${api.atencionMedica}/tipos-atencion`),
     tiposCampoFormulario: createEndpoints(`${api.atencionMedica}/tipos-campo-formulario`),
     formulariosClinicos: createEndpoints(`${api.atencionMedica}/formularios-clinicos`),

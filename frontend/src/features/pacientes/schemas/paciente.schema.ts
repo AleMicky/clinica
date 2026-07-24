@@ -4,12 +4,6 @@ import { personaSchema, toCreatePersonaPayload } from '../../personas/schemas/pe
 
 const optionalText = z.string().trim()
 
-const pacienteClinicalFields = {
-    grupoSanguineoId: z.string().trim().optional(),
-    alergias: optionalText.max(500, 'Las alergias no pueden superar los 500 caracteres.'),
-    observaciones: optionalText.max(1000, 'Las observaciones no pueden superar los 1000 caracteres.'),
-}
-
 export const pacienteUpdateSchema = z.object({
     personaId: z.string().trim().min(1, 'Seleccione una persona.'),
     numeroHistoriaClinica: z
@@ -17,7 +11,6 @@ export const pacienteUpdateSchema = z.object({
         .trim()
         .min(1, 'El número de historia clínica es obligatorio.')
         .max(30, 'No puede superar los 30 caracteres.'),
-    ...pacienteClinicalFields,
 })
 
 export const pacienteCreateSchema = z
@@ -40,7 +33,6 @@ export const pacienteCreateSchema = z
             30,
             'No puede superar los 30 caracteres.',
         ),
-        ...pacienteClinicalFields,
     })
     .superRefine((data, ctx) => {
         if (data.modo === 'existente') {
@@ -102,14 +94,6 @@ export const pacienteDefaultValues: PacienteFormInput = {
     telefono: '',
     direccion: '',
     numeroHistoriaClinica: '',
-    grupoSanguineoId: '',
-    alergias: '',
-    observaciones: '',
-}
-
-function toOptionalPayloadText(value: string) {
-    const trimmed = value.trim()
-    return trimmed.length > 0 ? trimmed : undefined
 }
 
 function getFirstWord(value: string) {
@@ -149,9 +133,6 @@ export function toCreatePacientePayload(
 ): import('../types/paciente.types').CreatePacientePayload {
     const payload: import('../types/paciente.types').CreatePacientePayload = {
         modo: values.modo,
-        grupoSanguineoId: toOptionalPayloadText(values.grupoSanguineoId ?? ''),
-        alergias: toOptionalPayloadText(values.alergias),
-        observaciones: toOptionalPayloadText(values.observaciones),
     }
 
     const numeroHistoria = values.numeroHistoriaClinica?.trim()
@@ -188,8 +169,5 @@ export function toUpdatePacientePayload(
     return {
         personaId: values.personaId,
         numeroHistoriaClinica: values.numeroHistoriaClinica.trim(),
-        grupoSanguineoId: toOptionalPayloadText(values.grupoSanguineoId ?? ''),
-        alergias: toOptionalPayloadText(values.alergias),
-        observaciones: toOptionalPayloadText(values.observaciones),
     }
 }

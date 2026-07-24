@@ -33,7 +33,6 @@ public class AtencionMedicaDbContext : DbContext
             entity.ToTable("Pacientes", t => t.ExcludeFromMigrations());
             entity.HasKey(x => x.Id);
             entity.Ignore(x => x.Persona);
-            entity.Ignore(x => x.GrupoSanguineo);
         });
 
         modelBuilder.Entity<Especialidad>(entity =>

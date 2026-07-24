@@ -7,7 +7,6 @@ import {
     Grid,
     Input,
     Modal,
-    Select,
     Statistic,
     Typography,
     theme,
@@ -19,7 +18,6 @@ import {
     TeamOutlined,
 } from '@ant-design/icons'
 
-import { useCatalogoGruposGrouped } from '../../parametros/catalogos/hooks/catalogo-grupos.hooks'
 import { PacienteFormModal } from '../components/PacienteFormModal'
 import { PacientesTable } from '../components/PacientesTable'
 import {
@@ -28,24 +26,24 @@ import {
     usePacientes,
     useUpdatePaciente,
 } from '../hooks/pacientes.hooks'
+import { usePersonas } from '../../personas/hooks/personas.hooks'
 import {
     toCreatePacientePayload,
     toUpdatePacientePayload,
     type PacienteFormValues,
     type PacienteUpdateFormValues,
 } from '../schemas/paciente.schema'
-import type { Paciente } from '../types/paciente.types'
+import {
+    calcularEdadPaciente,
+    formatPacienteDocumento,
+    type Paciente,
+} from '../types/paciente.types'
 
 const { Title, Text } = Typography
 const { useBreakpoint } = Grid
 
 const DEFAULT_PAGE_SIZE = 20
 const FETCH_PAGE_SIZE = 5000
-
-function extractDocumentoHint(numeroHistoriaClinica: string) {
-    const match = numeroHistoriaClinica.match(/\d+$/)
-    return match?.[0] ?? ''
-}
 
 function formatDate(value: string) {
     const date = new Date(value)
@@ -65,39 +63,57 @@ export function PacientesView() {
     const [searchInput, setSearchInput] = useState('')
     const [hcFilter, setHcFilter] = useState('')
     const [docFilter, setDocFilter] = useState('')
-    const [grupoFilter, setGrupoFilter] = useState<string | null>(null)
-    const [estadoFilter, setEstadoFilter] = useState<'all' | 'registrado'>('all')
     const [drawerOpen, setDrawerOpen] = useState(false)
     const [editingPaciente, setEditingPaciente] = useState<Paciente | null>(null)
     const [viewingPaciente, setViewingPaciente] = useState<Paciente | null>(null)
     const [deletingId, setDeletingId] = useState<string | null>(null)
 
-    const { data: catalogos } = useCatalogoGruposGrouped()
-
-    const { data, isFetching } = usePacientes({
+    const { data, isFetching: isFetchingPacientes } = usePacientes({
         page: 1,
         pageSize: FETCH_PAGE_SIZE,
         search: search || undefined,
+    })
+
+    const { data: personasData, isFetching: isFetchingPersonas } = usePersonas({
+        page: 1,
+        pageSize: FETCH_PAGE_SIZE,
     })
 
     const createPaciente = useCreatePaciente()
     const updatePaciente = useUpdatePaciente()
     const deletePaciente = useDeletePaciente()
 
-    const grupoSanguineoOptions = useMemo(
-        () =>
-            catalogos
-                ?.find((grupo) => grupo.codigo === 'GRUPO_SANGUINEO')
-                ?.items.map((item) => ({ label: item.nombre, value: item.id })) ?? [],
-        [catalogos],
-    )
+    const isFetching = isFetchingPacientes || isFetchingPersonas
 
-    const hasActiveFilters = Boolean(
-        hcFilter.trim() || docFilter.trim() || grupoFilter || estadoFilter !== 'all',
-    )
+    const hasActiveFilters = Boolean(hcFilter.trim() || docFilter.trim())
+
+    const pacientesEnriquecidos = useMemo(() => {
+        const personasById = new Map(
+            (personasData?.items ?? []).map((persona) => [persona.id, persona] as const),
+        )
+
+        return (data?.items ?? []).map((paciente) => {
+            const persona = personasById.get(paciente.personaId)
+            if (!persona) return paciente
+
+            return {
+                ...paciente,
+                personaNombreCompleto:
+                    paciente.personaNombreCompleto || persona.nombreCompleto,
+                tipoDocumentoNombre: persona.tipoDocumentoNombre,
+                numeroDocumento: persona.numeroDocumento,
+                extensionDocumentoNombre: persona.extensionDocumentoNombre,
+                complementoDocumento: persona.complementoDocumento,
+                fechaNacimiento: persona.fechaNacimiento,
+                sexoNombre: persona.sexoNombre,
+                telefono: persona.telefono,
+                direccion: persona.direccion,
+            } satisfies Paciente
+        })
+    }, [data?.items, personasData?.items])
 
     const filteredPacientes = useMemo(() => {
-        let list = data?.items ?? []
+        let list = pacientesEnriquecidos
 
         if (hcFilter.trim()) {
             const term = hcFilter.trim().toLowerCase()
@@ -109,21 +125,14 @@ export function PacientesView() {
         if (docFilter.trim()) {
             const term = docFilter.trim().toLowerCase()
             list = list.filter((paciente) => {
-                const documento = extractDocumentoHint(paciente.numeroHistoriaClinica).toLowerCase()
-                return documento.includes(term)
+                const documento = formatPacienteDocumento(paciente).toLowerCase()
+                const numero = paciente.numeroDocumento?.toLowerCase() ?? ''
+                return documento.includes(term) || numero.includes(term)
             })
         }
 
-        if (grupoFilter) {
-            list = list.filter((paciente) => paciente.grupoSanguineoId === grupoFilter)
-        }
-
-        if (estadoFilter === 'registrado') {
-            list = list.filter(Boolean)
-        }
-
         return list
-    }, [data?.items, hcFilter, docFilter, grupoFilter, estadoFilter])
+    }, [pacientesEnriquecidos, hcFilter, docFilter])
 
     const totalPacientes = data?.totalRecords ?? 0
     const totalFiltered = filteredPacientes.length
@@ -199,8 +208,6 @@ export function PacientesView() {
     const clearFilters = () => {
         setHcFilter('')
         setDocFilter('')
-        setGrupoFilter(null)
-        setEstadoFilter('all')
         setPage(1)
     }
 
@@ -291,34 +298,6 @@ export function PacientesView() {
                                 }}
                             />
 
-                            <Select
-                                allowClear
-                                size="small"
-                                className="pacientes-module__filter-select"
-                                placeholder="Grupo sanguíneo"
-                                options={grupoSanguineoOptions}
-                                value={grupoFilter ?? undefined}
-                                onChange={(value) => {
-                                    setGrupoFilter(value ?? null)
-                                    setPage(1)
-                                }}
-                            />
-
-                            <Select
-                                size="small"
-                                className="pacientes-module__filter-select"
-                                placeholder="Estado"
-                                value={estadoFilter}
-                                options={[
-                                    { label: 'Todos', value: 'all' },
-                                    { label: 'Registrado', value: 'registrado' },
-                                ]}
-                                onChange={(value) => {
-                                    setEstadoFilter(value)
-                                    setPage(1)
-                                }}
-                            />
-
                             {hasActiveFilters ? (
                                 <Button
                                     type="link"
@@ -401,25 +380,30 @@ export function PacientesView() {
             >
                 {viewingPaciente ? (
                     <Descriptions bordered size="small" column={1}>
-                        <Descriptions.Item label="Paciente">
-                            {viewingPaciente.personaNombreCompleto}
-                        </Descriptions.Item>
                         <Descriptions.Item label="Historia clínica">
                             {viewingPaciente.numeroHistoriaClinica}
                         </Descriptions.Item>
-                        <Descriptions.Item label="Grupo sanguíneo">
-                            {viewingPaciente.grupoSanguineoNombre || '—'}
+                        <Descriptions.Item label="Paciente">
+                            {viewingPaciente.personaNombreCompleto}
                         </Descriptions.Item>
-                        <Descriptions.Item label="Alergias">
-                            {viewingPaciente.alergias || '—'}
+                        <Descriptions.Item label="Documento">
+                            {formatPacienteDocumento(viewingPaciente)}
                         </Descriptions.Item>
-                        <Descriptions.Item label="Observaciones">
-                            {viewingPaciente.observaciones || '—'}
+                        <Descriptions.Item label="Fecha de nacimiento">
+                            {formatDate(viewingPaciente.fechaNacimiento)}
                         </Descriptions.Item>
-                        <Descriptions.Item label="Fecha de registro">
-                            {formatDate(viewingPaciente.fechaRegistro)}
+                        <Descriptions.Item label="Edad">
+                            {calcularEdadPaciente(viewingPaciente.fechaNacimiento)}
                         </Descriptions.Item>
-                        <Descriptions.Item label="Estado">Registrado</Descriptions.Item>
+                        <Descriptions.Item label="Sexo">
+                            {viewingPaciente.sexoNombre || '—'}
+                        </Descriptions.Item>
+                        <Descriptions.Item label="Teléfono">
+                            {viewingPaciente.telefono?.trim() || '—'}
+                        </Descriptions.Item>
+                        <Descriptions.Item label="Dirección">
+                            {viewingPaciente.direccion?.trim() || '—'}
+                        </Descriptions.Item>
                     </Descriptions>
                 ) : null}
             </Modal>

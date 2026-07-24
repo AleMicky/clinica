@@ -353,10 +353,6 @@ namespace Clinica.Modules.Personas.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("Alergias")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -365,12 +361,6 @@ namespace Clinica.Modules.Personas.Infrastructure.Migrations
                     b.Property<string>("CreatedBy")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("FechaRegistro")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("GrupoSanguineoId")
-                        .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
@@ -381,10 +371,6 @@ namespace Clinica.Modules.Personas.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
-
-                    b.Property<string>("Observaciones")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<Guid>("PersonaId")
                         .HasColumnType("uniqueidentifier");
@@ -397,8 +383,6 @@ namespace Clinica.Modules.Personas.Infrastructure.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("GrupoSanguineoId");
 
                     b.HasIndex("NumeroHistoriaClinica")
                         .IsUnique();
@@ -848,18 +832,11 @@ namespace Clinica.Modules.Personas.Infrastructure.Migrations
 
             modelBuilder.Entity("Clinica.Modules.Personas.Domain.Entities.Paciente", b =>
                 {
-                    b.HasOne("Clinica.Modules.Parametros.Domain.Entities.CatalogoItem", "GrupoSanguineo")
-                        .WithMany()
-                        .HasForeignKey("GrupoSanguineoId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("Clinica.Modules.Personas.Domain.Entities.Persona", "Persona")
                         .WithMany()
                         .HasForeignKey("PersonaId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("GrupoSanguineo");
 
                     b.Navigation("Persona");
                 });

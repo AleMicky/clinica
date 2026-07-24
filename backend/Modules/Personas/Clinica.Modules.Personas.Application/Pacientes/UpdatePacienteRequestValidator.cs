@@ -8,7 +8,5 @@ public class UpdatePacienteRequestValidator : AbstractValidator<UpdatePacienteRe
     {
         RuleFor(x => x.PersonaId).NotEmpty();
         RuleFor(x => x.NumeroHistoriaClinica).NotEmpty().MaximumLength(30);
-        RuleFor(x => x.Alergias).MaximumLength(500);
-        RuleFor(x => x.Observaciones).MaximumLength(1000);
     }
 }

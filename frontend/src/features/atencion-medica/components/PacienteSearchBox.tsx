@@ -1,15 +1,8 @@
 import { useMemo, useState } from 'react'
-import { PlusOutlined } from '@ant-design/icons'
-import { useQueryClient } from '@tanstack/react-query'
-import { Button, Flex, Form, Select, Typography } from 'antd'
+import { Button, Form, Select, Typography } from 'antd'
 
-import { PacienteFormModal } from '../../pacientes/components/PacienteFormModal'
-import { useCreatePaciente, usePacientes } from '../../pacientes/hooks/pacientes.hooks'
-import {
-    toCreatePacientePayload,
-    type PacienteFormValues,
-    type PacienteUpdateFormValues,
-} from '../../pacientes/schemas/paciente.schema'
+import { pacientesService } from '../../pacientes/services/pacientes.service'
+import { useAppQuery } from '../../../shared/hooks/use-app-query'
 import { queryKeys } from '../../../shared/constants/query-keys'
 import type { Paciente } from '../../pacientes/types/paciente.types'
 
@@ -26,58 +19,78 @@ export type PacienteSeleccionado = {
 type PacienteSearchBoxProps = {
     value?: string
     onChange: (paciente: PacienteSeleccionado | null) => void
+    onRegistrar?: (searchTerm: string) => void
+    onBlur?: () => void
     disabled?: boolean
+    error?: string
+    label?: string | null
 }
 
-export function PacienteSearchBox({ value, onChange, disabled }: PacienteSearchBoxProps) {
+function formatPacienteLabel(paciente: Paciente) {
+    return `${paciente.personaNombreCompleto} · HC ${paciente.numeroHistoriaClinica}`
+}
+
+export function PacienteSearchBox({
+    value,
+    onChange,
+    onRegistrar,
+    onBlur,
+    disabled,
+    error,
+    label = 'Paciente',
+}: PacienteSearchBoxProps) {
     const [pacienteSearch, setPacienteSearch] = useState('')
-    const [registrarOpen, setRegistrarOpen] = useState(false)
 
-    const queryClient = useQueryClient()
-    const createPaciente = useCreatePaciente()
+    const searchTerm = pacienteSearch.trim()
+    const hasSearch = searchTerm.length > 0
+    const searchQuery = { page: 1, pageSize: 20, search: searchTerm }
 
-    const { data: pacientesData, isFetching: loadingPacientes } = usePacientes({
-        page: 1,
-        pageSize: 20,
-        search: pacienteSearch || undefined,
+    const { data: pacientesData, isFetching: loadingPacientes } = useAppQuery({
+        queryKey: queryKeys.pacientes.list(searchQuery),
+        queryFn: () => pacientesService.getPaged(searchQuery),
+        enabled: hasSearch,
     })
 
-    const pacienteOptions = useMemo(
-        () =>
-            (pacientesData?.items ?? []).map((paciente) => ({
-                value: paciente.id,
-                label: `${paciente.personaNombreCompleto} · HC ${paciente.numeroHistoriaClinica}`,
-                paciente,
-            })),
-        [pacientesData?.items],
-    )
+    const { data: pacienteById } = useAppQuery({
+        queryKey: queryKeys.pacientes.detail(value ?? ''),
+        queryFn: () => pacientesService.getById(value!),
+        enabled: Boolean(value),
+    })
+
+    const pacienteOptions = useMemo(() => {
+        if (!hasSearch && !value) return []
+
+        const items = hasSearch
+            ? (pacientesData?.items ?? []).map((paciente) => ({
+                  value: paciente.id,
+                  label: formatPacienteLabel(paciente),
+                  paciente,
+              }))
+            : []
+
+        if (
+            pacienteById &&
+            value &&
+            !items.some((item) => item.value === value)
+        ) {
+            items.unshift({
+                value: pacienteById.id,
+                label: formatPacienteLabel(pacienteById),
+                paciente: pacienteById,
+            })
+        }
+
+        return items
+    }, [hasSearch, pacientesData?.items, pacienteById, value])
 
     const sinResultados =
-        Boolean(pacienteSearch.trim()) &&
-        !loadingPacientes &&
-        (pacientesData?.items.length ?? 0) === 0
-
-    const cerrarRegistroPaciente = () => {
-        if (createPaciente.isPending) return
-        setRegistrarOpen(false)
-    }
-
-    const handleRegistrarPaciente = async (
-        values: PacienteFormValues | PacienteUpdateFormValues,
-    ) => {
-        const paciente = await createPaciente.mutateAsync(
-            toCreatePacientePayload(values as PacienteFormValues),
-        )
-        await queryClient.invalidateQueries({ queryKey: queryKeys.pacientes.all })
-        seleccionarPaciente(paciente)
-        setRegistrarOpen(false)
-    }
+        hasSearch && !loadingPacientes && (pacientesData?.items.length ?? 0) === 0
 
     const seleccionarPaciente = (paciente: Paciente) => {
         onChange({
             id: paciente.id,
             personaId: paciente.personaId,
-            label: `${paciente.personaNombreCompleto} · HC ${paciente.numeroHistoriaClinica}`,
+            label: formatPacienteLabel(paciente),
             numeroHistoriaClinica: paciente.numeroHistoriaClinica,
             personaNombreCompleto: paciente.personaNombreCompleto,
         })
@@ -85,65 +98,78 @@ export function PacienteSearchBox({ value, onChange, disabled }: PacienteSearchB
     }
 
     return (
-        <>
-            <Form.Item label="Buscar paciente" required>
-                <Flex gap={8} align="start">
-                    <Select
-                        showSearch
-                        allowClear
-                        disabled={disabled}
-                        style={{ flex: 1 }}
-                        placeholder="Nombre, documento o historia clínica"
-                        filterOption={false}
-                        onSearch={setPacienteSearch}
-                        loading={loadingPacientes}
-                        options={pacienteOptions}
-                        value={value || undefined}
-                        onChange={(nextId) => {
-                            if (!nextId) {
-                                onChange(null)
-                                return
-                            }
+        <Form.Item
+            label={label === null ? undefined : label}
+            required={label !== null}
+            validateStatus={error ? 'error' : undefined}
+            help={
+                error ||
+                (sinResultados && onRegistrar ? (
+                    <span>
+                        No se encontró el paciente.{' '}
+                        <Button
+                            type="link"
+                            size="small"
+                            style={{ padding: 0, height: 'auto' }}
+                            onClick={() => onRegistrar(searchTerm)}
+                            disabled={disabled}
+                        >
+                            Completar datos para recepcionar
+                        </Button>
+                    </span>
+                ) : sinResultados ? (
+                    'No se encontró el paciente'
+                ) : undefined)
+            }
+        >
+            <Select
+                showSearch
+                allowClear
+                disabled={disabled}
+                style={{ width: '100%' }}
+                placeholder="Buscar por nombre, documento o HC"
+                filterOption={false}
+                onSearch={setPacienteSearch}
+                onBlur={onBlur}
+                loading={loadingPacientes && hasSearch}
+                options={pacienteOptions}
+                value={value || undefined}
+                onChange={(nextId) => {
+                    if (!nextId) {
+                        onChange(null)
+                        setPacienteSearch('')
+                        return
+                    }
 
-                            const option = pacienteOptions.find((item) => item.value === nextId)
-                            if (option) {
-                                seleccionarPaciente(option.paciente)
-                            }
-                        }}
-                        notFoundContent={
-                            sinResultados ? (
-                                <div style={{ padding: '8px 0', textAlign: 'center' }}>
-                                    <Text type="secondary">No se encontró el paciente</Text>
+                    const option = pacienteOptions.find((item) => item.value === nextId)
+                    if (option) {
+                        seleccionarPaciente(option.paciente)
+                    }
+                }}
+                notFoundContent={
+                    !hasSearch ? (
+                        <Text type="secondary">Escriba para buscar un paciente</Text>
+                    ) : loadingPacientes ? (
+                        <Text type="secondary">Buscando…</Text>
+                    ) : sinResultados ? (
+                        <div style={{ padding: '8px 0', textAlign: 'center' }}>
+                            <Text type="secondary">No se encontró el paciente</Text>
+                            {onRegistrar ? (
+                                <>
                                     <br />
                                     <Button
                                         type="link"
                                         size="small"
-                                        onClick={() => setRegistrarOpen(true)}
+                                        onClick={() => onRegistrar(searchTerm)}
                                     >
-                                        Registrar nuevo paciente
+                                        Completar datos para recepcionar
                                     </Button>
-                                </div>
-                            ) : undefined
-                        }
-                    />
-                    <Button
-                        icon={<PlusOutlined />}
-                        onClick={() => setRegistrarOpen(true)}
-                        disabled={disabled}
-                    >
-                        Nuevo
-                    </Button>
-                </Flex>
-            </Form.Item>
-
-            <PacienteFormModal
-                open={registrarOpen}
-                paciente={null}
-                loading={createPaciente.isPending}
-                title="Registrar paciente"
-                onClose={cerrarRegistroPaciente}
-                onSubmit={handleRegistrarPaciente}
+                                </>
+                            ) : null}
+                        </div>
+                    ) : undefined
+                }
             />
-        </>
+        </Form.Item>
     )
 }

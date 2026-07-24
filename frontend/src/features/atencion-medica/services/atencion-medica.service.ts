@@ -1,4 +1,4 @@
-import { getPaged } from '../../../shared/api/http'
+import { getPaged, post } from '../../../shared/api/http'
 import {
     atencionMedicaEndpoints,
     catalogoClinicoEndpoints,
@@ -25,6 +25,7 @@ import type {
     FormularioSeccionPagedQuery,
     AtencionFormularioRespuesta,
     PacienteLookup,
+    RecepcionarAtencionPayload,
     TipoAtencion,
     TipoCampoFormulario,
     UpdateAtencionFormularioRespuestaPayload,
@@ -41,6 +42,12 @@ export const atencionesService = {
     ),
     getPaged(query: AtencionPagedQuery) {
         return getPaged<Atencion>(atencionMedicaEndpoints.atenciones.root, query)
+    },
+    recepcionar(data: RecepcionarAtencionPayload) {
+        return post<Atencion, RecepcionarAtencionPayload>(
+            atencionMedicaEndpoints.atenciones.recepcionar,
+            data,
+        )
     },
 }
 

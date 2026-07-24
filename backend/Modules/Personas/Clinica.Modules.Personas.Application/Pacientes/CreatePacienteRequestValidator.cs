@@ -29,8 +29,5 @@ public class CreatePacienteRequestValidator : AbstractValidator<CreatePacienteRe
         RuleFor(x => x.NumeroHistoriaClinica)
             .MaximumLength(30)
             .When(x => !string.IsNullOrWhiteSpace(x.NumeroHistoriaClinica));
-
-        RuleFor(x => x.Alergias).MaximumLength(500);
-        RuleFor(x => x.Observaciones).MaximumLength(1000);
     }
 }

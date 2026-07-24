@@ -22,7 +22,11 @@ import {
 } from '@ant-design/icons'
 
 import { AppDataTable } from '../../../shared/components/ui/data-table/AppDataTable'
-import type { Paciente } from '../types/paciente.types'
+import {
+    calcularEdadPaciente,
+    formatPacienteDocumento,
+    type Paciente,
+} from '../types/paciente.types'
 
 const { Text } = Typography
 
@@ -53,17 +57,6 @@ function getInitials(nombre: string) {
     }
 
     return nombre.trim().slice(0, 2).toUpperCase()
-}
-
-function formatDate(value: string) {
-    const date = new Date(value)
-    if (Number.isNaN(date.getTime())) return value
-    return date.toLocaleDateString('es-BO')
-}
-
-function extractDocumentoHint(numeroHistoriaClinica: string) {
-    const match = numeroHistoriaClinica.match(/\d+$/)
-    return match?.[0] ?? '—'
 }
 
 function PacienteIdentityCell({ paciente }: { paciente: Paciente }) {
@@ -171,6 +164,13 @@ export function PacientesTable({
     const columns = useMemo(
         () =>
             [
+                columnHelper.accessor('numeroHistoriaClinica', {
+                    header: 'Historia clínica',
+                    size: 140,
+                    cell: ({ getValue }) => (
+                        <Tag className="paciente-hc-tag">{getValue()}</Tag>
+                    ),
+                }),
                 columnHelper.display({
                     id: 'paciente',
                     header: 'Paciente',
@@ -180,39 +180,31 @@ export function PacientesTable({
                 columnHelper.display({
                     id: 'documento',
                     header: 'Documento',
-                    size: 120,
+                    size: 160,
                     cell: ({ row }) => (
                         <Text type="secondary" className="paciente-cell__sub">
-                            {extractDocumentoHint(row.original.numeroHistoriaClinica)}
+                            {formatPacienteDocumento(row.original)}
                         </Text>
                     ),
                 }),
-                columnHelper.accessor('numeroHistoriaClinica', {
-                    header: 'Historia clínica',
-                    size: 140,
-                    cell: ({ getValue }) => (
-                        <Tag className="paciente-hc-tag">{getValue()}</Tag>
-                    ),
-                }),
-                columnHelper.accessor('grupoSanguineoNombre', {
-                    header: 'Grupo sanguíneo',
-                    size: 120,
+                columnHelper.accessor('sexoNombre', {
+                    header: 'Sexo',
+                    size: 90,
                     cell: ({ getValue }) => getValue() || '—',
                 }),
                 columnHelper.display({
-                    id: 'estado',
-                    header: 'Estado',
-                    size: 100,
-                    cell: () => <Tag className="paciente-status-tag">Registrado</Tag>,
+                    id: 'edad',
+                    header: 'Edad',
+                    size: 90,
+                    cell: ({ row }) => calcularEdadPaciente(row.original.fechaNacimiento),
                 }),
-                columnHelper.accessor('fechaRegistro', {
-                    header: 'Fecha de registro',
-                    size: 130,
-                    cell: ({ getValue }) => (
-                        <Text type="secondary" style={{ fontSize: 12 }}>
-                            {formatDate(getValue())}
-                        </Text>
-                    ),
+                columnHelper.accessor('telefono', {
+                    header: 'Teléfono',
+                    size: 120,
+                    cell: ({ getValue }) => {
+                        const value = getValue()
+                        return typeof value === 'string' && value.trim() ? value.trim() : '—'
+                    },
                 }),
                 columnHelper.display({
                     id: 'actions',

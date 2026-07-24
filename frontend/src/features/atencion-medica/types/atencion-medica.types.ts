@@ -180,6 +180,27 @@ export type CreateAtencionPayload = {
     observaciones?: string | null
 }
 
+export type RecepcionPacienteNuevoPayload = {
+    tipoDocumentoId: Guid
+    numeroDocumento: string
+    nombres: string
+    apellidoPaterno: string
+    apellidoMaterno: string
+    fechaNacimiento: string
+    sexoId: Guid
+    estadoCivilId: Guid
+    telefono: string
+    direccion?: string | null
+}
+
+export type RecepcionarAtencionPayload = {
+    tipoAtencionId: Guid
+    fechaAtencion?: string | null
+    observaciones?: string | null
+    pacienteId?: Guid | null
+    pacienteNuevo?: RecepcionPacienteNuevoPayload | null
+}
+
 export type UpdateAtencionPayload = {
     pacienteId: Guid
     tipoAtencionId: Guid

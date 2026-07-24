@@ -1,4 +1,3 @@
-using Clinica.Modules.Parametros.Domain.Entities;
 using Clinica.Modules.Personas.Application.Abstractions;
 using Clinica.Modules.Personas.Application.Pacientes;
 using Clinica.Modules.Personas.Application.Personas;
@@ -37,8 +36,6 @@ public sealed class PacienteService(
 
         var query = context.Pacientes
             .AsNoTracking()
-            .Include(x => x.Persona)
-            .Include(x => x.GrupoSanguineo)
             .AsQueryable();
 
         if (request.PersonaId is { } personaId && personaId != Guid.Empty)
@@ -57,12 +54,19 @@ public sealed class PacienteService(
 
         var total = await query.CountAsync(cancellationToken);
 
-        var items = await query
-            .OrderByDescending(x => x.FechaRegistro)
+        var entities = await query
+            .OrderByDescending(x => x.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(x => ToResponse(x))
             .ToListAsync(cancellationToken);
+
+        var personas = await personaService.GetByIdsAsync(
+            entities.Select(x => x.PersonaId),
+            cancellationToken);
+
+        var items = entities
+            .Select(x => ToResponse(x, personas.GetValueOrDefault(x.PersonaId)))
+            .ToList();
 
         return new PagedResult<PacienteResponse>(items, total, page, pageSize);
     }
@@ -71,13 +75,18 @@ public sealed class PacienteService(
         Guid id,
         CancellationToken cancellationToken = default)
     {
-        return await context.Pacientes
+        var entity = await context.Pacientes
             .AsNoTracking()
-            .Include(x => x.Persona)
-            .Include(x => x.GrupoSanguineo)
-            .Where(x => x.Id == id)
-            .Select(x => ToResponse(x))
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+
+        if (entity is null)
+            return null;
+
+        var personas = await personaService.GetByIdsAsync(
+            [entity.PersonaId],
+            cancellationToken);
+
+        return ToResponse(entity, personas.GetValueOrDefault(entity.PersonaId));
     }
 
     public async Task<PacienteResponse> CreateAsync(
@@ -108,9 +117,6 @@ public sealed class PacienteService(
         {
             await EnsurePersonaNotPacienteAsync(persona.Id, null, cancellationToken);
 
-            if (request.GrupoSanguineoId is { } grupoSanguineoId)
-                await EnsureCatalogoItemExistsAsync(grupoSanguineoId, cancellationToken);
-
             var numeroHistoria = await ResolveNumeroHistoriaClinicaAsync(
                 request.NumeroHistoriaClinica,
                 persona,
@@ -120,11 +126,7 @@ public sealed class PacienteService(
             var entity = new Paciente
             {
                 PersonaId = persona.Id,
-                NumeroHistoriaClinica = numeroHistoria,
-                GrupoSanguineoId = request.GrupoSanguineoId,
-                Alergias = NormalizeOptional(request.Alergias),
-                Observaciones = NormalizeOptional(request.Observaciones),
-                FechaRegistro = DateTime.UtcNow
+                NumeroHistoriaClinica = numeroHistoria
             };
 
             context.Pacientes.Add(entity);
@@ -155,17 +157,11 @@ public sealed class PacienteService(
         await EnsurePersonaExistsAsync(request.PersonaId, cancellationToken);
         await EnsurePersonaNotPacienteAsync(request.PersonaId, id, cancellationToken);
 
-        if (request.GrupoSanguineoId is { } grupoSanguineoId)
-            await EnsureCatalogoItemExistsAsync(grupoSanguineoId, cancellationToken);
-
         var numeroHistoria = Normalize(request.NumeroHistoriaClinica);
         await EnsureHistoriaClinicaIsUniqueAsync(numeroHistoria, id, cancellationToken);
 
         entity.PersonaId = request.PersonaId;
         entity.NumeroHistoriaClinica = numeroHistoria;
-        entity.GrupoSanguineoId = request.GrupoSanguineoId;
-        entity.Alergias = NormalizeOptional(request.Alergias);
-        entity.Observaciones = NormalizeOptional(request.Observaciones);
 
         await context.SaveChangesAsync(cancellationToken);
 
@@ -210,17 +206,6 @@ public sealed class PacienteService(
 
         if (exists)
             throw new BusinessException("La persona ya está registrada como paciente.");
-    }
-
-    private async Task EnsureCatalogoItemExistsAsync(
-        Guid catalogoItemId,
-        CancellationToken cancellationToken)
-    {
-        var exists = await context.Set<CatalogoItem>()
-            .AnyAsync(x => x.Id == catalogoItemId, cancellationToken);
-
-        if (!exists)
-            throw new BusinessException("El ítem de catálogo no existe.");
     }
 
     private async Task<string> ResolveNumeroHistoriaClinicaAsync(
@@ -276,26 +261,37 @@ public sealed class PacienteService(
 
     private static string Normalize(string value) => value.Trim();
 
-    private static string? NormalizeOptional(string? value)
+    private static PacienteResponse ToResponse(Paciente entity, PersonaResponse? persona)
     {
-        if (value is null)
-            return null;
+        if (persona is null)
+        {
+            return new PacienteResponse(
+                entity.Id,
+                entity.PersonaId,
+                string.Empty,
+                entity.NumeroHistoriaClinica,
+                string.Empty,
+                string.Empty,
+                null,
+                null,
+                default,
+                string.Empty,
+                string.Empty,
+                string.Empty);
+        }
 
-        var trimmed = value.Trim();
-        return string.IsNullOrEmpty(trimmed) ? null : trimmed;
-    }
-
-    private static PacienteResponse ToResponse(Paciente entity)
-    {
         return new PacienteResponse(
             entity.Id,
             entity.PersonaId,
-            PersonaNaming.NombreCompleto(entity.Persona),
+            persona.NombreCompleto,
             entity.NumeroHistoriaClinica,
-            entity.GrupoSanguineoId,
-            entity.GrupoSanguineo?.Nombre,
-            entity.Alergias,
-            entity.Observaciones,
-            entity.FechaRegistro);
+            persona.TipoDocumentoNombre,
+            persona.NumeroDocumento,
+            persona.ExtensionDocumentoNombre,
+            persona.ComplementoDocumento,
+            persona.FechaNacimiento,
+            persona.SexoNombre,
+            persona.Telefono,
+            persona.Direccion);
     }
 }

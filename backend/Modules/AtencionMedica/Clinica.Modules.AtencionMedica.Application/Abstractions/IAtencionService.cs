@@ -12,4 +12,8 @@ public interface IAtencionService : ICrudService<Guid,
     Task<PagedResult<AtencionResponse>> GetPagedAsync(
         AtencionPagedRequest request,
         CancellationToken cancellationToken = default);
+
+    Task<AtencionResponse> RecepcionarAsync(
+        RecepcionarAtencionRequest request,
+        CancellationToken cancellationToken = default);
 }

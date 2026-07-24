@@ -6,8 +6,5 @@ public sealed record CreatePacienteRequest(
     string Modo,
     Guid? PersonaId,
     CreatePersonaRequest? Persona,
-    string? NumeroHistoriaClinica = null,
-    Guid? GrupoSanguineoId = null,
-    string? Alergias = null,
-    string? Observaciones = null
+    string? NumeroHistoriaClinica = null
 );
