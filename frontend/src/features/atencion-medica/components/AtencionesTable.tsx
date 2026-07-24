@@ -20,6 +20,7 @@ type AtencionesTableProps = {
     onEdit: (atencion: Atencion) => void
     onDelete: (atencion: Atencion) => void
     deletingId: string | null
+    className?: string
 }
 
 const columnHelper = createColumnHelper<Atencion>()
@@ -56,6 +57,7 @@ export function AtencionesTable({
     onEdit,
     onDelete,
     deletingId,
+    className,
 }: AtencionesTableProps) {
     const columns = useMemo(
         () =>
@@ -230,7 +232,7 @@ export function AtencionesTable({
             loading={loading}
             emptyText="No hay atenciones registradas."
             getRowId={(row) => row.id}
-            className="atenciones-table atenciones-table--compact"
+            className={['atenciones-table', className].filter(Boolean).join(' ')}
             pagination={{
                 page,
                 pageSize,

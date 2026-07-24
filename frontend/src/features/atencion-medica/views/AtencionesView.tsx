@@ -1,12 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
     FormOutlined,
+    PlusOutlined,
+    SearchOutlined,
     UnorderedListOutlined,
 } from '@ant-design/icons'
 import { useQueryClient } from '@tanstack/react-query'
-import { Badge, Tabs } from 'antd'
+import { Badge, Button, Flex, Input, Tabs, theme } from 'antd'
 
-import { ModuleSectionPanel } from '../../../shared/components/ui/module-page/ModuleSectionPanel'
 import { queryKeys } from '../../../shared/constants/query-keys'
 import { catalogoGruposService } from '../../parametros/catalogos/services/catalogo-grupos.service'
 import { AtencionFormModal } from '../components/AtencionFormModal'
@@ -28,10 +29,12 @@ import {
 import type { Atencion } from '../types/atencion-medica.types'
 
 const DEFAULT_PAGE_SIZE = 20
+const SEARCH_DEBOUNCE_MS = 400
 
 type RecepcionTab = 'recepcion' | 'registros'
 
 export function AtencionesView() {
+    const { token } = theme.useToken()
     const queryClient = useQueryClient()
     const [activeTab, setActiveTab] = useState<RecepcionTab>('recepcion')
     const [page, setPage] = useState(1)
@@ -41,6 +44,26 @@ export function AtencionesView() {
     const [modalOpen, setModalOpen] = useState(false)
     const [editingAtencion, setEditingAtencion] = useState<Atencion | null>(null)
     const [deletingId, setDeletingId] = useState<string | null>(null)
+
+    const onSearchRef = useRef((value: string) => {
+        setSearch(value.trim())
+        setPage(1)
+    })
+
+    useEffect(() => {
+        onSearchRef.current = (value: string) => {
+            setSearch(value.trim())
+            setPage(1)
+        }
+    })
+
+    useEffect(() => {
+        const timer = window.setTimeout(() => {
+            onSearchRef.current(searchInput)
+        }, SEARCH_DEBOUNCE_MS)
+
+        return () => window.clearTimeout(timer)
+    }, [searchInput])
 
     useEffect(() => {
         const tiposQuery = { page: 1, pageSize: 100 }
@@ -70,6 +93,7 @@ export function AtencionesView() {
     const totalAtenciones = data?.totalRecords ?? 0
     // Solo spinner en carga inicial; el refetch en segundo plano no bloquea la tabla.
     const tableLoading = isLoading || (isFetching && !data)
+    const caption = `${totalAtenciones} registro${totalAtenciones === 1 ? '' : 's'}`
 
     const openEditModal = (atencion: Atencion) => {
         setEditingAtencion(atencion)
@@ -106,6 +130,12 @@ export function AtencionesView() {
         } finally {
             setDeletingId(null)
         }
+    }
+
+    const handleSearch = (value: string) => {
+        setSearchInput(value)
+        setSearch(value.trim())
+        setPage(1)
     }
 
     return (
@@ -151,34 +181,77 @@ export function AtencionesView() {
                             </span>
                         ),
                         children: (
-                            <ModuleSectionPanel
-                                title="Atenciones registradas"
-                                caption={`${totalAtenciones} registro${totalAtenciones === 1 ? '' : 's'}`}
-                                searchPlaceholder="Buscar por trámite, paciente, HC u observaciones…"
-                                searchValue={searchInput}
-                                onSearchChange={setSearchInput}
-                                onSearch={(value) => {
-                                    setSearch(value)
-                                    setPage(1)
-                                }}
-                                actionLabel="Nueva recepción"
-                                onAction={() => setActiveTab('recepcion')}
-                            >
-                                <AtencionesTable
-                                    atenciones={atenciones}
-                                    loading={tableLoading}
-                                    total={totalAtenciones}
-                                    page={page}
-                                    pageSize={pageSize}
-                                    onPageChange={(nextPage, nextPageSize) => {
-                                        setPage(nextPage)
-                                        setPageSize(nextPageSize)
-                                    }}
-                                    onEdit={openEditModal}
-                                    onDelete={handleDelete}
-                                    deletingId={deletingId}
-                                />
-                            </ModuleSectionPanel>
+                            <div className="atenciones-recepcion-view__registros">
+                                <div className="rrhh-section-panel rrhh-atenciones">
+                                    <div className="rrhh-section-panel__filters">
+                                        <Flex
+                                            gap={6}
+                                            wrap="wrap"
+                                            align="center"
+                                            className="rrhh-atenciones__filters"
+                                            role="search"
+                                            aria-label="Filtros de atenciones"
+                                        >
+                                            <Input
+                                                allowClear
+                                                size="small"
+                                                className="rrhh-atenciones__filter-search"
+                                                prefix={
+                                                    <SearchOutlined
+                                                        style={{
+                                                            color: token.colorTextQuaternary,
+                                                        }}
+                                                    />
+                                                }
+                                                placeholder="Buscar por trámite, paciente, HC u observaciones…"
+                                                value={searchInput}
+                                                onChange={(event) =>
+                                                    setSearchInput(event.target.value)
+                                                }
+                                                onPressEnter={() => handleSearch(searchInput)}
+                                                onClear={() => handleSearch('')}
+                                                aria-label="Buscar atención"
+                                            />
+                                        </Flex>
+                                        <Flex
+                                            gap={6}
+                                            wrap="wrap"
+                                            align="center"
+                                            className="rrhh-section-panel__actions"
+                                        >
+                                            <Button
+                                                type="primary"
+                                                size="small"
+                                                icon={<PlusOutlined />}
+                                                onClick={() => setActiveTab('recepcion')}
+                                                aria-label="Nueva recepción"
+                                            >
+                                                Nueva recepción
+                                            </Button>
+                                        </Flex>
+                                    </div>
+                                    <div className="rrhh-section-panel__body">
+                                        <p className="rrhh-section-panel__caption rrhh-atenciones__caption">
+                                            {caption}
+                                        </p>
+                                        <AtencionesTable
+                                            atenciones={atenciones}
+                                            loading={tableLoading}
+                                            total={totalAtenciones}
+                                            page={page}
+                                            pageSize={pageSize}
+                                            onPageChange={(nextPage, nextPageSize) => {
+                                                setPage(nextPage)
+                                                setPageSize(nextPageSize)
+                                            }}
+                                            onEdit={openEditModal}
+                                            onDelete={handleDelete}
+                                            deletingId={deletingId}
+                                            className="rrhh-atenciones__table"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
                         ),
                     },
                 ]}
