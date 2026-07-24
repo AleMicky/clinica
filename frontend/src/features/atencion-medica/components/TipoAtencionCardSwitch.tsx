@@ -99,11 +99,12 @@ export function TipoAtencionCardSwitch({
                         style={
                             {
                                 '--tipo-color': color,
-                                '--tipo-color-soft': hexToRgba(color, 0.1),
-                                '--tipo-color-border': hexToRgba(color, selected ? 0.55 : 0.22),
-                                '--tipo-color-bg': selected
-                                    ? hexToRgba(color, 0.1)
-                                    : '#fff',
+                                '--tipo-color-soft': hexToRgba(color, 0.14),
+                                '--tipo-color-border': hexToRgba(
+                                    color,
+                                    selected ? 0.65 : 0.35,
+                                ),
+                                '--tipo-color-selected-bg': hexToRgba(color, 0.18),
                             } as CSSProperties
                         }
                         onClick={() => onChange(tipo.id)}
