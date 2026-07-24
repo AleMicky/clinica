@@ -1,4 +1,4 @@
-import { FormOutlined, MedicineBoxOutlined, UnorderedListOutlined } from '@ant-design/icons'
+import { FormOutlined, MedicineBoxOutlined } from '@ant-design/icons'
 import { Outlet, useRouterState } from '@tanstack/react-router'
 
 import { ModuleObjectPage } from '../../../shared/components/ui/module-page/ModuleObjectPage'
@@ -8,42 +8,9 @@ import {
 } from '../constants/atencion-medica-sections'
 import { useAtenciones } from '../hooks/atencion-medica.hooks'
 
-function getPageHeader(pathname: string): {
-    title: string
-    subtitle: string
-    icon: React.ReactNode
-} {
-    if (
-        pathname === '/atenciones/formularios' ||
-        pathname.startsWith('/atenciones/formularios/')
-    ) {
-        return {
-            icon: <FormOutlined />,
-            title: 'Formularios clínicos',
-            subtitle:
-                'Configure los formularios, secciones, campos y validaciones del tipo de atención seleccionado.',
-        }
-    }
-
-    if (pathname === '/atenciones/tipos-atencion') {
-        return {
-            icon: <UnorderedListOutlined />,
-            title: 'Tipos de atención',
-            subtitle: 'Administre los tipos de atención clínica y sus formularios asociados.',
-        }
-    }
-
-    return {
-        icon: <MedicineBoxOutlined />,
-        title: 'Atención médica',
-        subtitle: 'Atenciones clínicas y formularios',
-    }
-}
-
 export function AtencionMedicaView() {
     const pathname = useRouterState({ select: (state) => state.location.pathname })
     const activeSection = getAtencionMedicaActiveSection(pathname)
-    const header = getPageHeader(pathname)
 
     const { data: atencionesData, isFetching } = useAtenciones({ page: 1, pageSize: 1 })
     const totalAtenciones = atencionesData?.totalRecords ?? 0
@@ -52,33 +19,44 @@ export function AtencionMedicaView() {
         return <Outlet />
     }
 
-    const isConfigSection =
-        pathname === '/atenciones/tipos-atencion' ||
+    const isFormularios =
         pathname === '/atenciones/formularios' ||
         pathname.startsWith('/atenciones/formularios/')
 
+    if (isFormularios) {
+        return (
+            <div className="atencion-medica-module">
+                <ModuleObjectPage
+                    icon={<FormOutlined />}
+                    title="Formularios clínicos"
+                    subtitle="Configure los formularios, secciones, campos y validaciones del tipo de atención seleccionado."
+                >
+                    <Outlet />
+                </ModuleObjectPage>
+            </div>
+        )
+    }
+
     return (
-        <ModuleObjectPage
-            icon={header.icon}
-            title={header.title}
-            subtitle={header.subtitle}
-            stats={
-                isConfigSection
-                    ? undefined
-                    : [
-                          {
-                              icon: <MedicineBoxOutlined />,
-                              label: isFetching ? '…' : `${totalAtenciones} atenciones`,
-                          },
-                      ]
-            }
-            activeSection={
-                activeSection && !isConfigSection
-                    ? { icon: activeSection.icon, title: activeSection.title }
-                    : null
-            }
-        >
-            <Outlet />
-        </ModuleObjectPage>
+        <div className="atencion-medica-module">
+            <ModuleObjectPage
+                icon={<MedicineBoxOutlined />}
+                title="Atención médica"
+                subtitle="Atenciones clínicas, tipos y formularios asociados."
+                stats={[
+                    {
+                        icon: <MedicineBoxOutlined />,
+                        label: isFetching ? '…' : `${totalAtenciones} atenciones`,
+                    },
+                ]}
+                activeSection={
+                    activeSection
+                        ? { icon: activeSection.icon, title: activeSection.title }
+                        : null
+                }
+            >
+                <Outlet />
+            </ModuleObjectPage>
+        </div>
     )
 }
