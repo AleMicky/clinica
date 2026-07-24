@@ -1,4 +1,4 @@
-import { forwardRef, useImperativeHandle, useMemo, useState } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from 'react'
 import { useForm, useStore } from '@tanstack/react-form'
 import {
     Button,
@@ -44,11 +44,14 @@ function formatFechaAtencion(value: string) {
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
+        second: '2-digit',
     })
 }
 
 function nowFechaAtencion() {
-    return new Date().toISOString().slice(0, 16)
+    const now = new Date()
+    const pad = (n: number) => String(n).padStart(2, '0')
+    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`
 }
 
 export type AtencionRecepcionFormHandle = {
@@ -112,6 +115,16 @@ export const AtencionRecepcionForm = forwardRef<
     const modoPaciente = useStore(form.store, (state) => state.values.modoPaciente)
     const fechaAtencion = useStore(form.store, (state) => state.values.fechaAtencion)
     const tipoAtencionIdForQuery = tipoAtencionId || undefined
+
+    useEffect(() => {
+        const tick = () => {
+            form.setFieldValue('fechaAtencion', nowFechaAtencion())
+        }
+
+        tick()
+        const timer = window.setInterval(tick, 1000)
+        return () => window.clearInterval(timer)
+    }, [form])
 
     const { data: formulariosData, isFetching: loadingFormularios } =
         useFormulariosClinicos({
