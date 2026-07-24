@@ -23,13 +23,6 @@ type AtencionFormModalProps = {
     onSubmit: (values: AtencionFormValues) => Promise<void>
 }
 
-const ESTADO_OPTIONS = [
-    { value: 'BORRADOR', label: 'Borrador' },
-    { value: 'EN_PROCESO', label: 'En proceso' },
-    { value: 'FINALIZADA', label: 'Finalizada' },
-    { value: 'ANULADA', label: 'Anulada' },
-]
-
 function getFieldError(errors: unknown[]) {
     return errors
         .map((error) =>
@@ -58,15 +51,7 @@ export function AtencionFormModal({
 
     const form = useForm({
         defaultValues: atencionDefaultValues,
-        validators: {
-            onSubmit: ({ value }) => {
-                const result = atencionFormSchema.safeParse(value)
-
-                if (!result.success) {
-                    return result.error.issues.map((issue) => issue.message).join(', ')
-                }
-            },
-        },
+        validators: { onSubmit: atencionFormSchema },
         onSubmit: async ({ value }) => {
             await onSubmit(value)
         },
@@ -132,59 +117,36 @@ export function AtencionFormModal({
             width={720}
         >
             <Form layout="vertical" requiredMark={false}>
-                <Row gutter={16}>
-                    <Col xs={24} md={12}>
-                        <form.Field name="numeroAtencion">
-                            {(field) => {
-                                const error = getFieldError(field.state.meta.errors)
+                {isEditing && atencion ? (
+                    <Form.Item label="Número de atención">
+                        <Input value={atencion.numeroAtencion} disabled />
+                    </Form.Item>
+                ) : null}
 
-                                return (
-                                    <Form.Item
-                                        label="Número de atención"
-                                        validateStatus={error ? 'error' : undefined}
-                                        help={error || undefined}
-                                    >
-                                        <Input
-                                            placeholder="ATN-00001"
-                                            value={field.state.value}
-                                            onChange={(event) =>
-                                                field.handleChange(event.target.value)
-                                            }
-                                            onBlur={field.handleBlur}
-                                            disabled={formDisabled}
-                                            autoFocus
-                                        />
-                                    </Form.Item>
-                                )
-                            }}
-                        </form.Field>
-                    </Col>
-                    <Col xs={24} md={12}>
-                        <form.Field name="fechaAtencion">
-                            {(field) => {
-                                const error = getFieldError(field.state.meta.errors)
+                <form.Field name="fechaAtencion">
+                    {(field) => {
+                        const error = getFieldError(field.state.meta.errors)
 
-                                return (
-                                    <Form.Item
-                                        label="Fecha de atención"
-                                        validateStatus={error ? 'error' : undefined}
-                                        help={error || undefined}
-                                    >
-                                        <Input
-                                            type="datetime-local"
-                                            value={field.state.value}
-                                            onChange={(event) =>
-                                                field.handleChange(event.target.value)
-                                            }
-                                            onBlur={field.handleBlur}
-                                            disabled={formDisabled}
-                                        />
-                                    </Form.Item>
-                                )
-                            }}
-                        </form.Field>
-                    </Col>
-                </Row>
+                        return (
+                            <Form.Item
+                                label="Fecha de atención"
+                                validateStatus={error ? 'error' : undefined}
+                                help={error || undefined}
+                            >
+                                <Input
+                                    type="datetime-local"
+                                    value={field.state.value}
+                                    onChange={(event) =>
+                                        field.handleChange(event.target.value)
+                                    }
+                                    onBlur={field.handleBlur}
+                                    disabled={formDisabled}
+                                    autoFocus={!isEditing}
+                                />
+                            </Form.Item>
+                        )
+                    }}
+                </form.Field>
 
                 <form.Field name="pacienteId">
                     {(field) => {
@@ -276,28 +238,6 @@ export function AtencionFormModal({
                         </form.Field>
                     </Col>
                 </Row>
-
-                <form.Field name="estado">
-                    {(field) => {
-                        const error = getFieldError(field.state.meta.errors)
-
-                        return (
-                            <Form.Item
-                                label="Estado"
-                                validateStatus={error ? 'error' : undefined}
-                                help={error || undefined}
-                            >
-                                <Select
-                                    options={ESTADO_OPTIONS}
-                                    value={field.state.value}
-                                    onChange={(value) => field.handleChange(value)}
-                                    onBlur={field.handleBlur}
-                                    disabled={formDisabled}
-                                />
-                            </Form.Item>
-                        )
-                    }}
-                </form.Field>
 
                 <form.Field name="observaciones">
                     {(field) => {

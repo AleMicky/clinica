@@ -7,12 +7,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Clinica.Modules.Parametros.Infrastructure.Services;
 
-public sealed class CorrelativoService(
-    ParametrosDbContext context
-) : ICorrelativoService
+public sealed class CorrelativoService(ParametrosDbContext context) : ICorrelativoService
 {
-    public async Task<PagedResult<CorrelativoResponse>> GetPagedAsync(
-        CorrelativoPagedRequest request,
+    public async Task<PagedResult<CorrelativoResponse>> GetPagedAsync(CorrelativoPagedRequest request,
         CancellationToken cancellationToken = default)
     {
         var page = request.Page <= 0 ? 1 : request.Page;
@@ -96,10 +93,7 @@ public sealed class CorrelativoService(
 
     private static string? NormalizeOptional(string? value)
     {
-        if (string.IsNullOrWhiteSpace(value))
-            return null;
-
-        return value.Trim();
+        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 
     private static string Formatear(Correlativo entity)
@@ -108,7 +102,9 @@ public sealed class CorrelativoService(
             .ToString()
             .PadLeft(entity.Longitud, '0');
 
-        return $"{entity.Prefijo}{numero}";
+        return string.IsNullOrEmpty(entity.Prefijo)
+            ? $"{entity.Gestion}-{numero}"
+            : $"{entity.Prefijo}-{entity.Gestion}-{numero}";
     }
 
     private static CorrelativoResponse ToResponse(Correlativo entity)

@@ -1,6 +1,8 @@
 using Clinica.Modules.AtencionMedica.Application.Abstractions;
 using Clinica.Modules.AtencionMedica.Application.Atenciones;
 using Clinica.Modules.AtencionMedica.Infrastructure.Persistence;
+using Clinica.Modules.Parametros.Application.Abstractions;
+using Clinica.Modules.Parametros.Application.Correlativos;
 using Clinica.Modules.Personas.Domain.Entities;
 using Clinica.SharedKernel.Exceptions;
 using Clinica.SharedKernel.Pagination;
@@ -9,7 +11,9 @@ using AtencionEntity = Clinica.Modules.AtencionMedica.Domain.Entities.Atencion;
 
 namespace Clinica.Modules.AtencionMedica.Infrastructure.Services;
 
-public sealed class AtencionService(AtencionMedicaDbContext context) : IAtencionService
+public sealed class AtencionService(
+    AtencionMedicaDbContext context,
+    ICorrelativoService correlativoService) : IAtencionService
 {
     public Task<PagedResult<AtencionResponse>> GetPagedAsync(
         PagedRequest request,
@@ -46,7 +50,7 @@ public sealed class AtencionService(AtencionMedicaDbContext context) : IAtencion
             .ThenBy(x => x.NumeroAtencion)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(x => AtencionMappings.ToResponse(x))
+            .Select(x => ToResponse(x))
             .ToListAsync(cancellationToken);
 
         return new PagedResult<AtencionResponse>(items, total, page, pageSize);
@@ -59,7 +63,7 @@ public sealed class AtencionService(AtencionMedicaDbContext context) : IAtencion
         return await context.Atenciones
             .AsNoTracking()
             .Where(x => x.Id == id)
-            .Select(x => AtencionMappings.ToResponse(x))
+            .Select(x => ToResponse(x))
             .FirstOrDefaultAsync(cancellationToken);
     }
 
@@ -68,30 +72,36 @@ public sealed class AtencionService(AtencionMedicaDbContext context) : IAtencion
         CancellationToken cancellationToken = default)
     {
         await EnsurePacienteExistsAsync(request.PacienteId, cancellationToken);
-        await EnsureTipoAtencionExistsAsync(request.TipoAtencionId, cancellationToken);
+        var tipoAtencionCodigo = await GetTipoAtencionCodigoAsync(request.TipoAtencionId, cancellationToken);
         await EnsureFormularioClinicoMatchesTipoAsync(
             request.FormularioClinicoId,
             request.TipoAtencionId,
             cancellationToken);
 
-        var numeroAtencion = Normalize(request.NumeroAtencion);
-        await EnsureNumeroAtencionIsUniqueAsync(numeroAtencion, null, cancellationToken);
+        var codigoCorrelativo = tipoAtencionCodigo.Trim().ToUpperInvariant();
+        var prefijo = codigoCorrelativo.Length <= 20
+            ? codigoCorrelativo
+            : codigoCorrelativo[..20];
+
+        var correlativo = await correlativoService.GenerarAsync(
+            new GenerarCorrelativoRequest(codigoCorrelativo, Prefijo: prefijo),
+            cancellationToken);
 
         var entity = new AtencionEntity
         {
-            NumeroAtencion = numeroAtencion,
+            NumeroAtencion = correlativo.NumeroFormateado,
             PacienteId = request.PacienteId,
             TipoAtencionId = request.TipoAtencionId,
             FormularioClinicoId = request.FormularioClinicoId,
             FechaAtencion = request.FechaAtencion,
-            Estado = Normalize(request.Estado),
+            Estado = "BORRADOR",
             Observaciones = NormalizeOptional(request.Observaciones)
         };
 
         context.Atenciones.Add(entity);
         await context.SaveChangesAsync(cancellationToken);
 
-        return AtencionMappings.ToResponse(entity);
+        return ToResponse(entity);
     }
 
     public async Task<AtencionResponse> UpdateAsync(
@@ -112,20 +122,16 @@ public sealed class AtencionService(AtencionMedicaDbContext context) : IAtencion
             request.TipoAtencionId,
             cancellationToken);
 
-        var numeroAtencion = Normalize(request.NumeroAtencion);
-        await EnsureNumeroAtencionIsUniqueAsync(numeroAtencion, id, cancellationToken);
-
-        entity.NumeroAtencion = numeroAtencion;
+        
         entity.PacienteId = request.PacienteId;
         entity.TipoAtencionId = request.TipoAtencionId;
         entity.FormularioClinicoId = request.FormularioClinicoId;
         entity.FechaAtencion = request.FechaAtencion;
-        entity.Estado = Normalize(request.Estado);
         entity.Observaciones = NormalizeOptional(request.Observaciones);
 
         await context.SaveChangesAsync(cancellationToken);
 
-        return AtencionMappings.ToResponse(entity);
+        return ToResponse(entity);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
@@ -162,6 +168,19 @@ public sealed class AtencionService(AtencionMedicaDbContext context) : IAtencion
             throw new BusinessException("El tipo de atención no existe.");
     }
 
+    private async Task<string> GetTipoAtencionCodigoAsync(
+        Guid tipoAtencionId,
+        CancellationToken cancellationToken)
+    {
+        var codigo = await context.TiposAtencion
+            .AsNoTracking()
+            .Where(x => x.Id == tipoAtencionId)
+            .Select(x => x.Codigo)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return codigo ?? throw new BusinessException("El tipo de atención no existe.");
+    }
+
     private async Task EnsureFormularioClinicoMatchesTipoAsync(
         Guid formularioClinicoId,
         Guid tipoAtencionId,
@@ -178,21 +197,27 @@ public sealed class AtencionService(AtencionMedicaDbContext context) : IAtencion
             throw new BusinessException("El formulario no corresponde al tipo de atención.");
     }
 
-    private async Task EnsureNumeroAtencionIsUniqueAsync(
-        string numeroAtencion,
-        Guid? currentId,
-        CancellationToken cancellationToken)
-    {
-        var exists = await context.Atenciones.AnyAsync(
-            x => x.NumeroAtencion == numeroAtencion &&
-                 (!currentId.HasValue || x.Id != currentId.Value),
-            cancellationToken);
-
-        if (exists)
-            throw new BusinessException("El número de atención ya existe.");
-    }
-
-    private static string Normalize(string value) => value.Trim();
+    private static AtencionResponse ToResponse(AtencionEntity entity) =>
+        new(
+            entity.Id,
+            entity.NumeroAtencion,
+            entity.PacienteId,
+            entity.TipoAtencionId,
+            entity.ServicioId,
+            entity.EspecialidadId,
+            entity.MedicoId,
+            entity.MotivoConsulta,
+            entity.FormularioClinicoId,
+            entity.FechaAtencion,
+            entity.FechaRecepcion,
+            entity.Estado,
+            entity.WorkflowInstanceId,
+            entity.ResponsableFinancieroNombre,
+            entity.ResponsableFinancieroDocumento,
+            entity.ResponsableFinancieroTelefono,
+            entity.SeguroNombre,
+            entity.NumeroAfiliacion,
+            entity.Observaciones);
 
     private static string? NormalizeOptional(string? value)
     {

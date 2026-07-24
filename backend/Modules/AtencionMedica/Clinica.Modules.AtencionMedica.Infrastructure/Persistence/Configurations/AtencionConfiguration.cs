@@ -16,7 +16,7 @@ public sealed class AtencionConfiguration : BaseEntityConfiguration<Atencion>
         builder.ToTable("Atenciones");
 
         builder.Property(x => x.NumeroAtencion)
-            .HasMaxLength(30)
+            .HasMaxLength(50)
             .IsRequired();
 
         builder.HasIndex(x => x.NumeroAtencion)

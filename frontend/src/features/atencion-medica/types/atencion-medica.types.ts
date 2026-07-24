@@ -173,22 +173,18 @@ export type Atencion = {
 }
 
 export type CreateAtencionPayload = {
-    numeroAtencion: string
     pacienteId: Guid
     tipoAtencionId: Guid
     formularioClinicoId: Guid
     fechaAtencion: string
-    estado?: string
     observaciones?: string | null
 }
 
 export type UpdateAtencionPayload = {
-    numeroAtencion: string
     pacienteId: Guid
     tipoAtencionId: Guid
     formularioClinicoId: Guid
     fechaAtencion: string
-    estado: string
     observaciones?: string | null
 }
 
