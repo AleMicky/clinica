@@ -65,9 +65,10 @@ function applyFieldErrors(
 ) {
     for (const [fieldName, message] of Object.entries(fieldErrors)) {
         form.setFieldMeta(fieldName, (prev) => ({
-            ...prev,
+            ...(prev ?? {}),
+            isTouched: true,
             errorMap: {
-                ...prev.errorMap,
+                ...(prev?.errorMap ?? {}),
                 onSubmit: message,
             },
             errors: [message],

@@ -109,12 +109,6 @@ export const AtencionRecepcionForm = forwardRef<
             ...recepcionDefaultValues,
             fechaAtencion: nowFechaAtencion(),
         },
-        onSubmit: async ({ value }) => {
-            const fechaAtencion = nowFechaAtencion()
-            form.setFieldValue('fechaAtencion', fechaAtencion)
-            await onSubmit({ ...value, fechaAtencion })
-            resetForm()
-        },
     })
 
     const modoPaciente = useStore(form.store, (state) => state.values.modoPaciente)
@@ -154,9 +148,10 @@ export const AtencionRecepcionForm = forwardRef<
     }
 
     const handleSubmitClick = () => {
+        const fechaAtencion = nowFechaAtencion()
         const result = recepcionFormSchema.safeParse({
             ...formValues,
-            fechaAtencion: nowFechaAtencion(),
+            fechaAtencion,
         })
 
         if (!result.success) {
@@ -172,7 +167,17 @@ export const AtencionRecepcionForm = forwardRef<
             return
         }
 
-        void form.handleSubmit()
+        void (async () => {
+            try {
+                await onSubmit({
+                    ...(result.data as RecepcionFormValues),
+                    fechaAtencion,
+                })
+                resetForm()
+            } catch {
+                // El error ya se notifica en el mutation hook.
+            }
+        })()
     }
 
     useImperativeHandle(ref, () => ({

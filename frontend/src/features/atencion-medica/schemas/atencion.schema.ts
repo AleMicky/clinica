@@ -13,7 +13,9 @@ export const recepcionFormSchema = z
     .object({
         modoPaciente: z.enum(['existente', 'nuevo']),
         pacienteId: z.string().trim().default(''),
-        pacienteNuevo: pacienteNuevoSchema.partial().optional(),
+        // Se valida solo en superRefine cuando modoPaciente === 'nuevo'.
+        // Si se usa partial() aquí, los '' del modo existente fallan el min(1).
+        pacienteNuevo: z.any().optional(),
         tipoAtencionId: z.string().trim().min(1, 'Seleccione un tipo de atención'),
         fechaAtencion: z.string().trim().min(1, 'La fecha es requerida'),
         observaciones: z.string().max(2000).optional(),
