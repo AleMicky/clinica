@@ -9,6 +9,7 @@ using Clinica.Modules.Personas.Application.Personas;
 using Clinica.Modules.Personas.Domain.Entities;
 using Clinica.SharedKernel.Exceptions;
 using Clinica.SharedKernel.Pagination;
+using Clinica.SharedKernel.Text;
 using Microsoft.EntityFrameworkCore;
 using AtencionEntity = Clinica.Modules.AtencionMedica.Domain.Entities.Atencion;
 
@@ -36,9 +37,6 @@ public sealed class AtencionService(
         AtencionPagedRequest request,
         CancellationToken cancellationToken = default)
     {
-        var page = request.Page <= 0 ? 1 : request.Page;
-        var pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
-
         var query = context.Atenciones.AsNoTracking();
 
         if (request.PacienteId is { } pacienteId && pacienteId != Guid.Empty)
@@ -47,17 +45,11 @@ public sealed class AtencionService(
         if (request.TipoAtencionId is { } tipoAtencionId && tipoAtencionId != Guid.Empty)
             query = query.Where(x => x.TipoAtencionId == tipoAtencionId);
 
-        var total = await query.CountAsync(cancellationToken);
-
-        var items = await query
+        return await query
             .OrderByDescending(x => x.FechaAtencion)
             .ThenBy(x => x.NumeroAtencion)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
             .Select(x => ToResponse(x))
-            .ToListAsync(cancellationToken);
-
-        return new PagedResult<AtencionResponse>(items, total, page, pageSize);
+            .ToPagedResultAsync(request, cancellationToken);
     }
 
     public async Task<AtencionResponse?> GetByIdAsync(
@@ -147,7 +139,7 @@ public sealed class AtencionService(
             FechaAtencion = fechaAtencion,
             FechaRecepcion = fechaRecepcion,
             Estado = "BORRADOR",
-            Observaciones = NormalizeOptional(request.Observaciones)
+            Observaciones = StringNormalize.Optional(request.Observaciones)
         };
 
         context.Atenciones.Add(entity);
@@ -203,7 +195,7 @@ public sealed class AtencionService(
             FechaAtencion = request.FechaAtencion,
             FechaRecepcion = DateTime.UtcNow,
             Estado = "BORRADOR",
-            Observaciones = NormalizeOptional(request.Observaciones)
+            Observaciones = StringNormalize.Optional(request.Observaciones)
         };
 
         context.Atenciones.Add(entity);
@@ -234,7 +226,7 @@ public sealed class AtencionService(
         entity.TipoAtencionId = request.TipoAtencionId;
         entity.FormularioClinicoId = request.FormularioClinicoId;
         entity.FechaAtencion = request.FechaAtencion;
-        entity.Observaciones = NormalizeOptional(request.Observaciones);
+        entity.Observaciones = StringNormalize.Optional(request.Observaciones);
 
         await context.SaveChangesAsync(cancellationToken);
 
@@ -312,11 +304,4 @@ public sealed class AtencionService(
             entity.SeguroNombre,
             entity.NumeroAfiliacion,
             entity.Observaciones);
-
-    private static string? NormalizeOptional(string? value)
-    {
-        if (value is null) return null;
-        var trimmed = value.Trim();
-        return string.IsNullOrEmpty(trimmed) ? null : trimmed;
-    }
 }

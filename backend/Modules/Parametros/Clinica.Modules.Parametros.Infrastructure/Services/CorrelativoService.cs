@@ -5,6 +5,7 @@ using Clinica.Modules.Parametros.Application.Correlativos;
 using Clinica.Modules.Parametros.Domain.Entities;
 using Clinica.Modules.Parametros.Infrastructure.Persistence;
 using Clinica.SharedKernel.Pagination;
+using Clinica.SharedKernel.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
@@ -15,9 +16,6 @@ public sealed class CorrelativoService(ParametrosDbContext context) : ICorrelati
     public async Task<PagedResult<CorrelativoResponse>> GetPagedAsync(CorrelativoPagedRequest request,
         CancellationToken cancellationToken = default)
     {
-        var page = request.Page <= 0 ? 1 : request.Page;
-        var pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
-
         var query = context.Correlativos.AsNoTracking();
 
         if (!string.IsNullOrWhiteSpace(request.Codigo))
@@ -29,20 +27,16 @@ public sealed class CorrelativoService(ParametrosDbContext context) : ICorrelati
         if (request.Gestion.HasValue)
             query = query.Where(x => x.Gestion == request.Gestion.Value);
 
-        var total = await query.CountAsync(cancellationToken);
-
-        var items = await query
+        var paged = await query
             .OrderByDescending(x => x.Gestion)
             .ThenBy(x => x.Codigo)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync(cancellationToken);
+            .ToPagedResultAsync(request, cancellationToken);
 
         return new PagedResult<CorrelativoResponse>(
-            items.Select(ToResponse).ToList(),
-            total,
-            page,
-            pageSize);
+            paged.Items.Select(ToResponse).ToList(),
+            paged.TotalRecords,
+            paged.Page,
+            paged.PageSize);
     }
 
     public async Task<CorrelativoResponse> GenerarAsync(
@@ -53,7 +47,7 @@ public sealed class CorrelativoService(ParametrosDbContext context) : ICorrelati
         var gestion = request.Gestion ?? DateTime.UtcNow.Year;
         var now = DateTime.UtcNow;
         var updatePrefijo = request.Prefijo is not null;
-        var prefijo = updatePrefijo ? NormalizeOptional(request.Prefijo) : null;
+        var prefijo = updatePrefijo ? StringNormalize.Optional(request.Prefijo) : null;
         var updateLongitud = request.Longitud.HasValue;
         var longitud = request.Longitud ?? 0;
 
@@ -76,7 +70,7 @@ public sealed class CorrelativoService(ParametrosDbContext context) : ICorrelati
             Codigo = codigo,
             Gestion = gestion,
             UltimoNumero = 1,
-            Prefijo = NormalizeOptional(request.Prefijo),
+            Prefijo = StringNormalize.Optional(request.Prefijo),
             Longitud = request.Longitud ?? 6,
             FechaCreacion = now
         };
@@ -175,11 +169,6 @@ public sealed class CorrelativoService(ParametrosDbContext context) : ICorrelati
         parameter.ParameterName = name;
         parameter.Value = value ?? DBNull.Value;
         command.Parameters.Add(parameter);
-    }
-
-    private static string? NormalizeOptional(string? value)
-    {
-        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 
     private static string Formatear(Correlativo entity)

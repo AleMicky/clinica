@@ -4,6 +4,7 @@ using Clinica.Modules.AtencionMedica.Domain.Entities;
 using Clinica.Modules.AtencionMedica.Infrastructure.Persistence;
 using Clinica.SharedKernel.Exceptions;
 using Clinica.SharedKernel.Pagination;
+using Clinica.SharedKernel.Text;
 using Microsoft.EntityFrameworkCore;
 
 namespace Clinica.Modules.AtencionMedica.Infrastructure.Services;
@@ -28,24 +29,15 @@ public sealed class AtencionFormularioRespuestaService(AtencionMedicaDbContext c
         AtencionFormularioRespuestaPagedRequest request,
         CancellationToken cancellationToken = default)
     {
-        var page = request.Page <= 0 ? 1 : request.Page;
-        var pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
-
         var query = context.AtencionFormularioRespuestas.AsNoTracking();
 
         if (request.AtencionId is { } atencionId && atencionId != Guid.Empty)
             query = query.Where(x => x.AtencionId == atencionId);
 
-        var total = await query.CountAsync(cancellationToken);
-
-        var items = await query
+        return await query
             .OrderBy(x => x.FormularioCampoId)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
             .Select(x => ToResponse(x))
-            .ToListAsync(cancellationToken);
-
-        return new PagedResult<AtencionFormularioRespuestaResponse>(items, total, page, pageSize);
+            .ToPagedResultAsync(request, cancellationToken);
     }
 
     public async Task<AtencionFormularioRespuestaResponse?> GetByIdAsync(
@@ -88,11 +80,11 @@ public sealed class AtencionFormularioRespuestaService(AtencionMedicaDbContext c
         {
             AtencionId = request.AtencionId,
             FormularioCampoId = request.FormularioCampoId,
-            ValorTexto = NormalizeOptional(request.ValorTexto),
+            ValorTexto = StringNormalize.Optional(request.ValorTexto),
             ValorNumero = request.ValorNumero,
             ValorFecha = request.ValorFecha,
             ValorBooleano = request.ValorBooleano,
-            ValorJson = NormalizeOptional(request.ValorJson)
+            ValorJson = StringNormalize.Optional(request.ValorJson)
         };
 
         context.AtencionFormularioRespuestas.Add(entity);
@@ -135,11 +127,11 @@ public sealed class AtencionFormularioRespuestaService(AtencionMedicaDbContext c
 
         entity.AtencionId = request.AtencionId;
         entity.FormularioCampoId = request.FormularioCampoId;
-        entity.ValorTexto = NormalizeOptional(request.ValorTexto);
+        entity.ValorTexto = StringNormalize.Optional(request.ValorTexto);
         entity.ValorNumero = request.ValorNumero;
         entity.ValorFecha = request.ValorFecha;
         entity.ValorBooleano = request.ValorBooleano;
-        entity.ValorJson = NormalizeOptional(request.ValorJson);
+        entity.ValorJson = StringNormalize.Optional(request.ValorJson);
 
         await context.SaveChangesAsync(cancellationToken);
 
@@ -187,13 +179,6 @@ public sealed class AtencionFormularioRespuestaService(AtencionMedicaDbContext c
 
         if (exists)
             throw new BusinessException("Ya existe una respuesta para este campo en la atención.");
-    }
-
-    private static string? NormalizeOptional(string? value)
-    {
-        if (value is null) return null;
-        var trimmed = value.Trim();
-        return string.IsNullOrEmpty(trimmed) ? null : trimmed;
     }
 
     private static AtencionFormularioRespuestaResponse ToResponse(AtencionFormularioRespuesta entity) =>

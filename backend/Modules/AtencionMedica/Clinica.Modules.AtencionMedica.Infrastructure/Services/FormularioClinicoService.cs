@@ -4,6 +4,7 @@ using Clinica.Modules.AtencionMedica.Domain.Entities;
 using Clinica.Modules.AtencionMedica.Infrastructure.Persistence;
 using Clinica.SharedKernel.Exceptions;
 using Clinica.SharedKernel.Pagination;
+using Clinica.SharedKernel.Text;
 using Microsoft.EntityFrameworkCore;
 
 namespace Clinica.Modules.AtencionMedica.Infrastructure.Services;
@@ -28,25 +29,16 @@ public sealed class FormularioClinicoService(AtencionMedicaDbContext context)
         FormularioClinicoPagedRequest request,
         CancellationToken cancellationToken = default)
     {
-        var page = request.Page <= 0 ? 1 : request.Page;
-        var pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
-
         var query = context.FormulariosClinicos.AsNoTracking();
 
         if (request.TipoAtencionId is { } tipoAtencionId && tipoAtencionId != Guid.Empty)
             query = query.Where(x => x.TipoAtencionId == tipoAtencionId);
 
-        var total = await query.CountAsync(cancellationToken);
-
-        var items = await query
+        return await query
             .OrderBy(x => x.Nombre)
             .ThenByDescending(x => x.Version)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
             .Select(x => ToResponse(x))
-            .ToListAsync(cancellationToken);
-
-        return new PagedResult<FormularioClinicoResponse>(items, total, page, pageSize);
+            .ToPagedResultAsync(request, cancellationToken);
     }
 
     public async Task<FormularioClinicoResponse?> GetByIdAsync(
@@ -66,7 +58,7 @@ public sealed class FormularioClinicoService(AtencionMedicaDbContext context)
     {
         await EnsureTipoAtencionExistsAsync(request.TipoAtencionId, cancellationToken);
 
-        var codigo = Normalize(request.Codigo);
+        var codigo = StringNormalize.Required(request.Codigo);
         await EnsureVersionIsUniqueAsync(
             request.TipoAtencionId,
             codigo,
@@ -78,8 +70,8 @@ public sealed class FormularioClinicoService(AtencionMedicaDbContext context)
         {
             TipoAtencionId = request.TipoAtencionId,
             Codigo = codigo,
-            Nombre = Normalize(request.Nombre),
-            Descripcion = NormalizeOptional(request.Descripcion),
+            Nombre = StringNormalize.Required(request.Nombre),
+            Descripcion = StringNormalize.Optional(request.Descripcion),
             Version = request.Version,
             Activo = request.Activo
         };
@@ -103,7 +95,7 @@ public sealed class FormularioClinicoService(AtencionMedicaDbContext context)
 
         await EnsureTipoAtencionExistsAsync(request.TipoAtencionId, cancellationToken);
 
-        var codigo = Normalize(request.Codigo);
+        var codigo = StringNormalize.Required(request.Codigo);
         await EnsureVersionIsUniqueAsync(
             request.TipoAtencionId,
             codigo,
@@ -113,8 +105,8 @@ public sealed class FormularioClinicoService(AtencionMedicaDbContext context)
 
         entity.TipoAtencionId = request.TipoAtencionId;
         entity.Codigo = codigo;
-        entity.Nombre = Normalize(request.Nombre);
-        entity.Descripcion = NormalizeOptional(request.Descripcion);
+        entity.Nombre = StringNormalize.Required(request.Nombre);
+        entity.Descripcion = StringNormalize.Optional(request.Descripcion);
         entity.Version = request.Version;
         entity.Activo = request.Activo;
 
@@ -162,15 +154,6 @@ public sealed class FormularioClinicoService(AtencionMedicaDbContext context)
 
         if (exists)
             throw new BusinessException("Ya existe un formulario con el mismo código y versión.");
-    }
-
-    private static string Normalize(string value) => value.Trim();
-
-    private static string? NormalizeOptional(string? value)
-    {
-        if (value is null) return null;
-        var trimmed = value.Trim();
-        return string.IsNullOrEmpty(trimmed) ? null : trimmed;
     }
 
     private static FormularioClinicoResponse ToResponse(FormularioClinico entity) =>

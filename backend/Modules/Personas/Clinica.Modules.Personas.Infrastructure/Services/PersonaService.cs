@@ -5,6 +5,7 @@ using Clinica.Modules.Personas.Domain.Entities;
 using Clinica.Modules.Personas.Infrastructure.Persistence;
 using Clinica.SharedKernel.Exceptions;
 using Clinica.SharedKernel.Pagination;
+using Clinica.SharedKernel.Text;
 using Microsoft.EntityFrameworkCore;
 
 namespace Clinica.Modules.Personas.Infrastructure.Services;
@@ -30,9 +31,6 @@ public sealed class PersonaService(
         PersonaPagedRequest request,
         CancellationToken cancellationToken = default)
     {
-        var page = request.Page <= 0 ? 1 : request.Page;
-        var pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
-
         var query = context.Personas
             .AsNoTracking()
             .Include(x => x.TipoDocumento)
@@ -54,18 +52,12 @@ public sealed class PersonaService(
                 x.ApellidoMaterno.Contains(search));
         }
 
-        var total = await query.CountAsync(cancellationToken);
-
-        var items = await query
+        return await query
             .OrderBy(x => x.ApellidoPaterno)
             .ThenBy(x => x.ApellidoMaterno)
             .ThenBy(x => x.Nombres)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
             .Select(x => ToResponse(x))
-            .ToListAsync(cancellationToken);
-
-        return new PagedResult<PersonaResponse>(items, total, page, pageSize);
+            .ToPagedResultAsync(request, cancellationToken);
     }
 
     public async Task<PersonaResponse?> GetByIdAsync(
@@ -116,8 +108,8 @@ public sealed class PersonaService(
             request.EstadoCivilId,
             cancellationToken);
 
-        var numeroDocumento = Normalize(request.NumeroDocumento);
-        var complementoDocumento = NormalizeOptional(request.ComplementoDocumento);
+        var numeroDocumento = StringNormalize.Required(request.NumeroDocumento);
+        var complementoDocumento = StringNormalize.Optional(request.ComplementoDocumento);
         await EnsureDocumentoIsUniqueAsync(
             request.TipoDocumentoId,
             numeroDocumento,
@@ -131,14 +123,14 @@ public sealed class PersonaService(
             NumeroDocumento = numeroDocumento,
             ExtensionDocumentoId = request.ExtensionDocumentoId,
             ComplementoDocumento = complementoDocumento,
-            Nombres = Normalize(request.Nombres),
-            ApellidoPaterno = Normalize(request.ApellidoPaterno),
-            ApellidoMaterno = Normalize(request.ApellidoMaterno),
+            Nombres = StringNormalize.Required(request.Nombres),
+            ApellidoPaterno = StringNormalize.Required(request.ApellidoPaterno),
+            ApellidoMaterno = StringNormalize.Required(request.ApellidoMaterno),
             FechaNacimiento = request.FechaNacimiento,
             SexoId = request.SexoId,
             EstadoCivilId = request.EstadoCivilId,
-            Telefono = Normalize(request.Telefono),
-            Direccion = Normalize(request.Direccion)
+            Telefono = StringNormalize.Required(request.Telefono),
+            Direccion = StringNormalize.Required(request.Direccion)
         };
 
         context.Personas.Add(entity);
@@ -165,8 +157,8 @@ public sealed class PersonaService(
             request.EstadoCivilId,
             cancellationToken);
 
-        var numeroDocumento = Normalize(request.NumeroDocumento);
-        var complementoDocumento = NormalizeOptional(request.ComplementoDocumento);
+        var numeroDocumento = StringNormalize.Required(request.NumeroDocumento);
+        var complementoDocumento = StringNormalize.Optional(request.ComplementoDocumento);
         await EnsureDocumentoIsUniqueAsync(
             request.TipoDocumentoId,
             numeroDocumento,
@@ -178,14 +170,14 @@ public sealed class PersonaService(
         entity.NumeroDocumento = numeroDocumento;
         entity.ExtensionDocumentoId = request.ExtensionDocumentoId;
         entity.ComplementoDocumento = complementoDocumento;
-        entity.Nombres = Normalize(request.Nombres);
-        entity.ApellidoPaterno = Normalize(request.ApellidoPaterno);
-        entity.ApellidoMaterno = Normalize(request.ApellidoMaterno);
+        entity.Nombres = StringNormalize.Required(request.Nombres);
+        entity.ApellidoPaterno = StringNormalize.Required(request.ApellidoPaterno);
+        entity.ApellidoMaterno = StringNormalize.Required(request.ApellidoMaterno);
         entity.FechaNacimiento = request.FechaNacimiento;
         entity.SexoId = request.SexoId;
         entity.EstadoCivilId = request.EstadoCivilId;
-        entity.Telefono = Normalize(request.Telefono);
-        entity.Direccion = Normalize(request.Direccion);
+        entity.Telefono = StringNormalize.Required(request.Telefono);
+        entity.Direccion = StringNormalize.Required(request.Direccion);
 
         await context.SaveChangesAsync(cancellationToken);
 
@@ -257,17 +249,6 @@ public sealed class PersonaService(
 
     private static string BuildDocumentoKey(string numeroDocumento, string? complementoDocumento)
         => numeroDocumento + (complementoDocumento ?? string.Empty);
-
-    private static string Normalize(string value) => value.Trim();
-
-    private static string? NormalizeOptional(string? value)
-    {
-        if (value is null)
-            return null;
-
-        var trimmed = value.Trim();
-        return string.IsNullOrEmpty(trimmed) ? null : trimmed;
-    }
 
     private static PersonaResponse ToResponse(
         Persona entity,

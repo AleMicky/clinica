@@ -3,6 +3,7 @@ using Clinica.Modules.Workflow.Application.WorkflowTransitions;
 using Clinica.Modules.Workflow.Domain.Entities;
 using Clinica.Modules.Workflow.Infrastructure.Persistence;
 using Clinica.SharedKernel.Exceptions;
+using Clinica.SharedKernel.Text;
 using Microsoft.EntityFrameworkCore;
 
 namespace Clinica.Modules.Workflow.Infrastructure.Services;
@@ -36,7 +37,7 @@ public sealed class WorkflowTransitionService(
         await EnsureDefinitionExistsAsync(definitionId, cancellationToken);
         await EnsureStatesBelongToDefinitionAsync(definitionId, request.FromStateId, request.ToStateId, cancellationToken);
 
-        var actionCode = Normalize(request.ActionCode);
+        var actionCode = StringNormalize.Required(request.ActionCode);
         await EnsureActionIsUniqueAsync(definitionId, request.FromStateId, actionCode, null, cancellationToken);
 
         var entity = new WorkflowTransition
@@ -45,11 +46,11 @@ public sealed class WorkflowTransitionService(
             FromStateId = request.FromStateId,
             ToStateId = request.ToStateId,
             ActionCode = actionCode,
-            ActionName = Normalize(request.ActionName),
-            Description = Normalize(request.Description),
+            ActionName = StringNormalize.Required(request.ActionName),
+            Description = StringNormalize.Required(request.Description),
             RequiredRole = string.IsNullOrWhiteSpace(request.RequiredRole)
                 ? null
-                : Normalize(request.RequiredRole),
+                : StringNormalize.Required(request.RequiredRole),
             RequiresComment = request.RequiresComment,
             IsActive = request.IsActive
         };
@@ -82,7 +83,7 @@ public sealed class WorkflowTransitionService(
             request.ToStateId,
             cancellationToken);
 
-        var actionCode = Normalize(request.ActionCode);
+        var actionCode = StringNormalize.Required(request.ActionCode);
         await EnsureActionIsUniqueAsync(
             entity.WorkflowDefinitionId,
             request.FromStateId,
@@ -93,11 +94,11 @@ public sealed class WorkflowTransitionService(
         entity.FromStateId = request.FromStateId;
         entity.ToStateId = request.ToStateId;
         entity.ActionCode = actionCode;
-        entity.ActionName = Normalize(request.ActionName);
-        entity.Description = Normalize(request.Description);
+        entity.ActionName = StringNormalize.Required(request.ActionName);
+        entity.Description = StringNormalize.Required(request.Description);
         entity.RequiredRole = string.IsNullOrWhiteSpace(request.RequiredRole)
             ? null
-            : Normalize(request.RequiredRole);
+            : StringNormalize.Required(request.RequiredRole);
         entity.RequiresComment = request.RequiresComment;
         entity.IsActive = request.IsActive;
         entity.UpdatedAt = DateTime.UtcNow;
@@ -167,8 +168,6 @@ public sealed class WorkflowTransitionService(
         if (exists)
             throw new BusinessException("La acción ya existe para el estado origen.");
     }
-
-    private static string Normalize(string value) => value.Trim();
 
     private static WorkflowTransitionResponse ToResponse(WorkflowTransition entity)
     {

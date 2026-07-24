@@ -2,7 +2,7 @@ using Clinica.SharedKernel.Abstractions;
 
 namespace Clinica.Modules.AtencionMedica.Domain.Entities;
 
-public class TipoAtencion : AuditableEntity
+public class TipoAtencion : AuditableEntity, INamedCatalogEntity
 {
     public string Codigo { get; set; } = string.Empty;
     public string Nombre { get; set; } = string.Empty;

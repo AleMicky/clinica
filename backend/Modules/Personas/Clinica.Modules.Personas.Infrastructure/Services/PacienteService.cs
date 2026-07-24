@@ -5,6 +5,7 @@ using Clinica.Modules.Personas.Domain.Entities;
 using Clinica.Modules.Personas.Infrastructure.Persistence;
 using Clinica.SharedKernel.Exceptions;
 using Clinica.SharedKernel.Pagination;
+using Clinica.SharedKernel.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace Clinica.Modules.Personas.Infrastructure.Services;
@@ -31,21 +32,12 @@ public sealed class PacienteService(
         PacientePagedRequest request,
         CancellationToken cancellationToken = default)
     {
-        var page = request.Page <= 0 ? 1 : request.Page;
-        var pageSize = request.PageSize <= 0 ? 10 : Math.Min(request.PageSize, 100);
-
         var query = ApplyFilters(context.Pacientes.AsNoTracking(), request);
 
-        var total = await query.CountAsync(cancellationToken);
-
-        var items = await query
+        return await query
             .OrderByDescending(x => x.CreatedAt)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
             .ProjectToResponse()
-            .ToListAsync(cancellationToken);
-
-        return new PagedResult<PacienteResponse>(items, total, page, pageSize);
+            .ToPagedResultAsync(request, cancellationToken);
     }
 
     public async Task<PacienteResponse?> GetByIdAsync(
@@ -110,11 +102,10 @@ public sealed class PacienteService(
         UpdatePacienteRequest request,
         CancellationToken cancellationToken = default)
     {
-        var entity = await context.Pacientes
-            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
-
-        if (entity is null)
-            throw new NotFoundException("Paciente no encontrado.");
+        var entity = await context.Pacientes.GetRequiredAsync(
+            id,
+            "Paciente no encontrado.",
+            cancellationToken);
 
         if (request.PersonaId != entity.PersonaId)
             throw new BusinessException("No se puede cambiar la persona asociada al paciente.");
@@ -143,11 +134,10 @@ public sealed class PacienteService(
         Guid id,
         CancellationToken cancellationToken = default)
     {
-        var entity = await context.Pacientes
-            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
-
-        if (entity is null)
-            throw new NotFoundException("Paciente no encontrado.");
+        var entity = await context.Pacientes.GetRequiredAsync(
+            id,
+            "Paciente no encontrado.",
+            cancellationToken);
 
         context.Pacientes.Remove(entity);
         await context.SaveChangesAsync(cancellationToken);

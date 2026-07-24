@@ -3,6 +3,7 @@ using Clinica.Modules.Workflow.Application.WorkflowStates;
 using Clinica.Modules.Workflow.Domain.Entities;
 using Clinica.Modules.Workflow.Infrastructure.Persistence;
 using Clinica.SharedKernel.Exceptions;
+using Clinica.SharedKernel.Text;
 using Microsoft.EntityFrameworkCore;
 
 namespace Clinica.Modules.Workflow.Infrastructure.Services;
@@ -33,7 +34,7 @@ public sealed class WorkflowStateService(
     {
         await EnsureDefinitionExistsAsync(definitionId, cancellationToken);
 
-        var code = Normalize(request.Code);
+        var code = StringNormalize.Required(request.Code);
         await EnsureCodeIsUniqueAsync(definitionId, code, null, cancellationToken);
 
         if (request.IsInitial)
@@ -43,11 +44,11 @@ public sealed class WorkflowStateService(
         {
             WorkflowDefinitionId = definitionId,
             Code = code,
-            Name = Normalize(request.Name),
-            Description = Normalize(request.Description),
+            Name = StringNormalize.Required(request.Name),
+            Description = StringNormalize.Required(request.Description),
             IsInitial = request.IsInitial,
             IsFinal = request.IsFinal,
-            Color = Normalize(request.Color),
+            Color = StringNormalize.Required(request.Color),
             Order = request.Order
         };
 
@@ -68,18 +69,18 @@ public sealed class WorkflowStateService(
         if (entity is null)
             throw new NotFoundException("Estado de workflow no encontrado.");
 
-        var code = Normalize(request.Code);
+        var code = StringNormalize.Required(request.Code);
         await EnsureCodeIsUniqueAsync(entity.WorkflowDefinitionId, code, id, cancellationToken);
 
         if (request.IsInitial)
             await EnsureSingleInitialStateAsync(entity.WorkflowDefinitionId, id, cancellationToken);
 
         entity.Code = code;
-        entity.Name = Normalize(request.Name);
-        entity.Description = Normalize(request.Description);
+        entity.Name = StringNormalize.Required(request.Name);
+        entity.Description = StringNormalize.Required(request.Description);
         entity.IsInitial = request.IsInitial;
         entity.IsFinal = request.IsFinal;
-        entity.Color = Normalize(request.Color);
+        entity.Color = StringNormalize.Required(request.Color);
         entity.Order = request.Order;
         entity.UpdatedAt = DateTime.UtcNow;
 
@@ -155,8 +156,6 @@ public sealed class WorkflowStateService(
         if (exists)
             throw new BusinessException("Solo puede existir un estado inicial por definición.");
     }
-
-    private static string Normalize(string value) => value.Trim();
 
     private static WorkflowStateResponse ToResponse(WorkflowState entity)
     {

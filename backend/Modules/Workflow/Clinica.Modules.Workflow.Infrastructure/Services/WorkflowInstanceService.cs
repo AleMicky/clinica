@@ -4,6 +4,7 @@ using Clinica.Modules.Workflow.Domain.Entities;
 using Clinica.Modules.Workflow.Infrastructure.Persistence;
 using Clinica.SharedKernel.Abstractions;
 using Clinica.SharedKernel.Exceptions;
+using Clinica.SharedKernel.Text;
 using Microsoft.EntityFrameworkCore;
 
 namespace Clinica.Modules.Workflow.Infrastructure.Services;
@@ -22,7 +23,7 @@ public sealed class WorkflowInstanceService(
         var definition = await context.WorkflowDefinitions
             .AsNoTracking()
             .FirstOrDefaultAsync(x =>
-                    x.Code == Normalize(request.WorkflowDefinitionCode) &&
+                    x.Code == StringNormalize.Required(request.WorkflowDefinitionCode) &&
                     x.IsActive,
                 cancellationToken);
 
@@ -31,8 +32,8 @@ public sealed class WorkflowInstanceService(
 
         var existing = await context.WorkflowInstances
             .AnyAsync(x =>
-                    x.ReferenceModule == Normalize(request.ReferenceModule) &&
-                    x.ReferenceEntity == Normalize(request.ReferenceEntity) &&
+                    x.ReferenceModule == StringNormalize.Required(request.ReferenceModule) &&
+                    x.ReferenceEntity == StringNormalize.Required(request.ReferenceEntity) &&
                     x.ReferenceId == request.ReferenceId,
                 cancellationToken);
 
@@ -61,8 +62,8 @@ public sealed class WorkflowInstanceService(
         {
             Id = Guid.NewGuid(),
             WorkflowDefinitionId = definition.Id,
-            ReferenceModule = Normalize(request.ReferenceModule),
-            ReferenceEntity = Normalize(request.ReferenceEntity),
+            ReferenceModule = StringNormalize.Required(request.ReferenceModule),
+            ReferenceEntity = StringNormalize.Required(request.ReferenceEntity),
             ReferenceId = request.ReferenceId,
             CurrentStateId = initialState.Id,
             Correlative = correlative + 1,
@@ -119,8 +120,8 @@ public sealed class WorkflowInstanceService(
             .Include(x => x.WorkflowDefinition)
             .Include(x => x.CurrentState)
             .Where(x =>
-                x.ReferenceModule == Normalize(referenceModule) &&
-                x.ReferenceEntity == Normalize(referenceEntity) &&
+                x.ReferenceModule == StringNormalize.Required(referenceModule) &&
+                x.ReferenceEntity == StringNormalize.Required(referenceEntity) &&
                 x.ReferenceId == referenceId)
             .Select(x => ToResponse(x))
             .FirstOrDefaultAsync(cancellationToken);
@@ -185,7 +186,7 @@ public sealed class WorkflowInstanceService(
         if (instance.IsCompleted)
             throw new BusinessException("La instancia ya está completada.");
 
-        var actionCode = Normalize(request.ActionCode);
+        var actionCode = StringNormalize.Required(request.ActionCode);
 
         var transition = await context.WorkflowTransitions
             .Include(x => x.ToState)
@@ -285,8 +286,6 @@ public sealed class WorkflowInstanceService(
     }
 
     private string? GetPrimaryRole() => currentUser.Roles.FirstOrDefault();
-
-    private static string Normalize(string value) => value.Trim();
 
     private static WorkflowInstanceResponse ToResponse(WorkflowInstance entity)
     {

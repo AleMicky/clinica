@@ -4,6 +4,7 @@ using Clinica.Modules.Parametros.Domain.Entities;
 using Clinica.Modules.Parametros.Infrastructure.Persistence;
 using Clinica.SharedKernel.Exceptions;
 using Clinica.SharedKernel.Pagination;
+using Clinica.SharedKernel.Text;
 using Microsoft.EntityFrameworkCore;
 
 namespace Clinica.Modules.Parametros.Infrastructure.Services;
@@ -29,30 +30,17 @@ public sealed class CatalogoItemService(
         CatalogoItemPagedRequest request,
         CancellationToken cancellationToken = default)
     {
-        var page = request.Page <= 0 ? 1 : request.Page;
-        var pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
-
         var query = context.CatalogoItems
             .AsNoTracking();
 
         if (request.CatalogoGrupoId is { } catalogoGrupoId && catalogoGrupoId != Guid.Empty)
             query = query.Where(x => x.CatalogoGrupoId == catalogoGrupoId);
 
-        var total = await query.CountAsync(cancellationToken);
-
-        var items = await query
+        return await query
             .OrderBy(x => x.Orden)
             .ThenBy(x => x.Nombre)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
             .Select(x => ToResponse(x))
-            .ToListAsync(cancellationToken);
-
-        return new PagedResult<CatalogoItemResponse>(
-            items,
-            total,
-            page,
-            pageSize);
+            .ToPagedResultAsync(request, cancellationToken);
     }
 
     public async Task<CatalogoItemResponse?> GetByIdAsync(
@@ -72,7 +60,7 @@ public sealed class CatalogoItemService(
     {
         await EnsureGrupoExistsAsync(request.CatalogoGrupoId, cancellationToken);
 
-        var codigo = Normalize(request.Codigo);
+        var codigo = StringNormalize.Required(request.Codigo);
 
         await EnsureCodigoIsUniqueAsync(
             request.CatalogoGrupoId,
@@ -84,8 +72,8 @@ public sealed class CatalogoItemService(
         {
             CatalogoGrupoId = request.CatalogoGrupoId,
             Codigo = codigo,
-            Nombre = Normalize(request.Nombre),
-            Valor = Normalize(request.Valor),
+            Nombre = StringNormalize.Required(request.Nombre),
+            Valor = StringNormalize.Required(request.Valor),
             Orden = request.Orden
         };
 
@@ -108,7 +96,7 @@ public sealed class CatalogoItemService(
 
         await EnsureGrupoExistsAsync(request.CatalogoGrupoId, cancellationToken);
 
-        var codigo = Normalize(request.Codigo);
+        var codigo = StringNormalize.Required(request.Codigo);
 
         await EnsureCodigoIsUniqueAsync(
             request.CatalogoGrupoId,
@@ -118,8 +106,8 @@ public sealed class CatalogoItemService(
 
         entity.CatalogoGrupoId = request.CatalogoGrupoId;
         entity.Codigo = codigo;
-        entity.Nombre = Normalize(request.Nombre);
-        entity.Valor = Normalize(request.Valor);
+        entity.Nombre = StringNormalize.Required(request.Nombre);
+        entity.Valor = StringNormalize.Required(request.Valor);
         entity.Orden = request.Orden;
 
         await context.SaveChangesAsync(cancellationToken);
@@ -168,11 +156,6 @@ public sealed class CatalogoItemService(
 
         if (exists)
             throw new BusinessException("El código ya existe en este grupo.");
-    }
-
-    private static string Normalize(string value)
-    {
-        return value.Trim();
     }
 
     private static CatalogoItemResponse ToResponse(CatalogoItem entity)

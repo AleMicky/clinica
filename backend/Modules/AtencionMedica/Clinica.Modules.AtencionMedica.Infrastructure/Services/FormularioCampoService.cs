@@ -4,6 +4,7 @@ using Clinica.Modules.AtencionMedica.Domain.Entities;
 using Clinica.Modules.AtencionMedica.Infrastructure.Persistence;
 using Clinica.SharedKernel.Exceptions;
 using Clinica.SharedKernel.Pagination;
+using Clinica.SharedKernel.Text;
 using Microsoft.EntityFrameworkCore;
 
 namespace Clinica.Modules.AtencionMedica.Infrastructure.Services;
@@ -28,25 +29,16 @@ public sealed class FormularioCampoService(AtencionMedicaDbContext context)
         FormularioCampoPagedRequest request,
         CancellationToken cancellationToken = default)
     {
-        var page = request.Page <= 0 ? 1 : request.Page;
-        var pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
-
         var query = context.FormularioCampos.AsNoTracking();
 
         if (request.FormularioSeccionId is { } formularioSeccionId && formularioSeccionId != Guid.Empty)
             query = query.Where(x => x.FormularioSeccionId == formularioSeccionId);
 
-        var total = await query.CountAsync(cancellationToken);
-
-        var items = await query
+        return await query
             .OrderBy(x => x.Orden)
             .ThenBy(x => x.Etiqueta)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
             .Select(x => ToResponse(x))
-            .ToListAsync(cancellationToken);
-
-        return new PagedResult<FormularioCampoResponse>(items, total, page, pageSize);
+            .ToPagedResultAsync(request, cancellationToken);
     }
 
     public async Task<FormularioCampoResponse?> GetByIdAsync(
@@ -67,7 +59,7 @@ public sealed class FormularioCampoService(AtencionMedicaDbContext context)
         await EnsureFormularioSeccionExistsAsync(request.FormularioSeccionId, cancellationToken);
         await EnsureTipoCampoFormularioExistsAsync(request.TipoCampoFormularioId, cancellationToken);
 
-        var codigo = Normalize(request.Codigo);
+        var codigo = StringNormalize.Required(request.Codigo);
         await EnsureCodigoIsUniqueAsync(
             request.FormularioSeccionId,
             codigo,
@@ -78,15 +70,15 @@ public sealed class FormularioCampoService(AtencionMedicaDbContext context)
         {
             FormularioSeccionId = request.FormularioSeccionId,
             Codigo = codigo,
-            Etiqueta = Normalize(request.Etiqueta),
+            Etiqueta = StringNormalize.Required(request.Etiqueta),
             TipoCampoFormularioId = request.TipoCampoFormularioId,
             EsRequerido = request.EsRequerido,
             Visible = request.Visible,
             Orden = request.Orden,
-            Placeholder = NormalizeOptional(request.Placeholder),
-            ValorDefecto = NormalizeOptional(request.ValorDefecto),
-            OpcionesJson = NormalizeOptional(request.OpcionesJson),
-            ValidacionesJson = NormalizeOptional(request.ValidacionesJson)
+            Placeholder = StringNormalize.Optional(request.Placeholder),
+            ValorDefecto = StringNormalize.Optional(request.ValorDefecto),
+            OpcionesJson = StringNormalize.Optional(request.OpcionesJson),
+            ValidacionesJson = StringNormalize.Optional(request.ValidacionesJson)
         };
 
         context.FormularioCampos.Add(entity);
@@ -109,7 +101,7 @@ public sealed class FormularioCampoService(AtencionMedicaDbContext context)
         await EnsureFormularioSeccionExistsAsync(request.FormularioSeccionId, cancellationToken);
         await EnsureTipoCampoFormularioExistsAsync(request.TipoCampoFormularioId, cancellationToken);
 
-        var codigo = Normalize(request.Codigo);
+        var codigo = StringNormalize.Required(request.Codigo);
         await EnsureCodigoIsUniqueAsync(
             request.FormularioSeccionId,
             codigo,
@@ -118,15 +110,15 @@ public sealed class FormularioCampoService(AtencionMedicaDbContext context)
 
         entity.FormularioSeccionId = request.FormularioSeccionId;
         entity.Codigo = codigo;
-        entity.Etiqueta = Normalize(request.Etiqueta);
+        entity.Etiqueta = StringNormalize.Required(request.Etiqueta);
         entity.TipoCampoFormularioId = request.TipoCampoFormularioId;
         entity.EsRequerido = request.EsRequerido;
         entity.Visible = request.Visible;
         entity.Orden = request.Orden;
-        entity.Placeholder = NormalizeOptional(request.Placeholder);
-        entity.ValorDefecto = NormalizeOptional(request.ValorDefecto);
-        entity.OpcionesJson = NormalizeOptional(request.OpcionesJson);
-        entity.ValidacionesJson = NormalizeOptional(request.ValidacionesJson);
+        entity.Placeholder = StringNormalize.Optional(request.Placeholder);
+        entity.ValorDefecto = StringNormalize.Optional(request.ValorDefecto);
+        entity.OpcionesJson = StringNormalize.Optional(request.OpcionesJson);
+        entity.ValidacionesJson = StringNormalize.Optional(request.ValidacionesJson);
 
         await context.SaveChangesAsync(cancellationToken);
 
@@ -181,15 +173,6 @@ public sealed class FormularioCampoService(AtencionMedicaDbContext context)
 
         if (exists)
             throw new BusinessException("El código ya existe en esta sección.");
-    }
-
-    private static string Normalize(string value) => value.Trim();
-
-    private static string? NormalizeOptional(string? value)
-    {
-        if (value is null) return null;
-        var trimmed = value.Trim();
-        return string.IsNullOrEmpty(trimmed) ? null : trimmed;
     }
 
     private static FormularioCampoResponse ToResponse(FormularioCampo entity) =>

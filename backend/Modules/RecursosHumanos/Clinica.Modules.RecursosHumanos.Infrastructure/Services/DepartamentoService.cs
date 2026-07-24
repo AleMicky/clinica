@@ -4,6 +4,7 @@ using Clinica.Modules.RecursosHumanos.Domain.Entities;
 using Clinica.Modules.RecursosHumanos.Infrastructure.Persistence;
 using Clinica.SharedKernel.Exceptions;
 using Clinica.SharedKernel.Pagination;
+using Clinica.SharedKernel.Text;
 using Microsoft.EntityFrameworkCore;
 
 namespace Clinica.Modules.RecursosHumanos.Infrastructure.Services;
@@ -29,9 +30,6 @@ public sealed class DepartamentoService(
         DepartamentoPagedRequest request,
         CancellationToken cancellationToken = default)
     {
-        var page = request.Page <= 0 ? 1 : request.Page;
-        var pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
-
         var query = context.Departamentos
             .AsNoTracking()
             .Include(x => x.Area)
@@ -40,16 +38,10 @@ public sealed class DepartamentoService(
         if (request.AreaId is { } areaId && areaId != Guid.Empty)
             query = query.Where(x => x.AreaId == areaId);
 
-        var total = await query.CountAsync(cancellationToken);
-
-        var items = await query
+        return await query
             .OrderBy(x => x.Nombre)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
             .Select(x => ToResponse(x))
-            .ToListAsync(cancellationToken);
-
-        return new PagedResult<DepartamentoResponse>(items, total, page, pageSize);
+            .ToPagedResultAsync(request, cancellationToken);
     }
 
     public async Task<DepartamentoResponse?> GetByIdAsync(
@@ -70,15 +62,15 @@ public sealed class DepartamentoService(
     {
         await EnsureAreaExistsAsync(request.AreaId, cancellationToken);
 
-        var codigo = Normalize(request.Codigo);
+        var codigo = StringNormalize.Required(request.Codigo);
         await EnsureCodigoIsUniqueAsync(codigo, null, cancellationToken);
 
         var entity = new Departamento
         {
             AreaId = request.AreaId,
             Codigo = codigo,
-            Nombre = Normalize(request.Nombre),
-            Descripcion = NormalizeOptional(request.Descripcion)
+            Nombre = StringNormalize.Required(request.Nombre),
+            Descripcion = StringNormalize.Optional(request.Descripcion)
         };
 
         context.Departamentos.Add(entity);
@@ -104,13 +96,13 @@ public sealed class DepartamentoService(
 
         await EnsureAreaExistsAsync(request.AreaId, cancellationToken);
 
-        var codigo = Normalize(request.Codigo);
+        var codigo = StringNormalize.Required(request.Codigo);
         await EnsureCodigoIsUniqueAsync(codigo, id, cancellationToken);
 
         entity.AreaId = request.AreaId;
         entity.Codigo = codigo;
-        entity.Nombre = Normalize(request.Nombre);
-        entity.Descripcion = NormalizeOptional(request.Descripcion);
+        entity.Nombre = StringNormalize.Required(request.Nombre);
+        entity.Descripcion = StringNormalize.Optional(request.Descripcion);
 
         await context.SaveChangesAsync(cancellationToken);
 
@@ -159,14 +151,6 @@ public sealed class DepartamentoService(
 
         if (exists)
             throw new BusinessException("El código ya existe.");
-    }
-
-    private static string Normalize(string value) => value.Trim();
-
-    private static string? NormalizeOptional(string value)
-    {
-        var trimmed = value.Trim();
-        return string.IsNullOrEmpty(trimmed) ? null : trimmed;
     }
 
     private static DepartamentoResponse ToResponse(Departamento entity)

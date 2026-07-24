@@ -6,6 +6,7 @@ using Clinica.Modules.Personas.Infrastructure.Persistence;
 using Clinica.Modules.RecursosHumanos.Domain.Entities;
 using Clinica.SharedKernel.Exceptions;
 using Clinica.SharedKernel.Pagination;
+using Clinica.SharedKernel.Text;
 using Microsoft.EntityFrameworkCore;
 
 namespace Clinica.Modules.Personas.Infrastructure.Services;
@@ -32,9 +33,6 @@ public sealed class EmpleadoService(
         EmpleadoPagedRequest request,
         CancellationToken cancellationToken = default)
     {
-        var page = request.Page <= 0 ? 1 : request.Page;
-        var pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
-
         var query = context.Empleados
             .AsNoTracking()
             .Include(x => x.Persona)
@@ -68,23 +66,23 @@ public sealed class EmpleadoService(
                 x.Persona.NumeroDocumento.Contains(search));
         }
 
-        var total = await query.CountAsync(cancellationToken);
-
-        var items = await query
+        var paged = await query
             .OrderBy(x => x.CodigoEmpleado)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync(cancellationToken);
+            .ToPagedResultAsync(request, cancellationToken);
 
         var medicos = await LoadMedicosByEmpleadoIdsAsync(
-            items.Select(x => x.Id).ToList(),
+            paged.Items.Select(x => x.Id).ToList(),
             cancellationToken);
 
-        var responses = items
+        var responses = paged.Items
             .Select(x => ToResponse(x, medicos.GetValueOrDefault(x.Id)))
             .ToList();
 
-        return new PagedResult<EmpleadoResponse>(responses, total, page, pageSize);
+        return new PagedResult<EmpleadoResponse>(
+            responses,
+            paged.TotalRecords,
+            paged.Page,
+            paged.PageSize);
     }
 
     public async Task<EmpleadoResponse?> GetByIdAsync(
@@ -117,7 +115,7 @@ public sealed class EmpleadoService(
         await EnsurePersonaNotEmpleadoAsync(request.PersonaId, null, cancellationToken);
         await EnsureRecursosHumanosExistAsync(request, cancellationToken);
 
-        var codigo = Normalize(request.CodigoEmpleado);
+        var codigo = StringNormalize.Required(request.CodigoEmpleado);
         await EnsureCodigoIsUniqueAsync(codigo, null, cancellationToken);
 
         var entity = new Empleado
@@ -156,7 +154,7 @@ public sealed class EmpleadoService(
         await EnsurePersonaNotEmpleadoAsync(request.PersonaId, id, cancellationToken);
         await EnsureRecursosHumanosExistAsync(request, cancellationToken);
 
-        var codigo = Normalize(request.CodigoEmpleado);
+        var codigo = StringNormalize.Required(request.CodigoEmpleado);
         await EnsureCodigoIsUniqueAsync(codigo, id, cancellationToken);
 
         entity.PersonaId = request.PersonaId;
@@ -352,8 +350,6 @@ public sealed class EmpleadoService(
         if (exists)
             throw new BusinessException("El código de empleado ya existe.");
     }
-
-    private static string Normalize(string value) => value.Trim();
 
     private static EmpleadoResponse ToResponse(Empleado entity, Medico? medico = null)
     {

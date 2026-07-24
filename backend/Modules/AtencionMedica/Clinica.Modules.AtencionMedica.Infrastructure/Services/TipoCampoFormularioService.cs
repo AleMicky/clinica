@@ -4,6 +4,7 @@ using Clinica.Modules.AtencionMedica.Domain.Entities;
 using Clinica.Modules.AtencionMedica.Infrastructure.Persistence;
 using Clinica.SharedKernel.Exceptions;
 using Clinica.SharedKernel.Pagination;
+using Clinica.SharedKernel.Text;
 using Microsoft.EntityFrameworkCore;
 
 namespace Clinica.Modules.AtencionMedica.Infrastructure.Services;
@@ -13,20 +14,12 @@ public sealed class TipoCampoFormularioService(AtencionMedicaDbContext context)
 {
     public async Task<PagedResult<TipoCampoFormularioResponse>> GetPagedAsync(PagedRequest request, CancellationToken cancellationToken = default)
     {
-        var page = request.Page <= 0 ? 1 : request.Page;
-        var pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
-
         var query = context.TiposCampoFormulario.AsNoTracking();
-        var total = await query.CountAsync(cancellationToken);
 
-        var items = await query
+        return await query
             .OrderBy(x => x.Nombre)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
             .Select(x => ToResponse(x))
-            .ToListAsync(cancellationToken);
-
-        return new PagedResult<TipoCampoFormularioResponse>(items, total, page, pageSize);
+            .ToPagedResultAsync(request, cancellationToken);
     }
     
     public async Task<TipoCampoFormularioResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
@@ -40,15 +33,15 @@ public sealed class TipoCampoFormularioService(AtencionMedicaDbContext context)
 
     public async Task<TipoCampoFormularioResponse> CreateAsync(CreateTipoCampoFormularioRequest request, CancellationToken cancellationToken = default)
     {
-        var codigo = Normalize(request.Codigo);
+        var codigo = StringNormalize.Required(request.Codigo);
         await EnsureCodigoIsUniqueAsync(codigo, null, cancellationToken);
 
         var entity = new TipoCampoFormulario
         {
             Codigo = codigo,
-            Nombre = Normalize(request.Nombre),
-            ControlFrontend = Normalize(request.ControlFrontend),
-            TipoDato = Normalize(request.TipoDato),
+            Nombre = StringNormalize.Required(request.Nombre),
+            ControlFrontend = StringNormalize.Required(request.ControlFrontend),
+            TipoDato = StringNormalize.Required(request.TipoDato),
             PermiteOpciones = request.PermiteOpciones,
             PermiteValorDefecto = request.PermiteValorDefecto,
             PermiteValidaciones = request.PermiteValidaciones,
@@ -69,13 +62,13 @@ public sealed class TipoCampoFormularioService(AtencionMedicaDbContext context)
         if (entity is null)
             throw new NotFoundException("Tipo de campo de formulario no encontrado.");
 
-        var codigo = Normalize(request.Codigo);
+        var codigo = StringNormalize.Required(request.Codigo);
         await EnsureCodigoIsUniqueAsync(codigo, id, cancellationToken);
 
         entity.Codigo = codigo;
-        entity.Nombre = Normalize(request.Nombre);
-        entity.ControlFrontend = Normalize(request.ControlFrontend);
-        entity.TipoDato = Normalize(request.TipoDato);
+        entity.Nombre = StringNormalize.Required(request.Nombre);
+        entity.ControlFrontend = StringNormalize.Required(request.ControlFrontend);
+        entity.TipoDato = StringNormalize.Required(request.TipoDato);
         entity.PermiteOpciones = request.PermiteOpciones;
         entity.PermiteValorDefecto = request.PermiteValorDefecto;
         entity.PermiteValidaciones = request.PermiteValidaciones;
@@ -107,8 +100,6 @@ public sealed class TipoCampoFormularioService(AtencionMedicaDbContext context)
         if (exists)
             throw new BusinessException("El código ya existe.");
     }
-
-    private static string Normalize(string value) => value.Trim();
 
     private static TipoCampoFormularioResponse ToResponse(TipoCampoFormulario entity) =>
         new(

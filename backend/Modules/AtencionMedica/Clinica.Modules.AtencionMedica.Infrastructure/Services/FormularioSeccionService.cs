@@ -4,6 +4,7 @@ using Clinica.Modules.AtencionMedica.Domain.Entities;
 using Clinica.Modules.AtencionMedica.Infrastructure.Persistence;
 using Clinica.SharedKernel.Exceptions;
 using Clinica.SharedKernel.Pagination;
+using Clinica.SharedKernel.Text;
 using Microsoft.EntityFrameworkCore;
 
 namespace Clinica.Modules.AtencionMedica.Infrastructure.Services;
@@ -28,25 +29,16 @@ public sealed class FormularioSeccionService(AtencionMedicaDbContext context)
         FormularioSeccionPagedRequest request,
         CancellationToken cancellationToken = default)
     {
-        var page = request.Page <= 0 ? 1 : request.Page;
-        var pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
-
         var query = context.FormularioSecciones.AsNoTracking();
 
         if (request.FormularioClinicoId is { } formularioClinicoId && formularioClinicoId != Guid.Empty)
             query = query.Where(x => x.FormularioClinicoId == formularioClinicoId);
 
-        var total = await query.CountAsync(cancellationToken);
-
-        var items = await query
+        return await query
             .OrderBy(x => x.Orden)
             .ThenBy(x => x.Nombre)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
             .Select(x => ToResponse(x))
-            .ToListAsync(cancellationToken);
-
-        return new PagedResult<FormularioSeccionResponse>(items, total, page, pageSize);
+            .ToPagedResultAsync(request, cancellationToken);
     }
 
     public async Task<FormularioSeccionResponse?> GetByIdAsync(
@@ -66,7 +58,7 @@ public sealed class FormularioSeccionService(AtencionMedicaDbContext context)
     {
         await EnsureFormularioClinicoExistsAsync(request.FormularioClinicoId, cancellationToken);
 
-        var codigo = Normalize(request.Codigo);
+        var codigo = StringNormalize.Required(request.Codigo);
         await EnsureCodigoIsUniqueAsync(
             request.FormularioClinicoId,
             codigo,
@@ -77,9 +69,9 @@ public sealed class FormularioSeccionService(AtencionMedicaDbContext context)
         {
             FormularioClinicoId = request.FormularioClinicoId,
             Codigo = codigo,
-            Nombre = Normalize(request.Nombre),
+            Nombre = StringNormalize.Required(request.Nombre),
             Orden = request.Orden,
-            EtapaFlujo = NormalizeOptional(request.EtapaFlujo),
+            EtapaFlujo = StringNormalize.Optional(request.EtapaFlujo),
             Visible = request.Visible
         };
 
@@ -102,7 +94,7 @@ public sealed class FormularioSeccionService(AtencionMedicaDbContext context)
 
         await EnsureFormularioClinicoExistsAsync(request.FormularioClinicoId, cancellationToken);
 
-        var codigo = Normalize(request.Codigo);
+        var codigo = StringNormalize.Required(request.Codigo);
         await EnsureCodigoIsUniqueAsync(
             request.FormularioClinicoId,
             codigo,
@@ -111,9 +103,9 @@ public sealed class FormularioSeccionService(AtencionMedicaDbContext context)
 
         entity.FormularioClinicoId = request.FormularioClinicoId;
         entity.Codigo = codigo;
-        entity.Nombre = Normalize(request.Nombre);
+        entity.Nombre = StringNormalize.Required(request.Nombre);
         entity.Orden = request.Orden;
-        entity.EtapaFlujo = NormalizeOptional(request.EtapaFlujo);
+        entity.EtapaFlujo = StringNormalize.Optional(request.EtapaFlujo);
         entity.Visible = request.Visible;
 
         await context.SaveChangesAsync(cancellationToken);
@@ -158,15 +150,6 @@ public sealed class FormularioSeccionService(AtencionMedicaDbContext context)
 
         if (exists)
             throw new BusinessException("El código ya existe en este formulario.");
-    }
-
-    private static string Normalize(string value) => value.Trim();
-
-    private static string? NormalizeOptional(string? value)
-    {
-        if (value is null) return null;
-        var trimmed = value.Trim();
-        return string.IsNullOrEmpty(trimmed) ? null : trimmed;
     }
 
     private static FormularioSeccionResponse ToResponse(FormularioSeccion entity) =>

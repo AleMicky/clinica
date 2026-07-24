@@ -4,6 +4,7 @@ using Clinica.Modules.Workflow.Domain.Entities;
 using Clinica.Modules.Workflow.Infrastructure.Persistence;
 using Clinica.SharedKernel.Exceptions;
 using Clinica.SharedKernel.Pagination;
+using Clinica.SharedKernel.Text;
 using Microsoft.EntityFrameworkCore;
 
 namespace Clinica.Modules.Workflow.Infrastructure.Services;
@@ -16,21 +17,12 @@ public sealed class WorkflowDefinitionService(
         PagedRequest request,
         CancellationToken cancellationToken = default)
     {
-        var page = request.Page <= 0 ? 1 : request.Page;
-        var pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
-
         var query = context.WorkflowDefinitions.AsNoTracking();
 
-        var total = await query.CountAsync(cancellationToken);
-
-        var items = await query
+        return await query
             .OrderBy(x => x.Name)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
             .Select(x => ToResponse(x))
-            .ToListAsync(cancellationToken);
-
-        return new PagedResult<WorkflowDefinitionResponse>(items, total, page, pageSize);
+            .ToPagedResultAsync(request, cancellationToken);
     }
 
     public async Task<WorkflowDefinitionResponse?> GetByIdAsync(
@@ -48,16 +40,16 @@ public sealed class WorkflowDefinitionService(
         CreateWorkflowDefinitionRequest request,
         CancellationToken cancellationToken = default)
     {
-        var code = Normalize(request.Code);
+        var code = StringNormalize.Required(request.Code);
         await EnsureCodeIsUniqueAsync(code, null, cancellationToken);
 
         var entity = new WorkflowDefinition
         {
             Code = code,
-            Name = Normalize(request.Name),
-            Description = Normalize(request.Description),
-            Module = Normalize(request.Module),
-            EntityName = Normalize(request.EntityName),
+            Name = StringNormalize.Required(request.Name),
+            Description = StringNormalize.Required(request.Description),
+            Module = StringNormalize.Required(request.Module),
+            EntityName = StringNormalize.Required(request.EntityName),
             IsActive = request.IsActive
         };
 
@@ -78,14 +70,14 @@ public sealed class WorkflowDefinitionService(
         if (entity is null)
             throw new NotFoundException("Definición de workflow no encontrada.");
 
-        var code = Normalize(request.Code);
+        var code = StringNormalize.Required(request.Code);
         await EnsureCodeIsUniqueAsync(code, id, cancellationToken);
 
         entity.Code = code;
-        entity.Name = Normalize(request.Name);
-        entity.Description = Normalize(request.Description);
-        entity.Module = Normalize(request.Module);
-        entity.EntityName = Normalize(request.EntityName);
+        entity.Name = StringNormalize.Required(request.Name);
+        entity.Description = StringNormalize.Required(request.Description);
+        entity.Module = StringNormalize.Required(request.Module);
+        entity.EntityName = StringNormalize.Required(request.EntityName);
         entity.IsActive = request.IsActive;
         entity.UpdatedAt = DateTime.UtcNow;
 
@@ -120,8 +112,6 @@ public sealed class WorkflowDefinitionService(
         if (exists)
             throw new BusinessException("El código ya existe.");
     }
-
-    private static string Normalize(string value) => value.Trim();
 
     private static WorkflowDefinitionResponse ToResponse(WorkflowDefinition entity)
     {

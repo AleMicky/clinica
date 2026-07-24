@@ -5,6 +5,7 @@ using Clinica.Modules.Personas.Infrastructure.Persistence;
 using Clinica.Modules.RecursosHumanos.Domain.Entities;
 using Clinica.SharedKernel.Exceptions;
 using Clinica.SharedKernel.Pagination;
+using Clinica.SharedKernel.Text;
 using Microsoft.EntityFrameworkCore;
 
 namespace Clinica.Modules.Personas.Infrastructure.Services;
@@ -30,9 +31,6 @@ public sealed class MedicoService(
         MedicoPagedRequest request,
         CancellationToken cancellationToken = default)
     {
-        var page = request.Page <= 0 ? 1 : request.Page;
-        var pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
-
         var query = context.Medicos
             .AsNoTracking()
             .Include(x => x.Empleado)
@@ -63,17 +61,11 @@ public sealed class MedicoService(
                 x.Especialidades.Any(e => e.Especialidad.Nombre.Contains(search)));
         }
 
-        var total = await query.CountAsync(cancellationToken);
-
-        var items = await query
+        return await query
             .OrderBy(x => x.Empleado.Persona.ApellidoPaterno)
             .ThenBy(x => x.Empleado.Persona.Nombres)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
             .Select(x => ToResponse(x))
-            .ToListAsync(cancellationToken);
-
-        return new PagedResult<MedicoResponse>(items, total, page, pageSize);
+            .ToPagedResultAsync(request, cancellationToken);
     }
 
     public async Task<MedicoResponse?> GetByIdAsync(
@@ -99,14 +91,14 @@ public sealed class MedicoService(
         await EnsureEmpleadoNotMedicoAsync(request.EmpleadoId, null, cancellationToken);
         await EnsureEspecialidadesExistAsync(request.EspecialidadIds, cancellationToken);
 
-        var matricula = Normalize(request.MatriculaProfesional);
+        var matricula = StringNormalize.Required(request.MatriculaProfesional);
         await EnsureMatriculaIsUniqueAsync(matricula, null, cancellationToken);
 
         var entity = new Medico
         {
             EmpleadoId = request.EmpleadoId,
             MatriculaProfesional = matricula,
-            RegistroColegioMedico = NormalizeOptional(request.RegistroColegioMedico),
+            RegistroColegioMedico = StringNormalize.Optional(request.RegistroColegioMedico),
             Especialidades = BuildEspecialidades(request.EspecialidadIds, request.EspecialidadPrincipalId)
         };
 
@@ -132,12 +124,12 @@ public sealed class MedicoService(
         await EnsureEmpleadoNotMedicoAsync(request.EmpleadoId, id, cancellationToken);
         await EnsureEspecialidadesExistAsync(request.EspecialidadIds, cancellationToken);
 
-        var matricula = Normalize(request.MatriculaProfesional);
+        var matricula = StringNormalize.Required(request.MatriculaProfesional);
         await EnsureMatriculaIsUniqueAsync(matricula, id, cancellationToken);
 
         entity.EmpleadoId = request.EmpleadoId;
         entity.MatriculaProfesional = matricula;
-        entity.RegistroColegioMedico = NormalizeOptional(request.RegistroColegioMedico);
+        entity.RegistroColegioMedico = StringNormalize.Optional(request.RegistroColegioMedico);
 
         SyncEspecialidades(entity, request.EspecialidadIds, request.EspecialidadPrincipalId);
 
@@ -263,17 +255,6 @@ public sealed class MedicoService(
                 existing.EsPrincipal = especialidadId == especialidadPrincipalId;
             }
         }
-    }
-
-    private static string Normalize(string value) => value.Trim();
-
-    private static string? NormalizeOptional(string? value)
-    {
-        if (value is null)
-            return null;
-
-        var trimmed = value.Trim();
-        return string.IsNullOrEmpty(trimmed) ? null : trimmed;
     }
 
     private static MedicoResponse ToResponse(Medico entity)

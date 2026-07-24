@@ -5,6 +5,7 @@ using Clinica.Modules.Personas.Domain.Entities;
 using Clinica.Modules.Personas.Infrastructure.Persistence;
 using Clinica.SharedKernel.Exceptions;
 using Clinica.SharedKernel.Pagination;
+using Clinica.SharedKernel.Text;
 using Microsoft.EntityFrameworkCore;
 
 namespace Clinica.Modules.Personas.Infrastructure.Services;
@@ -30,9 +31,6 @@ public sealed class ContactoEmergenciaService(
         ContactoEmergenciaPagedRequest request,
         CancellationToken cancellationToken = default)
     {
-        var page = request.Page <= 0 ? 1 : request.Page;
-        var pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
-
         var query = context.ContactosEmergencia
             .AsNoTracking()
             .Include(x => x.Parentesco)
@@ -51,16 +49,10 @@ public sealed class ContactoEmergenciaService(
                 (x.Celular != null && x.Celular.Contains(search)));
         }
 
-        var total = await query.CountAsync(cancellationToken);
-
-        var items = await query
+        return await query
             .OrderBy(x => x.Nombres)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
             .Select(x => ToResponse(x))
-            .ToListAsync(cancellationToken);
-
-        return new PagedResult<ContactoEmergenciaResponse>(items, total, page, pageSize);
+            .ToPagedResultAsync(request, cancellationToken);
     }
 
     public async Task<ContactoEmergenciaResponse?> GetByIdAsync(
@@ -87,12 +79,12 @@ public sealed class ContactoEmergenciaService(
         var entity = new ContactoEmergencia
         {
             PersonaId = request.PersonaId,
-            Nombres = Normalize(request.Nombres),
-            Apellidos = NormalizeOptional(request.Apellidos),
+            Nombres = StringNormalize.Required(request.Nombres),
+            Apellidos = StringNormalize.Optional(request.Apellidos),
             ParentescoId = request.ParentescoId,
-            Telefono = NormalizeOptional(request.Telefono),
-            Celular = NormalizeOptional(request.Celular),
-            Direccion = NormalizeOptional(request.Direccion)
+            Telefono = StringNormalize.Optional(request.Telefono),
+            Celular = StringNormalize.Optional(request.Celular),
+            Direccion = StringNormalize.Optional(request.Direccion)
         };
 
         context.ContactosEmergencia.Add(entity);
@@ -118,12 +110,12 @@ public sealed class ContactoEmergenciaService(
             await EnsureCatalogoItemExistsAsync(parentescoId, cancellationToken);
 
         entity.PersonaId = request.PersonaId;
-        entity.Nombres = Normalize(request.Nombres);
-        entity.Apellidos = NormalizeOptional(request.Apellidos);
+        entity.Nombres = StringNormalize.Required(request.Nombres);
+        entity.Apellidos = StringNormalize.Optional(request.Apellidos);
         entity.ParentescoId = request.ParentescoId;
-        entity.Telefono = NormalizeOptional(request.Telefono);
-        entity.Celular = NormalizeOptional(request.Celular);
-        entity.Direccion = NormalizeOptional(request.Direccion);
+        entity.Telefono = StringNormalize.Optional(request.Telefono);
+        entity.Celular = StringNormalize.Optional(request.Celular);
+        entity.Direccion = StringNormalize.Optional(request.Direccion);
 
         await context.SaveChangesAsync(cancellationToken);
 
@@ -164,17 +156,6 @@ public sealed class ContactoEmergenciaService(
 
         if (!exists)
             throw new BusinessException("El ítem de catálogo no existe.");
-    }
-
-    private static string Normalize(string value) => value.Trim();
-
-    private static string? NormalizeOptional(string? value)
-    {
-        if (value is null)
-            return null;
-
-        var trimmed = value.Trim();
-        return string.IsNullOrEmpty(trimmed) ? null : trimmed;
     }
 
     private static ContactoEmergenciaResponse ToResponse(ContactoEmergencia entity)
