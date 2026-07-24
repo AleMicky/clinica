@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { createColumnHelper, type ColumnDef } from '@tanstack/react-table'
-import { Button, Empty, Flex, Popconfirm, Space, Typography } from 'antd'
+import { Button, Empty, Flex, Popconfirm, Space, Tag, Typography } from 'antd'
 import {
     DeleteOutlined,
     EditOutlined,
@@ -13,6 +13,7 @@ import { AppDataTable } from '../../../shared/components/ui/data-table/AppDataTa
 import {
     DEFAULT_TIPO_ATENCION_COLOR,
     getTipoAtencionIcon,
+    getTipoAtencionIconLabel,
 } from '../constants/tipo-atencion-icons'
 import type { TipoAtencion } from '../types/atencion-medica.types'
 
@@ -54,13 +55,33 @@ function TipoIdentityCell({ tipo }: { tipo: TipoAtencion }) {
                 <Icon />
             </span>
             <span className="tipo-atencion-cell__text">
-                <Text strong className="tipo-atencion-cell__name">
-                    {tipo.nombre}
-                </Text>
+                <Flex gap={8} align="center" wrap="wrap">
+                    <Text strong className="tipo-atencion-cell__name">
+                        {tipo.nombre}
+                    </Text>
+                    <Text code className="tipo-atencion-cell__code">
+                        {tipo.codigo}
+                    </Text>
+                </Flex>
                 <Text type="secondary" className="tipo-atencion-cell__desc">
                     {descripcion || 'Sin descripción'}
                 </Text>
             </span>
+        </Flex>
+    )
+}
+
+function ColorCell({ color }: { color?: string | null }) {
+    const value = color || DEFAULT_TIPO_ATENCION_COLOR
+
+    return (
+        <Flex gap={8} align="center" className="tipo-atencion-cell__color">
+            <span
+                className="tipo-atencion-cell__swatch"
+                style={{ background: value }}
+                aria-hidden
+            />
+            <Text className="tipo-atencion-cell__color-value">{value.toUpperCase()}</Text>
         </Flex>
     )
 }
@@ -83,37 +104,45 @@ export function TiposAtencionTable({
     const columns = useMemo(
         () =>
             [
-                columnHelper.accessor('codigo', {
-                    header: 'Código',
-                    size: 120,
-                    cell: ({ getValue }) => (
-                        <Text code className="tipo-atencion-cell__code">
-                            {getValue()}
-                        </Text>
-                    ),
-                }),
                 columnHelper.display({
                     id: 'tipo',
                     header: 'Tipo de atención',
                     cell: ({ row }) => <TipoIdentityCell tipo={row.original} />,
                 }),
                 columnHelper.display({
+                    id: 'color',
+                    header: 'Color',
+                    size: 140,
+                    cell: ({ row }) => <ColorCell color={row.original.color} />,
+                }),
+                columnHelper.display({
+                    id: 'icono',
+                    header: 'Icono',
+                    size: 150,
+                    cell: ({ row }) => (
+                        <Tag className="tipo-atencion-cell__icon-tag">
+                            {getTipoAtencionIconLabel(row.original.icono)}
+                        </Tag>
+                    ),
+                }),
+                columnHelper.display({
                     id: 'actions',
-                    header: '',
-                    size: 120,
+                    header: 'Acciones',
+                    size: 220,
                     meta: { align: 'right', headerAlign: 'right' },
                     cell: ({ row }) => {
                         const tipo = row.original
 
                         return (
-                            <Space size={4}>
+                            <Space size={2} className="tipo-atencion-cell__actions">
                                 <Button
-                                    type="text"
+                                    type="link"
                                     size="small"
                                     icon={<FormOutlined />}
-                                    aria-label={`Administrar formularios de ${tipo.nombre}`}
                                     onClick={() => onManageForms(tipo)}
-                                />
+                                >
+                                    Formularios
+                                </Button>
                                 <Button
                                     type="text"
                                     size="small"

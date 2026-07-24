@@ -7271,6 +7271,31 @@ body {
 
 
 /* Tipos de atención */
+.rrhh-tipos-atencion__table .app-data-table__table {
+    table-layout: fixed;
+}
+
+.rrhh-tipos-atencion__table .app-data-table__th:nth-child(1),
+.rrhh-tipos-atencion__table .app-data-table__td:nth-child(1) {
+    width: auto;
+}
+
+.rrhh-tipos-atencion__table .app-data-table__th:nth-child(2),
+.rrhh-tipos-atencion__table .app-data-table__td:nth-child(2) {
+    width: 140px;
+}
+
+.rrhh-tipos-atencion__table .app-data-table__th:nth-child(3),
+.rrhh-tipos-atencion__table .app-data-table__td:nth-child(3) {
+    width: 150px;
+}
+
+.rrhh-tipos-atencion__table .app-data-table__th:nth-child(4),
+.rrhh-tipos-atencion__table .app-data-table__td:nth-child(4) {
+    width: 220px;
+    white-space: nowrap;
+}
+
 .tipo-atencion-cell {
     min-width: 0;
 }
@@ -7279,9 +7304,9 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
     flex-shrink: 0;
     font-size: 16px;
 }
@@ -7289,7 +7314,7 @@ body {
 .tipo-atencion-cell__text {
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    gap: 2px;
     min-width: 0;
 }
 
@@ -7305,7 +7330,44 @@ body {
 }
 
 .tipo-atencion-cell__code {
+    font-size: 11px;
+}
+
+.tipo-atencion-cell__color {
+    min-width: 0;
+}
+
+.tipo-atencion-cell__swatch {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.12);
+}
+
+.tipo-atencion-cell__color-value {
     font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    color: rgba(15, 23, 42, 0.65);
+}
+
+[data-theme='dark'] .tipo-atencion-cell__color-value {
+    color: rgba(255, 255, 255, 0.65);
+}
+
+[data-theme='dark'] .tipo-atencion-cell__swatch {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+
+.tipo-atencion-cell__icon-tag {
+    margin-inline-end: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tipo-atencion-cell__actions {
+    white-space: nowrap;
 }
 
 .tipos-atencion-empty {
@@ -7314,6 +7376,21 @@ body {
     justify-content: center;
     min-height: 220px;
     padding: 24px 12px;
+}
+
+@media (max-width: 900px) {
+    .rrhh-tipos-atencion__table .app-data-table__table {
+        table-layout: auto;
+    }
+
+    .rrhh-tipos-atencion__table .app-data-table__th:nth-child(2),
+    .rrhh-tipos-atencion__table .app-data-table__td:nth-child(2),
+    .rrhh-tipos-atencion__table .app-data-table__th:nth-child(3),
+    .rrhh-tipos-atencion__table .app-data-table__td:nth-child(3),
+    .rrhh-tipos-atencion__table .app-data-table__th:nth-child(4),
+    .rrhh-tipos-atencion__table .app-data-table__td:nth-child(4) {
+        width: auto;
+    }
 }
 
 .tipo-atencion-form__color-input {

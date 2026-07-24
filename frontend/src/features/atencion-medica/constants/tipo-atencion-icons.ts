@@ -138,5 +138,10 @@ export function getTipoAtencionIcon(icono?: string | null) {
     return iconByValue.get(icono)?.Icon ?? MedicineBoxOutlined
 }
 
+export function getTipoAtencionIconLabel(icono?: string | null) {
+    if (!icono) return 'Medicina'
+    return iconByValue.get(icono)?.label ?? icono
+}
+
 export const DEFAULT_TIPO_ATENCION_COLOR = '#1677ff'
 export const DEFAULT_TIPO_ATENCION_ICONO = 'MedicineBoxOutlined'
