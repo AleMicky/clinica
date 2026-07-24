@@ -233,7 +233,7 @@ export function PacientesTable({
 
     if (showCustomEmpty) {
         return (
-            <div className={['pacientes-module__table', className].filter(Boolean).join(' ')}>
+            <div className={className}>
                 <div className="app-data-table__wrapper">
                     <div className="pacientes-empty">
                         <Empty
@@ -263,7 +263,7 @@ export function PacientesTable({
             loading={loading}
             emptyText="No existen pacientes registrados."
             getRowId={(row) => row.id}
-            className={['pacientes-module__table', className].filter(Boolean).join(' ')}
+            className={className}
             pagination={{
                 page,
                 pageSize,
