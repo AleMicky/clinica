@@ -1,9 +1,12 @@
+using System.Data;
+using System.Data.Common;
 using Clinica.Modules.Parametros.Application.Abstractions;
 using Clinica.Modules.Parametros.Application.Correlativos;
 using Clinica.Modules.Parametros.Domain.Entities;
 using Clinica.Modules.Parametros.Infrastructure.Persistence;
 using Clinica.SharedKernel.Pagination;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Clinica.Modules.Parametros.Infrastructure.Services;
 
@@ -48,47 +51,130 @@ public sealed class CorrelativoService(ParametrosDbContext context) : ICorrelati
     {
         var codigo = request.Codigo.Trim().ToUpperInvariant();
         var gestion = request.Gestion ?? DateTime.UtcNow.Year;
+        var now = DateTime.UtcNow;
+        var updatePrefijo = request.Prefijo is not null;
+        var prefijo = updatePrefijo ? NormalizeOptional(request.Prefijo) : null;
+        var updateLongitud = request.Longitud.HasValue;
+        var longitud = request.Longitud ?? 0;
 
-        await using var transaction = await context.Database
-            .BeginTransactionAsync(cancellationToken);
+        var updated = await IncrementAsync(
+            codigo,
+            gestion,
+            now,
+            updatePrefijo,
+            prefijo,
+            updateLongitud,
+            longitud,
+            cancellationToken);
 
-        var entity = await context.Correlativos
-            .FirstOrDefaultAsync(
-                x => x.Codigo == codigo && x.Gestion == gestion,
+        if (updated is not null)
+            return ToResponse(updated);
+
+        var entity = new Correlativo
+        {
+            Id = Guid.NewGuid(),
+            Codigo = codigo,
+            Gestion = gestion,
+            UltimoNumero = 1,
+            Prefijo = NormalizeOptional(request.Prefijo),
+            Longitud = request.Longitud ?? 6,
+            FechaCreacion = now
+        };
+
+        context.Correlativos.Add(entity);
+
+        try
+        {
+            await context.SaveChangesAsync(cancellationToken);
+            return ToResponse(entity);
+        }
+        catch (DbUpdateException)
+        {
+            context.Entry(entity).State = EntityState.Detached;
+
+            updated = await IncrementAsync(
+                codigo,
+                gestion,
+                now,
+                updatePrefijo,
+                prefijo,
+                updateLongitud,
+                longitud,
                 cancellationToken);
 
-        var now = DateTime.UtcNow;
+            if (updated is not null)
+                return ToResponse(updated);
 
-        if (entity is null)
-        {
-            entity = new Correlativo
-            {
-                Codigo = codigo,
-                Gestion = gestion,
-                UltimoNumero = 1,
-                Prefijo = NormalizeOptional(request.Prefijo),
-                Longitud = request.Longitud ?? 6,
-                FechaCreacion = now
-            };
-
-            context.Correlativos.Add(entity);
+            throw;
         }
-        else
+    }
+
+    private async Task<Correlativo?> IncrementAsync(
+        string codigo,
+        int gestion,
+        DateTime now,
+        bool updatePrefijo,
+        string? prefijo,
+        bool updateLongitud,
+        int longitud,
+        CancellationToken cancellationToken)
+    {
+        var connection = context.Database.GetDbConnection();
+        if (connection.State != ConnectionState.Open)
+            await context.Database.OpenConnectionAsync(cancellationToken);
+
+        await using var command = connection.CreateCommand();
+        command.Transaction = context.Database.CurrentTransaction?.GetDbTransaction();
+        command.CommandText =
+            """
+            UPDATE Correlativos
+            SET UltimoNumero = UltimoNumero + 1,
+                FechaActualizacion = @now,
+                Prefijo = CASE WHEN @updatePrefijo = 1 THEN @prefijo ELSE Prefijo END,
+                Longitud = CASE WHEN @updateLongitud = 1 THEN @longitud ELSE Longitud END
+            OUTPUT
+                INSERTED.Id,
+                INSERTED.Codigo,
+                INSERTED.Gestion,
+                INSERTED.UltimoNumero,
+                INSERTED.Prefijo,
+                INSERTED.Longitud,
+                INSERTED.FechaCreacion,
+                INSERTED.FechaActualizacion
+            WHERE Codigo = @codigo AND Gestion = @gestion
+            """;
+
+        AddParameter(command, "@now", now);
+        AddParameter(command, "@updatePrefijo", updatePrefijo);
+        AddParameter(command, "@prefijo", prefijo);
+        AddParameter(command, "@updateLongitud", updateLongitud);
+        AddParameter(command, "@longitud", longitud);
+        AddParameter(command, "@codigo", codigo);
+        AddParameter(command, "@gestion", gestion);
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (!await reader.ReadAsync(cancellationToken))
+            return null;
+
+        return new Correlativo
         {
-            entity.UltimoNumero++;
-            entity.FechaActualizacion = now;
+            Id = reader.GetGuid(0),
+            Codigo = reader.GetString(1),
+            Gestion = reader.GetInt32(2),
+            UltimoNumero = reader.GetInt32(3),
+            Prefijo = reader.IsDBNull(4) ? null : reader.GetString(4),
+            Longitud = reader.GetInt32(5),
+            FechaCreacion = reader.GetDateTime(6),
+            FechaActualizacion = reader.IsDBNull(7) ? null : reader.GetDateTime(7)
+        };
+    }
 
-            if (request.Prefijo is not null)
-                entity.Prefijo = NormalizeOptional(request.Prefijo);
-
-            if (request.Longitud.HasValue)
-                entity.Longitud = request.Longitud.Value;
-        }
-
-        await context.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
-
-        return ToResponse(entity);
+    private static void AddParameter(DbCommand command, string name, object? value)
+    {
+        var parameter = command.CreateParameter();
+        parameter.ParameterName = name;
+        parameter.Value = value ?? DBNull.Value;
+        command.Parameters.Add(parameter);
     }
 
     private static string? NormalizeOptional(string? value)

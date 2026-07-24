@@ -71,14 +71,32 @@ public sealed class AtencionService(
         CreateAtencionRequest request,
         CancellationToken cancellationToken = default)
     {
-        await EnsurePacienteExistsAsync(request.PacienteId, cancellationToken);
-        var tipoAtencionCodigo = await GetTipoAtencionCodigoAsync(request.TipoAtencionId, cancellationToken);
-        await EnsureFormularioClinicoMatchesTipoAsync(
-            request.FormularioClinicoId,
-            request.TipoAtencionId,
-            cancellationToken);
+        var validation = await (
+            from t in context.TiposAtencion.AsNoTracking()
+            where t.Id == request.TipoAtencionId
+            select new
+            {
+                t.Codigo,
+                PacienteExiste = context.Set<Paciente>().Any(p => p.Id == request.PacienteId),
+                FormularioTipoAtencionId = context.FormulariosClinicos
+                    .Where(f => f.Id == request.FormularioClinicoId)
+                    .Select(f => (Guid?)f.TipoAtencionId)
+                    .FirstOrDefault()
+            }).FirstOrDefaultAsync(cancellationToken);
 
-        var codigoCorrelativo = tipoAtencionCodigo.Trim().ToUpperInvariant();
+        if (validation is null)
+            throw new BusinessException("El tipo de atención no existe.");
+
+        if (!validation.PacienteExiste)
+            throw new BusinessException("El paciente no existe.");
+
+        if (validation.FormularioTipoAtencionId is null)
+            throw new BusinessException("El formulario clínico no existe.");
+
+        if (validation.FormularioTipoAtencionId != request.TipoAtencionId)
+            throw new BusinessException("El formulario no corresponde al tipo de atención.");
+
+        var codigoCorrelativo = validation.Codigo.Trim().ToUpperInvariant();
         var prefijo = codigoCorrelativo.Length <= 20
             ? codigoCorrelativo
             : codigoCorrelativo[..20];
@@ -166,19 +184,6 @@ public sealed class AtencionService(
 
         if (!exists)
             throw new BusinessException("El tipo de atención no existe.");
-    }
-
-    private async Task<string> GetTipoAtencionCodigoAsync(
-        Guid tipoAtencionId,
-        CancellationToken cancellationToken)
-    {
-        var codigo = await context.TiposAtencion
-            .AsNoTracking()
-            .Where(x => x.Id == tipoAtencionId)
-            .Select(x => x.Codigo)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        return codigo ?? throw new BusinessException("El tipo de atención no existe.");
     }
 
     private async Task EnsureFormularioClinicoMatchesTipoAsync(
