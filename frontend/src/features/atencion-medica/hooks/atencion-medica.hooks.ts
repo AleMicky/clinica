@@ -10,7 +10,6 @@ import type { GuidCrudService } from '../../../shared/services/guid-crud.service
 import {
     atencionesService,
     atencionRespuestasService,
-    especialidadesLookupService,
     formularioCamposService,
     formularioSeccionesService,
     formulariosClinicosService,
@@ -359,13 +358,6 @@ export function usePacientesLookup(query: PagedQuery = { page: 1, pageSize: 100 
     return useAppQuery({
         queryKey: queryKeys.atencionMedica.pacientesLookup.list(query),
         queryFn: () => pacientesLookupService.getPaged(query),
-    })
-}
-
-export function useEspecialidadesLookup(query: PagedQuery = { page: 1, pageSize: 100 }) {
-    return useAppQuery({
-        queryKey: queryKeys.atencionMedica.especialidadesLookup.list(query),
-        queryFn: () => especialidadesLookupService.getPaged(query),
     })
 }
 

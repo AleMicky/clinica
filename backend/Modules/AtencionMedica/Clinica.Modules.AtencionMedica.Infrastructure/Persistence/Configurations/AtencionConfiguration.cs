@@ -1,6 +1,5 @@
 using Clinica.Modules.AtencionMedica.Domain.Entities;
 using Clinica.Modules.Personas.Domain.Entities;
-using Clinica.Modules.RecursosHumanos.Domain.Entities;
 using Clinica.SharedKernel.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -38,29 +37,12 @@ public sealed class AtencionConfiguration : BaseEntityConfiguration<Atencion>
             .HasForeignKey(x => x.TipoAtencionId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.Property(x => x.ServicioId);
-
-        builder.HasOne<Servicio>()
-            .WithMany()
-            .HasForeignKey(x => x.ServicioId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.Property(x => x.EspecialidadId);
-
-        builder.HasOne<Especialidad>()
-            .WithMany()
-            .HasForeignKey(x => x.EspecialidadId)
-            .OnDelete(DeleteBehavior.Restrict);
-
         builder.Property(x => x.MedicoId);
 
         builder.HasOne<Medico>()
             .WithMany()
             .HasForeignKey(x => x.MedicoId)
             .OnDelete(DeleteBehavior.Restrict);
-
-        builder.Property(x => x.MotivoConsulta)
-            .HasMaxLength(500);
 
         builder.Property(x => x.FormularioClinicoId);
 
@@ -75,21 +57,6 @@ public sealed class AtencionConfiguration : BaseEntityConfiguration<Atencion>
 
         builder.Property(x => x.Observaciones)
             .HasMaxLength(2000);
-
-        builder.Property(x => x.ResponsableFinancieroNombre)
-            .HasMaxLength(200);
-
-        builder.Property(x => x.ResponsableFinancieroDocumento)
-            .HasMaxLength(50);
-
-        builder.Property(x => x.ResponsableFinancieroTelefono)
-            .HasMaxLength(30);
-
-        builder.Property(x => x.SeguroNombre)
-            .HasMaxLength(200);
-
-        builder.Property(x => x.NumeroAfiliacion)
-            .HasMaxLength(50);
 
         builder.HasIndex(x => x.PacienteId);
         builder.HasIndex(x => x.FechaAtencion);

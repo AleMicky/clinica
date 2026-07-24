@@ -142,11 +142,6 @@ export const queryKeys = {
             list: (query: PagedQuery) =>
                 ['atencion-medica', 'pacientes-lookup', 'list', query] as const,
         },
-        especialidadesLookup: {
-            all: ['atencion-medica', 'especialidades-lookup'] as const,
-            list: (query: PagedQuery) =>
-                ['atencion-medica', 'especialidades-lookup', 'list', query] as const,
-        },
     },
     workflow: {
         all: ['workflow'] as const,

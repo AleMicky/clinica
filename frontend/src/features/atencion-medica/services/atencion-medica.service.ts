@@ -1,7 +1,6 @@
 import { getPaged, post } from '../../../shared/api/http'
 import {
     atencionMedicaEndpoints,
-    catalogoClinicoEndpoints,
     pacienteEndpoints,
 } from '../../../shared/api/endpoints'
 import { createGuidCrudService } from '../../../shared/services/guid-crud.service'
@@ -16,7 +15,6 @@ import type {
     CreateFormularioClinicoPayload,
     CreateFormularioSeccionPayload,
     CreateTipoAtencionPayload,
-    EspecialidadLookup,
     FormularioCampo,
     FormularioCampoPagedQuery,
     FormularioClinico,
@@ -136,15 +134,6 @@ export const atencionRespuestasService = {
 export const pacientesLookupService = {
     getPaged(query: PagedQuery) {
         return getPaged<PacienteLookup>(pacienteEndpoints.root, query)
-    },
-}
-
-export const especialidadesLookupService = {
-    getPaged(query: PagedQuery) {
-        return getPaged<EspecialidadLookup>(
-            catalogoClinicoEndpoints.especialidades.root,
-            query,
-        )
     },
 }
 

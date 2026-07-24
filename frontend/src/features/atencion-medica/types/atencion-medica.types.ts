@@ -146,12 +146,6 @@ export type PacienteLookup = {
     numeroHistoriaClinica: string
 }
 
-export type EspecialidadLookup = {
-    id: Guid
-    codigo: string
-    nombre: string
-}
-
 // ── Atención ────────────────────────────────────────────────────────
 
 export type Atencion = {
@@ -159,20 +153,12 @@ export type Atencion = {
     numeroAtencion: string
     pacienteId: Guid
     tipoAtencionId: Guid
-    servicioId?: Guid | null
-    especialidadId?: Guid | null
     medicoId?: Guid | null
-    motivoConsulta?: string | null
     formularioClinicoId?: Guid | null
     fechaAtencion: string
     fechaRecepcion?: string | null
     estado: string
     workflowInstanceId?: Guid | null
-    responsableFinancieroNombre?: string | null
-    responsableFinancieroDocumento?: string | null
-    responsableFinancieroTelefono?: string | null
-    seguroNombre?: string | null
-    numeroAfiliacion?: string | null
     observaciones?: string | null
     pacienteNombre?: string
     numeroHistoriaClinica?: string
