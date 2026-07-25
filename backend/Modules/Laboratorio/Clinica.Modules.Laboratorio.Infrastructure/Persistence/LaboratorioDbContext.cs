@@ -11,6 +11,7 @@ public class LaboratorioDbContext : DbContext
     }
 
     public DbSet<Especialidad> Especialidades => Set<Especialidad>();
+    public DbSet<TipoExamen> TiposExamen => Set<TipoExamen>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -1,3 +1,11 @@
+using Clinica.Modules.AtencionMedica.Presentation;
+using Clinica.Modules.Laboratorio.Presentation;
+using Clinica.Modules.Parametros.Presentation;
+using Clinica.Modules.Personas.Presentation;
+using Clinica.Modules.RecursosHumanos.Presentation;
+using Clinica.Modules.Seguridad.Presentation;
+using Clinica.Modules.Workflow.Presentation;
+using Microsoft.AspNetCore.Http.Metadata;
 using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
@@ -6,6 +14,53 @@ namespace Clinica.Api.Infrastructure;
 public static class SwaggerExtensions
 {
     public const string DocumentName = "v1";
+
+    private static readonly string[] TagOrder =
+    [
+        SeguridadSwaggerTags.Module,
+        SeguridadSwaggerTags.Auth,
+        SeguridadSwaggerTags.Users,
+        SeguridadSwaggerTags.Roles,
+        ParametrosSwaggerTags.Module,
+        ParametrosSwaggerTags.CatalogoGrupos,
+        ParametrosSwaggerTags.CatalogoItems,
+        ParametrosSwaggerTags.Correlativos,
+        RecursosHumanosSwaggerTags.Module,
+        RecursosHumanosSwaggerTags.Areas,
+        RecursosHumanosSwaggerTags.Cargos,
+        RecursosHumanosSwaggerTags.Profesiones,
+        RecursosHumanosSwaggerTags.Especialidades,
+        RecursosHumanosSwaggerTags.Departamentos,
+        RecursosHumanosSwaggerTags.Servicios,
+        RecursosHumanosSwaggerTags.Jerarquia,
+        LaboratorioSwaggerTags.Module,
+        LaboratorioSwaggerTags.Especialidades,
+        LaboratorioSwaggerTags.TiposExamen,
+        PersonasSwaggerTags.Module,
+        PersonasSwaggerTags.Personas,
+        PersonasSwaggerTags.Pacientes,
+        PersonasSwaggerTags.Empleados,
+        PersonasSwaggerTags.Medicos,
+        PersonasSwaggerTags.ContactosEmergencia,
+        AtencionMedicaSwaggerTags.Module,
+        AtencionMedicaSwaggerTags.TiposAtencion,
+        AtencionMedicaSwaggerTags.TiposCampoFormulario,
+        AtencionMedicaSwaggerTags.FormulariosClinicos,
+        AtencionMedicaSwaggerTags.FormularioSecciones,
+        AtencionMedicaSwaggerTags.FormularioCampos,
+        AtencionMedicaSwaggerTags.Atenciones,
+        AtencionMedicaSwaggerTags.AtencionRespuestas,
+        WorkflowSwaggerTags.Module,
+        WorkflowSwaggerTags.Definitions,
+        WorkflowSwaggerTags.States,
+        WorkflowSwaggerTags.Transitions,
+        WorkflowSwaggerTags.Instances,
+        "Sistema"
+    ];
+
+    private static readonly Dictionary<string, int> TagIndex = TagOrder
+        .Select((name, index) => (name, index))
+        .ToDictionary(x => x.name, x => x.index, StringComparer.Ordinal);
 
     public static IServiceCollection AddClinicaSwagger(this IServiceCollection services)
     {
@@ -37,8 +92,20 @@ public static class SwaggerExtensions
             // Evita colisiones entre DTOs homónimos de distintos módulos (p. ej. EspecialidadResponse).
             options.CustomSchemaIds(type => BuildSchemaId(type));
 
-            options.OrderActionsBy(api => $"{api.GroupName}_{api.RelativePath}");
-            options.DocumentFilter<SeguridadTagOrderDocumentFilter>();
+            options.OrderActionsBy(api =>
+            {
+                var tag = api.ActionDescriptor.EndpointMetadata
+                    .OfType<ITagsMetadata>()
+                    .SelectMany(metadata => metadata.Tags)
+                    .FirstOrDefault()
+                    ?? api.GroupName
+                    ?? string.Empty;
+
+                var tagOrder = TagIndex.TryGetValue(tag, out var index) ? index : int.MaxValue;
+                return $"{tagOrder:D4}_{tag}_{api.RelativePath}_{api.HttpMethod}";
+            });
+
+            options.DocumentFilter<ModuleTagOrderDocumentFilter>();
         });
 
         return services;
@@ -74,65 +141,43 @@ public static class SwaggerExtensions
             options.RoutePrefix = "swagger";
             options.DocumentTitle = "Clinica API";
             options.DisplayRequestDuration();
+            options.EnablePersistAuthorization();
         });
 
         return app;
     }
 
-    private sealed class SeguridadTagOrderDocumentFilter : IDocumentFilter
+    private sealed class ModuleTagOrderDocumentFilter : IDocumentFilter
     {
-        private static readonly string[] TagOrder =
-        [
-            "Seguridad",
-            "Seguridad · Autenticación",
-            "Seguridad · Usuarios",
-            "Seguridad · Roles",
-            "Parametros",
-            "Parametros · Catálogo grupos",
-            "Parametros · Catálogo ítems",
-            "RecursosHumanos",
-            "RecursosHumanos · Áreas",
-            "RecursosHumanos · Cargos",
-            "RecursosHumanos · Profesiones",
-            "RecursosHumanos · Especialidades",
-            "RecursosHumanos · Departamentos",
-            "RecursosHumanos · Servicios",
-            "Laboratorio",
-            "Laboratorio · Especialidades",
-            "Personas",
-            "Personas · Personas",
-            "Personas · Pacientes",
-            "Personas · Empleados",
-            "Personas · Médicos",
-            "Personas · Contactos de emergencia",
-            "AtencionMedica",
-            "AtencionMedica · Tipos de atención",
-            "AtencionMedica · Tipos de campo",
-            "AtencionMedica · Formularios clínicos",
-            "AtencionMedica · Secciones de formulario",
-            "AtencionMedica · Campos de formulario",
-            "AtencionMedica · Atenciones",
-            "AtencionMedica · Respuestas de formulario",
-            "Workflow",
-            "Sistema"
-        ];
-
         public void Apply(OpenApiDocument swaggerDoc, DocumentFilterContext context)
         {
-            if (swaggerDoc.Tags is null || swaggerDoc.Tags.Count == 0)
-                return;
+            var existingByName = (swaggerDoc.Tags ?? Enumerable.Empty<OpenApiTag>())
+                .Where(tag => tag.Name is not null)
+                .GroupBy(tag => tag.Name!, StringComparer.Ordinal)
+                .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
 
-            var tagIndex = TagOrder
-                .Select((name, index) => (name, index))
-                .ToDictionary(x => x.name, x => x.index, StringComparer.Ordinal);
+            var usedTagNames = swaggerDoc.Paths.Values
+                .SelectMany(path => path.Operations?.Values ?? Enumerable.Empty<OpenApiOperation>())
+                .SelectMany(operation => operation.Tags ?? Enumerable.Empty<OpenApiTagReference>())
+                .Select(tag => tag.Name)
+                .Where(name => !string.IsNullOrWhiteSpace(name))
+                .Cast<string>()
+                .ToHashSet(StringComparer.Ordinal);
 
-            var orderedTags = swaggerDoc.Tags
-                .OrderBy(tag => tag.Name is not null && tagIndex.TryGetValue(tag.Name, out var index)
-                    ? index
-                    : int.MaxValue)
-                .ThenBy(tag => tag.Name, StringComparer.Ordinal)
+            foreach (var name in existingByName.Keys)
+                usedTagNames.Add(name);
+
+            var orderedTags = TagOrder
+                .Where(usedTagNames.Contains)
+                .Concat(usedTagNames
+                    .Where(name => !TagIndex.ContainsKey(name))
+                    .OrderBy(name => name, StringComparer.Ordinal))
+                .Select(name => existingByName.TryGetValue(name, out var existing)
+                    ? existing
+                    : new OpenApiTag { Name = name })
                 .ToList();
 
+            swaggerDoc.Tags ??= new HashSet<OpenApiTag>();
             swaggerDoc.Tags.Clear();
 
             foreach (var tag in orderedTags)
