@@ -1,6 +1,7 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { CatalogosView } from '../../../features/parametros/catalogos/views/CatalogosView'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_admin/parametros/')({
-    component: CatalogosView,
+    beforeLoad: () => {
+        throw redirect({ to: '/parametros/catalogos' })
+    },
 })

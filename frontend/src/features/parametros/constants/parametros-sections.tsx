@@ -1,4 +1,8 @@
-import { AppstoreOutlined } from '@ant-design/icons'
+import {
+    AppstoreOutlined,
+    ColumnHeightOutlined,
+    NumberOutlined,
+} from '@ant-design/icons'
 
 export type ParametrosPageSection = {
     path: string
@@ -8,9 +12,19 @@ export type ParametrosPageSection = {
 
 export const parametrosPageSections: ParametrosPageSection[] = [
     {
-        path: '/parametros',
+        path: '/parametros/catalogos',
         title: 'Catálogos generales',
         icon: <AppstoreOutlined />,
+    },
+    {
+        path: '/parametros/unidades-medida',
+        title: 'Unidades de medida',
+        icon: <ColumnHeightOutlined />,
+    },
+    {
+        path: '/parametros/correlativos',
+        title: 'Correlativos',
+        icon: <NumberOutlined />,
     },
 ]
 

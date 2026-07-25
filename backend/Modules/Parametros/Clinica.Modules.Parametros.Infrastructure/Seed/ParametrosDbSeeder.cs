@@ -192,6 +192,39 @@ public static class ParametrosDbSeeder
             ("GEMELAR", "Gemelar", "GEMELAR", 2),
             ("MULTIPLE", "Múltiple", "MULTIPLE", 3)
         ]);
+
+        await SeedUnidadesMedidaAsync(context);
+    }
+
+    private static async Task SeedUnidadesMedidaAsync(ParametrosDbContext context)
+    {
+        (string Codigo, string Nombre, string Simbolo)[] unidades =
+        [
+            ("MG_DL", "Miligramos por decilitro", "mg/dL"),
+            ("G_DL", "Gramos por decilitro", "g/dL"),
+            ("PCT", "Porcentaje", "%"),
+            ("MM_H", "Milímetros por hora", "mm/h"),
+            ("U_L", "Unidades por litro", "U/L"),
+            ("ML", "Mililitros", "mL"),
+        ];
+
+        foreach (var unidad in unidades)
+        {
+            var exists = await context.UnidadesMedida
+                .AnyAsync(x => x.Codigo == unidad.Codigo);
+
+            if (exists)
+                continue;
+
+            context.UnidadesMedida.Add(new UnidadesMedida
+            {
+                Codigo = unidad.Codigo,
+                Nombre = unidad.Nombre,
+                Simbolo = unidad.Simbolo,
+            });
+        }
+
+        await context.SaveChangesAsync();
     }
 
     private static async Task SeedCatalogoGrupoAsync(

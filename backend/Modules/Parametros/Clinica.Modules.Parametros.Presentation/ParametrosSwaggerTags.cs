@@ -6,4 +6,5 @@ public static class ParametrosSwaggerTags
     public const string CatalogoGrupos = "Parametros · Catálogo grupos";
     public const string CatalogoItems = "Parametros · Catálogo ítems";
     public const string Correlativos = "Parametros · Correlativos";
+    public const string UnidadesMedida = "Parametros · Unidades de medida";
 }

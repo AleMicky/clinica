@@ -20,6 +20,7 @@ public static class ParametrosEndpoints
         MapCatalogoGrupoEndpoints(group);
         MapCatalogoItemEndpoints(group);
         MapCorrelativoEndpoints(group);
+        MapUnidadesMedidaEndpoints(group);
 
         return app;
     }
@@ -47,6 +48,11 @@ public static class ParametrosEndpoints
     private static void MapCorrelativoEndpoints(RouteGroupBuilder group)
     {
         group.MapCorrelativoEndpoints();
+    }
+
+    private static void MapUnidadesMedidaEndpoints(RouteGroupBuilder group)
+    {
+        group.MapUnidadesMedidaEndpoints();
     }
 
     private static IResult HealthCheck()

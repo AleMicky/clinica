@@ -19,6 +19,7 @@ public static class DependencyInjection
         services.AddScoped<ICatalogoGrupoService, CatalogoGrupoService>();
         services.AddScoped<ICatalogoItemService, CatalogoItemService>();
         services.AddScoped<ICorrelativoService, CorrelativoService>();
+        services.AddScoped<IUnidadesMedidaService, UnidadesMedidaService>();
 
         return services;
     }

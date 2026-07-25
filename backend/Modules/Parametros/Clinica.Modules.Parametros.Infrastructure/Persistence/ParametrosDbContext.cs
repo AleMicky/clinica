@@ -16,6 +16,8 @@ public class ParametrosDbContext : DbContext
 
     public DbSet<Correlativo> Correlativos => Set<Correlativo>();
 
+    public DbSet<UnidadesMedida> UnidadesMedida => Set<UnidadesMedida>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("parametros");

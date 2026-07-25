@@ -48,9 +48,20 @@ export const catalogoGrupoEndpoints = createEndpoints(
     `${api.parametros}/catalogo-grupos`,
 )
 
-export const personaEndpoints = createEndpoints(`${api.personas}`)
-
 export const catalogoItemEndpoints = createEndpoints(`${api.parametros}/catalogo-items`)
+
+export const unidadesMedidaEndpoints = createEndpoints(
+    `${api.parametros}/unidades-medida`,
+)
+
+export const correlativoEndpoints = createEndpoints(
+    `${api.parametros}/correlativos`,
+    (root) => ({
+        generar: `${root}/generar`,
+    }),
+)
+
+export const personaEndpoints = createEndpoints(`${api.personas}`)
 
 export const pacienteEndpoints = createEndpoints(`${api.personas}/pacientes`)
 

@@ -36,6 +36,9 @@ import { Route as AdminRecursosHumanosJerarquiaRouteImport } from './routes/_adm
 import { Route as AdminRecursosHumanosEspecialidadesRouteImport } from './routes/_admin/recursos-humanos/especialidades'
 import { Route as AdminRecursosHumanosEmpleadosRouteImport } from './routes/_admin/recursos-humanos/empleados'
 import { Route as AdminRecursosHumanosCargosRouteImport } from './routes/_admin/recursos-humanos/cargos'
+import { Route as AdminParametrosUnidadesMedidaRouteImport } from './routes/_admin/parametros/unidades-medida'
+import { Route as AdminParametrosCorrelativosRouteImport } from './routes/_admin/parametros/correlativos'
+import { Route as AdminParametrosCatalogosRouteImport } from './routes/_admin/parametros/catalogos'
 import { Route as AdminAtencionesTiposAtencionRouteImport } from './routes/_admin/atenciones/tipos-atencion'
 import { Route as AdminAtencionesFormulariosRouteImport } from './routes/_admin/atenciones/formularios'
 import { Route as AdminAtencionesAtencionIdRouteImport } from './routes/_admin/atenciones/$atencionId'
@@ -183,6 +186,24 @@ const AdminRecursosHumanosCargosRoute =
     path: '/cargos',
     getParentRoute: () => AdminRecursosHumanosRoute,
   } as any)
+const AdminParametrosUnidadesMedidaRoute =
+  AdminParametrosUnidadesMedidaRouteImport.update({
+    id: '/unidades-medida',
+    path: '/unidades-medida',
+    getParentRoute: () => AdminParametrosRoute,
+  } as any)
+const AdminParametrosCorrelativosRoute =
+  AdminParametrosCorrelativosRouteImport.update({
+    id: '/correlativos',
+    path: '/correlativos',
+    getParentRoute: () => AdminParametrosRoute,
+  } as any)
+const AdminParametrosCatalogosRoute =
+  AdminParametrosCatalogosRouteImport.update({
+    id: '/catalogos',
+    path: '/catalogos',
+    getParentRoute: () => AdminParametrosRoute,
+  } as any)
 const AdminAtencionesTiposAtencionRoute =
   AdminAtencionesTiposAtencionRouteImport.update({
     id: '/tipos-atencion',
@@ -230,6 +251,9 @@ export interface FileRoutesByFullPath {
   '/atenciones/$atencionId': typeof AdminAtencionesAtencionIdRoute
   '/atenciones/formularios': typeof AdminAtencionesFormulariosRouteWithChildren
   '/atenciones/tipos-atencion': typeof AdminAtencionesTiposAtencionRoute
+  '/parametros/catalogos': typeof AdminParametrosCatalogosRoute
+  '/parametros/correlativos': typeof AdminParametrosCorrelativosRoute
+  '/parametros/unidades-medida': typeof AdminParametrosUnidadesMedidaRoute
   '/recursos-humanos/cargos': typeof AdminRecursosHumanosCargosRoute
   '/recursos-humanos/empleados': typeof AdminRecursosHumanosEmpleadosRoute
   '/recursos-humanos/especialidades': typeof AdminRecursosHumanosEspecialidadesRoute
@@ -259,6 +283,9 @@ export interface FileRoutesByTo {
   '/atenciones/$atencionId': typeof AdminAtencionesAtencionIdRoute
   '/atenciones/formularios': typeof AdminAtencionesFormulariosRouteWithChildren
   '/atenciones/tipos-atencion': typeof AdminAtencionesTiposAtencionRoute
+  '/parametros/catalogos': typeof AdminParametrosCatalogosRoute
+  '/parametros/correlativos': typeof AdminParametrosCorrelativosRoute
+  '/parametros/unidades-medida': typeof AdminParametrosUnidadesMedidaRoute
   '/recursos-humanos/cargos': typeof AdminRecursosHumanosCargosRoute
   '/recursos-humanos/empleados': typeof AdminRecursosHumanosEmpleadosRoute
   '/recursos-humanos/especialidades': typeof AdminRecursosHumanosEspecialidadesRoute
@@ -295,6 +322,9 @@ export interface FileRoutesById {
   '/_admin/atenciones/$atencionId': typeof AdminAtencionesAtencionIdRoute
   '/_admin/atenciones/formularios': typeof AdminAtencionesFormulariosRouteWithChildren
   '/_admin/atenciones/tipos-atencion': typeof AdminAtencionesTiposAtencionRoute
+  '/_admin/parametros/catalogos': typeof AdminParametrosCatalogosRoute
+  '/_admin/parametros/correlativos': typeof AdminParametrosCorrelativosRoute
+  '/_admin/parametros/unidades-medida': typeof AdminParametrosUnidadesMedidaRoute
   '/_admin/recursos-humanos/cargos': typeof AdminRecursosHumanosCargosRoute
   '/_admin/recursos-humanos/empleados': typeof AdminRecursosHumanosEmpleadosRoute
   '/_admin/recursos-humanos/especialidades': typeof AdminRecursosHumanosEspecialidadesRoute
@@ -330,6 +360,9 @@ export interface FileRouteTypes {
     | '/atenciones/$atencionId'
     | '/atenciones/formularios'
     | '/atenciones/tipos-atencion'
+    | '/parametros/catalogos'
+    | '/parametros/correlativos'
+    | '/parametros/unidades-medida'
     | '/recursos-humanos/cargos'
     | '/recursos-humanos/empleados'
     | '/recursos-humanos/especialidades'
@@ -359,6 +392,9 @@ export interface FileRouteTypes {
     | '/atenciones/$atencionId'
     | '/atenciones/formularios'
     | '/atenciones/tipos-atencion'
+    | '/parametros/catalogos'
+    | '/parametros/correlativos'
+    | '/parametros/unidades-medida'
     | '/recursos-humanos/cargos'
     | '/recursos-humanos/empleados'
     | '/recursos-humanos/especialidades'
@@ -394,6 +430,9 @@ export interface FileRouteTypes {
     | '/_admin/atenciones/$atencionId'
     | '/_admin/atenciones/formularios'
     | '/_admin/atenciones/tipos-atencion'
+    | '/_admin/parametros/catalogos'
+    | '/_admin/parametros/correlativos'
+    | '/_admin/parametros/unidades-medida'
     | '/_admin/recursos-humanos/cargos'
     | '/_admin/recursos-humanos/empleados'
     | '/_admin/recursos-humanos/especialidades'
@@ -614,6 +653,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRecursosHumanosCargosRouteImport
       parentRoute: typeof AdminRecursosHumanosRoute
     }
+    '/_admin/parametros/unidades-medida': {
+      id: '/_admin/parametros/unidades-medida'
+      path: '/unidades-medida'
+      fullPath: '/parametros/unidades-medida'
+      preLoaderRoute: typeof AdminParametrosUnidadesMedidaRouteImport
+      parentRoute: typeof AdminParametrosRoute
+    }
+    '/_admin/parametros/correlativos': {
+      id: '/_admin/parametros/correlativos'
+      path: '/correlativos'
+      fullPath: '/parametros/correlativos'
+      preLoaderRoute: typeof AdminParametrosCorrelativosRouteImport
+      parentRoute: typeof AdminParametrosRoute
+    }
+    '/_admin/parametros/catalogos': {
+      id: '/_admin/parametros/catalogos'
+      path: '/catalogos'
+      fullPath: '/parametros/catalogos'
+      preLoaderRoute: typeof AdminParametrosCatalogosRouteImport
+      parentRoute: typeof AdminParametrosRoute
+    }
     '/_admin/atenciones/tipos-atencion': {
       id: '/_admin/atenciones/tipos-atencion'
       path: '/tipos-atencion'
@@ -693,10 +753,16 @@ const AdminAtencionesRouteWithChildren = AdminAtencionesRoute._addFileChildren(
 )
 
 interface AdminParametrosRouteChildren {
+  AdminParametrosCatalogosRoute: typeof AdminParametrosCatalogosRoute
+  AdminParametrosCorrelativosRoute: typeof AdminParametrosCorrelativosRoute
+  AdminParametrosUnidadesMedidaRoute: typeof AdminParametrosUnidadesMedidaRoute
   AdminParametrosIndexRoute: typeof AdminParametrosIndexRoute
 }
 
 const AdminParametrosRouteChildren: AdminParametrosRouteChildren = {
+  AdminParametrosCatalogosRoute: AdminParametrosCatalogosRoute,
+  AdminParametrosCorrelativosRoute: AdminParametrosCorrelativosRoute,
+  AdminParametrosUnidadesMedidaRoute: AdminParametrosUnidadesMedidaRoute,
   AdminParametrosIndexRoute: AdminParametrosIndexRoute,
 }
 
