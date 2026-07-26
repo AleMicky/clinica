@@ -42,6 +42,7 @@ import { Route as AdminParametrosUnidadesMedidaRouteImport } from './routes/_adm
 import { Route as AdminParametrosCorrelativosRouteImport } from './routes/_admin/parametros/correlativos'
 import { Route as AdminParametrosCatalogosRouteImport } from './routes/_admin/parametros/catalogos'
 import { Route as AdminLaboratorioTiposExamenRouteImport } from './routes/_admin/laboratorio/tipos-examen'
+import { Route as AdminLaboratorioPruebasRouteImport } from './routes/_admin/laboratorio/pruebas'
 import { Route as AdminLaboratorioEspecialidadesRouteImport } from './routes/_admin/laboratorio/especialidades'
 import { Route as AdminAtencionesTiposAtencionRouteImport } from './routes/_admin/atenciones/tipos-atencion'
 import { Route as AdminAtencionesFormulariosRouteImport } from './routes/_admin/atenciones/formularios'
@@ -224,6 +225,11 @@ const AdminLaboratorioTiposExamenRoute =
     path: '/tipos-examen',
     getParentRoute: () => AdminLaboratorioRoute,
   } as any)
+const AdminLaboratorioPruebasRoute = AdminLaboratorioPruebasRouteImport.update({
+  id: '/pruebas',
+  path: '/pruebas',
+  getParentRoute: () => AdminLaboratorioRoute,
+} as any)
 const AdminLaboratorioEspecialidadesRoute =
   AdminLaboratorioEspecialidadesRouteImport.update({
     id: '/especialidades',
@@ -279,6 +285,7 @@ export interface FileRoutesByFullPath {
   '/atenciones/formularios': typeof AdminAtencionesFormulariosRouteWithChildren
   '/atenciones/tipos-atencion': typeof AdminAtencionesTiposAtencionRoute
   '/laboratorio/especialidades': typeof AdminLaboratorioEspecialidadesRoute
+  '/laboratorio/pruebas': typeof AdminLaboratorioPruebasRoute
   '/laboratorio/tipos-examen': typeof AdminLaboratorioTiposExamenRoute
   '/parametros/catalogos': typeof AdminParametrosCatalogosRoute
   '/parametros/correlativos': typeof AdminParametrosCorrelativosRoute
@@ -314,6 +321,7 @@ export interface FileRoutesByTo {
   '/atenciones/formularios': typeof AdminAtencionesFormulariosRouteWithChildren
   '/atenciones/tipos-atencion': typeof AdminAtencionesTiposAtencionRoute
   '/laboratorio/especialidades': typeof AdminLaboratorioEspecialidadesRoute
+  '/laboratorio/pruebas': typeof AdminLaboratorioPruebasRoute
   '/laboratorio/tipos-examen': typeof AdminLaboratorioTiposExamenRoute
   '/parametros/catalogos': typeof AdminParametrosCatalogosRoute
   '/parametros/correlativos': typeof AdminParametrosCorrelativosRoute
@@ -357,6 +365,7 @@ export interface FileRoutesById {
   '/_admin/atenciones/formularios': typeof AdminAtencionesFormulariosRouteWithChildren
   '/_admin/atenciones/tipos-atencion': typeof AdminAtencionesTiposAtencionRoute
   '/_admin/laboratorio/especialidades': typeof AdminLaboratorioEspecialidadesRoute
+  '/_admin/laboratorio/pruebas': typeof AdminLaboratorioPruebasRoute
   '/_admin/laboratorio/tipos-examen': typeof AdminLaboratorioTiposExamenRoute
   '/_admin/parametros/catalogos': typeof AdminParametrosCatalogosRoute
   '/_admin/parametros/correlativos': typeof AdminParametrosCorrelativosRoute
@@ -399,6 +408,7 @@ export interface FileRouteTypes {
     | '/atenciones/formularios'
     | '/atenciones/tipos-atencion'
     | '/laboratorio/especialidades'
+    | '/laboratorio/pruebas'
     | '/laboratorio/tipos-examen'
     | '/parametros/catalogos'
     | '/parametros/correlativos'
@@ -434,6 +444,7 @@ export interface FileRouteTypes {
     | '/atenciones/formularios'
     | '/atenciones/tipos-atencion'
     | '/laboratorio/especialidades'
+    | '/laboratorio/pruebas'
     | '/laboratorio/tipos-examen'
     | '/parametros/catalogos'
     | '/parametros/correlativos'
@@ -476,6 +487,7 @@ export interface FileRouteTypes {
     | '/_admin/atenciones/formularios'
     | '/_admin/atenciones/tipos-atencion'
     | '/_admin/laboratorio/especialidades'
+    | '/_admin/laboratorio/pruebas'
     | '/_admin/laboratorio/tipos-examen'
     | '/_admin/parametros/catalogos'
     | '/_admin/parametros/correlativos'
@@ -743,6 +755,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLaboratorioTiposExamenRouteImport
       parentRoute: typeof AdminLaboratorioRoute
     }
+    '/_admin/laboratorio/pruebas': {
+      id: '/_admin/laboratorio/pruebas'
+      path: '/pruebas'
+      fullPath: '/laboratorio/pruebas'
+      preLoaderRoute: typeof AdminLaboratorioPruebasRouteImport
+      parentRoute: typeof AdminLaboratorioRoute
+    }
     '/_admin/laboratorio/especialidades': {
       id: '/_admin/laboratorio/especialidades'
       path: '/especialidades'
@@ -830,12 +849,14 @@ const AdminAtencionesRouteWithChildren = AdminAtencionesRoute._addFileChildren(
 
 interface AdminLaboratorioRouteChildren {
   AdminLaboratorioEspecialidadesRoute: typeof AdminLaboratorioEspecialidadesRoute
+  AdminLaboratorioPruebasRoute: typeof AdminLaboratorioPruebasRoute
   AdminLaboratorioTiposExamenRoute: typeof AdminLaboratorioTiposExamenRoute
   AdminLaboratorioIndexRoute: typeof AdminLaboratorioIndexRoute
 }
 
 const AdminLaboratorioRouteChildren: AdminLaboratorioRouteChildren = {
   AdminLaboratorioEspecialidadesRoute: AdminLaboratorioEspecialidadesRoute,
+  AdminLaboratorioPruebasRoute: AdminLaboratorioPruebasRoute,
   AdminLaboratorioTiposExamenRoute: AdminLaboratorioTiposExamenRoute,
   AdminLaboratorioIndexRoute: AdminLaboratorioIndexRoute,
 }

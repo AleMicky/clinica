@@ -130,6 +130,13 @@ export const queryKeys = {
             detail: (id: EntityId) =>
                 ['laboratorio', 'tipos-examen', 'detail', id] as const,
         },
+        pruebas: {
+            all: ['laboratorio', 'pruebas'] as const,
+            list: (query: PagedQuery) =>
+                ['laboratorio', 'pruebas', 'list', query] as const,
+            detail: (id: EntityId) =>
+                ['laboratorio', 'pruebas', 'detail', id] as const,
+        },
     },
     atencionMedica: {
         all: ['atencion-medica'] as const,

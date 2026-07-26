@@ -191,6 +191,13 @@ export const menuGroups: MenuGroup[] = [
                 label: 'Tipos de examen',
                 roles: [AppRole.Admin, AppRole.Laboratorio],
             },
+            {
+                key: '/laboratorio/pruebas',
+                to: '/laboratorio/pruebas',
+                icon: <MedicineBoxOutlined />,
+                label: 'Pruebas',
+                roles: [AppRole.Admin, AppRole.Laboratorio],
+            },
         ],
     },
     {

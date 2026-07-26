@@ -18,6 +18,7 @@ public static class DependencyInjection
 
         services.AddScoped<IEspecialidadService, EspecialidadService>();
         services.AddScoped<ITipoExamenService, TipoExamenService>();
+        services.AddScoped<IPruebaService, PruebaService>();
 
         return services;
     }

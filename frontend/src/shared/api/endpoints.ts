@@ -101,6 +101,7 @@ export const atencionMedicaEndpoints = {
 export const laboratorioEndpoints = {
     especialidades: createEndpoints(`${api.laboratorio}/especialidades`),
     tiposExamen: createEndpoints(`${api.laboratorio}/tipos-examen`),
+    pruebas: createEndpoints(`${api.laboratorio}/pruebas`),
 } as const
 
 export const workflowEndpoints = {

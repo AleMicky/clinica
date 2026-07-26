@@ -19,6 +19,7 @@ public static class LaboratorioEndpoints
         MapHealth(group);
         group.MapEspecialidadEndpoints();
         group.MapTipoExamenEndpoints();
+        group.MapPruebaEndpoints();
 
         return app;
     }

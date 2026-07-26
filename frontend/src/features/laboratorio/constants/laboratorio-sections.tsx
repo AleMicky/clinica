@@ -1,4 +1,8 @@
-import { ExperimentOutlined, FileSearchOutlined } from '@ant-design/icons'
+import {
+    ExperimentOutlined,
+    FileSearchOutlined,
+    MedicineBoxOutlined,
+} from '@ant-design/icons'
 
 export type LaboratorioPageSection = {
     path: string
@@ -16,6 +20,11 @@ export const laboratorioPageSections: LaboratorioPageSection[] = [
         path: '/laboratorio/tipos-examen',
         title: 'Tipos de examen',
         icon: <FileSearchOutlined />,
+    },
+    {
+        path: '/laboratorio/pruebas',
+        title: 'Pruebas',
+        icon: <MedicineBoxOutlined />,
     },
 ]
 
