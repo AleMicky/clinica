@@ -14,7 +14,6 @@ public class PersonasDbContext : DbContext
 
     public DbSet<Persona> Personas => Set<Persona>();
     public DbSet<Paciente> Pacientes => Set<Paciente>();
-    public DbSet<Empleado> Empleados => Set<Empleado>();
     public DbSet<Medico> Medicos => Set<Medico>();
     public DbSet<MedicoEspecialidad> MedicoEspecialidades => Set<MedicoEspecialidad>();
     public DbSet<ContactoEmergencia> ContactosEmergencia => Set<ContactoEmergencia>();
@@ -77,6 +76,17 @@ public class PersonasDbContext : DbContext
         {
             entity.ToTable("Especialidades", "recursos_humanos", t => t.ExcludeFromMigrations());
             entity.HasKey(x => x.Id);
+        });
+
+        modelBuilder.Entity<Empleado>(entity =>
+        {
+            entity.ToTable("Empleados", "recursos_humanos", t => t.ExcludeFromMigrations());
+            entity.HasKey(x => x.Id);
+            entity.Ignore(x => x.Area);
+            entity.Ignore(x => x.Departamento);
+            entity.Ignore(x => x.Servicio);
+            entity.Ignore(x => x.Profesion);
+            entity.Ignore(x => x.Cargo);
         });
     }
 }

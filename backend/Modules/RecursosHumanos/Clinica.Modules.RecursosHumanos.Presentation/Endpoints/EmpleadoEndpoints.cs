@@ -1,5 +1,5 @@
-using Clinica.Modules.Personas.Application.Abstractions;
-using Clinica.Modules.Personas.Application.Empleados;
+using Clinica.Modules.RecursosHumanos.Application.Abstractions;
+using Clinica.Modules.RecursosHumanos.Application.Empleados;
 using Clinica.SharedKernel.Pagination;
 using Clinica.SharedKernel.Responses;
 using FluentValidation;
@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 
-namespace Clinica.Modules.Personas.Presentation.Endpoints;
+namespace Clinica.Modules.RecursosHumanos.Presentation.Endpoints;
 
 public static class EmpleadoEndpoints
 {
@@ -15,7 +15,7 @@ public static class EmpleadoEndpoints
     {
         var empleados = group.MapGroup("/empleados")
             .RequireAuthorization()
-            .WithTags(PersonasSwaggerTags.Empleados);
+            .WithTags(RecursosHumanosSwaggerTags.Empleados);
 
         empleados.MapGet("/", async (
                 [AsParameters] EmpleadoPagedRequest request,

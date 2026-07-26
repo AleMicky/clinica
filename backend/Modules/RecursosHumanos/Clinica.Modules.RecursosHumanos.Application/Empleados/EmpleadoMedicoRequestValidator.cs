@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace Clinica.Modules.Personas.Application.Empleados;
+namespace Clinica.Modules.RecursosHumanos.Application.Empleados;
 
 public class EmpleadoMedicoRequestValidator : AbstractValidator<EmpleadoMedicoRequest>
 {

@@ -1,6 +1,6 @@
-namespace Clinica.Modules.Personas.Application.Empleados;
+namespace Clinica.Modules.RecursosHumanos.Application.Empleados;
 
-public sealed record UpdateEmpleadoRequest(
+public sealed record CreateEmpleadoRequest(
     Guid PersonaId,
     string CodigoEmpleado,
     Guid AreaId,

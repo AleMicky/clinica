@@ -1,16 +1,14 @@
-using Clinica.Modules.RecursosHumanos.Domain.Entities;
 using Clinica.SharedKernel.Abstractions;
 
-namespace Clinica.Modules.Personas.Domain.Entities;
+namespace Clinica.Modules.RecursosHumanos.Domain.Entities;
 
-public class Empleado: AuditableEntity
+public class Empleado : AuditableEntity
 {
     public Guid PersonaId { get; set; }
-    public Persona Persona { get; set; } = null!;
 
     public string CodigoEmpleado { get; set; } = string.Empty;
     public DateOnly? FechaIngreso { get; set; }
-    
+
     public Guid AreaId { get; set; }
     public Area Area { get; set; } = null!;
 

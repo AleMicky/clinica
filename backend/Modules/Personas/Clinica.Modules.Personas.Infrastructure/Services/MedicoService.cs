@@ -31,56 +31,97 @@ public sealed class MedicoService(
         MedicoPagedRequest request,
         CancellationToken cancellationToken = default)
     {
-        var query = context.Medicos
-            .AsNoTracking()
-            .Include(x => x.Empleado)
-            .ThenInclude(x => x.Persona)
-            .Include(x => x.Especialidades)
-            .ThenInclude(x => x.Especialidad)
-            .AsQueryable();
+        var query =
+            from medico in context.Medicos.AsNoTracking()
+            join empleado in context.Set<Empleado>().AsNoTracking()
+                on medico.EmpleadoId equals empleado.Id
+            join persona in context.Personas.AsNoTracking()
+                on empleado.PersonaId equals persona.Id
+            select new { Medico = medico, Empleado = empleado, Persona = persona };
 
         if (request.EmpleadoId is { } empleadoId && empleadoId != Guid.Empty)
-            query = query.Where(x => x.EmpleadoId == empleadoId);
+            query = query.Where(x => x.Medico.EmpleadoId == empleadoId);
 
         if (request.EspecialidadId is { } especialidadId && especialidadId != Guid.Empty)
         {
             query = query.Where(x =>
-                x.Especialidades.Any(e => e.EspecialidadId == especialidadId));
+                x.Medico.Especialidades.Any(e => e.EspecialidadId == especialidadId));
         }
 
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var search = request.Search.Trim();
             query = query.Where(x =>
-                x.MatriculaProfesional.Contains(search) ||
-                (x.RegistroColegioMedico != null && x.RegistroColegioMedico.Contains(search)) ||
+                x.Medico.MatriculaProfesional.Contains(search) ||
+                (x.Medico.RegistroColegioMedico != null &&
+                 x.Medico.RegistroColegioMedico.Contains(search)) ||
                 x.Empleado.CodigoEmpleado.Contains(search) ||
-                x.Empleado.Persona.Nombres.Contains(search) ||
-                x.Empleado.Persona.ApellidoPaterno.Contains(search) ||
-                x.Empleado.Persona.ApellidoMaterno.Contains(search) ||
-                x.Especialidades.Any(e => e.Especialidad.Nombre.Contains(search)));
+                x.Persona.Nombres.Contains(search) ||
+                x.Persona.ApellidoPaterno.Contains(search) ||
+                x.Persona.ApellidoMaterno.Contains(search) ||
+                x.Medico.Especialidades.Any(e => e.Especialidad.Nombre.Contains(search)));
         }
 
-        return await query
-            .OrderBy(x => x.Empleado.Persona.ApellidoPaterno)
-            .ThenBy(x => x.Empleado.Persona.Nombres)
-            .Select(x => ToResponse(x))
+        var paged = await query
+            .OrderBy(x => x.Persona.ApellidoPaterno)
+            .ThenBy(x => x.Persona.Nombres)
+            .Select(x => new MedicoListItem(
+                x.Medico.Id,
+                x.Empleado.CodigoEmpleado,
+                x.Persona.Nombres,
+                x.Persona.ApellidoPaterno,
+                x.Persona.ApellidoMaterno))
             .ToPagedResultAsync(request, cancellationToken);
+
+        var medicos = await LoadMedicosByIdsAsync(
+            paged.Items.Select(x => x.Id).ToList(),
+            cancellationToken);
+
+        var responses = paged.Items
+            .Select(item =>
+            {
+                var medico = medicos[item.Id];
+                return ToResponse(
+                    medico,
+                    item.EmpleadoCodigo,
+                    NombreCompleto(item.Nombres, item.ApellidoPaterno, item.ApellidoMaterno));
+            })
+            .ToList();
+
+        return new PagedResult<MedicoResponse>(
+            responses,
+            paged.TotalRecords,
+            paged.Page,
+            paged.PageSize);
     }
 
     public async Task<MedicoResponse?> GetByIdAsync(
         Guid id,
         CancellationToken cancellationToken = default)
     {
-        return await context.Medicos
+        var row = await (
+            from medico in context.Medicos.AsNoTracking()
+            join empleado in context.Set<Empleado>().AsNoTracking()
+                on medico.EmpleadoId equals empleado.Id
+            join persona in context.Personas.AsNoTracking()
+                on empleado.PersonaId equals persona.Id
+            where medico.Id == id
+            select new { Medico = medico, Empleado = empleado, Persona = persona }
+        ).FirstOrDefaultAsync(cancellationToken);
+
+        if (row is null)
+            return null;
+
+        var medicoEntity = await context.Medicos
             .AsNoTracking()
-            .Include(x => x.Empleado)
-            .ThenInclude(x => x.Persona)
             .Include(x => x.Especialidades)
             .ThenInclude(x => x.Especialidad)
-            .Where(x => x.Id == id)
-            .Select(x => ToResponse(x))
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstAsync(x => x.Id == id, cancellationToken);
+
+        return ToResponse(
+            medicoEntity,
+            row.Empleado.CodigoEmpleado,
+            PersonaNaming.NombreCompleto(row.Persona));
     }
 
     public async Task<MedicoResponse> CreateAsync(
@@ -99,7 +140,9 @@ public sealed class MedicoService(
             EmpleadoId = request.EmpleadoId,
             MatriculaProfesional = matricula,
             RegistroColegioMedico = StringNormalize.Optional(request.RegistroColegioMedico),
-            Especialidades = BuildEspecialidades(request.EspecialidadIds, request.EspecialidadPrincipalId)
+            Especialidades = BuildEspecialidades(
+                request.EspecialidadIds,
+                request.EspecialidadPrincipalId)
         };
 
         context.Medicos.Add(entity);
@@ -130,7 +173,6 @@ public sealed class MedicoService(
         entity.EmpleadoId = request.EmpleadoId;
         entity.MatriculaProfesional = matricula;
         entity.RegistroColegioMedico = StringNormalize.Optional(request.RegistroColegioMedico);
-
         SyncEspecialidades(entity, request.EspecialidadIds, request.EspecialidadPrincipalId);
 
         await context.SaveChangesAsync(cancellationToken);
@@ -156,7 +198,7 @@ public sealed class MedicoService(
         Guid empleadoId,
         CancellationToken cancellationToken)
     {
-        var exists = await context.Empleados
+        var exists = await context.Set<Empleado>()
             .AnyAsync(x => x.Id == empleadoId, cancellationToken);
 
         if (!exists)
@@ -209,6 +251,21 @@ public sealed class MedicoService(
             throw new BusinessException("La matrícula profesional ya existe.");
     }
 
+    private async Task<Dictionary<Guid, Medico>> LoadMedicosByIdsAsync(
+        IReadOnlyList<Guid> ids,
+        CancellationToken cancellationToken)
+    {
+        if (ids.Count == 0)
+            return [];
+
+        return await context.Medicos
+            .AsNoTracking()
+            .Include(x => x.Especialidades)
+            .ThenInclude(x => x.Especialidad)
+            .Where(x => ids.Contains(x.Id))
+            .ToDictionaryAsync(x => x.Id, cancellationToken);
+    }
+
     private static List<MedicoEspecialidad> BuildEspecialidades(
         IReadOnlyList<Guid> especialidadIds,
         Guid especialidadPrincipalId)
@@ -257,7 +314,10 @@ public sealed class MedicoService(
         }
     }
 
-    private static MedicoResponse ToResponse(Medico entity)
+    private static MedicoResponse ToResponse(
+        Medico entity,
+        string empleadoCodigo,
+        string personaNombreCompleto)
     {
         var especialidades = entity.Especialidades
             .OrderByDescending(x => x.EsPrincipal)
@@ -274,12 +334,25 @@ public sealed class MedicoService(
         return new MedicoResponse(
             entity.Id,
             entity.EmpleadoId,
-            entity.Empleado.CodigoEmpleado,
-            PersonaNaming.NombreCompleto(entity.Empleado.Persona),
+            empleadoCodigo,
+            personaNombreCompleto,
             especialidades,
             principal?.EspecialidadId ?? Guid.Empty,
             principal?.EspecialidadNombre ?? string.Empty,
             entity.MatriculaProfesional,
             entity.RegistroColegioMedico);
     }
+
+    private static string NombreCompleto(
+        string nombres,
+        string apellidoPaterno,
+        string apellidoMaterno) =>
+        $"{nombres} {apellidoPaterno} {apellidoMaterno}".Trim();
+
+    private sealed record MedicoListItem(
+        Guid Id,
+        string EmpleadoCodigo,
+        string Nombres,
+        string ApellidoPaterno,
+        string ApellidoMaterno);
 }

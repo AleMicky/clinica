@@ -1,4 +1,4 @@
-namespace Clinica.Modules.Personas.Application.Empleados;
+namespace Clinica.Modules.RecursosHumanos.Application.Empleados;
 
 public sealed record EmpleadoMedicoRequest(
     IReadOnlyList<Guid> EspecialidadIds,

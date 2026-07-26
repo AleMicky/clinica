@@ -1,18 +1,21 @@
 using Clinica.Modules.Personas.Application.Abstractions;
-using Clinica.Modules.Personas.Application.Empleados;
 using Clinica.Modules.Personas.Application.Medicos;
 using Clinica.Modules.Personas.Domain.Entities;
 using Clinica.Modules.Personas.Infrastructure.Persistence;
+using Clinica.Modules.RecursosHumanos.Application.Abstractions;
+using Clinica.Modules.RecursosHumanos.Application.Empleados;
 using Clinica.Modules.RecursosHumanos.Domain.Entities;
+using Clinica.Modules.RecursosHumanos.Infrastructure.Persistence;
 using Clinica.SharedKernel.Exceptions;
 using Clinica.SharedKernel.Pagination;
 using Clinica.SharedKernel.Text;
 using Microsoft.EntityFrameworkCore;
 
-namespace Clinica.Modules.Personas.Infrastructure.Services;
+namespace Clinica.Modules.RecursosHumanos.Infrastructure.Services;
 
 public sealed class EmpleadoService(
-    PersonasDbContext context,
+    RecursosHumanosDbContext context,
+    PersonasDbContext personasContext,
     IMedicoService medicoService
 ) : IEmpleadoService
 {
@@ -35,7 +38,6 @@ public sealed class EmpleadoService(
     {
         var query = context.Empleados
             .AsNoTracking()
-            .Include(x => x.Persona)
             .Include(x => x.Area)
             .Include(x => x.Departamento)
             .Include(x => x.Servicio)
@@ -60,22 +62,31 @@ public sealed class EmpleadoService(
             var search = request.Search.Trim();
             query = query.Where(x =>
                 x.CodigoEmpleado.Contains(search) ||
-                x.Persona.Nombres.Contains(search) ||
-                x.Persona.ApellidoPaterno.Contains(search) ||
-                x.Persona.ApellidoMaterno.Contains(search) ||
-                x.Persona.NumeroDocumento.Contains(search));
+                context.Set<Persona>().Any(p =>
+                    p.Id == x.PersonaId &&
+                    (p.Nombres.Contains(search) ||
+                     p.ApellidoPaterno.Contains(search) ||
+                     p.ApellidoMaterno.Contains(search) ||
+                     p.NumeroDocumento.Contains(search))));
         }
 
         var paged = await query
             .OrderBy(x => x.CodigoEmpleado)
             .ToPagedResultAsync(request, cancellationToken);
 
+        var personas = await LoadPersonasByIdsAsync(
+            paged.Items.Select(x => x.PersonaId).ToList(),
+            cancellationToken);
+
         var medicos = await LoadMedicosByEmpleadoIdsAsync(
             paged.Items.Select(x => x.Id).ToList(),
             cancellationToken);
 
         var responses = paged.Items
-            .Select(x => ToResponse(x, medicos.GetValueOrDefault(x.Id)))
+            .Select(x => ToResponse(
+                x,
+                personas.GetValueOrDefault(x.PersonaId),
+                medicos.GetValueOrDefault(x.Id)))
             .ToList();
 
         return new PagedResult<EmpleadoResponse>(
@@ -91,7 +102,6 @@ public sealed class EmpleadoService(
     {
         var entity = await context.Empleados
             .AsNoTracking()
-            .Include(x => x.Persona)
             .Include(x => x.Area)
             .Include(x => x.Departamento)
             .Include(x => x.Servicio)
@@ -102,9 +112,13 @@ public sealed class EmpleadoService(
         if (entity is null)
             return null;
 
+        var persona = await context.Set<Persona>()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == entity.PersonaId, cancellationToken);
+
         var medico = await LoadMedicoByEmpleadoIdAsync(entity.Id, cancellationToken);
 
-        return ToResponse(entity, medico);
+        return ToResponse(entity, persona, medico);
     }
 
     public async Task<EmpleadoResponse> CreateAsync(
@@ -183,7 +197,7 @@ public sealed class EmpleadoService(
         if (entity is null)
             throw new NotFoundException("Empleado no encontrado.");
 
-        var hasMedico = await context.Medicos
+        var hasMedico = await personasContext.Medicos
             .AnyAsync(x => x.EmpleadoId == id, cancellationToken);
 
         if (hasMedico)
@@ -199,7 +213,7 @@ public sealed class EmpleadoService(
         EmpleadoMedicoRequest? medicoRequest,
         CancellationToken cancellationToken)
     {
-        var existingMedico = await context.Medicos
+        var existingMedico = await personasContext.Medicos
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.EmpleadoId == empleadoId, cancellationToken);
 
@@ -245,6 +259,19 @@ public sealed class EmpleadoService(
             cancellationToken);
     }
 
+    private async Task<Dictionary<Guid, Persona>> LoadPersonasByIdsAsync(
+        IReadOnlyList<Guid> personaIds,
+        CancellationToken cancellationToken)
+    {
+        if (personaIds.Count == 0)
+            return [];
+
+        return await context.Set<Persona>()
+            .AsNoTracking()
+            .Where(x => personaIds.Contains(x.Id))
+            .ToDictionaryAsync(x => x.Id, cancellationToken);
+    }
+
     private async Task<Dictionary<Guid, Medico>> LoadMedicosByEmpleadoIdsAsync(
         IReadOnlyList<Guid> empleadoIds,
         CancellationToken cancellationToken)
@@ -252,7 +279,7 @@ public sealed class EmpleadoService(
         if (empleadoIds.Count == 0)
             return [];
 
-        return await context.Medicos
+        return await personasContext.Medicos
             .AsNoTracking()
             .Include(x => x.Especialidades)
             .ThenInclude(x => x.Especialidad)
@@ -264,7 +291,7 @@ public sealed class EmpleadoService(
         Guid empleadoId,
         CancellationToken cancellationToken)
     {
-        return await context.Medicos
+        return await personasContext.Medicos
             .AsNoTracking()
             .Include(x => x.Especialidades)
             .ThenInclude(x => x.Especialidad)
@@ -275,7 +302,7 @@ public sealed class EmpleadoService(
         Guid personaId,
         CancellationToken cancellationToken)
     {
-        var exists = await context.Personas
+        var exists = await context.Set<Persona>()
             .AnyAsync(x => x.Id == personaId, cancellationToken);
 
         if (!exists)
@@ -301,19 +328,19 @@ public sealed class EmpleadoService(
         CreateEmpleadoRequest request,
         CancellationToken cancellationToken)
     {
-        if (!await context.Set<Area>().AnyAsync(x => x.Id == request.AreaId, cancellationToken))
+        if (!await context.Areas.AnyAsync(x => x.Id == request.AreaId, cancellationToken))
             throw new BusinessException("El área no existe.");
 
-        if (!await context.Set<Departamento>().AnyAsync(x => x.Id == request.DepartamentoId, cancellationToken))
+        if (!await context.Departamentos.AnyAsync(x => x.Id == request.DepartamentoId, cancellationToken))
             throw new BusinessException("El departamento no existe.");
 
-        if (!await context.Set<Servicio>().AnyAsync(x => x.Id == request.ServicioId, cancellationToken))
+        if (!await context.Servicios.AnyAsync(x => x.Id == request.ServicioId, cancellationToken))
             throw new BusinessException("El servicio no existe.");
 
-        if (!await context.Set<Profesion>().AnyAsync(x => x.Id == request.ProfesionId, cancellationToken))
+        if (!await context.Profesiones.AnyAsync(x => x.Id == request.ProfesionId, cancellationToken))
             throw new BusinessException("La profesión no existe.");
 
-        if (!await context.Set<Cargo>().AnyAsync(x => x.Id == request.CargoId, cancellationToken))
+        if (!await context.Cargos.AnyAsync(x => x.Id == request.CargoId, cancellationToken))
             throw new BusinessException("El cargo no existe.");
     }
 
@@ -351,12 +378,15 @@ public sealed class EmpleadoService(
             throw new BusinessException("El código de empleado ya existe.");
     }
 
-    private static EmpleadoResponse ToResponse(Empleado entity, Medico? medico = null)
+    private static EmpleadoResponse ToResponse(
+        Empleado entity,
+        Persona? persona,
+        Medico? medico = null)
     {
         return new EmpleadoResponse(
             entity.Id,
             entity.PersonaId,
-            PersonaNaming.NombreCompleto(entity.Persona),
+            persona is null ? string.Empty : NombreCompleto(persona),
             entity.CodigoEmpleado,
             entity.FechaIngreso,
             entity.AreaId,
@@ -378,7 +408,7 @@ public sealed class EmpleadoService(
         var especialidades = medico.Especialidades
             .OrderByDescending(x => x.EsPrincipal)
             .ThenBy(x => x.Especialidad.Nombre)
-            .Select(x => new MedicoEspecialidadResponse(
+            .Select(x => new EmpleadoMedicoEspecialidadResponse(
                 x.EspecialidadId,
                 x.Especialidad.Nombre,
                 x.EsPrincipal))
@@ -394,4 +424,7 @@ public sealed class EmpleadoService(
             medico.MatriculaProfesional,
             medico.RegistroColegioMedico);
     }
+
+    private static string NombreCompleto(Persona persona) =>
+        $"{persona.Nombres} {persona.ApellidoPaterno} {persona.ApellidoMaterno}".Trim();
 }

@@ -19,7 +19,6 @@ public static class PersonasEndpoints
         MapHealth(group);
         group.MapPersonaEndpoints();
         group.MapPacienteEndpoints();
-        group.MapEmpleadoEndpoints();
         group.MapMedicoEndpoints();
         group.MapContactoEmergenciaEndpoints();
 

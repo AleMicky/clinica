@@ -1,3 +1,4 @@
+using Clinica.Modules.RecursosHumanos.Domain.Entities;
 using Clinica.SharedKernel.Abstractions;
 
 namespace Clinica.Modules.Personas.Domain.Entities;

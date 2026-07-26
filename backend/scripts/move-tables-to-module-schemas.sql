@@ -29,6 +29,10 @@ IF OBJECT_ID(N'[dbo].[Profesiones]', N'U') IS NOT NULL
     ALTER SCHEMA [recursos_humanos] TRANSFER [dbo].[Profesiones];
 IF OBJECT_ID(N'[dbo].[Servicios]', N'U') IS NOT NULL
     ALTER SCHEMA [recursos_humanos] TRANSFER [dbo].[Servicios];
+IF OBJECT_ID(N'[dbo].[Empleados]', N'U') IS NOT NULL
+    ALTER SCHEMA [recursos_humanos] TRANSFER [dbo].[Empleados];
+IF OBJECT_ID(N'[personas].[Empleados]', N'U') IS NOT NULL
+    ALTER SCHEMA [recursos_humanos] TRANSFER [personas].[Empleados];
 
 -- personas
 IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = N'personas')
@@ -37,8 +41,6 @@ IF OBJECT_ID(N'[dbo].[Personas]', N'U') IS NOT NULL
     ALTER SCHEMA [personas] TRANSFER [dbo].[Personas];
 IF OBJECT_ID(N'[dbo].[Pacientes]', N'U') IS NOT NULL
     ALTER SCHEMA [personas] TRANSFER [dbo].[Pacientes];
-IF OBJECT_ID(N'[dbo].[Empleados]', N'U') IS NOT NULL
-    ALTER SCHEMA [personas] TRANSFER [dbo].[Empleados];
 IF OBJECT_ID(N'[dbo].[Medicos]', N'U') IS NOT NULL
     ALTER SCHEMA [personas] TRANSFER [dbo].[Medicos];
 IF OBJECT_ID(N'[dbo].[MedicoEspecialidades]', N'U') IS NOT NULL

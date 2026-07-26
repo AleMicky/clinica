@@ -1,6 +1,6 @@
 using Clinica.SharedKernel.Pagination;
 
-namespace Clinica.Modules.Personas.Application.Empleados;
+namespace Clinica.Modules.RecursosHumanos.Application.Empleados;
 
 public sealed class EmpleadoPagedRequest : PagedRequest
 {

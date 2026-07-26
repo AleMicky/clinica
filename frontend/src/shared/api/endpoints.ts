@@ -66,7 +66,7 @@ export const personaEndpoints = createEndpoints(`${api.personas}`)
 
 export const pacienteEndpoints = createEndpoints(`${api.personas}/pacientes`)
 
-export const empleadoEndpoints = createEndpoints(`${api.personas}/empleados`)
+export const empleadoEndpoints = createEndpoints(`${api.recursosHumanos}/empleados`)
 
 export const medicoEndpoints = createEndpoints(`${api.personas}/medicos`)
 

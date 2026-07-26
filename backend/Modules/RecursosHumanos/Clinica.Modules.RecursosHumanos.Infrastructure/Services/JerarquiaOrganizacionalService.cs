@@ -1,6 +1,6 @@
-using Clinica.Modules.Personas.Domain.Entities;
 using Clinica.Modules.RecursosHumanos.Application.Abstractions;
 using Clinica.Modules.RecursosHumanos.Application.Jerarquia;
+using Clinica.Modules.RecursosHumanos.Domain.Entities;
 using Clinica.Modules.RecursosHumanos.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -27,7 +27,7 @@ public sealed class JerarquiaOrganizacionalService(
 
         if (request.IncludeCounts)
         {
-            var empleados = context.Set<Empleado>().AsNoTracking();
+            var empleados = context.Empleados.AsNoTracking();
 
             areaCounts = await empleados
                 .GroupBy(x => x.AreaId)

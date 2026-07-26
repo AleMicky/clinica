@@ -566,14 +566,14 @@ public static class RecursosHumanosDbSeeder
                 continue;
             }
 
-            var empleado = await personasContext.Empleados
+            var empleado = await recursosHumanosContext.Empleados
                 .FirstOrDefaultAsync(x =>
                     x.CodigoEmpleado == item.CodigoEmpleado ||
                     x.PersonaId == persona.Id);
 
             if (empleado is null)
             {
-                personasContext.Empleados.Add(new Empleado
+                recursosHumanosContext.Empleados.Add(new Empleado
                 {
                     PersonaId = persona.Id,
                     CodigoEmpleado = item.CodigoEmpleado,
@@ -598,7 +598,7 @@ public static class RecursosHumanosDbSeeder
             }
         }
 
-        await personasContext.SaveChangesAsync();
+        await recursosHumanosContext.SaveChangesAsync();
     }
 
     private static async Task SeedMedicosAsync(
@@ -608,8 +608,20 @@ public static class RecursosHumanosDbSeeder
     {
         foreach (var item in DemoMedicos)
         {
-            var empleado = await personasContext.Empleados
-                .FirstOrDefaultAsync(x => x.Persona.NumeroDocumento == item.NumeroDocumento);
+            var persona = await personasContext.Personas
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.NumeroDocumento == item.NumeroDocumento);
+
+            if (persona is null)
+            {
+                logger.LogWarning(
+                    "Persona con documento '{Documento}' no encontrada; omitiendo médico.",
+                    item.NumeroDocumento);
+                continue;
+            }
+
+            var empleado = await recursosHumanosContext.Empleados
+                .FirstOrDefaultAsync(x => x.PersonaId == persona.Id);
 
             if (empleado is null)
             {

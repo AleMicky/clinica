@@ -1,9 +1,10 @@
 using Clinica.Modules.Personas.Domain.Entities;
+using Clinica.Modules.RecursosHumanos.Domain.Entities;
 using Clinica.SharedKernel.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Clinica.Modules.Personas.Infrastructure.Persistence.Configurations;
+namespace Clinica.Modules.RecursosHumanos.Infrastructure.Persistence.Configurations;
 
 public sealed class EmpleadoConfiguration : BaseEntityConfiguration<Empleado>
 {
@@ -23,7 +24,7 @@ public sealed class EmpleadoConfiguration : BaseEntityConfiguration<Empleado>
         builder.HasIndex(x => x.PersonaId)
             .IsUnique();
 
-        builder.HasOne(x => x.Persona)
+        builder.HasOne<Persona>()
             .WithMany()
             .HasForeignKey(x => x.PersonaId)
             .OnDelete(DeleteBehavior.Restrict);

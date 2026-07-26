@@ -23,6 +23,8 @@ public class RecursosHumanosDbContext : DbContext
 
     public DbSet<Servicio> Servicios => Set<Servicio>();
 
+    public DbSet<Empleado> Empleados => Set<Empleado>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("recursos_humanos");
@@ -32,24 +34,23 @@ public class RecursosHumanosDbContext : DbContext
 
     private static void ConfigureExternalEntities(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Clinica.Modules.Personas.Domain.Entities.MedicoEspecialidad>(entity =>
+        modelBuilder.Entity<Persona>(entity =>
+        {
+            entity.ToTable("Personas", "personas", t => t.ExcludeFromMigrations());
+            entity.HasKey(x => x.Id);
+            entity.Ignore(x => x.TipoDocumento);
+            entity.Ignore(x => x.ExtensionDocumento);
+            entity.Ignore(x => x.Sexo);
+            entity.Ignore(x => x.EstadoCivil);
+            entity.Ignore(x => x.ContactosEmergencia);
+        });
+
+        modelBuilder.Entity<MedicoEspecialidad>(entity =>
         {
             entity.ToTable("MedicoEspecialidades", "personas", t => t.ExcludeFromMigrations());
             entity.HasKey(x => x.Id);
             entity.Ignore(x => x.Medico);
             entity.Ignore(x => x.Especialidad);
-        });
-
-        modelBuilder.Entity<Empleado>(entity =>
-        {
-            entity.ToTable("Empleados", "personas", t => t.ExcludeFromMigrations());
-            entity.HasKey(x => x.Id);
-            entity.Ignore(x => x.Persona);
-            entity.Ignore(x => x.Area);
-            entity.Ignore(x => x.Departamento);
-            entity.Ignore(x => x.Servicio);
-            entity.Ignore(x => x.Profesion);
-            entity.Ignore(x => x.Cargo);
         });
     }
 }

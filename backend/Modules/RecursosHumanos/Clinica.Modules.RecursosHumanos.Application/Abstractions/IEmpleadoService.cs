@@ -1,8 +1,8 @@
-using Clinica.Modules.Personas.Application.Empleados;
+using Clinica.Modules.RecursosHumanos.Application.Empleados;
 using Clinica.SharedKernel.Crud;
 using Clinica.SharedKernel.Pagination;
 
-namespace Clinica.Modules.Personas.Application.Abstractions;
+namespace Clinica.Modules.RecursosHumanos.Application.Abstractions;
 
 public interface IEmpleadoService : ICrudService<Guid,
     EmpleadoResponse,
