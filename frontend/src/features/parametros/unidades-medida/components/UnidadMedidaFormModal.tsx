@@ -2,6 +2,8 @@ import { useEffect } from 'react'
 import { useForm } from '@tanstack/react-form'
 import { Form, Input, Modal } from 'antd'
 
+import { getFieldError } from '../../../../shared/utils/form-errors'
+import { normalizeCodigoInput } from '../../../../shared/utils/format-codigo'
 import {
     unidadMedidaDefaultValues,
     unidadMedidaSchema,
@@ -15,16 +17,6 @@ type UnidadMedidaFormModalProps = {
     loading: boolean
     onClose: () => void
     onSubmit: (values: UnidadMedidaFormValues) => Promise<void>
-}
-
-function getFieldError(errors: unknown[]) {
-    return errors
-        .map((error) =>
-            typeof error === 'string'
-                ? error
-                : (error as { message: string }).message,
-        )
-        .join(', ')
 }
 
 export function UnidadMedidaFormModal({
@@ -87,9 +79,7 @@ export function UnidadMedidaFormModal({
                                     value={field.state.value}
                                     onChange={(e) =>
                                         field.handleChange(
-                                            e.target.value
-                                                .toUpperCase()
-                                                .replace(/\s+/g, '_'),
+                                            normalizeCodigoInput(e.target.value),
                                         )
                                     }
                                     onBlur={field.handleBlur}
@@ -113,7 +103,9 @@ export function UnidadMedidaFormModal({
                                 <Input
                                     placeholder="Miligramos por decilitro"
                                     value={field.state.value}
-                                    onChange={(e) => field.handleChange(e.target.value)}
+                                    onChange={(e) =>
+                                        field.handleChange(e.target.value)
+                                    }
                                     onBlur={field.handleBlur}
                                     disabled={loading}
                                     autoFocus={isEditing}
@@ -135,7 +127,9 @@ export function UnidadMedidaFormModal({
                                 <Input
                                     placeholder="mg/dL"
                                     value={field.state.value}
-                                    onChange={(e) => field.handleChange(e.target.value)}
+                                    onChange={(e) =>
+                                        field.handleChange(e.target.value)
+                                    }
                                     onBlur={field.handleBlur}
                                     disabled={loading}
                                 />

@@ -1,49 +1,66 @@
+import { useMemo } from 'react'
+
 import { useCrudModalState } from '../../../../shared/hooks/use-crud-modal-state'
 import { usePagedSearchFilters } from '../../../../shared/hooks/use-paged-search-filters'
-import { formatRegistrosCaption } from '../../../../shared/utils/crud-search'
-import type { UnidadMedidaFormValues } from '../schemas/unidades-medida.schema'
-import type { UnidadMedida } from '../types/unidades-medida.types'
 import {
-    useCreateUnidadMedida,
-    useDeleteUnidadMedida,
-    useUnidadesMedida,
-    useUpdateUnidadMedida,
-} from './unidades-medida.hooks'
+    formatRegistrosCaption,
+    matchesCodigoNombreDescripcion,
+} from '../../../../shared/utils/crud-search'
+import type { TipoExamenFormValues } from '../schemas/tipo-examen.schema'
+import type { TipoExamen } from '../types/tipo-examen.types'
+import {
+    useCreateTipoExamen,
+    useDeleteTipoExamen,
+    useTiposExamen,
+    useUpdateTipoExamen,
+} from './tipos-examen.hooks'
 
-export function useUnidadesMedidaView() {
+export function useTiposExamenView() {
     const filters = usePagedSearchFilters()
-    const modal = useCrudModalState<UnidadMedida>()
+    const modal = useCrudModalState<TipoExamen>()
 
-    const { data, isFetching } = useUnidadesMedida({
+    const { data, isFetching } = useTiposExamen({
         page: filters.page,
         pageSize: filters.pageSize,
-        search: filters.search || undefined,
     })
 
-    const createMutation = useCreateUnidadMedida()
-    const updateMutation = useUpdateUnidadMedida()
-    const deleteMutation = useDeleteUnidadMedida()
+    const createMutation = useCreateTipoExamen()
+    const updateMutation = useUpdateTipoExamen()
+    const deleteMutation = useDeleteTipoExamen()
 
-    const items = data?.items ?? []
-    const total = data?.totalRecords ?? 0
+    const items = useMemo(() => {
+        const source = data?.items ?? []
+        if (!filters.search) return source
+        return source.filter((item) =>
+            matchesCodigoNombreDescripcion(item, filters.search),
+        )
+    }, [data?.items, filters.search])
+
+    const total = filters.search ? items.length : (data?.totalRecords ?? 0)
     const isSaving = createMutation.isPending || updateMutation.isPending
 
-    const handleSubmit = async (values: UnidadMedidaFormValues) => {
+    const handleSubmit = async (values: TipoExamenFormValues) => {
+        const payload = {
+            codigo: values.codigo,
+            nombre: values.nombre,
+            descripcion: values.descripcion || '',
+        }
+
         if (modal.editing) {
             await updateMutation.mutateAsync({
                 id: modal.editing.id,
-                data: values,
+                data: payload,
             })
         } else {
-            await createMutation.mutateAsync(values)
+            await createMutation.mutateAsync(payload)
         }
         modal.close()
     }
 
-    const handleDelete = async (unidad: UnidadMedida) => {
-        modal.setDeletingId(unidad.id)
+    const handleDelete = async (tipo: TipoExamen) => {
+        modal.setDeletingId(tipo.id)
         try {
-            await deleteMutation.mutateAsync(unidad.id)
+            await deleteMutation.mutateAsync(tipo.id)
         } finally {
             modal.setDeletingId(null)
         }

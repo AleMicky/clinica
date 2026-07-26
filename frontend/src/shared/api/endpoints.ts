@@ -11,6 +11,7 @@ const api = {
     parametros: '/api/parametros',
     recursosHumanos: '/api/recursos-humanos',
     atencionMedica: '/api/atencion-medica',
+    laboratorio: '/api/laboratorio',
     workflow: '/api/workflow',
 } as const
 
@@ -95,6 +96,11 @@ export const atencionMedicaEndpoints = {
     formularioSecciones: createEndpoints(`${api.atencionMedica}/formulario-secciones`),
     formularioCampos: createEndpoints(`${api.atencionMedica}/formulario-campos`),
     atencionRespuestas: createEndpoints(`${api.atencionMedica}/atencion-respuestas`),
+} as const
+
+export const laboratorioEndpoints = {
+    especialidades: createEndpoints(`${api.laboratorio}/especialidades`),
+    tiposExamen: createEndpoints(`${api.laboratorio}/tipos-examen`),
 } as const
 
 export const workflowEndpoints = {

@@ -2,37 +2,48 @@ import { useEffect } from 'react'
 import { useForm } from '@tanstack/react-form'
 import { Form, Input, Modal } from 'antd'
 
-import { getFieldError } from '../../../shared/utils/form-errors'
-import { normalizeCodigoInput } from '../../../shared/utils/format-codigo'
 import {
-    catalogoBaseDefaultValues,
-    catalogoBaseSchema,
-    type CatalogoBaseFormValues,
-} from '../schemas/catalogo-clinico.schema'
-import type { CatalogoBase } from '../types/catalogo-clinico.types'
+    codigoNombreDescripcionDefaultValues,
+    codigoNombreDescripcionSchema,
+    type CodigoNombreDescripcionFormValues,
+} from '../../../schemas/codigo-nombre-descripcion.schema'
+import { getFieldError } from '../../../utils/form-errors'
+import { normalizeCodigoInput } from '../../../utils/format-codigo'
 
-type CatalogoBaseFormModalProps = {
-    open: boolean
-    entityLabel: string
-    entity: CatalogoBase | null
-    loading: boolean
-    onClose: () => void
-    onSubmit: (values: CatalogoBaseFormValues) => Promise<void>
+type EntityLike = {
+    codigo: string
+    nombre: string
+    descripcion?: string | null
 }
 
-export function CatalogoBaseFormModal({
+type CodigoNombreDescripcionFormModalProps = {
+    open: boolean
+    entityLabel: string
+    entity: EntityLike | null
+    loading: boolean
+    onClose: () => void
+    onSubmit: (values: CodigoNombreDescripcionFormValues) => Promise<void>
+    codigoHelp?: string
+    codigoPlaceholder?: string
+    nombrePlaceholder?: string
+}
+
+export function CodigoNombreDescripcionFormModal({
     open,
     entityLabel,
     entity,
     loading,
     onClose,
     onSubmit,
-}: CatalogoBaseFormModalProps) {
+    codigoHelp = 'Identificador único',
+    codigoPlaceholder = 'Ej. CODIGO',
+    nombrePlaceholder = 'Nombre descriptivo',
+}: CodigoNombreDescripcionFormModalProps) {
     const isEditing = entity !== null
 
     const form = useForm({
-        defaultValues: catalogoBaseDefaultValues,
-        validators: { onSubmit: catalogoBaseSchema },
+        defaultValues: codigoNombreDescripcionDefaultValues,
+        validators: { onSubmit: codigoNombreDescripcionSchema },
         onSubmit: async ({ value }) => {
             await onSubmit(value)
         },
@@ -74,10 +85,10 @@ export function CatalogoBaseFormModal({
                             <Form.Item
                                 label="Código"
                                 validateStatus={error ? 'error' : undefined}
-                                help={error || 'Identificador único, ej. CARD, LAB01'}
+                                help={error || codigoHelp}
                             >
                                 <Input
-                                    placeholder="Ej. EMER, CARD"
+                                    placeholder={codigoPlaceholder}
                                     value={field.state.value}
                                     onChange={(e) =>
                                         field.handleChange(
@@ -103,9 +114,11 @@ export function CatalogoBaseFormModal({
                                 help={error || undefined}
                             >
                                 <Input
-                                    placeholder="Nombre descriptivo"
+                                    placeholder={nombrePlaceholder}
                                     value={field.state.value}
-                                    onChange={(e) => field.handleChange(e.target.value)}
+                                    onChange={(e) =>
+                                        field.handleChange(e.target.value)
+                                    }
                                     onBlur={field.handleBlur}
                                     disabled={loading}
                                     autoFocus={isEditing}
@@ -122,13 +135,15 @@ export function CatalogoBaseFormModal({
                             <Form.Item
                                 label="Descripción"
                                 validateStatus={error ? 'error' : undefined}
-                                help={error || 'Opcional'}
+                                help={error || undefined}
                             >
                                 <Input.TextArea
                                     rows={3}
-                                    placeholder="Detalle adicional…"
-                                    value={field.state.value ?? ''}
-                                    onChange={(e) => field.handleChange(e.target.value)}
+                                    placeholder="Opcional"
+                                    value={field.state.value}
+                                    onChange={(e) =>
+                                        field.handleChange(e.target.value)
+                                    }
                                     onBlur={field.handleBlur}
                                     disabled={loading}
                                 />

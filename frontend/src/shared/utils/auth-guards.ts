@@ -43,6 +43,18 @@ export function requireAdmin() {
     }
 }
 
+export function requireRoles(roles: AppRoleName[]) {
+    requireAuth()
+
+    const { user } = authStore.getState()
+    const allowed =
+        user?.roles.some((role) => roles.includes(role as AppRoleName)) ?? false
+
+    if (!allowed) {
+        throw redirect({ to: '/' })
+    }
+}
+
 const staffRoles: AppRoleName[] = [
     AppRole.Admin,
     AppRole.Medico,

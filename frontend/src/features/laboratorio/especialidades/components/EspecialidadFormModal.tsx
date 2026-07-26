@@ -1,38 +1,36 @@
 import { useEffect } from 'react'
 import { useForm } from '@tanstack/react-form'
-import { Form, Input, Modal } from 'antd'
+import { Form, Input, InputNumber, Modal } from 'antd'
 
-import { getFieldError } from '../../../shared/utils/form-errors'
-import { normalizeCodigoInput } from '../../../shared/utils/format-codigo'
+import { getFieldError } from '../../../../shared/utils/form-errors'
+import { normalizeCodigoInput } from '../../../../shared/utils/format-codigo'
 import {
-    catalogoBaseDefaultValues,
-    catalogoBaseSchema,
-    type CatalogoBaseFormValues,
-} from '../schemas/catalogo-clinico.schema'
-import type { CatalogoBase } from '../types/catalogo-clinico.types'
+    especialidadLabDefaultValues,
+    especialidadLabSchema,
+    type EspecialidadLabFormValues,
+} from '../schemas/especialidad.schema'
+import type { EspecialidadLab } from '../types/especialidad.types'
 
-type CatalogoBaseFormModalProps = {
+type EspecialidadFormModalProps = {
     open: boolean
-    entityLabel: string
-    entity: CatalogoBase | null
+    entity: EspecialidadLab | null
     loading: boolean
     onClose: () => void
-    onSubmit: (values: CatalogoBaseFormValues) => Promise<void>
+    onSubmit: (values: EspecialidadLabFormValues) => Promise<void>
 }
 
-export function CatalogoBaseFormModal({
+export function EspecialidadFormModal({
     open,
-    entityLabel,
     entity,
     loading,
     onClose,
     onSubmit,
-}: CatalogoBaseFormModalProps) {
+}: EspecialidadFormModalProps) {
     const isEditing = entity !== null
 
     const form = useForm({
-        defaultValues: catalogoBaseDefaultValues,
-        validators: { onSubmit: catalogoBaseSchema },
+        defaultValues: especialidadLabDefaultValues,
+        validators: { onSubmit: especialidadLabSchema },
         onSubmit: async ({ value }) => {
             await onSubmit(value)
         },
@@ -46,6 +44,7 @@ export function CatalogoBaseFormModal({
             form.setFieldValue('codigo', entity.codigo)
             form.setFieldValue('nombre', entity.nombre)
             form.setFieldValue('descripcion', entity.descripcion ?? '')
+            form.setFieldValue('orden', entity.orden)
             return
         }
 
@@ -54,7 +53,11 @@ export function CatalogoBaseFormModal({
 
     return (
         <Modal
-            title={isEditing ? `Editar ${entityLabel}` : `Nuevo ${entityLabel}`}
+            title={
+                isEditing
+                    ? 'Editar especialidad de laboratorio'
+                    : 'Nueva especialidad de laboratorio'
+            }
             open={open}
             onCancel={() => {
                 if (!loading) onClose()
@@ -74,10 +77,10 @@ export function CatalogoBaseFormModal({
                             <Form.Item
                                 label="Código"
                                 validateStatus={error ? 'error' : undefined}
-                                help={error || 'Identificador único, ej. CARD, LAB01'}
+                                help={error || 'Identificador único, ej. HEMATO'}
                             >
                                 <Input
-                                    placeholder="Ej. EMER, CARD"
+                                    placeholder="Ej. HEMATO"
                                     value={field.state.value}
                                     onChange={(e) =>
                                         field.handleChange(
@@ -103,9 +106,11 @@ export function CatalogoBaseFormModal({
                                 help={error || undefined}
                             >
                                 <Input
-                                    placeholder="Nombre descriptivo"
+                                    placeholder="Hematología"
                                     value={field.state.value}
-                                    onChange={(e) => field.handleChange(e.target.value)}
+                                    onChange={(e) =>
+                                        field.handleChange(e.target.value)
+                                    }
                                     onBlur={field.handleBlur}
                                     disabled={loading}
                                     autoFocus={isEditing}
@@ -122,13 +127,40 @@ export function CatalogoBaseFormModal({
                             <Form.Item
                                 label="Descripción"
                                 validateStatus={error ? 'error' : undefined}
-                                help={error || 'Opcional'}
+                                help={error || undefined}
                             >
                                 <Input.TextArea
                                     rows={3}
-                                    placeholder="Detalle adicional…"
-                                    value={field.state.value ?? ''}
-                                    onChange={(e) => field.handleChange(e.target.value)}
+                                    placeholder="Opcional"
+                                    value={field.state.value}
+                                    onChange={(e) =>
+                                        field.handleChange(e.target.value)
+                                    }
+                                    onBlur={field.handleBlur}
+                                    disabled={loading}
+                                />
+                            </Form.Item>
+                        )
+                    }}
+                </form.Field>
+
+                <form.Field name="orden">
+                    {(field) => {
+                        const error = getFieldError(field.state.meta.errors)
+                        return (
+                            <Form.Item
+                                label="Orden"
+                                validateStatus={error ? 'error' : undefined}
+                                help={error || 'Posición en listados (0 = primero)'}
+                            >
+                                <InputNumber
+                                    min={0}
+                                    precision={0}
+                                    style={{ width: '100%' }}
+                                    value={field.state.value}
+                                    onChange={(value) =>
+                                        field.handleChange(value ?? 0)
+                                    }
                                     onBlur={field.handleBlur}
                                     disabled={loading}
                                 />

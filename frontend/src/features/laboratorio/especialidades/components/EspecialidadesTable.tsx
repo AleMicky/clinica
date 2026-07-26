@@ -3,33 +3,32 @@ import {
     createColumnHelper,
     type ColumnDef,
 } from '@tanstack/react-table'
-import { Tag, Typography } from 'antd'
+import { Tag } from 'antd'
 
 import { AppDataTable } from '../../../../shared/components/ui/data-table/AppDataTable'
 import {
     createCodigoColumn,
+    createNombreConDescripcionColumn,
     createRowActionsColumn,
 } from '../../../../shared/components/ui/crud-section'
-import type { UnidadMedida } from '../types/unidades-medida.types'
+import type { EspecialidadLab } from '../types/especialidad.types'
 
-const { Text } = Typography
-
-type UnidadesMedidaTableProps = {
-    items: UnidadMedida[]
+type EspecialidadesTableProps = {
+    items: EspecialidadLab[]
     loading: boolean
     total: number
     page: number
     pageSize: number
     onPageChange: (page: number, pageSize: number) => void
-    onEdit: (unidad: UnidadMedida) => void
-    onDelete: (unidad: UnidadMedida) => void
+    onEdit: (especialidad: EspecialidadLab) => void
+    onDelete: (especialidad: EspecialidadLab) => void
     deletingId: string | null
     className?: string
 }
 
-const columnHelper = createColumnHelper<UnidadMedida>()
+const columnHelper = createColumnHelper<EspecialidadLab>()
 
-export function UnidadesMedidaTable({
+export function EspecialidadesTable({
     items,
     loading,
     total,
@@ -40,32 +39,28 @@ export function UnidadesMedidaTable({
     onDelete,
     deletingId,
     className,
-}: UnidadesMedidaTableProps) {
+}: EspecialidadesTableProps) {
     const columns = useMemo(
         () =>
             [
-                createCodigoColumn<UnidadMedida>(),
-                columnHelper.accessor('nombre', {
-                    header: 'Nombre',
-                    cell: ({ getValue }) => <Text strong>{getValue()}</Text>,
-                }),
-                columnHelper.accessor('simbolo', {
-                    header: 'Símbolo',
-                    size: 100,
+                columnHelper.accessor('orden', {
+                    header: 'Orden',
+                    size: 80,
                     cell: ({ getValue }) => (
                         <Tag variant="filled" className="rrhh-page__date-tag">
                             {getValue()}
                         </Tag>
                     ),
                 }),
-                createRowActionsColumn<UnidadMedida>({
+                createCodigoColumn<EspecialidadLab>(),
+                createNombreConDescripcionColumn<EspecialidadLab>(),
+                createRowActionsColumn<EspecialidadLab>({
                     onEdit,
                     onDelete,
                     deletingId,
-                    deleteTitle: 'Desactivar unidad',
-                    deleteVerb: 'Desactivar',
+                    deleteTitle: 'Eliminar especialidad',
                 }),
-            ] as ColumnDef<UnidadMedida, unknown>[],
+            ] as ColumnDef<EspecialidadLab, unknown>[],
         [onEdit, onDelete, deletingId],
     )
 
@@ -75,7 +70,7 @@ export function UnidadesMedidaTable({
             data={items}
             columns={columns}
             loading={loading}
-            emptyText="No hay unidades de medida registradas."
+            emptyText="No hay especialidades de laboratorio registradas."
             getRowId={(row) => row.id}
             pagination={{
                 page,

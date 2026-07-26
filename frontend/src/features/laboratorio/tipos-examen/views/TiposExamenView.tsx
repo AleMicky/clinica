@@ -1,14 +1,14 @@
 import {
+    CodigoNombreDescripcionFormModal,
     CrudCreateHeader,
     CrudSearchFiltersBar,
     CrudSectionPanel,
 } from '../../../../shared/components/ui/crud-section'
-import { UnidadMedidaFormModal } from '../components/UnidadMedidaFormModal'
-import { UnidadesMedidaTable } from '../components/UnidadesMedidaTable'
-import { useUnidadesMedidaView } from '../hooks/use-unidades-medida-view'
+import { TiposExamenTable } from '../components/TiposExamenTable'
+import { useTiposExamenView } from '../hooks/use-tipos-examen-view'
 
-export function UnidadesMedidaView() {
-    const { loading, caption, filters, table, formModal } = useUnidadesMedidaView()
+export function TiposExamenView() {
+    const { loading, caption, filters, table, formModal } = useTiposExamenView()
 
     return (
         <>
@@ -20,21 +20,20 @@ export function UnidadesMedidaView() {
                         onSearchInputChange={filters.onSearchInputChange}
                         onSearch={filters.onSearch}
                         onClearFilters={filters.onClearFilters}
-                        ariaLabel="Filtros de unidades de medida"
-                        searchAriaLabel="Buscar unidad de medida"
-                        placeholder="Buscar por código, nombre o símbolo…"
+                        ariaLabel="Filtros de tipos de examen"
+                        searchAriaLabel="Buscar tipo de examen"
                     />
                 }
                 actions={
                     <CrudCreateHeader
-                        label="Nueva unidad"
-                        ariaLabel="Crear nueva unidad de medida"
+                        label="Nuevo tipo de examen"
+                        ariaLabel="Crear nuevo tipo de examen"
                         onCreate={formModal.openCreateModal}
                     />
                 }
                 caption={caption}
             >
-                <UnidadesMedidaTable
+                <TiposExamenTable
                     items={table.items}
                     loading={loading}
                     total={table.total}
@@ -48,12 +47,16 @@ export function UnidadesMedidaView() {
                 />
             </CrudSectionPanel>
 
-            <UnidadMedidaFormModal
+            <CodigoNombreDescripcionFormModal
                 open={formModal.open}
+                entityLabel="tipo de examen"
                 entity={formModal.entity}
                 loading={formModal.isSaving}
                 onClose={formModal.closeModal}
                 onSubmit={formModal.handleSubmit}
+                codigoHelp="Identificador único, ej. HEMOGRAMA"
+                codigoPlaceholder="Ej. HEMOGRAMA"
+                nombrePlaceholder="Hemograma completo"
             />
         </>
     )

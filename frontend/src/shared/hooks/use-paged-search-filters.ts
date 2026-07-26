@@ -3,9 +3,17 @@ import { useEffect, useRef, useState } from 'react'
 const DEFAULT_PAGE_SIZE = 20
 const SEARCH_DEBOUNCE_MS = 400
 
-export function useUnidadesMedidaFilters() {
+type UsePagedSearchFiltersOptions = {
+    defaultPageSize?: number
+    debounceMs?: number
+}
+
+export function usePagedSearchFilters(options?: UsePagedSearchFiltersOptions) {
+    const defaultPageSize = options?.defaultPageSize ?? DEFAULT_PAGE_SIZE
+    const debounceMs = options?.debounceMs ?? SEARCH_DEBOUNCE_MS
+
     const [page, setPage] = useState(1)
-    const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
+    const [pageSize, setPageSize] = useState(defaultPageSize)
     const [search, setSearch] = useState('')
     const [searchInput, setSearchInput] = useState('')
 
@@ -24,10 +32,10 @@ export function useUnidadesMedidaFilters() {
     useEffect(() => {
         const timer = window.setTimeout(() => {
             onSearchRef.current(searchInput.trim())
-        }, SEARCH_DEBOUNCE_MS)
+        }, debounceMs)
 
         return () => window.clearTimeout(timer)
-    }, [searchInput])
+    }, [searchInput, debounceMs])
 
     const hasActiveFilters = Boolean(search)
 

@@ -114,6 +114,23 @@ export const queryKeys = {
                 ['catalogo-clinico', 'cargos', 'list', query] as const,
         },
     },
+    laboratorio: {
+        all: ['laboratorio'] as const,
+        especialidades: {
+            all: ['laboratorio', 'especialidades'] as const,
+            list: (query: PagedQuery) =>
+                ['laboratorio', 'especialidades', 'list', query] as const,
+            detail: (id: EntityId) =>
+                ['laboratorio', 'especialidades', 'detail', id] as const,
+        },
+        tiposExamen: {
+            all: ['laboratorio', 'tipos-examen'] as const,
+            list: (query: PagedQuery) =>
+                ['laboratorio', 'tipos-examen', 'list', query] as const,
+            detail: (id: EntityId) =>
+                ['laboratorio', 'tipos-examen', 'detail', id] as const,
+        },
+    },
     atencionMedica: {
         all: ['atencion-medica'] as const,
         atenciones: {

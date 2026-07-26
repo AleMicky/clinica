@@ -1,11 +1,17 @@
 import { Button, Flex } from 'antd'
 import { PlusOutlined } from '@ant-design/icons'
 
-type UnidadesMedidaHeaderProps = {
+export type CrudCreateHeaderProps = {
+    label: string
+    ariaLabel: string
     onCreate: () => void
 }
 
-export function UnidadesMedidaHeader({ onCreate }: UnidadesMedidaHeaderProps) {
+export function CrudCreateHeader({
+    label,
+    ariaLabel,
+    onCreate,
+}: CrudCreateHeaderProps) {
     return (
         <Flex gap={6} wrap="wrap" align="center" className="rrhh-section-panel__actions">
             <Button
@@ -13,9 +19,9 @@ export function UnidadesMedidaHeader({ onCreate }: UnidadesMedidaHeaderProps) {
                 size="small"
                 icon={<PlusOutlined />}
                 onClick={onCreate}
-                aria-label="Crear nueva unidad de medida"
+                aria-label={ariaLabel}
             >
-                Nueva unidad
+                {label}
             </Button>
         </Flex>
     )
