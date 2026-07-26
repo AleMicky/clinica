@@ -32,8 +32,6 @@ public static class SwaggerExtensions
         RecursosHumanosSwaggerTags.Cargos,
         RecursosHumanosSwaggerTags.Profesiones,
         RecursosHumanosSwaggerTags.Especialidades,
-        RecursosHumanosSwaggerTags.Departamentos,
-        RecursosHumanosSwaggerTags.Servicios,
         RecursosHumanosSwaggerTags.Empleados,
         RecursosHumanosSwaggerTags.Jerarquia,
         LaboratorioSwaggerTags.Module,

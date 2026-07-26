@@ -4438,30 +4438,9 @@ body {
     color: #1677ff;
 }
 
-.jerarquia-explorer__tree-node--departamento .jerarquia-explorer__tree-node-icon {
-    background: rgba(99, 102, 241, 0.12);
-    color: #4f46e5;
-}
-
-.jerarquia-explorer__tree-node--servicio .jerarquia-explorer__tree-node-icon {
-    background: rgba(14, 165, 233, 0.12);
-    color: #0284c7;
-}
-
 .jerarquia-explorer__tree-node--area .jerarquia-explorer__tree-node-name {
     font-size: 14px;
     font-weight: 600;
-}
-
-.jerarquia-explorer__tree-node--departamento .jerarquia-explorer__tree-node-name {
-    font-size: 13.5px;
-    font-weight: 500;
-}
-
-.jerarquia-explorer__tree-node--servicio .jerarquia-explorer__tree-node-name {
-    font-size: 13px;
-    font-weight: 400;
-    color: #334155;
 }
 
 .jerarquia-explorer__tree-node-name {
@@ -5156,16 +5135,6 @@ body {
 [data-theme='dark'] .jerarquia-explorer__tree-node--area .jerarquia-explorer__tree-node-icon {
     background: rgba(22, 119, 255, 0.18);
     color: #69b1ff;
-}
-
-[data-theme='dark'] .jerarquia-explorer__tree-node--departamento .jerarquia-explorer__tree-node-icon {
-    background: rgba(99, 102, 241, 0.18);
-    color: #a5b4fc;
-}
-
-[data-theme='dark'] .jerarquia-explorer__tree-node--servicio .jerarquia-explorer__tree-node-icon {
-    background: rgba(14, 165, 233, 0.18);
-    color: #7dd3fc;
 }
 
 [data-theme='dark'] .jerarquia-explorer__tree-node-tag,

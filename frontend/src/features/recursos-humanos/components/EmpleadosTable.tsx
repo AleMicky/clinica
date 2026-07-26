@@ -34,12 +34,10 @@ function formatDate(value?: string | null) {
 }
 
 function OrgCell({ empleado }: { empleado: Empleado }) {
-    const path = `${empleado.areaNombre} › ${empleado.departamentoNombre} › ${empleado.servicioNombre}`
-
     return (
-        <Tooltip title={path}>
+        <Tooltip title={empleado.areaNombre}>
             <Text className="rrhh-page__org-path" ellipsis>
-                {path}
+                {empleado.areaNombre}
             </Text>
         </Tooltip>
     )

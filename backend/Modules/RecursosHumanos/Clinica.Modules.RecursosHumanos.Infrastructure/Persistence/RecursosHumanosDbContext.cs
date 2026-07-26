@@ -21,10 +21,6 @@ public class RecursosHumanosDbContext : DbContext
 
     public DbSet<Especialidad> Especialidades => Set<Especialidad>();
 
-    public DbSet<Departamento> Departamentos => Set<Departamento>();
-
-    public DbSet<Servicio> Servicios => Set<Servicio>();
-
     public DbSet<Empleado> Empleados => Set<Empleado>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

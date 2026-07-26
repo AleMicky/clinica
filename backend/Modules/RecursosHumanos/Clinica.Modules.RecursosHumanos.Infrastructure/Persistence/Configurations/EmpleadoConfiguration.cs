@@ -34,16 +34,6 @@ public sealed class EmpleadoConfiguration : BaseEntityConfiguration<Empleado>
             .HasForeignKey(x => x.AreaId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(x => x.Departamento)
-            .WithMany()
-            .HasForeignKey(x => x.DepartamentoId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasOne(x => x.Servicio)
-            .WithMany()
-            .HasForeignKey(x => x.ServicioId)
-            .OnDelete(DeleteBehavior.Restrict);
-
         builder.HasOne(x => x.Profesion)
             .WithMany()
             .HasForeignKey(x => x.ProfesionId)

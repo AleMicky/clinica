@@ -9,7 +9,6 @@ export function useEmpleadosFilters() {
     const [search, setSearch] = useState('')
     const [searchInput, setSearchInput] = useState('')
     const [areaFilter, setAreaFilter] = useState<string | undefined>()
-    const [departamentoFilter, setDepartamentoFilter] = useState<string | undefined>()
 
     const onSearchRef = useRef((value: string) => {
         setSearch(value.trim())
@@ -31,7 +30,7 @@ export function useEmpleadosFilters() {
         return () => window.clearTimeout(timer)
     }, [searchInput])
 
-    const hasActiveFilters = Boolean(search || areaFilter || departamentoFilter)
+    const hasActiveFilters = Boolean(search || areaFilter)
 
     const handleSearch = (value: string) => {
         setSearchInput(value)
@@ -45,12 +44,6 @@ export function useEmpleadosFilters() {
 
     const handleAreaFilterChange = (value: string | undefined) => {
         setAreaFilter(value)
-        setDepartamentoFilter(undefined)
-        setPage(1)
-    }
-
-    const handleDepartamentoFilterChange = (value: string | undefined) => {
-        setDepartamentoFilter(value)
         setPage(1)
     }
 
@@ -63,7 +56,6 @@ export function useEmpleadosFilters() {
         setSearchInput('')
         setSearch('')
         setAreaFilter(undefined)
-        setDepartamentoFilter(undefined)
         setPage(1)
     }
 
@@ -73,12 +65,10 @@ export function useEmpleadosFilters() {
         search,
         searchInput,
         areaFilter,
-        departamentoFilter,
         hasActiveFilters,
         handleSearch,
         handleSearchInputChange,
         handleAreaFilterChange,
-        handleDepartamentoFilterChange,
         handlePageChange,
         clearFilters,
     }

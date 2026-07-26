@@ -19,58 +19,6 @@ public static class RecursosHumanosDbSeeder
         ("ARE-002", "Atención en Salud")
     ];
 
-    private static readonly (string Codigo, string Nombre, string AreaCodigo)[] Departamentos =
-    [
-        ("DEP-ADM-001", "Dirección", "ARE-001"),
-        ("DEP-ADM-002", "Administración", "ARE-001"),
-        ("DEP-ADM-003", "Finanzas", "ARE-001"),
-        ("DEP-ADM-004", "Estadística", "ARE-001"),
-        ("DEP-ADM-005", "Atención al Cliente", "ARE-001"),
-        ("DEP-ADM-006", "Servicios Generales", "ARE-001"),
-
-        ("DEP-SAL-001", "Atención Médica", "ARE-002"),
-        ("DEP-SAL-002", "Enfermería", "ARE-002"),
-        ("DEP-SAL-003", "Apoyo al Diagnóstico y Tratamiento", "ARE-002")
-    ];
-
-    private static readonly (string Codigo, string Nombre, string DepartamentoCodigo)[] Servicios =
-    [
-        ("SER-DIR-001", "Administración", "DEP-ADM-001"),
-
-        ("SER-ADM-001", "Gestión Administrativa", "DEP-ADM-002"),
-
-        ("SER-FIN-001", "Contabilidad", "DEP-ADM-003"),
-
-        ("SER-EST-001", "Información", "DEP-ADM-004"),
-        ("SER-EST-002", "Archivo", "DEP-ADM-004"),
-
-        ("SER-CLI-001", "Recepción", "DEP-ADM-005"),
-
-        ("SER-SGE-001", "Limpieza", "DEP-ADM-006"),
-        ("SER-SGE-002", "Cocina", "DEP-ADM-006"),
-        ("SER-SGE-003", "Ropería", "DEP-ADM-006"),
-        ("SER-SGE-004", "Seguridad", "DEP-ADM-006"),
-        ("SER-SGE-005", "Mantenimiento", "DEP-ADM-006"),
-        ("SER-SGE-006", "Lavandería y Planchado", "DEP-ADM-006"),
-
-        ("SER-MED-001", "Médico de Guardia", "DEP-SAL-001"),
-        ("SER-MED-002", "Quirófano", "DEP-SAL-001"),
-        ("SER-MED-003", "Consulta Externa", "DEP-SAL-001"),
-
-        ("SER-ENF-001", "Jefatura de Enfermería", "DEP-SAL-002"),
-        ("SER-ENF-002", "Licenciados en Enfermería", "DEP-SAL-002"),
-        ("SER-ENF-003", "Técnicos Medios en Enfermería", "DEP-SAL-002"),
-        ("SER-ENF-004", "Técnicos en Enfermería", "DEP-SAL-002"),
-        ("SER-ENF-005", "Auxiliares de Enfermería", "DEP-SAL-002"),
-
-        ("SER-DIA-001", "Ecografía", "DEP-SAL-003"),
-        ("SER-DIA-002", "Rayos X", "DEP-SAL-003"),
-        ("SER-DIA-003", "Laboratorio", "DEP-SAL-003"),
-        ("SER-DIA-004", "Servicio Transfusional", "DEP-SAL-003"),
-        ("SER-DIA-005", "Farmacia", "DEP-SAL-003"),
-        ("SER-DIA-006", "Nutrición", "DEP-SAL-003")
-    ];
-
     private static readonly string[] Cargos =
     [
         "Administrador",
@@ -239,48 +187,36 @@ public static class RecursosHumanosDbSeeder
             "10000001",
             "EMP-00001",
             "ARE-002",
-            "DEP-SAL-001",
-            "SER-MED-003",
             "Médico General",
             "Médico"),
         new(
             "10000002",
             "EMP-00002",
             "ARE-001",
-            "DEP-ADM-005",
-            "SER-CLI-001",
             "Secretaria Ejecutiva",
             "Recepcionista"),
         new(
             "10000003",
             "EMP-00003",
             "ARE-002",
-            "DEP-SAL-002",
-            "SER-ENF-002",
             "Licenciado en Enfermería",
             "Enfermero de Base"),
         new(
             "10000004",
             "EMP-00004",
             "ARE-002",
-            "DEP-SAL-003",
-            "SER-DIA-005",
             "Bioquímico Farmacéutico",
             "Farmacia"),
         new(
             "10000005",
             "EMP-00005",
             "ARE-002",
-            "DEP-SAL-003",
-            "SER-DIA-003",
             "Laboratorista",
             "Laboratorios"),
         new(
             "10000006",
             "EMP-00006",
             "ARE-001",
-            "DEP-ADM-002",
-            "SER-ADM-001",
             "Ingeniero Comercial",
             "Administrador")
     ];
@@ -338,8 +274,6 @@ public static class RecursosHumanosDbSeeder
     private static async Task SeedAsync(RecursosHumanosDbContext context)
     {
         await SeedAreasAsync(context);
-        await SeedDepartamentosAsync(context);
-        await SeedServiciosAsync(context);
         await SeedCargosAsync(context);
         await SeedProfesionesAsync(context);
         await SeedEspecialidadesAsync(context);
@@ -364,67 +298,6 @@ public static class RecursosHumanosDbSeeder
             {
                 area.Nombre = item.Nombre;
                 area.Descripcion = null;
-            }
-        }
-
-        await context.SaveChangesAsync();
-    }
-
-    private static async Task SeedDepartamentosAsync(RecursosHumanosDbContext context)
-    {
-        foreach (var item in Departamentos)
-        {
-            var area = await context.Areas.FirstAsync(x => x.Codigo == item.AreaCodigo);
-
-            var departamento = await context.Departamentos
-                .FirstOrDefaultAsync(x => x.Codigo == item.Codigo);
-
-            if (departamento is null)
-            {
-                context.Departamentos.Add(new Departamento
-                {
-                    AreaId = area.Id,
-                    Codigo = item.Codigo,
-                    Nombre = item.Nombre,
-                    Descripcion = null
-                });
-            }
-            else
-            {
-                departamento.AreaId = area.Id;
-                departamento.Nombre = item.Nombre;
-                departamento.Descripcion = null;
-            }
-        }
-
-        await context.SaveChangesAsync();
-    }
-
-    private static async Task SeedServiciosAsync(RecursosHumanosDbContext context)
-    {
-        foreach (var item in Servicios)
-        {
-            var departamento = await context.Departamentos
-                .FirstAsync(x => x.Codigo == item.DepartamentoCodigo);
-
-            var servicio = await context.Servicios
-                .FirstOrDefaultAsync(x => x.Codigo == item.Codigo);
-
-            if (servicio is null)
-            {
-                context.Servicios.Add(new Servicio
-                {
-                    DepartamentoId = departamento.Id,
-                    Codigo = item.Codigo,
-                    Nombre = item.Nombre,
-                    Descripcion = null
-                });
-            }
-            else
-            {
-                servicio.DepartamentoId = departamento.Id;
-                servicio.Nombre = item.Nombre;
-                servicio.Descripcion = null;
             }
         }
 
@@ -546,19 +419,13 @@ public static class RecursosHumanosDbSeeder
             var area = await recursosHumanosContext.Areas
                 .FirstOrDefaultAsync(x => x.Codigo == item.AreaCodigo);
 
-            var departamento = await recursosHumanosContext.Departamentos
-                .FirstOrDefaultAsync(x => x.Codigo == item.DepartamentoCodigo);
-
-            var servicio = await recursosHumanosContext.Servicios
-                .FirstOrDefaultAsync(x => x.Codigo == item.ServicioCodigo);
-
             var profesion = await recursosHumanosContext.Profesiones
                 .FirstOrDefaultAsync(x => x.Nombre == item.ProfesionNombre);
 
             var cargo = await recursosHumanosContext.Cargos
                 .FirstOrDefaultAsync(x => x.Nombre == item.CargoNombre);
 
-            if (area is null || departamento is null || servicio is null || profesion is null || cargo is null)
+            if (area is null || profesion is null || cargo is null)
             {
                 logger.LogWarning(
                     "Catálogo incompleto para empleado '{Codigo}'; omitiendo.",
@@ -579,8 +446,6 @@ public static class RecursosHumanosDbSeeder
                     CodigoEmpleado = item.CodigoEmpleado,
                     FechaIngreso = DemoFechaIngreso,
                     AreaId = area.Id,
-                    DepartamentoId = departamento.Id,
-                    ServicioId = servicio.Id,
                     ProfesionId = profesion.Id,
                     CargoId = cargo.Id
                 });
@@ -591,8 +456,6 @@ public static class RecursosHumanosDbSeeder
                 empleado.CodigoEmpleado = item.CodigoEmpleado;
                 empleado.FechaIngreso = DemoFechaIngreso;
                 empleado.AreaId = area.Id;
-                empleado.DepartamentoId = departamento.Id;
-                empleado.ServicioId = servicio.Id;
                 empleado.ProfesionId = profesion.Id;
                 empleado.CargoId = cargo.Id;
             }
@@ -747,8 +610,6 @@ public static class RecursosHumanosDbSeeder
         string NumeroDocumento,
         string CodigoEmpleado,
         string AreaCodigo,
-        string DepartamentoCodigo,
-        string ServicioCodigo,
         string ProfesionNombre,
         string CargoNombre);
 

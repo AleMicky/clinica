@@ -39,8 +39,6 @@ public sealed class EmpleadoService(
         var query = context.Empleados
             .AsNoTracking()
             .Include(x => x.Area)
-            .Include(x => x.Departamento)
-            .Include(x => x.Servicio)
             .Include(x => x.Profesion)
             .Include(x => x.Cargo)
             .AsQueryable();
@@ -50,12 +48,6 @@ public sealed class EmpleadoService(
 
         if (request.AreaId is { } areaId && areaId != Guid.Empty)
             query = query.Where(x => x.AreaId == areaId);
-
-        if (request.DepartamentoId is { } departamentoId && departamentoId != Guid.Empty)
-            query = query.Where(x => x.DepartamentoId == departamentoId);
-
-        if (request.ServicioId is { } servicioId && servicioId != Guid.Empty)
-            query = query.Where(x => x.ServicioId == servicioId);
 
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
@@ -103,8 +95,6 @@ public sealed class EmpleadoService(
         var entity = await context.Empleados
             .AsNoTracking()
             .Include(x => x.Area)
-            .Include(x => x.Departamento)
-            .Include(x => x.Servicio)
             .Include(x => x.Profesion)
             .Include(x => x.Cargo)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
@@ -138,8 +128,6 @@ public sealed class EmpleadoService(
             CodigoEmpleado = codigo,
             FechaIngreso = request.FechaIngreso,
             AreaId = request.AreaId,
-            DepartamentoId = request.DepartamentoId,
-            ServicioId = request.ServicioId,
             ProfesionId = request.ProfesionId,
             CargoId = request.CargoId
         };
@@ -175,8 +163,6 @@ public sealed class EmpleadoService(
         entity.CodigoEmpleado = codigo;
         entity.FechaIngreso = request.FechaIngreso;
         entity.AreaId = request.AreaId;
-        entity.DepartamentoId = request.DepartamentoId;
-        entity.ServicioId = request.ServicioId;
         entity.ProfesionId = request.ProfesionId;
         entity.CargoId = request.CargoId;
 
@@ -331,12 +317,6 @@ public sealed class EmpleadoService(
         if (!await context.Areas.AnyAsync(x => x.Id == request.AreaId, cancellationToken))
             throw new BusinessException("El área no existe.");
 
-        if (!await context.Departamentos.AnyAsync(x => x.Id == request.DepartamentoId, cancellationToken))
-            throw new BusinessException("El departamento no existe.");
-
-        if (!await context.Servicios.AnyAsync(x => x.Id == request.ServicioId, cancellationToken))
-            throw new BusinessException("El servicio no existe.");
-
         if (!await context.Profesiones.AnyAsync(x => x.Id == request.ProfesionId, cancellationToken))
             throw new BusinessException("La profesión no existe.");
 
@@ -353,8 +333,6 @@ public sealed class EmpleadoService(
                 request.PersonaId,
                 request.CodigoEmpleado,
                 request.AreaId,
-                request.DepartamentoId,
-                request.ServicioId,
                 request.ProfesionId,
                 request.CargoId,
                 request.FechaIngreso,
@@ -391,10 +369,6 @@ public sealed class EmpleadoService(
             entity.FechaIngreso,
             entity.AreaId,
             entity.Area.Nombre,
-            entity.DepartamentoId,
-            entity.Departamento.Nombre,
-            entity.ServicioId,
-            entity.Servicio.Nombre,
             entity.ProfesionId,
             entity.Profesion.Nombre,
             entity.CargoId,

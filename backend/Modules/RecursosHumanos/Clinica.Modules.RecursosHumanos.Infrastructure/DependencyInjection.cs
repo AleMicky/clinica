@@ -21,8 +21,6 @@ public static class DependencyInjection
         services.AddScoped<ICargoService, CargoService>();
         services.AddScoped<IProfesionService, ProfesionService>();
         services.AddScoped<IEspecialidadService, EspecialidadService>();
-        services.AddScoped<IDepartamentoService, DepartamentoService>();
-        services.AddScoped<IServicioService, ServicioService>();
         services.AddScoped<IEmpleadoService, EmpleadoService>();
         services.AddScoped<IJerarquiaOrganizacionalService, JerarquiaOrganizacionalService>();
 

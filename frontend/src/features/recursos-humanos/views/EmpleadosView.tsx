@@ -5,8 +5,7 @@ import { EmpleadosTable } from '../components/EmpleadosTable'
 import { useEmpleadosView } from '../hooks/use-empleados-view'
 
 export function EmpleadosView() {
-    const { loading, caption, areaOptions, departamentoOptions, filters, table, formModal } =
-        useEmpleadosView()
+    const { loading, caption, areaOptions, filters, table, formModal } = useEmpleadosView()
 
     return (
         <>
@@ -15,14 +14,11 @@ export function EmpleadosView() {
                     <EmpleadosFiltersBar
                         searchInput={filters.searchInput}
                         areaFilter={filters.areaFilter}
-                        departamentoFilter={filters.departamentoFilter}
                         areaOptions={areaOptions}
-                        departamentoOptions={departamentoOptions}
                         hasActiveFilters={filters.hasActiveFilters}
                         onSearchInputChange={filters.onSearchInputChange}
                         onSearch={filters.onSearch}
                         onAreaFilterChange={filters.onAreaFilterChange}
-                        onDepartamentoFilterChange={filters.onDepartamentoFilterChange}
                         onClearFilters={filters.onClearFilters}
                     />
                     <EmpleadosHeader onCreate={formModal.openCreateModal} />

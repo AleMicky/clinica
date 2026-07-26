@@ -146,7 +146,7 @@ export const menuGroups: MenuGroup[] = [
                 key: '/recursos-humanos/jerarquia',
                 to: '/recursos-humanos/jerarquia',
                 icon: <NodeIndexOutlined />,
-                label: 'Áreas y servicios',
+                label: 'Áreas',
                 roles: [AppRole.Admin],
             },
             {

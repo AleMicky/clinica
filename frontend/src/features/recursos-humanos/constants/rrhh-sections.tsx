@@ -27,7 +27,7 @@ const rrhhPageSections: RrhhPageSection[] = [
     },
     {
         path: '/recursos-humanos/jerarquia',
-        title: 'Áreas y servicios',
+        title: 'Áreas',
         icon: <NodeIndexOutlined />,
     },
     {

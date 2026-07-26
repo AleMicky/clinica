@@ -3,7 +3,6 @@ export type PagedQuery = {
     pageSize?: number
     search?: string
     areaId?: string
-    departamentoId?: string
 }
 
 export type PagedResult<T> = {

@@ -9,21 +9,12 @@ import type { PagedQuery } from '../../../shared/types/pagination.types'
 import {
     areasService,
     cargosService,
-    departamentosService,
     especialidadesService,
-    prestacionesService,
     profesionesService,
-    serviciosService,
 } from '../services/catalogo-clinico.service'
 import type {
     CreateCatalogoBasePayload,
-    CreateDepartamentoPayload,
-    CreatePrestacionPayload,
-    CreateServicioPayload,
     UpdateCatalogoBasePayload,
-    UpdateDepartamentoPayload,
-    UpdatePrestacionPayload,
-    UpdateServicioPayload,
 } from '../types/catalogo-clinico.types'
 
 function invalidateCatalogoHierarchy(qc: QueryClient) {
@@ -41,20 +32,6 @@ export function useAreas(query: PagedQuery) {
     return useAppQuery({
         queryKey: queryKeys.catalogoClinico.areas.list(query),
         queryFn: () => areasService.getPaged(query),
-    })
-}
-
-const HIERARCHY_LOOKUP_QUERY = { page: 1, pageSize: 100 } as const
-
-export function useAreaDepartamentos(areaId: string | null) {
-    const query = { ...HIERARCHY_LOOKUP_QUERY, areaId: areaId ?? undefined }
-
-    return useAppQuery({
-        queryKey: queryKeys.catalogoClinico.departamentos.list(query),
-        queryFn: () =>
-            departamentosService.getPaged({ ...HIERARCHY_LOOKUP_QUERY, areaId: areaId! }),
-        enabled: areaId !== null,
-        select: (data) => data.items,
     })
 }
 
@@ -97,188 +74,6 @@ export function useDeleteArea() {
             notify.success('Área desactivada')
         },
         onError: (e) => notify.error('Error al desactivar', getApiErrorMessage(e)),
-    })
-}
-
-// ── Departamentos ──────────────────────────────────────────────
-
-export function useDepartamentos(query: PagedQuery) {
-    return useAppQuery({
-        queryKey: queryKeys.catalogoClinico.departamentos.list(query),
-        queryFn: () => departamentosService.getPaged(query),
-    })
-}
-
-export function useDepartamentoServicios(departamentoId: string | null) {
-    const query = {
-        ...HIERARCHY_LOOKUP_QUERY,
-        departamentoId: departamentoId ?? undefined,
-    }
-
-    return useAppQuery({
-        queryKey: queryKeys.catalogoClinico.servicios.list(query),
-        queryFn: () =>
-            serviciosService.getPaged({
-                ...HIERARCHY_LOOKUP_QUERY,
-                departamentoId: departamentoId!,
-            }),
-        enabled: departamentoId !== null,
-        select: (data) => data.items,
-    })
-}
-
-export function useCreateDepartamento() {
-    const qc = useQueryClient()
-    return useAppMutation({
-        mutationFn: (data: CreateDepartamentoPayload) =>
-            departamentosService.create(data),
-        onSuccess: () => {
-            invalidateCatalogoHierarchy(qc)
-            notify.success('Departamento creado', 'Registro guardado correctamente.')
-        },
-        onError: (e) =>
-            notify.error('Error al crear', getApiErrorMessage(e)),
-    })
-}
-
-export function useUpdateDepartamento() {
-    const qc = useQueryClient()
-    return useAppMutation({
-        mutationFn: ({
-            id,
-            data,
-        }: {
-            id: string
-            data: UpdateDepartamentoPayload
-        }) => departamentosService.update(id, data),
-        onSuccess: () => {
-            invalidateCatalogoHierarchy(qc)
-            notify.success('Departamento actualizado', 'Cambios guardados.')
-        },
-        onError: (e) =>
-            notify.error('Error al actualizar', getApiErrorMessage(e)),
-    })
-}
-
-export function useDeleteDepartamento() {
-    const qc = useQueryClient()
-    return useAppMutation({
-        mutationFn: (id: string) => departamentosService.delete(id),
-        onSuccess: () => {
-            invalidateCatalogoHierarchy(qc)
-            notify.success('Departamento desactivado')
-        },
-        onError: (e) =>
-            notify.error('Error al desactivar', getApiErrorMessage(e)),
-    })
-}
-
-// ── Servicios ──────────────────────────────────────────────────
-
-export function useServicioPrestaciones(servicioId: string | null) {
-    return useAppQuery({
-        queryKey: queryKeys.catalogoClinico.servicios.prestaciones(servicioId ?? ''),
-        queryFn: () => serviciosService.getPrestaciones(servicioId!),
-        enabled: servicioId !== null,
-    })
-}
-
-export function useCreateServicio() {
-    const qc = useQueryClient()
-    return useAppMutation({
-        mutationFn: (data: CreateServicioPayload) => serviciosService.create(data),
-        onSuccess: () => {
-            invalidateCatalogoHierarchy(qc)
-            notify.success('Servicio creado', 'Registro guardado correctamente.')
-        },
-        onError: (e) =>
-            notify.error('Error al crear', getApiErrorMessage(e)),
-    })
-}
-
-export function useUpdateServicio() {
-    const qc = useQueryClient()
-    return useAppMutation({
-        mutationFn: ({
-            id,
-            data,
-        }: {
-            id: string
-            data: UpdateServicioPayload
-        }) => serviciosService.update(id, data),
-        onSuccess: () => {
-            invalidateCatalogoHierarchy(qc)
-            notify.success('Servicio actualizado', 'Cambios guardados.')
-        },
-        onError: (e) =>
-            notify.error('Error al actualizar', getApiErrorMessage(e)),
-    })
-}
-
-export function useDeleteServicio() {
-    const qc = useQueryClient()
-    return useAppMutation({
-        mutationFn: (id: string) => serviciosService.delete(id),
-        onSuccess: () => {
-            invalidateCatalogoHierarchy(qc)
-            notify.success('Servicio desactivado')
-        },
-        onError: (e) =>
-            notify.error('Error al desactivar', getApiErrorMessage(e)),
-    })
-}
-
-// ── Prestaciones ───────────────────────────────────────────────
-
-export function useCreatePrestacion() {
-    const qc = useQueryClient()
-    return useAppMutation({
-        mutationFn: (data: CreatePrestacionPayload) =>
-            prestacionesService.create(data),
-        onSuccess: () => {
-            void qc.invalidateQueries({
-                queryKey: queryKeys.catalogoClinico.all,
-            })
-            notify.success('Prestación creada', 'Registro guardado correctamente.')
-        },
-        onError: (e) =>
-            notify.error('Error al crear', getApiErrorMessage(e)),
-    })
-}
-
-export function useUpdatePrestacion() {
-    const qc = useQueryClient()
-    return useAppMutation({
-        mutationFn: ({
-            id,
-            data,
-        }: {
-            id: string
-            data: UpdatePrestacionPayload
-        }) => prestacionesService.update(id, data),
-        onSuccess: () => {
-            void qc.invalidateQueries({
-                queryKey: queryKeys.catalogoClinico.all,
-            })
-            notify.success('Prestación actualizada', 'Cambios guardados.')
-        },
-        onError: (e) =>
-            notify.error('Error al actualizar', getApiErrorMessage(e)),
-    })
-}
-
-export function useDeletePrestacion() {
-    const qc = useQueryClient()
-    return useAppMutation({
-        mutationFn: (id: string) => prestacionesService.delete(id),
-        onSuccess: () => {
-            void qc.invalidateQueries({
-                queryKey: queryKeys.catalogoClinico.all,
-            })
-            notify.success('Prestación desactivada')
-        },
-        onError: (e) =>
-            notify.error('Error al desactivar', getApiErrorMessage(e)),
     })
 }
 

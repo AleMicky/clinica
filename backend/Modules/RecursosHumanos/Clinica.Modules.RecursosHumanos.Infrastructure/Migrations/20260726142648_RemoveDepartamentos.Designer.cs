@@ -4,6 +4,7 @@ using Clinica.Modules.RecursosHumanos.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Clinica.Modules.RecursosHumanos.Infrastructure.Migrations
 {
     [DbContext(typeof(RecursosHumanosDbContext))]
-    partial class RecursosHumanosDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260726142648_RemoveDepartamentos")]
+    partial class RemoveDepartamentos
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -270,6 +273,9 @@ namespace Clinica.Modules.RecursosHumanos.Infrastructure.Migrations
                     b.Property<Guid>("ProfesionId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("ServicioId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -290,6 +296,8 @@ namespace Clinica.Modules.RecursosHumanos.Infrastructure.Migrations
                         .IsUnique();
 
                     b.HasIndex("ProfesionId");
+
+                    b.HasIndex("ServicioId");
 
                     b.ToTable("Empleados", "recursos_humanos");
                 });
@@ -392,6 +400,60 @@ namespace Clinica.Modules.RecursosHumanos.Infrastructure.Migrations
                     b.ToTable("Profesiones", "recursos_humanos");
                 });
 
+            modelBuilder.Entity("Clinica.Modules.RecursosHumanos.Domain.Entities.Servicio", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AreaId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AreaId");
+
+                    b.HasIndex("AreaId", "Codigo")
+                        .IsUnique();
+
+                    b.ToTable("Servicios", "recursos_humanos");
+                });
+
             modelBuilder.Entity("Clinica.Modules.RecursosHumanos.Domain.Entities.TipoArea", b =>
                 {
                     b.Property<Guid>("Id")
@@ -470,11 +532,35 @@ namespace Clinica.Modules.RecursosHumanos.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Clinica.Modules.RecursosHumanos.Domain.Entities.Servicio", "Servicio")
+                        .WithMany()
+                        .HasForeignKey("ServicioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("Area");
 
                     b.Navigation("Cargo");
 
                     b.Navigation("Profesion");
+
+                    b.Navigation("Servicio");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.RecursosHumanos.Domain.Entities.Servicio", b =>
+                {
+                    b.HasOne("Clinica.Modules.RecursosHumanos.Domain.Entities.Area", "Area")
+                        .WithMany("Servicios")
+                        .HasForeignKey("AreaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Area");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.RecursosHumanos.Domain.Entities.Area", b =>
+                {
+                    b.Navigation("Servicios");
                 });
 #pragma warning restore 612, 618
         }

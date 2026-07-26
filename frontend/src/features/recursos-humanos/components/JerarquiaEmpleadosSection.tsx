@@ -13,8 +13,6 @@ const PAGE_SIZE = 10
 
 type JerarquiaEmpleadosSectionProps = {
     areaId?: EntityId | null
-    departamentoId?: EntityId | null
-    servicioId?: EntityId | null
     enabled?: boolean
     compactMeta?: boolean
 }
@@ -34,7 +32,7 @@ function EmpleadoRow({
     compactMeta: boolean
 }) {
     const meta = compactMeta
-        ? [empleado.cargoNombre, empleado.servicioNombre].filter(Boolean).join(' · ')
+        ? [empleado.cargoNombre, empleado.profesionNombre].filter(Boolean).join(' · ')
         : [empleado.cargoNombre, empleado.profesionNombre].filter(Boolean).join(' · ')
 
     return (
@@ -66,31 +64,25 @@ function EmpleadoRow({
 
 export function JerarquiaEmpleadosSection({
     areaId,
-    departamentoId,
-    servicioId,
     enabled = true,
     compactMeta = false,
 }: JerarquiaEmpleadosSectionProps) {
     const [page, setPage] = useState(1)
 
-    const selectionKey = `${areaId ?? ''}:${departamentoId ?? ''}:${servicioId ?? ''}`
-
     useEffect(() => {
         setPage(1)
-    }, [selectionKey])
+    }, [areaId])
 
     const query = useMemo(
         () => ({
             page,
             pageSize: PAGE_SIZE,
             areaId: areaId ?? undefined,
-            departamentoId: departamentoId ?? undefined,
-            servicioId: servicioId ?? undefined,
         }),
-        [page, areaId, departamentoId, servicioId],
+        [page, areaId],
     )
 
-    const canFetch = enabled && Boolean(areaId || departamentoId || servicioId)
+    const canFetch = enabled && Boolean(areaId)
 
     const { data, isFetching } = useAppQuery({
         queryKey: queryKeys.empleados.list(query),

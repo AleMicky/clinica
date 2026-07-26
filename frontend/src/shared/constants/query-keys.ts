@@ -76,27 +76,6 @@ export const queryKeys = {
             all: ['catalogo-clinico', 'areas'] as const,
             list: (query: PagedQuery) =>
                 ['catalogo-clinico', 'areas', 'list', query] as const,
-            departamentos: (id: EntityId) =>
-                ['catalogo-clinico', 'areas', id, 'departamentos'] as const,
-        },
-        departamentos: {
-            all: ['catalogo-clinico', 'departamentos'] as const,
-            list: (query: PagedQuery) =>
-                ['catalogo-clinico', 'departamentos', 'list', query] as const,
-            servicios: (id: EntityId) =>
-                ['catalogo-clinico', 'departamentos', id, 'servicios'] as const,
-        },
-        servicios: {
-            all: ['catalogo-clinico', 'servicios'] as const,
-            list: (query: PagedQuery) =>
-                ['catalogo-clinico', 'servicios', 'list', query] as const,
-            prestaciones: (id: EntityId) =>
-                ['catalogo-clinico', 'servicios', id, 'prestaciones'] as const,
-        },
-        prestaciones: {
-            all: ['catalogo-clinico', 'prestaciones'] as const,
-            list: (query: PagedQuery) =>
-                ['catalogo-clinico', 'prestaciones', 'list', query] as const,
         },
         especialidades: {
             all: ['catalogo-clinico', 'especialidades'] as const,

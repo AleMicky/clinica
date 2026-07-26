@@ -12,11 +12,9 @@ type OrganizationTreeProps = {
     hasFilteredAreas: boolean
     treeData: DataNode[]
     selectedKeys: string[]
-    expandedKeys: string[]
     onCreateArea: () => void
     onSearchChange: (value: string) => void
     onSearchClear: () => void
-    onExpand: (keys: string[]) => void
     onSelect: (keys: React.Key[]) => void
 }
 
@@ -28,11 +26,9 @@ export function OrganizationTree({
     hasFilteredAreas,
     treeData,
     selectedKeys,
-    expandedKeys,
     onCreateArea,
     onSearchChange,
     onSearchClear,
-    onExpand,
     onSelect,
 }: OrganizationTreeProps) {
     const { token } = theme.useToken()
@@ -67,7 +63,7 @@ export function OrganizationTree({
                     allowClear
                     size="middle"
                     prefix={<SearchOutlined style={{ color: token.colorTextQuaternary }} />}
-                    placeholder="Buscar área, departamento o servicio…"
+                    placeholder="Buscar área…"
                     value={treeSearchInput}
                     onChange={(event) => onSearchChange(event.target.value)}
                     onClear={onSearchClear}
@@ -104,8 +100,6 @@ export function OrganizationTree({
                         showLine={{ showLeafIcon: false }}
                         treeData={treeData}
                         selectedKeys={selectedKeys}
-                        expandedKeys={expandedKeys}
-                        onExpand={(keys) => onExpand(keys.map(String))}
                         onSelect={(keys) => onSelect(keys)}
                         className="jerarquia-explorer__tree"
                     />

@@ -71,16 +71,7 @@ export const empleadoEndpoints = createEndpoints(`${api.recursosHumanos}/emplead
 export const medicoEndpoints = createEndpoints(`${api.personas}/medicos`)
 
 export const catalogoClinicoEndpoints = {
-    areas: createEndpoints(`${api.recursosHumanos}/areas`, (root) => ({
-        departamentos: (id: EntityId) => `${root}/${id}/departamentos`,
-    })),
-    departamentos: createEndpoints(`${api.recursosHumanos}/departamentos`, (root) => ({
-        servicios: (id: EntityId) => `${root}/${id}/servicios`,
-    })),
-    servicios: createEndpoints(`${api.recursosHumanos}/servicios`, (root) => ({
-        prestaciones: (id: EntityId) => `${root}/${id}/prestaciones`,
-    })),
-    prestaciones: createEndpoints(`${api.recursosHumanos}/prestaciones`),
+    areas: createEndpoints(`${api.recursosHumanos}/areas`),
     especialidades: createEndpoints(`${api.recursosHumanos}/especialidades`),
     profesiones: createEndpoints(`${api.recursosHumanos}/profesiones`),
     cargos: createEndpoints(`${api.recursosHumanos}/cargos`),

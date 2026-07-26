@@ -1,12 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useForm, useStore } from '@tanstack/react-form'
 import { Col, Divider, Form, Input, Modal, Row, Select, Switch, Typography } from 'antd'
 
 import {
-    useAreaDepartamentos,
     useAreas,
     useCargos,
-    useDepartamentoServicios,
     useEspecialidades,
     useProfesiones,
 } from '../../catalogo-clinico/hooks/catalogo-clinico.hooks'
@@ -54,14 +52,6 @@ export function EmpleadoFormModal({
     const { data: especialidadesResult, isFetching: loadingEspecialidades } =
         useEspecialidades(LOOKUP_QUERY)
 
-    const [areaId, setAreaId] = useState<string | null>(null)
-    const [departamentoId, setDepartamentoId] = useState<string | null>(null)
-
-    const { data: departamentosResult, isFetching: loadingDepartamentos } =
-        useAreaDepartamentos(areaId)
-    const { data: serviciosResult, isFetching: loadingServicios } =
-        useDepartamentoServicios(departamentoId)
-
     const form = useForm({
         defaultValues: empleadoDefaultValues,
         validators: {
@@ -89,8 +79,6 @@ export function EmpleadoFormModal({
             form.setFieldValue('personaId', empleadoSource.personaId)
             form.setFieldValue('codigoEmpleado', empleadoSource.codigoEmpleado)
             form.setFieldValue('areaId', empleadoSource.areaId)
-            form.setFieldValue('departamentoId', empleadoSource.departamentoId)
-            form.setFieldValue('servicioId', empleadoSource.servicioId)
             form.setFieldValue('profesionId', empleadoSource.profesionId)
             form.setFieldValue('cargoId', empleadoSource.cargoId)
             form.setFieldValue('fechaIngreso', empleadoSource.fechaIngreso ?? '')
@@ -113,11 +101,6 @@ export function EmpleadoFormModal({
                 'registroColegioMedico',
                 empleadoSource.medico?.registroColegioMedico ?? '',
             )
-            setAreaId(empleadoSource.areaId)
-            setDepartamentoId(empleadoSource.departamentoId)
-        } else {
-            setAreaId(null)
-            setDepartamentoId(null)
         }
     }, [open, empleadoSource, form])
 
@@ -132,18 +115,6 @@ export function EmpleadoFormModal({
             label: area.nombre,
             value: area.id,
         })) ?? []
-
-    const departamentoOptions =
-        (departamentosResult ?? []).map((departamento) => ({
-            label: departamento.nombre,
-            value: departamento.id,
-        }))
-
-    const servicioOptions =
-        (serviciosResult ?? []).map((servicio) => ({
-            label: servicio.nombre,
-            value: servicio.id,
-        }))
 
     const profesionOptions =
         profesionesResult?.items.map((profesion) => ({
@@ -173,17 +144,7 @@ export function EmpleadoFormModal({
     }
 
     const handleAreaChange = (value: string) => {
-        setAreaId(value)
-        setDepartamentoId(null)
         form.setFieldValue('areaId', value)
-        form.setFieldValue('departamentoId', '')
-        form.setFieldValue('servicioId', '')
-    }
-
-    const handleDepartamentoChange = (value: string) => {
-        setDepartamentoId(value)
-        form.setFieldValue('departamentoId', value)
-        form.setFieldValue('servicioId', '')
     }
 
     const handleEsMedicoChange = (checked: boolean) => {
@@ -363,68 +324,6 @@ export function EmpleadoFormModal({
                                             onChange={handleAreaChange}
                                             onBlur={field.handleBlur}
                                             disabled={isFormLoading || loadingAreas}
-                                        />
-                                    </Form.Item>
-                                )
-                            }}
-                        </form.Field>
-                    </Col>
-
-                    <Col xs={24} sm={12}>
-                        <form.Field name="departamentoId">
-                            {(field) => {
-                                const error = getFieldError(field.state.meta.errors)
-
-                                return (
-                                    <Form.Item
-                                        label="Departamento"
-                                        validateStatus={error ? 'error' : undefined}
-                                        help={error || undefined}
-                                    >
-                                        <Select
-                                            showSearch
-                                            optionFilterProp="label"
-                                            placeholder="Seleccionar departamento"
-                                            options={departamentoOptions}
-                                            value={field.state.value || undefined}
-                                            onChange={handleDepartamentoChange}
-                                            onBlur={field.handleBlur}
-                                            disabled={
-                                                isFormLoading ||
-                                                loadingDepartamentos ||
-                                                !areaId
-                                            }
-                                        />
-                                    </Form.Item>
-                                )
-                            }}
-                        </form.Field>
-                    </Col>
-
-                    <Col xs={24}>
-                        <form.Field name="servicioId">
-                            {(field) => {
-                                const error = getFieldError(field.state.meta.errors)
-
-                                return (
-                                    <Form.Item
-                                        label="Servicio"
-                                        validateStatus={error ? 'error' : undefined}
-                                        help={error || undefined}
-                                    >
-                                        <Select
-                                            showSearch
-                                            optionFilterProp="label"
-                                            placeholder="Seleccionar servicio"
-                                            options={servicioOptions}
-                                            value={field.state.value || undefined}
-                                            onChange={(value) => field.handleChange(value)}
-                                            onBlur={field.handleBlur}
-                                            disabled={
-                                                isFormLoading ||
-                                                loadingServicios ||
-                                                !departamentoId
-                                            }
                                         />
                                     </Form.Item>
                                 )

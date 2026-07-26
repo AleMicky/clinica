@@ -22,8 +22,6 @@ public static class RecursosHumanosEndpoints
         group.MapCargoEndpoints();
         group.MapProfesionEndpoints();
         group.MapEspecialidadEndpoints();
-        group.MapDepartamentoEndpoints();
-        group.MapServicioEndpoints();
         group.MapEmpleadoEndpoints();
         group.MapJerarquiaEndpoints();
 

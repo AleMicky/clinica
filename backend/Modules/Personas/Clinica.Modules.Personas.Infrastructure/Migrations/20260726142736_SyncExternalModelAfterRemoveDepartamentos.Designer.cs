@@ -4,6 +4,7 @@ using Clinica.Modules.Personas.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Clinica.Modules.Personas.Infrastructure.Migrations
 {
     [DbContext(typeof(PersonasDbContext))]
-    partial class PersonasDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260726142736_SyncExternalModelAfterRemoveDepartamentos")]
+    partial class SyncExternalModelAfterRemoveDepartamentos
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -526,6 +529,9 @@ namespace Clinica.Modules.Personas.Infrastructure.Migrations
                     b.Property<Guid>("ProfesionId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("ServicioId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -615,6 +621,49 @@ namespace Clinica.Modules.Personas.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Profesiones", "recursos_humanos", t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
+                });
+
+            modelBuilder.Entity("Clinica.Modules.RecursosHumanos.Domain.Entities.Servicio", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AreaId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Descripcion")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Servicios", "recursos_humanos", t =>
                         {
                             t.ExcludeFromMigrations();
                         });

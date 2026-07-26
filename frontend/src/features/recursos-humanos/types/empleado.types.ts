@@ -22,10 +22,6 @@ export type Empleado = {
     fechaIngreso?: string | null
     areaId: EntityId
     areaNombre: string
-    departamentoId: EntityId
-    departamentoNombre: string
-    servicioId: EntityId
-    servicioNombre: string
     profesionId: EntityId
     profesionNombre: string
     cargoId: EntityId
@@ -39,16 +35,12 @@ export type EmpleadoQuery = {
     pageSize?: number
     search?: string
     areaId?: EntityId
-    departamentoId?: EntityId
-    servicioId?: EntityId
 }
 
 export type CreateEmpleadoPayload = {
     personaId: EntityId
     codigoEmpleado: string
     areaId: EntityId
-    departamentoId: EntityId
-    servicioId: EntityId
     profesionId: EntityId
     cargoId: EntityId
     fechaIngreso?: string | null

@@ -9,28 +9,22 @@ type SelectOption = {
 type EmpleadosFiltersBarProps = {
     searchInput: string
     areaFilter: string | undefined
-    departamentoFilter: string | undefined
     areaOptions: SelectOption[]
-    departamentoOptions: SelectOption[]
     hasActiveFilters: boolean
     onSearchInputChange: (value: string) => void
     onSearch: (value: string) => void
     onAreaFilterChange: (value: string | undefined) => void
-    onDepartamentoFilterChange: (value: string | undefined) => void
     onClearFilters: () => void
 }
 
 export function EmpleadosFiltersBar({
     searchInput,
     areaFilter,
-    departamentoFilter,
     areaOptions,
-    departamentoOptions,
     hasActiveFilters,
     onSearchInputChange,
     onSearch,
     onAreaFilterChange,
-    onDepartamentoFilterChange,
     onClearFilters,
 }: EmpleadosFiltersBarProps) {
     const { token } = theme.useToken()
@@ -68,17 +62,6 @@ export function EmpleadosFiltersBar({
                 onChange={onAreaFilterChange}
                 className="rrhh-empleados__filter-select"
                 aria-label="Filtrar por área"
-            />
-            <Select
-                allowClear
-                size="small"
-                placeholder="Departamento"
-                options={departamentoOptions}
-                value={departamentoFilter}
-                onChange={onDepartamentoFilterChange}
-                disabled={!areaFilter}
-                className="rrhh-empleados__filter-select"
-                aria-label="Filtrar por departamento"
             />
             {hasActiveFilters ? (
                 <Button

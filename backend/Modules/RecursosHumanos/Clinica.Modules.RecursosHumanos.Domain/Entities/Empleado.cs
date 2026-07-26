@@ -12,12 +12,6 @@ public class Empleado : AuditableEntity
     public Guid AreaId { get; set; }
     public Area Area { get; set; } = null!;
 
-    public Guid DepartamentoId { get; set; }
-    public Departamento Departamento { get; set; } = null!;
-
-    public Guid ServicioId { get; set; }
-    public Servicio Servicio { get; set; } = null!;
-
     public Guid ProfesionId { get; set; }
     public Profesion Profesion { get; set; } = null!;
 

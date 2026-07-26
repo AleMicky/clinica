@@ -1,9 +1,6 @@
 import { useState } from 'react'
 
-import {
-    useAreaDepartamentos,
-    useAreas,
-} from '../../catalogo-clinico/hooks/catalogo-clinico.hooks'
+import { useAreas } from '../../catalogo-clinico/hooks/catalogo-clinico.hooks'
 import {
     toCreateEmpleadoPayload,
     toUpdateEmpleadoPayload,
@@ -27,14 +24,12 @@ export function useEmpleadosView() {
     const [deletingId, setDeletingId] = useState<string | null>(null)
 
     const { data: areasResult } = useAreas(LOOKUP_QUERY)
-    const { data: departamentosResult } = useAreaDepartamentos(filters.areaFilter ?? null)
 
     const { data, isFetching } = useEmpleados({
         page: filters.page,
         pageSize: filters.pageSize,
         search: filters.search || undefined,
         areaId: filters.areaFilter,
-        departamentoId: filters.departamentoFilter,
     })
 
     const createEmpleado = useCreateEmpleado()
@@ -50,11 +45,6 @@ export function useEmpleadosView() {
             label: area.nombre,
             value: area.id,
         })) ?? []
-
-    const departamentoOptions = (departamentosResult ?? []).map((departamento) => ({
-        label: departamento.nombre,
-        value: departamento.id,
-    }))
 
     const caption = `${totalEmpleados} registrado${totalEmpleados === 1 ? '' : 's'}${
         filters.hasActiveFilters ? ' · filtros activos' : ''
@@ -103,16 +93,13 @@ export function useEmpleadosView() {
         loading: isFetching,
         caption,
         areaOptions,
-        departamentoOptions,
         filters: {
             searchInput: filters.searchInput,
             areaFilter: filters.areaFilter,
-            departamentoFilter: filters.departamentoFilter,
             hasActiveFilters: filters.hasActiveFilters,
             onSearchInputChange: filters.handleSearchInputChange,
             onSearch: filters.handleSearch,
             onAreaFilterChange: filters.handleAreaFilterChange,
-            onDepartamentoFilterChange: filters.handleDepartamentoFilterChange,
             onClearFilters: filters.clearFilters,
         },
         table: {

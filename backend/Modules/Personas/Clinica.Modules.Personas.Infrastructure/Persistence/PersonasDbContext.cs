@@ -44,20 +44,6 @@ public class PersonasDbContext : DbContext
         {
             entity.ToTable("Areas", "recursos_humanos", t => t.ExcludeFromMigrations());
             entity.HasKey(x => x.Id);
-            entity.Ignore(x => x.Departamentos);
-        });
-
-        modelBuilder.Entity<Departamento>(entity =>
-        {
-            entity.ToTable("Departamentos", "recursos_humanos", t => t.ExcludeFromMigrations());
-            entity.HasKey(x => x.Id);
-            entity.Ignore(x => x.Area);
-        });
-
-        modelBuilder.Entity<Servicio>(entity =>
-        {
-            entity.ToTable("Servicios", "recursos_humanos", t => t.ExcludeFromMigrations());
-            entity.HasKey(x => x.Id);
         });
 
         modelBuilder.Entity<Profesion>(entity =>
@@ -83,8 +69,6 @@ public class PersonasDbContext : DbContext
             entity.ToTable("Empleados", "recursos_humanos", t => t.ExcludeFromMigrations());
             entity.HasKey(x => x.Id);
             entity.Ignore(x => x.Area);
-            entity.Ignore(x => x.Departamento);
-            entity.Ignore(x => x.Servicio);
             entity.Ignore(x => x.Profesion);
             entity.Ignore(x => x.Cargo);
         });
