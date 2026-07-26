@@ -1,13 +1,16 @@
 import { del, get, getPaged, post, put } from '../../../shared/api/http'
 import { catalogoClinicoEndpoints } from '../../../shared/api/endpoints'
+import { createGuidCrudService } from '../../../shared/services/guid-crud.service'
 import type { PagedQuery } from '../../../shared/types/pagination.types'
 import type {
     Area,
     Cargo,
+    CreateAreaPayload,
     CreateCatalogoBasePayload,
     CreateCatalogoResult,
     Especialidad,
     Profesion,
+    UpdateAreaPayload,
     UpdateCatalogoBasePayload,
 } from '../types/catalogo-clinico.types'
 
@@ -23,9 +26,9 @@ function createSimpleCatalogService<T>(root: string) {
     }
 }
 
-export const areasService = {
-    ...createSimpleCatalogService<Area>(catalogoClinicoEndpoints.areas.root),
-}
+export const areasService = createGuidCrudService<Area, CreateAreaPayload, UpdateAreaPayload>(
+    catalogoClinicoEndpoints.areas.root,
+)
 
 export const especialidadesService = createSimpleCatalogService<Especialidad>(
     catalogoClinicoEndpoints.especialidades.root,

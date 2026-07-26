@@ -15,7 +15,9 @@ public sealed class JerarquiaOrganizacionalService(
     {
         var areas = await context.Areas
             .AsNoTracking()
-            .OrderBy(x => x.Nombre)
+            .Include(x => x.TipoArea)
+            .OrderBy(x => x.TipoArea.Orden)
+            .ThenBy(x => x.Nombre)
             .ToListAsync(cancellationToken);
 
         Dictionary<Guid, int>? areaCounts = null;
@@ -35,6 +37,12 @@ public sealed class JerarquiaOrganizacionalService(
                 area.Codigo,
                 area.Nombre,
                 area.Descripcion ?? string.Empty,
+                area.TipoAreaId,
+                area.TipoArea.Codigo,
+                area.TipoArea.Nombre,
+                area.TipoArea.Orden,
+                area.AreaPadreId,
+                area.ResponsableEmpleadoId,
                 request.IncludeCounts
                     ? areaCounts!.GetValueOrDefault(area.Id)
                     : null))

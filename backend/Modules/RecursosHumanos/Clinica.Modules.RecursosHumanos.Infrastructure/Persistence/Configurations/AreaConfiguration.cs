@@ -27,6 +27,25 @@ public sealed class AreaConfiguration : BaseEntityConfiguration<Area>
         builder.Property(x => x.Descripcion)
             .HasMaxLength(500);
 
+        builder.HasOne(x => x.TipoArea)
+            .WithMany()
+            .HasForeignKey(x => x.TipoAreaId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(x => x.AreaPadre)
+            .WithMany(x => x.SubAreas)
+            .HasForeignKey(x => x.AreaPadreId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(x => x.ResponsableEmpleado)
+            .WithMany()
+            .HasForeignKey(x => x.ResponsableEmpleadoId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(x => x.TipoAreaId);
+        builder.HasIndex(x => x.AreaPadreId);
+        builder.HasIndex(x => x.ResponsableEmpleadoId);
+
         builder.Property(x => x.CreatedAt)
             .HasDefaultValueSql("GETUTCDATE()");
 

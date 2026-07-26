@@ -13,10 +13,19 @@ namespace Clinica.Modules.RecursosHumanos.Infrastructure.Seed;
 
 public static class RecursosHumanosDbSeeder
 {
-    private static readonly (string Codigo, string Nombre)[] Areas =
+    private static readonly (string Codigo, string Nombre, int Orden)[] TiposArea =
     [
-        ("ARE-001", "Administrativa"),
-        ("ARE-002", "Atención en Salud")
+        ("ORG", "Organización", 1),
+        ("DIR", "Dirección", 2),
+        ("ARE", "Área", 3),
+        ("DEP", "Departamento", 4),
+        ("SER", "Servicio", 5)
+    ];
+
+    private static readonly (string Codigo, string Nombre, string TipoAreaCodigo)[] Areas =
+    [
+        ("ARE-001", "Administrativa", "ARE"),
+        ("ARE-002", "Atención en Salud", "ARE")
     ];
 
     private static readonly string[] Cargos =
@@ -273,16 +282,52 @@ public static class RecursosHumanosDbSeeder
 
     private static async Task SeedAsync(RecursosHumanosDbContext context)
     {
+        await SeedTiposAreaAsync(context);
         await SeedAreasAsync(context);
         await SeedCargosAsync(context);
         await SeedProfesionesAsync(context);
         await SeedEspecialidadesAsync(context);
     }
 
+    private static async Task SeedTiposAreaAsync(RecursosHumanosDbContext context)
+    {
+        foreach (var item in TiposArea)
+        {
+            var tipoArea = await context.TiposArea.FirstOrDefaultAsync(x => x.Codigo == item.Codigo);
+
+            if (tipoArea is null)
+            {
+                context.TiposArea.Add(new TipoArea
+                {
+                    Codigo = item.Codigo,
+                    Nombre = item.Nombre,
+                    Descripcion = null,
+                    Orden = item.Orden
+                });
+            }
+            else
+            {
+                tipoArea.Nombre = item.Nombre;
+                tipoArea.Descripcion = null;
+                tipoArea.Orden = item.Orden;
+            }
+        }
+
+        await context.SaveChangesAsync();
+    }
+
     private static async Task SeedAreasAsync(RecursosHumanosDbContext context)
     {
+        var tiposArea = await context.TiposArea
+            .AsNoTracking()
+            .ToDictionaryAsync(x => x.Codigo, x => x.Id);
+
         foreach (var item in Areas)
         {
+            if (!tiposArea.TryGetValue(item.TipoAreaCodigo, out var tipoAreaId))
+                throw new InvalidOperationException(
+                    $"No se encontró el tipo de área '{item.TipoAreaCodigo}' para sembrar áreas.");
+
             var area = await context.Areas.FirstOrDefaultAsync(x => x.Codigo == item.Codigo);
 
             if (area is null)
@@ -291,13 +336,15 @@ public static class RecursosHumanosDbSeeder
                 {
                     Codigo = item.Codigo,
                     Nombre = item.Nombre,
-                    Descripcion = null
+                    Descripcion = null,
+                    TipoAreaId = tipoAreaId
                 });
             }
             else
             {
                 area.Nombre = item.Nombre;
                 area.Descripcion = null;
+                area.TipoAreaId = tipoAreaId;
             }
         }
 

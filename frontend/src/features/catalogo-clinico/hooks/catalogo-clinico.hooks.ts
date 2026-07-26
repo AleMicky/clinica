@@ -13,7 +13,9 @@ import {
     profesionesService,
 } from '../services/catalogo-clinico.service'
 import type {
+    CreateAreaPayload,
     CreateCatalogoBasePayload,
+    UpdateAreaPayload,
     UpdateCatalogoBasePayload,
 } from '../types/catalogo-clinico.types'
 
@@ -38,7 +40,7 @@ export function useAreas(query: PagedQuery) {
 export function useCreateArea() {
     const qc = useQueryClient()
     return useAppMutation({
-        mutationFn: (data: CreateCatalogoBasePayload) => areasService.create(data),
+        mutationFn: (data: CreateAreaPayload) => areasService.create(data),
         onSuccess: () => {
             invalidateCatalogoHierarchy(qc)
             notify.success('Área creada', 'Registro guardado correctamente.')
@@ -55,7 +57,7 @@ export function useUpdateArea() {
             data,
         }: {
             id: string
-            data: UpdateCatalogoBasePayload
+            data: UpdateAreaPayload
         }) => areasService.update(id, data),
         onSuccess: () => {
             invalidateCatalogoHierarchy(qc)

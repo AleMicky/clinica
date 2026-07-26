@@ -44,6 +44,10 @@ public class PersonasDbContext : DbContext
         {
             entity.ToTable("Areas", "recursos_humanos", t => t.ExcludeFromMigrations());
             entity.HasKey(x => x.Id);
+            entity.Ignore(x => x.TipoArea);
+            entity.Ignore(x => x.AreaPadre);
+            entity.Ignore(x => x.ResponsableEmpleado);
+            entity.Ignore(x => x.SubAreas);
         });
 
         modelBuilder.Entity<Profesion>(entity =>

@@ -4,5 +4,10 @@ public sealed record AreaResponse(
     Guid Id,
     string Codigo,
     string Nombre,
-    string Descripcion
+    string Descripcion,
+    Guid TipoAreaId,
+    string TipoAreaNombre,
+    Guid? AreaPadreId,
+    string? AreaPadreNombre,
+    Guid? ResponsableEmpleadoId
 );

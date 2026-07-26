@@ -97,6 +97,7 @@ export function OrganizationTree({
                 ) : (
                     <Tree
                         blockNode
+                        defaultExpandAll
                         showLine={{ showLeafIcon: false }}
                         treeData={treeData}
                         selectedKeys={selectedKeys}

@@ -9,6 +9,7 @@ import type { MenuProps } from 'antd'
 import {
     BankOutlined,
     DeleteOutlined,
+    PlusOutlined,
 } from '@ant-design/icons'
 
 import {
@@ -16,17 +17,18 @@ import {
     useDeleteArea,
     useUpdateArea,
 } from '../../catalogo-clinico/hooks/catalogo-clinico.hooks'
-import type { CatalogoBaseFormValues } from '../../catalogo-clinico/schemas/catalogo-clinico.schema'
 import type { Area } from '../../catalogo-clinico/types/catalogo-clinico.types'
 import { useJerarquiaOrganizacional } from '../hooks/jerarquia.hooks'
+import type { AreaFormValues } from '../schemas/area.schema'
 import {
     filterJerarquiaTree,
     formatEmpleados,
     nodeKey,
     parseNodeKey,
     toArea,
-    toBasePayload,
+    toAreaPayload,
     type JerarquiaSelectionKind,
+    type JerarquiaTreeNode,
 } from '../utils/jerarquia-tree'
 import { DepartmentHeader } from './DepartmentHeader'
 import { DepartmentStats } from './DepartmentStats'
@@ -45,6 +47,7 @@ export function JerarquiaPanel() {
 
     const [areaDrawerOpen, setAreaDrawerOpen] = useState(false)
     const [editingArea, setEditingArea] = useState<Area | null>(null)
+    const [createParentAreaId, setCreateParentAreaId] = useState<string | null>(null)
 
     const [deletingAreaId, setDeletingAreaId] = useState<string | null>(null)
 
@@ -61,7 +64,7 @@ export function JerarquiaPanel() {
         [areaNodes],
     )
 
-    const filteredAreaNodes = useMemo(
+    const filteredAreaTree = useMemo(
         () => filterJerarquiaTree(areaNodes, treeSearch),
         [areaNodes, treeSearch],
     )
@@ -90,13 +93,15 @@ export function JerarquiaPanel() {
         setSelectedKeys([])
     }, [])
 
-    const openCreateArea = () => {
+    const openCreateArea = (parentAreaId: string | null = null) => {
         setEditingArea(null)
+        setCreateParentAreaId(parentAreaId)
         setAreaDrawerOpen(true)
     }
 
     const openEditArea = (area: Area) => {
         setEditingArea(area)
+        setCreateParentAreaId(null)
         setAreaDrawerOpen(true)
     }
 
@@ -112,8 +117,8 @@ export function JerarquiaPanel() {
         }
     }
 
-    const handleAreaSubmit = async (values: CatalogoBaseFormValues) => {
-        const payload = toBasePayload(values)
+    const handleAreaSubmit = async (values: AreaFormValues) => {
+        const payload = toAreaPayload(values)
 
         if (editingArea) {
             await updateArea.mutateAsync({ id: editingArea.id, data: payload })
@@ -123,9 +128,19 @@ export function JerarquiaPanel() {
 
         setAreaDrawerOpen(false)
         setEditingArea(null)
+        setCreateParentAreaId(null)
     }
 
     const buildAreaMenu = (area: Area): MenuProps['items'] => [
+        {
+            key: 'add-child',
+            icon: <PlusOutlined />,
+            label: 'Agregar subárea',
+            onClick: ({ domEvent }) => {
+                domEvent.stopPropagation()
+                openCreateArea(area.id)
+            },
+        },
         {
             key: 'delete',
             danger: true,
@@ -135,7 +150,8 @@ export function JerarquiaPanel() {
                 domEvent.stopPropagation()
                 Modal.confirm({
                     title: '¿Eliminar área?',
-                    content: 'Se eliminará el área y sus empleados quedarán sin asignación.',
+                    content:
+                        'No se podrá eliminar si tiene subáreas o empleados asignados.',
                     okText: 'Eliminar',
                     okType: 'danger',
                     cancelText: 'Cancelar',
@@ -145,28 +161,36 @@ export function JerarquiaPanel() {
         },
     ]
 
-    const treeData = useMemo<DataNode[]>(() => {
-        return filteredAreaNodes.map((area) => {
-            const areaEntity = toArea(area)
-            const empleados = formatEmpleados(area.empleadosCount)
+    const mapTreeNodes = useCallback(
+        (nodes: JerarquiaTreeNode[]): DataNode[] =>
+            nodes.map((area) => {
+                const areaEntity = toArea(area)
+                const empleados = formatEmpleados(area.empleadosCount)
 
-            return {
-                key: nodeKey('area', area.id),
-                isLeaf: true,
-                title: (
-                    <JerarquiaTreeNodeTitle
-                        icon={<BankOutlined />}
-                        nombre={area.nombre}
-                        codigo={area.codigo}
-                        countLabel={empleados ?? undefined}
-                        menuItems={buildAreaMenu(areaEntity)}
-                        deleting={deletingAreaId === area.id}
-                        onEdit={() => openEditArea(areaEntity)}
-                    />
-                ),
-            }
-        })
-    }, [filteredAreaNodes, deletingAreaId])
+                return {
+                    key: nodeKey('area', area.id),
+                    isLeaf: area.children.length === 0,
+                    title: (
+                        <JerarquiaTreeNodeTitle
+                            icon={<BankOutlined />}
+                            nombre={area.nombre}
+                            codigo={`${area.tipoAreaCodigo} · ${area.codigo}`}
+                            countLabel={empleados ?? undefined}
+                            menuItems={buildAreaMenu(areaEntity)}
+                            deleting={deletingAreaId === area.id}
+                            onEdit={() => openEditArea(areaEntity)}
+                        />
+                    ),
+                    children: mapTreeNodes(area.children),
+                }
+            }),
+        [deletingAreaId],
+    )
+
+    const treeData = useMemo(
+        () => mapTreeNodes(filteredAreaTree),
+        [filteredAreaTree, mapTreeNodes],
+    )
 
     const handleTreeSelect = (keys: React.Key[]) => {
         const key = String(keys[0] ?? '')
@@ -189,12 +213,24 @@ export function JerarquiaPanel() {
             { title: <span className="jerarquia-explorer__crumb-static">Recursos Humanos</span> },
         ]
 
-        if (selectedArea) {
-            items.push({ title: selectedArea.nombre })
+        if (!selectedAreaNode) return items
+
+        const path: typeof areaNodes = []
+        let current: typeof selectedAreaNode | undefined = selectedAreaNode
+
+        while (current) {
+            path.unshift(current)
+            current = current.areaPadreId
+                ? areaNodesById.get(current.areaPadreId)
+                : undefined
+        }
+
+        for (const node of path) {
+            items.push({ title: node.nombre })
         }
 
         return items
-    }, [selectedArea])
+    }, [selectedAreaNode, areaNodesById])
 
     const renderTreePanel = () => (
         <OrganizationTree
@@ -202,10 +238,10 @@ export function JerarquiaPanel() {
             treeSearchInput={treeSearchInput}
             loading={loadingJerarquia}
             hasAreas={areaNodes.length > 0}
-            hasFilteredAreas={filteredAreaNodes.length > 0}
+            hasFilteredAreas={filteredAreaTree.length > 0}
             treeData={treeData}
             selectedKeys={selectedKeys}
-            onCreateArea={openCreateArea}
+            onCreateArea={() => openCreateArea(null)}
             onSearchChange={setTreeSearchInput}
             onSearchClear={() => {
                 setTreeSearchInput('')
@@ -219,7 +255,19 @@ export function JerarquiaPanel() {
         if (!selectedArea || !selectedAreaNode) return null
 
         const empleados = formatEmpleados(selectedAreaNode.empleadosCount)
-        const stats = empleados ? [{ label: 'Empleados', value: empleados }] : []
+        const stats = [
+            { label: 'Tipo', value: selectedAreaNode.tipoAreaNombre },
+            ...(empleados ? [{ label: 'Empleados', value: empleados }] : []),
+        ]
+
+        const hierarchy = [{ label: 'Tipo', nombre: selectedAreaNode.tipoAreaNombre }]
+        if (selectedAreaNode.areaPadreId) {
+            const parent = areaNodesById.get(selectedAreaNode.areaPadreId)
+            if (parent) {
+                hierarchy.push({ label: 'Padre', nombre: parent.nombre })
+            }
+        }
+        hierarchy.push({ label: 'Área', nombre: selectedArea.nombre })
 
         return (
             <>
@@ -227,7 +275,7 @@ export function JerarquiaPanel() {
                     icon={<BankOutlined />}
                     codigo={selectedArea.codigo}
                     nombre={selectedArea.nombre}
-                    hierarchy={[{ label: 'Área', nombre: selectedArea.nombre }]}
+                    hierarchy={hierarchy}
                     descripcion={selectedArea.descripcion}
                     stats={<DepartmentStats items={stats} />}
                 />
@@ -265,11 +313,13 @@ export function JerarquiaPanel() {
             <JerarquiaAreaDrawer
                 open={areaDrawerOpen}
                 entity={editingArea}
+                parentAreaId={createParentAreaId}
                 loading={isSavingArea}
                 onClose={() => {
                     if (!isSavingArea) {
                         setAreaDrawerOpen(false)
                         setEditingArea(null)
+                        setCreateParentAreaId(null)
                     }
                 }}
                 onSubmit={handleAreaSubmit}

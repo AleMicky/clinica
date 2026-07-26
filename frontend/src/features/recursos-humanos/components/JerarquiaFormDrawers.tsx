@@ -1,14 +1,18 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useForm } from '@tanstack/react-form'
-import { Button, Col, Drawer, Flex, Form, Input, Row } from 'antd'
+import { Button, Col, Drawer, Flex, Form, Input, Row, Select } from 'antd'
 
-import {
-    catalogoBaseDefaultValues,
-    catalogoBaseSchema,
-    type CatalogoBaseFormValues,
-} from '../../catalogo-clinico/schemas/catalogo-clinico.schema'
+import { useAreas } from '../../catalogo-clinico/hooks/catalogo-clinico.hooks'
 import type { Area } from '../../catalogo-clinico/types/catalogo-clinico.types'
+import { useTiposArea } from '../tipos-area/hooks/tipos-area.hooks'
+import {
+    areaFormDefaultValues,
+    areaFormSchema,
+    type AreaFormValues,
+} from '../schemas/area.schema'
 import { getFieldError } from '../utils/form-errors'
+
+const LOOKUP_QUERY = { page: 1, pageSize: 200 }
 
 type DrawerFooterProps = {
     loading: boolean
@@ -33,23 +37,50 @@ function DrawerFooter({ loading, isEditing, onClose, onSubmit }: DrawerFooterPro
 type JerarquiaAreaDrawerProps = {
     open: boolean
     entity: Area | null
+    parentAreaId?: string | null
     loading: boolean
     onClose: () => void
-    onSubmit: (values: CatalogoBaseFormValues) => Promise<void>
+    onSubmit: (values: AreaFormValues) => Promise<void>
 }
 
 export function JerarquiaAreaDrawer({
     open,
     entity,
+    parentAreaId = null,
     loading,
     onClose,
     onSubmit,
 }: JerarquiaAreaDrawerProps) {
     const isEditing = entity !== null
+    const { data: tiposAreaResult, isFetching: loadingTiposArea } = useTiposArea(LOOKUP_QUERY)
+    const { data: areasResult, isFetching: loadingAreas } = useAreas(LOOKUP_QUERY)
+
+    const tipoAreaOptions = useMemo(
+        () =>
+            (tiposAreaResult?.items ?? [])
+                .slice()
+                .sort((a, b) => a.orden - b.orden || a.nombre.localeCompare(b.nombre, 'es'))
+                .map((item) => ({
+                    value: item.id,
+                    label: `${item.codigo} · ${item.nombre}`,
+                })),
+        [tiposAreaResult?.items],
+    )
+
+    const areaPadreOptions = useMemo(
+        () =>
+            (areasResult?.items ?? [])
+                .filter((area) => !entity || area.id !== entity.id)
+                .map((area) => ({
+                    value: area.id,
+                    label: `${area.codigo} · ${area.nombre}`,
+                })),
+        [areasResult?.items, entity],
+    )
 
     const form = useForm({
-        defaultValues: catalogoBaseDefaultValues,
-        validators: { onSubmit: catalogoBaseSchema },
+        defaultValues: areaFormDefaultValues,
+        validators: { onSubmit: areaFormSchema },
         onSubmit: async ({ value }) => {
             await onSubmit(value)
         },
@@ -63,15 +94,19 @@ export function JerarquiaAreaDrawer({
             form.setFieldValue('codigo', entity.codigo)
             form.setFieldValue('nombre', entity.nombre)
             form.setFieldValue('descripcion', entity.descripcion ?? '')
+            form.setFieldValue('tipoAreaId', entity.tipoAreaId)
+            form.setFieldValue('areaPadreId', entity.areaPadreId ?? '')
+            form.setFieldValue('responsableEmpleadoId', entity.responsableEmpleadoId ?? '')
             return
         }
 
         form.reset()
-    }, [open, entity, form])
+        form.setFieldValue('areaPadreId', parentAreaId ?? '')
+    }, [open, entity, parentAreaId, form])
 
     return (
         <Drawer
-            title={isEditing ? 'Editar área' : 'Nueva área'}
+            title={isEditing ? 'Editar área' : parentAreaId ? 'Nueva subárea' : 'Nueva área'}
             open={open}
             onClose={() => {
                 if (!loading) onClose()
@@ -132,6 +167,57 @@ export function JerarquiaAreaDrawer({
                                             onBlur={field.handleBlur}
                                             disabled={loading}
                                             autoFocus={isEditing}
+                                        />
+                                    </Form.Item>
+                                )
+                            }}
+                        </form.Field>
+                    </Col>
+                    <Col span={24}>
+                        <form.Field name="tipoAreaId">
+                            {(field) => {
+                                const error = getFieldError(field.state.meta.errors)
+                                return (
+                                    <Form.Item
+                                        label="Tipo de área"
+                                        validateStatus={error ? 'error' : undefined}
+                                        help={error || undefined}
+                                    >
+                                        <Select
+                                            showSearch
+                                            optionFilterProp="label"
+                                            placeholder="Seleccionar tipo"
+                                            options={tipoAreaOptions}
+                                            value={field.state.value || undefined}
+                                            onChange={(value) => field.handleChange(value)}
+                                            onBlur={field.handleBlur}
+                                            disabled={loading || loadingTiposArea}
+                                        />
+                                    </Form.Item>
+                                )
+                            }}
+                        </form.Field>
+                    </Col>
+                    <Col span={24}>
+                        <form.Field name="areaPadreId">
+                            {(field) => {
+                                const error = getFieldError(field.state.meta.errors)
+                                return (
+                                    <Form.Item
+                                        label="Área padre"
+                                        validateStatus={error ? 'error' : undefined}
+                                        help={error || 'Opcional'}
+                                    >
+                                        <Select
+                                            allowClear
+                                            showSearch
+                                            optionFilterProp="label"
+                                            placeholder="Sin área padre"
+                                            options={areaPadreOptions}
+                                            value={field.state.value || undefined}
+                                            onChange={(value) => field.handleChange(value ?? '')}
+                                            onBlur={field.handleBlur}
+                                            disabled={loading || loadingAreas}
                                         />
                                     </Form.Item>
                                 )

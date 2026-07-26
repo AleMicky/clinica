@@ -9,5 +9,11 @@ public sealed record JerarquiaAreaNode(
     string Codigo,
     string Nombre,
     string Descripcion,
+    Guid TipoAreaId,
+    string TipoAreaCodigo,
+    string TipoAreaNombre,
+    int TipoAreaOrden,
+    Guid? AreaPadreId,
+    Guid? ResponsableEmpleadoId,
     int? EmpleadosCount
 );

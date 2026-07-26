@@ -5,7 +5,13 @@ export type CatalogoBase = {
     descripcion: string | null
 }
 
-export type Area = CatalogoBase
+export type Area = CatalogoBase & {
+    tipoAreaId: string
+    tipoAreaNombre: string
+    areaPadreId: string | null
+    areaPadreNombre: string | null
+    responsableEmpleadoId: string | null
+}
 
 export type Especialidad = CatalogoBase
 export type Profesion = CatalogoBase
@@ -22,5 +28,16 @@ export type UpdateCatalogoBasePayload = {
     nombre: string
     descripcion?: string | null
 }
+
+export type CreateAreaPayload = {
+    codigo: string
+    nombre: string
+    tipoAreaId: string
+    descripcion?: string | null
+    areaPadreId?: string | null
+    responsableEmpleadoId?: string | null
+}
+
+export type UpdateAreaPayload = CreateAreaPayload
 
 export type CreateCatalogoResult = { id: string }

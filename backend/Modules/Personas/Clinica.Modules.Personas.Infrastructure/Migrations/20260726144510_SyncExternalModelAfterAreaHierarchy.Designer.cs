@@ -4,6 +4,7 @@ using Clinica.Modules.Personas.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Clinica.Modules.Personas.Infrastructure.Migrations
 {
     [DbContext(typeof(PersonasDbContext))]
-    partial class PersonasDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260726144510_SyncExternalModelAfterAreaHierarchy")]
+    partial class SyncExternalModelAfterAreaHierarchy
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
