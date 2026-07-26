@@ -6,4 +6,5 @@ public static class LaboratorioSwaggerTags
     public const string Especialidades = "Laboratorio · Especialidades";
     public const string TiposExamen = "Laboratorio · Tipos de examen";
     public const string Pruebas = "Laboratorio · Pruebas";
+    public const string PruebaPrecios = "Laboratorio · Precios de prueba";
 }

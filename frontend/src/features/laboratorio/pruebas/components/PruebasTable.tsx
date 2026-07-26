@@ -3,7 +3,8 @@ import {
     createColumnHelper,
     type ColumnDef,
 } from '@tanstack/react-table'
-import { Tag, Typography } from 'antd'
+import { Button, Tag, Typography } from 'antd'
+import { DollarOutlined } from '@ant-design/icons'
 
 import { AppDataTable } from '../../../../shared/components/ui/data-table/AppDataTable'
 import {
@@ -24,6 +25,7 @@ type PruebasTableProps = {
     onPageChange: (page: number, pageSize: number) => void
     onEdit: (prueba: Prueba) => void
     onDelete: (prueba: Prueba) => void
+    onManagePrecios: (prueba: Prueba) => void
     deletingId: string | null
     className?: string
 }
@@ -37,6 +39,7 @@ export function PruebasTable({
     onPageChange,
     onEdit,
     onDelete,
+    onManagePrecios,
     deletingId,
     className,
 }: PruebasTableProps) {
@@ -80,14 +83,29 @@ export function PruebasTable({
                             <Text type="secondary">No</Text>
                         ),
                 }),
+                columnHelper.display({
+                    id: 'precios',
+                    header: '',
+                    size: 44,
+                    cell: ({ row }) => (
+                        <Button
+                            type="text"
+                            size="small"
+                            icon={<DollarOutlined />}
+                            aria-label={`Precios de ${row.original.nombre}`}
+                            onClick={() => onManagePrecios(row.original)}
+                        />
+                    ),
+                }),
                 createRowActionsColumn<Prueba>({
                     onEdit,
                     onDelete,
                     deletingId,
                     deleteTitle: 'Eliminar prueba',
+                    size: 88,
                 }),
             ] as ColumnDef<Prueba, unknown>[],
-        [onEdit, onDelete, deletingId],
+        [onEdit, onDelete, onManagePrecios, deletingId],
     )
 
     return (

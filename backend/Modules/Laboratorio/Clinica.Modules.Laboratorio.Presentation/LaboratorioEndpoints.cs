@@ -20,6 +20,7 @@ public static class LaboratorioEndpoints
         group.MapEspecialidadEndpoints();
         group.MapTipoExamenEndpoints();
         group.MapPruebaEndpoints();
+        group.MapPruebaPrecioEndpoints();
 
         return app;
     }

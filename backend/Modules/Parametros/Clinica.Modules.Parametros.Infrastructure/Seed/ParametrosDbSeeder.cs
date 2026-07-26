@@ -193,6 +193,17 @@ public static class ParametrosDbSeeder
             ("MULTIPLE", "Múltiple", "MULTIPLE", 3)
         ]);
 
+        await SeedCatalogoGrupoAsync(context, "TIPO_MUESTRA", "Tipo de muestra", "Tipos de muestra de laboratorio clínico",
+        [
+            ("SANGRE", "Sangre", "SANGRE", 1),
+            ("SUERO", "Suero", "SUERO", 2),
+            ("PLASMA", "Plasma", "PLASMA", 3),
+            ("ORINA", "Orina", "ORINA", 4),
+            ("HECES", "Heces", "HECES", 5),
+            ("ESPUTO", "Esputo", "ESPUTO", 6),
+            ("LCR", "Líquido cefalorraquídeo", "LCR", 7)
+        ]);
+
         await SeedUnidadesMedidaAsync(context);
     }
 

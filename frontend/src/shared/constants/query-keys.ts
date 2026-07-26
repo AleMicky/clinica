@@ -137,6 +137,13 @@ export const queryKeys = {
             detail: (id: EntityId) =>
                 ['laboratorio', 'pruebas', 'detail', id] as const,
         },
+        pruebaPrecios: {
+            all: ['laboratorio', 'prueba-precios'] as const,
+            list: (query: PagedQuery & Record<string, unknown>) =>
+                ['laboratorio', 'prueba-precios', 'list', query] as const,
+            detail: (id: EntityId) =>
+                ['laboratorio', 'prueba-precios', 'detail', id] as const,
+        },
     },
     atencionMedica: {
         all: ['atencion-medica'] as const,

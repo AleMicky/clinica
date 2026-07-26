@@ -3,6 +3,7 @@ using Clinica.Api.Middleware;
 using Clinica.Modules.AtencionMedica.Infrastructure.Persistence;
 using Clinica.Modules.AtencionMedica.Infrastructure.Seed;
 using Clinica.Modules.Laboratorio.Infrastructure.Persistence;
+using Clinica.Modules.Laboratorio.Infrastructure.Seed;
 using Clinica.Modules.Parametros.Infrastructure.Persistence;
 using Clinica.Modules.Parametros.Infrastructure.Seed;
 using Clinica.Modules.Personas.Infrastructure.Persistence;
@@ -64,6 +65,7 @@ public static class ApplicationBuilderExtensions
             await RecursosHumanosDbSeeder.SeedEmpleadosMedicosAsync(app.Services);
             await AtencionMedicaDbSeeder.MigrateAsync(app.Services);
             await WorkflowDbSeeder.MigrateAsync(app.Services);
+            await LaboratorioDbSeeder.MigrateAsync(app.Services);
 
             logger.LogInformation("Seeds completados.");
         }
