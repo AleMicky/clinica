@@ -21,6 +21,7 @@ import type { Area } from '../../catalogo-clinico/types/catalogo-clinico.types'
 import { useJerarquiaOrganizacional } from '../hooks/jerarquia.hooks'
 import type { AreaFormValues } from '../schemas/area.schema'
 import {
+    collectExpandableKeys,
     filterJerarquiaTree,
     formatEmpleados,
     nodeKey,
@@ -41,6 +42,7 @@ export function JerarquiaPanel() {
     const [treeSearchInput, setTreeSearchInput] = useState('')
     const [treeSearch, setTreeSearch] = useState('')
     const [selectedKeys, setSelectedKeys] = useState<string[]>([])
+    const [expandedKeys, setExpandedKeys] = useState<string[]>([])
 
     const [selectedArea, setSelectedArea] = useState<Area | null>(null)
     const [selectionKind, setSelectionKind] = useState<JerarquiaSelectionKind>(null)
@@ -51,7 +53,7 @@ export function JerarquiaPanel() {
 
     const [deletingAreaId, setDeletingAreaId] = useState<string | null>(null)
 
-    const { data: jerarquia, isFetching: loadingJerarquia } = useJerarquiaOrganizacional(true)
+    const { data: jerarquia, isPending: loadingJerarquia } = useJerarquiaOrganizacional(true)
 
     const createArea = useCreateArea()
     const updateArea = useUpdateArea()
@@ -81,6 +83,26 @@ export function JerarquiaPanel() {
         }, 300)
         return () => window.clearTimeout(timer)
     }, [treeSearchInput])
+
+    const treeStructureKey = useMemo(
+        () =>
+            `${treeSearch}::${areaNodes
+                .map((area) => `${area.id}:${area.areaPadreId ?? ''}`)
+                .sort()
+                .join('|')}`,
+        [areaNodes, treeSearch],
+    )
+
+    // Expandir al cargar / al cambiar jerarquía o búsqueda (evita depender de defaultExpandAll).
+    useEffect(() => {
+        if (areaNodes.length === 0) {
+            setExpandedKeys([])
+            return
+        }
+        setExpandedKeys(collectExpandableKeys(filteredAreaTree))
+        // filteredAreaTree se deriva de areaNodes + treeSearch (cubiertos por treeStructureKey).
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- solo re-expandir cuando cambia la estructura
+    }, [treeStructureKey])
 
     const syncSelection = useCallback((kind: JerarquiaSelectionKind, area: Area | null) => {
         setSelectionKind(kind)
@@ -241,6 +263,7 @@ export function JerarquiaPanel() {
             hasFilteredAreas={filteredAreaTree.length > 0}
             treeData={treeData}
             selectedKeys={selectedKeys}
+            expandedKeys={expandedKeys}
             onCreateArea={() => openCreateArea(null)}
             onSearchChange={setTreeSearchInput}
             onSearchClear={() => {
@@ -248,6 +271,7 @@ export function JerarquiaPanel() {
                 setTreeSearch('')
             }}
             onSelect={handleTreeSelect}
+            onExpand={(keys) => setExpandedKeys(keys.map(String))}
         />
     )
 

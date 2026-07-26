@@ -121,3 +121,20 @@ export function formatEmpleados(count?: number | null) {
     if (count == null) return null
     return `${count} empleado${count === 1 ? '' : 's'}`
 }
+
+/** Claves de nodos con hijos (para expandir el árbol de Ant Design). */
+export function collectExpandableKeys(nodes: JerarquiaTreeNode[]): string[] {
+    const keys: string[] = []
+
+    const visit = (list: JerarquiaTreeNode[]) => {
+        for (const node of list) {
+            if (node.children.length > 0) {
+                keys.push(nodeKey('area', node.id))
+                visit(node.children)
+            }
+        }
+    }
+
+    visit(nodes)
+    return keys
+}

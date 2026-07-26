@@ -13,233 +13,6 @@ namespace Clinica.Modules.RecursosHumanos.Infrastructure.Seed;
 
 public static class RecursosHumanosDbSeeder
 {
-    private static readonly (string Codigo, string Nombre, int Orden)[] TiposArea =
-    [
-        ("ORG", "Organización", 1),
-        ("DIR", "Dirección", 2),
-        ("ARE", "Área", 3),
-        ("DEP", "Departamento", 4),
-        ("SER", "Servicio", 5)
-    ];
-
-    private static readonly (string Codigo, string Nombre, string TipoAreaCodigo)[] Areas =
-    [
-        ("ARE-001", "Administrativa", "ARE"),
-        ("ARE-002", "Atención en Salud", "ARE")
-    ];
-
-    private static readonly string[] Cargos =
-    [
-        "Administrador",
-        "Anestesiología",
-        "Anestesiólogo",
-        "Archivista",
-        "Auxiliar Administrativo",
-        "Auxiliar Administrativo de Caja",
-        "Auxiliar de Caja y Seguros",
-        "Auxiliar de Enfermería",
-        "Auxiliar de Enfermería de Apoyo",
-        "Auxiliar de Farmacia",
-        "Auxiliar de Laboratorio",
-        "Auxiliar de Marketing y Admisión",
-        "Ayudante de Cocina",
-        "Ayudante de Lavado",
-        "Ayudante de Limpieza",
-        "Cajas",
-        "Cajas y Tesorería",
-        "Cajero",
-        "Cardiología",
-        "Circulante",
-        "Cirugía General",
-        "Cirugía Plástica",
-        "Colposcopia",
-        "Contador",
-        "Director General",
-        "Director Médico",
-        "Ecografista",
-        "Encargado de Cocina",
-        "Encargado de Costura",
-        "Encargado de Esterilización",
-        "Encargado de Limpieza",
-        "Encargado de Mantenimiento",
-        "Encargado de Neonatología",
-        "Encargado de Planchado",
-        "Encargado de Quirófano",
-        "Encargado de Rayos X",
-        "Encargado de Servicio",
-        "Encargado de UTI",
-        "Enfermero de Base",
-        "Enfermero de Emergencias",
-        "Enfermero de Esterilización",
-        "Enfermero de Quirófano",
-        "Enfermero de Salas de Internación",
-        "Enfermero de Servicio Crítico",
-        "Estadígrafo",
-        "Esterilización",
-        "Farmacia",
-        "Gastroenterología",
-        "Gerente Administrativo",
-        "Gerente Administrativo Financiero",
-        "Geriatría",
-        "Ginecología",
-        "Guardia de Seguridad / Portero",
-        "Instrumentista",
-        "Instrumentista Quirúrgico",
-        "Jefe de Enfermería",
-        "Laboratorios",
-        "Lavado y Planchado",
-        "Limpieza",
-        "Marketing",
-        "Medicina Crítica y Terapia Intensiva",
-        "Medicina Interna",
-        "Médico",
-        "Médico de Guardia",
-        "Médico General de Guardia",
-        "Otorrinolaringología",
-        "Pediatría",
-        "Personal de Esterilización",
-        "Planchado",
-        "Psiquiatra",
-        "Psiquiatría",
-        "Quirófano",
-        "Radiólogo",
-        "Recepcionista",
-        "Regente de Farmacia",
-        "Responsable",
-        "Responsable de Esterilización",
-        "Responsable de Quirófano",
-        "Supervisor de Enfermería",
-        "Técnico en Rayos X",
-        "Terapia Intensiva",
-        "Traumatología",
-        "Traumatólogo",
-        "Urólogo"
-    ];
-
-    private static readonly string[] Profesiones =
-    [
-        "Anestesiólogo",
-        "Auxiliar de Enfermería",
-        "Auxiliar de Laboratorio",
-        "Bachiller",
-        "Bioquímico",
-        "Bioquímico Farmacéutico",
-        "Cardiólogo",
-        "Cirujano General",
-        "Cirujano Geriatra",
-        "Cirujano Plástico",
-        "Contador",
-        "Gastroenterólogo",
-        "Ginecólogo",
-        "Ginecólogo Obstetra",
-        "Hematólogo",
-        "Imagenólogo",
-        "Ingeniero Comercial",
-        "Laboratorista",
-        "Licenciado en Contaduría Pública",
-        "Licenciado en Enfermería",
-        "Médico General",
-        "Médico General Dermatoestético",
-        "Médico Intensivista",
-        "Médico Internista",
-        "Neurocirujano",
-        "Nutricionista",
-        "Otorrinolaringólogo",
-        "Pediatra",
-        "Pediatra Neonatólogo",
-        "Psiquiatra",
-        "Reumatólogo",
-        "Secretaria Ejecutiva",
-        "Técnico de Laboratorio",
-        "Técnico en Enfermería",
-        "Técnico en Radiología",
-        "Técnico Medio",
-        "Técnico Medio en Enfermería",
-        "Traumatólogo",
-        "Urólogo"
-    ];
-
-    private static readonly string[] Especialidades =
-    [
-        "Anestesiología",
-        "Cardiología",
-        "Cirugía General",
-        "Cirugía Plástica, Estética y Reconstructiva",
-        "Ecografía",
-        "Farmacia",
-        "Gastroenterología",
-        "Geriatría",
-        "Ginecología y Obstetricia",
-        "Hematología",
-        "Imagenología",
-        "Laboratorio Clínico",
-        "Medicina Crítica y Terapia Intensiva",
-        "Medicina Dermatoestética",
-        "Medicina Interna",
-        "Neonatología",
-        "Neurocirugía",
-        "Nutrición Clínica",
-        "Otorrinolaringología",
-        "Pediatría",
-        "Psiquiatría",
-        "Radiología",
-        "Reumatología",
-        "Traumatología",
-        "Urología"
-    ];
-
-    private static readonly DateOnly DemoFechaIngreso = new(2020, 1, 1);
-
-    private static readonly DemoEmpleadoSeed[] DemoEmpleados =
-    [
-        new(
-            "10000001",
-            "EMP-00001",
-            "ARE-002",
-            "Médico General",
-            "Médico"),
-        new(
-            "10000002",
-            "EMP-00002",
-            "ARE-001",
-            "Secretaria Ejecutiva",
-            "Recepcionista"),
-        new(
-            "10000003",
-            "EMP-00003",
-            "ARE-002",
-            "Licenciado en Enfermería",
-            "Enfermero de Base"),
-        new(
-            "10000004",
-            "EMP-00004",
-            "ARE-002",
-            "Bioquímico Farmacéutico",
-            "Farmacia"),
-        new(
-            "10000005",
-            "EMP-00005",
-            "ARE-002",
-            "Laboratorista",
-            "Laboratorios"),
-        new(
-            "10000006",
-            "EMP-00006",
-            "ARE-001",
-            "Ingeniero Comercial",
-            "Administrador")
-    ];
-
-    private static readonly DemoMedicoSeed[] DemoMedicos =
-    [
-        new(
-            "10000001",
-            "MP-10000001",
-            "CMP-10001",
-            "Medicina Interna",
-            ["Ginecología y Obstetricia"])
-    ];
-
     public static async Task MigrateAsync(IServiceProvider serviceProvider)
     {
         using var scope = serviceProvider.CreateScope();
@@ -251,7 +24,7 @@ public static class RecursosHumanosDbSeeder
         var context = services.GetRequiredService<RecursosHumanosDbContext>();
 
         await context.Database.MigrateAsync();
-        await SeedAsync(context);
+        await SeedCatalogAsync(context);
 
         logger.LogInformation("Migraciones y datos iniciales de RecursosHumanos aplicadas correctamente.");
     }
@@ -276,11 +49,12 @@ public static class RecursosHumanosDbSeeder
 
         await SeedEmpleadosAsync(personasContext, recursosHumanosContext, logger);
         await SeedMedicosAsync(personasContext, recursosHumanosContext, logger);
+        await SeedResponsablesAsync(recursosHumanosContext, logger);
 
-        logger.LogInformation("Seed de empleados y médicos demo aplicado correctamente.");
+        logger.LogInformation("Seed demo de RecursosHumanos aplicado correctamente.");
     }
 
-    private static async Task SeedAsync(RecursosHumanosDbContext context)
+    private static async Task SeedCatalogAsync(RecursosHumanosDbContext context)
     {
         await SeedTiposAreaAsync(context);
         await SeedAreasAsync(context);
@@ -291,7 +65,7 @@ public static class RecursosHumanosDbSeeder
 
     private static async Task SeedTiposAreaAsync(RecursosHumanosDbContext context)
     {
-        foreach (var item in TiposArea)
+        foreach (var item in RecursosHumanosCatalogSeedData.TiposArea)
         {
             var tipoArea = await context.TiposArea.FirstOrDefaultAsync(x => x.Codigo == item.Codigo);
 
@@ -322,43 +96,58 @@ public static class RecursosHumanosDbSeeder
             .AsNoTracking()
             .ToDictionaryAsync(x => x.Codigo, x => x.Id);
 
-        foreach (var item in Areas)
+        var areaIdsByCodigo = await context.Areas
+            .AsNoTracking()
+            .ToDictionaryAsync(x => x.Codigo, x => x.Id);
+
+        foreach (var item in RecursosHumanosDemoSeedData.Areas)
         {
             if (!tiposArea.TryGetValue(item.TipoAreaCodigo, out var tipoAreaId))
                 throw new InvalidOperationException(
                     $"No se encontró el tipo de área '{item.TipoAreaCodigo}' para sembrar áreas.");
 
+            Guid? areaPadreId = null;
+            if (item.AreaPadreCodigo is not null)
+            {
+                if (!areaIdsByCodigo.TryGetValue(item.AreaPadreCodigo, out var padreId))
+                    throw new InvalidOperationException(
+                        $"No se encontró el área padre '{item.AreaPadreCodigo}' para '{item.Codigo}'.");
+
+                areaPadreId = padreId;
+            }
+
             var area = await context.Areas.FirstOrDefaultAsync(x => x.Codigo == item.Codigo);
 
             if (area is null)
             {
-                context.Areas.Add(new Area
+                area = new Area
                 {
                     Codigo = item.Codigo,
                     Nombre = item.Nombre,
                     Descripcion = null,
-                    TipoAreaId = tipoAreaId
-                });
+                    TipoAreaId = tipoAreaId,
+                    AreaPadreId = areaPadreId
+                };
+                context.Areas.Add(area);
             }
             else
             {
                 area.Nombre = item.Nombre;
                 area.Descripcion = null;
                 area.TipoAreaId = tipoAreaId;
+                area.AreaPadreId = areaPadreId;
             }
-        }
 
-        await context.SaveChangesAsync();
+            await context.SaveChangesAsync();
+            areaIdsByCodigo[item.Codigo] = area.Id;
+        }
     }
 
     private static async Task SeedCargosAsync(RecursosHumanosDbContext context)
     {
-        var orden = 1;
-
-        foreach (var nombre in Cargos.Select(x => x.Trim()).Where(x => !string.IsNullOrWhiteSpace(x)).DistinctBy(ToCode))
+        foreach (var nombre in DistinctNames(RecursosHumanosCatalogSeedData.Cargos))
         {
             var codigo = ToCode(nombre);
-
             var cargo = await context.Cargos.FirstOrDefaultAsync(x => x.Codigo == codigo);
 
             if (cargo is null)
@@ -367,7 +156,7 @@ public static class RecursosHumanosDbSeeder
                 {
                     Codigo = codigo,
                     Nombre = nombre,
-                    Descripcion = null,
+                    Descripcion = null
                 });
             }
             else
@@ -375,8 +164,6 @@ public static class RecursosHumanosDbSeeder
                 cargo.Nombre = nombre;
                 cargo.Descripcion = null;
             }
-
-            orden++;
         }
 
         await context.SaveChangesAsync();
@@ -384,12 +171,9 @@ public static class RecursosHumanosDbSeeder
 
     private static async Task SeedProfesionesAsync(RecursosHumanosDbContext context)
     {
-        var orden = 1;
-
-        foreach (var nombre in Profesiones.Select(x => x.Trim()).Where(x => !string.IsNullOrWhiteSpace(x)).DistinctBy(ToCode))
+        foreach (var nombre in DistinctNames(RecursosHumanosCatalogSeedData.Profesiones))
         {
             var codigo = ToCode(nombre);
-
             var profesion = await context.Profesiones.FirstOrDefaultAsync(x => x.Codigo == codigo);
 
             if (profesion is null)
@@ -398,7 +182,7 @@ public static class RecursosHumanosDbSeeder
                 {
                     Codigo = codigo,
                     Nombre = nombre,
-                    Descripcion = null,
+                    Descripcion = null
                 });
             }
             else
@@ -406,8 +190,6 @@ public static class RecursosHumanosDbSeeder
                 profesion.Nombre = nombre;
                 profesion.Descripcion = null;
             }
-
-            orden++;
         }
 
         await context.SaveChangesAsync();
@@ -415,12 +197,9 @@ public static class RecursosHumanosDbSeeder
 
     private static async Task SeedEspecialidadesAsync(RecursosHumanosDbContext context)
     {
-        var orden = 1;
-
-        foreach (var nombre in Especialidades.Select(x => x.Trim()).Where(x => !string.IsNullOrWhiteSpace(x)).DistinctBy(ToCode))
+        foreach (var nombre in DistinctNames(RecursosHumanosCatalogSeedData.Especialidades))
         {
             var codigo = ToCode(nombre);
-
             var especialidad = await context.Especialidades.FirstOrDefaultAsync(x => x.Codigo == codigo);
 
             if (especialidad is null)
@@ -429,7 +208,7 @@ public static class RecursosHumanosDbSeeder
                 {
                     Codigo = codigo,
                     Nombre = nombre,
-                    Descripcion = null,
+                    Descripcion = null
                 });
             }
             else
@@ -437,8 +216,6 @@ public static class RecursosHumanosDbSeeder
                 especialidad.Nombre = nombre;
                 especialidad.Descripcion = null;
             }
-
-            orden++;
         }
 
         await context.SaveChangesAsync();
@@ -449,7 +226,7 @@ public static class RecursosHumanosDbSeeder
         RecursosHumanosDbContext recursosHumanosContext,
         ILogger logger)
     {
-        foreach (var item in DemoEmpleados)
+        foreach (var item in RecursosHumanosDemoSeedData.Empleados)
         {
             var persona = await personasContext.Personas
                 .FirstOrDefaultAsync(x => x.NumeroDocumento == item.NumeroDocumento);
@@ -491,7 +268,7 @@ public static class RecursosHumanosDbSeeder
                 {
                     PersonaId = persona.Id,
                     CodigoEmpleado = item.CodigoEmpleado,
-                    FechaIngreso = DemoFechaIngreso,
+                    FechaIngreso = RecursosHumanosDemoSeedData.DemoFechaIngreso,
                     AreaId = area.Id,
                     ProfesionId = profesion.Id,
                     CargoId = cargo.Id
@@ -501,7 +278,7 @@ public static class RecursosHumanosDbSeeder
             {
                 empleado.PersonaId = persona.Id;
                 empleado.CodigoEmpleado = item.CodigoEmpleado;
-                empleado.FechaIngreso = DemoFechaIngreso;
+                empleado.FechaIngreso = RecursosHumanosDemoSeedData.DemoFechaIngreso;
                 empleado.AreaId = area.Id;
                 empleado.ProfesionId = profesion.Id;
                 empleado.CargoId = cargo.Id;
@@ -516,7 +293,7 @@ public static class RecursosHumanosDbSeeder
         RecursosHumanosDbContext recursosHumanosContext,
         ILogger logger)
     {
-        foreach (var item in DemoMedicos)
+        foreach (var item in RecursosHumanosDemoSeedData.Medicos)
         {
             var persona = await personasContext.Personas
                 .AsNoTracking()
@@ -594,6 +371,46 @@ public static class RecursosHumanosDbSeeder
         await personasContext.SaveChangesAsync();
     }
 
+    private static async Task SeedResponsablesAsync(
+        RecursosHumanosDbContext context,
+        ILogger logger)
+    {
+        var codigosEmpleado = RecursosHumanosDemoSeedData.Responsables
+            .Select(x => x.CodigoEmpleado)
+            .Distinct()
+            .ToArray();
+
+        var empleados = await context.Empleados
+            .AsNoTracking()
+            .Where(x => codigosEmpleado.Contains(x.CodigoEmpleado))
+            .ToDictionaryAsync(x => x.CodigoEmpleado, x => x.Id);
+
+        foreach (var (areaCodigo, codigoEmpleado) in RecursosHumanosDemoSeedData.Responsables)
+        {
+            if (!empleados.TryGetValue(codigoEmpleado, out var empleadoId))
+            {
+                logger.LogWarning(
+                    "Empleado '{Codigo}' no encontrado; omitiendo responsable de área '{Area}'.",
+                    codigoEmpleado,
+                    areaCodigo);
+                continue;
+            }
+
+            var area = await context.Areas.FirstOrDefaultAsync(x => x.Codigo == areaCodigo);
+            if (area is null)
+            {
+                logger.LogWarning(
+                    "Área '{Area}' no encontrada; omitiendo asignación de responsable.",
+                    areaCodigo);
+                continue;
+            }
+
+            area.ResponsableEmpleadoId = empleadoId;
+        }
+
+        await context.SaveChangesAsync();
+    }
+
     private static void SyncMedicoEspecialidades(
         Medico medico,
         IReadOnlyList<Especialidad> especialidades,
@@ -628,6 +445,12 @@ public static class RecursosHumanosDbSeeder
         }
     }
 
+    private static IEnumerable<string> DistinctNames(IEnumerable<string> values) =>
+        values
+            .Select(x => x.Trim())
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .DistinctBy(ToCode);
+
     private static string ToCode(string value)
     {
         var normalized = value.Trim().Normalize(NormalizationForm.FormD);
@@ -652,18 +475,4 @@ public static class RecursosHumanosDbSeeder
 
         return builder.ToString().Trim('_');
     }
-
-    private sealed record DemoEmpleadoSeed(
-        string NumeroDocumento,
-        string CodigoEmpleado,
-        string AreaCodigo,
-        string ProfesionNombre,
-        string CargoNombre);
-
-    private sealed record DemoMedicoSeed(
-        string NumeroDocumento,
-        string MatriculaProfesional,
-        string? RegistroColegioMedico,
-        string EspecialidadPrincipalNombre,
-        string[] OtrasEspecialidades);
 }

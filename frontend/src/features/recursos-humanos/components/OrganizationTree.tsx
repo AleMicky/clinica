@@ -12,10 +12,12 @@ type OrganizationTreeProps = {
     hasFilteredAreas: boolean
     treeData: DataNode[]
     selectedKeys: string[]
+    expandedKeys: string[]
     onCreateArea: () => void
     onSearchChange: (value: string) => void
     onSearchClear: () => void
     onSelect: (keys: React.Key[]) => void
+    onExpand: (keys: React.Key[]) => void
 }
 
 export function OrganizationTree({
@@ -26,10 +28,12 @@ export function OrganizationTree({
     hasFilteredAreas,
     treeData,
     selectedKeys,
+    expandedKeys,
     onCreateArea,
     onSearchChange,
     onSearchClear,
     onSelect,
+    onExpand,
 }: OrganizationTreeProps) {
     const { token } = theme.useToken()
 
@@ -97,10 +101,11 @@ export function OrganizationTree({
                 ) : (
                     <Tree
                         blockNode
-                        defaultExpandAll
                         showLine={{ showLeafIcon: false }}
                         treeData={treeData}
                         selectedKeys={selectedKeys}
+                        expandedKeys={expandedKeys}
+                        onExpand={(keys) => onExpand(keys)}
                         onSelect={(keys) => onSelect(keys)}
                         className="jerarquia-explorer__tree"
                     />
