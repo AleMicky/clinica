@@ -4,6 +4,7 @@ public static class RecursosHumanosSwaggerTags
 {
     public const string Module = "RecursosHumanos";
     public const string Areas = "RecursosHumanos · Áreas";
+    public const string TiposArea = "RecursosHumanos · Tipos de área";
     public const string Cargos = "RecursosHumanos · Cargos";
     public const string Profesiones = "RecursosHumanos · Profesiones";
     public const string Especialidades = "RecursosHumanos · Especialidades";

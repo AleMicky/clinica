@@ -13,6 +13,8 @@ public class RecursosHumanosDbContext : DbContext
 
     public DbSet<Area> Areas => Set<Area>();
 
+    public DbSet<TipoArea> TiposArea => Set<TipoArea>();
+
     public DbSet<Cargo> Cargos => Set<Cargo>();
 
     public DbSet<Profesion> Profesiones => Set<Profesion>();

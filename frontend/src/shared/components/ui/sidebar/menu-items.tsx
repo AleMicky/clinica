@@ -150,6 +150,13 @@ export const menuGroups: MenuGroup[] = [
                 roles: [AppRole.Admin],
             },
             {
+                key: '/recursos-humanos/tipos-area',
+                to: '/recursos-humanos/tipos-area',
+                icon: <ApartmentOutlined />,
+                label: 'Tipos de área',
+                roles: [AppRole.Admin],
+            },
+            {
                 key: '/recursos-humanos/especialidades',
                 to: '/recursos-humanos/especialidades',
                 icon: <ExperimentOutlined />,

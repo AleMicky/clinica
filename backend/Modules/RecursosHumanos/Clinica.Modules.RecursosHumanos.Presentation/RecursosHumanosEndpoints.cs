@@ -18,6 +18,7 @@ public static class RecursosHumanosEndpoints
 
         MapHealth(group);
         group.MapAreaEndpoints();
+        group.MapTipoAreaEndpoints();
         group.MapCargoEndpoints();
         group.MapProfesionEndpoints();
         group.MapEspecialidadEndpoints();

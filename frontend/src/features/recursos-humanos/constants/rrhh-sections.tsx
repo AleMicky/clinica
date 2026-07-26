@@ -1,4 +1,5 @@
 import {
+    ApartmentOutlined,
     ExperimentOutlined,
     IdcardOutlined,
     MedicineBoxOutlined,
@@ -28,6 +29,11 @@ const rrhhPageSections: RrhhPageSection[] = [
         path: '/recursos-humanos/jerarquia',
         title: 'Áreas y servicios',
         icon: <NodeIndexOutlined />,
+    },
+    {
+        path: '/recursos-humanos/tipos-area',
+        title: 'Tipos de área',
+        icon: <ApartmentOutlined />,
     },
     {
         path: '/recursos-humanos/especialidades',

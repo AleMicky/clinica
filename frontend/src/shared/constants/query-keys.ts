@@ -113,6 +113,11 @@ export const queryKeys = {
             list: (query: PagedQuery) =>
                 ['catalogo-clinico', 'cargos', 'list', query] as const,
         },
+        tiposArea: {
+            all: ['catalogo-clinico', 'tipos-area'] as const,
+            list: (query: PagedQuery) =>
+                ['catalogo-clinico', 'tipos-area', 'list', query] as const,
+        },
     },
     laboratorio: {
         all: ['laboratorio'] as const,

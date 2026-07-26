@@ -84,6 +84,7 @@ export const catalogoClinicoEndpoints = {
     especialidades: createEndpoints(`${api.recursosHumanos}/especialidades`),
     profesiones: createEndpoints(`${api.recursosHumanos}/profesiones`),
     cargos: createEndpoints(`${api.recursosHumanos}/cargos`),
+    tiposArea: createEndpoints(`${api.recursosHumanos}/tipos-area`),
 } as const
 
 export const atencionMedicaEndpoints = {

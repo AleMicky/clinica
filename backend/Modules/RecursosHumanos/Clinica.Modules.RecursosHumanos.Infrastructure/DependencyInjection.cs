@@ -17,6 +17,7 @@ public static class DependencyInjection
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
         services.AddScoped<IAreaService, AreaService>();
+        services.AddScoped<ITipoAreaService, TipoAreaService>();
         services.AddScoped<ICargoService, CargoService>();
         services.AddScoped<IProfesionService, ProfesionService>();
         services.AddScoped<IEspecialidadService, EspecialidadService>();

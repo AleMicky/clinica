@@ -28,6 +28,7 @@ public static class SwaggerExtensions
         ParametrosSwaggerTags.UnidadesMedida,
         RecursosHumanosSwaggerTags.Module,
         RecursosHumanosSwaggerTags.Areas,
+        RecursosHumanosSwaggerTags.TiposArea,
         RecursosHumanosSwaggerTags.Cargos,
         RecursosHumanosSwaggerTags.Profesiones,
         RecursosHumanosSwaggerTags.Especialidades,
