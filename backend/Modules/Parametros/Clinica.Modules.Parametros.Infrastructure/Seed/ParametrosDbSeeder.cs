@@ -204,6 +204,13 @@ public static class ParametrosDbSeeder
             ("LCR", "Líquido cefalorraquídeo", "LCR", 7)
         ]);
 
+        await SeedCatalogoGrupoAsync(context, "METODO_PAGO", "Método de pago", "Métodos de cobro en caja",
+        [
+            ("EFECTIVO", "Efectivo", "EFECTIVO", 1),
+            ("TARJETA", "Tarjeta", "TARJETA", 2),
+            ("TRANSFERENCIA", "Transferencia", "TRANSFERENCIA", 3)
+        ]);
+
         await SeedUnidadesMedidaAsync(context);
     }
 

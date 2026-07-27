@@ -35,6 +35,8 @@
     <ProjectReference Include="..\Modules\Workflow\Clinica.Modules.Workflow.Presentation\Clinica.Modules.Workflow.Presentation.csproj" />
     <ProjectReference Include="..\Modules\Laboratorio\Clinica.Modules.Laboratorio.Infrastructure\Clinica.Modules.Laboratorio.Infrastructure.csproj" />
     <ProjectReference Include="..\Modules\Laboratorio\Clinica.Modules.Laboratorio.Presentation\Clinica.Modules.Laboratorio.Presentation.csproj" />
+    <ProjectReference Include="..\Modules\Caja\Clinica.Modules.Caja.Infrastructure\Clinica.Modules.Caja.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Caja\Clinica.Modules.Caja.Presentation\Clinica.Modules.Caja.Presentation.csproj" />
   </ItemGroup>
 
 </Project>

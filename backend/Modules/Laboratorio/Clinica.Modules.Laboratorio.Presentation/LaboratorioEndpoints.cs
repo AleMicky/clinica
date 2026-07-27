@@ -21,6 +21,14 @@ public static class LaboratorioEndpoints
         group.MapTipoExamenEndpoints();
         group.MapPruebaEndpoints();
         group.MapPruebaPrecioEndpoints();
+        group.MapParametroEndpoints();
+        group.MapValorReferenciaEndpoints();
+        group.MapLaboratorioExternoEndpoints();
+        group.MapSolicitudEndpoints();
+        group.MapMuestraEndpoints();
+        group.MapSolicitudMuestraEndpoints();
+        group.MapResultadoEndpoints();
+        group.MapSolicitudResultadoEndpoints();
 
         return app;
     }

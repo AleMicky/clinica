@@ -185,6 +185,25 @@ export function useRecepcionarAtencion() {
     })
 }
 
+export function useEnviarACaja() {
+    const queryClient = useQueryClient()
+
+    return useAppMutation({
+        mutationFn: ({ id, empleadoId }: { id: string; empleadoId: string }) =>
+            atencionesService.enviarACaja(id, { empleadoId }),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({
+                queryKey: queryKeys.atencionMedica.atenciones.all,
+            })
+            void queryClient.invalidateQueries({ queryKey: queryKeys.caja.cuentas.all })
+            notify.success('Enviado a caja', 'Se generó la cuenta de cobro.')
+        },
+        onError: (error) => {
+            notify.error('Error al enviar a caja', getApiErrorMessage(error))
+        },
+    })
+}
+
 export function useUpdateAtencion() {
     const queryClient = useQueryClient()
 

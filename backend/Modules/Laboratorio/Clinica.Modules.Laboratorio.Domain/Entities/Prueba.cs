@@ -14,6 +14,8 @@ public class Prueba : AuditableEntity, ICodedEntity
     public Guid TipoMuestraId { get; set; }
     public CatalogoItem TipoMuestra { get; set; } = null!;
     public bool RequiereAyuno { get; set; }
-    public int HorasAyuno { get; set; }
+    public int? HorasAyuno { get; set; }
     public bool EsDerivable { get; set; }
+    public ICollection<Parametro> Parametros { get; set; } = [];
+    public ICollection<PruebaPrecio> Precios { get; set; } = [];
 }

@@ -47,6 +47,12 @@ export const atencionesService = {
             data,
         )
     },
+    enviarACaja(id: string, data: { empleadoId: string }) {
+        return post<Atencion, { empleadoId: string }>(
+            atencionMedicaEndpoints.atenciones.enviarACaja(id),
+            data,
+        )
+    },
 }
 
 export const tiposAtencionService = {

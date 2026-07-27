@@ -62,6 +62,7 @@ const staffRoles: AppRoleName[] = [
     AppRole.Enfermeria,
     AppRole.Farmacia,
     AppRole.Laboratorio,
+    AppRole.Caja,
 ]
 
 export function requireStaff() {

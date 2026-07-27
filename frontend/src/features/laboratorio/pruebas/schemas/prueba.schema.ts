@@ -16,11 +16,11 @@ export const pruebaSchema = z
         tipoExamenId: z.string().trim().min(1, 'Seleccione un tipo de examen.'),
         tipoMuestraId: z.string().trim().min(1, 'Seleccione un tipo de muestra.'),
         requiereAyuno: z.boolean(),
-        horasAyuno: z.number().int().min(0).max(72),
+        horasAyuno: z.number().int().min(0).max(72).nullable(),
         esDerivable: z.boolean(),
     })
     .superRefine((values, ctx) => {
-        if (values.requiereAyuno && values.horasAyuno <= 0) {
+        if (values.requiereAyuno && (values.horasAyuno ?? 0) <= 0) {
             ctx.addIssue({
                 code: 'custom',
                 path: ['horasAyuno'],
@@ -38,6 +38,6 @@ export const pruebaDefaultValues: PruebaFormValues = {
     tipoExamenId: '',
     tipoMuestraId: '',
     requiereAyuno: false,
-    horasAyuno: 0,
+    horasAyuno: null,
     esDerivable: false,
 }

@@ -41,6 +41,32 @@ public static class AtencionEndpoints
             .Produces<ApiResponse<AtencionResponse>>(StatusCodes.Status201Created)
             .Produces<ApiResponse<object>>(StatusCodes.Status400BadRequest);
 
+        atenciones.MapPost("/{id:guid}/enviar-a-caja", async (
+                Guid id,
+                EnviarACajaRequest request,
+                IValidator<EnviarACajaRequest> validator,
+                IAtencionService service,
+                CancellationToken cancellationToken) =>
+            {
+                var validation = await validator.ValidateAsync(request, cancellationToken);
+
+                if (!validation.IsValid)
+                {
+                    var message = $"Datos inválidos. {string.Join(", ",
+                        validation.Errors
+                            .Select(x => x.ErrorMessage)
+                            .Distinct())}";
+
+                    return ApiResults.BadRequest(message);
+                }
+
+                var result = await service.EnviarACajaAsync(id, request, cancellationToken);
+                return ApiResults.Ok(result, "Atención enviada a caja correctamente.");
+            })
+            .WithName("Atencion_EnviarACaja")
+            .Produces<ApiResponse<AtencionResponse>>(StatusCodes.Status200OK)
+            .Produces<ApiResponse<object>>(StatusCodes.Status400BadRequest);
+
         atenciones.MapFilteredCrud<
             AtencionPagedRequest,
             IAtencionService,

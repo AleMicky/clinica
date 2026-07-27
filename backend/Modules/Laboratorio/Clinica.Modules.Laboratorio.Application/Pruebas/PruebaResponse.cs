@@ -11,6 +11,6 @@ public sealed record PruebaResponse(
     Guid TipoMuestraId,
     string TipoMuestraNombre,
     bool RequiereAyuno,
-    int HorasAyuno,
+    int? HorasAyuno,
     bool EsDerivable
 );

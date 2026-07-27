@@ -14,6 +14,7 @@ function toPayload(values: TipoAtencionFormValues) {
         descripcion: values.descripcion || '',
         color: values.color,
         icono: values.icono || null,
+        precioBase: values.precioBase,
     }
 }
 

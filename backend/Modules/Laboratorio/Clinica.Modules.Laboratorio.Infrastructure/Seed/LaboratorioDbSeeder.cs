@@ -21,6 +21,7 @@ public static class LaboratorioDbSeeder
 
         await context.Database.MigrateAsync();
         await SeedAsync(context, logger);
+        await LaboratorioDemoSeeder.SeedAsync(serviceProvider);
 
         logger.LogInformation("Migraciones y datos iniciales de Laboratorio aplicados correctamente.");
     }
@@ -40,6 +41,8 @@ public static class LaboratorioDbSeeder
 
         await SeedPruebasAsync(context, tipoMuestras);
         await SeedPruebaPreciosAsync(context);
+        await SeedLaboratoriosExternosAsync(context);
+        await SeedParametrosAsync(context);
     }
 
     private static async Task SeedEspecialidadesAsync(LaboratorioDbContext context)
@@ -139,7 +142,7 @@ public static class LaboratorioDbSeeder
             string TipoExamen,
             string TipoMuestra,
             bool RequiereAyuno,
-            int HorasAyuno,
+            int? HorasAyuno,
             bool EsDerivable
         )[] items =
         [
@@ -178,8 +181,139 @@ public static class LaboratorioDbSeeder
                 TipoExamenId = tipoExamenId,
                 TipoMuestraId = tipoMuestraId,
                 RequiereAyuno = item.RequiereAyuno,
-                HorasAyuno = item.HorasAyuno,
+                HorasAyuno = item.RequiereAyuno ? item.HorasAyuno : null,
                 EsDerivable = item.EsDerivable,
+            });
+        }
+
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task SeedLaboratoriosExternosAsync(LaboratorioDbContext context)
+    {
+        (string Codigo, string Nombre, string Contacto, string Telefono, string Email)[] items =
+        [
+            ("LABEXT01", "Laboratorio Central de Referencia", "Ing. Rosa Fernández", "591-2-2445566", "contacto@labcentral.com.bo"),
+            ("LABEXT02", "BioAnálisis Especializado S.R.L.", "Lic. Mario Quispe", "591-3-3456789", "info@bioanalisis.com.bo"),
+        ];
+
+        foreach (var item in items)
+        {
+            var exists = await context.LaboratoriosExternos
+                .AnyAsync(x => x.Codigo == item.Codigo);
+
+            if (exists)
+                continue;
+
+            context.LaboratoriosExternos.Add(new LaboratorioExterno
+            {
+                Codigo = item.Codigo,
+                Nombre = item.Nombre,
+                Descripcion = "Laboratorio externo para derivación de pruebas especializadas.",
+                Contacto = item.Contacto,
+                Telefono = item.Telefono,
+                Email = item.Email,
+                Activo = true,
+            });
+        }
+
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task SeedParametrosAsync(LaboratorioDbContext context)
+    {
+        var unidades = await context.Set<UnidadesMedida>()
+            .AsNoTracking()
+            .ToDictionaryAsync(x => x.Codigo, x => x.Id);
+
+        unidades.TryGetValue("MG_DL", out var mgDl);
+        unidades.TryGetValue("G_DL", out var gDl);
+        unidades.TryGetValue("PCT", out var pct);
+        unidades.TryGetValue("U_L", out var uL);
+
+        var pruebas = await context.Pruebas
+            .AsNoTracking()
+            .ToDictionaryAsync(x => x.Codigo, x => x.Id);
+
+        (string PruebaCodigo, string Codigo, string Nombre, string TipoDato, Guid? UnidadId, int Orden)[] items =
+        [
+            ("GLU", "GLU_VAL", "Glucosa en suero", "NUMERICO", mgDl == Guid.Empty ? null : mgDl, 1),
+            ("CREA", "CREA_VAL", "Creatinina en suero", "NUMERICO", mgDl == Guid.Empty ? null : mgDl, 1),
+            ("COL", "COL_VAL", "Colesterol total", "NUMERICO", mgDl == Guid.Empty ? null : mgDl, 1),
+            ("TRIG", "TRIG_VAL", "Triglicéridos", "NUMERICO", mgDl == Guid.Empty ? null : mgDl, 1),
+            ("HB", "HB_VAL", "Hemoglobina", "NUMERICO", gDl == Guid.Empty ? null : gDl, 1),
+            ("HTO", "HTO_VAL", "Hematocrito", "NUMERICO", pct == Guid.Empty ? null : pct, 1),
+            ("LEU", "LEU_VAL", "Leucocitos", "NUMERICO", null, 1),
+            ("EGO", "EGO_ASPECTO", "Aspecto", "TEXTO", null, 1),
+            ("EGO", "EGO_PH", "pH", "NUMERICO", null, 2),
+            ("TSH", "TSH_VAL", "TSH", "NUMERICO", uL == Guid.Empty ? null : uL, 1),
+        ];
+
+        foreach (var item in items)
+        {
+            if (!pruebas.TryGetValue(item.PruebaCodigo, out var pruebaId))
+                continue;
+
+            var exists = await context.Parametros
+                .AnyAsync(x => x.PruebaId == pruebaId && x.Codigo == item.Codigo);
+
+            if (exists)
+                continue;
+
+            context.Parametros.Add(new Parametro
+            {
+                PruebaId = pruebaId,
+                Codigo = item.Codigo,
+                Nombre = item.Nombre,
+                TipoDato = item.TipoDato,
+                UnidadMedidaId = item.UnidadId,
+                Orden = item.Orden,
+                Activo = true,
+            });
+        }
+
+        await context.SaveChangesAsync();
+        await SeedValoresReferenciaAsync(context);
+    }
+
+    private static async Task SeedValoresReferenciaAsync(LaboratorioDbContext context)
+    {
+        var parametros = await context.Parametros
+            .AsNoTracking()
+            .ToDictionaryAsync(x => x.Codigo, x => x.Id);
+
+        (string ParamCodigo, decimal? Min, decimal? Max, string? Texto)[] items =
+        [
+            ("GLU_VAL", 70m, 100m, null),
+            ("CREA_VAL", 0.6m, 1.3m, null),
+            ("COL_VAL", null, 200m, null),
+            ("TRIG_VAL", null, 150m, null),
+            ("HB_VAL", 12m, 17m, null),
+            ("HTO_VAL", 36m, 50m, null),
+            ("LEU_VAL", 4000m, 11000m, null),
+            ("EGO_ASPECTO", null, null, "Amarillo claro"),
+            ("EGO_PH", 4.5m, 8.0m, null),
+            ("TSH_VAL", 0.4m, 4.0m, null),
+        ];
+
+        foreach (var item in items)
+        {
+            if (!parametros.TryGetValue(item.ParamCodigo, out var parametroId))
+                continue;
+
+            var exists = await context.ValoresReferencia
+                .AnyAsync(x => x.ParametroId == parametroId && x.Activo);
+
+            if (exists)
+                continue;
+
+            context.ValoresReferencia.Add(new ValorReferencia
+            {
+                ParametroId = parametroId,
+                ValorMin = item.Min,
+                ValorMax = item.Max,
+                ValorTexto = item.Texto,
+                Activo = true,
             });
         }
 

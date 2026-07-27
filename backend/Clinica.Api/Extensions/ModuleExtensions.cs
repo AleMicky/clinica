@@ -1,6 +1,9 @@
 using Clinica.Modules.AtencionMedica.Application;
 using Clinica.Modules.AtencionMedica.Infrastructure;
 using Clinica.Modules.AtencionMedica.Presentation;
+using Clinica.Modules.Caja.Application;
+using Clinica.Modules.Caja.Infrastructure;
+using Clinica.Modules.Caja.Presentation;
 using Clinica.Modules.Laboratorio.Application;
 using Clinica.Modules.Laboratorio.Infrastructure;
 using Clinica.Modules.Laboratorio.Presentation;
@@ -63,6 +66,11 @@ public static class ModuleExtensions
             .AddLaboratorioInfrastructure(configuration)
             .AddLaboratorioPresentation();
 
+        services
+            .AddCajaApplication()
+            .AddCajaInfrastructure(configuration)
+            .AddCajaPresentation();
+
         return services;
     }
 
@@ -75,6 +83,7 @@ public static class ModuleExtensions
         app.MapPersonasModule();
         app.MapAtencionMedicaModule();
         app.MapLaboratorioModule();
+        app.MapCajaModule();
 
         return app;
     }

@@ -11,6 +11,7 @@ export type TipoAtencion = {
     descripcion: string
     color: string
     icono?: string | null
+    precioBase: number
 }
 
 export type CreateTipoAtencionPayload = {
@@ -19,6 +20,7 @@ export type CreateTipoAtencionPayload = {
     descripcion?: string
     color: string
     icono?: string | null
+    precioBase: number
 }
 
 export type UpdateTipoAtencionPayload = CreateTipoAtencionPayload

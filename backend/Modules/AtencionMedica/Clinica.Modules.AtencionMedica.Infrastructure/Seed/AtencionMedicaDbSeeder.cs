@@ -71,11 +71,11 @@ public static class AtencionMedicaDbSeeder
 
     private static async Task SeedTiposAtencionAsync(AtencionMedicaDbContext context)
     {
-        var items = new (string Codigo, string Nombre, string Color, string Icono)[]
+        var items = new (string Codigo, string Nombre, string Color, string Icono, decimal PrecioBase)[]
         {
-            ("CONSULTA_EXTERNA", "Consulta Externa", "#1677ff", "MedicineBoxOutlined"),
-            ("EMERGENCIA", "Emergencia", "#ff4d4f", "AlertOutlined"),
-            ("INTERNACION", "Internación", "#722ed1", "HomeOutlined")
+            ("CONSULTA_EXTERNA", "Consulta Externa", "#1677ff", "MedicineBoxOutlined", 80m),
+            ("EMERGENCIA", "Emergencia", "#ff4d4f", "AlertOutlined", 150m),
+            ("INTERNACION", "Internación", "#722ed1", "HomeOutlined", 200m)
         };
 
         foreach (var item in items)
@@ -89,6 +89,8 @@ public static class AtencionMedicaDbSeeder
                     existing.Color = item.Color;
                 if (string.IsNullOrWhiteSpace(existing.Icono))
                     existing.Icono = item.Icono;
+                if (existing.PrecioBase <= 0)
+                    existing.PrecioBase = item.PrecioBase;
                 continue;
             }
 
@@ -97,7 +99,8 @@ public static class AtencionMedicaDbSeeder
                 Codigo = item.Codigo,
                 Nombre = item.Nombre,
                 Color = item.Color,
-                Icono = item.Icono
+                Icono = item.Icono,
+                PrecioBase = item.PrecioBase,
             });
         }
 

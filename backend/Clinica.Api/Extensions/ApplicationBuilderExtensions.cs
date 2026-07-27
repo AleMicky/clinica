@@ -2,6 +2,8 @@ using Clinica.Api.Infrastructure;
 using Clinica.Api.Middleware;
 using Clinica.Modules.AtencionMedica.Infrastructure.Persistence;
 using Clinica.Modules.AtencionMedica.Infrastructure.Seed;
+using Clinica.Modules.Caja.Infrastructure.Persistence;
+using Clinica.Modules.Caja.Infrastructure.Seed;
 using Clinica.Modules.Laboratorio.Infrastructure.Persistence;
 using Clinica.Modules.Laboratorio.Infrastructure.Seed;
 using Clinica.Modules.Parametros.Infrastructure.Persistence;
@@ -66,6 +68,7 @@ public static class ApplicationBuilderExtensions
             await AtencionMedicaDbSeeder.MigrateAsync(app.Services);
             await WorkflowDbSeeder.MigrateAsync(app.Services);
             await LaboratorioDbSeeder.MigrateAsync(app.Services);
+            await CajaDbSeeder.MigrateAsync(app.Services);
 
             logger.LogInformation("Seeds completados.");
         }
@@ -94,6 +97,7 @@ public static class ApplicationBuilderExtensions
         await sp.GetRequiredService<AtencionMedicaDbContext>().Database.MigrateAsync();
         await sp.GetRequiredService<WorkflowDbContext>().Database.MigrateAsync();
         await sp.GetRequiredService<LaboratorioDbContext>().Database.MigrateAsync();
+        await sp.GetRequiredService<CajaDbContext>().Database.MigrateAsync();
     }
 
     public static WebApplication UseClinicaPipeline(this WebApplication app)

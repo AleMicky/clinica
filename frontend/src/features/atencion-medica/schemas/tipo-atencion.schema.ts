@@ -32,6 +32,7 @@ export const tipoAtencionFormSchema = z.object({
         .trim()
         .min(1, 'Seleccione un icono.')
         .max(50, 'Máximo 50 caracteres.'),
+    precioBase: z.number().min(0, 'El precio no puede ser negativo.'),
 })
 
 export type TipoAtencionFormValues = z.output<typeof tipoAtencionFormSchema>
@@ -42,4 +43,5 @@ export const tipoAtencionFormDefaultValues: TipoAtencionFormValues = {
     descripcion: '',
     color: DEFAULT_TIPO_ATENCION_COLOR,
     icono: DEFAULT_TIPO_ATENCION_ICONO,
+    precioBase: 0,
 }

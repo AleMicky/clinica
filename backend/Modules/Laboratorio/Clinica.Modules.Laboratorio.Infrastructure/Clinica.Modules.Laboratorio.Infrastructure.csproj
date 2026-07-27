@@ -3,6 +3,13 @@
   <ItemGroup>
     <ProjectReference Include="..\Clinica.Modules.Laboratorio.Application\Clinica.Modules.Laboratorio.Application.csproj" />
     <ProjectReference Include="..\Clinica.Modules.Laboratorio.Domain\Clinica.Modules.Laboratorio.Domain.csproj" />
+    <ProjectReference Include="..\..\Caja\Clinica.Modules.Caja.Application\Clinica.Modules.Caja.Application.csproj" />
+    <ProjectReference Include="..\..\Workflow\Clinica.Modules.Workflow.Application\Clinica.Modules.Workflow.Application.csproj" />
+    <ProjectReference Include="..\..\Workflow\Clinica.Modules.Workflow.Infrastructure\Clinica.Modules.Workflow.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Parametros\Clinica.Modules.Parametros.Application\Clinica.Modules.Parametros.Application.csproj" />
+    <ProjectReference Include="..\..\Personas\Clinica.Modules.Personas.Domain\Clinica.Modules.Personas.Domain.csproj" />
+    <ProjectReference Include="..\..\Personas\Clinica.Modules.Personas.Infrastructure\Clinica.Modules.Personas.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\RecursosHumanos\Clinica.Modules.RecursosHumanos.Domain\Clinica.Modules.RecursosHumanos.Domain.csproj" />
     <ProjectReference Include="..\..\..\Clinica.SharedKernel\Clinica.SharedKernel.csproj" />
   </ItemGroup>
 

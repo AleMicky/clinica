@@ -55,7 +55,7 @@ export function usePruebasView() {
             tipoExamenId: values.tipoExamenId,
             tipoMuestraId: values.tipoMuestraId,
             requiereAyuno: values.requiereAyuno,
-            horasAyuno: values.requiereAyuno ? values.horasAyuno : 0,
+            horasAyuno: values.requiereAyuno ? values.horasAyuno : null,
             esDerivable: values.esDerivable,
         }
 

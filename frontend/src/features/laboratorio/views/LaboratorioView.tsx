@@ -6,7 +6,10 @@ import {
 import { Outlet, useRouterState } from '@tanstack/react-router'
 
 import { ModuleObjectPage } from '../../../shared/components/ui/module-page/ModuleObjectPage'
-import { getLaboratorioActiveSection } from '../constants/laboratorio-sections'
+import {
+    getLaboratorioActiveSection,
+    isSolicitudDetailPath,
+} from '../constants/laboratorio-sections'
 import { useEspecialidadesLab } from '../especialidades/hooks/especialidades.hooks'
 import { usePruebas } from '../pruebas/hooks/pruebas.hooks'
 import { useTiposExamen } from '../tipos-examen/hooks/tipos-examen.hooks'
@@ -28,6 +31,10 @@ export function LaboratorioView() {
         page: 1,
         pageSize: 1,
     })
+
+    if (isSolicitudDetailPath(pathname)) {
+        return <Outlet />
+    }
 
     const totalEspecialidades = especialidadesData?.totalRecords ?? 0
     const totalTiposExamen = tiposExamenData?.totalRecords ?? 0

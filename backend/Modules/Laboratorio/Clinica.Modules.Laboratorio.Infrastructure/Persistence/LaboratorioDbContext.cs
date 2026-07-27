@@ -15,6 +15,16 @@ public class LaboratorioDbContext : DbContext
     public DbSet<TipoExamen> TiposExamen => Set<TipoExamen>();
     public DbSet<Prueba> Pruebas => Set<Prueba>();
     public DbSet<PruebaPrecio> PruebaPrecios => Set<PruebaPrecio>();
+    public DbSet<Parametro> Parametros => Set<Parametro>();
+    public DbSet<ValorReferencia> ValoresReferencia => Set<ValorReferencia>();
+    public DbSet<LaboratorioExterno> LaboratoriosExternos => Set<LaboratorioExterno>();
+    public DbSet<Solicitud> Solicitudes => Set<Solicitud>();
+    public DbSet<SolicitudDetalle> SolicitudDetalles => Set<SolicitudDetalle>();
+    public DbSet<SolicitudPago> SolicitudPagos => Set<SolicitudPago>();
+    public DbSet<Muestra> Muestras => Set<Muestra>();
+    public DbSet<MuestraDetalle> MuestraDetalles => Set<MuestraDetalle>();
+    public DbSet<Resultado> Resultados => Set<Resultado>();
+    public DbSet<ResultadoDetalle> ResultadoDetalles => Set<ResultadoDetalle>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -36,6 +46,12 @@ public class LaboratorioDbContext : DbContext
             entity.ToTable("CatalogoItems", "parametros", t => t.ExcludeFromMigrations());
             entity.HasKey(x => x.Id);
             entity.Ignore(x => x.CatalogoGrupo);
+        });
+
+        modelBuilder.Entity<UnidadesMedida>(entity =>
+        {
+            entity.ToTable("UnidadesMedida", "parametros", t => t.ExcludeFromMigrations());
+            entity.HasKey(x => x.Id);
         });
     }
 }

@@ -58,7 +58,7 @@ public sealed class PruebaService(LaboratorioDbContext context) : IPruebaService
             TipoExamenId = request.TipoExamenId,
             TipoMuestraId = request.TipoMuestraId,
             RequiereAyuno = request.RequiereAyuno,
-            HorasAyuno = request.RequiereAyuno ? request.HorasAyuno : 0,
+            HorasAyuno = request.RequiereAyuno ? request.HorasAyuno : null,
             EsDerivable = request.EsDerivable,
         };
 
@@ -89,7 +89,7 @@ public sealed class PruebaService(LaboratorioDbContext context) : IPruebaService
         entity.TipoExamenId = request.TipoExamenId;
         entity.TipoMuestraId = request.TipoMuestraId;
         entity.RequiereAyuno = request.RequiereAyuno;
-        entity.HorasAyuno = request.RequiereAyuno ? request.HorasAyuno : 0;
+        entity.HorasAyuno = request.RequiereAyuno ? request.HorasAyuno : null;
         entity.EsDerivable = request.EsDerivable;
 
         await context.SaveChangesAsync(cancellationToken);

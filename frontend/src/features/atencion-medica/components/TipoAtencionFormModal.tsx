@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useForm } from '@tanstack/react-form'
-import { Col, Form, Input, Modal, Row, Tooltip } from 'antd'
+import { Col, Form, Input, InputNumber, Modal, Row, Tooltip } from 'antd'
 
 import {
     DEFAULT_TIPO_ATENCION_COLOR,
@@ -59,6 +59,7 @@ export function TipoAtencionFormModal({
             form.setFieldValue('descripcion', entity.descripcion ?? '')
             form.setFieldValue('color', entity.color || DEFAULT_TIPO_ATENCION_COLOR)
             form.setFieldValue('icono', entity.icono || DEFAULT_TIPO_ATENCION_ICONO)
+            form.setFieldValue('precioBase', entity.precioBase ?? 0)
             return
         }
 
@@ -124,6 +125,29 @@ export function TipoAtencionFormModal({
                                     onBlur={field.handleBlur}
                                     disabled={loading}
                                     autoFocus={isEditing}
+                                />
+                            </Form.Item>
+                        )
+                    }}
+                </form.Field>
+
+                <form.Field name="precioBase">
+                    {(field) => {
+                        const error = getFieldError(field.state.meta.errors)
+                        return (
+                            <Form.Item
+                                label="Precio base"
+                                validateStatus={error ? 'error' : undefined}
+                                help={error || 'Monto a cobrar al enviar a caja'}
+                            >
+                                <InputNumber
+                                    style={{ width: '100%' }}
+                                    min={0}
+                                    step={0.01}
+                                    value={field.state.value}
+                                    onChange={(value) => field.handleChange(value ?? 0)}
+                                    onBlur={field.handleBlur}
+                                    disabled={loading}
                                 />
                             </Form.Item>
                         )

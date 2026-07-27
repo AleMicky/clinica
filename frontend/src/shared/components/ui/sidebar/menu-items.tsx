@@ -4,10 +4,13 @@ import {
     ApartmentOutlined,
     DashboardOutlined,
     ExperimentOutlined,
+    FileDoneOutlined,
     FileSearchOutlined,
+    GlobalOutlined,
     IdcardOutlined,
     MedicineBoxOutlined,
     NodeIndexOutlined,
+    OrderedListOutlined,
     SafetyCertificateOutlined,
     ColumnHeightOutlined,
     ControlOutlined,
@@ -16,6 +19,7 @@ import {
     TeamOutlined,
     UnorderedListOutlined,
     UserOutlined,
+    DollarOutlined,
 } from '@ant-design/icons'
 
 import { AppRole, canAccessRoles, type AppRoleName } from '../../../constants/app-roles'
@@ -182,6 +186,27 @@ export const menuGroups: MenuGroup[] = [
         roles: [AppRole.Admin, AppRole.Laboratorio],
         items: [
             {
+                key: '/laboratorio/solicitudes',
+                to: '/laboratorio/solicitudes',
+                icon: <SolutionOutlined />,
+                label: 'Solicitudes',
+                roles: [AppRole.Admin, AppRole.Laboratorio],
+            },
+            {
+                key: '/laboratorio/muestras',
+                to: '/laboratorio/muestras',
+                icon: <OrderedListOutlined />,
+                label: 'Muestras',
+                roles: [AppRole.Admin, AppRole.Laboratorio],
+            },
+            {
+                key: '/laboratorio/resultados',
+                to: '/laboratorio/resultados',
+                icon: <FileDoneOutlined />,
+                label: 'Resultados',
+                roles: [AppRole.Admin, AppRole.Laboratorio],
+            },
+            {
                 key: '/laboratorio/especialidades',
                 to: '/laboratorio/especialidades',
                 icon: <ExperimentOutlined />,
@@ -201,6 +226,55 @@ export const menuGroups: MenuGroup[] = [
                 icon: <MedicineBoxOutlined />,
                 label: 'Pruebas',
                 roles: [AppRole.Admin, AppRole.Laboratorio],
+            },
+            {
+                key: '/laboratorio/parametros',
+                to: '/laboratorio/parametros',
+                icon: <OrderedListOutlined />,
+                label: 'Parámetros',
+                roles: [AppRole.Admin, AppRole.Laboratorio],
+            },
+            {
+                key: '/laboratorio/laboratorios-externos',
+                to: '/laboratorio/laboratorios-externos',
+                icon: <GlobalOutlined />,
+                label: 'Laboratorios externos',
+                roles: [AppRole.Admin, AppRole.Laboratorio],
+            },
+        ],
+    },
+    {
+        key: 'caja',
+        label: 'Caja',
+        roles: [AppRole.Admin, AppRole.Caja, AppRole.Recepcion],
+        items: [
+            {
+                key: '/caja',
+                to: '/caja',
+                icon: <DollarOutlined />,
+                label: 'Operación',
+                roles: [AppRole.Admin, AppRole.Caja, AppRole.Recepcion],
+            },
+            {
+                key: '/caja/cuentas',
+                to: '/caja/cuentas',
+                icon: <DollarOutlined />,
+                label: 'Cuentas por cobrar',
+                roles: [AppRole.Admin, AppRole.Caja, AppRole.Recepcion],
+            },
+            {
+                key: '/caja/movimientos',
+                to: '/caja/movimientos',
+                icon: <DollarOutlined />,
+                label: 'Movimientos',
+                roles: [AppRole.Admin, AppRole.Caja, AppRole.Recepcion],
+            },
+            {
+                key: '/caja/cajas',
+                to: '/caja/cajas',
+                icon: <DollarOutlined />,
+                label: 'Cajas',
+                roles: [AppRole.Admin, AppRole.Caja],
             },
         ],
     },
@@ -421,6 +495,10 @@ function isAtencionDetailUuidPath(pathname: string): boolean {
     return /^\/atenciones\/[0-9a-f-]{36}$/i.test(pathname)
 }
 
+function isSolicitudDetailUuidPath(pathname: string): boolean {
+    return /^\/laboratorio\/solicitudes\/[0-9a-f-]{36}$/i.test(pathname)
+}
+
 const nestedRouteLabels: Record<string, { title: string; parentPath: AppRoute }> = {
     '/usuarios/perfil': { title: 'Mi perfil', parentPath: '/seguridad/usuarios' },
     '/atenciones/$atencionId': { title: 'Detalle de atención', parentPath: '/atenciones' },
@@ -483,6 +561,21 @@ export function getBreadcrumbSegments(
         }
 
         segments.push({ title: 'Detalle de atención' })
+        return segments
+    }
+
+    if (isSolicitudDetailUuidPath(pathname)) {
+        const parent = findMenuItemByPath('/laboratorio/solicitudes', userRoles)
+
+        if (parent.group && parent.group.key !== 'general') {
+            segments.push({ title: parent.group.label })
+        }
+
+        if (parent.item) {
+            segments.push({ title: parent.item.label, to: '/laboratorio/solicitudes' })
+        }
+
+        segments.push({ title: 'Detalle de solicitud' })
         return segments
     }
 

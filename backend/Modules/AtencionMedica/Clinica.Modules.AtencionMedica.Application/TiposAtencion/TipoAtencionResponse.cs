@@ -6,4 +6,5 @@ public sealed record TipoAtencionResponse(
     string Nombre,
     string Descripcion,
     string Color,
-    string? Icono);
+    string? Icono,
+    decimal PrecioBase);

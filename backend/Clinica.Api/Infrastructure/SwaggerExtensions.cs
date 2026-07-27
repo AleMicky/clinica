@@ -1,4 +1,5 @@
 using Clinica.Modules.AtencionMedica.Presentation;
+using Clinica.Modules.Caja.Presentation;
 using Clinica.Modules.Laboratorio.Presentation;
 using Clinica.Modules.Parametros.Presentation;
 using Clinica.Modules.Personas.Presentation;
@@ -37,6 +38,21 @@ public static class SwaggerExtensions
         LaboratorioSwaggerTags.Module,
         LaboratorioSwaggerTags.Especialidades,
         LaboratorioSwaggerTags.TiposExamen,
+        LaboratorioSwaggerTags.Pruebas,
+        LaboratorioSwaggerTags.PruebaPrecios,
+        LaboratorioSwaggerTags.Parametros,
+        LaboratorioSwaggerTags.ValoresReferencia,
+        LaboratorioSwaggerTags.LaboratoriosExternos,
+        LaboratorioSwaggerTags.Solicitudes,
+        LaboratorioSwaggerTags.Muestras,
+        LaboratorioSwaggerTags.Resultados,
+        CajaSwaggerTags.Module,
+        CajaSwaggerTags.Cajas,
+        CajaSwaggerTags.Turnos,
+        CajaSwaggerTags.Cuentas,
+        CajaSwaggerTags.Pagos,
+        CajaSwaggerTags.Movimientos,
+        CajaSwaggerTags.Catalogos,
         PersonasSwaggerTags.Module,
         PersonasSwaggerTags.Personas,
         PersonasSwaggerTags.Pacientes,
@@ -71,7 +87,7 @@ public static class SwaggerExtensions
             {
                 Title = "Clinica API",
                 Version = DocumentName,
-                Description = "API del sistema de clínica — monolito modular con módulos Seguridad, Parámetros, Recursos Humanos, Laboratorio, Personas, Atención Médica y Workflow."
+                Description = "API del sistema de clínica — monolito modular con módulos Seguridad, Parámetros, Recursos Humanos, Laboratorio, Caja, Personas, Atención Médica y Workflow."
             });
 
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme

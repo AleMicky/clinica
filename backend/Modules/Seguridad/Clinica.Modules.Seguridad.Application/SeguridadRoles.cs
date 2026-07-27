@@ -9,6 +9,7 @@ public static class SeguridadRoles
     public const string Farmacia = "Farmacia";
     public const string Laboratorio = "Laboratorio";
     public const string RecursosHumanos = "RecursosHumanos";
+    public const string Caja = "Caja";
 
     /// <summary>
     /// Roles predefinidos del sistema clínico y su descripción funcional.
@@ -22,5 +23,6 @@ public static class SeguridadRoles
         (Farmacia, "Dispensación de medicamentos y gestión de prescripciones."),
         (Laboratorio, "Solicitud y registro de resultados de estudios complementarios."),
         (RecursosHumanos, "Gestión de empleados, médicos y estructura organizacional."),
+        (Caja, "Cobros, cuentas de paciente y registro de pagos."),
     ];
 }

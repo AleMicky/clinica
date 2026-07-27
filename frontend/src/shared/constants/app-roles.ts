@@ -7,6 +7,7 @@ export const AppRole = {
     Farmacia: 'Farmacia',
     Laboratorio: 'Laboratorio',
     RecursosHumanos: 'RecursosHumanos',
+    Caja: 'Caja',
 } as const
 
 export type AppRoleName = (typeof AppRole)[keyof typeof AppRole]

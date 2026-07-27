@@ -11,5 +11,6 @@ public class CreateTipoAtencionRequestValidator : AbstractValidator<CreateTipoAt
         RuleFor(x => x.Descripcion).MaximumLength(500);
         RuleFor(x => x.Color).NotEmpty().MaximumLength(20);
         RuleFor(x => x.Icono).MaximumLength(50);
+        RuleFor(x => x.PrecioBase).GreaterThanOrEqualTo(0);
     }
 }

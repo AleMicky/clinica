@@ -1,7 +1,11 @@
 import {
     ExperimentOutlined,
+    FileDoneOutlined,
     FileSearchOutlined,
+    GlobalOutlined,
     MedicineBoxOutlined,
+    OrderedListOutlined,
+    SolutionOutlined,
 } from '@ant-design/icons'
 
 export type LaboratorioPageSection = {
@@ -11,6 +15,21 @@ export type LaboratorioPageSection = {
 }
 
 export const laboratorioPageSections: LaboratorioPageSection[] = [
+    {
+        path: '/laboratorio/solicitudes',
+        title: 'Solicitudes',
+        icon: <SolutionOutlined />,
+    },
+    {
+        path: '/laboratorio/muestras',
+        title: 'Muestras',
+        icon: <OrderedListOutlined />,
+    },
+    {
+        path: '/laboratorio/resultados',
+        title: 'Resultados',
+        icon: <FileDoneOutlined />,
+    },
     {
         path: '/laboratorio/especialidades',
         title: 'Especialidades',
@@ -26,6 +45,16 @@ export const laboratorioPageSections: LaboratorioPageSection[] = [
         title: 'Pruebas',
         icon: <MedicineBoxOutlined />,
     },
+    {
+        path: '/laboratorio/parametros',
+        title: 'Parámetros',
+        icon: <OrderedListOutlined />,
+    },
+    {
+        path: '/laboratorio/laboratorios-externos',
+        title: 'Laboratorios externos',
+        icon: <GlobalOutlined />,
+    },
 ]
 
 export function getLaboratorioActiveSection(
@@ -37,4 +66,8 @@ export function getLaboratorioActiveSection(
                 pathname === section.path || pathname.startsWith(`${section.path}/`),
         ) ?? null
     )
+}
+
+export function isSolicitudDetailPath(pathname: string): boolean {
+    return /\/laboratorio\/solicitudes\/[0-9a-f-]{36}$/i.test(pathname)
 }

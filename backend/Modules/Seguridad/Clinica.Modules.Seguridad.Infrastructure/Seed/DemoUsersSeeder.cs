@@ -74,6 +74,15 @@ public static class DemoUsersSeeder
             "rrhh@clinica.com",
             "10000006",
             SeguridadRoles.RecursosHumanos),
+        new(
+            "caja.demo",
+            "Sofía Rojas Mamani",
+            "Sofía",
+            "Rojas",
+            "Mamani",
+            "caja@clinica.com",
+            "10000007",
+            SeguridadRoles.Caja),
     ];
 
     public static async Task SeedAsync(IServiceProvider serviceProvider)

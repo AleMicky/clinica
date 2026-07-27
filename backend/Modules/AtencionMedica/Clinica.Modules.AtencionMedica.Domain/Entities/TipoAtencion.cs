@@ -9,6 +9,7 @@ public class TipoAtencion : AuditableEntity, INamedCatalogEntity
     public string? Descripcion { get; set; }
     public string Color { get; set; } = "#1677ff";
     public string? Icono { get; set; }
+    public decimal PrecioBase { get; set; }
 
     public ICollection<FormularioClinico> FormulariosClinicos { get; set; } = [];
     public ICollection<Atencion> Atenciones { get; set; } = [];

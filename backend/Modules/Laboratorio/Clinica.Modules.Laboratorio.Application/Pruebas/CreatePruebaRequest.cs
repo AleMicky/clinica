@@ -7,6 +7,6 @@ public sealed record CreatePruebaRequest(
     Guid TipoExamenId,
     Guid TipoMuestraId,
     bool RequiereAyuno = false,
-    int HorasAyuno = 0,
+    int? HorasAyuno = null,
     bool EsDerivable = false
 );

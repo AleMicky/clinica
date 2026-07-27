@@ -30,14 +30,20 @@ export const WORKFLOW_MODULE_CATALOG: WorkflowModuleCatalogEntry[] = [
         label: 'Laboratorio',
         entities: [
             {
-                entityName: 'Orden',
-                label: 'Orden de laboratorio',
-                suggestedDefinitionCode: 'LAB_ORDEN',
+                entityName: 'Solicitud',
+                label: 'Solicitud de laboratorio',
+                suggestedDefinitionCode: 'LABORATORIO',
             },
+        ],
+    },
+    {
+        module: 'Caja',
+        label: 'Caja',
+        entities: [
             {
-                entityName: 'Muestra',
-                label: 'Muestra',
-                suggestedDefinitionCode: 'LAB_MUESTRA',
+                entityName: 'Cuenta',
+                label: 'Cuenta de cobro',
+                suggestedDefinitionCode: 'CAJA_CUENTA',
             },
         ],
     },

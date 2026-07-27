@@ -5,4 +5,5 @@ public sealed record UpdateTipoAtencionRequest(
     string Nombre,
     string Descripcion = "",
     string Color = "#1677ff",
-    string? Icono = null);
+    string? Icono = null,
+    decimal PrecioBase = 0);

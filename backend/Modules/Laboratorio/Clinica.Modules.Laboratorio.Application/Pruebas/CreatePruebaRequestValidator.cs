@@ -11,13 +11,21 @@ public class CreatePruebaRequestValidator : AbstractValidator<CreatePruebaReques
         RuleFor(x => x.EspecialidadId).NotEmpty();
         RuleFor(x => x.TipoExamenId).NotEmpty();
         RuleFor(x => x.TipoMuestraId).NotEmpty();
-        RuleFor(x => x.HorasAyuno).InclusiveBetween(0, 72);
 
         When(x => x.RequiereAyuno, () =>
         {
             RuleFor(x => x.HorasAyuno)
+                .NotNull()
                 .GreaterThan(0)
-                .WithMessage("Indique las horas de ayuno.");
+                .LessThanOrEqualTo(72)
+                .WithMessage("Indique las horas de ayuno (1-72).");
+        });
+
+        When(x => !x.RequiereAyuno, () =>
+        {
+            RuleFor(x => x.HorasAyuno)
+                .Must(h => h is null)
+                .WithMessage("Si no requiere ayuno, HorasAyuno debe ser null.");
         });
     }
 }

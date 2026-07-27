@@ -33,7 +33,7 @@ public sealed class PruebaPrecioConfiguration : BaseEntityConfiguration<PruebaPr
             .IsRequired();
 
         builder.HasOne(x => x.Prueba)
-            .WithMany()
+            .WithMany(x => x.Precios)
             .HasForeignKey(x => x.PruebaId)
             .OnDelete(DeleteBehavior.Restrict);
 

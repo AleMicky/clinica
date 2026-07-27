@@ -128,6 +128,79 @@ export const queryKeys = {
             detail: (id: EntityId) =>
                 ['laboratorio', 'prueba-precios', 'detail', id] as const,
         },
+        parametros: {
+            all: ['laboratorio', 'parametros'] as const,
+            list: (query: PagedQuery & Record<string, unknown>) =>
+                ['laboratorio', 'parametros', 'list', query] as const,
+            detail: (id: EntityId) =>
+                ['laboratorio', 'parametros', 'detail', id] as const,
+        },
+        valoresReferencia: {
+            all: ['laboratorio', 'valores-referencia'] as const,
+            list: (query: PagedQuery & Record<string, unknown>) =>
+                ['laboratorio', 'valores-referencia', 'list', query] as const,
+            detail: (id: EntityId) =>
+                ['laboratorio', 'valores-referencia', 'detail', id] as const,
+        },
+        laboratoriosExternos: {
+            all: ['laboratorio', 'laboratorios-externos'] as const,
+            list: (query: PagedQuery) =>
+                ['laboratorio', 'laboratorios-externos', 'list', query] as const,
+            detail: (id: EntityId) =>
+                ['laboratorio', 'laboratorios-externos', 'detail', id] as const,
+        },
+        solicitudes: {
+            all: ['laboratorio', 'solicitudes'] as const,
+            list: (query: PagedQuery & Record<string, unknown>) =>
+                ['laboratorio', 'solicitudes', 'list', query] as const,
+            detail: (id: EntityId) =>
+                ['laboratorio', 'solicitudes', 'detail', id] as const,
+        },
+        muestras: {
+            all: ['laboratorio', 'muestras'] as const,
+            list: (query: PagedQuery & Record<string, unknown>) =>
+                ['laboratorio', 'muestras', 'list', query] as const,
+            detail: (id: EntityId) =>
+                ['laboratorio', 'muestras', 'detail', id] as const,
+        },
+        resultados: {
+            all: ['laboratorio', 'resultados'] as const,
+            list: (query: PagedQuery & Record<string, unknown>) =>
+                ['laboratorio', 'resultados', 'list', query] as const,
+            detail: (id: EntityId) =>
+                ['laboratorio', 'resultados', 'detail', id] as const,
+        },
+    },
+    caja: {
+        all: ['caja'] as const,
+        cuentas: {
+            all: ['caja', 'cuentas'] as const,
+            list: (query: PagedQuery & Record<string, unknown>) =>
+                ['caja', 'cuentas', 'list', query] as const,
+            detail: (id: EntityId) => ['caja', 'cuentas', 'detail', id] as const,
+        },
+        cajas: {
+            all: ['caja', 'cajas'] as const,
+            list: (query: PagedQuery & Record<string, unknown>) =>
+                ['caja', 'cajas', 'list', query] as const,
+        },
+        turnos: {
+            all: ['caja', 'turnos'] as const,
+            abierto: ['caja', 'turnos', 'abierto'] as const,
+            resumen: (id: EntityId) => ['caja', 'turnos', 'resumen', id] as const,
+            arqueo: (id: EntityId) => ['caja', 'turnos', 'arqueo', id] as const,
+        },
+        pagos: {
+            all: ['caja', 'pagos'] as const,
+            detail: (id: EntityId) => ['caja', 'pagos', 'detail', id] as const,
+        },
+        movimientos: {
+            all: ['caja', 'movimientos'] as const,
+            list: (query: PagedQuery & Record<string, unknown>) =>
+                ['caja', 'movimientos', 'list', query] as const,
+        },
+        metodosPago: ['caja', 'metodos-pago'] as const,
+        conceptos: ['caja', 'conceptos'] as const,
     },
     atencionMedica: {
         all: ['atencion-medica'] as const,

@@ -17,6 +17,7 @@ import { Route as AdminSeguridadRouteImport } from './routes/_admin/seguridad'
 import { Route as AdminRecursosHumanosRouteImport } from './routes/_admin/recursos-humanos'
 import { Route as AdminParametrosRouteImport } from './routes/_admin/parametros'
 import { Route as AdminLaboratorioRouteImport } from './routes/_admin/laboratorio'
+import { Route as AdminCajaRouteImport } from './routes/_admin/caja'
 import { Route as AdminAtencionesRouteImport } from './routes/_admin/atenciones'
 import { Route as AdminWorkflowIndexRouteImport } from './routes/_admin/workflow/index'
 import { Route as AdminUsuariosIndexRouteImport } from './routes/_admin/usuarios/index'
@@ -28,6 +29,7 @@ import { Route as AdminParametrosIndexRouteImport } from './routes/_admin/parame
 import { Route as AdminPacientesIndexRouteImport } from './routes/_admin/pacientes/index'
 import { Route as AdminLaboratorioIndexRouteImport } from './routes/_admin/laboratorio/index'
 import { Route as AdminCatalogosIndexRouteImport } from './routes/_admin/catalogos/index'
+import { Route as AdminCajaIndexRouteImport } from './routes/_admin/caja/index'
 import { Route as AdminAtencionesIndexRouteImport } from './routes/_admin/atenciones/index'
 import { Route as AdminWorkflowCustomQueriesRouteImport } from './routes/_admin/workflow/custom-queries'
 import { Route as AdminUsuariosPerfilRouteImport } from './routes/_admin/usuarios/perfil'
@@ -44,13 +46,23 @@ import { Route as AdminParametrosUnidadesMedidaRouteImport } from './routes/_adm
 import { Route as AdminParametrosCorrelativosRouteImport } from './routes/_admin/parametros/correlativos'
 import { Route as AdminParametrosCatalogosRouteImport } from './routes/_admin/parametros/catalogos'
 import { Route as AdminLaboratorioTiposExamenRouteImport } from './routes/_admin/laboratorio/tipos-examen'
+import { Route as AdminLaboratorioSolicitudesRouteImport } from './routes/_admin/laboratorio/solicitudes'
+import { Route as AdminLaboratorioResultadosRouteImport } from './routes/_admin/laboratorio/resultados'
 import { Route as AdminLaboratorioPruebasRouteImport } from './routes/_admin/laboratorio/pruebas'
+import { Route as AdminLaboratorioParametrosRouteImport } from './routes/_admin/laboratorio/parametros'
+import { Route as AdminLaboratorioMuestrasRouteImport } from './routes/_admin/laboratorio/muestras'
+import { Route as AdminLaboratorioLaboratoriosExternosRouteImport } from './routes/_admin/laboratorio/laboratorios-externos'
 import { Route as AdminLaboratorioEspecialidadesRouteImport } from './routes/_admin/laboratorio/especialidades'
+import { Route as AdminCajaMovimientosRouteImport } from './routes/_admin/caja/movimientos'
+import { Route as AdminCajaCajasRouteImport } from './routes/_admin/caja/cajas'
 import { Route as AdminAtencionesTiposAtencionRouteImport } from './routes/_admin/atenciones/tipos-atencion'
 import { Route as AdminAtencionesFormulariosRouteImport } from './routes/_admin/atenciones/formularios'
 import { Route as AdminAtencionesAtencionIdRouteImport } from './routes/_admin/atenciones/$atencionId'
+import { Route as AdminCajaCuentasIndexRouteImport } from './routes/_admin/caja/cuentas/index'
 import { Route as AdminWorkflowInstancesInstanceIdRouteImport } from './routes/_admin/workflow/instances/$instanceId'
 import { Route as AdminWorkflowDesignerDefinitionIdRouteImport } from './routes/_admin/workflow/designer/$definitionId'
+import { Route as AdminLaboratorioSolicitudesIdRouteImport } from './routes/_admin/laboratorio/solicitudes.$id'
+import { Route as AdminCajaCuentasCuentaIdRouteImport } from './routes/_admin/caja/cuentas/$cuentaId'
 import { Route as AdminAtencionesFormulariosTipoAtencionIdRouteImport } from './routes/_admin/atenciones/formularios.$tipoAtencionId'
 
 const AuthRoute = AuthRouteImport.update({
@@ -89,6 +101,11 @@ const AdminParametrosRoute = AdminParametrosRouteImport.update({
 const AdminLaboratorioRoute = AdminLaboratorioRouteImport.update({
   id: '/laboratorio',
   path: '/laboratorio',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCajaRoute = AdminCajaRouteImport.update({
+  id: '/caja',
+  path: '/caja',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAtencionesRoute = AdminAtencionesRouteImport.update({
@@ -146,6 +163,11 @@ const AdminCatalogosIndexRoute = AdminCatalogosIndexRouteImport.update({
   id: '/catalogos/',
   path: '/catalogos/',
   getParentRoute: () => AdminRoute,
+} as any)
+const AdminCajaIndexRoute = AdminCajaIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminCajaRoute,
 } as any)
 const AdminAtencionesIndexRoute = AdminAtencionesIndexRouteImport.update({
   id: '/',
@@ -239,17 +261,57 @@ const AdminLaboratorioTiposExamenRoute =
     path: '/tipos-examen',
     getParentRoute: () => AdminLaboratorioRoute,
   } as any)
+const AdminLaboratorioSolicitudesRoute =
+  AdminLaboratorioSolicitudesRouteImport.update({
+    id: '/solicitudes',
+    path: '/solicitudes',
+    getParentRoute: () => AdminLaboratorioRoute,
+  } as any)
+const AdminLaboratorioResultadosRoute =
+  AdminLaboratorioResultadosRouteImport.update({
+    id: '/resultados',
+    path: '/resultados',
+    getParentRoute: () => AdminLaboratorioRoute,
+  } as any)
 const AdminLaboratorioPruebasRoute = AdminLaboratorioPruebasRouteImport.update({
   id: '/pruebas',
   path: '/pruebas',
   getParentRoute: () => AdminLaboratorioRoute,
 } as any)
+const AdminLaboratorioParametrosRoute =
+  AdminLaboratorioParametrosRouteImport.update({
+    id: '/parametros',
+    path: '/parametros',
+    getParentRoute: () => AdminLaboratorioRoute,
+  } as any)
+const AdminLaboratorioMuestrasRoute =
+  AdminLaboratorioMuestrasRouteImport.update({
+    id: '/muestras',
+    path: '/muestras',
+    getParentRoute: () => AdminLaboratorioRoute,
+  } as any)
+const AdminLaboratorioLaboratoriosExternosRoute =
+  AdminLaboratorioLaboratoriosExternosRouteImport.update({
+    id: '/laboratorios-externos',
+    path: '/laboratorios-externos',
+    getParentRoute: () => AdminLaboratorioRoute,
+  } as any)
 const AdminLaboratorioEspecialidadesRoute =
   AdminLaboratorioEspecialidadesRouteImport.update({
     id: '/especialidades',
     path: '/especialidades',
     getParentRoute: () => AdminLaboratorioRoute,
   } as any)
+const AdminCajaMovimientosRoute = AdminCajaMovimientosRouteImport.update({
+  id: '/movimientos',
+  path: '/movimientos',
+  getParentRoute: () => AdminCajaRoute,
+} as any)
+const AdminCajaCajasRoute = AdminCajaCajasRouteImport.update({
+  id: '/cajas',
+  path: '/cajas',
+  getParentRoute: () => AdminCajaRoute,
+} as any)
 const AdminAtencionesTiposAtencionRoute =
   AdminAtencionesTiposAtencionRouteImport.update({
     id: '/tipos-atencion',
@@ -268,6 +330,11 @@ const AdminAtencionesAtencionIdRoute =
     path: '/$atencionId',
     getParentRoute: () => AdminAtencionesRoute,
   } as any)
+const AdminCajaCuentasIndexRoute = AdminCajaCuentasIndexRouteImport.update({
+  id: '/cuentas/',
+  path: '/cuentas/',
+  getParentRoute: () => AdminCajaRoute,
+} as any)
 const AdminWorkflowInstancesInstanceIdRoute =
   AdminWorkflowInstancesInstanceIdRouteImport.update({
     id: '/workflow/instances/$instanceId',
@@ -280,6 +347,18 @@ const AdminWorkflowDesignerDefinitionIdRoute =
     path: '/workflow/designer/$definitionId',
     getParentRoute: () => AdminRoute,
   } as any)
+const AdminLaboratorioSolicitudesIdRoute =
+  AdminLaboratorioSolicitudesIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AdminLaboratorioSolicitudesRoute,
+  } as any)
+const AdminCajaCuentasCuentaIdRoute =
+  AdminCajaCuentasCuentaIdRouteImport.update({
+    id: '/cuentas/$cuentaId',
+    path: '/cuentas/$cuentaId',
+    getParentRoute: () => AdminCajaRoute,
+  } as any)
 const AdminAtencionesFormulariosTipoAtencionIdRoute =
   AdminAtencionesFormulariosTipoAtencionIdRouteImport.update({
     id: '/$tipoAtencionId',
@@ -290,6 +369,7 @@ const AdminAtencionesFormulariosTipoAtencionIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof AdminIndexRoute
   '/atenciones': typeof AdminAtencionesRouteWithChildren
+  '/caja': typeof AdminCajaRouteWithChildren
   '/laboratorio': typeof AdminLaboratorioRouteWithChildren
   '/parametros': typeof AdminParametrosRouteWithChildren
   '/recursos-humanos': typeof AdminRecursosHumanosRouteWithChildren
@@ -298,8 +378,15 @@ export interface FileRoutesByFullPath {
   '/atenciones/$atencionId': typeof AdminAtencionesAtencionIdRoute
   '/atenciones/formularios': typeof AdminAtencionesFormulariosRouteWithChildren
   '/atenciones/tipos-atencion': typeof AdminAtencionesTiposAtencionRoute
+  '/caja/cajas': typeof AdminCajaCajasRoute
+  '/caja/movimientos': typeof AdminCajaMovimientosRoute
   '/laboratorio/especialidades': typeof AdminLaboratorioEspecialidadesRoute
+  '/laboratorio/laboratorios-externos': typeof AdminLaboratorioLaboratoriosExternosRoute
+  '/laboratorio/muestras': typeof AdminLaboratorioMuestrasRoute
+  '/laboratorio/parametros': typeof AdminLaboratorioParametrosRoute
   '/laboratorio/pruebas': typeof AdminLaboratorioPruebasRoute
+  '/laboratorio/resultados': typeof AdminLaboratorioResultadosRoute
+  '/laboratorio/solicitudes': typeof AdminLaboratorioSolicitudesRouteWithChildren
   '/laboratorio/tipos-examen': typeof AdminLaboratorioTiposExamenRoute
   '/parametros/catalogos': typeof AdminParametrosCatalogosRoute
   '/parametros/correlativos': typeof AdminParametrosCorrelativosRoute
@@ -316,6 +403,7 @@ export interface FileRoutesByFullPath {
   '/usuarios/perfil': typeof AdminUsuariosPerfilRoute
   '/workflow/custom-queries': typeof AdminWorkflowCustomQueriesRoute
   '/atenciones/': typeof AdminAtencionesIndexRoute
+  '/caja/': typeof AdminCajaIndexRoute
   '/catalogos/': typeof AdminCatalogosIndexRoute
   '/laboratorio/': typeof AdminLaboratorioIndexRoute
   '/pacientes/': typeof AdminPacientesIndexRoute
@@ -327,8 +415,11 @@ export interface FileRoutesByFullPath {
   '/usuarios/': typeof AdminUsuariosIndexRoute
   '/workflow/': typeof AdminWorkflowIndexRoute
   '/atenciones/formularios/$tipoAtencionId': typeof AdminAtencionesFormulariosTipoAtencionIdRoute
+  '/caja/cuentas/$cuentaId': typeof AdminCajaCuentasCuentaIdRoute
+  '/laboratorio/solicitudes/$id': typeof AdminLaboratorioSolicitudesIdRoute
   '/workflow/designer/$definitionId': typeof AdminWorkflowDesignerDefinitionIdRoute
   '/workflow/instances/$instanceId': typeof AdminWorkflowInstancesInstanceIdRoute
+  '/caja/cuentas/': typeof AdminCajaCuentasIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof AdminIndexRoute
@@ -336,8 +427,15 @@ export interface FileRoutesByTo {
   '/atenciones/$atencionId': typeof AdminAtencionesAtencionIdRoute
   '/atenciones/formularios': typeof AdminAtencionesFormulariosRouteWithChildren
   '/atenciones/tipos-atencion': typeof AdminAtencionesTiposAtencionRoute
+  '/caja/cajas': typeof AdminCajaCajasRoute
+  '/caja/movimientos': typeof AdminCajaMovimientosRoute
   '/laboratorio/especialidades': typeof AdminLaboratorioEspecialidadesRoute
+  '/laboratorio/laboratorios-externos': typeof AdminLaboratorioLaboratoriosExternosRoute
+  '/laboratorio/muestras': typeof AdminLaboratorioMuestrasRoute
+  '/laboratorio/parametros': typeof AdminLaboratorioParametrosRoute
   '/laboratorio/pruebas': typeof AdminLaboratorioPruebasRoute
+  '/laboratorio/resultados': typeof AdminLaboratorioResultadosRoute
+  '/laboratorio/solicitudes': typeof AdminLaboratorioSolicitudesRouteWithChildren
   '/laboratorio/tipos-examen': typeof AdminLaboratorioTiposExamenRoute
   '/parametros/catalogos': typeof AdminParametrosCatalogosRoute
   '/parametros/correlativos': typeof AdminParametrosCorrelativosRoute
@@ -354,6 +452,7 @@ export interface FileRoutesByTo {
   '/usuarios/perfil': typeof AdminUsuariosPerfilRoute
   '/workflow/custom-queries': typeof AdminWorkflowCustomQueriesRoute
   '/atenciones': typeof AdminAtencionesIndexRoute
+  '/caja': typeof AdminCajaIndexRoute
   '/catalogos': typeof AdminCatalogosIndexRoute
   '/laboratorio': typeof AdminLaboratorioIndexRoute
   '/pacientes': typeof AdminPacientesIndexRoute
@@ -365,14 +464,18 @@ export interface FileRoutesByTo {
   '/usuarios': typeof AdminUsuariosIndexRoute
   '/workflow': typeof AdminWorkflowIndexRoute
   '/atenciones/formularios/$tipoAtencionId': typeof AdminAtencionesFormulariosTipoAtencionIdRoute
+  '/caja/cuentas/$cuentaId': typeof AdminCajaCuentasCuentaIdRoute
+  '/laboratorio/solicitudes/$id': typeof AdminLaboratorioSolicitudesIdRoute
   '/workflow/designer/$definitionId': typeof AdminWorkflowDesignerDefinitionIdRoute
   '/workflow/instances/$instanceId': typeof AdminWorkflowInstancesInstanceIdRoute
+  '/caja/cuentas': typeof AdminCajaCuentasIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_admin': typeof AdminRouteWithChildren
   '/_auth': typeof AuthRouteWithChildren
   '/_admin/atenciones': typeof AdminAtencionesRouteWithChildren
+  '/_admin/caja': typeof AdminCajaRouteWithChildren
   '/_admin/laboratorio': typeof AdminLaboratorioRouteWithChildren
   '/_admin/parametros': typeof AdminParametrosRouteWithChildren
   '/_admin/recursos-humanos': typeof AdminRecursosHumanosRouteWithChildren
@@ -382,8 +485,15 @@ export interface FileRoutesById {
   '/_admin/atenciones/$atencionId': typeof AdminAtencionesAtencionIdRoute
   '/_admin/atenciones/formularios': typeof AdminAtencionesFormulariosRouteWithChildren
   '/_admin/atenciones/tipos-atencion': typeof AdminAtencionesTiposAtencionRoute
+  '/_admin/caja/cajas': typeof AdminCajaCajasRoute
+  '/_admin/caja/movimientos': typeof AdminCajaMovimientosRoute
   '/_admin/laboratorio/especialidades': typeof AdminLaboratorioEspecialidadesRoute
+  '/_admin/laboratorio/laboratorios-externos': typeof AdminLaboratorioLaboratoriosExternosRoute
+  '/_admin/laboratorio/muestras': typeof AdminLaboratorioMuestrasRoute
+  '/_admin/laboratorio/parametros': typeof AdminLaboratorioParametrosRoute
   '/_admin/laboratorio/pruebas': typeof AdminLaboratorioPruebasRoute
+  '/_admin/laboratorio/resultados': typeof AdminLaboratorioResultadosRoute
+  '/_admin/laboratorio/solicitudes': typeof AdminLaboratorioSolicitudesRouteWithChildren
   '/_admin/laboratorio/tipos-examen': typeof AdminLaboratorioTiposExamenRoute
   '/_admin/parametros/catalogos': typeof AdminParametrosCatalogosRoute
   '/_admin/parametros/correlativos': typeof AdminParametrosCorrelativosRoute
@@ -400,6 +510,7 @@ export interface FileRoutesById {
   '/_admin/usuarios/perfil': typeof AdminUsuariosPerfilRoute
   '/_admin/workflow/custom-queries': typeof AdminWorkflowCustomQueriesRoute
   '/_admin/atenciones/': typeof AdminAtencionesIndexRoute
+  '/_admin/caja/': typeof AdminCajaIndexRoute
   '/_admin/catalogos/': typeof AdminCatalogosIndexRoute
   '/_admin/laboratorio/': typeof AdminLaboratorioIndexRoute
   '/_admin/pacientes/': typeof AdminPacientesIndexRoute
@@ -411,14 +522,18 @@ export interface FileRoutesById {
   '/_admin/usuarios/': typeof AdminUsuariosIndexRoute
   '/_admin/workflow/': typeof AdminWorkflowIndexRoute
   '/_admin/atenciones/formularios/$tipoAtencionId': typeof AdminAtencionesFormulariosTipoAtencionIdRoute
+  '/_admin/caja/cuentas/$cuentaId': typeof AdminCajaCuentasCuentaIdRoute
+  '/_admin/laboratorio/solicitudes/$id': typeof AdminLaboratorioSolicitudesIdRoute
   '/_admin/workflow/designer/$definitionId': typeof AdminWorkflowDesignerDefinitionIdRoute
   '/_admin/workflow/instances/$instanceId': typeof AdminWorkflowInstancesInstanceIdRoute
+  '/_admin/caja/cuentas/': typeof AdminCajaCuentasIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/atenciones'
+    | '/caja'
     | '/laboratorio'
     | '/parametros'
     | '/recursos-humanos'
@@ -427,8 +542,15 @@ export interface FileRouteTypes {
     | '/atenciones/$atencionId'
     | '/atenciones/formularios'
     | '/atenciones/tipos-atencion'
+    | '/caja/cajas'
+    | '/caja/movimientos'
     | '/laboratorio/especialidades'
+    | '/laboratorio/laboratorios-externos'
+    | '/laboratorio/muestras'
+    | '/laboratorio/parametros'
     | '/laboratorio/pruebas'
+    | '/laboratorio/resultados'
+    | '/laboratorio/solicitudes'
     | '/laboratorio/tipos-examen'
     | '/parametros/catalogos'
     | '/parametros/correlativos'
@@ -445,6 +567,7 @@ export interface FileRouteTypes {
     | '/usuarios/perfil'
     | '/workflow/custom-queries'
     | '/atenciones/'
+    | '/caja/'
     | '/catalogos/'
     | '/laboratorio/'
     | '/pacientes/'
@@ -456,8 +579,11 @@ export interface FileRouteTypes {
     | '/usuarios/'
     | '/workflow/'
     | '/atenciones/formularios/$tipoAtencionId'
+    | '/caja/cuentas/$cuentaId'
+    | '/laboratorio/solicitudes/$id'
     | '/workflow/designer/$definitionId'
     | '/workflow/instances/$instanceId'
+    | '/caja/cuentas/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -465,8 +591,15 @@ export interface FileRouteTypes {
     | '/atenciones/$atencionId'
     | '/atenciones/formularios'
     | '/atenciones/tipos-atencion'
+    | '/caja/cajas'
+    | '/caja/movimientos'
     | '/laboratorio/especialidades'
+    | '/laboratorio/laboratorios-externos'
+    | '/laboratorio/muestras'
+    | '/laboratorio/parametros'
     | '/laboratorio/pruebas'
+    | '/laboratorio/resultados'
+    | '/laboratorio/solicitudes'
     | '/laboratorio/tipos-examen'
     | '/parametros/catalogos'
     | '/parametros/correlativos'
@@ -483,6 +616,7 @@ export interface FileRouteTypes {
     | '/usuarios/perfil'
     | '/workflow/custom-queries'
     | '/atenciones'
+    | '/caja'
     | '/catalogos'
     | '/laboratorio'
     | '/pacientes'
@@ -494,13 +628,17 @@ export interface FileRouteTypes {
     | '/usuarios'
     | '/workflow'
     | '/atenciones/formularios/$tipoAtencionId'
+    | '/caja/cuentas/$cuentaId'
+    | '/laboratorio/solicitudes/$id'
     | '/workflow/designer/$definitionId'
     | '/workflow/instances/$instanceId'
+    | '/caja/cuentas'
   id:
     | '__root__'
     | '/_admin'
     | '/_auth'
     | '/_admin/atenciones'
+    | '/_admin/caja'
     | '/_admin/laboratorio'
     | '/_admin/parametros'
     | '/_admin/recursos-humanos'
@@ -510,8 +648,15 @@ export interface FileRouteTypes {
     | '/_admin/atenciones/$atencionId'
     | '/_admin/atenciones/formularios'
     | '/_admin/atenciones/tipos-atencion'
+    | '/_admin/caja/cajas'
+    | '/_admin/caja/movimientos'
     | '/_admin/laboratorio/especialidades'
+    | '/_admin/laboratorio/laboratorios-externos'
+    | '/_admin/laboratorio/muestras'
+    | '/_admin/laboratorio/parametros'
     | '/_admin/laboratorio/pruebas'
+    | '/_admin/laboratorio/resultados'
+    | '/_admin/laboratorio/solicitudes'
     | '/_admin/laboratorio/tipos-examen'
     | '/_admin/parametros/catalogos'
     | '/_admin/parametros/correlativos'
@@ -528,6 +673,7 @@ export interface FileRouteTypes {
     | '/_admin/usuarios/perfil'
     | '/_admin/workflow/custom-queries'
     | '/_admin/atenciones/'
+    | '/_admin/caja/'
     | '/_admin/catalogos/'
     | '/_admin/laboratorio/'
     | '/_admin/pacientes/'
@@ -539,8 +685,11 @@ export interface FileRouteTypes {
     | '/_admin/usuarios/'
     | '/_admin/workflow/'
     | '/_admin/atenciones/formularios/$tipoAtencionId'
+    | '/_admin/caja/cuentas/$cuentaId'
+    | '/_admin/laboratorio/solicitudes/$id'
     | '/_admin/workflow/designer/$definitionId'
     | '/_admin/workflow/instances/$instanceId'
+    | '/_admin/caja/cuentas/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -604,6 +753,13 @@ declare module '@tanstack/react-router' {
       path: '/laboratorio'
       fullPath: '/laboratorio'
       preLoaderRoute: typeof AdminLaboratorioRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/caja': {
+      id: '/_admin/caja'
+      path: '/caja'
+      fullPath: '/caja'
+      preLoaderRoute: typeof AdminCajaRouteImport
       parentRoute: typeof AdminRoute
     }
     '/_admin/atenciones': {
@@ -682,6 +838,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/catalogos/'
       preLoaderRoute: typeof AdminCatalogosIndexRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/_admin/caja/': {
+      id: '/_admin/caja/'
+      path: '/'
+      fullPath: '/caja/'
+      preLoaderRoute: typeof AdminCajaIndexRouteImport
+      parentRoute: typeof AdminCajaRoute
     }
     '/_admin/atenciones/': {
       id: '/_admin/atenciones/'
@@ -795,11 +958,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLaboratorioTiposExamenRouteImport
       parentRoute: typeof AdminLaboratorioRoute
     }
+    '/_admin/laboratorio/solicitudes': {
+      id: '/_admin/laboratorio/solicitudes'
+      path: '/solicitudes'
+      fullPath: '/laboratorio/solicitudes'
+      preLoaderRoute: typeof AdminLaboratorioSolicitudesRouteImport
+      parentRoute: typeof AdminLaboratorioRoute
+    }
+    '/_admin/laboratorio/resultados': {
+      id: '/_admin/laboratorio/resultados'
+      path: '/resultados'
+      fullPath: '/laboratorio/resultados'
+      preLoaderRoute: typeof AdminLaboratorioResultadosRouteImport
+      parentRoute: typeof AdminLaboratorioRoute
+    }
     '/_admin/laboratorio/pruebas': {
       id: '/_admin/laboratorio/pruebas'
       path: '/pruebas'
       fullPath: '/laboratorio/pruebas'
       preLoaderRoute: typeof AdminLaboratorioPruebasRouteImport
+      parentRoute: typeof AdminLaboratorioRoute
+    }
+    '/_admin/laboratorio/parametros': {
+      id: '/_admin/laboratorio/parametros'
+      path: '/parametros'
+      fullPath: '/laboratorio/parametros'
+      preLoaderRoute: typeof AdminLaboratorioParametrosRouteImport
+      parentRoute: typeof AdminLaboratorioRoute
+    }
+    '/_admin/laboratorio/muestras': {
+      id: '/_admin/laboratorio/muestras'
+      path: '/muestras'
+      fullPath: '/laboratorio/muestras'
+      preLoaderRoute: typeof AdminLaboratorioMuestrasRouteImport
+      parentRoute: typeof AdminLaboratorioRoute
+    }
+    '/_admin/laboratorio/laboratorios-externos': {
+      id: '/_admin/laboratorio/laboratorios-externos'
+      path: '/laboratorios-externos'
+      fullPath: '/laboratorio/laboratorios-externos'
+      preLoaderRoute: typeof AdminLaboratorioLaboratoriosExternosRouteImport
       parentRoute: typeof AdminLaboratorioRoute
     }
     '/_admin/laboratorio/especialidades': {
@@ -808,6 +1006,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/laboratorio/especialidades'
       preLoaderRoute: typeof AdminLaboratorioEspecialidadesRouteImport
       parentRoute: typeof AdminLaboratorioRoute
+    }
+    '/_admin/caja/movimientos': {
+      id: '/_admin/caja/movimientos'
+      path: '/movimientos'
+      fullPath: '/caja/movimientos'
+      preLoaderRoute: typeof AdminCajaMovimientosRouteImport
+      parentRoute: typeof AdminCajaRoute
+    }
+    '/_admin/caja/cajas': {
+      id: '/_admin/caja/cajas'
+      path: '/cajas'
+      fullPath: '/caja/cajas'
+      preLoaderRoute: typeof AdminCajaCajasRouteImport
+      parentRoute: typeof AdminCajaRoute
     }
     '/_admin/atenciones/tipos-atencion': {
       id: '/_admin/atenciones/tipos-atencion'
@@ -830,6 +1042,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAtencionesAtencionIdRouteImport
       parentRoute: typeof AdminAtencionesRoute
     }
+    '/_admin/caja/cuentas/': {
+      id: '/_admin/caja/cuentas/'
+      path: '/cuentas'
+      fullPath: '/caja/cuentas/'
+      preLoaderRoute: typeof AdminCajaCuentasIndexRouteImport
+      parentRoute: typeof AdminCajaRoute
+    }
     '/_admin/workflow/instances/$instanceId': {
       id: '/_admin/workflow/instances/$instanceId'
       path: '/workflow/instances/$instanceId'
@@ -843,6 +1062,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/workflow/designer/$definitionId'
       preLoaderRoute: typeof AdminWorkflowDesignerDefinitionIdRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/_admin/laboratorio/solicitudes/$id': {
+      id: '/_admin/laboratorio/solicitudes/$id'
+      path: '/$id'
+      fullPath: '/laboratorio/solicitudes/$id'
+      preLoaderRoute: typeof AdminLaboratorioSolicitudesIdRouteImport
+      parentRoute: typeof AdminLaboratorioSolicitudesRoute
+    }
+    '/_admin/caja/cuentas/$cuentaId': {
+      id: '/_admin/caja/cuentas/$cuentaId'
+      path: '/cuentas/$cuentaId'
+      fullPath: '/caja/cuentas/$cuentaId'
+      preLoaderRoute: typeof AdminCajaCuentasCuentaIdRouteImport
+      parentRoute: typeof AdminCajaRoute
     }
     '/_admin/atenciones/formularios/$tipoAtencionId': {
       id: '/_admin/atenciones/formularios/$tipoAtencionId'
@@ -887,16 +1120,62 @@ const AdminAtencionesRouteWithChildren = AdminAtencionesRoute._addFileChildren(
   AdminAtencionesRouteChildren,
 )
 
+interface AdminCajaRouteChildren {
+  AdminCajaCajasRoute: typeof AdminCajaCajasRoute
+  AdminCajaMovimientosRoute: typeof AdminCajaMovimientosRoute
+  AdminCajaIndexRoute: typeof AdminCajaIndexRoute
+  AdminCajaCuentasCuentaIdRoute: typeof AdminCajaCuentasCuentaIdRoute
+  AdminCajaCuentasIndexRoute: typeof AdminCajaCuentasIndexRoute
+}
+
+const AdminCajaRouteChildren: AdminCajaRouteChildren = {
+  AdminCajaCajasRoute: AdminCajaCajasRoute,
+  AdminCajaMovimientosRoute: AdminCajaMovimientosRoute,
+  AdminCajaIndexRoute: AdminCajaIndexRoute,
+  AdminCajaCuentasCuentaIdRoute: AdminCajaCuentasCuentaIdRoute,
+  AdminCajaCuentasIndexRoute: AdminCajaCuentasIndexRoute,
+}
+
+const AdminCajaRouteWithChildren = AdminCajaRoute._addFileChildren(
+  AdminCajaRouteChildren,
+)
+
+interface AdminLaboratorioSolicitudesRouteChildren {
+  AdminLaboratorioSolicitudesIdRoute: typeof AdminLaboratorioSolicitudesIdRoute
+}
+
+const AdminLaboratorioSolicitudesRouteChildren: AdminLaboratorioSolicitudesRouteChildren =
+  {
+    AdminLaboratorioSolicitudesIdRoute: AdminLaboratorioSolicitudesIdRoute,
+  }
+
+const AdminLaboratorioSolicitudesRouteWithChildren =
+  AdminLaboratorioSolicitudesRoute._addFileChildren(
+    AdminLaboratorioSolicitudesRouteChildren,
+  )
+
 interface AdminLaboratorioRouteChildren {
   AdminLaboratorioEspecialidadesRoute: typeof AdminLaboratorioEspecialidadesRoute
+  AdminLaboratorioLaboratoriosExternosRoute: typeof AdminLaboratorioLaboratoriosExternosRoute
+  AdminLaboratorioMuestrasRoute: typeof AdminLaboratorioMuestrasRoute
+  AdminLaboratorioParametrosRoute: typeof AdminLaboratorioParametrosRoute
   AdminLaboratorioPruebasRoute: typeof AdminLaboratorioPruebasRoute
+  AdminLaboratorioResultadosRoute: typeof AdminLaboratorioResultadosRoute
+  AdminLaboratorioSolicitudesRoute: typeof AdminLaboratorioSolicitudesRouteWithChildren
   AdminLaboratorioTiposExamenRoute: typeof AdminLaboratorioTiposExamenRoute
   AdminLaboratorioIndexRoute: typeof AdminLaboratorioIndexRoute
 }
 
 const AdminLaboratorioRouteChildren: AdminLaboratorioRouteChildren = {
   AdminLaboratorioEspecialidadesRoute: AdminLaboratorioEspecialidadesRoute,
+  AdminLaboratorioLaboratoriosExternosRoute:
+    AdminLaboratorioLaboratoriosExternosRoute,
+  AdminLaboratorioMuestrasRoute: AdminLaboratorioMuestrasRoute,
+  AdminLaboratorioParametrosRoute: AdminLaboratorioParametrosRoute,
   AdminLaboratorioPruebasRoute: AdminLaboratorioPruebasRoute,
+  AdminLaboratorioResultadosRoute: AdminLaboratorioResultadosRoute,
+  AdminLaboratorioSolicitudesRoute:
+    AdminLaboratorioSolicitudesRouteWithChildren,
   AdminLaboratorioTiposExamenRoute: AdminLaboratorioTiposExamenRoute,
   AdminLaboratorioIndexRoute: AdminLaboratorioIndexRoute,
 }
@@ -966,6 +1245,7 @@ const AdminSeguridadRouteWithChildren = AdminSeguridadRoute._addFileChildren(
 
 interface AdminRouteChildren {
   AdminAtencionesRoute: typeof AdminAtencionesRouteWithChildren
+  AdminCajaRoute: typeof AdminCajaRouteWithChildren
   AdminLaboratorioRoute: typeof AdminLaboratorioRouteWithChildren
   AdminParametrosRoute: typeof AdminParametrosRouteWithChildren
   AdminRecursosHumanosRoute: typeof AdminRecursosHumanosRouteWithChildren
@@ -985,6 +1265,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAtencionesRoute: AdminAtencionesRouteWithChildren,
+  AdminCajaRoute: AdminCajaRouteWithChildren,
   AdminLaboratorioRoute: AdminLaboratorioRouteWithChildren,
   AdminParametrosRoute: AdminParametrosRouteWithChildren,
   AdminRecursosHumanosRoute: AdminRecursosHumanosRouteWithChildren,

@@ -26,7 +26,8 @@ public sealed class TipoAtencionService(AtencionMedicaDbContext context)
             x.Nombre,
             x.Descripcion ?? string.Empty,
             x.Color,
-            x.Icono);
+            x.Icono,
+            x.PrecioBase);
 
     protected override TipoAtencionResponse MapToResponse(TipoAtencion entity) =>
         new(
@@ -35,7 +36,8 @@ public sealed class TipoAtencionService(AtencionMedicaDbContext context)
             entity.Nombre,
             entity.Descripcion ?? string.Empty,
             entity.Color,
-            entity.Icono);
+            entity.Icono,
+            entity.PrecioBase);
 
     protected override (string Codigo, string Nombre, string? Descripcion) ReadCreate(
         CreateTipoAtencionRequest request) =>
@@ -55,6 +57,7 @@ public sealed class TipoAtencionService(AtencionMedicaDbContext context)
         var entity = new TipoAtencion();
         ApplyFields(entity, codigo, nombre, descripcion);
         ApplyVisualFields(entity, request.Color, request.Icono);
+        entity.PrecioBase = request.PrecioBase;
 
         Set.Add(entity);
         await context.SaveChangesAsync(cancellationToken);
@@ -74,6 +77,7 @@ public sealed class TipoAtencionService(AtencionMedicaDbContext context)
 
         ApplyFields(entity, codigo, nombre, descripcion);
         ApplyVisualFields(entity, request.Color, request.Icono);
+        entity.PrecioBase = request.PrecioBase;
         await context.SaveChangesAsync(cancellationToken);
 
         return MapToResponse(entity);

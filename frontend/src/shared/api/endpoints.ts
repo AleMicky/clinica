@@ -12,6 +12,7 @@ const api = {
     recursosHumanos: '/api/recursos-humanos',
     atencionMedica: '/api/atencion-medica',
     laboratorio: '/api/laboratorio',
+    caja: '/api/caja',
     workflow: '/api/workflow',
 } as const
 
@@ -81,6 +82,7 @@ export const catalogoClinicoEndpoints = {
 export const atencionMedicaEndpoints = {
     atenciones: createEndpoints(`${api.atencionMedica}/atenciones`, (root) => ({
         recepcionar: `${root}/recepcionar`,
+        enviarACaja: (id: EntityId) => `${root}/${id}/enviar-a-caja`,
     })),
     tiposAtencion: createEndpoints(`${api.atencionMedica}/tipos-atencion`),
     tiposCampoFormulario: createEndpoints(`${api.atencionMedica}/tipos-campo-formulario`),
@@ -95,6 +97,51 @@ export const laboratorioEndpoints = {
     tiposExamen: createEndpoints(`${api.laboratorio}/tipos-examen`),
     pruebas: createEndpoints(`${api.laboratorio}/pruebas`),
     pruebaPrecios: createEndpoints(`${api.laboratorio}/prueba-precios`),
+    parametros: createEndpoints(`${api.laboratorio}/parametros`),
+    valoresReferencia: createEndpoints(`${api.laboratorio}/valores-referencia`),
+    laboratoriosExternos: createEndpoints(`${api.laboratorio}/laboratorios-externos`),
+    solicitudes: createEndpoints(`${api.laboratorio}/solicitudes`, (root) => ({
+        enviarACaja: (id: EntityId) => `${root}/${id}/enviar-a-caja`,
+        derivar: (id: EntityId, detalleId: EntityId) =>
+            `${root}/${id}/detalles/${detalleId}/derivar`,
+        tomarMuestra: (id: EntityId) => `${root}/${id}/muestras`,
+        registrarResultados: (id: EntityId) => `${root}/${id}/resultados`,
+    })),
+    muestras: createEndpoints(`${api.laboratorio}/muestras`),
+    resultados: createEndpoints(`${api.laboratorio}/resultados`, (root) => ({
+        validar: (id: EntityId) => `${root}/${id}/validar`,
+    })),
+} as const
+
+export const cajaEndpoints = {
+    root: api.caja,
+    cajas: createEndpoints(`${api.caja}/cajas`, (root) => ({
+        estado: (id: EntityId) => `${root}/${id}/estado`,
+    })),
+    turnos: createEndpoints(`${api.caja}/turnos`, (root) => ({
+        abierto: `${root}/abierto`,
+        abrir: `${root}/abrir`,
+        cerrar: (id: EntityId) => `${root}/${id}/cerrar`,
+        resumen: (id: EntityId) => `${root}/${id}/resumen`,
+        arqueo: (id: EntityId) => `${root}/${id}/arqueo`,
+    })),
+    cuentas: createEndpoints(`${api.caja}/cuentas`, (root) => ({
+        cargos: `${root}/cargos`,
+        pagos: (id: EntityId) => `${root}/${id}/pagos`,
+        anular: (id: EntityId) => `${root}/${id}/anular`,
+        byReferencia: (moduloOrigen: string, entidadOrigen: string, referenciaId: EntityId) =>
+            `${root}/by-referencia/${moduloOrigen}/${entidadOrigen}/${referenciaId}`,
+    })),
+    pagos: createEndpoints(`${api.caja}/pagos`, (root) => ({
+        anular: (id: EntityId) => `${root}/${id}/anular`,
+        recibo: (id: EntityId) => `${root}/${id}/recibo`,
+    })),
+    movimientos: createEndpoints(`${api.caja}/movimientos`, (root) => ({
+        ingreso: `${root}/ingreso`,
+        egreso: `${root}/egreso`,
+    })),
+    metodosPago: `${api.caja}/metodos-pago`,
+    conceptos: `${api.caja}/conceptos`,
 } as const
 
 export const workflowEndpoints = {

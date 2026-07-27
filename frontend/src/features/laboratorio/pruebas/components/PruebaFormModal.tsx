@@ -268,7 +268,7 @@ export function PruebaFormModal({
                                         onChange={(checked) => {
                                             field.handleChange(checked)
                                             if (!checked) {
-                                                form.setFieldValue('horasAyuno', 0)
+                                                form.setFieldValue('horasAyuno', null)
                                             }
                                         }}
                                         disabled={loading}
@@ -293,9 +293,9 @@ export function PruebaFormModal({
                                             max={72}
                                             precision={0}
                                             style={{ width: '100%' }}
-                                            value={field.state.value}
+                                            value={field.state.value ?? undefined}
                                             onChange={(value) =>
-                                                field.handleChange(value ?? 0)
+                                                field.handleChange(value ?? null)
                                             }
                                             onBlur={field.handleBlur}
                                             disabled={loading || !requiereAyuno}

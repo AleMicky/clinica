@@ -9,7 +9,7 @@ export type Prueba = {
     tipoMuestraId: string
     tipoMuestraNombre: string
     requiereAyuno: boolean
-    horasAyuno: number
+    horasAyuno: number | null
     esDerivable: boolean
 }
 
@@ -20,7 +20,7 @@ export type CreatePruebaPayload = {
     tipoExamenId: string
     tipoMuestraId: string
     requiereAyuno: boolean
-    horasAyuno: number
+    horasAyuno: number | null
     esDerivable: boolean
 }
 

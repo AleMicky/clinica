@@ -67,7 +67,7 @@ export function PruebasTable({
                     header: 'Ayuno',
                     size: 100,
                     cell: ({ row }) =>
-                        row.original.requiereAyuno ? (
+                        row.original.requiereAyuno && row.original.horasAyuno ? (
                             <Tag color="orange">{row.original.horasAyuno}h</Tag>
                         ) : (
                             <Text type="secondary">No</Text>

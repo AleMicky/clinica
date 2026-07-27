@@ -16,4 +16,14 @@ public interface IAtencionService : ICrudService<Guid,
     Task<AtencionResponse> RecepcionarAsync(
         RecepcionarAtencionRequest request,
         CancellationToken cancellationToken = default);
+
+    Task<AtencionResponse> EnviarACajaAsync(
+        Guid id,
+        EnviarACajaRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task SetEstadoAsync(
+        Guid id,
+        string estado,
+        CancellationToken cancellationToken = default);
 }
