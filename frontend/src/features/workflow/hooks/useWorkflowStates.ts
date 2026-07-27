@@ -9,6 +9,8 @@ import { workflowService } from '../services/workflow.service'
 import type {
     CreateWorkflowStatePayload,
     UpdateWorkflowStatePayload,
+    UpdateWorkflowStatePositionPayload,
+    WorkflowState,
 } from '../types/workflow.types'
 
 export function useWorkflowStates(definitionId: string | undefined) {
@@ -49,6 +51,32 @@ export function useUpdateWorkflowState(definitionId: string) {
         },
         onError: (error) => {
             notify.error('Error al actualizar estado', getApiErrorMessage(error))
+        },
+    })
+}
+
+export function useUpdateWorkflowStatePosition(definitionId: string) {
+    const queryClient = useQueryClient()
+
+    return useAppMutation({
+        mutationFn: ({
+            id,
+            data,
+        }: {
+            id: string
+            data: UpdateWorkflowStatePositionPayload
+        }) => workflowService.updateStatePosition(id, data),
+        onSuccess: (updated) => {
+            queryClient.setQueryData<WorkflowState[]>(
+                queryKeys.workflow.states.byDefinition(definitionId),
+                (current) => {
+                    if (!current) return current
+                    return current.map((state) => (state.id === updated.id ? updated : state))
+                },
+            )
+        },
+        onError: (error) => {
+            notify.error('Error al guardar posición', getApiErrorMessage(error))
         },
     })
 }

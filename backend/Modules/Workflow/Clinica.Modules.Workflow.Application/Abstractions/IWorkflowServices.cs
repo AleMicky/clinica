@@ -35,6 +35,11 @@ public interface IWorkflowStateService
         WorkflowStates.UpdateWorkflowStateRequest request,
         CancellationToken cancellationToken = default);
 
+    Task<WorkflowStates.WorkflowStateResponse> UpdatePositionAsync(
+        Guid id,
+        WorkflowStates.UpdateWorkflowStatePositionRequest request,
+        CancellationToken cancellationToken = default);
+
     Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 }
 

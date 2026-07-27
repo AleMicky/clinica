@@ -41,14 +41,27 @@ export const createWorkflowCustomQueryDefaultValues: z.input<typeof createWorkfl
     procedureName: '',
 }
 
-export const createWorkflowStateSchema = z.object({
-    code: z.string().trim().min(1, 'El código es obligatorio.').max(100),
-    name: z.string().trim().min(1, 'El nombre es obligatorio.').max(200),
-    isInitial: z.boolean(),
-    isFinal: z.boolean(),
-    color: z.string().trim().min(1, 'El color es obligatorio.').max(20),
-    order: z.number().int().min(0),
-})
+export const createWorkflowStateSchema = z
+    .object({
+        code: z.string().trim().min(1, 'El código es obligatorio.').max(100),
+        name: z.string().trim().min(1, 'El nombre es obligatorio.').max(200),
+        isInitial: z.boolean(),
+        isFinal: z.boolean(),
+        isGateway: z.boolean(),
+        color: z.string().trim().min(1, 'El color es obligatorio.').max(20),
+        order: z.number().int().min(0),
+        diagramX: z.number().nullable().optional(),
+        diagramY: z.number().nullable().optional(),
+    })
+    .superRefine((value, ctx) => {
+        if (value.isGateway && (value.isInitial || value.isFinal)) {
+            ctx.addIssue({
+                code: 'custom',
+                message: 'Un gateway no puede ser estado inicial ni final.',
+                path: ['isGateway'],
+            })
+        }
+    })
 
 export const updateWorkflowStateSchema = createWorkflowStateSchema
 
@@ -60,8 +73,11 @@ export const createWorkflowStateDefaultValues: z.input<typeof createWorkflowStat
     name: '',
     isInitial: false,
     isFinal: false,
+    isGateway: false,
     color: '#1677ff',
     order: 0,
+    diagramX: null,
+    diagramY: null,
 }
 
 const workflowAssignmentSchema = z

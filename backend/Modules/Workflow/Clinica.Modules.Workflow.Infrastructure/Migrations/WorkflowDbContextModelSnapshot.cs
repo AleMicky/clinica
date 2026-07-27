@@ -341,6 +341,12 @@ namespace Clinica.Modules.Workflow.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<double?>("DiagramX")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("DiagramY")
+                        .HasColumnType("float");
+
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -348,6 +354,11 @@ namespace Clinica.Modules.Workflow.Infrastructure.Migrations
 
                     b.Property<bool>("IsFinal")
                         .HasColumnType("bit");
+
+                    b.Property<bool>("IsGateway")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<bool>("IsInitial")
                         .HasColumnType("bit");

@@ -36,6 +36,14 @@ export async function put<TResponse, TRequest>(
     return unwrap(data)
 }
 
+export async function patch<TResponse, TRequest>(
+    url: string,
+    body: TRequest,
+): Promise<TResponse> {
+    const { data } = await api.patch<ApiResponse<TResponse>>(url, body)
+    return unwrap(data)
+}
+
 export async function del<TResponse>(
     url: string,
 ): Promise<TResponse> {

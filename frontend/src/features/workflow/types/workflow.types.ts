@@ -61,8 +61,11 @@ export type WorkflowState = {
     name: string
     isInitial: boolean
     isFinal: boolean
+    isGateway: boolean
     color: string
     order: number
+    diagramX: number | null
+    diagramY: number | null
     createdAt: string
     updatedAt: string | null
 }
@@ -72,11 +75,19 @@ export type CreateWorkflowStatePayload = {
     name: string
     isInitial: boolean
     isFinal: boolean
+    isGateway: boolean
     color: string
     order: number
+    diagramX?: number | null
+    diagramY?: number | null
 }
 
 export type UpdateWorkflowStatePayload = CreateWorkflowStatePayload
+
+export type UpdateWorkflowStatePositionPayload = {
+    diagramX: number
+    diagramY: number
+}
 
 export type WorkflowTransitionAssignment = {
     id: EntityId

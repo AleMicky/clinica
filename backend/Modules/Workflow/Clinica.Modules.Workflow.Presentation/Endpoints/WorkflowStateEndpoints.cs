@@ -80,6 +80,30 @@ public static class WorkflowStateEndpoints
             .Produces<ApiResponse<WorkflowStateResponse>>(StatusCodes.Status200OK)
             .Produces<ApiResponse<object>>(StatusCodes.Status400BadRequest);
 
+        statesGroup.MapPatch("/{id:guid}/position", async (
+                Guid id,
+                UpdateWorkflowStatePositionRequest request,
+                IValidator<UpdateWorkflowStatePositionRequest> validator,
+                IWorkflowStateService service,
+                CancellationToken cancellationToken) =>
+            {
+                var validation = await validator.ValidateAsync(request, cancellationToken);
+
+                if (!validation.IsValid)
+                {
+                    var message = $"Datos inválidos. {string.Join(", ",
+                        validation.Errors.Select(x => x.ErrorMessage).Distinct())}";
+
+                    return ApiResults.BadRequest(message);
+                }
+
+                var result = await service.UpdatePositionAsync(id, request, cancellationToken);
+                return ApiResults.Ok(result);
+            })
+            .WithName("WorkflowState_UpdatePosition")
+            .Produces<ApiResponse<WorkflowStateResponse>>(StatusCodes.Status200OK)
+            .Produces<ApiResponse<object>>(StatusCodes.Status400BadRequest);
+
         statesGroup.MapDelete("/{id:guid}", async (
                 Guid id,
                 IWorkflowStateService service,

@@ -1,5 +1,6 @@
 import { useMemo, useState, type MouseEvent } from 'react'
 import { Link } from '@tanstack/react-router'
+import { useQueryClient } from '@tanstack/react-query'
 import {
     createColumnHelper,
     type ColumnDef,
@@ -12,23 +13,26 @@ import {
     MoreOutlined,
     NodeIndexOutlined,
     PlusOutlined,
+    SettingOutlined,
+    SwapOutlined,
 } from '@ant-design/icons'
 import {
     Button,
-    Descriptions,
+    Drawer,
     Dropdown,
     Flex,
     Modal,
-    Tabs,
     Tag,
     Typography,
 } from 'antd'
 
+import { queryKeys } from '../../../shared/constants/query-keys'
+import { getApiErrorMessage } from '../../../shared/utils/api-error'
+import { notify } from '../../../shared/utils/notify'
 import { AppDataTable } from '../../../shared/components/ui/data-table/AppDataTable'
 import { WorkflowDefinitionForm } from '../components/WorkflowDefinitionForm'
 import { WorkflowFlowView } from '../components/WorkflowFlowView'
 import { WorkflowStateBadge } from '../components/WorkflowStateBadge'
-import { WorkflowStateDrawer } from '../components/WorkflowStateDrawer'
 import { WorkflowStateForm } from '../components/WorkflowStateForm'
 import { WorkflowTransitionDrawer } from '../components/WorkflowTransitionDrawer'
 import { WorkflowTransitionForm } from '../components/WorkflowTransitionForm'
@@ -40,6 +44,7 @@ import {
     useCreateWorkflowState,
     useDeleteWorkflowState,
     useUpdateWorkflowState,
+    useUpdateWorkflowStatePosition,
     useWorkflowStates,
 } from '../hooks/useWorkflowStates'
 import {
@@ -49,12 +54,17 @@ import {
     useWorkflowTransitions,
 } from '../hooks/useWorkflowTransitions'
 import { useWorkflowCustomQueries } from '../hooks/useWorkflowCustomQueries'
+import { workflowService } from '../services/workflow.service'
 import type {
     CreateWorkflowDefinitionFormValues,
     CreateWorkflowStateFormValues,
     CreateWorkflowTransitionFormValues,
 } from '../schemas/workflow.schemas'
 import type { WorkflowState, WorkflowTransition } from '../types/workflow.types'
+import {
+    buildPaletteStateDefaults,
+    type BpmnPaletteKind,
+} from '../utils/buildWorkflowFlow'
 
 const { Text, Title } = Typography
 
@@ -122,19 +132,23 @@ const closedFlowTransitionDrawer: FlowTransitionDrawerState = {
 }
 
 export function WorkflowDesignerPage({ definitionId }: WorkflowDesignerPageProps) {
-    const [activeTab, setActiveTab] = useState('general')
     const [definitionDrawerOpen, setDefinitionDrawerOpen] = useState(false)
+    const [statesPanelOpen, setStatesPanelOpen] = useState(false)
+    const [transitionsPanelOpen, setTransitionsPanelOpen] = useState(false)
     const [stateDrawerOpen, setStateDrawerOpen] = useState(false)
     const [transitionDrawerOpen, setTransitionDrawerOpen] = useState(false)
     const [editingState, setEditingState] = useState<WorkflowState | null>(null)
     const [editingTransition, setEditingTransition] = useState<WorkflowTransition | null>(null)
     const [deletingStateId, setDeletingStateId] = useState<string | null>(null)
     const [deletingTransitionId, setDeletingTransitionId] = useState<string | null>(null)
-    const [flowStateDetail, setFlowStateDetail] = useState<WorkflowState | null>(null)
+    const [flowSelectedStateId, setFlowSelectedStateId] = useState<string | null>(null)
+    const [flowSelectedTransitionId, setFlowSelectedTransitionId] = useState<string | null>(null)
+    const [deletingFlowSelection, setDeletingFlowSelection] = useState(false)
     const [flowTransitionDrawer, setFlowTransitionDrawer] =
         useState<FlowTransitionDrawerState>(closedFlowTransitionDrawer)
     const [deletingFlowTransitionId, setDeletingFlowTransitionId] = useState<string | null>(null)
 
+    const queryClient = useQueryClient()
     const { data: definition, isFetching: loadingDefinition } = useWorkflowDefinition(definitionId)
     const { data: states = [], isFetching: loadingStates } = useWorkflowStates(definitionId)
     const { data: transitions = [], isFetching: loadingTransitions } =
@@ -145,6 +159,7 @@ export function WorkflowDesignerPage({ definitionId }: WorkflowDesignerPageProps
     const updateDefinition = useUpdateWorkflowDefinition()
     const createState = useCreateWorkflowState(definitionId)
     const updateState = useUpdateWorkflowState(definitionId)
+    const updateStatePosition = useUpdateWorkflowStatePosition(definitionId)
     const deleteState = useDeleteWorkflowState(definitionId)
     const createTransition = useCreateWorkflowTransition(definitionId)
     const updateTransition = useUpdateWorkflowTransition(definitionId)
@@ -155,141 +170,146 @@ export function WorkflowDesignerPage({ definitionId }: WorkflowDesignerPageProps
     const isSavingTransition = createTransition.isPending || updateTransition.isPending
 
     const stateColumns = useMemo(
-        () => [
-            stateColumnHelper.accessor('order', { header: 'Orden', size: 64 }),
-            stateColumnHelper.accessor('code', { header: 'Código', size: 120 }),
-            stateColumnHelper.accessor('name', {
-                header: 'Estado',
-                cell: ({ row }) => (
-                    <WorkflowStateBadge
-                        name={row.original.name}
-                        color={row.original.color}
-                        code={row.original.code}
-                    />
-                ),
-            }),
-            stateColumnHelper.display({
-                id: 'stateType',
-                header: 'Tipo',
-                size: 120,
-                cell: ({ row }) => {
-                    const state = row.original
-                    if (state.isInitial) {
-                        return <Tag color="blue">Estado inicial</Tag>
-                    }
-                    if (state.isFinal) {
-                        return <Tag color="green">Estado final</Tag>
-                    }
-                    return <Tag>Normal</Tag>
-                },
-            }),
-            stateColumnHelper.display({
-                id: 'actions',
-                header: '',
-                size: 56,
-                meta: { align: 'right', headerAlign: 'right' },
-                cell: ({ row }) => {
-                    const state = row.original
-
-                    return (
-                        <RowActions
-                            label={state.name}
-                            deleting={deletingStateId === state.id}
-                            onEdit={() => {
-                                setEditingState(state)
-                                setStateDrawerOpen(true)
-                            }}
-                            onDelete={() => {
-                                Modal.confirm({
-                                    title: 'Eliminar estado',
-                                    content: `¿Desea eliminar "${state.name}"?`,
-                                    okText: 'Eliminar',
-                                    okType: 'danger',
-                                    cancelText: 'Cancelar',
-                                    onOk: () => void handleDeleteState(state.id),
-                                })
-                            }}
+        () =>
+            [
+                stateColumnHelper.accessor('order', { header: 'Orden', size: 64 }),
+                stateColumnHelper.accessor('code', { header: 'Código', size: 120 }),
+                stateColumnHelper.accessor('name', {
+                    header: 'Estado',
+                    cell: ({ row }) => (
+                        <WorkflowStateBadge
+                            name={row.original.name}
+                            color={row.original.color}
+                            code={row.original.code}
                         />
-                    )
-                },
-            }),
-        ] as ColumnDef<WorkflowState, any>[],
+                    ),
+                }),
+                stateColumnHelper.display({
+                    id: 'stateType',
+                    header: 'Tipo',
+                    size: 120,
+                    cell: ({ row }) => {
+                        const state = row.original
+                        if (state.isGateway) {
+                            return <Tag color="gold">Gateway XOR</Tag>
+                        }
+                        if (state.isInitial) {
+                            return <Tag color="blue">Estado inicial</Tag>
+                        }
+                        if (state.isFinal) {
+                            return <Tag color="green">Estado final</Tag>
+                        }
+                        return <Tag>Normal</Tag>
+                    },
+                }),
+                stateColumnHelper.display({
+                    id: 'actions',
+                    header: '',
+                    size: 56,
+                    meta: { align: 'right', headerAlign: 'right' },
+                    cell: ({ row }) => {
+                        const state = row.original
+
+                        return (
+                            <RowActions
+                                label={state.name}
+                                deleting={deletingStateId === state.id}
+                                onEdit={() => {
+                                    setEditingState(state)
+                                    setStateDrawerOpen(true)
+                                }}
+                                onDelete={() => {
+                                    Modal.confirm({
+                                        title: 'Eliminar estado',
+                                        content: `¿Desea eliminar "${state.name}"?`,
+                                        okText: 'Eliminar',
+                                        okType: 'danger',
+                                        cancelText: 'Cancelar',
+                                        onOk: () => void handleDeleteState(state.id),
+                                    })
+                                }}
+                            />
+                        )
+                    },
+                }),
+            ] as ColumnDef<WorkflowState, any>[],
         [deletingStateId],
     )
 
     const transitionColumns = useMemo(
-        () => [
-            transitionColumnHelper.accessor('fromStateName', {
-                header: 'Origen',
-                cell: ({ row }) => (
-                    <WorkflowStateBadge
-                        name={row.original.fromStateName}
-                        code={row.original.fromStateCode}
-                    />
-                ),
-            }),
-            transitionColumnHelper.display({
-                id: 'flow',
-                header: 'Acción',
-                cell: ({ row }) => (
-                    <span className="workflow-module__transition-action">
-                        {row.original.name}
-                    </span>
-                ),
-            }),
-            transitionColumnHelper.accessor('toStateName', {
-                header: 'Destino',
-                cell: ({ row }) => (
-                    <WorkflowStateBadge
-                        name={row.original.toStateName}
-                        code={row.original.toStateCode}
-                    />
-                ),
-            }),
-            transitionColumnHelper.accessor('code', {
-                header: 'Código',
-                size: 140,
-            }),
-            transitionColumnHelper.accessor('isActive', {
-                header: 'Estado',
-                size: 90,
-                cell: ({ getValue }) => (
-                    <Tag color={getValue() ? 'success' : 'default'}>
-                        {getValue() ? 'Activa' : 'Inactiva'}
-                    </Tag>
-                ),
-            }),
-            transitionColumnHelper.display({
-                id: 'actions',
-                header: '',
-                size: 56,
-                meta: { align: 'right', headerAlign: 'right' },
-                cell: ({ row }) => {
-                    const transition = row.original
-
-                    return (
-                        <RowActions
-                            label={transition.name}
-                            deleting={deletingTransitionId === transition.id}
-                            onEdit={() => {
-                                setEditingTransition(transition)
-                                setTransitionDrawerOpen(true)
-                            }}
-                            onDelete={() => {
-                                Modal.confirm({
-                                    title: 'Eliminar transición',
-                                    content: `¿Desea eliminar "${transition.name}"?`,
-                                    okText: 'Eliminar',
-                                    okType: 'danger',
-                                    cancelText: 'Cancelar',
-                                    onOk: () => void handleDeleteTransition(transition.id),
-                                })
-                            }}
+        () =>
+            [
+                transitionColumnHelper.accessor('fromStateName', {
+                    header: 'Origen',
+                    cell: ({ row }) => (
+                        <WorkflowStateBadge
+                            name={row.original.fromStateName}
+                            code={row.original.fromStateCode}
                         />
-                    )
-                },
-            }),
-        ] as ColumnDef<WorkflowTransition, any>[],
+                    ),
+                }),
+                transitionColumnHelper.display({
+                    id: 'flow',
+                    header: 'Acción',
+                    cell: ({ row }) => (
+                        <span className="workflow-module__transition-action">
+                            {row.original.name}
+                        </span>
+                    ),
+                }),
+                transitionColumnHelper.accessor('toStateName', {
+                    header: 'Destino',
+                    cell: ({ row }) => (
+                        <WorkflowStateBadge
+                            name={row.original.toStateName}
+                            code={row.original.toStateCode}
+                        />
+                    ),
+                }),
+                transitionColumnHelper.accessor('code', {
+                    header: 'Código',
+                    size: 140,
+                }),
+                transitionColumnHelper.accessor('isActive', {
+                    header: 'Estado',
+                    size: 90,
+                    cell: ({ getValue }) => (
+                        <Tag color={getValue() ? 'success' : 'default'}>
+                            {getValue() ? 'Activa' : 'Inactiva'}
+                        </Tag>
+                    ),
+                }),
+                transitionColumnHelper.display({
+                    id: 'actions',
+                    header: '',
+                    size: 56,
+                    meta: { align: 'right', headerAlign: 'right' },
+                    cell: ({ row }) => {
+                        const transition = row.original
+
+                        return (
+                            <RowActions
+                                label={transition.name}
+                                deleting={deletingTransitionId === transition.id}
+                                onEdit={() => {
+                                    setEditingTransition(transition)
+                                    setTransitionDrawerOpen(true)
+                                }}
+                                onDelete={() => {
+                                    Modal.confirm({
+                                        title: 'Eliminar transición',
+                                        content: `¿Desea eliminar "${transition.name}"?`,
+                                        okText: 'Eliminar',
+                                        okType: 'danger',
+                                        cancelText: 'Cancelar',
+                                        onOk: () => void handleDeleteTransition(transition.id),
+                                    })
+                                }}
+                            />
+                        )
+                    },
+                }),
+            ] as ColumnDef<WorkflowTransition, any>[],
         [deletingTransitionId],
     )
 
@@ -380,6 +400,8 @@ export function WorkflowDesignerPage({ definitionId }: WorkflowDesignerPageProps
     }
 
     const openFlowTransitionEdit = (transition: WorkflowTransition) => {
+        setFlowSelectedStateId(null)
+        setFlowSelectedTransitionId(transition.id)
         setFlowTransitionDrawer({
             open: true,
             mode: 'edit',
@@ -389,164 +411,90 @@ export function WorkflowDesignerPage({ definitionId }: WorkflowDesignerPageProps
         })
     }
 
-    const tabItems = [
-        {
-            key: 'general',
-            label: 'Información general',
-            children: (
-                <div className="workflow-module__tab-panel">
-                    <Flex
-                        justify="space-between"
-                        align="center"
-                        wrap
-                        gap={12}
-                        className="workflow-module__action-bar"
-                    >
-                        <Text type="secondary">Datos principales del workflow</Text>
-                        <Button
-                            icon={<EditOutlined />}
-                            onClick={() => setDefinitionDrawerOpen(true)}
-                            disabled={!definition}
-                        >
-                            Editar información
-                        </Button>
-                    </Flex>
-                    <div className="workflow-module__general-body">
-                        {definition ? (
-                            <Descriptions
-                                bordered
-                                size="small"
-                                column={{ xs: 1, sm: 2, lg: 3 }}
-                                className="workflow-module__descriptions"
-                            >
-                                <Descriptions.Item label="Código">{definition.code}</Descriptions.Item>
-                                <Descriptions.Item label="Nombre">{definition.name}</Descriptions.Item>
-                                <Descriptions.Item label="Estado">
-                                    <Tag color={definition.isActive ? 'success' : 'default'}>
-                                        {definition.isActive ? 'Activo' : 'Inactivo'}
-                                    </Tag>
-                                </Descriptions.Item>
-                                <Descriptions.Item label="Módulo">{definition.module}</Descriptions.Item>
-                                <Descriptions.Item label="Entidad">{definition.entityName}</Descriptions.Item>
-                            </Descriptions>
-                        ) : (
-                            <Text type="secondary">Cargando información…</Text>
-                        )}
-                    </div>
-                </div>
-            ),
-        },
-        {
-            key: 'states',
-            label: `Estados (${states.length})`,
-            children: (
-                <div className="workflow-module__tab-panel">
-                    <Flex
-                        justify="space-between"
-                        align="center"
-                        wrap
-                        gap={12}
-                        className="workflow-module__action-bar"
-                    >
-                        <Text type="secondary">
-                            {states.length} estado{states.length === 1 ? '' : 's'} configurado
-                            {states.length === 1 ? '' : 's'}
-                        </Text>
-                        <Button
-                            type="primary"
-                            size="small"
-                            icon={<PlusOutlined />}
-                            onClick={() => {
-                                setEditingState(null)
-                                setStateDrawerOpen(true)
-                            }}
-                        >
-                            Nuevo estado
-                        </Button>
-                    </Flex>
-                    <div className="workflow-module__table">
-                        <AppDataTable
-                            data={states}
-                            columns={stateColumns}
-                            loading={loadingStates}
-                            emptyText="No hay estados configurados."
-                            getRowId={(row) => row.id}
-                        />
-                    </div>
-                </div>
-            ),
-        },
-        {
-            key: 'flow',
-            label: 'Vista del flujo',
-            children: (
-                <div className="workflow-module__tab-panel workflow-module__tab-panel--flow">
-                    <WorkflowFlowView
-                        definition={definition}
-                        states={states}
-                        transitions={transitions}
-                        onStateSelect={setFlowStateDetail}
-                        onTransitionSelect={openFlowTransitionEdit}
-                        onConnectStates={(fromStateId, toStateId) =>
-                            openFlowTransitionCreate(fromStateId, toStateId)
-                        }
-                        onAddTransitionFrom={(fromStateId) =>
-                            openFlowTransitionCreate(fromStateId, '', {
-                                lockFromState: true,
-                                lockToState: false,
-                            })
-                        }
-                    />
-                </div>
-            ),
-        },
-        {
-            key: 'transitions',
-            label: `Transiciones (${transitions.length})`,
-            children: (
-                <div className="workflow-module__tab-panel">
-                    <Flex
-                        justify="space-between"
-                        align="center"
-                        wrap
-                        gap={12}
-                        className="workflow-module__action-bar"
-                    >
-                        <Text type="secondary">
-                            Vista técnica de respaldo. La creación principal se realiza desde la
-                            Vista del flujo.
-                        </Text>
-                        <Button
-                            type="primary"
-                            size="small"
-                            icon={<PlusOutlined />}
-                            disabled={states.length < 2}
-                            onClick={() => {
-                                setEditingTransition(null)
-                                setTransitionDrawerOpen(true)
-                            }}
-                        >
-                            Nueva transición
-                        </Button>
-                    </Flex>
-                    <div className="workflow-module__table">
-                        <AppDataTable
-                            data={transitions}
-                            columns={transitionColumns}
-                            loading={loadingTransitions}
-                            emptyText="No hay transiciones configuradas."
-                            getRowId={(row) => row.id}
-                        />
-                    </div>
-                </div>
-            ),
-        },
-    ]
+    const handleCreateFromPalette = async (
+        kind: BpmnPaletteKind,
+        position: { x: number; y: number },
+    ) => {
+        if (kind === 'start' && states.some((state) => state.isInitial)) {
+            notify.error(
+                'Ya existe un inicio',
+                'Solo puede haber un evento de inicio por definición.',
+            )
+            return
+        }
+
+        const payload = buildPaletteStateDefaults(kind, states, position)
+        await createState.mutateAsync(payload)
+    }
+
+    const handleNodePositionChange = (stateId: string, position: { x: number; y: number }) => {
+        void updateStatePosition.mutateAsync({
+            id: stateId,
+            data: { diagramX: position.x, diagramY: position.y },
+        })
+    }
+
+    const deleteFlowSelection = async (stateIds: string[], transitionIds: string[]) => {
+        const incidentTransitionIds = transitions
+            .filter(
+                (transition) =>
+                    stateIds.includes(transition.fromStateId) ||
+                    stateIds.includes(transition.toStateId),
+            )
+            .map((transition) => transition.id)
+
+        const allTransitionIds = [...new Set([...transitionIds, ...incidentTransitionIds])]
+
+        setDeletingFlowSelection(true)
+        try {
+            for (const id of allTransitionIds) {
+                await workflowService.deleteTransition(id)
+            }
+            for (const id of stateIds) {
+                await workflowService.deleteState(id)
+            }
+
+            await Promise.all([
+                queryClient.invalidateQueries({
+                    queryKey: queryKeys.workflow.states.byDefinition(definitionId),
+                }),
+                queryClient.invalidateQueries({
+                    queryKey: queryKeys.workflow.transitions.byDefinition(definitionId),
+                }),
+            ])
+
+            setFlowSelectedStateId(null)
+            setFlowSelectedTransitionId(null)
+            notify.success('Selección eliminada', 'Los elementos se eliminaron del diagrama.')
+        } catch (error) {
+            notify.error('Error al eliminar', getApiErrorMessage(error))
+        } finally {
+            setDeletingFlowSelection(false)
+        }
+    }
+
+    const confirmDeleteFlowSelection = (stateIds: string[], transitionIds: string[]) => {
+        if (stateIds.length === 0 && transitionIds.length === 0) return
+
+        const label =
+            stateIds.length + transitionIds.length === 1
+                ? 'el elemento seleccionado'
+                : `${stateIds.length + transitionIds.length} elementos seleccionados`
+
+        Modal.confirm({
+            title: 'Eliminar del diagrama',
+            content: `¿Desea eliminar ${label}? Las transiciones conectadas a estados también se eliminarán.`,
+            okText: 'Eliminar',
+            okType: 'danger',
+            cancelText: 'Cancelar',
+            onOk: () => deleteFlowSelection(stateIds, transitionIds),
+        })
+    }
 
     return (
         <div className="workflow-module workflow-designer-page">
-            <div className="workflow-module__header">
-                <Flex justify="space-between" align="flex-start" wrap gap={12}>
+            <div className="workflow-module__header workflow-designer-page__toolbar">
+                <Flex justify="space-between" align="center" wrap gap={12}>
                     <div className="workflow-module__header-main">
                         <Link to="/workflow">
                             <Button
@@ -590,28 +538,145 @@ export function WorkflowDesignerPage({ definitionId }: WorkflowDesignerPageProps
                         </Flex>
                     </div>
 
-                    <Flex gap={8} wrap className="workflow-module__stats">
-                        <span className="workflow-module__stat">
-                            <NodeIndexOutlined />
-                            {states.length} estado{states.length === 1 ? '' : 's'}
-                        </span>
-                        <span className="workflow-module__stat">
-                            {transitions.length} transición
-                            {transitions.length === 1 ? '' : 'es'}
-                        </span>
+                    <Flex gap={8} wrap align="center" className="workflow-designer-page__actions">
+                        <Button
+                            icon={<SettingOutlined />}
+                            onClick={() => setDefinitionDrawerOpen(true)}
+                            disabled={!definition}
+                        >
+                            Información
+                        </Button>
+                        <Button
+                            icon={<NodeIndexOutlined />}
+                            onClick={() => setStatesPanelOpen(true)}
+                        >
+                            Estados ({states.length})
+                        </Button>
+                        <Button
+                            icon={<SwapOutlined />}
+                            onClick={() => setTransitionsPanelOpen(true)}
+                        >
+                            Transiciones ({transitions.length})
+                        </Button>
                     </Flex>
                 </Flex>
             </div>
 
-            <div className="workflow-module__card">
-                <Tabs
-                    activeKey={activeTab}
-                    onChange={setActiveTab}
-                    items={tabItems}
-                    className="workflow-module__tabs"
-                    size="small"
+            <div className="workflow-designer-page__canvas">
+                <WorkflowFlowView
+                    definition={definition}
+                    states={states}
+                    transitions={transitions}
+                    selectedStateId={flowSelectedStateId}
+                    selectedTransitionId={flowSelectedTransitionId}
+                    onStateSelect={(state) => {
+                        setFlowSelectedStateId(state?.id ?? null)
+                        if (state) setFlowSelectedTransitionId(null)
+                    }}
+                    onTransitionSelect={(transition) => {
+                        setFlowSelectedTransitionId(transition?.id ?? null)
+                        if (transition) {
+                            setFlowSelectedStateId(null)
+                        }
+                    }}
+                    onConnectStates={(fromStateId, toStateId) =>
+                        openFlowTransitionCreate(fromStateId, toStateId)
+                    }
+                    onAddTransitionFrom={(fromStateId) =>
+                        openFlowTransitionCreate(fromStateId, '', {
+                            lockFromState: true,
+                            lockToState: false,
+                        })
+                    }
+                    onCreateFromPalette={(kind, position) => {
+                        void handleCreateFromPalette(kind, position)
+                    }}
+                    onNodePositionChange={handleNodePositionChange}
+                    onDeleteSelection={confirmDeleteFlowSelection}
+                    onEditState={(state) => {
+                        setEditingState(state)
+                        setStateDrawerOpen(true)
+                    }}
+                    onDeleteState={(state) => confirmDeleteFlowSelection([state.id], [])}
+                    onEditTransition={openFlowTransitionEdit}
+                    onDeleteTransition={(transition) =>
+                        confirmDeleteFlowSelection([], [transition.id])
+                    }
+                    deletingSelection={deletingFlowSelection}
                 />
             </div>
+
+            <Drawer
+                title={`Estados (${states.length})`}
+                open={statesPanelOpen}
+                onClose={() => setStatesPanelOpen(false)}
+                size={720}
+                destroyOnHidden
+                className="workflow-drawer"
+                extra={
+                    <Button
+                        type="primary"
+                        size="small"
+                        icon={<PlusOutlined />}
+                        onClick={() => {
+                            setEditingState(null)
+                            setStateDrawerOpen(true)
+                        }}
+                    >
+                        Nuevo estado
+                    </Button>
+                }
+            >
+                <Text type="secondary" className="workflow-designer-page__panel-hint">
+                    Vista técnica. Lo habitual es crear y editar desde el diagrama BPMN.
+                </Text>
+                <div className="workflow-module__table workflow-module__table--drawer">
+                    <AppDataTable
+                        data={states}
+                        columns={stateColumns}
+                        loading={loadingStates}
+                        emptyText="No hay estados configurados."
+                        getRowId={(row) => row.id}
+                    />
+                </div>
+            </Drawer>
+
+            <Drawer
+                title={`Transiciones (${transitions.length})`}
+                open={transitionsPanelOpen}
+                onClose={() => setTransitionsPanelOpen(false)}
+                size={860}
+                destroyOnHidden
+                className="workflow-drawer"
+                extra={
+                    <Button
+                        type="primary"
+                        size="small"
+                        icon={<PlusOutlined />}
+                        disabled={states.length < 2}
+                        onClick={() => {
+                            setEditingTransition(null)
+                            setTransitionDrawerOpen(true)
+                        }}
+                    >
+                        Nueva transición
+                    </Button>
+                }
+            >
+                <Text type="secondary" className="workflow-designer-page__panel-hint">
+                    Vista técnica de respaldo. La creación principal se hace conectando elementos
+                    en el canvas.
+                </Text>
+                <div className="workflow-module__table workflow-module__table--drawer">
+                    <AppDataTable
+                        data={transitions}
+                        columns={transitionColumns}
+                        loading={loadingTransitions}
+                        emptyText="No hay transiciones configuradas."
+                        getRowId={(row) => row.id}
+                    />
+                </div>
+            </Drawer>
 
             <WorkflowDefinitionForm
                 open={definitionDrawerOpen}
@@ -677,16 +742,6 @@ export function WorkflowDesignerPage({ definitionId }: WorkflowDesignerPageProps
                         ? handleFlowTransitionDelete
                         : undefined
                 }
-            />
-
-            <WorkflowStateDrawer
-                open={Boolean(flowStateDetail)}
-                state={flowStateDetail}
-                onClose={() => setFlowStateDetail(null)}
-                onEdit={(state) => {
-                    setEditingState(state)
-                    setStateDrawerOpen(true)
-                }}
             />
         </div>
     )

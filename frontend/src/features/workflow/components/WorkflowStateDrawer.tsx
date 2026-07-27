@@ -47,7 +47,9 @@ export function WorkflowStateDrawer({ open, state, onClose, onEdit }: WorkflowSt
                     <Descriptions.Item label="Nombre">{state.name}</Descriptions.Item>
                     <Descriptions.Item label="Código">{state.code}</Descriptions.Item>
                     <Descriptions.Item label="Tipo">
-                        {state.isInitial ? (
+                        {state.isGateway ? (
+                            <Tag color="gold">Gateway XOR</Tag>
+                        ) : state.isInitial ? (
                             <Tag color="blue">Estado inicial</Tag>
                         ) : state.isFinal ? (
                             <Tag color="green">Estado final</Tag>

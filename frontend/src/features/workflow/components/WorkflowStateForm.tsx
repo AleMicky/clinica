@@ -14,9 +14,10 @@ import type { WorkflowState } from '../types/workflow.types'
 const COMPACT_FORM_CLASS = 'workflow-form--compact'
 const FORM_COL = { xs: 24, sm: 12 }
 
-type StateType = 'normal' | 'initial' | 'final'
+type StateType = 'normal' | 'initial' | 'final' | 'gateway'
 
-function getStateType(isInitial: boolean, isFinal: boolean): StateType {
+function getStateType(isInitial: boolean, isFinal: boolean, isGateway: boolean): StateType {
+    if (isGateway) return 'gateway'
     if (isInitial) return 'initial'
     if (isFinal) return 'final'
     return 'normal'
@@ -66,8 +67,11 @@ export function WorkflowStateForm({
             updateForm.setFieldValue('name', state.name)
             updateForm.setFieldValue('isInitial', state.isInitial)
             updateForm.setFieldValue('isFinal', state.isFinal)
+            updateForm.setFieldValue('isGateway', state.isGateway)
             updateForm.setFieldValue('color', state.color)
             updateForm.setFieldValue('order', state.order)
+            updateForm.setFieldValue('diagramX', state.diagramX)
+            updateForm.setFieldValue('diagramY', state.diagramY)
             return
         }
 
@@ -170,24 +174,33 @@ export function WorkflowStateForm({
                             selector={(formState) => ({
                                 isInitial: formState.values.isInitial,
                                 isFinal: formState.values.isFinal,
+                                isGateway: formState.values.isGateway,
                             })}
                         >
-                            {({ isInitial, isFinal }) => (
+                            {({ isInitial, isFinal, isGateway }) => (
                                 <Form.Item label="Tipo de estado">
                                     <Radio.Group
-                                        value={getStateType(isInitial, isFinal)}
+                                        value={getStateType(isInitial, isFinal, isGateway)}
                                         optionType="button"
                                         buttonStyle="solid"
                                         className="workflow-form__state-type"
                                         onChange={(event) => {
                                             const stateType = event.target.value as StateType
-                                            form.setFieldValue('isInitial', stateType === 'initial')
+                                            form.setFieldValue(
+                                                'isInitial',
+                                                stateType === 'initial',
+                                            )
                                             form.setFieldValue('isFinal', stateType === 'final')
+                                            form.setFieldValue(
+                                                'isGateway',
+                                                stateType === 'gateway',
+                                            )
                                         }}
                                         options={[
                                             { label: 'Normal', value: 'normal' },
                                             { label: 'Inicial', value: 'initial' },
                                             { label: 'Final', value: 'final' },
+                                            { label: 'Gateway XOR', value: 'gateway' },
                                         ]}
                                     />
                                 </Form.Item>

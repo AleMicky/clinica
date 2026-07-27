@@ -7,8 +7,11 @@ public sealed record WorkflowStateResponse(
     string Name,
     bool IsInitial,
     bool IsFinal,
+    bool IsGateway,
     string Color,
     int Order,
+    double? DiagramX,
+    double? DiagramY,
     DateTime CreatedAt,
     DateTime? UpdatedAt);
 
@@ -17,13 +20,23 @@ public sealed record CreateWorkflowStateRequest(
     string Name,
     bool IsInitial,
     bool IsFinal,
+    bool IsGateway,
     string Color,
-    int Order);
+    int Order,
+    double? DiagramX,
+    double? DiagramY);
 
 public sealed record UpdateWorkflowStateRequest(
     string Code,
     string Name,
     bool IsInitial,
     bool IsFinal,
+    bool IsGateway,
     string Color,
-    int Order);
+    int Order,
+    double? DiagramX,
+    double? DiagramY);
+
+public sealed record UpdateWorkflowStatePositionRequest(
+    double DiagramX,
+    double DiagramY);

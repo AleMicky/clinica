@@ -10,8 +10,11 @@ public class WorkflowState : AuditableEntity
     public string Name { get; set; } = string.Empty;
     public bool IsInitial { get; set; }
     public bool IsFinal { get; set; }
+    public bool IsGateway { get; set; }
     public string Color { get; set; } = "#1677ff";
     public int Order { get; set; }
+    public double? DiagramX { get; set; }
+    public double? DiagramY { get; set; }
     public ICollection<WorkflowTransition> OutgoingTransitions { get; set; } = [];
     public ICollection<WorkflowTransition> IncomingTransitions { get; set; } = [];
 }

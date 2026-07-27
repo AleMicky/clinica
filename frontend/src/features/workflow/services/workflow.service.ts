@@ -1,4 +1,4 @@
-import { del, get, getPaged, post, put } from '../../../shared/api/http'
+import { del, get, getPaged, patch, post, put } from '../../../shared/api/http'
 import { workflowEndpoints } from '../../../shared/api/endpoints'
 import type { PagedQuery, PagedResult } from '../../../shared/types/pagination.types'
 import type {
@@ -11,6 +11,7 @@ import type {
     UpdateWorkflowCustomQueryPayload,
     UpdateWorkflowDefinitionPayload,
     UpdateWorkflowStatePayload,
+    UpdateWorkflowStatePositionPayload,
     UpdateWorkflowTransitionPayload,
     WorkflowAssignableEmployee,
     WorkflowAvailableAction,
@@ -89,6 +90,13 @@ export class WorkflowService {
     updateState(id: string, data: UpdateWorkflowStatePayload) {
         return put<WorkflowState, UpdateWorkflowStatePayload>(
             workflowEndpoints.stateById(id),
+            data,
+        )
+    }
+
+    updateStatePosition(id: string, data: UpdateWorkflowStatePositionPayload) {
+        return patch<WorkflowState, UpdateWorkflowStatePositionPayload>(
+            workflowEndpoints.statePosition(id),
             data,
         )
     }

@@ -102,6 +102,7 @@ export const workflowEndpoints = {
     customQueries: createEndpoints(`${api.workflow}/custom-queries`),
     states: (definitionId: EntityId) => `${api.workflow}/definitions/${definitionId}/states`,
     stateById: (id: EntityId) => `${api.workflow}/states/${id}`,
+    statePosition: (id: EntityId) => `${api.workflow}/states/${id}/position`,
     transitions: (definitionId: EntityId) => `${api.workflow}/definitions/${definitionId}/transitions`,
     transitionById: (id: EntityId) => `${api.workflow}/transitions/${id}`,
     instances: {
