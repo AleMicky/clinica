@@ -224,6 +224,9 @@ public static class ParametrosDbSeeder
             ("MM_H", "Milímetros por hora", "mm/h"),
             ("U_L", "Unidades por litro", "U/L"),
             ("ML", "Mililitros", "mL"),
+            ("UND", "Unidad", "u"),
+            ("TAB", "Tableta", "tab"),
+            ("CAP", "Cápsula", "cap"),
         ];
 
         foreach (var unidad in unidades)

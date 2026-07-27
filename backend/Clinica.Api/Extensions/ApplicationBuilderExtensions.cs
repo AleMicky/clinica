@@ -1,9 +1,15 @@
 using Clinica.Api.Infrastructure;
 using Clinica.Api.Middleware;
+using Clinica.Modules.Almacen.Infrastructure.Persistence;
+using Clinica.Modules.Almacen.Infrastructure.Seed;
 using Clinica.Modules.AtencionMedica.Infrastructure.Persistence;
 using Clinica.Modules.AtencionMedica.Infrastructure.Seed;
 using Clinica.Modules.Caja.Infrastructure.Persistence;
 using Clinica.Modules.Caja.Infrastructure.Seed;
+using Clinica.Modules.Compras.Infrastructure.Persistence;
+using Clinica.Modules.Compras.Infrastructure.Seed;
+using Clinica.Modules.Farmacia.Infrastructure.Persistence;
+using Clinica.Modules.Farmacia.Infrastructure.Seed;
 using Clinica.Modules.Laboratorio.Infrastructure.Persistence;
 using Clinica.Modules.Laboratorio.Infrastructure.Seed;
 using Clinica.Modules.Parametros.Infrastructure.Persistence;
@@ -31,7 +37,6 @@ public static class ApplicationBuilderExtensions
             .GetRequiredService<ILoggerFactory>()
             .CreateLogger("Startup");
 
-        // Las migraciones corren siempre para mantener el schema alineado con el código.
         try
         {
             logger.LogInformation("Aplicando migraciones pendientes...");
@@ -48,7 +53,6 @@ public static class ApplicationBuilderExtensions
                 throw;
         }
 
-        // Seeds solo con --seed/--seed-only o CLINICA_RUN_DB_INIT=true (p. ej. Docker).
         var runDbInit = force
             || app.Configuration.GetValue("CLINICA_RUN_DB_INIT", false);
 
@@ -69,6 +73,9 @@ public static class ApplicationBuilderExtensions
             await WorkflowDbSeeder.MigrateAsync(app.Services);
             await LaboratorioDbSeeder.MigrateAsync(app.Services);
             await CajaDbSeeder.MigrateAsync(app.Services);
+            await AlmacenDbSeeder.MigrateAsync(app.Services);
+            await ComprasDbSeeder.MigrateAsync(app.Services);
+            await FarmaciaDbSeeder.MigrateAsync(app.Services);
 
             logger.LogInformation("Seeds completados.");
         }
@@ -98,6 +105,9 @@ public static class ApplicationBuilderExtensions
         await sp.GetRequiredService<WorkflowDbContext>().Database.MigrateAsync();
         await sp.GetRequiredService<LaboratorioDbContext>().Database.MigrateAsync();
         await sp.GetRequiredService<CajaDbContext>().Database.MigrateAsync();
+        await sp.GetRequiredService<AlmacenDbContext>().Database.MigrateAsync();
+        await sp.GetRequiredService<ComprasDbContext>().Database.MigrateAsync();
+        await sp.GetRequiredService<FarmaciaDbContext>().Database.MigrateAsync();
     }
 
     public static WebApplication UseClinicaPipeline(this WebApplication app)

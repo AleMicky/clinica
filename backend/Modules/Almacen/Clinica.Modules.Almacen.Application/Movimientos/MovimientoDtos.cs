@@ -1,0 +1,104 @@
+using Clinica.SharedKernel.Pagination;
+
+namespace Clinica.Modules.Almacen.Application.Movimientos;
+
+public sealed record MovimientoDetalleLineaRequest(
+    Guid ProductoId,
+    Guid? LoteId,
+    decimal Cantidad,
+    decimal? CostoUnitario = null,
+    string? NumeroLote = null,
+    DateOnly? FechaVencimiento = null);
+
+public sealed record RegistrarIngresoRequest(
+    IReadOnlyList<MovimientoDetalleLineaRequest> Lineas,
+    Guid? ProveedorId = null,
+    string? Observaciones = null,
+    string? ModuloOrigen = null,
+    string? EntidadOrigen = null,
+    Guid? ReferenciaId = null);
+
+public sealed record RegistrarSalidaRequest(
+    IReadOnlyList<MovimientoDetalleLineaRequest> Lineas,
+    string? Observaciones = null,
+    string? ModuloOrigen = null,
+    string? EntidadOrigen = null,
+    Guid? ReferenciaId = null,
+    bool UsarFefo = true);
+
+public sealed record RegistrarAjusteRequest(
+    IReadOnlyList<MovimientoDetalleLineaRequest> Lineas,
+    string? Observaciones = null,
+    Guid? EmpleadoId = null);
+
+public sealed record RegistrarBajaRequest(
+    IReadOnlyList<MovimientoDetalleLineaRequest> Lineas,
+    string? Observaciones = null,
+    Guid? EmpleadoId = null);
+
+public sealed record RegistrarTransferenciaRequest(
+    IReadOnlyList<MovimientoDetalleLineaRequest> Lineas,
+    string? Observaciones = null,
+    Guid? EmpleadoId = null);
+
+public sealed record DescontarFefoRequest(
+    Guid ProductoId,
+    decimal Cantidad,
+    string? ModuloOrigen = null,
+    string? EntidadOrigen = null,
+    Guid? ReferenciaId = null,
+    string? Observaciones = null);
+
+public sealed record DescontarFefoLineaResponse(
+    Guid LoteId,
+    string NumeroLote,
+    DateOnly? FechaVencimiento,
+    decimal Cantidad);
+
+public sealed record DescontarFefoResponse(
+    Guid MovimientoId,
+    string NumeroMovimiento,
+    IReadOnlyList<DescontarFefoLineaResponse> Lineas);
+
+public sealed record MovimientoDetalleResponse(
+    Guid Id,
+    Guid ProductoId,
+    string ProductoCodigo,
+    string ProductoNombre,
+    Guid? LoteId,
+    string? LoteNumero,
+    decimal Cantidad,
+    decimal? CostoUnitario);
+
+public sealed record MovimientoResponse(
+    Guid Id,
+    string Numero,
+    string Tipo,
+    DateTime Fecha,
+    string Estado,
+    string? Observaciones,
+    string? ModuloOrigen,
+    string? EntidadOrigen,
+    Guid? ReferenciaId,
+    Guid? ProveedorId,
+    Guid? WorkflowInstanceId,
+    bool RequiereAprobacion,
+    IReadOnlyList<MovimientoDetalleResponse> Detalles);
+
+public sealed record MovimientoListItemResponse(
+    Guid Id,
+    string Numero,
+    string Tipo,
+    DateTime Fecha,
+    string Estado,
+    bool RequiereAprobacion,
+    Guid? WorkflowInstanceId);
+
+public sealed class MovimientoPagedRequest : PagedRequest
+{
+    public string? Search { get; set; }
+    public string? Tipo { get; set; }
+    public string? Estado { get; set; }
+}
+
+public sealed record AplicarMovimientoRequest(Guid? EmpleadoId = null);

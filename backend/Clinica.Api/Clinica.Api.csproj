@@ -37,6 +37,12 @@
     <ProjectReference Include="..\Modules\Laboratorio\Clinica.Modules.Laboratorio.Presentation\Clinica.Modules.Laboratorio.Presentation.csproj" />
     <ProjectReference Include="..\Modules\Caja\Clinica.Modules.Caja.Infrastructure\Clinica.Modules.Caja.Infrastructure.csproj" />
     <ProjectReference Include="..\Modules\Caja\Clinica.Modules.Caja.Presentation\Clinica.Modules.Caja.Presentation.csproj" />
+    <ProjectReference Include="..\Modules\Almacen\Clinica.Modules.Almacen.Infrastructure\Clinica.Modules.Almacen.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Almacen\Clinica.Modules.Almacen.Presentation\Clinica.Modules.Almacen.Presentation.csproj" />
+    <ProjectReference Include="..\Modules\Compras\Clinica.Modules.Compras.Infrastructure\Clinica.Modules.Compras.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Compras\Clinica.Modules.Compras.Presentation\Clinica.Modules.Compras.Presentation.csproj" />
+    <ProjectReference Include="..\Modules\Farmacia\Clinica.Modules.Farmacia.Infrastructure\Clinica.Modules.Farmacia.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Farmacia\Clinica.Modules.Farmacia.Presentation\Clinica.Modules.Farmacia.Presentation.csproj" />
   </ItemGroup>
 
 </Project>

@@ -275,4 +275,53 @@ export const queryKeys = {
             history: (id: EntityId) => ['workflow', 'instances', id, 'history'] as const,
         },
     },
+    almacen: {
+        categorias: {
+            all: ['almacen', 'categorias'] as const,
+            list: (query: PagedQuery) => ['almacen', 'categorias', 'list', query] as const,
+        },
+        productos: {
+            all: ['almacen', 'productos'] as const,
+            list: (query: PagedQuery) => ['almacen', 'productos', 'list', query] as const,
+        },
+        existencias: {
+            all: ['almacen', 'existencias'] as const,
+            list: (query: PagedQuery & Record<string, unknown>) =>
+                ['almacen', 'existencias', 'list', query] as const,
+        },
+        movimientos: {
+            all: ['almacen', 'movimientos'] as const,
+            list: (query: PagedQuery & Record<string, unknown>) =>
+                ['almacen', 'movimientos', 'list', query] as const,
+        },
+    },
+    compras: {
+        proveedores: {
+            all: ['compras', 'proveedores'] as const,
+            list: (query: PagedQuery) => ['compras', 'proveedores', 'list', query] as const,
+        },
+        ordenes: {
+            all: ['compras', 'ordenes'] as const,
+            list: (query: PagedQuery & Record<string, unknown>) =>
+                ['compras', 'ordenes', 'list', query] as const,
+        },
+    },
+    farmacia: {
+        precios: {
+            all: ['farmacia', 'precios'] as const,
+            list: (query: PagedQuery & Record<string, unknown>) =>
+                ['farmacia', 'precios', 'list', query] as const,
+        },
+        recetas: {
+            all: ['farmacia', 'recetas'] as const,
+            list: (query: PagedQuery & Record<string, unknown>) =>
+                ['farmacia', 'recetas', 'list', query] as const,
+        },
+        dispensaciones: {
+            all: ['farmacia', 'dispensaciones'] as const,
+            list: (query: PagedQuery & Record<string, unknown>) =>
+                ['farmacia', 'dispensaciones', 'list', query] as const,
+        },
+    },
+
 }

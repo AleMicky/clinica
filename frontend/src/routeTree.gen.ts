@@ -17,8 +17,11 @@ import { Route as AdminSeguridadRouteImport } from './routes/_admin/seguridad'
 import { Route as AdminRecursosHumanosRouteImport } from './routes/_admin/recursos-humanos'
 import { Route as AdminParametrosRouteImport } from './routes/_admin/parametros'
 import { Route as AdminLaboratorioRouteImport } from './routes/_admin/laboratorio'
+import { Route as AdminFarmaciaRouteImport } from './routes/_admin/farmacia'
+import { Route as AdminComprasRouteImport } from './routes/_admin/compras'
 import { Route as AdminCajaRouteImport } from './routes/_admin/caja'
 import { Route as AdminAtencionesRouteImport } from './routes/_admin/atenciones'
+import { Route as AdminAlmacenRouteImport } from './routes/_admin/almacen'
 import { Route as AdminWorkflowIndexRouteImport } from './routes/_admin/workflow/index'
 import { Route as AdminUsuariosIndexRouteImport } from './routes/_admin/usuarios/index'
 import { Route as AdminSeguridadIndexRouteImport } from './routes/_admin/seguridad/index'
@@ -53,11 +56,20 @@ import { Route as AdminLaboratorioParametrosRouteImport } from './routes/_admin/
 import { Route as AdminLaboratorioMuestrasRouteImport } from './routes/_admin/laboratorio/muestras'
 import { Route as AdminLaboratorioLaboratoriosExternosRouteImport } from './routes/_admin/laboratorio/laboratorios-externos'
 import { Route as AdminLaboratorioEspecialidadesRouteImport } from './routes/_admin/laboratorio/especialidades'
+import { Route as AdminFarmaciaRecetasRouteImport } from './routes/_admin/farmacia/recetas'
+import { Route as AdminFarmaciaPreciosRouteImport } from './routes/_admin/farmacia/precios'
+import { Route as AdminFarmaciaDispensacionesRouteImport } from './routes/_admin/farmacia/dispensaciones'
+import { Route as AdminComprasProveedoresRouteImport } from './routes/_admin/compras/proveedores'
+import { Route as AdminComprasOrdenesRouteImport } from './routes/_admin/compras/ordenes'
 import { Route as AdminCajaMovimientosRouteImport } from './routes/_admin/caja/movimientos'
 import { Route as AdminCajaCajasRouteImport } from './routes/_admin/caja/cajas'
 import { Route as AdminAtencionesTiposAtencionRouteImport } from './routes/_admin/atenciones/tipos-atencion'
 import { Route as AdminAtencionesFormulariosRouteImport } from './routes/_admin/atenciones/formularios'
 import { Route as AdminAtencionesAtencionIdRouteImport } from './routes/_admin/atenciones/$atencionId'
+import { Route as AdminAlmacenProductosRouteImport } from './routes/_admin/almacen/productos'
+import { Route as AdminAlmacenMovimientosRouteImport } from './routes/_admin/almacen/movimientos'
+import { Route as AdminAlmacenExistenciasRouteImport } from './routes/_admin/almacen/existencias'
+import { Route as AdminAlmacenCategoriasRouteImport } from './routes/_admin/almacen/categorias'
 import { Route as AdminCajaCuentasIndexRouteImport } from './routes/_admin/caja/cuentas/index'
 import { Route as AdminWorkflowInstancesInstanceIdRouteImport } from './routes/_admin/workflow/instances/$instanceId'
 import { Route as AdminWorkflowDesignerDefinitionIdRouteImport } from './routes/_admin/workflow/designer/$definitionId'
@@ -103,6 +115,16 @@ const AdminLaboratorioRoute = AdminLaboratorioRouteImport.update({
   path: '/laboratorio',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminFarmaciaRoute = AdminFarmaciaRouteImport.update({
+  id: '/farmacia',
+  path: '/farmacia',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminComprasRoute = AdminComprasRouteImport.update({
+  id: '/compras',
+  path: '/compras',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminCajaRoute = AdminCajaRouteImport.update({
   id: '/caja',
   path: '/caja',
@@ -111,6 +133,11 @@ const AdminCajaRoute = AdminCajaRouteImport.update({
 const AdminAtencionesRoute = AdminAtencionesRouteImport.update({
   id: '/atenciones',
   path: '/atenciones',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAlmacenRoute = AdminAlmacenRouteImport.update({
+  id: '/almacen',
+  path: '/almacen',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminWorkflowIndexRoute = AdminWorkflowIndexRouteImport.update({
@@ -302,6 +329,32 @@ const AdminLaboratorioEspecialidadesRoute =
     path: '/especialidades',
     getParentRoute: () => AdminLaboratorioRoute,
   } as any)
+const AdminFarmaciaRecetasRoute = AdminFarmaciaRecetasRouteImport.update({
+  id: '/recetas',
+  path: '/recetas',
+  getParentRoute: () => AdminFarmaciaRoute,
+} as any)
+const AdminFarmaciaPreciosRoute = AdminFarmaciaPreciosRouteImport.update({
+  id: '/precios',
+  path: '/precios',
+  getParentRoute: () => AdminFarmaciaRoute,
+} as any)
+const AdminFarmaciaDispensacionesRoute =
+  AdminFarmaciaDispensacionesRouteImport.update({
+    id: '/dispensaciones',
+    path: '/dispensaciones',
+    getParentRoute: () => AdminFarmaciaRoute,
+  } as any)
+const AdminComprasProveedoresRoute = AdminComprasProveedoresRouteImport.update({
+  id: '/proveedores',
+  path: '/proveedores',
+  getParentRoute: () => AdminComprasRoute,
+} as any)
+const AdminComprasOrdenesRoute = AdminComprasOrdenesRouteImport.update({
+  id: '/ordenes',
+  path: '/ordenes',
+  getParentRoute: () => AdminComprasRoute,
+} as any)
 const AdminCajaMovimientosRoute = AdminCajaMovimientosRouteImport.update({
   id: '/movimientos',
   path: '/movimientos',
@@ -330,6 +383,26 @@ const AdminAtencionesAtencionIdRoute =
     path: '/$atencionId',
     getParentRoute: () => AdminAtencionesRoute,
   } as any)
+const AdminAlmacenProductosRoute = AdminAlmacenProductosRouteImport.update({
+  id: '/productos',
+  path: '/productos',
+  getParentRoute: () => AdminAlmacenRoute,
+} as any)
+const AdminAlmacenMovimientosRoute = AdminAlmacenMovimientosRouteImport.update({
+  id: '/movimientos',
+  path: '/movimientos',
+  getParentRoute: () => AdminAlmacenRoute,
+} as any)
+const AdminAlmacenExistenciasRoute = AdminAlmacenExistenciasRouteImport.update({
+  id: '/existencias',
+  path: '/existencias',
+  getParentRoute: () => AdminAlmacenRoute,
+} as any)
+const AdminAlmacenCategoriasRoute = AdminAlmacenCategoriasRouteImport.update({
+  id: '/categorias',
+  path: '/categorias',
+  getParentRoute: () => AdminAlmacenRoute,
+} as any)
 const AdminCajaCuentasIndexRoute = AdminCajaCuentasIndexRouteImport.update({
   id: '/cuentas/',
   path: '/cuentas/',
@@ -368,18 +441,30 @@ const AdminAtencionesFormulariosTipoAtencionIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof AdminIndexRoute
+  '/almacen': typeof AdminAlmacenRouteWithChildren
   '/atenciones': typeof AdminAtencionesRouteWithChildren
   '/caja': typeof AdminCajaRouteWithChildren
+  '/compras': typeof AdminComprasRouteWithChildren
+  '/farmacia': typeof AdminFarmaciaRouteWithChildren
   '/laboratorio': typeof AdminLaboratorioRouteWithChildren
   '/parametros': typeof AdminParametrosRouteWithChildren
   '/recursos-humanos': typeof AdminRecursosHumanosRouteWithChildren
   '/seguridad': typeof AdminSeguridadRouteWithChildren
   '/login': typeof AuthLoginRoute
+  '/almacen/categorias': typeof AdminAlmacenCategoriasRoute
+  '/almacen/existencias': typeof AdminAlmacenExistenciasRoute
+  '/almacen/movimientos': typeof AdminAlmacenMovimientosRoute
+  '/almacen/productos': typeof AdminAlmacenProductosRoute
   '/atenciones/$atencionId': typeof AdminAtencionesAtencionIdRoute
   '/atenciones/formularios': typeof AdminAtencionesFormulariosRouteWithChildren
   '/atenciones/tipos-atencion': typeof AdminAtencionesTiposAtencionRoute
   '/caja/cajas': typeof AdminCajaCajasRoute
   '/caja/movimientos': typeof AdminCajaMovimientosRoute
+  '/compras/ordenes': typeof AdminComprasOrdenesRoute
+  '/compras/proveedores': typeof AdminComprasProveedoresRoute
+  '/farmacia/dispensaciones': typeof AdminFarmaciaDispensacionesRoute
+  '/farmacia/precios': typeof AdminFarmaciaPreciosRoute
+  '/farmacia/recetas': typeof AdminFarmaciaRecetasRoute
   '/laboratorio/especialidades': typeof AdminLaboratorioEspecialidadesRoute
   '/laboratorio/laboratorios-externos': typeof AdminLaboratorioLaboratoriosExternosRoute
   '/laboratorio/muestras': typeof AdminLaboratorioMuestrasRoute
@@ -423,12 +508,24 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof AdminIndexRoute
+  '/almacen': typeof AdminAlmacenRouteWithChildren
+  '/compras': typeof AdminComprasRouteWithChildren
+  '/farmacia': typeof AdminFarmaciaRouteWithChildren
   '/login': typeof AuthLoginRoute
+  '/almacen/categorias': typeof AdminAlmacenCategoriasRoute
+  '/almacen/existencias': typeof AdminAlmacenExistenciasRoute
+  '/almacen/movimientos': typeof AdminAlmacenMovimientosRoute
+  '/almacen/productos': typeof AdminAlmacenProductosRoute
   '/atenciones/$atencionId': typeof AdminAtencionesAtencionIdRoute
   '/atenciones/formularios': typeof AdminAtencionesFormulariosRouteWithChildren
   '/atenciones/tipos-atencion': typeof AdminAtencionesTiposAtencionRoute
   '/caja/cajas': typeof AdminCajaCajasRoute
   '/caja/movimientos': typeof AdminCajaMovimientosRoute
+  '/compras/ordenes': typeof AdminComprasOrdenesRoute
+  '/compras/proveedores': typeof AdminComprasProveedoresRoute
+  '/farmacia/dispensaciones': typeof AdminFarmaciaDispensacionesRoute
+  '/farmacia/precios': typeof AdminFarmaciaPreciosRoute
+  '/farmacia/recetas': typeof AdminFarmaciaRecetasRoute
   '/laboratorio/especialidades': typeof AdminLaboratorioEspecialidadesRoute
   '/laboratorio/laboratorios-externos': typeof AdminLaboratorioLaboratoriosExternosRoute
   '/laboratorio/muestras': typeof AdminLaboratorioMuestrasRoute
@@ -474,19 +571,31 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_admin': typeof AdminRouteWithChildren
   '/_auth': typeof AuthRouteWithChildren
+  '/_admin/almacen': typeof AdminAlmacenRouteWithChildren
   '/_admin/atenciones': typeof AdminAtencionesRouteWithChildren
   '/_admin/caja': typeof AdminCajaRouteWithChildren
+  '/_admin/compras': typeof AdminComprasRouteWithChildren
+  '/_admin/farmacia': typeof AdminFarmaciaRouteWithChildren
   '/_admin/laboratorio': typeof AdminLaboratorioRouteWithChildren
   '/_admin/parametros': typeof AdminParametrosRouteWithChildren
   '/_admin/recursos-humanos': typeof AdminRecursosHumanosRouteWithChildren
   '/_admin/seguridad': typeof AdminSeguridadRouteWithChildren
   '/_auth/login': typeof AuthLoginRoute
   '/_admin/': typeof AdminIndexRoute
+  '/_admin/almacen/categorias': typeof AdminAlmacenCategoriasRoute
+  '/_admin/almacen/existencias': typeof AdminAlmacenExistenciasRoute
+  '/_admin/almacen/movimientos': typeof AdminAlmacenMovimientosRoute
+  '/_admin/almacen/productos': typeof AdminAlmacenProductosRoute
   '/_admin/atenciones/$atencionId': typeof AdminAtencionesAtencionIdRoute
   '/_admin/atenciones/formularios': typeof AdminAtencionesFormulariosRouteWithChildren
   '/_admin/atenciones/tipos-atencion': typeof AdminAtencionesTiposAtencionRoute
   '/_admin/caja/cajas': typeof AdminCajaCajasRoute
   '/_admin/caja/movimientos': typeof AdminCajaMovimientosRoute
+  '/_admin/compras/ordenes': typeof AdminComprasOrdenesRoute
+  '/_admin/compras/proveedores': typeof AdminComprasProveedoresRoute
+  '/_admin/farmacia/dispensaciones': typeof AdminFarmaciaDispensacionesRoute
+  '/_admin/farmacia/precios': typeof AdminFarmaciaPreciosRoute
+  '/_admin/farmacia/recetas': typeof AdminFarmaciaRecetasRoute
   '/_admin/laboratorio/especialidades': typeof AdminLaboratorioEspecialidadesRoute
   '/_admin/laboratorio/laboratorios-externos': typeof AdminLaboratorioLaboratoriosExternosRoute
   '/_admin/laboratorio/muestras': typeof AdminLaboratorioMuestrasRoute
@@ -532,18 +641,30 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/almacen'
     | '/atenciones'
     | '/caja'
+    | '/compras'
+    | '/farmacia'
     | '/laboratorio'
     | '/parametros'
     | '/recursos-humanos'
     | '/seguridad'
     | '/login'
+    | '/almacen/categorias'
+    | '/almacen/existencias'
+    | '/almacen/movimientos'
+    | '/almacen/productos'
     | '/atenciones/$atencionId'
     | '/atenciones/formularios'
     | '/atenciones/tipos-atencion'
     | '/caja/cajas'
     | '/caja/movimientos'
+    | '/compras/ordenes'
+    | '/compras/proveedores'
+    | '/farmacia/dispensaciones'
+    | '/farmacia/precios'
+    | '/farmacia/recetas'
     | '/laboratorio/especialidades'
     | '/laboratorio/laboratorios-externos'
     | '/laboratorio/muestras'
@@ -587,12 +708,24 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/almacen'
+    | '/compras'
+    | '/farmacia'
     | '/login'
+    | '/almacen/categorias'
+    | '/almacen/existencias'
+    | '/almacen/movimientos'
+    | '/almacen/productos'
     | '/atenciones/$atencionId'
     | '/atenciones/formularios'
     | '/atenciones/tipos-atencion'
     | '/caja/cajas'
     | '/caja/movimientos'
+    | '/compras/ordenes'
+    | '/compras/proveedores'
+    | '/farmacia/dispensaciones'
+    | '/farmacia/precios'
+    | '/farmacia/recetas'
     | '/laboratorio/especialidades'
     | '/laboratorio/laboratorios-externos'
     | '/laboratorio/muestras'
@@ -637,19 +770,31 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_admin'
     | '/_auth'
+    | '/_admin/almacen'
     | '/_admin/atenciones'
     | '/_admin/caja'
+    | '/_admin/compras'
+    | '/_admin/farmacia'
     | '/_admin/laboratorio'
     | '/_admin/parametros'
     | '/_admin/recursos-humanos'
     | '/_admin/seguridad'
     | '/_auth/login'
     | '/_admin/'
+    | '/_admin/almacen/categorias'
+    | '/_admin/almacen/existencias'
+    | '/_admin/almacen/movimientos'
+    | '/_admin/almacen/productos'
     | '/_admin/atenciones/$atencionId'
     | '/_admin/atenciones/formularios'
     | '/_admin/atenciones/tipos-atencion'
     | '/_admin/caja/cajas'
     | '/_admin/caja/movimientos'
+    | '/_admin/compras/ordenes'
+    | '/_admin/compras/proveedores'
+    | '/_admin/farmacia/dispensaciones'
+    | '/_admin/farmacia/precios'
+    | '/_admin/farmacia/recetas'
     | '/_admin/laboratorio/especialidades'
     | '/_admin/laboratorio/laboratorios-externos'
     | '/_admin/laboratorio/muestras'
@@ -755,6 +900,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLaboratorioRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_admin/farmacia': {
+      id: '/_admin/farmacia'
+      path: '/farmacia'
+      fullPath: '/farmacia'
+      preLoaderRoute: typeof AdminFarmaciaRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/compras': {
+      id: '/_admin/compras'
+      path: '/compras'
+      fullPath: '/compras'
+      preLoaderRoute: typeof AdminComprasRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/_admin/caja': {
       id: '/_admin/caja'
       path: '/caja'
@@ -767,6 +926,13 @@ declare module '@tanstack/react-router' {
       path: '/atenciones'
       fullPath: '/atenciones'
       preLoaderRoute: typeof AdminAtencionesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/almacen': {
+      id: '/_admin/almacen'
+      path: '/almacen'
+      fullPath: '/almacen'
+      preLoaderRoute: typeof AdminAlmacenRouteImport
       parentRoute: typeof AdminRoute
     }
     '/_admin/workflow/': {
@@ -1007,6 +1173,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLaboratorioEspecialidadesRouteImport
       parentRoute: typeof AdminLaboratorioRoute
     }
+    '/_admin/farmacia/recetas': {
+      id: '/_admin/farmacia/recetas'
+      path: '/recetas'
+      fullPath: '/farmacia/recetas'
+      preLoaderRoute: typeof AdminFarmaciaRecetasRouteImport
+      parentRoute: typeof AdminFarmaciaRoute
+    }
+    '/_admin/farmacia/precios': {
+      id: '/_admin/farmacia/precios'
+      path: '/precios'
+      fullPath: '/farmacia/precios'
+      preLoaderRoute: typeof AdminFarmaciaPreciosRouteImport
+      parentRoute: typeof AdminFarmaciaRoute
+    }
+    '/_admin/farmacia/dispensaciones': {
+      id: '/_admin/farmacia/dispensaciones'
+      path: '/dispensaciones'
+      fullPath: '/farmacia/dispensaciones'
+      preLoaderRoute: typeof AdminFarmaciaDispensacionesRouteImport
+      parentRoute: typeof AdminFarmaciaRoute
+    }
+    '/_admin/compras/proveedores': {
+      id: '/_admin/compras/proveedores'
+      path: '/proveedores'
+      fullPath: '/compras/proveedores'
+      preLoaderRoute: typeof AdminComprasProveedoresRouteImport
+      parentRoute: typeof AdminComprasRoute
+    }
+    '/_admin/compras/ordenes': {
+      id: '/_admin/compras/ordenes'
+      path: '/ordenes'
+      fullPath: '/compras/ordenes'
+      preLoaderRoute: typeof AdminComprasOrdenesRouteImport
+      parentRoute: typeof AdminComprasRoute
+    }
     '/_admin/caja/movimientos': {
       id: '/_admin/caja/movimientos'
       path: '/movimientos'
@@ -1041,6 +1242,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/atenciones/$atencionId'
       preLoaderRoute: typeof AdminAtencionesAtencionIdRouteImport
       parentRoute: typeof AdminAtencionesRoute
+    }
+    '/_admin/almacen/productos': {
+      id: '/_admin/almacen/productos'
+      path: '/productos'
+      fullPath: '/almacen/productos'
+      preLoaderRoute: typeof AdminAlmacenProductosRouteImport
+      parentRoute: typeof AdminAlmacenRoute
+    }
+    '/_admin/almacen/movimientos': {
+      id: '/_admin/almacen/movimientos'
+      path: '/movimientos'
+      fullPath: '/almacen/movimientos'
+      preLoaderRoute: typeof AdminAlmacenMovimientosRouteImport
+      parentRoute: typeof AdminAlmacenRoute
+    }
+    '/_admin/almacen/existencias': {
+      id: '/_admin/almacen/existencias'
+      path: '/existencias'
+      fullPath: '/almacen/existencias'
+      preLoaderRoute: typeof AdminAlmacenExistenciasRouteImport
+      parentRoute: typeof AdminAlmacenRoute
+    }
+    '/_admin/almacen/categorias': {
+      id: '/_admin/almacen/categorias'
+      path: '/categorias'
+      fullPath: '/almacen/categorias'
+      preLoaderRoute: typeof AdminAlmacenCategoriasRouteImport
+      parentRoute: typeof AdminAlmacenRoute
     }
     '/_admin/caja/cuentas/': {
       id: '/_admin/caja/cuentas/'
@@ -1086,6 +1315,24 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AdminAlmacenRouteChildren {
+  AdminAlmacenCategoriasRoute: typeof AdminAlmacenCategoriasRoute
+  AdminAlmacenExistenciasRoute: typeof AdminAlmacenExistenciasRoute
+  AdminAlmacenMovimientosRoute: typeof AdminAlmacenMovimientosRoute
+  AdminAlmacenProductosRoute: typeof AdminAlmacenProductosRoute
+}
+
+const AdminAlmacenRouteChildren: AdminAlmacenRouteChildren = {
+  AdminAlmacenCategoriasRoute: AdminAlmacenCategoriasRoute,
+  AdminAlmacenExistenciasRoute: AdminAlmacenExistenciasRoute,
+  AdminAlmacenMovimientosRoute: AdminAlmacenMovimientosRoute,
+  AdminAlmacenProductosRoute: AdminAlmacenProductosRoute,
+}
+
+const AdminAlmacenRouteWithChildren = AdminAlmacenRoute._addFileChildren(
+  AdminAlmacenRouteChildren,
+)
 
 interface AdminAtencionesFormulariosRouteChildren {
   AdminAtencionesFormulariosTipoAtencionIdRoute: typeof AdminAtencionesFormulariosTipoAtencionIdRoute
@@ -1138,6 +1385,36 @@ const AdminCajaRouteChildren: AdminCajaRouteChildren = {
 
 const AdminCajaRouteWithChildren = AdminCajaRoute._addFileChildren(
   AdminCajaRouteChildren,
+)
+
+interface AdminComprasRouteChildren {
+  AdminComprasOrdenesRoute: typeof AdminComprasOrdenesRoute
+  AdminComprasProveedoresRoute: typeof AdminComprasProveedoresRoute
+}
+
+const AdminComprasRouteChildren: AdminComprasRouteChildren = {
+  AdminComprasOrdenesRoute: AdminComprasOrdenesRoute,
+  AdminComprasProveedoresRoute: AdminComprasProveedoresRoute,
+}
+
+const AdminComprasRouteWithChildren = AdminComprasRoute._addFileChildren(
+  AdminComprasRouteChildren,
+)
+
+interface AdminFarmaciaRouteChildren {
+  AdminFarmaciaDispensacionesRoute: typeof AdminFarmaciaDispensacionesRoute
+  AdminFarmaciaPreciosRoute: typeof AdminFarmaciaPreciosRoute
+  AdminFarmaciaRecetasRoute: typeof AdminFarmaciaRecetasRoute
+}
+
+const AdminFarmaciaRouteChildren: AdminFarmaciaRouteChildren = {
+  AdminFarmaciaDispensacionesRoute: AdminFarmaciaDispensacionesRoute,
+  AdminFarmaciaPreciosRoute: AdminFarmaciaPreciosRoute,
+  AdminFarmaciaRecetasRoute: AdminFarmaciaRecetasRoute,
+}
+
+const AdminFarmaciaRouteWithChildren = AdminFarmaciaRoute._addFileChildren(
+  AdminFarmaciaRouteChildren,
 )
 
 interface AdminLaboratorioSolicitudesRouteChildren {
@@ -1244,8 +1521,11 @@ const AdminSeguridadRouteWithChildren = AdminSeguridadRoute._addFileChildren(
 )
 
 interface AdminRouteChildren {
+  AdminAlmacenRoute: typeof AdminAlmacenRouteWithChildren
   AdminAtencionesRoute: typeof AdminAtencionesRouteWithChildren
   AdminCajaRoute: typeof AdminCajaRouteWithChildren
+  AdminComprasRoute: typeof AdminComprasRouteWithChildren
+  AdminFarmaciaRoute: typeof AdminFarmaciaRouteWithChildren
   AdminLaboratorioRoute: typeof AdminLaboratorioRouteWithChildren
   AdminParametrosRoute: typeof AdminParametrosRouteWithChildren
   AdminRecursosHumanosRoute: typeof AdminRecursosHumanosRouteWithChildren
@@ -1264,8 +1544,11 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminAlmacenRoute: AdminAlmacenRouteWithChildren,
   AdminAtencionesRoute: AdminAtencionesRouteWithChildren,
   AdminCajaRoute: AdminCajaRouteWithChildren,
+  AdminComprasRoute: AdminComprasRouteWithChildren,
+  AdminFarmaciaRoute: AdminFarmaciaRouteWithChildren,
   AdminLaboratorioRoute: AdminLaboratorioRouteWithChildren,
   AdminParametrosRoute: AdminParametrosRouteWithChildren,
   AdminRecursosHumanosRoute: AdminRecursosHumanosRouteWithChildren,

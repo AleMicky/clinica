@@ -13,6 +13,9 @@ const api = {
     atencionMedica: '/api/atencion-medica',
     laboratorio: '/api/laboratorio',
     caja: '/api/caja',
+    almacen: '/api/almacen',
+    compras: '/api/compras',
+    farmacia: '/api/farmacia',
     workflow: '/api/workflow',
 } as const
 
@@ -144,7 +147,48 @@ export const cajaEndpoints = {
     conceptos: `${api.caja}/conceptos`,
 } as const
 
+
+export const almacenEndpoints = {
+    categorias: createEndpoints(`${api.almacen}/categorias`),
+    productos: createEndpoints(`${api.almacen}/productos`),
+    existencias: createEndpoints(`${api.almacen}/existencias`, (root) => ({
+        disponibilidad: (productoId: EntityId) => `${root}/disponibilidad/${productoId}`,
+    })),
+    lotes: createEndpoints(`${api.almacen}/lotes`),
+    movimientos: createEndpoints(`${api.almacen}/movimientos`, (root) => ({
+        ingresos: `${root}/ingresos`,
+        salidas: `${root}/salidas`,
+        ajustes: `${root}/ajustes`,
+        bajas: `${root}/bajas`,
+        transferencias: `${root}/transferencias`,
+        aplicar: (id: EntityId) => `${root}/${id}/aplicar`,
+    })),
+} as const
+
+export const comprasEndpoints = {
+    proveedores: createEndpoints(`${api.compras}/proveedores`),
+    ordenes: createEndpoints(`${api.compras}/ordenes`, (root) => ({
+        confirmar: (id: EntityId) => `${root}/${id}/confirmar`,
+        recibir: (id: EntityId) => `${root}/${id}/recibir`,
+        anular: (id: EntityId) => `${root}/${id}/anular`,
+    })),
+} as const
+
+export const farmaciaEndpoints = {
+    precios: createEndpoints(`${api.farmacia}/precios`, (root) => ({
+        vigente: (productoId: EntityId) => `${root}/vigente/${productoId}`,
+    })),
+    recetas: createEndpoints(`${api.farmacia}/recetas`, (root) => ({
+        anular: (id: EntityId) => `${root}/${id}/anular`,
+    })),
+    dispensaciones: createEndpoints(`${api.farmacia}/dispensaciones`, (root) => ({
+        confirmar: (id: EntityId) => `${root}/${id}/confirmar`,
+        anular: (id: EntityId) => `${root}/${id}/anular`,
+    })),
+} as const
+
 export const workflowEndpoints = {
+
     definitions: createEndpoints(`${api.workflow}/definitions`),
     customQueries: createEndpoints(`${api.workflow}/custom-queries`),
     states: (definitionId: EntityId) => `${api.workflow}/definitions/${definitionId}/states`,

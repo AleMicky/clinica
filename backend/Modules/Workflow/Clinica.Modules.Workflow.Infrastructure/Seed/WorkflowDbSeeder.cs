@@ -29,6 +29,8 @@ public static class WorkflowDbSeeder
         await SeedCustomQueriesAsync(context);
         await SeedAtencionMedicaAsync(context);
         await SeedLaboratorioAsync(context);
+        await SeedFarmaciaDispensacionAsync(context);
+        await SeedAlmacenMovimientoAsync(context);
     }
 
     private static async Task SeedAtencionMedicaAsync(WorkflowDbContext context)
@@ -202,6 +204,143 @@ public static class WorkflowDbSeeder
                 stateMap["CANCELADO"],
                 "CANCELAR",
                 "Cancelar");
+        }
+
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task SeedFarmaciaDispensacionAsync(WorkflowDbContext context)
+    {
+        const string definitionCode = "FARMACIA_DISPENSACION";
+
+        var definition = await context.WorkflowDefinitions
+            .Include(x => x.States)
+            .Include(x => x.Transitions)
+            .FirstOrDefaultAsync(x => x.Code == definitionCode);
+
+        if (definition is null)
+        {
+            definition = new WorkflowDefinition
+            {
+                Code = definitionCode,
+                Name = "Dispensación de Farmacia",
+                Module = "Farmacia",
+                EntityName = "Dispensacion",
+                IsActive = true
+            };
+            context.WorkflowDefinitions.Add(definition);
+            await context.SaveChangesAsync();
+        }
+        else
+        {
+            definition.Name = "Dispensación de Farmacia";
+            definition.Module = "Farmacia";
+            definition.EntityName = "Dispensacion";
+            definition.IsActive = true;
+        }
+
+        var states = new (string Code, string Name, bool IsInitial, bool IsFinal, string Color, int Order)[]
+        {
+            ("BORRADOR", "Borrador", true, false, "#8c8c8c", 1),
+            ("PENDIENTE_PAGO", "Pendiente de pago", false, false, "#faad14", 2),
+            ("DISPENSADA", "Dispensada", false, false, "#389e0d", 3),
+            ("FINALIZADO", "Finalizado", false, true, "#237804", 4),
+            ("ANULADO", "Anulado", false, true, "#cf1322", 5)
+        };
+
+        UpsertStates(definition, states);
+        await context.SaveChangesAsync();
+
+        await context.Entry(definition).Collection(x => x.States).LoadAsync();
+        await context.Entry(definition).Collection(x => x.Transitions).LoadAsync();
+        var stateMap = definition.States.ToDictionary(x => x.Code, x => x.Id);
+
+        var transitions = new (string From, string To, string Code, string Name)[]
+        {
+            ("BORRADOR", "PENDIENTE_PAGO", "ENVIAR_CAJA", "Enviar a caja"),
+            ("PENDIENTE_PAGO", "DISPENSADA", "REGISTRAR_PAGO", "Registrar pago"),
+            ("DISPENSADA", "FINALIZADO", "FINALIZAR", "Finalizar"),
+        };
+
+        foreach (var transition in transitions)
+        {
+            await EnsureTransitionAsync(
+                context, definition,
+                stateMap[transition.From], stateMap[transition.To],
+                transition.Code, transition.Name);
+        }
+
+        foreach (var fromCode in new[] { "BORRADOR", "PENDIENTE_PAGO" })
+        {
+            await EnsureTransitionAsync(
+                context, definition,
+                stateMap[fromCode], stateMap["ANULADO"],
+                "ANULAR", "Anular");
+        }
+
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task SeedAlmacenMovimientoAsync(WorkflowDbContext context)
+    {
+        const string definitionCode = "ALMACEN_MOVIMIENTO";
+
+        var definition = await context.WorkflowDefinitions
+            .Include(x => x.States)
+            .Include(x => x.Transitions)
+            .FirstOrDefaultAsync(x => x.Code == definitionCode);
+
+        if (definition is null)
+        {
+            definition = new WorkflowDefinition
+            {
+                Code = definitionCode,
+                Name = "Movimiento de Almacén",
+                Module = "Almacen",
+                EntityName = "Movimiento",
+                IsActive = true
+            };
+            context.WorkflowDefinitions.Add(definition);
+            await context.SaveChangesAsync();
+        }
+        else
+        {
+            definition.Name = "Movimiento de Almacén";
+            definition.Module = "Almacen";
+            definition.EntityName = "Movimiento";
+            definition.IsActive = true;
+        }
+
+        var states = new (string Code, string Name, bool IsInitial, bool IsFinal, string Color, int Order)[]
+        {
+            ("BORRADOR", "Borrador", true, false, "#8c8c8c", 1),
+            ("PENDIENTE_APROBACION", "Pendiente de aprobación", false, false, "#faad14", 2),
+            ("APROBADO", "Aprobado", false, false, "#1677ff", 3),
+            ("APLICADO", "Aplicado", false, true, "#237804", 4),
+            ("RECHAZADO", "Rechazado", false, true, "#cf1322", 5)
+        };
+
+        UpsertStates(definition, states);
+        await context.SaveChangesAsync();
+
+        await context.Entry(definition).Collection(x => x.States).LoadAsync();
+        await context.Entry(definition).Collection(x => x.Transitions).LoadAsync();
+        var stateMap = definition.States.ToDictionary(x => x.Code, x => x.Id);
+
+        var transitions = new (string From, string To, string Code, string Name)[]
+        {
+            ("BORRADOR", "PENDIENTE_APROBACION", "SOLICITAR_APROBACION", "Solicitar aprobación"),
+            ("PENDIENTE_APROBACION", "APROBADO", "APROBAR", "Aprobar"),
+            ("PENDIENTE_APROBACION", "RECHAZADO", "RECHAZAR", "Rechazar"),
+            ("APROBADO", "APLICADO", "APLICAR", "Aplicar a stock"),
+        };
+
+        foreach (var transition in transitions)
+        {
+            await EnsureTransitionAsync(
+                context, definition,
+                stateMap[transition.From], stateMap[transition.To],
+                transition.Code, transition.Name);
         }
 
         await context.SaveChangesAsync();

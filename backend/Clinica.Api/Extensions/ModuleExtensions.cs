@@ -1,9 +1,18 @@
+using Clinica.Modules.Almacen.Application;
+using Clinica.Modules.Almacen.Infrastructure;
+using Clinica.Modules.Almacen.Presentation;
 using Clinica.Modules.AtencionMedica.Application;
 using Clinica.Modules.AtencionMedica.Infrastructure;
 using Clinica.Modules.AtencionMedica.Presentation;
 using Clinica.Modules.Caja.Application;
 using Clinica.Modules.Caja.Infrastructure;
 using Clinica.Modules.Caja.Presentation;
+using Clinica.Modules.Compras.Application;
+using Clinica.Modules.Compras.Infrastructure;
+using Clinica.Modules.Compras.Presentation;
+using Clinica.Modules.Farmacia.Application;
+using Clinica.Modules.Farmacia.Infrastructure;
+using Clinica.Modules.Farmacia.Presentation;
 using Clinica.Modules.Laboratorio.Application;
 using Clinica.Modules.Laboratorio.Infrastructure;
 using Clinica.Modules.Laboratorio.Presentation;
@@ -71,6 +80,21 @@ public static class ModuleExtensions
             .AddCajaInfrastructure(configuration)
             .AddCajaPresentation();
 
+        services
+            .AddAlmacenApplication()
+            .AddAlmacenInfrastructure(configuration)
+            .AddAlmacenPresentation();
+
+        services
+            .AddComprasApplication()
+            .AddComprasInfrastructure(configuration)
+            .AddComprasPresentation();
+
+        services
+            .AddFarmaciaApplication()
+            .AddFarmaciaInfrastructure(configuration)
+            .AddFarmaciaPresentation();
+
         return services;
     }
 
@@ -84,6 +108,9 @@ public static class ModuleExtensions
         app.MapAtencionMedicaModule();
         app.MapLaboratorioModule();
         app.MapCajaModule();
+        app.MapAlmacenModule();
+        app.MapComprasModule();
+        app.MapFarmaciaModule();
 
         return app;
     }

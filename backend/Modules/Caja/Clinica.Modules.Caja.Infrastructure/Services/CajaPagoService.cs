@@ -3,6 +3,7 @@ using Clinica.Modules.Caja.Application.Abstractions;
 using Clinica.Modules.Caja.Application.Pagos;
 using Clinica.Modules.Caja.Domain.Entities;
 using Clinica.Modules.Caja.Infrastructure.Persistence;
+using Clinica.Modules.Farmacia.Application.Abstractions;
 using Clinica.Modules.Laboratorio.Application.Abstractions;
 using Clinica.Modules.Parametros.Application.Abstractions;
 using Clinica.Modules.Parametros.Application.Correlativos;
@@ -23,10 +24,12 @@ public sealed class CajaPagoService(
     IWorkflowInstanceService workflowInstanceService,
     IAtencionService atencionService,
     ISolicitudService solicitudService,
+    IDispensacionService dispensacionService,
     ILogger<CajaPagoService> logger) : ICajaPagoService
 {
     public const string ConceptoCobroAtencion = "COBRO_ATENCION";
     public const string ConceptoCobroLaboratorio = "COBRO_LABORATORIO";
+    public const string ConceptoCobroFarmacia = "COBRO_FARMACIA";
     public const string ConceptoOtroIngreso = "OTRO_INGRESO";
 
     public async Task<PagoDetalleCompletoResponse> RegistrarPagoAsync(
@@ -126,7 +129,9 @@ public sealed class CajaPagoService(
             ? ConceptoCobroAtencion
             : string.Equals(cuenta.ModuloOrigen, "Laboratorio", StringComparison.OrdinalIgnoreCase)
                 ? ConceptoCobroLaboratorio
-                : ConceptoOtroIngreso;
+                : string.Equals(cuenta.ModuloOrigen, "Farmacia", StringComparison.OrdinalIgnoreCase)
+                    ? ConceptoCobroFarmacia
+                    : ConceptoOtroIngreso;
 
         var concepto = await context.ConceptosCaja
             .FirstOrDefaultAsync(x => x.Codigo == conceptoCodigo && x.Activo, cancellationToken)
@@ -399,6 +404,26 @@ public sealed class CajaPagoService(
                 logger.LogWarning(
                     ex,
                     "Cuenta {CuentaId} pagada pero no se pudo actualizar estado de solicitud de laboratorio {ReferenciaId}.",
+                    cuenta.Id,
+                    cuenta.ReferenciaId);
+            }
+        }
+
+        if (string.Equals(cuenta.ModuloOrigen, "Farmacia", StringComparison.OrdinalIgnoreCase)
+            && string.Equals(cuenta.EntidadOrigen, "Dispensacion", StringComparison.OrdinalIgnoreCase))
+        {
+            try
+            {
+                await dispensacionService.SetEstadoAsync(
+                    cuenta.ReferenciaId,
+                    "DISPENSADA",
+                    cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(
+                    ex,
+                    "Cuenta {CuentaId} pagada pero no se pudo actualizar estado de dispensación {ReferenciaId}.",
                     cuenta.Id,
                     cuenta.ReferenciaId);
             }
