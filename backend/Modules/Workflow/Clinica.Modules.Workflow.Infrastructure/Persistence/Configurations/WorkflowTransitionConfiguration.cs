@@ -37,5 +37,10 @@ public sealed class WorkflowTransitionConfiguration
             .WithMany(x => x.IncomingTransitions)
             .HasForeignKey(x => x.ToStateId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(x => x.Assignment)
+            .WithOne(x => x.WorkflowTransition)
+            .HasForeignKey<WorkflowTransitionAssignment>(x => x.WorkflowTransitionId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

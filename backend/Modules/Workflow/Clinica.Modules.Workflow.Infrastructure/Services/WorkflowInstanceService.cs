@@ -1,6 +1,7 @@
 using Clinica.Modules.Workflow.Application.Abstractions;
 using Clinica.Modules.Workflow.Application.WorkflowInstances;
 using Clinica.Modules.Workflow.Domain.Entities;
+using Clinica.Modules.Workflow.Domain.Enums;
 using Clinica.Modules.Workflow.Infrastructure.Persistence;
 using Clinica.SharedKernel.Abstractions;
 using Clinica.SharedKernel.Exceptions;
@@ -49,14 +50,7 @@ public sealed class WorkflowInstanceService(
         if (initialState is null)
             throw new BusinessException("La definición no tiene un estado inicial configurado.");
 
-        var correlative = await context.WorkflowInstances
-            .Where(x => x.WorkflowDefinitionId == definition.Id)
-            .Select(x => (int?)x.Correlative)
-            .MaxAsync(cancellationToken) ?? 0;
-
         var now = DateTime.UtcNow;
-        var userId = currentUser.UserId!.Value;
-        var userName = currentUser.UserName ?? "Usuario";
 
         var instance = new WorkflowInstance
         {
@@ -66,9 +60,7 @@ public sealed class WorkflowInstanceService(
             ReferenceEntity = StringNormalize.Required(request.ReferenceEntity),
             ReferenceId = request.ReferenceId,
             CurrentStateId = initialState.Id,
-            Correlative = correlative + 1,
-            StartedByUserId = userId,
-            StartedByUserName = userName,
+            StartedByEmployeeId = request.EmployeeId,
             StartedAt = now,
             IsCompleted = initialState.IsFinal,
             FinishedAt = initialState.IsFinal ? now : null
@@ -79,14 +71,11 @@ public sealed class WorkflowInstanceService(
         context.WorkflowHistories.Add(new WorkflowHistory
         {
             WorkflowInstanceId = instance.Id,
+            WorkflowTransitionId = null,
             FromStateId = initialState.Id,
             ToStateId = initialState.Id,
-            ActionCode = "INICIAR",
-            ActionName = "Iniciar workflow",
             Comment = null,
-            PerformedByUserId = userId,
-            PerformedByUserName = userName,
-            PerformedByRole = GetPrimaryRole(),
+            ExecutedByEmployeeId = request.EmployeeId,
             PerformedAt = now
         });
 
@@ -184,6 +173,8 @@ public sealed class WorkflowInstanceService(
 
         var transition = await context.WorkflowTransitions
             .Include(x => x.ToState)
+            .Include(x => x.Assignment!)
+                .ThenInclude(x => x.Employees)
             .FirstOrDefaultAsync(x =>
                     x.WorkflowDefinitionId == instance.WorkflowDefinitionId &&
                     x.FromStateId == instance.CurrentStateId &&
@@ -197,9 +188,9 @@ public sealed class WorkflowInstanceService(
         if (transition.RequiresComment && string.IsNullOrWhiteSpace(request.Comment))
             throw new BusinessException("Se requiere un comentario para esta acción.");
 
+        EnsureEmployeeCanExecute(transition.Assignment, request.EmployeeId);
+
         var now = DateTime.UtcNow;
-        var userId = currentUser.UserId!.Value;
-        var userName = currentUser.UserName ?? "Usuario";
         var fromStateId = instance.CurrentStateId;
 
         instance.CurrentStateId = transition.ToStateId;
@@ -214,16 +205,13 @@ public sealed class WorkflowInstanceService(
         context.WorkflowHistories.Add(new WorkflowHistory
         {
             WorkflowInstanceId = instance.Id,
+            WorkflowTransitionId = transition.Id,
             FromStateId = fromStateId,
             ToStateId = transition.ToStateId,
-            ActionCode = transition.Code,
-            ActionName = transition.Name,
             Comment = string.IsNullOrWhiteSpace(request.Comment)
                 ? null
                 : request.Comment.Trim(),
-            PerformedByUserId = userId,
-            PerformedByUserName = userName,
-            PerformedByRole = GetPrimaryRole(),
+            ExecutedByEmployeeId = request.EmployeeId,
             PerformedAt = now
         });
 
@@ -247,22 +235,22 @@ public sealed class WorkflowInstanceService(
             .AsNoTracking()
             .Include(x => x.FromState)
             .Include(x => x.ToState)
+            .Include(x => x.WorkflowTransition)
             .Where(x => x.WorkflowInstanceId == id)
             .OrderByDescending(x => x.PerformedAt)
             .Select(x => new WorkflowHistoryResponse(
                 x.Id,
+                x.WorkflowTransitionId,
+                x.WorkflowTransition != null ? x.WorkflowTransition.Code : null,
+                x.WorkflowTransition != null ? x.WorkflowTransition.Name : null,
                 x.FromStateId,
                 x.FromState.Code,
                 x.FromState.Name,
                 x.ToStateId,
                 x.ToState.Code,
                 x.ToState.Name,
-                x.ActionCode,
-                x.ActionName,
+                x.ExecutedByEmployeeId,
                 x.Comment,
-                x.PerformedByUserId,
-                x.PerformedByUserName,
-                x.PerformedByRole,
                 x.PerformedAt))
             .ToListAsync(cancellationToken);
     }
@@ -273,7 +261,22 @@ public sealed class WorkflowInstanceService(
             throw new BusinessException("Debe iniciar sesión para operar el workflow.");
     }
 
-    private string? GetPrimaryRole() => currentUser.Roles.FirstOrDefault();
+    private static void EnsureEmployeeCanExecute(
+        WorkflowTransitionAssignment? assignment,
+        Guid employeeId)
+    {
+        if (assignment is null)
+            return;
+
+        if (assignment.Type == WorkflowAssignmentType.EmployeeList)
+        {
+            var allowed = assignment.Employees.Any(x => x.EmployeeId == employeeId);
+            if (!allowed)
+                throw new BusinessException("El empleado no está autorizado para ejecutar esta transición.");
+        }
+
+        // Area y StoredProcedure se validan en el consumidor / runtime especializado.
+    }
 
     private static WorkflowInstanceResponse ToResponse(WorkflowInstance entity)
     {
@@ -289,9 +292,7 @@ public sealed class WorkflowInstanceService(
             entity.CurrentState.Code,
             entity.CurrentState.Name,
             entity.CurrentState.Color,
-            entity.Correlative,
-            entity.StartedByUserId,
-            entity.StartedByUserName,
+            entity.StartedByEmployeeId,
             entity.StartedAt,
             entity.FinishedAt,
             entity.IsCompleted,

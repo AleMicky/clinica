@@ -2,15 +2,18 @@ import { del, get, getPaged, post, put } from '../../../shared/api/http'
 import { workflowEndpoints } from '../../../shared/api/endpoints'
 import type { PagedQuery } from '../../../shared/types/pagination.types'
 import type {
+    CreateWorkflowCustomQueryPayload,
     CreateWorkflowDefinitionPayload,
     CreateWorkflowStatePayload,
     CreateWorkflowTransitionPayload,
     ExecuteWorkflowTransitionPayload,
     StartWorkflowInstancePayload,
+    UpdateWorkflowCustomQueryPayload,
     UpdateWorkflowDefinitionPayload,
     UpdateWorkflowStatePayload,
     UpdateWorkflowTransitionPayload,
     WorkflowAvailableAction,
+    WorkflowCustomQuery,
     WorkflowDefinition,
     WorkflowHistoryEntry,
     WorkflowInstance,
@@ -43,6 +46,32 @@ export class WorkflowService {
 
     deleteDefinition(id: string) {
         return del<void>(workflowEndpoints.definitions.byId(id))
+    }
+
+    getCustomQueriesPaged(query: PagedQuery) {
+        return getPaged<WorkflowCustomQuery>(workflowEndpoints.customQueries.root, query)
+    }
+
+    getCustomQueryById(id: string) {
+        return get<WorkflowCustomQuery>(workflowEndpoints.customQueries.byId(id))
+    }
+
+    createCustomQuery(data: CreateWorkflowCustomQueryPayload) {
+        return post<WorkflowCustomQuery, CreateWorkflowCustomQueryPayload>(
+            workflowEndpoints.customQueries.root,
+            data,
+        )
+    }
+
+    updateCustomQuery(id: string, data: UpdateWorkflowCustomQueryPayload) {
+        return put<WorkflowCustomQuery, UpdateWorkflowCustomQueryPayload>(
+            workflowEndpoints.customQueries.byId(id),
+            data,
+        )
+    }
+
+    deleteCustomQuery(id: string) {
+        return del<void>(workflowEndpoints.customQueries.byId(id))
     }
 
     getStatesByDefinition(definitionId: string) {

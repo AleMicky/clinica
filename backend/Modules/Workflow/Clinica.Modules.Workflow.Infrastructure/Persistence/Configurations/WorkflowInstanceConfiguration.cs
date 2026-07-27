@@ -16,13 +16,12 @@ public sealed class WorkflowInstanceConfiguration
 
         builder.Property(x => x.ReferenceModule).HasMaxLength(100).IsRequired();
         builder.Property(x => x.ReferenceEntity).HasMaxLength(100).IsRequired();
-        builder.Property(x => x.StartedByUserName).HasMaxLength(200).IsRequired();
         builder.Property(x => x.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
         builder.Property(x => x.CreatedBy).HasMaxLength(100);
         builder.Property(x => x.UpdatedBy).HasMaxLength(100);
 
         builder.HasIndex(x => new { x.ReferenceModule, x.ReferenceEntity, x.ReferenceId }).IsUnique();
-        builder.HasIndex(x => new { x.WorkflowDefinitionId, x.Correlative }).IsUnique();
+        builder.HasIndex(x => x.StartedByEmployeeId);
 
         builder.HasOne(x => x.WorkflowDefinition)
             .WithMany(x => x.Instances)

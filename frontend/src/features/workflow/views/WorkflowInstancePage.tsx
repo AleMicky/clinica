@@ -53,6 +53,7 @@ export function WorkflowInstancePage({ instanceId }: WorkflowInstancePageProps) 
 
             await executeTransition.mutateAsync({
                 code: value.code,
+                employeeId: value.employeeId,
                 comment: value.comment?.trim() || null,
             })
 
@@ -84,9 +85,6 @@ export function WorkflowInstancePage({ instanceId }: WorkflowInstancePageProps) 
                 <Card title="Datos de la instancia" loading={loadingInstance}>
                     {instance ? (
                         <Descriptions column={{ xs: 1, sm: 2 }}>
-                            <Descriptions.Item label="Correlativo">
-                                #{instance.correlative}
-                            </Descriptions.Item>
                             <Descriptions.Item label="Referencia">
                                 {instance.referenceModule} / {instance.referenceEntity} / {instance.referenceId}
                             </Descriptions.Item>
@@ -102,8 +100,8 @@ export function WorkflowInstancePage({ instanceId }: WorkflowInstancePageProps) 
                                     {instance.isCompleted ? 'Sí' : 'No'}
                                 </Tag>
                             </Descriptions.Item>
-                            <Descriptions.Item label="Iniciada por">
-                                {instance.startedByUserName}
+                            <Descriptions.Item label="Iniciada por (empleado)">
+                                {instance.startedByEmployeeId}
                             </Descriptions.Item>
                             <Descriptions.Item label="Inicio">
                                 {new Date(instance.startedAt).toLocaleString('es-BO')}
@@ -139,6 +137,19 @@ export function WorkflowInstancePage({ instanceId }: WorkflowInstancePageProps) 
                                                                 options={actionOptions}
                                                                 value={field.state.value || undefined}
                                                                 onChange={(value) => field.handleChange(value)}
+                                                            />
+                                                        </Form.Item>
+                                                    )}
+                                                </form.Field>
+
+                                                <form.Field name="employeeId">
+                                                    {(field) => (
+                                                        <Form.Item label="Empleado ejecutor (UUID)" required>
+                                                            <Input
+                                                                value={field.state.value}
+                                                                onChange={(event) =>
+                                                                    field.handleChange(event.target.value)
+                                                                }
                                                             />
                                                         </Form.Item>
                                                     )}

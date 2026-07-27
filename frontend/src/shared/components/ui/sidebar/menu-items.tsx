@@ -248,6 +248,13 @@ export const menuGroups: MenuGroup[] = [
                 roles: [AppRole.Admin],
             },
             {
+                key: '/workflow/custom-queries',
+                to: '/workflow/custom-queries',
+                icon: <FileSearchOutlined />,
+                label: 'Consultas personalizadas',
+                roles: [AppRole.Admin],
+            },
+            {
                 key: 'workflow-flow-view',
                 icon: <ApartmentOutlined />,
                 label: 'Vista del flujo',
@@ -450,6 +457,7 @@ const nestedRouteLabels: Record<string, { title: string; parentPath: AppRoute }>
     '/atenciones/$atencionId': { title: 'Detalle de atención', parentPath: '/atenciones' },
     '/workflow/designer/$definitionId': { title: 'Diseñador de workflow', parentPath: '/workflow' },
     '/workflow/instances/$instanceId': { title: 'Instancia de workflow', parentPath: '/workflow' },
+    '/workflow/custom-queries': { title: 'Consultas personalizadas', parentPath: '/workflow' },
 }
 
 function findMenuItemByPath(

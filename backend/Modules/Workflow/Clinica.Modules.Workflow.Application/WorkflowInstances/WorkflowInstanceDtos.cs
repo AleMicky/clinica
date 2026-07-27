@@ -12,9 +12,7 @@ public sealed record WorkflowInstanceResponse(
     string CurrentStateCode,
     string CurrentStateName,
     string CurrentStateColor,
-    int Correlative,
-    Guid StartedByUserId,
-    string StartedByUserName,
+    Guid StartedByEmployeeId,
     DateTime StartedAt,
     DateTime? FinishedAt,
     bool IsCompleted,
@@ -25,10 +23,12 @@ public sealed record StartWorkflowInstanceRequest(
     string WorkflowDefinitionCode,
     string ReferenceModule,
     string ReferenceEntity,
-    Guid ReferenceId);
+    Guid ReferenceId,
+    Guid EmployeeId);
 
 public sealed record ExecuteWorkflowTransitionRequest(
     string Code,
+    Guid EmployeeId,
     string? Comment);
 
 public sealed record WorkflowAvailableActionResponse(
@@ -42,16 +42,15 @@ public sealed record WorkflowAvailableActionResponse(
 
 public sealed record WorkflowHistoryResponse(
     Guid Id,
+    Guid? WorkflowTransitionId,
+    string? TransitionCode,
+    string? TransitionName,
     Guid FromStateId,
     string FromStateCode,
     string FromStateName,
     Guid ToStateId,
     string ToStateCode,
     string ToStateName,
-    string ActionCode,
-    string ActionName,
+    Guid ExecutedByEmployeeId,
     string? Comment,
-    Guid PerformedByUserId,
-    string PerformedByUserName,
-    string? PerformedByRole,
     DateTime PerformedAt);

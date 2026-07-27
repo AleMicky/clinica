@@ -1,4 +1,21 @@
+using Clinica.Modules.Workflow.Domain.Enums;
+
 namespace Clinica.Modules.Workflow.Application.WorkflowTransitions;
+
+public sealed record WorkflowTransitionAssignmentResponse(
+    Guid Id,
+    WorkflowAssignmentType Type,
+    Guid? AreaId,
+    Guid? WorkflowCustomQueryId,
+    string? WorkflowCustomQueryCode,
+    string? WorkflowCustomQueryName,
+    IReadOnlyCollection<Guid> EmployeeIds);
+
+public sealed record WorkflowTransitionAssignmentRequest(
+    WorkflowAssignmentType Type,
+    Guid? AreaId,
+    Guid? WorkflowCustomQueryId,
+    IReadOnlyCollection<Guid>? EmployeeIds);
 
 public sealed record WorkflowTransitionResponse(
     Guid Id,
@@ -13,6 +30,7 @@ public sealed record WorkflowTransitionResponse(
     string Name,
     bool RequiresComment,
     bool IsActive,
+    WorkflowTransitionAssignmentResponse? Assignment,
     DateTime CreatedAt,
     DateTime? UpdatedAt);
 
@@ -22,7 +40,8 @@ public sealed record CreateWorkflowTransitionRequest(
     string Code,
     string Name,
     bool RequiresComment,
-    bool IsActive = true);
+    bool IsActive = true,
+    WorkflowTransitionAssignmentRequest? Assignment = null);
 
 public sealed record UpdateWorkflowTransitionRequest(
     Guid FromStateId,
@@ -30,4 +49,5 @@ public sealed record UpdateWorkflowTransitionRequest(
     string Code,
     string Name,
     bool RequiresComment,
-    bool IsActive);
+    bool IsActive,
+    WorkflowTransitionAssignmentRequest? Assignment = null);

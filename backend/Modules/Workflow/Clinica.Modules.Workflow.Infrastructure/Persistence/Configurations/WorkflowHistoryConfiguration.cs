@@ -14,19 +14,23 @@ public sealed class WorkflowHistoryConfiguration
 
         builder.ToTable("WorkflowHistories");
 
-        builder.Property(x => x.ActionCode).HasMaxLength(100).IsRequired();
-        builder.Property(x => x.ActionName).HasMaxLength(200).IsRequired();
         builder.Property(x => x.Comment).HasMaxLength(1000);
-        builder.Property(x => x.PerformedByUserName).HasMaxLength(200).IsRequired();
-        builder.Property(x => x.PerformedByRole).HasMaxLength(100);
         builder.Property(x => x.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
         builder.Property(x => x.CreatedBy).HasMaxLength(100);
         builder.Property(x => x.UpdatedBy).HasMaxLength(100);
+
+        builder.HasIndex(x => x.ExecutedByEmployeeId);
+        builder.HasIndex(x => x.WorkflowTransitionId);
 
         builder.HasOne(x => x.WorkflowInstance)
             .WithMany(x => x.History)
             .HasForeignKey(x => x.WorkflowInstanceId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(x => x.WorkflowTransition)
+            .WithMany()
+            .HasForeignKey(x => x.WorkflowTransitionId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasOne(x => x.FromState)
             .WithMany()

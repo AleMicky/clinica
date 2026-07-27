@@ -1,5 +1,13 @@
 export type EntityId = string
 
+export type WorkflowAssignmentType = 1 | 2 | 3
+
+export const WorkflowAssignmentType = {
+    Area: 1,
+    EmployeeList: 2,
+    StoredProcedure: 3,
+} as const
+
 export type WorkflowDefinition = {
     id: EntityId
     code: string
@@ -27,6 +35,25 @@ export type UpdateWorkflowDefinitionPayload = {
     isActive: boolean
 }
 
+export type WorkflowCustomQuery = {
+    id: EntityId
+    code: string
+    name: string
+    description: string | null
+    procedureName: string
+    createdAt: string
+    updatedAt: string | null
+}
+
+export type CreateWorkflowCustomQueryPayload = {
+    code: string
+    name: string
+    description?: string | null
+    procedureName: string
+}
+
+export type UpdateWorkflowCustomQueryPayload = CreateWorkflowCustomQueryPayload
+
 export type WorkflowState = {
     id: EntityId
     workflowDefinitionId: EntityId
@@ -51,6 +78,23 @@ export type CreateWorkflowStatePayload = {
 
 export type UpdateWorkflowStatePayload = CreateWorkflowStatePayload
 
+export type WorkflowTransitionAssignment = {
+    id: EntityId
+    type: WorkflowAssignmentType
+    areaId: EntityId | null
+    workflowCustomQueryId: EntityId | null
+    workflowCustomQueryCode: string | null
+    workflowCustomQueryName: string | null
+    employeeIds: EntityId[]
+}
+
+export type WorkflowTransitionAssignmentPayload = {
+    type: WorkflowAssignmentType
+    areaId?: EntityId | null
+    workflowCustomQueryId?: EntityId | null
+    employeeIds?: EntityId[] | null
+}
+
 export type WorkflowTransition = {
     id: EntityId
     workflowDefinitionId: EntityId
@@ -64,6 +108,7 @@ export type WorkflowTransition = {
     name: string
     requiresComment: boolean
     isActive: boolean
+    assignment: WorkflowTransitionAssignment | null
     createdAt: string
     updatedAt: string | null
 }
@@ -75,6 +120,7 @@ export type CreateWorkflowTransitionPayload = {
     name: string
     requiresComment: boolean
     isActive?: boolean
+    assignment?: WorkflowTransitionAssignmentPayload | null
 }
 
 export type UpdateWorkflowTransitionPayload = {
@@ -84,6 +130,7 @@ export type UpdateWorkflowTransitionPayload = {
     name: string
     requiresComment: boolean
     isActive: boolean
+    assignment?: WorkflowTransitionAssignmentPayload | null
 }
 
 export type WorkflowInstance = {
@@ -98,9 +145,7 @@ export type WorkflowInstance = {
     currentStateCode: string
     currentStateName: string
     currentStateColor: string
-    correlative: number
-    startedByUserId: EntityId
-    startedByUserName: string
+    startedByEmployeeId: EntityId
     startedAt: string
     finishedAt: string | null
     isCompleted: boolean
@@ -113,10 +158,12 @@ export type StartWorkflowInstancePayload = {
     referenceModule: string
     referenceEntity: string
     referenceId: EntityId
+    employeeId: EntityId
 }
 
 export type ExecuteWorkflowTransitionPayload = {
     code: string
+    employeeId: EntityId
     comment?: string | null
 }
 
@@ -132,17 +179,16 @@ export type WorkflowAvailableAction = {
 
 export type WorkflowHistoryEntry = {
     id: EntityId
+    workflowTransitionId: EntityId | null
+    transitionCode: string | null
+    transitionName: string | null
     fromStateId: EntityId
     fromStateCode: string
     fromStateName: string
     toStateId: EntityId
     toStateCode: string
     toStateName: string
-    actionCode: string
-    actionName: string
+    executedByEmployeeId: EntityId
     comment: string | null
-    performedByUserId: EntityId
-    performedByUserName: string
-    performedByRole: string | null
     performedAt: string
 }

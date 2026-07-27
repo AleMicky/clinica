@@ -18,6 +18,7 @@ public static class WorkflowEndpoints
 
         MapHealth(group);
         group.MapWorkflowDefinitionEndpoints();
+        group.MapWorkflowCustomQueryEndpoints();
         group.MapWorkflowStateEndpoints();
         group.MapWorkflowTransitionEndpoints();
         group.MapWorkflowInstanceEndpoints();

@@ -23,6 +23,103 @@ namespace Clinica.Modules.Workflow.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Clinica.Modules.Workflow.Domain.Entities.WorkflowAssignmentEmployee", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("WorkflowTransitionAssignmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.HasIndex("WorkflowTransitionAssignmentId", "EmployeeId")
+                        .IsUnique();
+
+                    b.ToTable("WorkflowAssignmentEmployees", "workflow");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Workflow.Domain.Entities.WorkflowCustomQuery", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("ProcedureName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("WorkflowCustomQueries", "workflow");
+                });
+
             modelBuilder.Entity("Clinica.Modules.Workflow.Domain.Entities.WorkflowDefinition", b =>
                 {
                     b.Property<Guid>("Id")
@@ -89,16 +186,6 @@ namespace Clinica.Modules.Workflow.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("ActionCode")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("ActionName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
                     b.Property<string>("Comment")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
@@ -112,6 +199,9 @@ namespace Clinica.Modules.Workflow.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<Guid>("ExecutedByEmployeeId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("FromStateId")
                         .HasColumnType("uniqueidentifier");
 
@@ -122,18 +212,6 @@ namespace Clinica.Modules.Workflow.Infrastructure.Migrations
 
                     b.Property<DateTime>("PerformedAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("PerformedByRole")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<Guid>("PerformedByUserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("PerformedByUserName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
 
                     b.Property<Guid>("ToStateId")
                         .HasColumnType("uniqueidentifier");
@@ -148,13 +226,20 @@ namespace Clinica.Modules.Workflow.Infrastructure.Migrations
                     b.Property<Guid>("WorkflowInstanceId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("WorkflowTransitionId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("ExecutedByEmployeeId");
 
                     b.HasIndex("FromStateId");
 
                     b.HasIndex("ToStateId");
 
                     b.HasIndex("WorkflowInstanceId");
+
+                    b.HasIndex("WorkflowTransitionId");
 
                     b.ToTable("WorkflowHistories", "workflow");
                 });
@@ -164,9 +249,6 @@ namespace Clinica.Modules.Workflow.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("Correlative")
-                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -207,13 +289,8 @@ namespace Clinica.Modules.Workflow.Infrastructure.Migrations
                     b.Property<DateTime>("StartedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("StartedByUserId")
+                    b.Property<Guid>("StartedByEmployeeId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("StartedByUserName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -229,8 +306,9 @@ namespace Clinica.Modules.Workflow.Infrastructure.Migrations
 
                     b.HasIndex("CurrentStateId");
 
-                    b.HasIndex("WorkflowDefinitionId", "Correlative")
-                        .IsUnique();
+                    b.HasIndex("StartedByEmployeeId");
+
+                    b.HasIndex("WorkflowDefinitionId");
 
                     b.HasIndex("ReferenceModule", "ReferenceEntity", "ReferenceId")
                         .IsUnique();
@@ -366,6 +444,68 @@ namespace Clinica.Modules.Workflow.Infrastructure.Migrations
                     b.ToTable("WorkflowTransitions", "workflow");
                 });
 
+            modelBuilder.Entity("Clinica.Modules.Workflow.Domain.Entities.WorkflowTransitionAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("AreaId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid?>("WorkflowCustomQueryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("WorkflowTransitionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AreaId");
+
+                    b.HasIndex("WorkflowCustomQueryId");
+
+                    b.HasIndex("WorkflowTransitionId")
+                        .IsUnique();
+
+                    b.ToTable("WorkflowTransitionAssignments", "workflow");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Workflow.Domain.Entities.WorkflowAssignmentEmployee", b =>
+                {
+                    b.HasOne("Clinica.Modules.Workflow.Domain.Entities.WorkflowTransitionAssignment", "Assignment")
+                        .WithMany("Employees")
+                        .HasForeignKey("WorkflowTransitionAssignmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Assignment");
+                });
+
             modelBuilder.Entity("Clinica.Modules.Workflow.Domain.Entities.WorkflowHistory", b =>
                 {
                     b.HasOne("Clinica.Modules.Workflow.Domain.Entities.WorkflowState", "FromState")
@@ -386,11 +526,18 @@ namespace Clinica.Modules.Workflow.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Clinica.Modules.Workflow.Domain.Entities.WorkflowTransition", "WorkflowTransition")
+                        .WithMany()
+                        .HasForeignKey("WorkflowTransitionId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("FromState");
 
                     b.Navigation("ToState");
 
                     b.Navigation("WorkflowInstance");
+
+                    b.Navigation("WorkflowTransition");
                 });
 
             modelBuilder.Entity("Clinica.Modules.Workflow.Domain.Entities.WorkflowInstance", b =>
@@ -450,6 +597,24 @@ namespace Clinica.Modules.Workflow.Infrastructure.Migrations
                     b.Navigation("WorkflowDefinition");
                 });
 
+            modelBuilder.Entity("Clinica.Modules.Workflow.Domain.Entities.WorkflowTransitionAssignment", b =>
+                {
+                    b.HasOne("Clinica.Modules.Workflow.Domain.Entities.WorkflowCustomQuery", "WorkflowCustomQuery")
+                        .WithMany()
+                        .HasForeignKey("WorkflowCustomQueryId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Clinica.Modules.Workflow.Domain.Entities.WorkflowTransition", "WorkflowTransition")
+                        .WithOne("Assignment")
+                        .HasForeignKey("Clinica.Modules.Workflow.Domain.Entities.WorkflowTransitionAssignment", "WorkflowTransitionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("WorkflowCustomQuery");
+
+                    b.Navigation("WorkflowTransition");
+                });
+
             modelBuilder.Entity("Clinica.Modules.Workflow.Domain.Entities.WorkflowDefinition", b =>
                 {
                     b.Navigation("Instances");
@@ -469,6 +634,16 @@ namespace Clinica.Modules.Workflow.Infrastructure.Migrations
                     b.Navigation("IncomingTransitions");
 
                     b.Navigation("OutgoingTransitions");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Workflow.Domain.Entities.WorkflowTransition", b =>
+                {
+                    b.Navigation("Assignment");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Workflow.Domain.Entities.WorkflowTransitionAssignment", b =>
+                {
+                    b.Navigation("Employees");
                 });
 #pragma warning restore 612, 618
         }

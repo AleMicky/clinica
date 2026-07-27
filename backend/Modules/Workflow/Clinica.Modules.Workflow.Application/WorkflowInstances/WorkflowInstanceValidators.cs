@@ -10,6 +10,7 @@ public class StartWorkflowInstanceRequestValidator : AbstractValidator<StartWork
         RuleFor(x => x.ReferenceModule).NotEmpty().MaximumLength(100);
         RuleFor(x => x.ReferenceEntity).NotEmpty().MaximumLength(100);
         RuleFor(x => x.ReferenceId).NotEmpty();
+        RuleFor(x => x.EmployeeId).NotEmpty();
     }
 }
 
@@ -18,6 +19,7 @@ public class ExecuteWorkflowTransitionRequestValidator : AbstractValidator<Execu
     public ExecuteWorkflowTransitionRequestValidator()
     {
         RuleFor(x => x.Code).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.EmployeeId).NotEmpty();
         RuleFor(x => x.Comment).MaximumLength(1000);
     }
 }

@@ -29,6 +29,7 @@ import { Route as AdminPacientesIndexRouteImport } from './routes/_admin/pacient
 import { Route as AdminLaboratorioIndexRouteImport } from './routes/_admin/laboratorio/index'
 import { Route as AdminCatalogosIndexRouteImport } from './routes/_admin/catalogos/index'
 import { Route as AdminAtencionesIndexRouteImport } from './routes/_admin/atenciones/index'
+import { Route as AdminWorkflowCustomQueriesRouteImport } from './routes/_admin/workflow/custom-queries'
 import { Route as AdminUsuariosPerfilRouteImport } from './routes/_admin/usuarios/perfil'
 import { Route as AdminSeguridadUsuariosRouteImport } from './routes/_admin/seguridad/usuarios'
 import { Route as AdminSeguridadRolesRouteImport } from './routes/_admin/seguridad/roles'
@@ -151,6 +152,12 @@ const AdminAtencionesIndexRoute = AdminAtencionesIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminAtencionesRoute,
 } as any)
+const AdminWorkflowCustomQueriesRoute =
+  AdminWorkflowCustomQueriesRouteImport.update({
+    id: '/workflow/custom-queries',
+    path: '/workflow/custom-queries',
+    getParentRoute: () => AdminRoute,
+  } as any)
 const AdminUsuariosPerfilRoute = AdminUsuariosPerfilRouteImport.update({
   id: '/usuarios/perfil',
   path: '/usuarios/perfil',
@@ -307,6 +314,7 @@ export interface FileRoutesByFullPath {
   '/seguridad/roles': typeof AdminSeguridadRolesRoute
   '/seguridad/usuarios': typeof AdminSeguridadUsuariosRoute
   '/usuarios/perfil': typeof AdminUsuariosPerfilRoute
+  '/workflow/custom-queries': typeof AdminWorkflowCustomQueriesRoute
   '/atenciones/': typeof AdminAtencionesIndexRoute
   '/catalogos/': typeof AdminCatalogosIndexRoute
   '/laboratorio/': typeof AdminLaboratorioIndexRoute
@@ -344,6 +352,7 @@ export interface FileRoutesByTo {
   '/seguridad/roles': typeof AdminSeguridadRolesRoute
   '/seguridad/usuarios': typeof AdminSeguridadUsuariosRoute
   '/usuarios/perfil': typeof AdminUsuariosPerfilRoute
+  '/workflow/custom-queries': typeof AdminWorkflowCustomQueriesRoute
   '/atenciones': typeof AdminAtencionesIndexRoute
   '/catalogos': typeof AdminCatalogosIndexRoute
   '/laboratorio': typeof AdminLaboratorioIndexRoute
@@ -389,6 +398,7 @@ export interface FileRoutesById {
   '/_admin/seguridad/roles': typeof AdminSeguridadRolesRoute
   '/_admin/seguridad/usuarios': typeof AdminSeguridadUsuariosRoute
   '/_admin/usuarios/perfil': typeof AdminUsuariosPerfilRoute
+  '/_admin/workflow/custom-queries': typeof AdminWorkflowCustomQueriesRoute
   '/_admin/atenciones/': typeof AdminAtencionesIndexRoute
   '/_admin/catalogos/': typeof AdminCatalogosIndexRoute
   '/_admin/laboratorio/': typeof AdminLaboratorioIndexRoute
@@ -433,6 +443,7 @@ export interface FileRouteTypes {
     | '/seguridad/roles'
     | '/seguridad/usuarios'
     | '/usuarios/perfil'
+    | '/workflow/custom-queries'
     | '/atenciones/'
     | '/catalogos/'
     | '/laboratorio/'
@@ -470,6 +481,7 @@ export interface FileRouteTypes {
     | '/seguridad/roles'
     | '/seguridad/usuarios'
     | '/usuarios/perfil'
+    | '/workflow/custom-queries'
     | '/atenciones'
     | '/catalogos'
     | '/laboratorio'
@@ -514,6 +526,7 @@ export interface FileRouteTypes {
     | '/_admin/seguridad/roles'
     | '/_admin/seguridad/usuarios'
     | '/_admin/usuarios/perfil'
+    | '/_admin/workflow/custom-queries'
     | '/_admin/atenciones/'
     | '/_admin/catalogos/'
     | '/_admin/laboratorio/'
@@ -676,6 +689,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/atenciones/'
       preLoaderRoute: typeof AdminAtencionesIndexRouteImport
       parentRoute: typeof AdminAtencionesRoute
+    }
+    '/_admin/workflow/custom-queries': {
+      id: '/_admin/workflow/custom-queries'
+      path: '/workflow/custom-queries'
+      fullPath: '/workflow/custom-queries'
+      preLoaderRoute: typeof AdminWorkflowCustomQueriesRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/_admin/usuarios/perfil': {
       id: '/_admin/usuarios/perfil'
@@ -952,6 +972,7 @@ interface AdminRouteChildren {
   AdminSeguridadRoute: typeof AdminSeguridadRouteWithChildren
   AdminIndexRoute: typeof AdminIndexRoute
   AdminUsuariosPerfilRoute: typeof AdminUsuariosPerfilRoute
+  AdminWorkflowCustomQueriesRoute: typeof AdminWorkflowCustomQueriesRoute
   AdminCatalogosIndexRoute: typeof AdminCatalogosIndexRoute
   AdminPacientesIndexRoute: typeof AdminPacientesIndexRoute
   AdminPersonasIndexRoute: typeof AdminPersonasIndexRoute
@@ -970,6 +991,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSeguridadRoute: AdminSeguridadRouteWithChildren,
   AdminIndexRoute: AdminIndexRoute,
   AdminUsuariosPerfilRoute: AdminUsuariosPerfilRoute,
+  AdminWorkflowCustomQueriesRoute: AdminWorkflowCustomQueriesRoute,
   AdminCatalogosIndexRoute: AdminCatalogosIndexRoute,
   AdminPacientesIndexRoute: AdminPacientesIndexRoute,
   AdminPersonasIndexRoute: AdminPersonasIndexRoute,

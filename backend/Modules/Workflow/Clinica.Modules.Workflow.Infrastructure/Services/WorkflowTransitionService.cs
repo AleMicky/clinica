@@ -1,6 +1,7 @@
 using Clinica.Modules.Workflow.Application.Abstractions;
 using Clinica.Modules.Workflow.Application.WorkflowTransitions;
 using Clinica.Modules.Workflow.Domain.Entities;
+using Clinica.Modules.Workflow.Domain.Enums;
 using Clinica.Modules.Workflow.Infrastructure.Persistence;
 using Clinica.SharedKernel.Exceptions;
 using Clinica.SharedKernel.Text;
@@ -18,15 +19,20 @@ public sealed class WorkflowTransitionService(
     {
         await EnsureDefinitionExistsAsync(definitionId, cancellationToken);
 
-        return await context.WorkflowTransitions
+        var transitions = await context.WorkflowTransitions
             .AsNoTracking()
             .Include(x => x.FromState)
             .Include(x => x.ToState)
+            .Include(x => x.Assignment!)
+                .ThenInclude(x => x.Employees)
+            .Include(x => x.Assignment!)
+                .ThenInclude(x => x.WorkflowCustomQuery)
             .Where(x => x.WorkflowDefinitionId == definitionId)
             .OrderBy(x => x.FromState.Order)
             .ThenBy(x => x.Name)
-            .Select(x => ToResponse(x))
             .ToListAsync(cancellationToken);
+
+        return transitions.Select(ToResponse).ToList();
     }
 
     public async Task<WorkflowTransitionResponse> CreateAsync(
@@ -51,13 +57,13 @@ public sealed class WorkflowTransitionService(
             IsActive = request.IsActive
         };
 
+        if (request.Assignment is not null)
+            entity.Assignment = await BuildAssignmentAsync(request.Assignment, cancellationToken);
+
         context.WorkflowTransitions.Add(entity);
         await context.SaveChangesAsync(cancellationToken);
 
-        await context.Entry(entity).Reference(x => x.FromState).LoadAsync(cancellationToken);
-        await context.Entry(entity).Reference(x => x.ToState).LoadAsync(cancellationToken);
-
-        return ToResponse(entity);
+        return await LoadResponseAsync(entity.Id, cancellationToken);
     }
 
     public async Task<WorkflowTransitionResponse> UpdateAsync(
@@ -66,8 +72,8 @@ public sealed class WorkflowTransitionService(
         CancellationToken cancellationToken = default)
     {
         var entity = await context.WorkflowTransitions
-            .Include(x => x.FromState)
-            .Include(x => x.ToState)
+            .Include(x => x.Assignment!)
+                .ThenInclude(x => x.Employees)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (entity is null)
@@ -95,12 +101,11 @@ public sealed class WorkflowTransitionService(
         entity.IsActive = request.IsActive;
         entity.UpdatedAt = DateTime.UtcNow;
 
+        await SyncAssignmentAsync(entity, request.Assignment, cancellationToken);
+
         await context.SaveChangesAsync(cancellationToken);
 
-        await context.Entry(entity).Reference(x => x.FromState).LoadAsync(cancellationToken);
-        await context.Entry(entity).Reference(x => x.ToState).LoadAsync(cancellationToken);
-
-        return ToResponse(entity);
+        return await LoadResponseAsync(entity.Id, cancellationToken);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
@@ -113,6 +118,103 @@ public sealed class WorkflowTransitionService(
 
         context.WorkflowTransitions.Remove(entity);
         await context.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task SyncAssignmentAsync(
+        WorkflowTransition entity,
+        WorkflowTransitionAssignmentRequest? request,
+        CancellationToken cancellationToken)
+    {
+        if (request is null)
+        {
+            if (entity.Assignment is not null)
+                context.WorkflowTransitionAssignments.Remove(entity.Assignment);
+
+            entity.Assignment = null;
+            return;
+        }
+
+        if (entity.Assignment is null)
+        {
+            entity.Assignment = await BuildAssignmentAsync(request, cancellationToken);
+            return;
+        }
+
+        await ApplyAssignmentAsync(entity.Assignment, request, cancellationToken);
+        entity.Assignment.UpdatedAt = DateTime.UtcNow;
+    }
+
+    private async Task<WorkflowTransitionAssignment> BuildAssignmentAsync(
+        WorkflowTransitionAssignmentRequest request,
+        CancellationToken cancellationToken)
+    {
+        var assignment = new WorkflowTransitionAssignment();
+        await ApplyAssignmentAsync(assignment, request, cancellationToken);
+        return assignment;
+    }
+
+    private async Task ApplyAssignmentAsync(
+        WorkflowTransitionAssignment assignment,
+        WorkflowTransitionAssignmentRequest request,
+        CancellationToken cancellationToken)
+    {
+        await ValidateAssignmentReferencesAsync(request, cancellationToken);
+
+        assignment.Type = request.Type;
+        assignment.AreaId = request.Type == WorkflowAssignmentType.Area ? request.AreaId : null;
+        assignment.WorkflowCustomQueryId = request.Type == WorkflowAssignmentType.StoredProcedure
+            ? request.WorkflowCustomQueryId
+            : null;
+
+        if (assignment.Employees.Count > 0)
+            context.WorkflowAssignmentEmployees.RemoveRange(assignment.Employees);
+
+        assignment.Employees.Clear();
+
+        if (request.Type == WorkflowAssignmentType.EmployeeList && request.EmployeeIds is not null)
+        {
+            foreach (var employeeId in request.EmployeeIds.Distinct())
+            {
+                assignment.Employees.Add(new WorkflowAssignmentEmployee
+                {
+                    EmployeeId = employeeId
+                });
+            }
+        }
+    }
+
+    private async Task ValidateAssignmentReferencesAsync(
+        WorkflowTransitionAssignmentRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (request.Type == WorkflowAssignmentType.StoredProcedure)
+        {
+            var queryId = request.WorkflowCustomQueryId
+                ?? throw new BusinessException("WorkflowCustomQueryId es obligatorio.");
+
+            var exists = await context.WorkflowCustomQueries
+                .AnyAsync(x => x.Id == queryId, cancellationToken);
+
+            if (!exists)
+                throw new NotFoundException("Consulta personalizada de workflow no encontrada.");
+        }
+    }
+
+    private async Task<WorkflowTransitionResponse> LoadResponseAsync(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var entity = await context.WorkflowTransitions
+            .AsNoTracking()
+            .Include(x => x.FromState)
+            .Include(x => x.ToState)
+            .Include(x => x.Assignment!)
+                .ThenInclude(x => x.Employees)
+            .Include(x => x.Assignment!)
+                .ThenInclude(x => x.WorkflowCustomQuery)
+            .FirstAsync(x => x.Id == id, cancellationToken);
+
+        return ToResponse(entity);
     }
 
     private async Task EnsureDefinitionExistsAsync(
@@ -163,6 +265,20 @@ public sealed class WorkflowTransitionService(
 
     private static WorkflowTransitionResponse ToResponse(WorkflowTransition entity)
     {
+        WorkflowTransitionAssignmentResponse? assignment = null;
+
+        if (entity.Assignment is not null)
+        {
+            assignment = new WorkflowTransitionAssignmentResponse(
+                entity.Assignment.Id,
+                entity.Assignment.Type,
+                entity.Assignment.AreaId,
+                entity.Assignment.WorkflowCustomQueryId,
+                entity.Assignment.WorkflowCustomQuery?.Code,
+                entity.Assignment.WorkflowCustomQuery?.Name,
+                entity.Assignment.Employees.Select(x => x.EmployeeId).ToList());
+        }
+
         return new WorkflowTransitionResponse(
             entity.Id,
             entity.WorkflowDefinitionId,
@@ -176,6 +292,7 @@ public sealed class WorkflowTransitionService(
             entity.Name,
             entity.RequiresComment,
             entity.IsActive,
+            assignment,
             entity.CreatedAt,
             entity.UpdatedAt);
     }

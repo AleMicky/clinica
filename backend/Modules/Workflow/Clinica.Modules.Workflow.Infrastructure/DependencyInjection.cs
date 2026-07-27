@@ -17,6 +17,7 @@ public static class DependencyInjection
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
         services.AddScoped<IWorkflowDefinitionService, WorkflowDefinitionService>();
+        services.AddScoped<IWorkflowCustomQueryService, WorkflowCustomQueryService>();
         services.AddScoped<IWorkflowStateService, WorkflowStateService>();
         services.AddScoped<IWorkflowTransitionService, WorkflowTransitionService>();
         services.AddScoped<IWorkflowInstanceService, WorkflowInstanceService>();

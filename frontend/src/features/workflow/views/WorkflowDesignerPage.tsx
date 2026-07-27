@@ -48,6 +48,7 @@ import {
     useUpdateWorkflowTransition,
     useWorkflowTransitions,
 } from '../hooks/useWorkflowTransitions'
+import { useWorkflowCustomQueries } from '../hooks/useWorkflowCustomQueries'
 import type {
     CreateWorkflowDefinitionFormValues,
     CreateWorkflowStateFormValues,
@@ -138,6 +139,8 @@ export function WorkflowDesignerPage({ definitionId }: WorkflowDesignerPageProps
     const { data: states = [], isFetching: loadingStates } = useWorkflowStates(definitionId)
     const { data: transitions = [], isFetching: loadingTransitions } =
         useWorkflowTransitions(definitionId)
+    const { data: customQueriesPage } = useWorkflowCustomQueries({ page: 1, pageSize: 100 })
+    const customQueries = customQueriesPage?.items ?? []
 
     const updateDefinition = useUpdateWorkflowDefinition()
     const createState = useCreateWorkflowState(definitionId)
@@ -639,6 +642,7 @@ export function WorkflowDesignerPage({ definitionId }: WorkflowDesignerPageProps
                 open={transitionDrawerOpen}
                 transition={editingTransition}
                 states={states}
+                customQueries={customQueries}
                 loading={isSavingTransition}
                 onClose={() => {
                     if (isSavingTransition) return
@@ -654,6 +658,7 @@ export function WorkflowDesignerPage({ definitionId }: WorkflowDesignerPageProps
                 mode={flowTransitionDrawer.mode}
                 transition={flowTransitionDrawer.transition}
                 states={states}
+                customQueries={customQueries}
                 existingTransitions={transitions}
                 initialFromStateId={flowTransitionDrawer.initialFromStateId}
                 initialToStateId={flowTransitionDrawer.initialToStateId}

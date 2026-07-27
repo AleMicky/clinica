@@ -175,6 +175,11 @@ export const queryKeys = {
             list: (query: PagedQuery) => ['workflow', 'definitions', 'list', query] as const,
             detail: (id: EntityId) => ['workflow', 'definitions', 'detail', id] as const,
         },
+        customQueries: {
+            all: ['workflow', 'custom-queries'] as const,
+            list: (query: PagedQuery) => ['workflow', 'custom-queries', 'list', query] as const,
+            detail: (id: EntityId) => ['workflow', 'custom-queries', 'detail', id] as const,
+        },
         states: {
             all: ['workflow', 'states'] as const,
             byDefinition: (definitionId: EntityId) =>

@@ -4,6 +4,7 @@ import { ArrowRightOutlined } from '@ant-design/icons'
 import {
     Button,
     Col,
+    Divider,
     Drawer,
     Flex,
     Form,
@@ -11,6 +12,7 @@ import {
     Row,
     Select,
     Switch,
+    Typography,
 } from 'antd'
 
 import {
@@ -20,26 +22,52 @@ import {
     type CreateWorkflowTransitionFormValues,
     type UpdateWorkflowTransitionFormValues,
 } from '../schemas/workflow.schemas'
-import type { WorkflowState, WorkflowTransition } from '../types/workflow.types'
+import type {
+    WorkflowCustomQuery,
+    WorkflowState,
+    WorkflowTransition,
+} from '../types/workflow.types'
+import { WorkflowAssignmentType } from '../types/workflow.types'
 import { WorkflowStateBadge } from './WorkflowStateBadge'
 
 const COMPACT_FORM_CLASS = 'workflow-form--compact'
 const FORM_COL = { xs: 24, sm: 12 }
+const { Text } = Typography
+
+const ASSIGNMENT_TYPE_OPTIONS = [
+    { value: WorkflowAssignmentType.Area, label: 'Área' },
+    { value: WorkflowAssignmentType.EmployeeList, label: 'Lista de empleados' },
+    { value: WorkflowAssignmentType.StoredProcedure, label: 'Procedimiento almacenado' },
+]
 
 type WorkflowTransitionFormProps = {
     open: boolean
     transition: WorkflowTransition | null
     states: WorkflowState[]
+    customQueries?: WorkflowCustomQuery[]
     loading: boolean
     onClose: () => void
     onCreate: (values: CreateWorkflowTransitionFormValues) => Promise<void>
     onUpdate: (values: UpdateWorkflowTransitionFormValues) => Promise<void>
 }
 
+function fillAssignmentFromTransition(
+    setFieldValue: (name: string, value: unknown) => void,
+    transition: WorkflowTransition,
+) {
+    const assignment = transition.assignment
+    setFieldValue('assignment.enabled', Boolean(assignment))
+    setFieldValue('assignment.type', assignment?.type ?? WorkflowAssignmentType.Area)
+    setFieldValue('assignment.areaId', assignment?.areaId ?? '')
+    setFieldValue('assignment.workflowCustomQueryId', assignment?.workflowCustomQueryId ?? '')
+    setFieldValue('assignment.employeeIdsText', assignment?.employeeIds.join('\n') ?? '')
+}
+
 export function WorkflowTransitionForm({
     open,
     transition,
     states,
+    customQueries = [],
     loading,
     onClose,
     onCreate,
@@ -50,6 +78,11 @@ export function WorkflowTransitionForm({
     const stateOptions = states.map((state) => ({
         value: state.id,
         label: `${state.code} · ${state.name}`,
+    }))
+
+    const customQueryOptions = customQueries.map((query) => ({
+        value: query.id,
+        label: `${query.code} · ${query.name}`,
     }))
 
     const createForm = useForm({
@@ -85,6 +118,10 @@ export function WorkflowTransitionForm({
             updateForm.setFieldValue('name', transition.name)
             updateForm.setFieldValue('requiresComment', transition.requiresComment)
             updateForm.setFieldValue('isActive', transition.isActive)
+            fillAssignmentFromTransition(
+                (name, value) => updateForm.setFieldValue(name as never, value as never),
+                transition,
+            )
             return
         }
 
@@ -249,6 +286,108 @@ export function WorkflowTransitionForm({
                         </form.Field>
                     </Col>
                 </Row>
+
+                <Divider style={{ margin: '8px 0 16px' }} />
+                <Text strong>Asignación</Text>
+                <Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>
+                    Define quién puede ejecutar esta transición.
+                </Text>
+
+                <form.Field name="assignment.enabled">
+                    {(field) => (
+                        <Form.Item label="Configurar asignación">
+                            <Switch
+                                checked={field.state.value}
+                                checkedChildren="Sí"
+                                unCheckedChildren="No"
+                                onChange={(checked) => field.handleChange(checked)}
+                            />
+                        </Form.Item>
+                    )}
+                </form.Field>
+
+                <form.Subscribe selector={(state) => state.values.assignment}>
+                    {(assignment) => {
+                        if (!assignment.enabled) return null
+
+                        return (
+                            <Row gutter={[12, 0]}>
+                                <Col span={24}>
+                                    <form.Field name="assignment.type">
+                                        {(field) => (
+                                            <Form.Item label="Tipo" required>
+                                                <Select
+                                                    options={ASSIGNMENT_TYPE_OPTIONS}
+                                                    value={field.state.value}
+                                                    onChange={(value) => field.handleChange(value)}
+                                                />
+                                            </Form.Item>
+                                        )}
+                                    </form.Field>
+                                </Col>
+
+                                {assignment.type === WorkflowAssignmentType.Area ? (
+                                    <Col span={24}>
+                                        <form.Field name="assignment.areaId">
+                                            {(field) => (
+                                                <Form.Item label="Área (UUID)" required>
+                                                    <Input
+                                                        value={field.state.value ?? ''}
+                                                        onChange={(event) =>
+                                                            field.handleChange(event.target.value)
+                                                        }
+                                                    />
+                                                </Form.Item>
+                                            )}
+                                        </form.Field>
+                                    </Col>
+                                ) : null}
+
+                                {assignment.type === WorkflowAssignmentType.EmployeeList ? (
+                                    <Col span={24}>
+                                        <form.Field name="assignment.employeeIdsText">
+                                            {(field) => (
+                                                <Form.Item
+                                                    label="Empleados (UUID, uno por línea)"
+                                                    required
+                                                >
+                                                    <Input.TextArea
+                                                        rows={4}
+                                                        value={field.state.value ?? ''}
+                                                        onChange={(event) =>
+                                                            field.handleChange(event.target.value)
+                                                        }
+                                                    />
+                                                </Form.Item>
+                                            )}
+                                        </form.Field>
+                                    </Col>
+                                ) : null}
+
+                                {assignment.type === WorkflowAssignmentType.StoredProcedure ? (
+                                    <Col span={24}>
+                                        <form.Field name="assignment.workflowCustomQueryId">
+                                            {(field) => (
+                                                <Form.Item label="Consulta personalizada" required>
+                                                    <Select
+                                                        showSearch
+                                                        optionFilterProp="label"
+                                                        placeholder="Seleccione consulta"
+                                                        options={customQueryOptions}
+                                                        value={field.state.value || undefined}
+                                                        onChange={(value) =>
+                                                            field.handleChange(value)
+                                                        }
+                                                    />
+                                                </Form.Item>
+                                            )}
+                                        </form.Field>
+                                    </Col>
+                                ) : null}
+                            </Row>
+                        )
+                    }}
+                </form.Subscribe>
             </Form>
         </Drawer>
     )

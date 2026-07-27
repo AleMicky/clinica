@@ -99,6 +99,7 @@ export const laboratorioEndpoints = {
 
 export const workflowEndpoints = {
     definitions: createEndpoints(`${api.workflow}/definitions`),
+    customQueries: createEndpoints(`${api.workflow}/custom-queries`),
     states: (definitionId: EntityId) => `${api.workflow}/definitions/${definitionId}/states`,
     stateById: (id: EntityId) => `${api.workflow}/states/${id}`,
     transitions: (definitionId: EntityId) => `${api.workflow}/definitions/${definitionId}/transitions`,

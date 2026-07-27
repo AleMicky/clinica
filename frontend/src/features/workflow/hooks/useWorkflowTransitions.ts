@@ -5,11 +5,23 @@ import { useAppMutation } from '../../../shared/hooks/use-app-mutation'
 import { useAppQuery } from '../../../shared/hooks/use-app-query'
 import { getApiErrorMessage } from '../../../shared/utils/api-error'
 import { notify } from '../../../shared/utils/notify'
+import {
+    toAssignmentPayload,
+    type CreateWorkflowTransitionFormValues,
+} from '../schemas/workflow.schemas'
 import { workflowService } from '../services/workflow.service'
-import type {
-    CreateWorkflowTransitionPayload,
-    UpdateWorkflowTransitionPayload,
-} from '../types/workflow.types'
+
+function toTransitionPayload(values: CreateWorkflowTransitionFormValues) {
+    return {
+        fromStateId: values.fromStateId,
+        toStateId: values.toStateId,
+        code: values.code,
+        name: values.name,
+        requiresComment: values.requiresComment,
+        isActive: values.isActive ?? true,
+        assignment: toAssignmentPayload(values.assignment),
+    }
+}
 
 export function useWorkflowTransitions(definitionId: string | undefined) {
     return useAppQuery({
@@ -23,8 +35,8 @@ export function useCreateWorkflowTransition(definitionId: string) {
     const queryClient = useQueryClient()
 
     return useAppMutation({
-        mutationFn: (data: CreateWorkflowTransitionPayload) =>
-            workflowService.createTransition(definitionId, data),
+        mutationFn: (data: CreateWorkflowTransitionFormValues) =>
+            workflowService.createTransition(definitionId, toTransitionPayload(data)),
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey: queryKeys.workflow.transitions.all })
             notify.success('Transición creada', 'La transición se registró correctamente.')
@@ -39,8 +51,8 @@ export function useUpdateWorkflowTransition(definitionId: string) {
     const queryClient = useQueryClient()
 
     return useAppMutation({
-        mutationFn: ({ id, data }: { id: string; data: UpdateWorkflowTransitionPayload }) =>
-            workflowService.updateTransition(id, data),
+        mutationFn: ({ id, data }: { id: string; data: CreateWorkflowTransitionFormValues }) =>
+            workflowService.updateTransition(id, toTransitionPayload(data)),
         onSuccess: () => {
             void queryClient.invalidateQueries({
                 queryKey: queryKeys.workflow.transitions.byDefinition(definitionId),

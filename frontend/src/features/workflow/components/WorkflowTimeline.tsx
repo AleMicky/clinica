@@ -27,7 +27,7 @@ export function WorkflowTimeline({ history, loading = false }: WorkflowTimelineP
                 children: (
                     <div className="workflow-timeline__item">
                         <div className="workflow-timeline__header">
-                            <Text strong>{entry.actionName}</Text>
+                            <Text strong>{entry.transitionName ?? 'Inicio del workflow'}</Text>
                             <Text type="secondary">
                                 {new Date(entry.performedAt).toLocaleString('es-BO')}
                             </Text>
@@ -37,10 +37,7 @@ export function WorkflowTimeline({ history, loading = false }: WorkflowTimelineP
                             <Text type="secondary">→</Text>
                             <WorkflowStateBadge name={entry.toStateName} code={entry.toStateCode} />
                         </div>
-                        <Text type="secondary">
-                            {entry.performedByUserName}
-                            {entry.performedByRole ? ` · ${entry.performedByRole}` : ''}
-                        </Text>
+                        <Text type="secondary">Empleado: {entry.executedByEmployeeId}</Text>
                         {entry.comment ? <Text>{entry.comment}</Text> : null}
                     </div>
                 ),

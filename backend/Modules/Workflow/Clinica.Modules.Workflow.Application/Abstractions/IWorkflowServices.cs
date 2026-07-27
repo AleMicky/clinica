@@ -1,3 +1,4 @@
+using Clinica.Modules.Workflow.Application.WorkflowCustomQueries;
 using Clinica.Modules.Workflow.Application.WorkflowDefinitions;
 using Clinica.SharedKernel.Crud;
 
@@ -9,6 +10,13 @@ public interface IWorkflowDefinitionService
         WorkflowDefinitionResponse,
         CreateWorkflowDefinitionRequest,
         UpdateWorkflowDefinitionRequest>;
+
+public interface IWorkflowCustomQueryService
+    : ICrudService<
+        Guid,
+        WorkflowCustomQueryResponse,
+        CreateWorkflowCustomQueryRequest,
+        UpdateWorkflowCustomQueryRequest>;
 
 public interface IWorkflowStateService
 {
