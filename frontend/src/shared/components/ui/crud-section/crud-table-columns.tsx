@@ -29,7 +29,8 @@ type RowActionsOptions<T extends IdentifiableNamed> = {
 
 export function createCodigoColumn<T extends { codigo: string }>() {
     const columnHelper = createColumnHelper<T>()
-    return columnHelper.accessor('codigo', {
+    return columnHelper.accessor((row) => row.codigo, {
+        id: 'codigo',
         header: 'Código',
         size: 120,
         cell: ({ getValue }) => (
@@ -44,7 +45,8 @@ export function createNombreConDescripcionColumn<
     T extends { nombre: string; descripcion?: string | null },
 >() {
     const columnHelper = createColumnHelper<T>()
-    return columnHelper.accessor('nombre', {
+    return columnHelper.accessor((row) => row.nombre, {
+        id: 'nombre',
         header: 'Nombre',
         cell: ({ row }) => (
             <div className="rrhh-page__employee-cell">

@@ -11,6 +11,8 @@ import { BpmnSequenceEdge } from './BpmnSequenceEdge'
 import { BpmnStartEventNode } from './BpmnStartEventNode'
 import { BpmnTaskNode } from './BpmnTaskNode'
 
+export { BpmnTaskNode }
+
 export const bpmnNodeTypes = {
     [BPMN_START_NODE_TYPE]: BpmnStartEventNode,
     [BPMN_END_NODE_TYPE]: BpmnEndEventNode,
