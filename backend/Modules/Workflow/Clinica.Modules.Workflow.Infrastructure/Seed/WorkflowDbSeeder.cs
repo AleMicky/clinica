@@ -26,6 +26,8 @@ public static class WorkflowDbSeeder
 
     private static async Task SeedAsync(WorkflowDbContext context)
     {
+        await SeedCustomQueriesAsync(context);
+
         const string definitionCode = "ATENCION_MEDICA";
 
         var definition = await context.WorkflowDefinitions
@@ -136,6 +138,33 @@ public static class WorkflowDbSeeder
                 stateMap["ANULADO"],
                 "ANULAR",
                 "Anular");
+        }
+
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task SeedCustomQueriesAsync(WorkflowDbContext context)
+    {
+        const string code = "MEDICO_ASIGNADO_ATENCION";
+        var existing = await context.WorkflowCustomQueries
+            .FirstOrDefaultAsync(x => x.Code == code);
+
+        if (existing is null)
+        {
+            context.WorkflowCustomQueries.Add(new WorkflowCustomQuery
+            {
+                Code = code,
+                Name = "Médico asignado a la atención",
+                Description = "Devuelve el médico (empleado) vinculado a la atención referenciada por la instancia.",
+                ProcedureName = "workflow.sp_medico_asignado_atencion"
+            });
+        }
+        else
+        {
+            existing.Name = "Médico asignado a la atención";
+            existing.Description = "Devuelve el médico (empleado) vinculado a la atención referenciada por la instancia.";
+            existing.ProcedureName = "workflow.sp_medico_asignado_atencion";
+            existing.UpdatedAt = DateTime.UtcNow;
         }
 
         await context.SaveChangesAsync();

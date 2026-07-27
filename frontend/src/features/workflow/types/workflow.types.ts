@@ -175,6 +175,13 @@ export type WorkflowAvailableAction = {
     toStateCode: string
     toStateName: string
     toStateColor: string
+    assignmentType: WorkflowAssignmentType | null
+    workflowCustomQueryId: EntityId | null
+}
+
+export type WorkflowAssignableEmployee = {
+    employeeId: EntityId
+    employeeName: string
 }
 
 export type WorkflowHistoryEntry = {

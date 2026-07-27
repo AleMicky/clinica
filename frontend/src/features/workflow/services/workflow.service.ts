@@ -1,6 +1,6 @@
 import { del, get, getPaged, post, put } from '../../../shared/api/http'
 import { workflowEndpoints } from '../../../shared/api/endpoints'
-import type { PagedQuery } from '../../../shared/types/pagination.types'
+import type { PagedQuery, PagedResult } from '../../../shared/types/pagination.types'
 import type {
     CreateWorkflowCustomQueryPayload,
     CreateWorkflowDefinitionPayload,
@@ -12,6 +12,7 @@ import type {
     UpdateWorkflowDefinitionPayload,
     UpdateWorkflowStatePayload,
     UpdateWorkflowTransitionPayload,
+    WorkflowAssignableEmployee,
     WorkflowAvailableAction,
     WorkflowCustomQuery,
     WorkflowDefinition,
@@ -137,6 +138,23 @@ export class WorkflowService {
 
     getAvailableActions(instanceId: string) {
         return get<WorkflowAvailableAction[]>(workflowEndpoints.instances.availableActions(instanceId))
+    }
+
+    getAssignees(
+        instanceId: string,
+        transitionCode: string,
+        page = 1,
+        pageSize = 20,
+    ) {
+        const params = new URLSearchParams({
+            transitionCode,
+            page: String(page),
+            pageSize: String(pageSize),
+        })
+
+        return get<PagedResult<WorkflowAssignableEmployee>>(
+            `${workflowEndpoints.instances.assignees(instanceId)}?${params.toString()}`,
+        )
     }
 
     executeTransition(instanceId: string, data: ExecuteWorkflowTransitionPayload) {

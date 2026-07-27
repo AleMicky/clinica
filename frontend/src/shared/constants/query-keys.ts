@@ -197,6 +197,8 @@ export const queryKeys = {
                 ['workflow', 'instances', 'reference', referenceModule, referenceEntity, referenceId] as const,
             availableActions: (id: EntityId) =>
                 ['workflow', 'instances', id, 'available-actions'] as const,
+            assignees: (id: EntityId, transitionCode: string, page: number, pageSize: number) =>
+                ['workflow', 'instances', id, 'assignees', transitionCode, page, pageSize] as const,
             history: (id: EntityId) => ['workflow', 'instances', id, 'history'] as const,
         },
     },

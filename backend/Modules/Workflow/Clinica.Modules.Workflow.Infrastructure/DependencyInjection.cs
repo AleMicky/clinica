@@ -20,6 +20,7 @@ public static class DependencyInjection
         services.AddScoped<IWorkflowCustomQueryService, WorkflowCustomQueryService>();
         services.AddScoped<IWorkflowStateService, WorkflowStateService>();
         services.AddScoped<IWorkflowTransitionService, WorkflowTransitionService>();
+        services.AddScoped<WorkflowAssignmentExecutor>();
         services.AddScoped<IWorkflowInstanceService, WorkflowInstanceService>();
 
         return services;

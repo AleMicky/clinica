@@ -1,5 +1,6 @@
 using Clinica.Modules.Workflow.Application.Abstractions;
 using Clinica.Modules.Workflow.Application.WorkflowInstances;
+using Clinica.SharedKernel.Pagination;
 using Clinica.SharedKernel.Responses;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
@@ -86,6 +87,30 @@ public static class WorkflowInstanceEndpoints
             })
             .WithName("WorkflowInstance_GetAvailableActions")
             .Produces<ApiResponse<IReadOnlyCollection<WorkflowAvailableActionResponse>>>(StatusCodes.Status200OK);
+
+        instancesGroup.MapGet("/{id:guid}/assignees", async (
+                Guid id,
+                string transitionCode,
+                IWorkflowInstanceService service,
+                int page = 1,
+                int pageSize = 20,
+                CancellationToken cancellationToken = default) =>
+            {
+                if (string.IsNullOrWhiteSpace(transitionCode))
+                    return ApiResults.BadRequest("transitionCode es obligatorio.");
+
+                var result = await service.GetAssigneesAsync(
+                    id,
+                    transitionCode,
+                    page,
+                    pageSize,
+                    cancellationToken);
+
+                return ApiResults.Ok(result);
+            })
+            .WithName("WorkflowInstance_GetAssignees")
+            .Produces<ApiResponse<PagedResult<WorkflowAssignableEmployeeResponse>>>(StatusCodes.Status200OK)
+            .Produces<ApiResponse<object>>(StatusCodes.Status400BadRequest);
 
         instancesGroup.MapPost("/{id:guid}/execute", async (
                 Guid id,

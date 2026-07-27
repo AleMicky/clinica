@@ -146,43 +146,51 @@ export function WorkflowCustomQueriesPage() {
     }
 
     return (
-        <div className="workflow-module">
-            <Flex justify="space-between" align="flex-start" gap={16} wrap>
-                <div>
-                    <Title level={3} style={{ margin: 0 }}>
-                        Consultas personalizadas
-                    </Title>
-                    <Text type="secondary">
-                        Procedimientos usados para asignar ejecutores de transiciones.
-                    </Text>
-                </div>
-                <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    onClick={() => {
-                        setEditing(null)
-                        setDrawerOpen(true)
-                    }}
-                >
-                    Nueva consulta
-                </Button>
-            </Flex>
+        <div className="workflow-module workflow-custom-queries-page">
+            <div className="workflow-module__header workflow-module__header--list">
+                <Flex justify="space-between" align="center" wrap gap={12}>
+                    <div>
+                        <Title level={4} className="workflow-module__title">
+                            Consultas personalizadas
+                        </Title>
+                        <Text type="secondary" className="workflow-module__subtitle">
+                            Procedimientos para asignar ejecutores por reglas de negocio
+                        </Text>
+                    </div>
+                    <Button
+                        type="primary"
+                        size="small"
+                        icon={<PlusOutlined />}
+                        onClick={() => {
+                            setEditing(null)
+                            setDrawerOpen(true)
+                        }}
+                    >
+                        Nueva consulta
+                    </Button>
+                </Flex>
+            </div>
 
-            <div style={{ marginTop: 16 }}>
-                <AppDataTable
-                    data={items}
-                    columns={columns}
-                    loading={isFetching}
-                    pagination={{
-                        page,
-                        pageSize,
-                        total,
-                        onChange: (nextPage, nextPageSize) => {
-                            setPage(nextPage)
-                            setPageSize(nextPageSize)
-                        },
-                    }}
-                />
+            <div className="workflow-module__card workflow-module__card--table">
+                <div className="workflow-module__table">
+                    <AppDataTable
+                        data={items}
+                        columns={columns}
+                        loading={isFetching}
+                        emptyText="No hay consultas registradas."
+                        getRowId={(row) => row.id}
+                        pagination={{
+                            page,
+                            pageSize,
+                            total,
+                            pageSizeOptions: [10, 20, 50],
+                            onChange: (nextPage, nextPageSize) => {
+                                setPage(nextPage)
+                                setPageSize(nextPageSize)
+                            },
+                        }}
+                    />
+                </div>
             </div>
 
             <WorkflowCustomQueryForm

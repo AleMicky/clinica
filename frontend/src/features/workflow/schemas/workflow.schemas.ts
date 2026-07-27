@@ -70,7 +70,7 @@ const workflowAssignmentSchema = z
         type: z.union([z.literal(1), z.literal(2), z.literal(3)]),
         areaId: z.string().trim().optional().nullable(),
         workflowCustomQueryId: z.string().trim().optional().nullable(),
-        employeeIdsText: z.string().optional().nullable(),
+        employeeIds: z.array(z.string().uuid()).optional().nullable(),
     })
     .superRefine((value, ctx) => {
         if (!value.enabled) return
@@ -79,23 +79,16 @@ const workflowAssignmentSchema = z
             ctx.addIssue({
                 code: 'custom',
                 path: ['areaId'],
-                message: 'Indique el área.',
+                message: 'Seleccione el área.',
             })
         }
 
-        if (value.type === 2) {
-            const ids = (value.employeeIdsText ?? '')
-                .split(/[\n,;]+/)
-                .map((id) => id.trim())
-                .filter(Boolean)
-
-            if (ids.length === 0) {
-                ctx.addIssue({
-                    code: 'custom',
-                    path: ['employeeIdsText'],
-                    message: 'Indique al menos un empleado (UUID).',
-                })
-            }
+        if (value.type === 2 && (!value.employeeIds || value.employeeIds.length === 0)) {
+            ctx.addIssue({
+                code: 'custom',
+                path: ['employeeIds'],
+                message: 'Seleccione al menos un empleado.',
+            })
         }
 
         if (value.type === 3 && !value.workflowCustomQueryId?.trim()) {
@@ -134,7 +127,7 @@ export const createWorkflowTransitionDefaultValues: z.input<typeof createWorkflo
         type: 1,
         areaId: '',
         workflowCustomQueryId: '',
-        employeeIdsText: '',
+        employeeIds: [],
     },
 }
 
@@ -157,15 +150,10 @@ export function toAssignmentPayload(
 ) {
     if (!assignment.enabled) return null
 
-    const employeeIds = (assignment.employeeIdsText ?? '')
-        .split(/[\n,;]+/)
-        .map((id) => id.trim())
-        .filter(Boolean)
-
     return {
         type: assignment.type,
         areaId: assignment.type === 1 ? assignment.areaId || null : null,
         workflowCustomQueryId: assignment.type === 3 ? assignment.workflowCustomQueryId || null : null,
-        employeeIds: assignment.type === 2 ? employeeIds : null,
+        employeeIds: assignment.type === 2 ? (assignment.employeeIds ?? []) : null,
     }
 }

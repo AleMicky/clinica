@@ -7247,6 +7247,10 @@ body {
     padding: 4px 0 16px;
 }
 
+.workflow-instance-page .workflow-entity-panel {
+    margin-top: 4px;
+}
+
 .workflow-timeline__header {
     display: flex;
     justify-content: space-between;
@@ -7262,8 +7266,178 @@ body {
     margin: 8px 0;
 }
 
+.workflow-timeline__comment {
+    display: block;
+    margin-top: 4px;
+}
+
 .workflow-state-badge {
     margin-inline-end: 0;
+}
+
+/* Panel embebible para módulos */
+.workflow-entity-panel--card {
+    background: var(--ant-color-bg-container, #fff);
+    border: 1px solid var(--ant-color-border-secondary, #eef2f7);
+    border-radius: 14px;
+    padding: 18px 20px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.workflow-entity-panel--embedded {
+    padding: 0;
+}
+
+.workflow-entity-panel__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.workflow-entity-panel__title {
+    margin: 0 !important;
+}
+
+.workflow-entity-panel__ref {
+    display: block;
+    margin-top: 2px;
+    font-size: 13px;
+}
+
+.workflow-entity-panel__status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.workflow-entity-panel__meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: rgba(15, 23, 42, 0.03);
+    border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.workflow-entity-panel__history {
+    border-top: 1px solid rgba(15, 23, 42, 0.06);
+    margin-top: 4px;
+}
+
+.workflow-actions-panel__title {
+    display: block;
+    margin-bottom: 2px;
+}
+
+.workflow-actions-panel__hint {
+    display: block;
+    margin-bottom: 12px;
+    font-size: 13px;
+}
+
+.workflow-actions-panel__empty {
+    padding: 12px 0;
+}
+
+.workflow-actions-panel__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+}
+
+.workflow-action-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    background: #fff;
+    cursor: pointer;
+    text-align: left;
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease,
+        transform 0.15s ease;
+}
+
+.workflow-action-chip:hover:not(:disabled) {
+    border-color: #1677ff;
+    box-shadow: 0 4px 14px rgba(22, 119, 255, 0.12);
+    transform: translateY(-1px);
+}
+
+.workflow-action-chip--selected {
+    border-color: #1677ff;
+    background: rgba(22, 119, 255, 0.04);
+    box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.12);
+}
+
+.workflow-action-chip:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.workflow-action-chip__name {
+    font-weight: 600;
+    color: #0f172a;
+    font-size: 14px;
+}
+
+.workflow-action-chip__target {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    color: #64748b;
+    font-size: 12px;
+}
+
+.workflow-action-chip__meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+.workflow-actions-panel__confirm {
+    margin-top: 14px;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px dashed rgba(22, 119, 255, 0.35);
+    background: rgba(22, 119, 255, 0.03);
+}
+
+.workflow-start-panel {
+    padding: 8px 0 4px;
+}
+
+[data-theme='dark'] .workflow-entity-panel--card,
+[data-theme='dark'] .workflow-action-chip {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .workflow-entity-panel__meta,
+[data-theme='dark'] .workflow-actions-panel__confirm {
+    background: rgba(255, 255, 255, 0.02);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .workflow-action-chip__name {
+    color: rgba(255, 255, 255, 0.88);
+}
+
+[data-theme='dark'] .workflow-action-chip--selected {
+    background: rgba(22, 119, 255, 0.12);
 }
 
 @media (max-width: 1366px) {

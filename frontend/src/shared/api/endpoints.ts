@@ -110,6 +110,7 @@ export const workflowEndpoints = {
         byReference: (referenceModule: string, referenceEntity: string, referenceId: EntityId) =>
             `${api.workflow}/instances/by-reference/${referenceModule}/${referenceEntity}/${referenceId}`,
         availableActions: (id: EntityId) => `${api.workflow}/instances/${id}/available-actions`,
+        assignees: (id: EntityId) => `${api.workflow}/instances/${id}/assignees`,
         execute: (id: EntityId) => `${api.workflow}/instances/${id}/execute`,
         history: (id: EntityId) => `${api.workflow}/instances/${id}/history`,
     },

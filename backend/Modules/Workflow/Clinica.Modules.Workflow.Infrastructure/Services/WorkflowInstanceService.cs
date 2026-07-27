@@ -1,10 +1,10 @@
 using Clinica.Modules.Workflow.Application.Abstractions;
 using Clinica.Modules.Workflow.Application.WorkflowInstances;
 using Clinica.Modules.Workflow.Domain.Entities;
-using Clinica.Modules.Workflow.Domain.Enums;
 using Clinica.Modules.Workflow.Infrastructure.Persistence;
 using Clinica.SharedKernel.Abstractions;
 using Clinica.SharedKernel.Exceptions;
+using Clinica.SharedKernel.Pagination;
 using Clinica.SharedKernel.Text;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,7 +12,8 @@ namespace Clinica.Modules.Workflow.Infrastructure.Services;
 
 public sealed class WorkflowInstanceService(
     WorkflowDbContext context,
-    ICurrentUser currentUser
+    ICurrentUser currentUser,
+    WorkflowAssignmentExecutor assignmentExecutor
 ) : IWorkflowInstanceService
 {
     public async Task<WorkflowInstanceResponse> StartAsync(
@@ -133,6 +134,7 @@ public sealed class WorkflowInstanceService(
         var transitions = await context.WorkflowTransitions
             .AsNoTracking()
             .Include(x => x.ToState)
+            .Include(x => x.Assignment)
             .Where(x =>
                 x.WorkflowDefinitionId == instance.WorkflowDefinitionId &&
                 x.FromStateId == instance.CurrentStateId &&
@@ -148,8 +150,25 @@ public sealed class WorkflowInstanceService(
                 x.ToStateId,
                 x.ToState.Code,
                 x.ToState.Name,
-                x.ToState.Color))
+                x.ToState.Color,
+                x.Assignment?.Type,
+                x.Assignment?.WorkflowCustomQueryId))
             .ToList();
+    }
+
+    public Task<PagedResult<WorkflowAssignableEmployeeResponse>> GetAssigneesAsync(
+        Guid id,
+        string transitionCode,
+        int page = 1,
+        int pageSize = 20,
+        CancellationToken cancellationToken = default)
+    {
+        return assignmentExecutor.GetAssigneesAsync(
+            id,
+            StringNormalize.Required(transitionCode),
+            page,
+            pageSize,
+            cancellationToken);
     }
 
     public async Task<WorkflowInstanceResponse> ExecuteAsync(
@@ -175,6 +194,8 @@ public sealed class WorkflowInstanceService(
             .Include(x => x.ToState)
             .Include(x => x.Assignment!)
                 .ThenInclude(x => x.Employees)
+            .Include(x => x.Assignment!)
+                .ThenInclude(x => x.WorkflowCustomQuery)
             .FirstOrDefaultAsync(x =>
                     x.WorkflowDefinitionId == instance.WorkflowDefinitionId &&
                     x.FromStateId == instance.CurrentStateId &&
@@ -188,7 +209,11 @@ public sealed class WorkflowInstanceService(
         if (transition.RequiresComment && string.IsNullOrWhiteSpace(request.Comment))
             throw new BusinessException("Se requiere un comentario para esta acción.");
 
-        EnsureEmployeeCanExecute(transition.Assignment, request.EmployeeId);
+        await assignmentExecutor.EnsureEmployeeCanExecuteAsync(
+            instance.Id,
+            transition.Assignment,
+            request.EmployeeId,
+            cancellationToken);
 
         var now = DateTime.UtcNow;
         var fromStateId = instance.CurrentStateId;
@@ -259,23 +284,6 @@ public sealed class WorkflowInstanceService(
     {
         if (!currentUser.IsAuthenticated || !currentUser.UserId.HasValue)
             throw new BusinessException("Debe iniciar sesión para operar el workflow.");
-    }
-
-    private static void EnsureEmployeeCanExecute(
-        WorkflowTransitionAssignment? assignment,
-        Guid employeeId)
-    {
-        if (assignment is null)
-            return;
-
-        if (assignment.Type == WorkflowAssignmentType.EmployeeList)
-        {
-            var allowed = assignment.Employees.Any(x => x.EmployeeId == employeeId);
-            if (!allowed)
-                throw new BusinessException("El empleado no está autorizado para ejecutar esta transición.");
-        }
-
-        // Area y StoredProcedure se validan en el consumidor / runtime especializado.
     }
 
     private static WorkflowInstanceResponse ToResponse(WorkflowInstance entity)

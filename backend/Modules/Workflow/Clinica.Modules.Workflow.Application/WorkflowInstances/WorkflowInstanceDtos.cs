@@ -1,4 +1,21 @@
+using Clinica.Modules.Workflow.Domain.Enums;
+
 namespace Clinica.Modules.Workflow.Application.WorkflowInstances;
+
+public sealed record WorkflowAssignableEmployeeResponse(
+    Guid EmployeeId,
+    string EmployeeName);
+
+public sealed record WorkflowAvailableActionResponse(
+    string Code,
+    string Name,
+    bool RequiresComment,
+    Guid ToStateId,
+    string ToStateCode,
+    string ToStateName,
+    string ToStateColor,
+    WorkflowAssignmentType? AssignmentType,
+    Guid? WorkflowCustomQueryId);
 
 public sealed record WorkflowInstanceResponse(
     Guid Id,
@@ -30,15 +47,6 @@ public sealed record ExecuteWorkflowTransitionRequest(
     string Code,
     Guid EmployeeId,
     string? Comment);
-
-public sealed record WorkflowAvailableActionResponse(
-    string Code,
-    string Name,
-    bool RequiresComment,
-    Guid ToStateId,
-    string ToStateCode,
-    string ToStateName,
-    string ToStateColor);
 
 public sealed record WorkflowHistoryResponse(
     Guid Id,

@@ -1,7 +1,11 @@
 import { useEffect } from 'react'
 import { useForm } from '@tanstack/react-form'
-import { Button, Col, Drawer, Flex, Form, Input, Row, Switch } from 'antd'
+import { Button, Col, Drawer, Flex, Form, Input, Row, Select, Switch, Typography } from 'antd'
 
+import {
+    getWorkflowEntityOptions,
+    getWorkflowModuleOptions,
+} from '../constants/workflow-modules'
 import {
     createWorkflowDefinitionDefaultValues,
     createWorkflowDefinitionSchema,
@@ -13,6 +17,8 @@ import type { WorkflowDefinition } from '../types/workflow.types'
 
 const COMPACT_FORM_CLASS = 'workflow-form--compact'
 const FORM_COL = { xs: 24, sm: 12 }
+const { Text } = Typography
+const CUSTOM_MODULE_VALUE = '__custom__'
 
 type WorkflowDefinitionFormProps = {
     open: boolean
@@ -42,6 +48,10 @@ export function WorkflowDefinitionForm({
     onUpdate,
 }: WorkflowDefinitionFormProps) {
     const isEditing = definition !== null
+    const moduleOptions = [
+        ...getWorkflowModuleOptions(),
+        { value: CUSTOM_MODULE_VALUE, label: 'Otro (personalizado)…' },
+    ]
 
     const createForm = useForm({
         defaultValues: createWorkflowDefinitionDefaultValues,
@@ -109,6 +119,11 @@ export function WorkflowDefinitionForm({
             }
         >
             <Form layout="vertical" className={COMPACT_FORM_CLASS}>
+                <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
+                    Vincule el workflow a un módulo y entidad. Luego embeba el panel de
+                    cambio de estado en esa pantalla.
+                </Text>
+
                 <Row gutter={[12, 0]}>
                     <Col {...FORM_COL}>
                         <form.Field name="code">
@@ -154,34 +169,89 @@ export function WorkflowDefinitionForm({
                         </form.Field>
                     </Col>
 
-                    <Col {...FORM_COL}>
+                    <Col span={24}>
                         <form.Field name="module">
-                            {(field) => (
-                                <Form.Item label="Módulo" required>
-                                    <Input
-                                        value={field.state.value}
-                                        onChange={(event) =>
-                                            field.handleChange(event.target.value)
-                                        }
-                                    />
-                                </Form.Item>
-                            )}
+                            {(field) => {
+                                const known = getWorkflowModuleOptions().some(
+                                    (opt) => opt.value === field.state.value,
+                                )
+                                const selectValue = known
+                                    ? field.state.value
+                                    : field.state.value
+                                      ? CUSTOM_MODULE_VALUE
+                                      : undefined
+
+                                return (
+                                    <Form.Item label="Módulo" required>
+                                        <Select
+                                            showSearch
+                                            optionFilterProp="label"
+                                            placeholder="Seleccione módulo"
+                                            options={moduleOptions}
+                                            value={selectValue}
+                                            onChange={(value) => {
+                                                if (value === CUSTOM_MODULE_VALUE) {
+                                                    field.handleChange('')
+                                                } else {
+                                                    field.handleChange(value)
+                                                }
+                                                form.setFieldValue('entityName', '')
+                                            }}
+                                        />
+                                        {!known ? (
+                                            <Input
+                                                style={{ marginTop: 8 }}
+                                                placeholder="Código técnico del módulo (ej. Pedidos)"
+                                                value={field.state.value}
+                                                onChange={(event) => {
+                                                    field.handleChange(event.target.value)
+                                                    form.setFieldValue('entityName', '')
+                                                }}
+                                            />
+                                        ) : null}
+                                    </Form.Item>
+                                )
+                            }}
                         </form.Field>
                     </Col>
 
-                    <Col {...FORM_COL}>
-                        <form.Field name="entityName">
-                            {(field) => (
-                                <Form.Item label="Entidad" required>
-                                    <Input
-                                        value={field.state.value}
-                                        onChange={(event) =>
-                                            field.handleChange(event.target.value)
-                                        }
-                                    />
-                                </Form.Item>
-                            )}
-                        </form.Field>
+                    <Col span={24}>
+                        <form.Subscribe selector={(state) => state.values.module}>
+                            {(module) => {
+                                const entityOptions = getWorkflowEntityOptions(module)
+
+                                return (
+                                    <form.Field name="entityName">
+                                        {(field) => (
+                                            <Form.Item label="Entidad" required>
+                                                {entityOptions.length > 0 ? (
+                                                    <Select
+                                                        showSearch
+                                                        optionFilterProp="label"
+                                                        placeholder="Seleccione entidad"
+                                                        options={entityOptions}
+                                                        value={field.state.value || undefined}
+                                                        onChange={(value) =>
+                                                            field.handleChange(value)
+                                                        }
+                                                    />
+                                                ) : (
+                                                    <Input
+                                                        placeholder="Nombre técnico de la entidad (ej. Orden)"
+                                                        value={field.state.value}
+                                                        onChange={(event) =>
+                                                            field.handleChange(
+                                                                event.target.value,
+                                                            )
+                                                        }
+                                                    />
+                                                )}
+                                            </Form.Item>
+                                        )}
+                                    </form.Field>
+                                )
+                            }}
+                        </form.Subscribe>
                     </Col>
 
                     <Col {...FORM_COL}>

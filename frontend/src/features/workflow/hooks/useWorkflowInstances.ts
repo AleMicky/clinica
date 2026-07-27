@@ -9,7 +9,9 @@ import { workflowService } from '../services/workflow.service'
 import type {
     ExecuteWorkflowTransitionPayload,
     StartWorkflowInstancePayload,
+    WorkflowInstance,
 } from '../types/workflow.types'
+import { isNotFoundError } from '../utils/is-not-found-error'
 
 export function useWorkflowInstance(instanceId: string | undefined) {
     return useAppQuery({
@@ -19,6 +21,7 @@ export function useWorkflowInstance(instanceId: string | undefined) {
     })
 }
 
+/** Devuelve `null` si la entidad aún no tiene instancia (404), sin notificar error. */
 export function useWorkflowInstanceByReference(
     referenceModule: string | undefined,
     referenceEntity: string | undefined,
@@ -30,8 +33,18 @@ export function useWorkflowInstanceByReference(
             referenceEntity ?? '',
             referenceId ?? '',
         ),
-        queryFn: () =>
-            workflowService.getInstanceByReference(referenceModule!, referenceEntity!, referenceId!),
+        queryFn: async (): Promise<WorkflowInstance | null> => {
+            try {
+                return await workflowService.getInstanceByReference(
+                    referenceModule!,
+                    referenceEntity!,
+                    referenceId!,
+                )
+            } catch (error) {
+                if (isNotFoundError(error)) return null
+                throw error
+            }
+        },
         enabled: Boolean(referenceModule && referenceEntity && referenceId),
     })
 }
@@ -41,6 +54,25 @@ export function useWorkflowAvailableActions(instanceId: string | undefined) {
         queryKey: queryKeys.workflow.instances.availableActions(instanceId ?? ''),
         queryFn: () => workflowService.getAvailableActions(instanceId!),
         enabled: Boolean(instanceId),
+    })
+}
+
+export function useWorkflowAssignees(
+    instanceId: string | undefined,
+    transitionCode: string | undefined,
+    page = 1,
+    pageSize = 50,
+) {
+    return useAppQuery({
+        queryKey: queryKeys.workflow.instances.assignees(
+            instanceId ?? '',
+            transitionCode ?? '',
+            page,
+            pageSize,
+        ),
+        queryFn: () =>
+            workflowService.getAssignees(instanceId!, transitionCode!, page, pageSize),
+        enabled: Boolean(instanceId && transitionCode),
     })
 }
 

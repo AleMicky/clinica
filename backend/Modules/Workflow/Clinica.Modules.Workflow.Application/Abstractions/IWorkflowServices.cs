@@ -1,6 +1,7 @@
 using Clinica.Modules.Workflow.Application.WorkflowCustomQueries;
 using Clinica.Modules.Workflow.Application.WorkflowDefinitions;
 using Clinica.SharedKernel.Crud;
+using Clinica.SharedKernel.Pagination;
 
 namespace Clinica.Modules.Workflow.Application.Abstractions;
 
@@ -74,6 +75,13 @@ public interface IWorkflowInstanceService
 
     Task<IReadOnlyCollection<WorkflowInstances.WorkflowAvailableActionResponse>> GetAvailableActionsAsync(
         Guid id,
+        CancellationToken cancellationToken = default);
+
+    Task<PagedResult<WorkflowInstances.WorkflowAssignableEmployeeResponse>> GetAssigneesAsync(
+        Guid id,
+        string transitionCode,
+        int page = 1,
+        int pageSize = 20,
         CancellationToken cancellationToken = default);
 
     Task<WorkflowInstances.WorkflowInstanceResponse> ExecuteAsync(
