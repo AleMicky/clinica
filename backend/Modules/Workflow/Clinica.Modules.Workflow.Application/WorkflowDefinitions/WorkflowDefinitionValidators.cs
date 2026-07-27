@@ -8,7 +8,6 @@ public class CreateWorkflowDefinitionRequestValidator : AbstractValidator<Create
     {
         RuleFor(x => x.Code).NotEmpty().MaximumLength(100);
         RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
-        RuleFor(x => x.Description).MaximumLength(500);
         RuleFor(x => x.Module).NotEmpty().MaximumLength(100);
         RuleFor(x => x.EntityName).NotEmpty().MaximumLength(100);
     }
@@ -20,7 +19,6 @@ public class UpdateWorkflowDefinitionRequestValidator : AbstractValidator<Update
     {
         RuleFor(x => x.Code).NotEmpty().MaximumLength(100);
         RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
-        RuleFor(x => x.Description).MaximumLength(500);
         RuleFor(x => x.Module).NotEmpty().MaximumLength(100);
         RuleFor(x => x.EntityName).NotEmpty().MaximumLength(100);
     }

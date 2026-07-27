@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect } from 'react'
 import { useForm } from '@tanstack/react-form'
 import { ArrowRightOutlined } from '@ant-design/icons'
 import {
@@ -13,7 +13,6 @@ import {
     Switch,
 } from 'antd'
 
-import { useRoles } from '../../roles/hooks/roles.hooks'
 import {
     createWorkflowTransitionDefaultValues,
     createWorkflowTransitionSchema,
@@ -48,17 +47,6 @@ export function WorkflowTransitionForm({
 }: WorkflowTransitionFormProps) {
     const isEditing = transition !== null
 
-    const { data: rolesData } = useRoles({ page: 1, pageSize: 100 })
-    const roleOptions = useMemo(
-        () =>
-            (rolesData?.items ?? []).map((role) => ({
-                value: role.name,
-                label: role.name,
-            })),
-        [rolesData?.items],
-    )
-    const hasRoles = roleOptions.length > 0
-
     const stateOptions = states.map((state) => ({
         value: state.id,
         label: `${state.code} · ${state.name}`,
@@ -70,7 +58,6 @@ export function WorkflowTransitionForm({
         onSubmit: async ({ value }) => {
             await onCreate({
                 ...value,
-                requiredRole: value.requiredRole || null,
                 isActive: value.isActive ?? true,
             })
         },
@@ -82,7 +69,6 @@ export function WorkflowTransitionForm({
         onSubmit: async ({ value }) => {
             await onUpdate({
                 ...value,
-                requiredRole: value.requiredRole || null,
                 isActive: value.isActive ?? true,
             })
         },
@@ -95,10 +81,8 @@ export function WorkflowTransitionForm({
             updateForm.reset()
             updateForm.setFieldValue('fromStateId', transition.fromStateId)
             updateForm.setFieldValue('toStateId', transition.toStateId)
-            updateForm.setFieldValue('actionCode', transition.actionCode)
-            updateForm.setFieldValue('actionName', transition.actionName)
-            updateForm.setFieldValue('description', transition.description)
-            updateForm.setFieldValue('requiredRole', transition.requiredRole ?? '')
+            updateForm.setFieldValue('code', transition.code)
+            updateForm.setFieldValue('name', transition.name)
             updateForm.setFieldValue('requiresComment', transition.requiresComment)
             updateForm.setFieldValue('isActive', transition.isActive)
             return
@@ -139,10 +123,10 @@ export function WorkflowTransitionForm({
                     selector={(formState) => ({
                         fromStateId: formState.values.fromStateId,
                         toStateId: formState.values.toStateId,
-                        actionName: formState.values.actionName,
+                        name: formState.values.name,
                     })}
                 >
-                    {({ fromStateId, toStateId, actionName }) => {
+                    {({ fromStateId, toStateId, name }) => {
                         const fromState = states.find((state) => state.id === fromStateId)
                         const toState = states.find((state) => state.id === toStateId)
 
@@ -157,7 +141,7 @@ export function WorkflowTransitionForm({
                                 />
                                 <ArrowRightOutlined className="workflow-transition-preview__arrow" />
                                 <span className="workflow-transition-preview__action">
-                                    {actionName?.trim() || 'Acción'}
+                                    {name?.trim() || 'Acción'}
                                 </span>
                                 <ArrowRightOutlined className="workflow-transition-preview__arrow" />
                                 <WorkflowStateBadge
@@ -206,9 +190,9 @@ export function WorkflowTransitionForm({
                     </Col>
 
                     <Col {...FORM_COL}>
-                        <form.Field name="actionCode">
+                        <form.Field name="code">
                             {(field) => (
-                                <Form.Item label="Código de acción" required>
+                                <Form.Item label="Código" required>
                                     <Input
                                         value={field.state.value}
                                         onChange={(event) =>
@@ -221,44 +205,15 @@ export function WorkflowTransitionForm({
                     </Col>
 
                     <Col {...FORM_COL}>
-                        <form.Field name="actionName">
+                        <form.Field name="name">
                             {(field) => (
-                                <Form.Item label="Nombre de acción" required>
+                                <Form.Item label="Nombre" required>
                                     <Input
                                         value={field.state.value}
                                         onChange={(event) =>
                                             field.handleChange(event.target.value)
                                         }
                                     />
-                                </Form.Item>
-                            )}
-                        </form.Field>
-                    </Col>
-
-                    <Col {...FORM_COL}>
-                        <form.Field name="requiredRole">
-                            {(field) => (
-                                <Form.Item label="Rol requerido">
-                                    {hasRoles ? (
-                                        <Select
-                                            allowClear
-                                            showSearch
-                                            placeholder="Opcional"
-                                            options={roleOptions}
-                                            value={field.state.value || undefined}
-                                            onChange={(value) =>
-                                                field.handleChange(value ?? '')
-                                            }
-                                        />
-                                    ) : (
-                                        <Input
-                                            placeholder="Opcional"
-                                            value={field.state.value ?? ''}
-                                            onChange={(event) =>
-                                                field.handleChange(event.target.value)
-                                            }
-                                        />
-                                    )}
                                 </Form.Item>
                             )}
                         </form.Field>
@@ -288,22 +243,6 @@ export function WorkflowTransitionForm({
                                         checkedChildren="Activa"
                                         unCheckedChildren="Inactiva"
                                         onChange={(checked) => field.handleChange(checked)}
-                                    />
-                                </Form.Item>
-                            )}
-                        </form.Field>
-                    </Col>
-
-                    <Col span={24}>
-                        <form.Field name="description">
-                            {(field) => (
-                                <Form.Item label="Descripción">
-                                    <Input.TextArea
-                                        rows={2}
-                                        value={field.state.value}
-                                        onChange={(event) =>
-                                            field.handleChange(event.target.value)
-                                        }
                                     />
                                 </Form.Item>
                             )}

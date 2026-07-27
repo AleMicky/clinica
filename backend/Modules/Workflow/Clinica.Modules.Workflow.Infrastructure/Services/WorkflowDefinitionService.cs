@@ -47,7 +47,6 @@ public sealed class WorkflowDefinitionService(
         {
             Code = code,
             Name = StringNormalize.Required(request.Name),
-            Description = StringNormalize.Required(request.Description),
             Module = StringNormalize.Required(request.Module),
             EntityName = StringNormalize.Required(request.EntityName),
             IsActive = request.IsActive
@@ -75,7 +74,6 @@ public sealed class WorkflowDefinitionService(
 
         entity.Code = code;
         entity.Name = StringNormalize.Required(request.Name);
-        entity.Description = StringNormalize.Required(request.Description);
         entity.Module = StringNormalize.Required(request.Module);
         entity.EntityName = StringNormalize.Required(request.EntityName);
         entity.IsActive = request.IsActive;
@@ -119,7 +117,6 @@ public sealed class WorkflowDefinitionService(
             entity.Id,
             entity.Code,
             entity.Name,
-            entity.Description,
             entity.Module,
             entity.EntityName,
             entity.IsActive,

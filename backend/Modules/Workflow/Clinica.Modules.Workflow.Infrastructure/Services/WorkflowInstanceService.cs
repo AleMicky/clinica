@@ -141,8 +141,6 @@ public sealed class WorkflowInstanceService(
         if (instance.IsCompleted)
             return [];
 
-        var userRoles = currentUser.Roles;
-
         var transitions = await context.WorkflowTransitions
             .AsNoTracking()
             .Include(x => x.ToState)
@@ -150,17 +148,13 @@ public sealed class WorkflowInstanceService(
                 x.WorkflowDefinitionId == instance.WorkflowDefinitionId &&
                 x.FromStateId == instance.CurrentStateId &&
                 x.IsActive)
-            .OrderBy(x => x.ActionName)
+            .OrderBy(x => x.Name)
             .ToListAsync(cancellationToken);
 
         return transitions
-            .Where(x => string.IsNullOrWhiteSpace(x.RequiredRole) ||
-                        userRoles.Contains(x.RequiredRole, StringComparer.OrdinalIgnoreCase))
             .Select(x => new WorkflowAvailableActionResponse(
-                x.ActionCode,
-                x.ActionName,
-                x.Description,
-                x.RequiredRole,
+                x.Code,
+                x.Name,
                 x.RequiresComment,
                 x.ToStateId,
                 x.ToState.Code,
@@ -186,25 +180,19 @@ public sealed class WorkflowInstanceService(
         if (instance.IsCompleted)
             throw new BusinessException("La instancia ya está completada.");
 
-        var actionCode = StringNormalize.Required(request.ActionCode);
+        var code = StringNormalize.Required(request.Code);
 
         var transition = await context.WorkflowTransitions
             .Include(x => x.ToState)
             .FirstOrDefaultAsync(x =>
                     x.WorkflowDefinitionId == instance.WorkflowDefinitionId &&
                     x.FromStateId == instance.CurrentStateId &&
-                    x.ActionCode == actionCode &&
+                    x.Code == code &&
                     x.IsActive,
                 cancellationToken);
 
         if (transition is null)
             throw new BusinessException("La transición no existe o no está activa para el estado actual.");
-
-        if (!string.IsNullOrWhiteSpace(transition.RequiredRole) &&
-            !currentUser.Roles.Contains(transition.RequiredRole, StringComparer.OrdinalIgnoreCase))
-        {
-            throw new BusinessException("No tiene el rol requerido para ejecutar esta acción.");
-        }
 
         if (transition.RequiresComment && string.IsNullOrWhiteSpace(request.Comment))
             throw new BusinessException("Se requiere un comentario para esta acción.");
@@ -228,8 +216,8 @@ public sealed class WorkflowInstanceService(
             WorkflowInstanceId = instance.Id,
             FromStateId = fromStateId,
             ToStateId = transition.ToStateId,
-            ActionCode = transition.ActionCode,
-            ActionName = transition.ActionName,
+            ActionCode = transition.Code,
+            ActionName = transition.Name,
             Comment = string.IsNullOrWhiteSpace(request.Comment)
                 ? null
                 : request.Comment.Trim(),

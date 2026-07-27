@@ -43,11 +43,6 @@ namespace Clinica.Modules.Workflow.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
                     b.Property<string>("EntityName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -268,11 +263,6 @@ namespace Clinica.Modules.Workflow.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -316,15 +306,10 @@ namespace Clinica.Modules.Workflow.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("ActionCode")
+                    b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("ActionName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -334,11 +319,6 @@ namespace Clinica.Modules.Workflow.Infrastructure.Migrations
                     b.Property<string>("CreatedBy")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
 
                     b.Property<Guid>("FromStateId")
                         .HasColumnType("uniqueidentifier");
@@ -353,9 +333,10 @@ namespace Clinica.Modules.Workflow.Infrastructure.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<string>("RequiredRole")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<bool>("RequiresComment")
                         .HasColumnType("bit");
@@ -379,7 +360,7 @@ namespace Clinica.Modules.Workflow.Infrastructure.Migrations
 
                     b.HasIndex("ToStateId");
 
-                    b.HasIndex("WorkflowDefinitionId", "FromStateId", "ActionCode")
+                    b.HasIndex("WorkflowDefinitionId", "FromStateId", "Code")
                         .IsUnique();
 
                     b.ToTable("WorkflowTransitions", "workflow");

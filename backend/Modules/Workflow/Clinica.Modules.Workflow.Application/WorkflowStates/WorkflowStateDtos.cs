@@ -5,7 +5,6 @@ public sealed record WorkflowStateResponse(
     Guid WorkflowDefinitionId,
     string Code,
     string Name,
-    string Description,
     bool IsInitial,
     bool IsFinal,
     string Color,
@@ -16,7 +15,6 @@ public sealed record WorkflowStateResponse(
 public sealed record CreateWorkflowStateRequest(
     string Code,
     string Name,
-    string Description,
     bool IsInitial,
     bool IsFinal,
     string Color,
@@ -25,7 +23,6 @@ public sealed record CreateWorkflowStateRequest(
 public sealed record UpdateWorkflowStateRequest(
     string Code,
     string Name,
-    string Description,
     bool IsInitial,
     bool IsFinal,
     string Color,

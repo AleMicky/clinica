@@ -24,7 +24,7 @@ public sealed class WorkflowTransitionService(
             .Include(x => x.ToState)
             .Where(x => x.WorkflowDefinitionId == definitionId)
             .OrderBy(x => x.FromState.Order)
-            .ThenBy(x => x.ActionName)
+            .ThenBy(x => x.Name)
             .Select(x => ToResponse(x))
             .ToListAsync(cancellationToken);
     }
@@ -37,20 +37,16 @@ public sealed class WorkflowTransitionService(
         await EnsureDefinitionExistsAsync(definitionId, cancellationToken);
         await EnsureStatesBelongToDefinitionAsync(definitionId, request.FromStateId, request.ToStateId, cancellationToken);
 
-        var actionCode = StringNormalize.Required(request.ActionCode);
-        await EnsureActionIsUniqueAsync(definitionId, request.FromStateId, actionCode, null, cancellationToken);
+        var code = StringNormalize.Required(request.Code);
+        await EnsureCodeIsUniqueAsync(definitionId, request.FromStateId, code, null, cancellationToken);
 
         var entity = new WorkflowTransition
         {
             WorkflowDefinitionId = definitionId,
             FromStateId = request.FromStateId,
             ToStateId = request.ToStateId,
-            ActionCode = actionCode,
-            ActionName = StringNormalize.Required(request.ActionName),
-            Description = StringNormalize.Required(request.Description),
-            RequiredRole = string.IsNullOrWhiteSpace(request.RequiredRole)
-                ? null
-                : StringNormalize.Required(request.RequiredRole),
+            Code = code,
+            Name = StringNormalize.Required(request.Name),
             RequiresComment = request.RequiresComment,
             IsActive = request.IsActive
         };
@@ -83,22 +79,18 @@ public sealed class WorkflowTransitionService(
             request.ToStateId,
             cancellationToken);
 
-        var actionCode = StringNormalize.Required(request.ActionCode);
-        await EnsureActionIsUniqueAsync(
+        var code = StringNormalize.Required(request.Code);
+        await EnsureCodeIsUniqueAsync(
             entity.WorkflowDefinitionId,
             request.FromStateId,
-            actionCode,
+            code,
             id,
             cancellationToken);
 
         entity.FromStateId = request.FromStateId;
         entity.ToStateId = request.ToStateId;
-        entity.ActionCode = actionCode;
-        entity.ActionName = StringNormalize.Required(request.ActionName);
-        entity.Description = StringNormalize.Required(request.Description);
-        entity.RequiredRole = string.IsNullOrWhiteSpace(request.RequiredRole)
-            ? null
-            : StringNormalize.Required(request.RequiredRole);
+        entity.Code = code;
+        entity.Name = StringNormalize.Required(request.Name);
         entity.RequiresComment = request.RequiresComment;
         entity.IsActive = request.IsActive;
         entity.UpdatedAt = DateTime.UtcNow;
@@ -150,10 +142,10 @@ public sealed class WorkflowTransitionService(
             throw new BusinessException("Los estados deben pertenecer a la misma definición.");
     }
 
-    private async Task EnsureActionIsUniqueAsync(
+    private async Task EnsureCodeIsUniqueAsync(
         Guid definitionId,
         Guid fromStateId,
-        string actionCode,
+        string code,
         Guid? currentId,
         CancellationToken cancellationToken)
     {
@@ -161,12 +153,12 @@ public sealed class WorkflowTransitionService(
             .AnyAsync(x =>
                     x.WorkflowDefinitionId == definitionId &&
                     x.FromStateId == fromStateId &&
-                    x.ActionCode == actionCode &&
+                    x.Code == code &&
                     (!currentId.HasValue || x.Id != currentId.Value),
                 cancellationToken);
 
         if (exists)
-            throw new BusinessException("La acción ya existe para el estado origen.");
+            throw new BusinessException("El código ya existe para el estado origen.");
     }
 
     private static WorkflowTransitionResponse ToResponse(WorkflowTransition entity)
@@ -180,10 +172,8 @@ public sealed class WorkflowTransitionService(
             entity.ToStateId,
             entity.ToState.Code,
             entity.ToState.Name,
-            entity.ActionCode,
-            entity.ActionName,
-            entity.Description,
-            entity.RequiredRole,
+            entity.Code,
+            entity.Name,
             entity.RequiresComment,
             entity.IsActive,
             entity.CreatedAt,

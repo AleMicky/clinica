@@ -8,10 +8,8 @@ public class CreateWorkflowTransitionRequestValidator : AbstractValidator<Create
     {
         RuleFor(x => x.FromStateId).NotEmpty();
         RuleFor(x => x.ToStateId).NotEmpty();
-        RuleFor(x => x.ActionCode).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.ActionName).NotEmpty().MaximumLength(200);
-        RuleFor(x => x.Description).MaximumLength(500);
-        RuleFor(x => x.RequiredRole).MaximumLength(100);
+        RuleFor(x => x.Code).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
     }
 }
 
@@ -21,9 +19,7 @@ public class UpdateWorkflowTransitionRequestValidator : AbstractValidator<Update
     {
         RuleFor(x => x.FromStateId).NotEmpty();
         RuleFor(x => x.ToStateId).NotEmpty();
-        RuleFor(x => x.ActionCode).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.ActionName).NotEmpty().MaximumLength(200);
-        RuleFor(x => x.Description).MaximumLength(500);
-        RuleFor(x => x.RequiredRole).MaximumLength(100);
+        RuleFor(x => x.Code).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
     }
 }

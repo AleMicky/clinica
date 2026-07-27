@@ -63,9 +63,6 @@ export function WorkflowStateDrawer({ open, state, onClose, onEdit }: WorkflowSt
                         />
                         {state.color || '—'}
                     </Descriptions.Item>
-                    <Descriptions.Item label="Descripción">
-                        {state.description?.trim() || '—'}
-                    </Descriptions.Item>
                 </Descriptions>
             ) : null}
         </Drawer>

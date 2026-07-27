@@ -45,14 +45,14 @@ export function WorkflowInstancePage({ instanceId }: WorkflowInstancePageProps) 
         defaultValues: executeWorkflowTransitionDefaultValues,
         validators: { onSubmit: executeWorkflowTransitionSchema },
         onSubmit: async ({ value }) => {
-            const selectedAction = actions.find((action) => action.actionCode === value.actionCode)
+            const selectedAction = actions.find((action) => action.code === value.code)
 
             if (selectedAction?.requiresComment && !value.comment?.trim()) {
                 throw new Error('Se requiere un comentario para esta acción.')
             }
 
             await executeTransition.mutateAsync({
-                actionCode: value.actionCode,
+                code: value.code,
                 comment: value.comment?.trim() || null,
             })
 
@@ -65,8 +65,8 @@ export function WorkflowInstancePage({ instanceId }: WorkflowInstancePageProps) 
     }, [instance?.currentStateId, form])
 
     const actionOptions = actions.map((action) => ({
-        value: action.actionCode,
-        label: action.actionName,
+        value: action.code,
+        label: action.name,
     }))
 
     return (
@@ -123,15 +123,15 @@ export function WorkflowInstancePage({ instanceId }: WorkflowInstancePageProps) 
                             <Text type="secondary">No hay acciones disponibles para el estado actual.</Text>
                         ) : (
                             <Form layout="vertical">
-                                <form.Subscribe selector={(state) => state.values.actionCode}>
-                                    {(selectedActionCode) => {
+                                <form.Subscribe selector={(state) => state.values.code}>
+                                    {(selectedCode) => {
                                         const selectedAction = actions.find(
-                                            (action) => action.actionCode === selectedActionCode,
+                                            (action) => action.code === selectedCode,
                                         )
 
                                         return (
                                             <>
-                                                <form.Field name="actionCode">
+                                                <form.Field name="code">
                                                     {(field) => (
                                                         <Form.Item label="Acción" required>
                                                             <Select

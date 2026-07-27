@@ -17,7 +17,7 @@ public class ExecuteWorkflowTransitionRequestValidator : AbstractValidator<Execu
 {
     public ExecuteWorkflowTransitionRequestValidator()
     {
-        RuleFor(x => x.ActionCode).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.Code).NotEmpty().MaximumLength(100);
         RuleFor(x => x.Comment).MaximumLength(1000);
     }
 }

@@ -4,7 +4,6 @@ public sealed record WorkflowDefinitionResponse(
     Guid Id,
     string Code,
     string Name,
-    string Description,
     string Module,
     string EntityName,
     bool IsActive,
@@ -14,7 +13,6 @@ public sealed record WorkflowDefinitionResponse(
 public sealed record CreateWorkflowDefinitionRequest(
     string Code,
     string Name,
-    string Description,
     string Module,
     string EntityName,
     bool IsActive = true);
@@ -22,7 +20,6 @@ public sealed record CreateWorkflowDefinitionRequest(
 public sealed record UpdateWorkflowDefinitionRequest(
     string Code,
     string Name,
-    string Description,
     string Module,
     string EntityName,
     bool IsActive);

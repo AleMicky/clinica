@@ -28,14 +28,12 @@ public sealed record StartWorkflowInstanceRequest(
     Guid ReferenceId);
 
 public sealed record ExecuteWorkflowTransitionRequest(
-    string ActionCode,
+    string Code,
     string? Comment);
 
 public sealed record WorkflowAvailableActionResponse(
-    string ActionCode,
-    string ActionName,
-    string Description,
-    string? RequiredRole,
+    string Code,
+    string Name,
     bool RequiresComment,
     Guid ToStateId,
     string ToStateCode,

@@ -64,7 +64,6 @@ export function WorkflowStateForm({
             updateForm.reset()
             updateForm.setFieldValue('code', state.code)
             updateForm.setFieldValue('name', state.name)
-            updateForm.setFieldValue('description', state.description)
             updateForm.setFieldValue('isInitial', state.isInitial)
             updateForm.setFieldValue('isFinal', state.isFinal)
             updateForm.setFieldValue('color', state.color)
@@ -194,22 +193,6 @@ export function WorkflowStateForm({
                                 </Form.Item>
                             )}
                         </form.Subscribe>
-                    </Col>
-
-                    <Col span={24}>
-                        <form.Field name="description">
-                            {(field) => (
-                                <Form.Item label="Descripción">
-                                    <Input.TextArea
-                                        rows={2}
-                                        value={field.state.value}
-                                        onChange={(event) =>
-                                            field.handleChange(event.target.value)
-                                        }
-                                    />
-                                </Form.Item>
-                            )}
-                        </form.Field>
                     </Col>
                 </Row>
             </Form>

@@ -45,7 +45,6 @@ public sealed class WorkflowStateService(
             WorkflowDefinitionId = definitionId,
             Code = code,
             Name = StringNormalize.Required(request.Name),
-            Description = StringNormalize.Required(request.Description),
             IsInitial = request.IsInitial,
             IsFinal = request.IsFinal,
             Color = StringNormalize.Required(request.Color),
@@ -77,7 +76,6 @@ public sealed class WorkflowStateService(
 
         entity.Code = code;
         entity.Name = StringNormalize.Required(request.Name);
-        entity.Description = StringNormalize.Required(request.Description);
         entity.IsInitial = request.IsInitial;
         entity.IsFinal = request.IsFinal;
         entity.Color = StringNormalize.Required(request.Color);
@@ -164,7 +162,6 @@ public sealed class WorkflowStateService(
             entity.WorkflowDefinitionId,
             entity.Code,
             entity.Name,
-            entity.Description,
             entity.IsInitial,
             entity.IsFinal,
             entity.Color,

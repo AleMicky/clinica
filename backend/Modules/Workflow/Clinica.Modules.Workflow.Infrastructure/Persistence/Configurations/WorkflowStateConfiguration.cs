@@ -16,7 +16,6 @@ public sealed class WorkflowStateConfiguration
 
         builder.Property(x => x.Code).HasMaxLength(100).IsRequired();
         builder.Property(x => x.Name).HasMaxLength(200).IsRequired();
-        builder.Property(x => x.Description).HasMaxLength(500);
         builder.Property(x => x.Color).HasMaxLength(20).IsRequired();
         builder.Property(x => x.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
         builder.Property(x => x.CreatedBy).HasMaxLength(100);

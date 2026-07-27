@@ -16,7 +16,6 @@ public sealed class WorkflowDefinitionConfiguration
 
         builder.Property(x => x.Code).HasMaxLength(100).IsRequired();
         builder.Property(x => x.Name).HasMaxLength(200).IsRequired();
-        builder.Property(x => x.Description).HasMaxLength(500);
         builder.Property(x => x.Module).HasMaxLength(100).IsRequired();
         builder.Property(x => x.EntityName).HasMaxLength(100).IsRequired();
         builder.Property(x => x.IsActive).HasDefaultValue(true);

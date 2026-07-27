@@ -230,7 +230,7 @@ export function WorkflowDesignerPage({ definitionId }: WorkflowDesignerPageProps
                 header: 'Acción',
                 cell: ({ row }) => (
                     <span className="workflow-module__transition-action">
-                        {row.original.actionName}
+                        {row.original.name}
                     </span>
                 ),
             }),
@@ -243,10 +243,9 @@ export function WorkflowDesignerPage({ definitionId }: WorkflowDesignerPageProps
                     />
                 ),
             }),
-            transitionColumnHelper.accessor('requiredRole', {
-                header: 'Rol',
-                size: 120,
-                cell: ({ getValue }) => getValue() ?? '—',
+            transitionColumnHelper.accessor('code', {
+                header: 'Código',
+                size: 140,
             }),
             transitionColumnHelper.accessor('isActive', {
                 header: 'Estado',
@@ -267,7 +266,7 @@ export function WorkflowDesignerPage({ definitionId }: WorkflowDesignerPageProps
 
                     return (
                         <RowActions
-                            label={transition.actionName}
+                            label={transition.name}
                             deleting={deletingTransitionId === transition.id}
                             onEdit={() => {
                                 setEditingTransition(transition)
@@ -276,7 +275,7 @@ export function WorkflowDesignerPage({ definitionId }: WorkflowDesignerPageProps
                             onDelete={() => {
                                 Modal.confirm({
                                     title: 'Eliminar transición',
-                                    content: `¿Desea eliminar "${transition.actionName}"?`,
+                                    content: `¿Desea eliminar "${transition.name}"?`,
                                     okText: 'Eliminar',
                                     okType: 'danger',
                                     cancelText: 'Cancelar',
@@ -426,9 +425,6 @@ export function WorkflowDesignerPage({ definitionId }: WorkflowDesignerPageProps
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Módulo">{definition.module}</Descriptions.Item>
                                 <Descriptions.Item label="Entidad">{definition.entityName}</Descriptions.Item>
-                                <Descriptions.Item label="Descripción" span={3}>
-                                    {definition.description?.trim() || '—'}
-                                </Descriptions.Item>
                             </Descriptions>
                         ) : (
                             <Text type="secondary">Cargando información…</Text>

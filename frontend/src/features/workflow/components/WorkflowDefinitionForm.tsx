@@ -72,7 +72,6 @@ export function WorkflowDefinitionForm({
             updateForm.reset()
             updateForm.setFieldValue('code', definition.code)
             updateForm.setFieldValue('name', definition.name)
-            updateForm.setFieldValue('description', definition.description)
             updateForm.setFieldValue('module', definition.module)
             updateForm.setFieldValue('entityName', definition.entityName)
             updateForm.setFieldValue('isActive', definition.isActive)
@@ -194,22 +193,6 @@ export function WorkflowDefinitionForm({
                                         checkedChildren="Activo"
                                         unCheckedChildren="Inactivo"
                                         onChange={(checked) => field.handleChange(checked)}
-                                    />
-                                </Form.Item>
-                            )}
-                        </form.Field>
-                    </Col>
-
-                    <Col span={24}>
-                        <form.Field name="description">
-                            {(field) => (
-                                <Form.Item label="Descripción">
-                                    <Input.TextArea
-                                        rows={3}
-                                        value={field.state.value}
-                                        onChange={(event) =>
-                                            field.handleChange(event.target.value)
-                                        }
                                     />
                                 </Form.Item>
                             )}

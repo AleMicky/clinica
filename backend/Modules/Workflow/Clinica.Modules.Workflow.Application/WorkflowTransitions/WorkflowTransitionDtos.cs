@@ -9,10 +9,8 @@ public sealed record WorkflowTransitionResponse(
     Guid ToStateId,
     string ToStateCode,
     string ToStateName,
-    string ActionCode,
-    string ActionName,
-    string Description,
-    string? RequiredRole,
+    string Code,
+    string Name,
     bool RequiresComment,
     bool IsActive,
     DateTime CreatedAt,
@@ -21,19 +19,15 @@ public sealed record WorkflowTransitionResponse(
 public sealed record CreateWorkflowTransitionRequest(
     Guid FromStateId,
     Guid ToStateId,
-    string ActionCode,
-    string ActionName,
-    string Description,
-    string? RequiredRole,
+    string Code,
+    string Name,
     bool RequiresComment,
     bool IsActive = true);
 
 public sealed record UpdateWorkflowTransitionRequest(
     Guid FromStateId,
     Guid ToStateId,
-    string ActionCode,
-    string ActionName,
-    string Description,
-    string? RequiredRole,
+    string Code,
+    string Name,
     bool RequiresComment,
     bool IsActive);

@@ -39,7 +39,6 @@ public static class WorkflowDbSeeder
             {
                 Code = definitionCode,
                 Name = "Atención Médica",
-                Description = "Flujo de atención médica ambulatoria",
                 Module = "AtencionMedica",
                 EntityName = "Atencion",
                 IsActive = true
@@ -79,7 +78,6 @@ public static class WorkflowDbSeeder
                 {
                     Code = state.Code,
                     Name = state.Name,
-                    Description = state.Name,
                     IsInitial = state.IsInitial,
                     IsFinal = state.IsFinal,
                     Color = state.Color,
@@ -103,7 +101,7 @@ public static class WorkflowDbSeeder
 
         var stateMap = definition.States.ToDictionary(x => x.Code, x => x.Id);
 
-        var linearTransitions = new (string From, string To, string ActionCode, string ActionName)[]
+        var linearTransitions = new (string From, string To, string Code, string Name)[]
         {
             ("BORRADOR", "RECEPCION", "ENVIAR_RECEPCION", "Enviar a recepción"),
             ("RECEPCION", "TRIAJE", "ENVIAR_TRIAJE", "Enviar a triaje"),
@@ -121,8 +119,8 @@ public static class WorkflowDbSeeder
                 definition,
                 stateMap[transition.From],
                 stateMap[transition.To],
-                transition.ActionCode,
-                transition.ActionName);
+                transition.Code,
+                transition.Name);
         }
 
         var nonFinalStates = definition.States
@@ -148,12 +146,12 @@ public static class WorkflowDbSeeder
         WorkflowDefinition definition,
         Guid fromStateId,
         Guid toStateId,
-        string actionCode,
-        string actionName)
+        string code,
+        string name)
     {
         var exists = definition.Transitions.Any(x =>
             x.FromStateId == fromStateId &&
-            x.ActionCode == actionCode);
+            x.Code == code);
 
         if (exists)
             return;
@@ -163,10 +161,9 @@ public static class WorkflowDbSeeder
             WorkflowDefinitionId = definition.Id,
             FromStateId = fromStateId,
             ToStateId = toStateId,
-            ActionCode = actionCode,
-            ActionName = actionName,
-            Description = actionName,
-            RequiresComment = actionCode == "ANULAR",
+            Code = code,
+            Name = name,
+            RequiresComment = code == "ANULAR",
             IsActive = true
         };
 

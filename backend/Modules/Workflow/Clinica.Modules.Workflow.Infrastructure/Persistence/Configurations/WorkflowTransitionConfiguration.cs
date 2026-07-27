@@ -14,16 +14,14 @@ public sealed class WorkflowTransitionConfiguration
 
         builder.ToTable("WorkflowTransitions");
 
-        builder.Property(x => x.ActionCode).HasMaxLength(100).IsRequired();
-        builder.Property(x => x.ActionName).HasMaxLength(200).IsRequired();
-        builder.Property(x => x.Description).HasMaxLength(500);
-        builder.Property(x => x.RequiredRole).HasMaxLength(100);
+        builder.Property(x => x.Code).HasMaxLength(100).IsRequired();
+        builder.Property(x => x.Name).HasMaxLength(200).IsRequired();
         builder.Property(x => x.IsActive).HasDefaultValue(true);
         builder.Property(x => x.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
         builder.Property(x => x.CreatedBy).HasMaxLength(100);
         builder.Property(x => x.UpdatedBy).HasMaxLength(100);
 
-        builder.HasIndex(x => new { x.WorkflowDefinitionId, x.FromStateId, x.ActionCode }).IsUnique();
+        builder.HasIndex(x => new { x.WorkflowDefinitionId, x.FromStateId, x.Code }).IsUnique();
 
         builder.HasOne(x => x.WorkflowDefinition)
             .WithMany(x => x.Transitions)

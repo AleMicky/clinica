@@ -50,7 +50,7 @@ function isAlternateTransition(
         return true
     }
 
-    const label = `${transition.actionCode} ${transition.actionName}`.toLowerCase()
+    const label = `${transition.code} ${transition.name}`.toLowerCase()
     return /anulad|cancelad|cancel|rechazad|abort|descartad/.test(label)
 }
 
@@ -121,7 +121,7 @@ export function buildWorkflowFlow(
             id: transition.id,
             source: transition.fromStateId,
             target: transition.toStateId,
-            label: transition.actionName,
+            label: transition.name,
             type: 'smoothstep',
             animated: transition.isActive,
             markerEnd: {

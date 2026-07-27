@@ -4,7 +4,6 @@ export type WorkflowDefinition = {
     id: EntityId
     code: string
     name: string
-    description: string
     module: string
     entityName: string
     isActive: boolean
@@ -15,7 +14,6 @@ export type WorkflowDefinition = {
 export type CreateWorkflowDefinitionPayload = {
     code: string
     name: string
-    description: string
     module: string
     entityName: string
     isActive?: boolean
@@ -24,7 +22,6 @@ export type CreateWorkflowDefinitionPayload = {
 export type UpdateWorkflowDefinitionPayload = {
     code: string
     name: string
-    description: string
     module: string
     entityName: string
     isActive: boolean
@@ -35,7 +32,6 @@ export type WorkflowState = {
     workflowDefinitionId: EntityId
     code: string
     name: string
-    description: string
     isInitial: boolean
     isFinal: boolean
     color: string
@@ -47,7 +43,6 @@ export type WorkflowState = {
 export type CreateWorkflowStatePayload = {
     code: string
     name: string
-    description: string
     isInitial: boolean
     isFinal: boolean
     color: string
@@ -65,10 +60,8 @@ export type WorkflowTransition = {
     toStateId: EntityId
     toStateCode: string
     toStateName: string
-    actionCode: string
-    actionName: string
-    description: string
-    requiredRole: string | null
+    code: string
+    name: string
     requiresComment: boolean
     isActive: boolean
     createdAt: string
@@ -78,10 +71,8 @@ export type WorkflowTransition = {
 export type CreateWorkflowTransitionPayload = {
     fromStateId: EntityId
     toStateId: EntityId
-    actionCode: string
-    actionName: string
-    description: string
-    requiredRole?: string | null
+    code: string
+    name: string
     requiresComment: boolean
     isActive?: boolean
 }
@@ -89,10 +80,8 @@ export type CreateWorkflowTransitionPayload = {
 export type UpdateWorkflowTransitionPayload = {
     fromStateId: EntityId
     toStateId: EntityId
-    actionCode: string
-    actionName: string
-    description: string
-    requiredRole?: string | null
+    code: string
+    name: string
     requiresComment: boolean
     isActive: boolean
 }
@@ -127,15 +116,13 @@ export type StartWorkflowInstancePayload = {
 }
 
 export type ExecuteWorkflowTransitionPayload = {
-    actionCode: string
+    code: string
     comment?: string | null
 }
 
 export type WorkflowAvailableAction = {
-    actionCode: string
-    actionName: string
-    description: string
-    requiredRole: string | null
+    code: string
+    name: string
     requiresComment: boolean
     toStateId: EntityId
     toStateCode: string
