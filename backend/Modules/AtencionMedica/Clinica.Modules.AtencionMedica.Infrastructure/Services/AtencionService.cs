@@ -11,6 +11,8 @@ using Clinica.Modules.Personas.Application.Personas;
 using Clinica.Modules.Personas.Domain.Entities;
 using Clinica.Modules.Workflow.Application.Abstractions;
 using Clinica.Modules.Workflow.Application.WorkflowInstances;
+using Clinica.Modules.RecursosHumanos.Application.Abstractions;
+using Clinica.Modules.RecursosHumanos.Application.ProgramacionDiaria;
 using Clinica.SharedKernel.Exceptions;
 using Clinica.SharedKernel.Pagination;
 using Clinica.SharedKernel.Text;
@@ -24,7 +26,8 @@ public sealed class AtencionService(
     ICorrelativoService correlativoService,
     IPacienteService pacienteService,
     ICajaCargoService cajaCargoService,
-    IWorkflowInstanceService workflowInstanceService) : IAtencionService
+    IWorkflowInstanceService workflowInstanceService,
+    IProgramacionDiariaService programacionDiariaService) : IAtencionService
 {
     public Task<PagedResult<AtencionResponse>> GetPagedAsync(
         PagedRequest request,
@@ -141,6 +144,16 @@ public sealed class AtencionService(
         var fechaAtencion = request.FechaAtencion ?? DateTime.UtcNow;
         var fechaRecepcion = DateTime.UtcNow;
 
+        if (request.MedicoId is { } medicoId && medicoId != Guid.Empty)
+        {
+            await programacionDiariaService.EnsureMedicoDisponibleAsync(
+                new ValidarMedicoProgramadoRequest(
+                    medicoId,
+                    fechaAtencion,
+                    request.EspecialidadId),
+                cancellationToken);
+        }
+
         var codigoCorrelativo = tipo.Codigo.Trim().ToUpperInvariant();
         var prefijo = codigoCorrelativo.Length <= 20
             ? codigoCorrelativo
@@ -158,6 +171,7 @@ public sealed class AtencionService(
             FormularioClinicoId = formularioActivo.Id,
             FechaAtencion = fechaAtencion,
             FechaRecepcion = fechaRecepcion,
+            MedicoId = request.MedicoId is { } mId && mId != Guid.Empty ? mId : null,
             Estado = "BORRADOR",
             Observaciones = StringNormalize.Optional(request.Observaciones)
         };

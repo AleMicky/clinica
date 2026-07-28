@@ -50,6 +50,8 @@ public static class RecursosHumanosDbSeeder
         await SeedEmpleadosAsync(personasContext, recursosHumanosContext, logger);
         await SeedMedicosAsync(personasContext, recursosHumanosContext, logger);
         await SeedResponsablesAsync(recursosHumanosContext, logger);
+        await SeedTurnosAsync(recursosHumanosContext, logger);
+        await SeedProgramacionDiariaAsync(recursosHumanosContext, logger);
 
         logger.LogInformation("Seed demo de RecursosHumanos aplicado correctamente.");
     }
@@ -409,6 +411,139 @@ public static class RecursosHumanosDbSeeder
         }
 
         await context.SaveChangesAsync();
+    }
+
+    private static async Task SeedTurnosAsync(
+        RecursosHumanosDbContext context,
+        ILogger logger)
+    {
+        foreach (var item in RecursosHumanosDemoSeedData.Turnos)
+        {
+            var turno = await context.Turnos.FirstOrDefaultAsync(x => x.Codigo == item.Codigo);
+
+            if (turno is null)
+            {
+                context.Turnos.Add(new Turno
+                {
+                    Codigo = item.Codigo,
+                    Nombre = item.Nombre,
+                    HoraInicio = item.HoraInicio,
+                    HoraFin = item.HoraFin,
+                    CruceDia = item.CruceDia,
+                    Activo = item.Activo,
+                    PermiteMultiplesMedicosTurno = item.PermiteMultiplesMedicosTurno
+                });
+            }
+            else
+            {
+                turno.Nombre = item.Nombre;
+                turno.HoraInicio = item.HoraInicio;
+                turno.HoraFin = item.HoraFin;
+                turno.CruceDia = item.CruceDia;
+                turno.Activo = item.Activo;
+                turno.PermiteMultiplesMedicosTurno = item.PermiteMultiplesMedicosTurno;
+            }
+        }
+
+        await context.SaveChangesAsync();
+        logger.LogInformation("Seed de turnos aplicado ({Count}).", RecursosHumanosDemoSeedData.Turnos.Length);
+    }
+
+    private static async Task SeedProgramacionDiariaAsync(
+        RecursosHumanosDbContext context,
+        ILogger logger)
+    {
+        var hoy = DateOnly.FromDateTime(DateTime.Now);
+        var creadas = 0;
+
+        foreach (var item in RecursosHumanosDemoSeedData.Programaciones)
+        {
+            var empleado = await context.Empleados
+                .FirstOrDefaultAsync(x => x.CodigoEmpleado == item.CodigoEmpleado);
+
+            var turno = await context.Turnos
+                .FirstOrDefaultAsync(x => x.Codigo == item.TurnoCodigo);
+
+            var area = await context.Areas
+                .FirstOrDefaultAsync(x => x.Codigo == item.AreaCodigo);
+
+            var cargo = await context.Cargos
+                .FirstOrDefaultAsync(x => x.Nombre == item.CargoNombre);
+
+            if (empleado is null || turno is null || area is null || cargo is null)
+            {
+                logger.LogWarning(
+                    "Catálogo incompleto para programación '{Codigo}'; omitiendo.",
+                    item.CodigoSeed);
+                continue;
+            }
+
+            Guid? especialidadId = null;
+            if (!string.IsNullOrWhiteSpace(item.EspecialidadNombre))
+            {
+                var especialidad = await context.Especialidades
+                    .FirstOrDefaultAsync(x => x.Nombre == item.EspecialidadNombre);
+
+                if (especialidad is null)
+                {
+                    logger.LogWarning(
+                        "Especialidad '{Especialidad}' no encontrada para '{Codigo}'; omitiendo.",
+                        item.EspecialidadNombre,
+                        item.CodigoSeed);
+                    continue;
+                }
+
+                especialidadId = especialidad.Id;
+            }
+
+            var fecha = hoy.AddDays(item.OffsetDias);
+
+            var existing = await context.ProgramacionDiaria
+                .FirstOrDefaultAsync(x =>
+                    x.EmpleadoId == empleado.Id &&
+                    x.Fecha == fecha &&
+                    x.TurnoId == turno.Id);
+
+            if (existing is null)
+            {
+                context.ProgramacionDiaria.Add(new ProgramacionDiaria
+                {
+                    EmpleadoId = empleado.Id,
+                    Fecha = fecha,
+                    TurnoId = turno.Id,
+                    AreaId = area.Id,
+                    CargoId = cargo.Id,
+                    EspecialidadId = especialidadId,
+                    EsMedicoTurno = item.EsMedicoTurno,
+                    AceptaConsultas = item.AceptaConsultas,
+                    AceptaSinCita = item.AceptaSinCita,
+                    MaxPacientes = item.MaxPacientes,
+                    Estado = item.Estado,
+                    Observacion = item.Observacion,
+                    PermiteMultiplesMedicosTurno = item.PermiteMultiplesMedicosTurno
+                });
+                creadas++;
+            }
+            else
+            {
+                existing.AreaId = area.Id;
+                existing.CargoId = cargo.Id;
+                existing.EspecialidadId = especialidadId;
+                existing.EsMedicoTurno = item.EsMedicoTurno;
+                existing.AceptaConsultas = item.AceptaConsultas;
+                existing.AceptaSinCita = item.AceptaSinCita;
+                existing.MaxPacientes = item.MaxPacientes;
+                existing.Estado = item.Estado;
+                existing.Observacion = item.Observacion;
+                existing.PermiteMultiplesMedicosTurno = item.PermiteMultiplesMedicosTurno;
+            }
+        }
+
+        await context.SaveChangesAsync();
+        logger.LogInformation(
+            "Seed de programación diaria aplicado ({Creadas} nuevas / {Total} definidas).",
+            creadas,
+            RecursosHumanosDemoSeedData.Programaciones.Length);
     }
 
     private static void SyncMedicoEspecialidades(

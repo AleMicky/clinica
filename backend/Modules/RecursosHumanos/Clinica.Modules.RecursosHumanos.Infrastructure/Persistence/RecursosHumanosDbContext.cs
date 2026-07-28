@@ -23,6 +23,10 @@ public class RecursosHumanosDbContext : DbContext
 
     public DbSet<Empleado> Empleados => Set<Empleado>();
 
+    public DbSet<Turno> Turnos => Set<Turno>();
+
+    public DbSet<ProgramacionDiaria> ProgramacionDiaria => Set<ProgramacionDiaria>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("recursos_humanos");

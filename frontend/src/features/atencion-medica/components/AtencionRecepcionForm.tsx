@@ -5,6 +5,7 @@ import {
     Flex,
     Form,
     Input,
+    Select,
     Space,
     Tag,
     Typography,
@@ -19,6 +20,8 @@ import {
 } from '@ant-design/icons'
 
 import { useCatalogoGruposGrouped } from '../../parametros/catalogos/hooks/catalogo-grupos.hooks'
+import { useEspecialidades } from '../../catalogo-clinico/hooks/catalogo-clinico.hooks'
+import { useMedicoDisponibilidad } from '../../recursos-humanos/hooks/turnos.hooks'
 import { PersonaFormFields } from '../../personas/components/PersonaFormFields'
 import {
     applyFieldErrors,
@@ -34,6 +37,7 @@ import {
     type RecepcionFormValues,
 } from '../schemas/atencion.schema'
 import { PacienteSearchBox } from './PacienteSearchBox'
+import { MedicoDisponibilidadPanel } from './MedicoDisponibilidadPanel'
 import { TipoAtencionCardSwitch } from './TipoAtencionCardSwitch'
 
 const { Text } = Typography
@@ -113,6 +117,8 @@ export const AtencionRecepcionForm = forwardRef<
 
     const modoPaciente = useStore(form.store, (state) => state.values.modoPaciente)
     const formValues = useStore(form.store, (state) => state.values)
+    const especialidadId = useStore(form.store, (state) => state.values.especialidadId)
+    const medicoId = useStore(form.store, (state) => state.values.medicoId)
     const tipoAtencionIdForQuery = tipoAtencionId || undefined
 
     // Reloj solo en estado local: evita re-render/validación del form cada segundo.
@@ -129,6 +135,23 @@ export const AtencionRecepcionForm = forwardRef<
             pageSize: 100,
             tipoAtencionId: tipoAtencionIdForQuery,
         })
+
+    const { data: especialidadesData } = useEspecialidades({ page: 1, pageSize: 200 })
+
+    const now = new Date()
+    const { data: medicosDisponibles } = useMedicoDisponibilidad({
+        fecha: now.toISOString().slice(0, 10),
+        hora: now.toTimeString().slice(0, 8),
+        especialidadId: especialidadId || undefined,
+        incluirProximaDisponibilidad: true,
+    })
+
+    const medicoOptions = (medicosDisponibles ?? [])
+        .filter((m) => m.disponibleAhora)
+        .map((m) => ({
+            value: m.medicoId,
+            label: `${m.medicoNombre}${m.especialidadNombre ? ` · ${m.especialidadNombre}` : ''}`,
+        }))
 
     const formularioActivo = useMemo(() => {
         const activos = (formulariosData?.items ?? []).filter((item) => item.activo)
@@ -391,6 +414,58 @@ export const AtencionRecepcionForm = forwardRef<
                             </Form.Item>
                         )}
                     </form.Field>
+                </section>
+
+                <section className="atencion-recepcion-form__section">
+                    <div className="atencion-recepcion-form__section-head">
+                        <span className="atencion-recepcion-form__step">3</span>
+                        <p className="atencion-recepcion-form__section-title">
+                            Médico y disponibilidad
+                        </p>
+                    </div>
+
+                    <form.Field name="especialidadId">
+                        {(field) => (
+                            <Form.Item label="Especialidad solicitada">
+                                <Select
+                                    allowClear
+                                    showSearch
+                                    optionFilterProp="label"
+                                    placeholder="Filtrar por especialidad"
+                                    value={field.state.value || undefined}
+                                    onChange={(value) => field.handleChange(value ?? '')}
+                                    options={(especialidadesData?.items ?? []).map((e) => ({
+                                        value: e.id,
+                                        label: e.nombre,
+                                    }))}
+                                    disabled={loading}
+                                />
+                            </Form.Item>
+                        )}
+                    </form.Field>
+
+                    <form.Field name="medicoId">
+                        {(field) => (
+                            <Form.Item label="Médico programado">
+                                <Select
+                                    allowClear
+                                    showSearch
+                                    optionFilterProp="label"
+                                    placeholder="Seleccione un médico disponible"
+                                    value={field.state.value || undefined}
+                                    onChange={(value) => field.handleChange(value ?? '')}
+                                    options={medicoOptions}
+                                    disabled={loading}
+                                />
+                            </Form.Item>
+                        )}
+                    </form.Field>
+
+                    <MedicoDisponibilidadPanel
+                        especialidadId={especialidadId || undefined}
+                        selectedMedicoId={medicoId || undefined}
+                        onSelectMedico={(id) => form.setFieldValue('medicoId', id)}
+                    />
                 </section>
             </div>
 

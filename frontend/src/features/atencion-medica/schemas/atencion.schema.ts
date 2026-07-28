@@ -18,6 +18,8 @@ export const recepcionFormSchema = z
         pacienteNuevo: z.any().optional(),
         tipoAtencionId: z.string().trim().min(1, 'Seleccione un tipo de atención'),
         fechaAtencion: z.string().trim().min(1, 'La fecha es requerida'),
+        medicoId: z.string().trim().optional(),
+        especialidadId: z.string().trim().optional(),
         observaciones: z.string().max(2000).optional(),
     })
     .superRefine((data, ctx) => {
@@ -65,6 +67,8 @@ export const recepcionDefaultValues: RecepcionFormValues = {
     },
     tipoAtencionId: '',
     fechaAtencion: new Date().toISOString().slice(0, 16),
+    medicoId: '',
+    especialidadId: '',
     observaciones: '',
 }
 
@@ -75,6 +79,8 @@ export function toRecepcionarAtencionPayload(
         tipoAtencionId: values.tipoAtencionId,
         fechaAtencion: new Date(values.fechaAtencion).toISOString(),
         observaciones: values.observaciones?.trim() || null,
+        medicoId: values.medicoId?.trim() || null,
+        especialidadId: values.especialidadId?.trim() || null,
     }
 
     if (values.modoPaciente === 'existente') {

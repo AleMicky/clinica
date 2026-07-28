@@ -38,7 +38,9 @@ import { Route as AdminWorkflowCustomQueriesRouteImport } from './routes/_admin/
 import { Route as AdminUsuariosPerfilRouteImport } from './routes/_admin/usuarios/perfil'
 import { Route as AdminSeguridadUsuariosRouteImport } from './routes/_admin/seguridad/usuarios'
 import { Route as AdminSeguridadRolesRouteImport } from './routes/_admin/seguridad/roles'
+import { Route as AdminRecursosHumanosTurnosRouteImport } from './routes/_admin/recursos-humanos/turnos'
 import { Route as AdminRecursosHumanosTiposAreaRouteImport } from './routes/_admin/recursos-humanos/tipos-area'
+import { Route as AdminRecursosHumanosProgramacionDiariaRouteImport } from './routes/_admin/recursos-humanos/programacion-diaria'
 import { Route as AdminRecursosHumanosProfesionesRouteImport } from './routes/_admin/recursos-humanos/profesiones'
 import { Route as AdminRecursosHumanosMedicosRouteImport } from './routes/_admin/recursos-humanos/medicos'
 import { Route as AdminRecursosHumanosJerarquiaRouteImport } from './routes/_admin/recursos-humanos/jerarquia'
@@ -223,10 +225,22 @@ const AdminSeguridadRolesRoute = AdminSeguridadRolesRouteImport.update({
   path: '/roles',
   getParentRoute: () => AdminSeguridadRoute,
 } as any)
+const AdminRecursosHumanosTurnosRoute =
+  AdminRecursosHumanosTurnosRouteImport.update({
+    id: '/turnos',
+    path: '/turnos',
+    getParentRoute: () => AdminRecursosHumanosRoute,
+  } as any)
 const AdminRecursosHumanosTiposAreaRoute =
   AdminRecursosHumanosTiposAreaRouteImport.update({
     id: '/tipos-area',
     path: '/tipos-area',
+    getParentRoute: () => AdminRecursosHumanosRoute,
+  } as any)
+const AdminRecursosHumanosProgramacionDiariaRoute =
+  AdminRecursosHumanosProgramacionDiariaRouteImport.update({
+    id: '/programacion-diaria',
+    path: '/programacion-diaria',
     getParentRoute: () => AdminRecursosHumanosRoute,
   } as any)
 const AdminRecursosHumanosProfesionesRoute =
@@ -489,7 +503,9 @@ export interface FileRoutesByFullPath {
   '/recursos-humanos/jerarquia': typeof AdminRecursosHumanosJerarquiaRoute
   '/recursos-humanos/medicos': typeof AdminRecursosHumanosMedicosRoute
   '/recursos-humanos/profesiones': typeof AdminRecursosHumanosProfesionesRoute
+  '/recursos-humanos/programacion-diaria': typeof AdminRecursosHumanosProgramacionDiariaRoute
   '/recursos-humanos/tipos-area': typeof AdminRecursosHumanosTiposAreaRoute
+  '/recursos-humanos/turnos': typeof AdminRecursosHumanosTurnosRoute
   '/seguridad/roles': typeof AdminSeguridadRolesRoute
   '/seguridad/usuarios': typeof AdminSeguridadUsuariosRoute
   '/usuarios/perfil': typeof AdminUsuariosPerfilRoute
@@ -551,7 +567,9 @@ export interface FileRoutesByTo {
   '/recursos-humanos/jerarquia': typeof AdminRecursosHumanosJerarquiaRoute
   '/recursos-humanos/medicos': typeof AdminRecursosHumanosMedicosRoute
   '/recursos-humanos/profesiones': typeof AdminRecursosHumanosProfesionesRoute
+  '/recursos-humanos/programacion-diaria': typeof AdminRecursosHumanosProgramacionDiariaRoute
   '/recursos-humanos/tipos-area': typeof AdminRecursosHumanosTiposAreaRoute
+  '/recursos-humanos/turnos': typeof AdminRecursosHumanosTurnosRoute
   '/seguridad/roles': typeof AdminSeguridadRolesRoute
   '/seguridad/usuarios': typeof AdminSeguridadUsuariosRoute
   '/usuarios/perfil': typeof AdminUsuariosPerfilRoute
@@ -622,7 +640,9 @@ export interface FileRoutesById {
   '/_admin/recursos-humanos/jerarquia': typeof AdminRecursosHumanosJerarquiaRoute
   '/_admin/recursos-humanos/medicos': typeof AdminRecursosHumanosMedicosRoute
   '/_admin/recursos-humanos/profesiones': typeof AdminRecursosHumanosProfesionesRoute
+  '/_admin/recursos-humanos/programacion-diaria': typeof AdminRecursosHumanosProgramacionDiariaRoute
   '/_admin/recursos-humanos/tipos-area': typeof AdminRecursosHumanosTiposAreaRoute
+  '/_admin/recursos-humanos/turnos': typeof AdminRecursosHumanosTurnosRoute
   '/_admin/seguridad/roles': typeof AdminSeguridadRolesRoute
   '/_admin/seguridad/usuarios': typeof AdminSeguridadUsuariosRoute
   '/_admin/usuarios/perfil': typeof AdminUsuariosPerfilRoute
@@ -692,7 +712,9 @@ export interface FileRouteTypes {
     | '/recursos-humanos/jerarquia'
     | '/recursos-humanos/medicos'
     | '/recursos-humanos/profesiones'
+    | '/recursos-humanos/programacion-diaria'
     | '/recursos-humanos/tipos-area'
+    | '/recursos-humanos/turnos'
     | '/seguridad/roles'
     | '/seguridad/usuarios'
     | '/usuarios/perfil'
@@ -754,7 +776,9 @@ export interface FileRouteTypes {
     | '/recursos-humanos/jerarquia'
     | '/recursos-humanos/medicos'
     | '/recursos-humanos/profesiones'
+    | '/recursos-humanos/programacion-diaria'
     | '/recursos-humanos/tipos-area'
+    | '/recursos-humanos/turnos'
     | '/seguridad/roles'
     | '/seguridad/usuarios'
     | '/usuarios/perfil'
@@ -824,7 +848,9 @@ export interface FileRouteTypes {
     | '/_admin/recursos-humanos/jerarquia'
     | '/_admin/recursos-humanos/medicos'
     | '/_admin/recursos-humanos/profesiones'
+    | '/_admin/recursos-humanos/programacion-diaria'
     | '/_admin/recursos-humanos/tipos-area'
+    | '/_admin/recursos-humanos/turnos'
     | '/_admin/seguridad/roles'
     | '/_admin/seguridad/usuarios'
     | '/_admin/usuarios/perfil'
@@ -1059,11 +1085,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSeguridadRolesRouteImport
       parentRoute: typeof AdminSeguridadRoute
     }
+    '/_admin/recursos-humanos/turnos': {
+      id: '/_admin/recursos-humanos/turnos'
+      path: '/turnos'
+      fullPath: '/recursos-humanos/turnos'
+      preLoaderRoute: typeof AdminRecursosHumanosTurnosRouteImport
+      parentRoute: typeof AdminRecursosHumanosRoute
+    }
     '/_admin/recursos-humanos/tipos-area': {
       id: '/_admin/recursos-humanos/tipos-area'
       path: '/tipos-area'
       fullPath: '/recursos-humanos/tipos-area'
       preLoaderRoute: typeof AdminRecursosHumanosTiposAreaRouteImport
+      parentRoute: typeof AdminRecursosHumanosRoute
+    }
+    '/_admin/recursos-humanos/programacion-diaria': {
+      id: '/_admin/recursos-humanos/programacion-diaria'
+      path: '/programacion-diaria'
+      fullPath: '/recursos-humanos/programacion-diaria'
+      preLoaderRoute: typeof AdminRecursosHumanosProgramacionDiariaRouteImport
       parentRoute: typeof AdminRecursosHumanosRoute
     }
     '/_admin/recursos-humanos/profesiones': {
@@ -1506,7 +1546,9 @@ interface AdminRecursosHumanosRouteChildren {
   AdminRecursosHumanosJerarquiaRoute: typeof AdminRecursosHumanosJerarquiaRoute
   AdminRecursosHumanosMedicosRoute: typeof AdminRecursosHumanosMedicosRoute
   AdminRecursosHumanosProfesionesRoute: typeof AdminRecursosHumanosProfesionesRoute
+  AdminRecursosHumanosProgramacionDiariaRoute: typeof AdminRecursosHumanosProgramacionDiariaRoute
   AdminRecursosHumanosTiposAreaRoute: typeof AdminRecursosHumanosTiposAreaRoute
+  AdminRecursosHumanosTurnosRoute: typeof AdminRecursosHumanosTurnosRoute
   AdminRecursosHumanosIndexRoute: typeof AdminRecursosHumanosIndexRoute
 }
 
@@ -1518,7 +1560,10 @@ const AdminRecursosHumanosRouteChildren: AdminRecursosHumanosRouteChildren = {
   AdminRecursosHumanosJerarquiaRoute: AdminRecursosHumanosJerarquiaRoute,
   AdminRecursosHumanosMedicosRoute: AdminRecursosHumanosMedicosRoute,
   AdminRecursosHumanosProfesionesRoute: AdminRecursosHumanosProfesionesRoute,
+  AdminRecursosHumanosProgramacionDiariaRoute:
+    AdminRecursosHumanosProgramacionDiariaRoute,
   AdminRecursosHumanosTiposAreaRoute: AdminRecursosHumanosTiposAreaRoute,
+  AdminRecursosHumanosTurnosRoute: AdminRecursosHumanosTurnosRoute,
   AdminRecursosHumanosIndexRoute: AdminRecursosHumanosIndexRoute,
 }
 

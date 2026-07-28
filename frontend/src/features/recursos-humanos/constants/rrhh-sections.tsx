@@ -1,5 +1,7 @@
 import {
     ApartmentOutlined,
+    CalendarOutlined,
+    ClockCircleOutlined,
     ExperimentOutlined,
     IdcardOutlined,
     MedicineBoxOutlined,
@@ -49,6 +51,16 @@ const rrhhPageSections: RrhhPageSection[] = [
         path: '/recursos-humanos/cargos',
         title: 'Cargos',
         icon: <IdcardOutlined />,
+    },
+    {
+        path: '/recursos-humanos/turnos',
+        title: 'Turnos',
+        icon: <ClockCircleOutlined />,
+    },
+    {
+        path: '/recursos-humanos/programacion-diaria',
+        title: 'Programación diaria',
+        icon: <CalendarOutlined />,
     },
 ]
 

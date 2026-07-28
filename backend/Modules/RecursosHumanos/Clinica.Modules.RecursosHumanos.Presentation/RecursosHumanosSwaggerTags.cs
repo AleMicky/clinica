@@ -10,4 +10,6 @@ public static class RecursosHumanosSwaggerTags
     public const string Especialidades = "RecursosHumanos · Especialidades";
     public const string Empleados = "RecursosHumanos · Empleados";
     public const string Jerarquia = "RecursosHumanos · Jerarquía";
+    public const string Turnos = "RecursosHumanos · Turnos";
+    public const string ProgramacionDiaria = "RecursosHumanos · Programación diaria";
 }

@@ -199,6 +199,8 @@ export type RecepcionarAtencionPayload = {
     fechaAtencion?: string | null
     observaciones?: string | null
     pacienteId?: Guid | null
+    medicoId?: Guid | null
+    especialidadId?: Guid | null
     pacienteNuevo?: RecepcionPacienteNuevoPayload | null
 }
 

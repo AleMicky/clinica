@@ -24,6 +24,8 @@ public static class RecursosHumanosEndpoints
         group.MapEspecialidadEndpoints();
         group.MapEmpleadoEndpoints();
         group.MapJerarquiaEndpoints();
+        group.MapTurnoEndpoints();
+        group.MapProgramacionDiariaEndpoints();
 
         return app;
     }

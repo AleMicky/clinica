@@ -9,6 +9,8 @@ public sealed record RecepcionarAtencionRequest(
     DateTime? FechaAtencion = null,
     string? Observaciones = null,
     Guid? PacienteId = null,
+    Guid? MedicoId = null,
+    Guid? EspecialidadId = null,
     RecepcionPacienteNuevoRequest? PacienteNuevo = null);
 
 public sealed record RecepcionPacienteNuevoRequest(

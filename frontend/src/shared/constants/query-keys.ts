@@ -69,6 +69,18 @@ export const queryKeys = {
             tree: (includeCounts?: boolean) =>
                 ['recursos-humanos', 'jerarquia', { includeCounts: !!includeCounts }] as const,
         },
+        turnos: {
+            all: ['recursos-humanos', 'turnos'] as const,
+            list: (query: PagedQuery & Record<string, unknown>) =>
+                ['recursos-humanos', 'turnos', 'list', query] as const,
+        },
+        programacionDiaria: {
+            all: ['recursos-humanos', 'programacion-diaria'] as const,
+            list: (query: PagedQuery & Record<string, unknown>) =>
+                ['recursos-humanos', 'programacion-diaria', 'list', query] as const,
+            disponibilidad: (query: Record<string, unknown>) =>
+                ['recursos-humanos', 'programacion-diaria', 'disponibilidad', query] as const,
+        },
     },
     catalogoClinico: {
         all: ['catalogo-clinico'] as const,

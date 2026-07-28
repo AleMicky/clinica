@@ -8,6 +8,7 @@ public class RecepcionarAtencionRequestValidator : AbstractValidator<Recepcionar
     {
         RuleFor(x => x.TipoAtencionId).NotEmpty();
         RuleFor(x => x.Observaciones).MaximumLength(2000);
+        RuleFor(x => x.MedicoId).NotEmpty().When(x => x.MedicoId.HasValue);
 
         RuleFor(x => x)
             .Must(x =>
