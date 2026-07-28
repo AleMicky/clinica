@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useForm } from '@tanstack/react-form'
-import { Form, Input, Modal } from 'antd'
+import { Button, Drawer, Flex, Form, Grid, Input, Typography } from 'antd'
 
 import { getFieldError } from '../../../../shared/utils/form-errors'
 import { normalizeCodigoInput } from '../../../../shared/utils/format-codigo'
@@ -11,7 +11,10 @@ import {
 } from '../schemas/unidades-medida.schema'
 import type { UnidadMedida } from '../types/unidades-medida.types'
 
-type UnidadMedidaFormModalProps = {
+const { Text } = Typography
+const { useBreakpoint } = Grid
+
+type UnidadMedidaFormDrawerProps = {
     open: boolean
     entity: UnidadMedida | null
     loading: boolean
@@ -19,13 +22,15 @@ type UnidadMedidaFormModalProps = {
     onSubmit: (values: UnidadMedidaFormValues) => Promise<void>
 }
 
-export function UnidadMedidaFormModal({
+export function UnidadMedidaFormDrawer({
     open,
     entity,
     loading,
     onClose,
     onSubmit,
-}: UnidadMedidaFormModalProps) {
+}: UnidadMedidaFormDrawerProps) {
+    const screens = useBreakpoint()
+    const drawerWidth = screens.md ? 480 : '95%'
     const isEditing = entity !== null
 
     const form = useForm({
@@ -50,27 +55,51 @@ export function UnidadMedidaFormModal({
         form.reset()
     }, [open, entity, form])
 
+    const handleClose = () => {
+        if (loading) return
+        onClose()
+    }
+
     return (
-        <Modal
+        <Drawer
             title={isEditing ? 'Editar unidad de medida' : 'Nueva unidad de medida'}
             open={open}
-            onCancel={() => {
-                if (!loading) onClose()
-            }}
-            onOk={() => void form.handleSubmit()}
-            okText={isEditing ? 'Guardar' : 'Crear'}
-            cancelText="Cancelar"
-            confirmLoading={loading}
+            onClose={handleClose}
+            width={drawerWidth}
             destroyOnHidden
-            width={480}
+            className="usuario-drawer"
+            footer={
+                <Flex justify="flex-end" gap={8} className="usuario-drawer__footer">
+                    <Button onClick={handleClose} disabled={loading}>
+                        Cancelar
+                    </Button>
+                    <Button
+                        type="primary"
+                        loading={loading}
+                        onClick={() => void form.handleSubmit()}
+                    >
+                        {isEditing ? 'Guardar' : 'Crear'}
+                    </Button>
+                </Flex>
+            }
         >
-            <Form layout="vertical" requiredMark={false}>
+            <Form
+                layout="vertical"
+                requiredMark
+                size="small"
+                className="usuario-drawer__form usuario-drawer__form--compact"
+            >
+                <Text type="secondary" className="usuario-drawer__required-hint">
+                    Los campos marcados con <Text type="danger">*</Text> son obligatorios.
+                </Text>
+
                 <form.Field name="codigo">
                     {(field) => {
                         const error = getFieldError(field.state.meta.errors)
                         return (
                             <Form.Item
                                 label="Código"
+                                required
                                 validateStatus={error ? 'error' : undefined}
                                 help={error || 'Identificador único, ej. MG_DL'}
                             >
@@ -97,15 +126,14 @@ export function UnidadMedidaFormModal({
                         return (
                             <Form.Item
                                 label="Nombre"
+                                required
                                 validateStatus={error ? 'error' : undefined}
                                 help={error || undefined}
                             >
                                 <Input
                                     placeholder="Miligramos por decilitro"
                                     value={field.state.value}
-                                    onChange={(e) =>
-                                        field.handleChange(e.target.value)
-                                    }
+                                    onChange={(e) => field.handleChange(e.target.value)}
                                     onBlur={field.handleBlur}
                                     disabled={loading}
                                     autoFocus={isEditing}
@@ -121,15 +149,14 @@ export function UnidadMedidaFormModal({
                         return (
                             <Form.Item
                                 label="Símbolo"
+                                required
                                 validateStatus={error ? 'error' : undefined}
                                 help={error || 'Ej. mg/dL, %, U/L'}
                             >
                                 <Input
                                     placeholder="mg/dL"
                                     value={field.state.value}
-                                    onChange={(e) =>
-                                        field.handleChange(e.target.value)
-                                    }
+                                    onChange={(e) => field.handleChange(e.target.value)}
                                     onBlur={field.handleBlur}
                                     disabled={loading}
                                 />
@@ -138,6 +165,6 @@ export function UnidadMedidaFormModal({
                     }}
                 </form.Field>
             </Form>
-        </Modal>
+        </Drawer>
     )
 }

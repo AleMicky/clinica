@@ -3,12 +3,12 @@ import {
     CrudSearchFiltersBar,
     CrudSectionPanel,
 } from '../../../../shared/components/ui/crud-section'
-import { UnidadMedidaFormModal } from '../components/UnidadMedidaFormModal'
+import { UnidadMedidaFormDrawer } from '../components/UnidadMedidaFormDrawer'
 import { UnidadesMedidaTable } from '../components/UnidadesMedidaTable'
 import { useUnidadesMedidaView } from '../hooks/use-unidades-medida-view'
 
 export function UnidadesMedidaView() {
-    const { loading, caption, filters, table, formModal } = useUnidadesMedidaView()
+    const { loading, caption, filters, table, formDrawer } = useUnidadesMedidaView()
 
     return (
         <>
@@ -29,7 +29,7 @@ export function UnidadesMedidaView() {
                     <CrudCreateHeader
                         label="Nueva unidad"
                         ariaLabel="Crear nueva unidad de medida"
-                        onCreate={formModal.openCreateModal}
+                        onCreate={formDrawer.openCreate}
                     />
                 }
                 caption={caption}
@@ -48,12 +48,12 @@ export function UnidadesMedidaView() {
                 />
             </CrudSectionPanel>
 
-            <UnidadMedidaFormModal
-                open={formModal.open}
-                entity={formModal.entity}
-                loading={formModal.isSaving}
-                onClose={formModal.closeModal}
-                onSubmit={formModal.handleSubmit}
+            <UnidadMedidaFormDrawer
+                open={formDrawer.open}
+                entity={formDrawer.entity}
+                loading={formDrawer.isSaving}
+                onClose={formDrawer.closeDrawer}
+                onSubmit={formDrawer.handleSubmit}
             />
         </>
     )
