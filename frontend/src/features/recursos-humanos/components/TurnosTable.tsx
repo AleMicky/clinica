@@ -3,13 +3,14 @@ import {
     createColumnHelper,
     type ColumnDef,
 } from '@tanstack/react-table'
-import { Tag, Typography } from 'antd'
+import { Typography } from 'antd'
 
 import {
     createCodigoColumn,
     createRowActionsColumn,
 } from '../../../shared/components/ui/crud-section'
 import { AppDataTable } from '../../../shared/components/ui/data-table/AppDataTable'
+import { StatusBadge } from '../../../shared/components/ui/status-badge/StatusBadge'
 import type { Turno } from '../types/turnos.types'
 
 const { Text } = Typography
@@ -65,14 +66,7 @@ export function TurnosTable({
                 columnHelper.accessor('activo', {
                     header: 'Estado',
                     size: 110,
-                    cell: ({ getValue }) => {
-                        const activo = getValue()
-                        return (
-                            <Tag color={activo ? 'success' : 'default'}>
-                                {activo ? 'Activo' : 'Inactivo'}
-                            </Tag>
-                        )
-                    },
+                    cell: ({ getValue }) => <StatusBadge active={getValue()} />,
                 }),
                 columnHelper.accessor('permiteMultiplesMedicosTurno', {
                     header: 'Múltiples médicos',

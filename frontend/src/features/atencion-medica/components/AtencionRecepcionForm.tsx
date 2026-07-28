@@ -7,7 +7,6 @@ import {
     Input,
     Select,
     Space,
-    Tag,
     Typography,
 } from 'antd'
 import {
@@ -39,6 +38,7 @@ import {
 import { PacienteSearchBox } from './PacienteSearchBox'
 import { MedicoDisponibilidadPanel } from './MedicoDisponibilidadPanel'
 import { TipoAtencionCardSwitch } from './TipoAtencionCardSwitch'
+import { StatusBadge } from '../../../shared/components/ui/status-badge/StatusBadge'
 
 const { Text } = Typography
 
@@ -387,7 +387,7 @@ export const AtencionRecepcionForm = forwardRef<
                                     <Text ellipsis className="atencion-recepcion-form__formulario-nombre">
                                         {formularioActivo.nombre}
                                     </Text>
-                                    <Tag color="success">Activo</Tag>
+                                    <StatusBadge active />
                                 </>
                             ) : (
                                 <Text type="danger">Sin formulario activo</Text>

@@ -5292,6 +5292,10 @@ body {
     transition: opacity 0.15s ease;
 }
 
+.catalogos-grupos-list__status {
+    flex-shrink: 0;
+}
+
 .catalogos-grupos-list__item:hover .catalogos-grupos-list__item-actions,
 .catalogos-grupos-list__item--selected .catalogos-grupos-list__item-actions,
 .catalogos-grupos-list__item:focus-within .catalogos-grupos-list__item-actions {
@@ -6200,6 +6204,7 @@ body {
     gap: 4px;
 }
 
+.status-badge,
 .seguridad-status-tag {
     margin: 0;
     display: inline-flex;
@@ -6213,6 +6218,7 @@ body {
     border: 1px solid transparent;
 }
 
+.status-badge__dot,
 .seguridad-status-tag__dot {
     width: 6px;
     height: 6px;
@@ -6221,12 +6227,14 @@ body {
     opacity: 0.85;
 }
 
+.status-badge--active,
 .seguridad-status-tag--active {
     color: #166534;
     background: #f0fdf4;
     border-color: #bbf7d0;
 }
 
+.status-badge--inactive,
 .seguridad-status-tag--inactive {
     color: #64748b;
     background: #f8fafc;
@@ -6410,14 +6418,18 @@ body {
     border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
+[data-theme='dark'] .status-badge--active,
 [data-theme='dark'] .seguridad-status-tag--active {
     color: #86efac;
     background: rgba(34, 197, 94, 0.15);
+    border-color: rgba(134, 239, 172, 0.35);
 }
 
+[data-theme='dark'] .status-badge--inactive,
 [data-theme='dark'] .seguridad-status-tag--inactive {
     color: rgba(255, 255, 255, 0.55);
     background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.1);
 }
 
 [data-theme='dark'] .usuario-drawer .ant-drawer-content {

@@ -17,11 +17,11 @@ import {
     Dropdown,
     Flex,
     Modal,
-    Tag,
     Typography,
 } from 'antd'
 
 import { AppDataTable } from '../../../shared/components/ui/data-table/AppDataTable'
+import { StatusBadge } from '../../../shared/components/ui/status-badge/StatusBadge'
 import { WorkflowDefinitionForm } from '../components/WorkflowDefinitionForm'
 import {
     useCreateWorkflowDefinition,
@@ -116,11 +116,7 @@ export function WorkflowDefinitionsPage() {
             columnHelper.accessor('isActive', {
                 header: 'Estado',
                 size: 100,
-                cell: ({ getValue }) => (
-                    <Tag color={getValue() ? 'success' : 'default'}>
-                        {getValue() ? 'Activo' : 'Inactivo'}
-                    </Tag>
-                ),
+                cell: ({ getValue }) => <StatusBadge active={getValue()} />,
             }),
             columnHelper.display({
                 id: 'actions',

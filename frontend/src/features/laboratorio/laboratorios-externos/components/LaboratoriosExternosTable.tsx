@@ -3,13 +3,14 @@ import {
     createColumnHelper,
     type ColumnDef,
 } from '@tanstack/react-table'
-import { Tag, Typography } from 'antd'
+import { Typography } from 'antd'
 
 import { AppDataTable } from '../../../../shared/components/ui/data-table/AppDataTable'
 import {
     createCodigoColumn,
     createRowActionsColumn,
 } from '../../../../shared/components/ui/crud-section'
+import { StatusBadge } from '../../../../shared/components/ui/status-badge/StatusBadge'
 import type { LaboratorioExterno } from '../types/laboratorio-externo.types'
 
 const { Text } = Typography
@@ -73,12 +74,7 @@ export function LaboratoriosExternosTable({
                 columnHelper.accessor('activo', {
                     header: 'Estado',
                     size: 100,
-                    cell: ({ getValue }) =>
-                        getValue() ? (
-                            <Tag color="success">Activo</Tag>
-                        ) : (
-                            <Tag color="default">Inactivo</Tag>
-                        ),
+                    cell: ({ getValue }) => <StatusBadge active={getValue()} />,
                 }),
                 createRowActionsColumn<LaboratorioExterno>({
                     onEdit,

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Button, Form, Input, Modal, Switch, Tag, Typography } from 'antd'
+import { Button, Form, Input, Modal, Switch, Typography } from 'antd'
 import { createColumnHelper, type ColumnDef } from '@tanstack/react-table'
 
 import { AppDataTable } from '../../../shared/components/ui/data-table/AppDataTable'
@@ -7,6 +7,7 @@ import {
     CrudCreateHeader,
     CrudSectionPanel,
 } from '../../../shared/components/ui/crud-section'
+import { StatusBadge } from '../../../shared/components/ui/status-badge/StatusBadge'
 import {
     useCajas,
     useCreateCaja,
@@ -58,9 +59,11 @@ export function CajasAdminView() {
                 columnHelper.accessor('activo', {
                     header: 'Estado',
                     cell: (info) => (
-                        <Tag color={info.getValue() ? 'green' : 'default'}>
-                            {info.getValue() ? 'Activa' : 'Inactiva'}
-                        </Tag>
+                        <StatusBadge
+                            active={info.getValue()}
+                            activeLabel="Activa"
+                            inactiveLabel="Inactiva"
+                        />
                     ),
                 }),
                 columnHelper.display({

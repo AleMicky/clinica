@@ -4,7 +4,6 @@ import {
     Flex,
     Input,
     Skeleton,
-    Tag,
     Typography,
     theme,
 } from 'antd'
@@ -17,6 +16,7 @@ import {
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 
+import { StatusBadge } from '../../../../shared/components/ui/status-badge/StatusBadge'
 import { GestionFormDrawer } from '../components/GestionFormDrawer'
 import { GestionesList } from '../components/GestionesList'
 import { PeriodoFormDrawer } from '../components/PeriodoFormDrawer'
@@ -315,13 +315,11 @@ export function GestionesView() {
                                                 {selectedGestion.literal ||
                                                     `Gestión ${selectedGestion.gestion}`}
                                             </Text>
-                                            {selectedGestion.activa ? (
-                                                <Tag color="success" style={{ margin: 0 }}>
-                                                    Activa
-                                                </Tag>
-                                            ) : (
-                                                <Tag style={{ margin: 0 }}>Inactiva</Tag>
-                                            )}
+                                            <StatusBadge
+                                                active={selectedGestion.activa}
+                                                activeLabel="Activa"
+                                                inactiveLabel="Inactiva"
+                                            />
                                         </Flex>
                                         <Text
                                             type="secondary"

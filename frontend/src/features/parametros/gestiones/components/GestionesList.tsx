@@ -5,13 +5,13 @@ import {
     Pagination,
     Popconfirm,
     Skeleton,
-    Tag,
     Tooltip,
     Typography,
 } from 'antd'
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 
+import { StatusBadge } from '../../../../shared/components/ui/status-badge/StatusBadge'
 import type { Gestion } from '../types/gestiones.types'
 
 const { Text } = Typography
@@ -108,18 +108,12 @@ export function GestionesList({
                                               >
                                                   {title}
                                               </Text>
-                                              {gestion.activa ? (
-                                                  <Tag
-                                                      color="success"
-                                                      style={{ margin: 0, flexShrink: 0 }}
-                                                  >
-                                                      Activa
-                                                  </Tag>
-                                              ) : (
-                                                  <Tag style={{ margin: 0, flexShrink: 0 }}>
-                                                      Inactiva
-                                                  </Tag>
-                                              )}
+                                              <StatusBadge
+                                                  active={gestion.activa}
+                                                  activeLabel="Activa"
+                                                  inactiveLabel="Inactiva"
+                                                  className="catalogos-grupos-list__status"
+                                              />
                                           </Flex>
                                           <Flex gap={8} align="center" wrap="wrap">
                                               <Text

@@ -10,6 +10,7 @@ import {
     createCodigoColumn,
     createRowActionsColumn,
 } from '../../../../shared/components/ui/crud-section'
+import { StatusBadge } from '../../../../shared/components/ui/status-badge/StatusBadge'
 import { PARAMETRO_TIPO_DATO_OPTIONS, type Parametro } from '../types/parametro.types'
 
 const columnHelper = createColumnHelper<Parametro>()
@@ -72,12 +73,7 @@ export function ParametrosTable({
                 columnHelper.accessor('activo', {
                     header: 'Estado',
                     size: 100,
-                    cell: ({ getValue }) =>
-                        getValue() ? (
-                            <Tag color="success">Activo</Tag>
-                        ) : (
-                            <Tag color="default">Inactivo</Tag>
-                        ),
+                    cell: ({ getValue }) => <StatusBadge active={getValue()} />,
                 }),
                 createRowActionsColumn<Parametro>({
                     onEdit,
