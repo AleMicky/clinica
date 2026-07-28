@@ -1,11 +1,11 @@
-import { EmpleadoFormModal } from '../components/EmpleadoFormModal'
+import { EmpleadoFormDrawer } from '../components/EmpleadoFormDrawer'
 import { EmpleadosFiltersBar } from '../components/EmpleadosFiltersBar'
 import { EmpleadosHeader } from '../components/EmpleadosHeader'
 import { EmpleadosTable } from '../components/EmpleadosTable'
 import { useEmpleadosView } from '../hooks/use-empleados-view'
 
 export function EmpleadosView() {
-    const { loading, caption, areaOptions, filters, table, formModal } = useEmpleadosView()
+    const { loading, caption, areaOptions, filters, table, formDrawer } = useEmpleadosView()
 
     return (
         <>
@@ -21,7 +21,7 @@ export function EmpleadosView() {
                         onAreaFilterChange={filters.onAreaFilterChange}
                         onClearFilters={filters.onClearFilters}
                     />
-                    <EmpleadosHeader onCreate={formModal.openCreateModal} />
+                    <EmpleadosHeader onCreate={formDrawer.openCreate} />
                 </div>
                 <div className="rrhh-section-panel__body">
                     <p className="rrhh-section-panel__caption rrhh-empleados__caption">
@@ -42,12 +42,12 @@ export function EmpleadosView() {
                 </div>
             </div>
 
-            <EmpleadoFormModal
-                open={formModal.open}
-                empleado={formModal.empleado}
-                loading={formModal.isSaving}
-                onClose={formModal.closeModal}
-                onSubmit={formModal.handleSubmit}
+            <EmpleadoFormDrawer
+                open={formDrawer.open}
+                empleado={formDrawer.empleado}
+                loading={formDrawer.isSaving}
+                onClose={formDrawer.closeDrawer}
+                onSubmit={formDrawer.handleSubmit}
             />
         </>
     )

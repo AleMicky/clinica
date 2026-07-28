@@ -1,6 +1,21 @@
 import { useEffect } from 'react'
 import { useForm, useStore } from '@tanstack/react-form'
-import { Col, Divider, Form, Input, Modal, Row, Select, Switch, Typography } from 'antd'
+import {
+    Button,
+    Col,
+    DatePicker,
+    Divider,
+    Drawer,
+    Flex,
+    Form,
+    Grid,
+    Input,
+    Row,
+    Select,
+    Switch,
+    Typography,
+} from 'antd'
+import dayjs from 'dayjs'
 
 import {
     useAreas,
@@ -19,8 +34,12 @@ import type { Empleado } from '../types/empleado.types'
 import { getFieldError } from '../utils/form-errors'
 
 const { Text } = Typography
+const { useBreakpoint } = Grid
 
-type EmpleadoFormModalProps = {
+const DATE_VALUE_FORMAT = 'YYYY-MM-DD'
+const DATE_DISPLAY_FORMAT = 'DD/MM/YYYY'
+
+type EmpleadoFormDrawerProps = {
     open: boolean
     empleado: Empleado | null
     loading: boolean
@@ -30,13 +49,15 @@ type EmpleadoFormModalProps = {
 
 const LOOKUP_QUERY = { page: 1, pageSize: 200 }
 
-export function EmpleadoFormModal({
+export function EmpleadoFormDrawer({
     open,
     empleado,
     loading,
     onClose,
     onSubmit,
-}: EmpleadoFormModalProps) {
+}: EmpleadoFormDrawerProps) {
+    const screens = useBreakpoint()
+    const drawerWidth = screens.md ? 680 : '95%'
     const isEditing = empleado !== null
 
     const { data: empleadoDetail, isFetching: loadingEmpleadoDetail } = useEmpleado(
@@ -161,19 +182,38 @@ export function EmpleadoFormModal({
     const isFormLoading = loading || (isEditing && loadingEmpleadoDetail)
 
     return (
-        <Modal
+        <Drawer
             title={isEditing ? 'Editar empleado' : 'Nuevo empleado'}
             open={open}
-            onCancel={handleClose}
-            onOk={() => void form.handleSubmit()}
-            okText={isEditing ? 'Guardar' : 'Registrar'}
-            cancelText="Cancelar"
-            confirmLoading={isFormLoading}
+            onClose={handleClose}
+            width={drawerWidth}
             destroyOnHidden
-            width={680}
-            className="rrhh-form-modal"
+            className="usuario-drawer"
+            footer={
+                <Flex justify="flex-end" gap={8} className="usuario-drawer__footer">
+                    <Button onClick={handleClose} disabled={isFormLoading}>
+                        Cancelar
+                    </Button>
+                    <Button
+                        type="primary"
+                        loading={isFormLoading}
+                        onClick={() => void form.handleSubmit()}
+                    >
+                        {isEditing ? 'Guardar' : 'Registrar'}
+                    </Button>
+                </Flex>
+            }
         >
-            <Form layout="vertical" requiredMark={false} size="small">
+            <Form
+                layout="vertical"
+                requiredMark
+                size="small"
+                className="usuario-drawer__form usuario-drawer__form--compact"
+            >
+                <Text type="secondary" className="usuario-drawer__required-hint">
+                    Los campos marcados con <Text type="danger">*</Text> son obligatorios.
+                </Text>
+
                 <Row gutter={12}>
                     <Col xs={24} sm={12}>
                         <form.Field name="personaId">
@@ -183,6 +223,7 @@ export function EmpleadoFormModal({
                                 return (
                                     <Form.Item
                                         label="Persona"
+                                        required
                                         validateStatus={error ? 'error' : undefined}
                                         help={error || undefined}
                                     >
@@ -214,6 +255,7 @@ export function EmpleadoFormModal({
                                 return (
                                     <Form.Item
                                         label="Código de empleado"
+                                        required
                                         validateStatus={error ? 'error' : undefined}
                                         help={error || undefined}
                                     >
@@ -236,11 +278,19 @@ export function EmpleadoFormModal({
                         <form.Field name="fechaIngreso">
                             {(field) => (
                                 <Form.Item label="Fecha de ingreso">
-                                    <Input
-                                        type="date"
-                                        value={field.state.value}
-                                        onChange={(event) =>
-                                            field.handleChange(event.target.value)
+                                    <DatePicker
+                                        style={{ width: '100%' }}
+                                        format={DATE_DISPLAY_FORMAT}
+                                        placeholder="Seleccione fecha"
+                                        value={
+                                            field.state.value
+                                                ? dayjs(field.state.value, DATE_VALUE_FORMAT)
+                                                : null
+                                        }
+                                        onChange={(date) =>
+                                            field.handleChange(
+                                                date ? date.format(DATE_VALUE_FORMAT) : '',
+                                            )
                                         }
                                         onBlur={field.handleBlur}
                                         disabled={isFormLoading}
@@ -258,6 +308,7 @@ export function EmpleadoFormModal({
                                 return (
                                     <Form.Item
                                         label="Cargo"
+                                        required
                                         validateStatus={error ? 'error' : undefined}
                                         help={error || undefined}
                                     >
@@ -285,6 +336,7 @@ export function EmpleadoFormModal({
                                 return (
                                     <Form.Item
                                         label="Profesión"
+                                        required
                                         validateStatus={error ? 'error' : undefined}
                                         help={error || undefined}
                                     >
@@ -312,6 +364,7 @@ export function EmpleadoFormModal({
                                 return (
                                     <Form.Item
                                         label="Área"
+                                        required
                                         validateStatus={error ? 'error' : undefined}
                                         help={error || undefined}
                                     >
@@ -359,6 +412,7 @@ export function EmpleadoFormModal({
                                     return (
                                         <Form.Item
                                             label="Especialidades"
+                                            required
                                             validateStatus={error ? 'error' : undefined}
                                             help={error || undefined}
                                         >
@@ -414,6 +468,7 @@ export function EmpleadoFormModal({
                                     return (
                                         <Form.Item
                                             label="Especialidad principal"
+                                            required
                                             validateStatus={error ? 'error' : undefined}
                                             help={
                                                 error ||
@@ -452,6 +507,7 @@ export function EmpleadoFormModal({
                                     return (
                                         <Form.Item
                                             label="Matrícula profesional"
+                                            required
                                             validateStatus={error ? 'error' : undefined}
                                             help={error || undefined}
                                         >
@@ -495,6 +551,6 @@ export function EmpleadoFormModal({
                     </Text>
                 )}
             </Form>
-        </Modal>
+        </Drawer>
     )
 }

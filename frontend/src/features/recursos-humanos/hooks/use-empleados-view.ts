@@ -19,7 +19,7 @@ const LOOKUP_QUERY = { page: 1, pageSize: 200 }
 
 export function useEmpleadosView() {
     const filters = useEmpleadosFilters()
-    const [modalOpen, setModalOpen] = useState(false)
+    const [drawerOpen, setDrawerOpen] = useState(false)
     const [editingEmpleado, setEditingEmpleado] = useState<Empleado | null>(null)
     const [deletingId, setDeletingId] = useState<string | null>(null)
 
@@ -50,19 +50,19 @@ export function useEmpleadosView() {
         filters.hasActiveFilters ? ' · filtros activos' : ''
     }`
 
-    const openCreateModal = () => {
+    const openCreate = () => {
         setEditingEmpleado(null)
-        setModalOpen(true)
+        setDrawerOpen(true)
     }
 
-    const openEditModal = (empleado: Empleado) => {
+    const openEdit = (empleado: Empleado) => {
         setEditingEmpleado(empleado)
-        setModalOpen(true)
+        setDrawerOpen(true)
     }
 
-    const closeModal = () => {
+    const closeDrawer = () => {
         if (isSaving) return
-        setModalOpen(false)
+        setDrawerOpen(false)
         setEditingEmpleado(null)
     }
 
@@ -76,7 +76,7 @@ export function useEmpleadosView() {
             await createEmpleado.mutateAsync(toCreateEmpleadoPayload(values))
         }
 
-        closeModal()
+        closeDrawer()
     }
 
     const handleDelete = async (empleado: Empleado) => {
@@ -108,16 +108,16 @@ export function useEmpleadosView() {
             page: filters.page,
             pageSize: filters.pageSize,
             onPageChange: filters.handlePageChange,
-            onEdit: openEditModal,
+            onEdit: openEdit,
             onDelete: handleDelete,
             deletingId,
         },
-        formModal: {
-            open: modalOpen,
+        formDrawer: {
+            open: drawerOpen,
             empleado: editingEmpleado,
             isSaving,
-            openCreateModal,
-            closeModal,
+            openCreate,
+            closeDrawer,
             handleSubmit,
         },
     }
