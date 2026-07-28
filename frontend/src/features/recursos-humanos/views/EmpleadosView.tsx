@@ -36,7 +36,9 @@ export function EmpleadosView() {
                         onPageChange={table.onPageChange}
                         onEdit={table.onEdit}
                         onDelete={table.onDelete}
+                        onCreate={formDrawer.openCreate}
                         deletingId={table.deletingId}
+                        hasActiveFilters={filters.hasActiveFilters}
                         className="rrhh-empleados__table"
                     />
                 </div>

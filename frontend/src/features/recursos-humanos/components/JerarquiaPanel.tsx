@@ -3,6 +3,7 @@ import type { DataNode } from 'antd/es/tree'
 import {
     Breadcrumb,
     Drawer,
+    Grid,
     Modal,
 } from 'antd'
 import type { MenuProps } from 'antd'
@@ -38,7 +39,11 @@ import { JerarquiaAreaDrawer } from './JerarquiaFormDrawers'
 import { JerarquiaTreeNodeTitle } from './JerarquiaTreeNodeTitle'
 import { OrganizationTree } from './OrganizationTree'
 
+const { useBreakpoint } = Grid
+
 export function JerarquiaPanel() {
+    const screens = useBreakpoint()
+    const detailDrawerWidth = screens.md ? 420 : '95%'
     const [treeSearchInput, setTreeSearchInput] = useState('')
     const [treeSearch, setTreeSearch] = useState('')
     const [selectedKeys, setSelectedKeys] = useState<string[]>([])
@@ -93,9 +98,10 @@ export function JerarquiaPanel() {
         [areaNodes, treeSearch],
     )
 
-    // Expandir al cargar / al cambiar jerarquía o búsqueda (evita depender de defaultExpandAll).
+    // El árbol inicia contraído; solo se expande automáticamente durante una búsqueda
+    // para que las coincidencias queden visibles.
     useEffect(() => {
-        if (areaNodes.length === 0) {
+        if (areaNodes.length === 0 || !treeSearch) {
             setExpandedKeys([])
             return
         }
@@ -321,7 +327,7 @@ export function JerarquiaPanel() {
                 open={hasSelection}
                 onClose={() => syncSelection(null, null)}
                 placement="right"
-                width={420}
+                width={detailDrawerWidth}
                 destroyOnHidden
                 className="jerarquia-explorer__detail-drawer"
                 styles={{ body: { padding: '10px 12px' } }}

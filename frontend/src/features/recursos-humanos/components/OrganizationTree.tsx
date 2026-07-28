@@ -1,6 +1,11 @@
 import type { DataNode } from 'antd/es/tree'
 import { Button, Empty, Flex, Input, Skeleton, Tree, Typography, theme } from 'antd'
-import { NodeIndexOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons'
+import {
+    ApartmentOutlined,
+    NodeIndexOutlined,
+    PlusOutlined,
+    SearchOutlined,
+} from '@ant-design/icons'
 
 const { Text } = Typography
 
@@ -83,8 +88,12 @@ export function OrganizationTree({
                 ) : !hasAreas ? (
                     <div className="jerarquia-explorer__sidebar-empty">
                         <Empty
-                            image={Empty.PRESENTED_IMAGE_SIMPLE}
-                            description="No hay áreas registradas"
+                            image={
+                                <ApartmentOutlined
+                                    style={{ fontSize: 48, color: '#94a3b8' }}
+                                />
+                            }
+                            description="No hay áreas registradas. Cree la primera para armar la estructura organizacional."
                         >
                             <Button type="primary" icon={<PlusOutlined />} onClick={onCreateArea}>
                                 Crear primera área
@@ -94,7 +103,11 @@ export function OrganizationTree({
                 ) : !hasFilteredAreas ? (
                     <div className="jerarquia-explorer__sidebar-empty">
                         <Empty
-                            image={Empty.PRESENTED_IMAGE_SIMPLE}
+                            image={
+                                <SearchOutlined
+                                    style={{ fontSize: 48, color: '#94a3b8' }}
+                                />
+                            }
                             description="Sin coincidencias en la búsqueda"
                         />
                     </div>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import { useForm } from '@tanstack/react-form'
-import { Button, Col, Drawer, Flex, Form, Input, Row, Select } from 'antd'
+import { Button, Col, Drawer, Flex, Form, Grid, Input, Row, Select, Typography } from 'antd'
 
 import { useAreas } from '../../catalogo-clinico/hooks/catalogo-clinico.hooks'
 import type { Area } from '../../catalogo-clinico/types/catalogo-clinico.types'
@@ -11,6 +11,9 @@ import {
     type AreaFormValues,
 } from '../schemas/area.schema'
 import { getFieldError } from '../utils/form-errors'
+
+const { Text } = Typography
+const { useBreakpoint } = Grid
 
 const LOOKUP_QUERY = { page: 1, pageSize: 200 }
 
@@ -51,6 +54,8 @@ export function JerarquiaAreaDrawer({
     onClose,
     onSubmit,
 }: JerarquiaAreaDrawerProps) {
+    const screens = useBreakpoint()
+    const drawerWidth = screens.md ? 480 : '95%'
     const isEditing = entity !== null
     const { data: tiposAreaResult, isFetching: loadingTiposArea } = useTiposArea(LOOKUP_QUERY)
     const { data: areasResult, isFetching: loadingAreas } = useAreas(LOOKUP_QUERY)
@@ -112,7 +117,7 @@ export function JerarquiaAreaDrawer({
                 if (!loading) onClose()
             }}
             placement="left"
-            size={480}
+            width={drawerWidth}
             destroyOnHidden
             footer={
                 <DrawerFooter
@@ -123,7 +128,10 @@ export function JerarquiaAreaDrawer({
                 />
             }
         >
-            <Form layout="vertical" requiredMark={false} className="jerarquia-explorer__drawer-form">
+            <Form layout="vertical" requiredMark className="jerarquia-explorer__drawer-form">
+                <Text type="secondary" className="usuario-drawer__required-hint">
+                    Los campos marcados con <Text type="danger">*</Text> son obligatorios.
+                </Text>
                 <Row gutter={12}>
                     <Col xs={24} sm={12}>
                         <form.Field name="codigo">
@@ -132,6 +140,7 @@ export function JerarquiaAreaDrawer({
                                 return (
                                     <Form.Item
                                         label="Código"
+                                        required
                                         validateStatus={error ? 'error' : undefined}
                                         help={error || 'Ej. ADM, SALUD'}
                                     >
@@ -157,6 +166,7 @@ export function JerarquiaAreaDrawer({
                                 return (
                                     <Form.Item
                                         label="Nombre"
+                                        required
                                         validateStatus={error ? 'error' : undefined}
                                         help={error || undefined}
                                     >
@@ -180,6 +190,7 @@ export function JerarquiaAreaDrawer({
                                 return (
                                     <Form.Item
                                         label="Tipo de área"
+                                        required
                                         validateStatus={error ? 'error' : undefined}
                                         help={error || undefined}
                                     >

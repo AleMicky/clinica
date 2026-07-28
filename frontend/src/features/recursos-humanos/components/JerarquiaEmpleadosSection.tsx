@@ -123,8 +123,12 @@ export function JerarquiaEmpleadosSection({
             ) : empleados.length === 0 ? (
                 <div className="jerarquia-explorer__section-empty">
                     <Empty
-                        image={Empty.PRESENTED_IMAGE_SIMPLE}
-                        description="Sin empleados asignados"
+                        image={
+                            <TeamOutlined
+                                style={{ fontSize: 40, color: '#94a3b8' }}
+                            />
+                        }
+                        description="Sin empleados asignados a esta área"
                     />
                 </div>
             ) : (
