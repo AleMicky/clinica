@@ -3,12 +3,12 @@ import {
     CrudSearchFiltersBar,
     CrudSectionPanel,
 } from '../../../../shared/components/ui/crud-section'
-import { EspecialidadFormModal } from '../components/EspecialidadFormModal'
+import { EspecialidadFormDrawer } from '../components/EspecialidadFormDrawer'
 import { EspecialidadesTable } from '../components/EspecialidadesTable'
 import { useEspecialidadesLabView } from '../hooks/use-especialidades-view'
 
 export function EspecialidadesView() {
-    const { loading, caption, filters, table, formModal } = useEspecialidadesLabView()
+    const { loading, caption, filters, table, formDrawer } = useEspecialidadesLabView()
 
     return (
         <>
@@ -28,7 +28,7 @@ export function EspecialidadesView() {
                     <CrudCreateHeader
                         label="Nueva especialidad"
                         ariaLabel="Crear nueva especialidad de laboratorio"
-                        onCreate={formModal.openCreateModal}
+                        onCreate={formDrawer.openCreate}
                     />
                 }
                 caption={caption}
@@ -47,12 +47,12 @@ export function EspecialidadesView() {
                 />
             </CrudSectionPanel>
 
-            <EspecialidadFormModal
-                open={formModal.open}
-                entity={formModal.entity}
-                loading={formModal.isSaving}
-                onClose={formModal.closeModal}
-                onSubmit={formModal.handleSubmit}
+            <EspecialidadFormDrawer
+                open={formDrawer.open}
+                entity={formDrawer.entity}
+                loading={formDrawer.isSaving}
+                onClose={formDrawer.closeDrawer}
+                onSubmit={formDrawer.handleSubmit}
             />
         </>
     )

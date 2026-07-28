@@ -1,36 +1,41 @@
 import { useEffect } from 'react'
 import { useForm } from '@tanstack/react-form'
-import { Form, Input, InputNumber, Modal } from 'antd'
+import { Button, Drawer, Flex, Form, Grid, Input, InputNumber, Typography } from 'antd'
 
 import { getFieldError } from '../../../../shared/utils/form-errors'
 import { normalizeCodigoInput } from '../../../../shared/utils/format-codigo'
 import {
-    tipoAreaDefaultValues,
-    tipoAreaSchema,
-    type TipoAreaFormValues,
-} from '../schemas/tipo-area.schema'
-import type { TipoArea } from '../types/tipo-area.types'
+    especialidadLabDefaultValues,
+    especialidadLabSchema,
+    type EspecialidadLabFormValues,
+} from '../schemas/especialidad.schema'
+import type { EspecialidadLab } from '../types/especialidad.types'
 
-type TipoAreaFormModalProps = {
+const { Text } = Typography
+const { useBreakpoint } = Grid
+
+type EspecialidadFormDrawerProps = {
     open: boolean
-    entity: TipoArea | null
+    entity: EspecialidadLab | null
     loading: boolean
     onClose: () => void
-    onSubmit: (values: TipoAreaFormValues) => Promise<void>
+    onSubmit: (values: EspecialidadLabFormValues) => Promise<void>
 }
 
-export function TipoAreaFormModal({
+export function EspecialidadFormDrawer({
     open,
     entity,
     loading,
     onClose,
     onSubmit,
-}: TipoAreaFormModalProps) {
+}: EspecialidadFormDrawerProps) {
+    const screens = useBreakpoint()
+    const drawerWidth = screens.md ? 480 : '95%'
     const isEditing = entity !== null
 
     const form = useForm({
-        defaultValues: tipoAreaDefaultValues,
-        validators: { onSubmit: tipoAreaSchema },
+        defaultValues: especialidadLabDefaultValues,
+        validators: { onSubmit: especialidadLabSchema },
         onSubmit: async ({ value }) => {
             await onSubmit(value)
         },
@@ -51,32 +56,60 @@ export function TipoAreaFormModal({
         form.reset()
     }, [open, entity, form])
 
+    const handleClose = () => {
+        if (loading) return
+        onClose()
+    }
+
     return (
-        <Modal
-            title={isEditing ? 'Editar tipo de área' : 'Nuevo tipo de área'}
+        <Drawer
+            title={
+                isEditing
+                    ? 'Editar especialidad de laboratorio'
+                    : 'Nueva especialidad de laboratorio'
+            }
             open={open}
-            onCancel={() => {
-                if (!loading) onClose()
-            }}
-            onOk={() => void form.handleSubmit()}
-            okText={isEditing ? 'Guardar' : 'Crear'}
-            cancelText="Cancelar"
-            confirmLoading={loading}
+            onClose={handleClose}
+            width={drawerWidth}
             destroyOnHidden
-            width={480}
+            className="usuario-drawer"
+            footer={
+                <Flex justify="flex-end" gap={8} className="usuario-drawer__footer">
+                    <Button onClick={handleClose} disabled={loading}>
+                        Cancelar
+                    </Button>
+                    <Button
+                        type="primary"
+                        loading={loading}
+                        onClick={() => void form.handleSubmit()}
+                    >
+                        {isEditing ? 'Guardar' : 'Crear'}
+                    </Button>
+                </Flex>
+            }
         >
-            <Form layout="vertical" requiredMark={false}>
+            <Form
+                layout="vertical"
+                requiredMark
+                size="small"
+                className="usuario-drawer__form usuario-drawer__form--compact"
+            >
+                <Text type="secondary" className="usuario-drawer__required-hint">
+                    Los campos marcados con <Text type="danger">*</Text> son obligatorios.
+                </Text>
+
                 <form.Field name="codigo">
                     {(field) => {
                         const error = getFieldError(field.state.meta.errors)
                         return (
                             <Form.Item
                                 label="Código"
+                                required
                                 validateStatus={error ? 'error' : undefined}
-                                help={error || 'Identificador único, ej. ADM'}
+                                help={error || 'Identificador único, ej. HEMATO'}
                             >
                                 <Input
-                                    placeholder="Ej. ADM"
+                                    placeholder="Ej. HEMATO"
                                     value={field.state.value}
                                     onChange={(e) =>
                                         field.handleChange(
@@ -98,15 +131,14 @@ export function TipoAreaFormModal({
                         return (
                             <Form.Item
                                 label="Nombre"
+                                required
                                 validateStatus={error ? 'error' : undefined}
                                 help={error || undefined}
                             >
                                 <Input
-                                    placeholder="Administrativa"
+                                    placeholder="Hematología"
                                     value={field.state.value}
-                                    onChange={(e) =>
-                                        field.handleChange(e.target.value)
-                                    }
+                                    onChange={(e) => field.handleChange(e.target.value)}
                                     onBlur={field.handleBlur}
                                     disabled={loading}
                                     autoFocus={isEditing}
@@ -129,9 +161,7 @@ export function TipoAreaFormModal({
                                     rows={3}
                                     placeholder="Opcional"
                                     value={field.state.value}
-                                    onChange={(e) =>
-                                        field.handleChange(e.target.value)
-                                    }
+                                    onChange={(e) => field.handleChange(e.target.value)}
                                     onBlur={field.handleBlur}
                                     disabled={loading}
                                 />
@@ -146,6 +176,7 @@ export function TipoAreaFormModal({
                         return (
                             <Form.Item
                                 label="Orden"
+                                required
                                 validateStatus={error ? 'error' : undefined}
                                 help={error || 'Posición en listados (0 = primero)'}
                             >
@@ -154,9 +185,7 @@ export function TipoAreaFormModal({
                                     precision={0}
                                     style={{ width: '100%' }}
                                     value={field.state.value}
-                                    onChange={(value) =>
-                                        field.handleChange(value ?? 0)
-                                    }
+                                    onChange={(value) => field.handleChange(value ?? 0)}
                                     onBlur={field.handleBlur}
                                     disabled={loading}
                                 />
@@ -165,6 +194,6 @@ export function TipoAreaFormModal({
                     }}
                 </form.Field>
             </Form>
-        </Modal>
+        </Drawer>
     )
 }

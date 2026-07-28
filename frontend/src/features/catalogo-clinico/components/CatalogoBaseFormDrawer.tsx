@@ -1,36 +1,43 @@
 import { useEffect } from 'react'
 import { useForm } from '@tanstack/react-form'
-import { Form, Input, InputNumber, Modal } from 'antd'
+import { Button, Drawer, Flex, Form, Grid, Input, Typography } from 'antd'
 
-import { getFieldError } from '../../../../shared/utils/form-errors'
-import { normalizeCodigoInput } from '../../../../shared/utils/format-codigo'
+import { getFieldError } from '../../../shared/utils/form-errors'
+import { normalizeCodigoInput } from '../../../shared/utils/format-codigo'
 import {
-    especialidadLabDefaultValues,
-    especialidadLabSchema,
-    type EspecialidadLabFormValues,
-} from '../schemas/especialidad.schema'
-import type { EspecialidadLab } from '../types/especialidad.types'
+    catalogoBaseDefaultValues,
+    catalogoBaseSchema,
+    type CatalogoBaseFormValues,
+} from '../schemas/catalogo-clinico.schema'
+import type { CatalogoBase } from '../types/catalogo-clinico.types'
 
-type EspecialidadFormModalProps = {
+const { Text } = Typography
+const { useBreakpoint } = Grid
+
+type CatalogoBaseFormDrawerProps = {
     open: boolean
-    entity: EspecialidadLab | null
+    entityLabel: string
+    entity: CatalogoBase | null
     loading: boolean
     onClose: () => void
-    onSubmit: (values: EspecialidadLabFormValues) => Promise<void>
+    onSubmit: (values: CatalogoBaseFormValues) => Promise<void>
 }
 
-export function EspecialidadFormModal({
+export function CatalogoBaseFormDrawer({
     open,
+    entityLabel,
     entity,
     loading,
     onClose,
     onSubmit,
-}: EspecialidadFormModalProps) {
+}: CatalogoBaseFormDrawerProps) {
+    const screens = useBreakpoint()
+    const drawerWidth = screens.md ? 480 : '95%'
     const isEditing = entity !== null
 
     const form = useForm({
-        defaultValues: especialidadLabDefaultValues,
-        validators: { onSubmit: especialidadLabSchema },
+        defaultValues: catalogoBaseDefaultValues,
+        validators: { onSubmit: catalogoBaseSchema },
         onSubmit: async ({ value }) => {
             await onSubmit(value)
         },
@@ -44,43 +51,62 @@ export function EspecialidadFormModal({
             form.setFieldValue('codigo', entity.codigo)
             form.setFieldValue('nombre', entity.nombre)
             form.setFieldValue('descripcion', entity.descripcion ?? '')
-            form.setFieldValue('orden', entity.orden)
             return
         }
 
         form.reset()
     }, [open, entity, form])
 
+    const handleClose = () => {
+        if (loading) return
+        onClose()
+    }
+
     return (
-        <Modal
-            title={
-                isEditing
-                    ? 'Editar especialidad de laboratorio'
-                    : 'Nueva especialidad de laboratorio'
-            }
+        <Drawer
+            title={isEditing ? `Editar ${entityLabel}` : `Nuevo ${entityLabel}`}
             open={open}
-            onCancel={() => {
-                if (!loading) onClose()
-            }}
-            onOk={() => void form.handleSubmit()}
-            okText={isEditing ? 'Guardar' : 'Crear'}
-            cancelText="Cancelar"
-            confirmLoading={loading}
+            onClose={handleClose}
+            width={drawerWidth}
             destroyOnHidden
-            width={480}
+            className="usuario-drawer"
+            footer={
+                <Flex justify="flex-end" gap={8} className="usuario-drawer__footer">
+                    <Button onClick={handleClose} disabled={loading}>
+                        Cancelar
+                    </Button>
+                    <Button
+                        type="primary"
+                        loading={loading}
+                        onClick={() => void form.handleSubmit()}
+                    >
+                        {isEditing ? 'Guardar' : 'Crear'}
+                    </Button>
+                </Flex>
+            }
         >
-            <Form layout="vertical" requiredMark={false}>
+            <Form
+                layout="vertical"
+                requiredMark
+                size="small"
+                className="usuario-drawer__form usuario-drawer__form--compact"
+            >
+                <Text type="secondary" className="usuario-drawer__required-hint">
+                    Los campos marcados con <Text type="danger">*</Text> son obligatorios.
+                </Text>
+
                 <form.Field name="codigo">
                     {(field) => {
                         const error = getFieldError(field.state.meta.errors)
                         return (
                             <Form.Item
                                 label="Código"
+                                required
                                 validateStatus={error ? 'error' : undefined}
-                                help={error || 'Identificador único, ej. HEMATO'}
+                                help={error || 'Identificador único, ej. CARD, LAB01'}
                             >
                                 <Input
-                                    placeholder="Ej. HEMATO"
+                                    placeholder="Ej. EMER, CARD"
                                     value={field.state.value}
                                     onChange={(e) =>
                                         field.handleChange(
@@ -102,15 +128,14 @@ export function EspecialidadFormModal({
                         return (
                             <Form.Item
                                 label="Nombre"
+                                required
                                 validateStatus={error ? 'error' : undefined}
                                 help={error || undefined}
                             >
                                 <Input
-                                    placeholder="Hematología"
+                                    placeholder="Nombre descriptivo"
                                     value={field.state.value}
-                                    onChange={(e) =>
-                                        field.handleChange(e.target.value)
-                                    }
+                                    onChange={(e) => field.handleChange(e.target.value)}
                                     onBlur={field.handleBlur}
                                     disabled={loading}
                                     autoFocus={isEditing}
@@ -127,40 +152,13 @@ export function EspecialidadFormModal({
                             <Form.Item
                                 label="Descripción"
                                 validateStatus={error ? 'error' : undefined}
-                                help={error || undefined}
+                                help={error || 'Opcional'}
                             >
                                 <Input.TextArea
                                     rows={3}
-                                    placeholder="Opcional"
-                                    value={field.state.value}
-                                    onChange={(e) =>
-                                        field.handleChange(e.target.value)
-                                    }
-                                    onBlur={field.handleBlur}
-                                    disabled={loading}
-                                />
-                            </Form.Item>
-                        )
-                    }}
-                </form.Field>
-
-                <form.Field name="orden">
-                    {(field) => {
-                        const error = getFieldError(field.state.meta.errors)
-                        return (
-                            <Form.Item
-                                label="Orden"
-                                validateStatus={error ? 'error' : undefined}
-                                help={error || 'Posición en listados (0 = primero)'}
-                            >
-                                <InputNumber
-                                    min={0}
-                                    precision={0}
-                                    style={{ width: '100%' }}
-                                    value={field.state.value}
-                                    onChange={(value) =>
-                                        field.handleChange(value ?? 0)
-                                    }
+                                    placeholder="Detalle adicional…"
+                                    value={field.state.value ?? ''}
+                                    onChange={(e) => field.handleChange(e.target.value)}
                                     onBlur={field.handleBlur}
                                     disabled={loading}
                                 />
@@ -169,6 +167,6 @@ export function EspecialidadFormModal({
                     }}
                 </form.Field>
             </Form>
-        </Modal>
+        </Drawer>
     )
 }

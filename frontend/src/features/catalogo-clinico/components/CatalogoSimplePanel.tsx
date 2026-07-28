@@ -12,7 +12,7 @@ import {
 } from '@ant-design/icons'
 
 import { AppDataTable } from '../../../shared/components/ui/data-table/AppDataTable'
-import { CatalogoBaseFormModal } from './CatalogoBaseFormModal'
+import { CatalogoBaseFormDrawer } from './CatalogoBaseFormDrawer'
 import type { CatalogoBaseFormValues } from '../schemas/catalogo-clinico.schema'
 import type { CatalogoBase } from '../types/catalogo-clinico.types'
 
@@ -61,7 +61,7 @@ export function CatalogoSimplePanel({
 }: CatalogoSimplePanelProps) {
     const { token } = theme.useToken()
     const [searchInput, setSearchInput] = useState(search)
-    const [modalOpen, setModalOpen] = useState(false)
+    const [drawerOpen, setDrawerOpen] = useState(false)
     const [editing, setEditing] = useState<CatalogoBase | null>(null)
     const [deletingId, setDeletingId] = useState<string | null>(null)
     const onSearchRef = useRef(onSearch)
@@ -111,7 +111,7 @@ export function CatalogoSimplePanel({
                                     aria-label={`Editar ${item.nombre}`}
                                     onClick={() => {
                                         setEditing(item)
-                                        setModalOpen(true)
+                                        setDrawerOpen(true)
                                     }}
                                 />
                                 <Popconfirm
@@ -149,9 +149,9 @@ export function CatalogoSimplePanel({
         [deletingId, extraRowActions, onDelete],
     )
 
-    const closeModal = () => {
+    const closeDrawer = () => {
         if (isSaving) return
-        setModalOpen(false)
+        setDrawerOpen(false)
         setEditing(null)
     }
 
@@ -161,7 +161,7 @@ export function CatalogoSimplePanel({
         } else {
             await onCreate(values)
         }
-        closeModal()
+        closeDrawer()
     }
 
     return (
@@ -201,7 +201,7 @@ export function CatalogoSimplePanel({
                             icon={<PlusOutlined />}
                             onClick={() => {
                                 setEditing(null)
-                                setModalOpen(true)
+                                setDrawerOpen(true)
                             }}
                             aria-label={newButtonLabel}
                         >
@@ -229,12 +229,12 @@ export function CatalogoSimplePanel({
                 </div>
             </div>
 
-            <CatalogoBaseFormModal
-                open={modalOpen}
+            <CatalogoBaseFormDrawer
+                open={drawerOpen}
                 entityLabel={entityLabel}
                 entity={editing}
                 loading={isSaving}
-                onClose={closeModal}
+                onClose={closeDrawer}
                 onSubmit={handleSubmit}
             />
         </>

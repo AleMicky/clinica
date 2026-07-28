@@ -87,12 +87,12 @@ export function useEspecialidadesLabView() {
             onDelete: handleDelete,
             deletingId: modal.deletingId,
         },
-        formModal: {
+        formDrawer: {
             open: modal.open,
             entity: modal.editing,
             isSaving,
-            openCreateModal: modal.openCreate,
-            closeModal: () => modal.close(isSaving),
+            openCreate: modal.openCreate,
+            closeDrawer: () => modal.close(isSaving),
             handleSubmit,
         },
     }

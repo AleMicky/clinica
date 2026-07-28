@@ -1,38 +1,41 @@
 import { useEffect } from 'react'
 import { useForm } from '@tanstack/react-form'
-import { Form, Input, Modal } from 'antd'
+import { Button, Drawer, Flex, Form, Grid, Input, InputNumber, Typography } from 'antd'
 
-import { getFieldError } from '../../../shared/utils/form-errors'
-import { normalizeCodigoInput } from '../../../shared/utils/format-codigo'
+import { getFieldError } from '../../../../shared/utils/form-errors'
+import { normalizeCodigoInput } from '../../../../shared/utils/format-codigo'
 import {
-    catalogoBaseDefaultValues,
-    catalogoBaseSchema,
-    type CatalogoBaseFormValues,
-} from '../schemas/catalogo-clinico.schema'
-import type { CatalogoBase } from '../types/catalogo-clinico.types'
+    tipoAreaDefaultValues,
+    tipoAreaSchema,
+    type TipoAreaFormValues,
+} from '../schemas/tipo-area.schema'
+import type { TipoArea } from '../types/tipo-area.types'
 
-type CatalogoBaseFormModalProps = {
+const { Text } = Typography
+const { useBreakpoint } = Grid
+
+type TipoAreaFormDrawerProps = {
     open: boolean
-    entityLabel: string
-    entity: CatalogoBase | null
+    entity: TipoArea | null
     loading: boolean
     onClose: () => void
-    onSubmit: (values: CatalogoBaseFormValues) => Promise<void>
+    onSubmit: (values: TipoAreaFormValues) => Promise<void>
 }
 
-export function CatalogoBaseFormModal({
+export function TipoAreaFormDrawer({
     open,
-    entityLabel,
     entity,
     loading,
     onClose,
     onSubmit,
-}: CatalogoBaseFormModalProps) {
+}: TipoAreaFormDrawerProps) {
+    const screens = useBreakpoint()
+    const drawerWidth = screens.md ? 480 : '95%'
     const isEditing = entity !== null
 
     const form = useForm({
-        defaultValues: catalogoBaseDefaultValues,
-        validators: { onSubmit: catalogoBaseSchema },
+        defaultValues: tipoAreaDefaultValues,
+        validators: { onSubmit: tipoAreaSchema },
         onSubmit: async ({ value }) => {
             await onSubmit(value)
         },
@@ -46,38 +49,63 @@ export function CatalogoBaseFormModal({
             form.setFieldValue('codigo', entity.codigo)
             form.setFieldValue('nombre', entity.nombre)
             form.setFieldValue('descripcion', entity.descripcion ?? '')
+            form.setFieldValue('orden', entity.orden)
             return
         }
 
         form.reset()
     }, [open, entity, form])
 
+    const handleClose = () => {
+        if (loading) return
+        onClose()
+    }
+
     return (
-        <Modal
-            title={isEditing ? `Editar ${entityLabel}` : `Nuevo ${entityLabel}`}
+        <Drawer
+            title={isEditing ? 'Editar tipo de área' : 'Nuevo tipo de área'}
             open={open}
-            onCancel={() => {
-                if (!loading) onClose()
-            }}
-            onOk={() => void form.handleSubmit()}
-            okText={isEditing ? 'Guardar' : 'Crear'}
-            cancelText="Cancelar"
-            confirmLoading={loading}
+            onClose={handleClose}
+            width={drawerWidth}
             destroyOnHidden
-            width={480}
+            className="usuario-drawer"
+            footer={
+                <Flex justify="flex-end" gap={8} className="usuario-drawer__footer">
+                    <Button onClick={handleClose} disabled={loading}>
+                        Cancelar
+                    </Button>
+                    <Button
+                        type="primary"
+                        loading={loading}
+                        onClick={() => void form.handleSubmit()}
+                    >
+                        {isEditing ? 'Guardar' : 'Crear'}
+                    </Button>
+                </Flex>
+            }
         >
-            <Form layout="vertical" requiredMark={false}>
+            <Form
+                layout="vertical"
+                requiredMark
+                size="small"
+                className="usuario-drawer__form usuario-drawer__form--compact"
+            >
+                <Text type="secondary" className="usuario-drawer__required-hint">
+                    Los campos marcados con <Text type="danger">*</Text> son obligatorios.
+                </Text>
+
                 <form.Field name="codigo">
                     {(field) => {
                         const error = getFieldError(field.state.meta.errors)
                         return (
                             <Form.Item
                                 label="Código"
+                                required
                                 validateStatus={error ? 'error' : undefined}
-                                help={error || 'Identificador único, ej. CARD, LAB01'}
+                                help={error || 'Identificador único, ej. ADM'}
                             >
                                 <Input
-                                    placeholder="Ej. EMER, CARD"
+                                    placeholder="Ej. ADM"
                                     value={field.state.value}
                                     onChange={(e) =>
                                         field.handleChange(
@@ -99,11 +127,12 @@ export function CatalogoBaseFormModal({
                         return (
                             <Form.Item
                                 label="Nombre"
+                                required
                                 validateStatus={error ? 'error' : undefined}
                                 help={error || undefined}
                             >
                                 <Input
-                                    placeholder="Nombre descriptivo"
+                                    placeholder="Administrativa"
                                     value={field.state.value}
                                     onChange={(e) => field.handleChange(e.target.value)}
                                     onBlur={field.handleBlur}
@@ -122,12 +151,12 @@ export function CatalogoBaseFormModal({
                             <Form.Item
                                 label="Descripción"
                                 validateStatus={error ? 'error' : undefined}
-                                help={error || 'Opcional'}
+                                help={error || undefined}
                             >
                                 <Input.TextArea
                                     rows={3}
-                                    placeholder="Detalle adicional…"
-                                    value={field.state.value ?? ''}
+                                    placeholder="Opcional"
+                                    value={field.state.value}
                                     onChange={(e) => field.handleChange(e.target.value)}
                                     onBlur={field.handleBlur}
                                     disabled={loading}
@@ -136,7 +165,31 @@ export function CatalogoBaseFormModal({
                         )
                     }}
                 </form.Field>
+
+                <form.Field name="orden">
+                    {(field) => {
+                        const error = getFieldError(field.state.meta.errors)
+                        return (
+                            <Form.Item
+                                label="Orden"
+                                required
+                                validateStatus={error ? 'error' : undefined}
+                                help={error || 'Posición en listados (0 = primero)'}
+                            >
+                                <InputNumber
+                                    min={0}
+                                    precision={0}
+                                    style={{ width: '100%' }}
+                                    value={field.state.value}
+                                    onChange={(value) => field.handleChange(value ?? 0)}
+                                    onBlur={field.handleBlur}
+                                    disabled={loading}
+                                />
+                            </Form.Item>
+                        )
+                    }}
+                </form.Field>
             </Form>
-        </Modal>
+        </Drawer>
     )
 }

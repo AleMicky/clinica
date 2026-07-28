@@ -3,12 +3,12 @@ import {
     CrudSearchFiltersBar,
     CrudSectionPanel,
 } from '../../../../shared/components/ui/crud-section'
-import { TipoAreaFormModal } from '../components/TipoAreaFormModal'
+import { TipoAreaFormDrawer } from '../components/TipoAreaFormDrawer'
 import { TiposAreaTable } from '../components/TiposAreaTable'
 import { useTiposAreaView } from '../hooks/use-tipos-area-view'
 
 export function TiposAreaView() {
-    const { loading, caption, filters, table, formModal } = useTiposAreaView()
+    const { loading, caption, filters, table, formDrawer } = useTiposAreaView()
 
     return (
         <>
@@ -28,7 +28,7 @@ export function TiposAreaView() {
                     <CrudCreateHeader
                         label="Nuevo tipo de área"
                         ariaLabel="Crear nuevo tipo de área"
-                        onCreate={formModal.openCreateModal}
+                        onCreate={formDrawer.openCreate}
                     />
                 }
                 caption={caption}
@@ -47,12 +47,12 @@ export function TiposAreaView() {
                 />
             </CrudSectionPanel>
 
-            <TipoAreaFormModal
-                open={formModal.open}
-                entity={formModal.entity}
-                loading={formModal.isSaving}
-                onClose={formModal.closeModal}
-                onSubmit={formModal.handleSubmit}
+            <TipoAreaFormDrawer
+                open={formDrawer.open}
+                entity={formDrawer.entity}
+                loading={formDrawer.isSaving}
+                onClose={formDrawer.closeDrawer}
+                onSubmit={formDrawer.handleSubmit}
             />
         </>
     )
