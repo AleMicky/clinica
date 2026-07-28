@@ -30,6 +30,8 @@ public static class SwaggerExtensions
         ParametrosSwaggerTags.CatalogoItems,
         ParametrosSwaggerTags.Correlativos,
         ParametrosSwaggerTags.UnidadesMedida,
+        ParametrosSwaggerTags.Gestiones,
+        ParametrosSwaggerTags.Periodos,
         RecursosHumanosSwaggerTags.Module,
         RecursosHumanosSwaggerTags.Areas,
         RecursosHumanosSwaggerTags.TiposArea,

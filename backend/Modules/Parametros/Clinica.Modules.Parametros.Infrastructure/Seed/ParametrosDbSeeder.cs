@@ -212,6 +212,45 @@ public static class ParametrosDbSeeder
         ]);
 
         await SeedUnidadesMedidaAsync(context);
+        await SeedGestionActualAsync(context);
+    }
+
+    private static async Task SeedGestionActualAsync(ParametrosDbContext context)
+    {
+        var gestion = DateTime.Now.Year;
+
+        if (await context.Gestiones.AnyAsync(x => x.NumeroGestion == gestion))
+            return;
+
+        string[] literales =
+        [
+            "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+        ];
+
+        var entity = new Gestion
+        {
+            NumeroGestion = gestion,
+            FechaInicio = new DateOnly(gestion, 1, 1),
+            FechaFin = new DateOnly(gestion, 12, 31),
+            Literal = $"Gestión {gestion}",
+            Activa = true,
+        };
+
+        for (var mes = 1; mes <= 12; mes++)
+        {
+            var inicio = new DateOnly(gestion, mes, 1);
+            entity.Periodos.Add(new Periodo
+            {
+                Numero = mes,
+                FechaInicio = inicio,
+                FechaFin = inicio.AddMonths(1).AddDays(-1),
+                Literal = literales[mes - 1],
+            });
+        }
+
+        context.Gestiones.Add(entity);
+        await context.SaveChangesAsync();
     }
 
     private static async Task SeedUnidadesMedidaAsync(ParametrosDbContext context)

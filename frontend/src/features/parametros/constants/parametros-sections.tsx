@@ -1,5 +1,6 @@
 import {
     AppstoreOutlined,
+    CalendarOutlined,
     ColumnHeightOutlined,
     IdcardOutlined,
     NumberOutlined,
@@ -26,6 +27,11 @@ export const parametrosPageSections: ParametrosPageSection[] = [
         path: '/parametros/unidades-medida',
         title: 'Unidades de medida',
         icon: <ColumnHeightOutlined />,
+    },
+    {
+        path: '/parametros/gestiones',
+        title: 'Gestiones y periodos',
+        icon: <CalendarOutlined />,
     },
     {
         path: '/parametros/correlativos',

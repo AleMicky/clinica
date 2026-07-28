@@ -59,6 +59,10 @@ export const unidadesMedidaEndpoints = createEndpoints(
     `${api.parametros}/unidades-medida`,
 )
 
+export const gestionesEndpoints = createEndpoints(`${api.parametros}/gestiones`)
+
+export const periodosEndpoints = createEndpoints(`${api.parametros}/periodos`)
+
 export const correlativoEndpoints = createEndpoints(
     `${api.parametros}/correlativos`,
     (root) => ({

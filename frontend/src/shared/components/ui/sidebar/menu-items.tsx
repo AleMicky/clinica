@@ -391,6 +391,13 @@ export const menuGroups: MenuGroup[] = [
                 roles: [AppRole.Admin],
             },
             {
+                key: '/parametros/gestiones',
+                to: '/parametros/gestiones',
+                icon: <CalendarOutlined />,
+                label: 'Gestiones y periodos',
+                roles: [AppRole.Admin],
+            },
+            {
                 key: '/parametros/correlativos',
                 to: '/parametros/correlativos',
                 icon: <NumberOutlined />,

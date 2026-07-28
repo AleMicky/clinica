@@ -18,6 +18,10 @@ public class ParametrosDbContext : DbContext
 
     public DbSet<UnidadesMedida> UnidadesMedida => Set<UnidadesMedida>();
 
+    public DbSet<Gestion> Gestiones => Set<Gestion>();
+
+    public DbSet<Periodo> Periodos => Set<Periodo>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("parametros");

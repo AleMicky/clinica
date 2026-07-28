@@ -32,6 +32,16 @@ export const queryKeys = {
         list: (query: PagedQuery) => ['unidades-medida', 'list', query] as const,
         detail: (id: EntityId) => ['unidades-medida', 'detail', id] as const,
     },
+    gestiones: {
+        all: ['gestiones'] as const,
+        list: (query: PagedQuery) => ['gestiones', 'list', query] as const,
+        detail: (id: EntityId) => ['gestiones', 'detail', id] as const,
+    },
+    periodos: {
+        all: ['periodos'] as const,
+        list: (query: PagedQuery & Record<string, unknown>) =>
+            ['periodos', 'list', query] as const,
+    },
     correlativos: {
         all: ['correlativos'] as const,
         list: (query: PagedQuery & Record<string, unknown>) =>
