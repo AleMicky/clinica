@@ -2,7 +2,13 @@ import { useMemo } from 'react'
 import { Col, DatePicker, Form, Input, Row, Select, Typography } from 'antd'
 import dayjs from 'dayjs'
 
+import { getFieldError } from '../../../shared/utils/form-errors'
 import { useCatalogoGruposGrouped } from '../../parametros/catalogos/hooks/catalogo-grupos.hooks'
+import {
+    isPersonaRequiredField,
+    personaFieldValidators,
+    type PersonaFormInput,
+} from '../schemas/persona.schema'
 
 const { Text } = Typography
 
@@ -15,16 +21,6 @@ type PersonaFormFieldsProps = {
     loading?: boolean
     fieldPrefix?: string
     variant?: 'default' | 'sections'
-}
-
-function getFieldError(errors: unknown[]) {
-    return errors
-        .map((error) =>
-            typeof error === 'string'
-                ? error
-                : (error as { message: string }).message,
-        )
-        .join(', ')
 }
 
 function getCatalogoOptions(
@@ -41,7 +37,7 @@ function getCatalogoOptions(
     )
 }
 
-function fieldName(prefix: string | undefined, name: string) {
+function fieldName(prefix: string | undefined, name: keyof PersonaFormInput) {
     return prefix ? `${prefix}.${name}` : name
 }
 
@@ -65,6 +61,44 @@ function SectionTitle({
                 <Text className="usuario-drawer__section-title">{children}</Text>
             </div>
         </Col>
+    )
+}
+
+type FieldRenderProps = {
+    state: { value: string; meta: { errors: unknown[] } }
+    handleChange: (value: string) => void
+    handleBlur: () => void
+}
+
+type PersonaFieldProps = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    form: any
+    fieldPrefix?: string
+    name: keyof PersonaFormInput
+    label: string
+    children: (field: FieldRenderProps, error: string) => React.ReactNode
+}
+
+function PersonaField({ form, fieldPrefix, name, label, children }: PersonaFieldProps) {
+    const required = isPersonaRequiredField(name)
+
+    return (
+        <form.Field name={fieldName(fieldPrefix, name)} validators={personaFieldValidators(name)}>
+            {(field: FieldRenderProps) => {
+                const error = getFieldError(field.state.meta.errors)
+
+                return (
+                    <Form.Item
+                        label={label}
+                        required={required}
+                        validateStatus={error ? 'error' : undefined}
+                        help={error || undefined}
+                    >
+                        {children(field, error)}
+                    </Form.Item>
+                )
+            }}
+        </form.Field>
     )
 }
 
@@ -100,325 +134,267 @@ export function PersonaFormFields({
             {showSections ? <SectionTitle>Documento</SectionTitle> : null}
 
             <Col {...colProps}>
-                <form.Field name={fieldName(fieldPrefix, 'tipoDocumentoId')}>
-                    {(field: { state: { value: string; meta: { errors: unknown[] } }; handleChange: (v: string) => void; handleBlur: () => void }) => {
-                        const error = getFieldError(field.state.meta.errors)
-
-                        return (
-                            <Form.Item
-                                label="Tipo de documento"
-                                required
-                                validateStatus={error ? 'error' : undefined}
-                                help={error || undefined}
-                            >
-                                <Select
-                                    showSearch
-                                    optionFilterProp="label"
-                                    placeholder="Seleccionar tipo"
-                                    options={tipoDocumentoOptions}
-                                    value={field.state.value || undefined}
-                                    onChange={(value) => field.handleChange(value)}
-                                    onBlur={field.handleBlur}
-                                    disabled={disabled}
-                                    loading={loadingCatalogos}
-                                />
-                            </Form.Item>
-                        )
-                    }}
-                </form.Field>
-            </Col>
-
-            <Col {...colProps}>
-                <form.Field name={fieldName(fieldPrefix, 'numeroDocumento')}>
-                    {(field: { state: { value: string; meta: { errors: unknown[] } }; handleChange: (v: string) => void; handleBlur: () => void }) => {
-                        const error = getFieldError(field.state.meta.errors)
-
-                        return (
-                            <Form.Item
-                                label="Número de documento"
-                                required
-                                validateStatus={error ? 'error' : undefined}
-                                help={error || undefined}
-                            >
-                                <Input
-                                    placeholder="12345678"
-                                    value={field.state.value}
-                                    onChange={(event) =>
-                                        field.handleChange(event.target.value)
-                                    }
-                                    onBlur={field.handleBlur}
-                                    disabled={loading}
-                                />
-                            </Form.Item>
-                        )
-                    }}
-                </form.Field>
-            </Col>
-
-            <Col {...colProps}>
-                <form.Field name={fieldName(fieldPrefix, 'extensionDocumentoId')}>
-                    {(field: { state: { value: string }; handleChange: (v: string) => void; handleBlur: () => void }) => (
-                        <Form.Item label="Extensión">
-                            <Select
-                                allowClear
-                                showSearch
-                                optionFilterProp="label"
-                                placeholder="Opcional"
-                                options={extensionDocumentoOptions}
-                                value={field.state.value || undefined}
-                                onChange={(value) => field.handleChange(value ?? '')}
-                                onBlur={field.handleBlur}
-                                disabled={disabled}
-                                loading={loadingCatalogos}
-                            />
-                        </Form.Item>
+                <PersonaField
+                    form={form}
+                    fieldPrefix={fieldPrefix}
+                    name="tipoDocumentoId"
+                    label="Tipo de documento"
+                >
+                    {(field) => (
+                        <Select
+                            showSearch
+                            optionFilterProp="label"
+                            placeholder="Seleccionar tipo"
+                            options={tipoDocumentoOptions}
+                            value={field.state.value || undefined}
+                            onChange={(value) => field.handleChange(value)}
+                            onBlur={field.handleBlur}
+                            disabled={disabled}
+                            loading={loadingCatalogos}
+                        />
                     )}
-                </form.Field>
+                </PersonaField>
             </Col>
 
             <Col {...colProps}>
-                <form.Field name={fieldName(fieldPrefix, 'complementoDocumento')}>
-                    {(field: { state: { value: string }; handleChange: (v: string) => void; handleBlur: () => void }) => (
-                        <Form.Item label="Complemento">
-                            <Input
-                                placeholder="Opcional"
-                                value={field.state.value}
-                                onChange={(event) =>
-                                    field.handleChange(event.target.value)
-                                }
-                                onBlur={field.handleBlur}
-                                disabled={loading}
-                            />
-                        </Form.Item>
+                <PersonaField
+                    form={form}
+                    fieldPrefix={fieldPrefix}
+                    name="numeroDocumento"
+                    label="Número de documento"
+                >
+                    {(field) => (
+                        <Input
+                            placeholder="12345678"
+                            value={field.state.value}
+                            onChange={(event) => field.handleChange(event.target.value)}
+                            onBlur={field.handleBlur}
+                            disabled={loading}
+                        />
                     )}
-                </form.Field>
+                </PersonaField>
+            </Col>
+
+            <Col {...colProps}>
+                <PersonaField
+                    form={form}
+                    fieldPrefix={fieldPrefix}
+                    name="extensionDocumentoId"
+                    label="Extensión"
+                >
+                    {(field) => (
+                        <Select
+                            allowClear
+                            showSearch
+                            optionFilterProp="label"
+                            placeholder="Opcional"
+                            options={extensionDocumentoOptions}
+                            value={field.state.value || undefined}
+                            onChange={(value) => field.handleChange(value ?? '')}
+                            onBlur={field.handleBlur}
+                            disabled={disabled}
+                            loading={loadingCatalogos}
+                        />
+                    )}
+                </PersonaField>
+            </Col>
+
+            <Col {...colProps}>
+                <PersonaField
+                    form={form}
+                    fieldPrefix={fieldPrefix}
+                    name="complementoDocumento"
+                    label="Complemento"
+                >
+                    {(field) => (
+                        <Input
+                            placeholder="Opcional"
+                            value={field.state.value}
+                            onChange={(event) => field.handleChange(event.target.value)}
+                            onBlur={field.handleBlur}
+                            disabled={loading}
+                            maxLength={10}
+                        />
+                    )}
+                </PersonaField>
             </Col>
 
             {showSections ? <SectionTitle spaced>Datos personales</SectionTitle> : null}
 
             <Col {...colProps}>
-                <form.Field name={fieldName(fieldPrefix, 'nombres')}>
-                    {(field: { state: { value: string; meta: { errors: unknown[] } }; handleChange: (v: string) => void; handleBlur: () => void }) => {
-                        const error = getFieldError(field.state.meta.errors)
-
-                        return (
-                            <Form.Item
-                                label="Nombres"
-                                required
-                                validateStatus={error ? 'error' : undefined}
-                                help={error || undefined}
-                            >
-                                <Input
-                                    placeholder="Nombres"
-                                    value={field.state.value}
-                                    onChange={(event) =>
-                                        field.handleChange(event.target.value)
-                                    }
-                                    onBlur={field.handleBlur}
-                                    disabled={loading}
-                                />
-                            </Form.Item>
-                        )
-                    }}
-                </form.Field>
-            </Col>
-
-            <Col {...colProps}>
-                <form.Field name={fieldName(fieldPrefix, 'apellidoPaterno')}>
-                    {(field: { state: { value: string; meta: { errors: unknown[] } }; handleChange: (v: string) => void; handleBlur: () => void }) => {
-                        const error = getFieldError(field.state.meta.errors)
-
-                        return (
-                            <Form.Item
-                                label="Apellido paterno"
-                                required
-                                validateStatus={error ? 'error' : undefined}
-                                help={error || undefined}
-                            >
-                                <Input
-                                    placeholder="Apellido paterno"
-                                    value={field.state.value}
-                                    onChange={(event) =>
-                                        field.handleChange(event.target.value)
-                                    }
-                                    onBlur={field.handleBlur}
-                                    disabled={loading}
-                                />
-                            </Form.Item>
-                        )
-                    }}
-                </form.Field>
-            </Col>
-
-            <Col {...colProps}>
-                <form.Field name={fieldName(fieldPrefix, 'apellidoMaterno')}>
-                    {(field: { state: { value: string }; handleChange: (v: string) => void; handleBlur: () => void }) => (
-                        <Form.Item label="Apellido materno">
-                            <Input
-                                placeholder="Opcional"
-                                value={field.state.value}
-                                onChange={(event) =>
-                                    field.handleChange(event.target.value)
-                                }
-                                onBlur={field.handleBlur}
-                                disabled={loading}
-                            />
-                        </Form.Item>
+                <PersonaField
+                    form={form}
+                    fieldPrefix={fieldPrefix}
+                    name="nombres"
+                    label="Nombres"
+                >
+                    {(field) => (
+                        <Input
+                            placeholder="Nombres"
+                            value={field.state.value}
+                            onChange={(event) => field.handleChange(event.target.value)}
+                            onBlur={field.handleBlur}
+                            disabled={loading}
+                        />
                     )}
-                </form.Field>
+                </PersonaField>
             </Col>
 
             <Col {...colProps}>
-                <form.Field name={fieldName(fieldPrefix, 'fechaNacimiento')}>
-                    {(field: { state: { value: string; meta: { errors: unknown[] } }; handleChange: (v: string) => void; handleBlur: () => void }) => {
-                        const error = getFieldError(field.state.meta.errors)
-
-                        return (
-                            <Form.Item
-                                label="Fecha de nacimiento"
-                                required
-                                validateStatus={error ? 'error' : undefined}
-                                help={error || undefined}
-                            >
-                                <DatePicker
-                                    style={{ width: '100%' }}
-                                    format={DATE_DISPLAY_FORMAT}
-                                    placeholder="Seleccione fecha"
-                                    value={
-                                        field.state.value
-                                            ? dayjs(field.state.value, DATE_VALUE_FORMAT)
-                                            : null
-                                    }
-                                    onChange={(date) =>
-                                        field.handleChange(
-                                            date
-                                                ? date.format(DATE_VALUE_FORMAT)
-                                                : '',
-                                        )
-                                    }
-                                    onBlur={field.handleBlur}
-                                    disabled={loading}
-                                />
-                            </Form.Item>
-                        )
-                    }}
-                </form.Field>
+                <PersonaField
+                    form={form}
+                    fieldPrefix={fieldPrefix}
+                    name="apellidoPaterno"
+                    label="Apellido paterno"
+                >
+                    {(field) => (
+                        <Input
+                            placeholder="Apellido paterno"
+                            value={field.state.value}
+                            onChange={(event) => field.handleChange(event.target.value)}
+                            onBlur={field.handleBlur}
+                            disabled={loading}
+                        />
+                    )}
+                </PersonaField>
             </Col>
 
             <Col {...colProps}>
-                <form.Field name={fieldName(fieldPrefix, 'sexoId')}>
-                    {(field: { state: { value: string; meta: { errors: unknown[] } }; handleChange: (v: string) => void; handleBlur: () => void }) => {
-                        const error = getFieldError(field.state.meta.errors)
-
-                        return (
-                            <Form.Item
-                                label="Sexo"
-                                required
-                                validateStatus={error ? 'error' : undefined}
-                                help={error || undefined}
-                            >
-                                <Select
-                                    showSearch
-                                    optionFilterProp="label"
-                                    placeholder="Seleccionar sexo"
-                                    options={sexoOptions}
-                                    value={field.state.value || undefined}
-                                    onChange={(value) => field.handleChange(value)}
-                                    onBlur={field.handleBlur}
-                                    disabled={disabled}
-                                    loading={loadingCatalogos}
-                                />
-                            </Form.Item>
-                        )
-                    }}
-                </form.Field>
+                <PersonaField
+                    form={form}
+                    fieldPrefix={fieldPrefix}
+                    name="apellidoMaterno"
+                    label="Apellido materno"
+                >
+                    {(field) => (
+                        <Input
+                            placeholder="Opcional"
+                            value={field.state.value}
+                            onChange={(event) => field.handleChange(event.target.value)}
+                            onBlur={field.handleBlur}
+                            disabled={loading}
+                        />
+                    )}
+                </PersonaField>
             </Col>
 
             <Col {...colProps}>
-                <form.Field name={fieldName(fieldPrefix, 'estadoCivilId')}>
-                    {(field: { state: { value: string; meta: { errors: unknown[] } }; handleChange: (v: string) => void; handleBlur: () => void }) => {
-                        const error = getFieldError(field.state.meta.errors)
+                <PersonaField
+                    form={form}
+                    fieldPrefix={fieldPrefix}
+                    name="fechaNacimiento"
+                    label="Fecha de nacimiento"
+                >
+                    {(field) => (
+                        <DatePicker
+                            style={{ width: '100%' }}
+                            format={DATE_DISPLAY_FORMAT}
+                            placeholder="Seleccione fecha"
+                            value={
+                                field.state.value
+                                    ? dayjs(field.state.value, DATE_VALUE_FORMAT)
+                                    : null
+                            }
+                            onChange={(date) =>
+                                field.handleChange(
+                                    date ? date.format(DATE_VALUE_FORMAT) : '',
+                                )
+                            }
+                            onBlur={field.handleBlur}
+                            disabled={loading}
+                        />
+                    )}
+                </PersonaField>
+            </Col>
 
-                        return (
-                            <Form.Item
-                                label="Estado civil"
-                                required
-                                validateStatus={error ? 'error' : undefined}
-                                help={error || undefined}
-                            >
-                                <Select
-                                    showSearch
-                                    optionFilterProp="label"
-                                    placeholder="Seleccionar estado civil"
-                                    options={estadoCivilOptions}
-                                    value={field.state.value || undefined}
-                                    onChange={(value) => field.handleChange(value)}
-                                    onBlur={field.handleBlur}
-                                    disabled={disabled}
-                                    loading={loadingCatalogos}
-                                />
-                            </Form.Item>
-                        )
-                    }}
-                </form.Field>
+            <Col {...colProps}>
+                <PersonaField
+                    form={form}
+                    fieldPrefix={fieldPrefix}
+                    name="sexoId"
+                    label="Sexo"
+                >
+                    {(field) => (
+                        <Select
+                            showSearch
+                            optionFilterProp="label"
+                            placeholder="Seleccionar sexo"
+                            options={sexoOptions}
+                            value={field.state.value || undefined}
+                            onChange={(value) => field.handleChange(value)}
+                            onBlur={field.handleBlur}
+                            disabled={disabled}
+                            loading={loadingCatalogos}
+                        />
+                    )}
+                </PersonaField>
+            </Col>
+
+            <Col {...colProps}>
+                <PersonaField
+                    form={form}
+                    fieldPrefix={fieldPrefix}
+                    name="estadoCivilId"
+                    label="Estado civil"
+                >
+                    {(field) => (
+                        <Select
+                            showSearch
+                            optionFilterProp="label"
+                            placeholder="Seleccionar estado civil"
+                            options={estadoCivilOptions}
+                            value={field.state.value || undefined}
+                            onChange={(value) => field.handleChange(value)}
+                            onBlur={field.handleBlur}
+                            disabled={disabled}
+                            loading={loadingCatalogos}
+                        />
+                    )}
+                </PersonaField>
             </Col>
 
             {showSections ? <SectionTitle spaced>Contacto</SectionTitle> : null}
 
             <Col {...colProps}>
-                <form.Field name={fieldName(fieldPrefix, 'telefono')}>
-                    {(field: { state: { value: string; meta: { errors: unknown[] } }; handleChange: (v: string) => void; handleBlur: () => void }) => {
-                        const error = getFieldError(field.state.meta.errors)
-
-                        return (
-                            <Form.Item
-                                label="Teléfono"
-                                required
-                                validateStatus={error ? 'error' : undefined}
-                                help={error || undefined}
-                            >
-                                <Input
-                                    placeholder="70000000"
-                                    value={field.state.value}
-                                    onChange={(event) =>
-                                        field.handleChange(event.target.value)
-                                    }
-                                    onBlur={field.handleBlur}
-                                    disabled={loading}
-                                />
-                            </Form.Item>
-                        )
-                    }}
-                </form.Field>
+                <PersonaField
+                    form={form}
+                    fieldPrefix={fieldPrefix}
+                    name="telefono"
+                    label="Teléfono"
+                >
+                    {(field) => (
+                        <Input
+                            placeholder="70000000"
+                            value={field.state.value}
+                            onChange={(event) => field.handleChange(event.target.value)}
+                            onBlur={field.handleBlur}
+                            disabled={loading}
+                        />
+                    )}
+                </PersonaField>
             </Col>
 
             <Col span={24}>
-                <form.Field name={fieldName(fieldPrefix, 'direccion')}>
-                    {(field: { state: { value: string; meta: { errors: unknown[] } }; handleChange: (v: string) => void; handleBlur: () => void }) => {
-                        const error = getFieldError(field.state.meta.errors)
-
-                        return (
-                            <Form.Item
-                                label="Dirección"
-                                validateStatus={error ? 'error' : undefined}
-                                help={error || undefined}
-                            >
-                                <Input.TextArea
-                                    rows={1}
-                                    autoSize={{ minRows: 1, maxRows: 2 }}
-                                    className="usuario-drawer__textarea"
-                                    placeholder="Opcional"
-                                    value={field.state.value}
-                                    onChange={(event) =>
-                                        field.handleChange(event.target.value)
-                                    }
-                                    onBlur={field.handleBlur}
-                                    disabled={loading}
-                                />
-                            </Form.Item>
-                        )
-                    }}
-                </form.Field>
+                <PersonaField
+                    form={form}
+                    fieldPrefix={fieldPrefix}
+                    name="direccion"
+                    label="Dirección"
+                >
+                    {(field) => (
+                        <Input.TextArea
+                            rows={1}
+                            autoSize={{ minRows: 1, maxRows: 2 }}
+                            className="usuario-drawer__textarea"
+                            placeholder="Opcional"
+                            value={field.state.value}
+                            onChange={(event) => field.handleChange(event.target.value)}
+                            onBlur={field.handleBlur}
+                            disabled={loading}
+                            maxLength={500}
+                        />
+                    )}
+                </PersonaField>
             </Col>
         </Row>
     )

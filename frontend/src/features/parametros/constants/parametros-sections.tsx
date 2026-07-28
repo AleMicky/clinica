@@ -1,6 +1,7 @@
 import {
     AppstoreOutlined,
     ColumnHeightOutlined,
+    IdcardOutlined,
     NumberOutlined,
 } from '@ant-design/icons'
 
@@ -15,6 +16,11 @@ export const parametrosPageSections: ParametrosPageSection[] = [
         path: '/parametros/catalogos',
         title: 'Catálogos generales',
         icon: <AppstoreOutlined />,
+    },
+    {
+        path: '/parametros/personas',
+        title: 'Personas',
+        icon: <IdcardOutlined />,
     },
     {
         path: '/parametros/unidades-medida',

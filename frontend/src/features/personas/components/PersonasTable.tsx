@@ -3,8 +3,8 @@ import {
     createColumnHelper,
     type ColumnDef,
 } from '@tanstack/react-table'
-import { Button, Popconfirm, Space, Typography } from 'antd'
-import { DeleteOutlined, EditOutlined } from '@ant-design/icons'
+import { Button, Typography } from 'antd'
+import { EditOutlined } from '@ant-design/icons'
 
 import { AppDataTable } from '../../../shared/components/ui/data-table/AppDataTable'
 import type { Persona } from '../types/persona.types'
@@ -19,8 +19,7 @@ type PersonasTableProps = {
     pageSize: number
     onPageChange: (page: number, pageSize: number) => void
     onEdit: (persona: Persona) => void
-    onDelete: (persona: Persona) => void
-    deletingId: string | null
+    className?: string
 }
 
 const columnHelper = createColumnHelper<Persona>()
@@ -53,8 +52,7 @@ export function PersonasTable({
     pageSize,
     onPageChange,
     onEdit,
-    onDelete,
-    deletingId,
+    className,
 }: PersonasTableProps) {
     const columns = useMemo(
         () => [
@@ -92,7 +90,7 @@ export function PersonasTable({
             columnHelper.display({
                 id: 'actions',
                 header: 'Acciones',
-                size: 120,
+                size: 80,
                 meta: {
                     align: 'right',
                     headerAlign: 'right',
@@ -101,42 +99,22 @@ export function PersonasTable({
                     const persona = row.original
 
                     return (
-                        <Space size="small">
-                            <Button
-                                type="text"
-                                icon={<EditOutlined />}
-                                aria-label={`Editar ${persona.nombreCompleto}`}
-                                onClick={() => onEdit(persona)}
-                            />
-                            <Popconfirm
-                                title="Eliminar persona"
-                                description={`¿Desea eliminar a "${persona.nombreCompleto}"?`}
-                                okText="Eliminar"
-                                cancelText="Cancelar"
-                                okButtonProps={{
-                                    danger: true,
-                                    loading: deletingId === persona.id,
-                                }}
-                                onConfirm={() => onDelete(persona)}
-                            >
-                                <Button
-                                    type="text"
-                                    danger
-                                    icon={<DeleteOutlined />}
-                                    aria-label={`Eliminar ${persona.nombreCompleto}`}
-                                    loading={deletingId === persona.id}
-                                />
-                            </Popconfirm>
-                        </Space>
+                        <Button
+                            type="text"
+                            icon={<EditOutlined />}
+                            aria-label={`Editar ${persona.nombreCompleto}`}
+                            onClick={() => onEdit(persona)}
+                        />
                     )
                 },
             }),
         ] as ColumnDef<Persona, any>[],
-        [onEdit, onDelete, deletingId],
+        [onEdit],
     )
 
     return (
         <AppDataTable
+            className={className}
             data={personas}
             columns={columns}
             loading={loading}

@@ -28,7 +28,11 @@ export const personaSchema = z.object({
         100,
         'No puede superar los 100 caracteres.',
     ),
-    fechaNacimiento: z.string().trim().min(1, 'La fecha de nacimiento es obligatoria.'),
+    fechaNacimiento: z
+        .string()
+        .trim()
+        .min(1, 'La fecha de nacimiento es obligatoria.')
+        .regex(/^\d{4}-\d{2}-\d{2}$/, 'La fecha de nacimiento no es válida.'),
     sexoId: z.string().trim().min(1, 'Seleccione el sexo.'),
     estadoCivilId: z.string().trim().min(1, 'Seleccione el estado civil.'),
     telefono: z
@@ -44,6 +48,32 @@ export const personaSchema = z.object({
 
 export type PersonaFormInput = z.infer<typeof personaSchema>
 export type PersonaFormValues = z.output<typeof personaSchema>
+
+export const personaFieldSchemas = personaSchema.shape
+
+export const personaRequiredFields = [
+    'tipoDocumentoId',
+    'numeroDocumento',
+    'nombres',
+    'apellidoPaterno',
+    'fechaNacimiento',
+    'sexoId',
+    'estadoCivilId',
+    'telefono',
+] as const satisfies ReadonlyArray<keyof PersonaFormInput>
+
+export function isPersonaRequiredField(name: keyof PersonaFormInput) {
+    return (personaRequiredFields as ReadonlyArray<string>).includes(name)
+}
+
+export function personaFieldValidators(field: keyof typeof personaFieldSchemas) {
+    const schema = personaFieldSchemas[field]
+    return {
+        onBlur: schema,
+        onChange: schema,
+        onSubmit: schema,
+    }
+}
 
 export const personaDefaultValues: PersonaFormInput = {
     tipoDocumentoId: '',

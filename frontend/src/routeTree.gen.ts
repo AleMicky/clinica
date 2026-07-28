@@ -46,6 +46,7 @@ import { Route as AdminRecursosHumanosEspecialidadesRouteImport } from './routes
 import { Route as AdminRecursosHumanosEmpleadosRouteImport } from './routes/_admin/recursos-humanos/empleados'
 import { Route as AdminRecursosHumanosCargosRouteImport } from './routes/_admin/recursos-humanos/cargos'
 import { Route as AdminParametrosUnidadesMedidaRouteImport } from './routes/_admin/parametros/unidades-medida'
+import { Route as AdminParametrosPersonasRouteImport } from './routes/_admin/parametros/personas'
 import { Route as AdminParametrosCorrelativosRouteImport } from './routes/_admin/parametros/correlativos'
 import { Route as AdminParametrosCatalogosRouteImport } from './routes/_admin/parametros/catalogos'
 import { Route as AdminLaboratorioTiposExamenRouteImport } from './routes/_admin/laboratorio/tipos-examen'
@@ -270,6 +271,11 @@ const AdminParametrosUnidadesMedidaRoute =
     path: '/unidades-medida',
     getParentRoute: () => AdminParametrosRoute,
   } as any)
+const AdminParametrosPersonasRoute = AdminParametrosPersonasRouteImport.update({
+  id: '/personas',
+  path: '/personas',
+  getParentRoute: () => AdminParametrosRoute,
+} as any)
 const AdminParametrosCorrelativosRoute =
   AdminParametrosCorrelativosRouteImport.update({
     id: '/correlativos',
@@ -475,6 +481,7 @@ export interface FileRoutesByFullPath {
   '/laboratorio/tipos-examen': typeof AdminLaboratorioTiposExamenRoute
   '/parametros/catalogos': typeof AdminParametrosCatalogosRoute
   '/parametros/correlativos': typeof AdminParametrosCorrelativosRoute
+  '/parametros/personas': typeof AdminParametrosPersonasRoute
   '/parametros/unidades-medida': typeof AdminParametrosUnidadesMedidaRoute
   '/recursos-humanos/cargos': typeof AdminRecursosHumanosCargosRoute
   '/recursos-humanos/empleados': typeof AdminRecursosHumanosEmpleadosRoute
@@ -536,6 +543,7 @@ export interface FileRoutesByTo {
   '/laboratorio/tipos-examen': typeof AdminLaboratorioTiposExamenRoute
   '/parametros/catalogos': typeof AdminParametrosCatalogosRoute
   '/parametros/correlativos': typeof AdminParametrosCorrelativosRoute
+  '/parametros/personas': typeof AdminParametrosPersonasRoute
   '/parametros/unidades-medida': typeof AdminParametrosUnidadesMedidaRoute
   '/recursos-humanos/cargos': typeof AdminRecursosHumanosCargosRoute
   '/recursos-humanos/empleados': typeof AdminRecursosHumanosEmpleadosRoute
@@ -606,6 +614,7 @@ export interface FileRoutesById {
   '/_admin/laboratorio/tipos-examen': typeof AdminLaboratorioTiposExamenRoute
   '/_admin/parametros/catalogos': typeof AdminParametrosCatalogosRoute
   '/_admin/parametros/correlativos': typeof AdminParametrosCorrelativosRoute
+  '/_admin/parametros/personas': typeof AdminParametrosPersonasRoute
   '/_admin/parametros/unidades-medida': typeof AdminParametrosUnidadesMedidaRoute
   '/_admin/recursos-humanos/cargos': typeof AdminRecursosHumanosCargosRoute
   '/_admin/recursos-humanos/empleados': typeof AdminRecursosHumanosEmpleadosRoute
@@ -675,6 +684,7 @@ export interface FileRouteTypes {
     | '/laboratorio/tipos-examen'
     | '/parametros/catalogos'
     | '/parametros/correlativos'
+    | '/parametros/personas'
     | '/parametros/unidades-medida'
     | '/recursos-humanos/cargos'
     | '/recursos-humanos/empleados'
@@ -736,6 +746,7 @@ export interface FileRouteTypes {
     | '/laboratorio/tipos-examen'
     | '/parametros/catalogos'
     | '/parametros/correlativos'
+    | '/parametros/personas'
     | '/parametros/unidades-medida'
     | '/recursos-humanos/cargos'
     | '/recursos-humanos/empleados'
@@ -805,6 +816,7 @@ export interface FileRouteTypes {
     | '/_admin/laboratorio/tipos-examen'
     | '/_admin/parametros/catalogos'
     | '/_admin/parametros/correlativos'
+    | '/_admin/parametros/personas'
     | '/_admin/parametros/unidades-medida'
     | '/_admin/recursos-humanos/cargos'
     | '/_admin/recursos-humanos/empleados'
@@ -1101,6 +1113,13 @@ declare module '@tanstack/react-router' {
       path: '/unidades-medida'
       fullPath: '/parametros/unidades-medida'
       preLoaderRoute: typeof AdminParametrosUnidadesMedidaRouteImport
+      parentRoute: typeof AdminParametrosRoute
+    }
+    '/_admin/parametros/personas': {
+      id: '/_admin/parametros/personas'
+      path: '/personas'
+      fullPath: '/parametros/personas'
+      preLoaderRoute: typeof AdminParametrosPersonasRouteImport
       parentRoute: typeof AdminParametrosRoute
     }
     '/_admin/parametros/correlativos': {
@@ -1463,6 +1482,7 @@ const AdminLaboratorioRouteWithChildren =
 interface AdminParametrosRouteChildren {
   AdminParametrosCatalogosRoute: typeof AdminParametrosCatalogosRoute
   AdminParametrosCorrelativosRoute: typeof AdminParametrosCorrelativosRoute
+  AdminParametrosPersonasRoute: typeof AdminParametrosPersonasRoute
   AdminParametrosUnidadesMedidaRoute: typeof AdminParametrosUnidadesMedidaRoute
   AdminParametrosIndexRoute: typeof AdminParametrosIndexRoute
 }
@@ -1470,6 +1490,7 @@ interface AdminParametrosRouteChildren {
 const AdminParametrosRouteChildren: AdminParametrosRouteChildren = {
   AdminParametrosCatalogosRoute: AdminParametrosCatalogosRoute,
   AdminParametrosCorrelativosRoute: AdminParametrosCorrelativosRoute,
+  AdminParametrosPersonasRoute: AdminParametrosPersonasRoute,
   AdminParametrosUnidadesMedidaRoute: AdminParametrosUnidadesMedidaRoute,
   AdminParametrosIndexRoute: AdminParametrosIndexRoute,
 }

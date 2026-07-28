@@ -1,10 +1,7 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { PersonasView } from '../../../features/personas/views/PersonasView'
-import { requireStaff } from '../../../shared/utils/auth-guards'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_admin/personas/')({
     beforeLoad: () => {
-        requireStaff()
+        throw redirect({ to: '/parametros/personas' })
     },
-    component: PersonasView,
 })

@@ -57,20 +57,6 @@ export const menuGroups: MenuGroup[] = [
         ],
     },
     {
-        key: 'personas',
-        label: 'Personas',
-        roles: [AppRole.Admin, AppRole.Medico, AppRole.Recepcion],
-        items: [
-            {
-                key: '/personas',
-                to: '/personas',
-                icon: <IdcardOutlined />,
-                label: 'Personas',
-                roles: [AppRole.Admin, AppRole.Medico, AppRole.Recepcion],
-            },
-        ],
-    },
-    {
         key: 'clinical',
         label: 'Clínica',
         roles: [
@@ -372,6 +358,13 @@ export const menuGroups: MenuGroup[] = [
                 to: '/parametros/catalogos',
                 icon: <ControlOutlined />,
                 label: 'Catálogos generales',
+                roles: [AppRole.Admin],
+            },
+            {
+                key: '/parametros/personas',
+                to: '/parametros/personas',
+                icon: <IdcardOutlined />,
+                label: 'Personas',
                 roles: [AppRole.Admin],
             },
             {

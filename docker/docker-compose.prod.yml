@@ -37,7 +37,6 @@ services:
     container_name: clinica-frontend
     depends_on:
       - api
-    # Sin ports públicos: el acceso es por infraestructura-nginx:9000
     expose:
       - "80"
     restart: unless-stopped

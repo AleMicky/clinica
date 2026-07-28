@@ -2237,6 +2237,18 @@ body {
     background: rgba(255, 255, 255, 0.03);
 }
 
+[data-theme='dark'] .rrhh-empleados__caption,
+[data-theme='dark'] .rrhh-medicos__caption,
+[data-theme='dark'] .rrhh-catalogo__caption,
+[data-theme='dark'] .rrhh-pacientes__caption,
+[data-theme='dark'] .rrhh-tipos-atencion__caption,
+[data-theme='dark'] .rrhh-atenciones__caption,
+[data-theme='dark'] .rrhh-empleados__filter-clear,
+[data-theme='dark'] .rrhh-medicos__filter-clear,
+[data-theme='dark'] .rrhh-pacientes__filter-clear {
+    color: rgba(255, 255, 255, 0.55);
+}
+
 @media (max-width: 992px) {
     .rrhh-empleados__filter-search,
     .rrhh-empleados__filter-select,
@@ -6375,6 +6387,13 @@ body {
     width: 100%;
 }
 
+.usuario-drawer__required-hint {
+    display: block;
+    margin: 0 0 10px;
+    font-size: 12px;
+    line-height: 1.35;
+}
+
 [data-theme='dark'] .seguridad-module .module-object-page__header,
 [data-theme='dark'] .seguridad-module .module-object-page__stat,
 [data-theme='dark'] .seguridad-module .module-object-page__section-badge {
@@ -6401,8 +6420,27 @@ body {
     background: rgba(255, 255, 255, 0.06);
 }
 
+[data-theme='dark'] .usuario-drawer .ant-drawer-content {
+    background: #0d1117;
+}
+
+[data-theme='dark'] .usuario-drawer .ant-drawer-header {
+    background: #161b22;
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .usuario-drawer .ant-drawer-title,
+[data-theme='dark'] .usuario-drawer .ant-drawer-close {
+    color: rgba(255, 255, 255, 0.88);
+}
+
 [data-theme='dark'] .usuario-drawer .ant-drawer-body {
     background: #0d1117;
+}
+
+[data-theme='dark'] .usuario-drawer .ant-drawer-footer {
+    background: #161b22;
+    border-top-color: rgba(255, 255, 255, 0.08);
 }
 
 [data-theme='dark'] .usuario-drawer__form,
@@ -6413,8 +6451,21 @@ body {
     border-color: rgba(255, 255, 255, 0.08);
 }
 
+[data-theme='dark'] .usuario-drawer__section-title {
+    color: rgba(255, 255, 255, 0.45);
+}
+
 [data-theme='dark'] .usuario-drawer__section-title-wrap--spaced {
     border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .usuario-drawer__summary .ant-descriptions-item-label {
+    color: rgba(255, 255, 255, 0.55);
+    background: rgba(255, 255, 255, 0.03) !important;
+}
+
+[data-theme='dark'] .usuario-drawer__summary .ant-descriptions-item-content {
+    color: rgba(255, 255, 255, 0.88);
 }
 
 @media (max-width: 992px) {
