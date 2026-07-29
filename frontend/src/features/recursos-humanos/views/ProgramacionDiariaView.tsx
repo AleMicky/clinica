@@ -6,86 +6,66 @@ import {
     Flex,
     Form,
     Input,
-    InputNumber,
     Popconfirm,
     Select,
     Space,
-    Switch,
     Table,
     Tag,
 } from 'antd'
 import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 
-import {
-    useAreas,
-    useCargos,
-    useEspecialidades,
-} from '../../catalogo-clinico/hooks/catalogo-clinico.hooks'
 import { useEmpleados } from '../hooks/empleados.hooks'
 import {
     useCreateProgramacionDiaria,
     useDeleteProgramacionDiaria,
     useProgramacionDiaria,
+    useProgramacionesLookup,
     useTurnos,
     useUpdateProgramacionDiaria,
 } from '../hooks/turnos.hooks'
 import {
-    PROGRAMACION_ESTADOS,
+    ESTADO_PROGRAMACION_LABELS,
+    TIPO_ASIGNACION_OPTIONS,
+    type EstadoProgramacion,
     type ProgramacionDiaria,
+    type TipoAsignacionProgramacion,
 } from '../types/turnos.types'
 
 const LOOKUP_QUERY = { page: 1, pageSize: 200 }
 const DATE_FORMAT = 'YYYY-MM-DD'
 
 type ProgramacionFormValues = {
+    programacionId: string
     empleadoId: string
     fecha: dayjs.Dayjs
-    turnoId: string
-    areaId: string
-    cargoId: string
-    especialidadId?: string
-    esMedicoTurno: boolean
-    aceptaConsultas: boolean
-    aceptaSinCita: boolean
-    maxPacientes: number
-    estado: string
+    turnoId?: string
+    tipoAsignacion: TipoAsignacionProgramacion
     observacion?: string
-    permiteMultiplesMedicosTurno: boolean
 }
 
 const defaultValues: ProgramacionFormValues = {
+    programacionId: '',
     empleadoId: '',
     fecha: dayjs(),
-    turnoId: '',
-    areaId: '',
-    cargoId: '',
-    especialidadId: undefined,
-    esMedicoTurno: false,
-    aceptaConsultas: true,
-    aceptaSinCita: false,
-    maxPacientes: 20,
-    estado: 'ACTIVO',
+    turnoId: undefined,
+    tipoAsignacion: 1,
     observacion: '',
-    permiteMultiplesMedicosTurno: false,
 }
 
 function toPayload(values: ProgramacionFormValues) {
     return {
+        programacionId: values.programacionId,
         empleadoId: values.empleadoId,
         fecha: values.fecha.format(DATE_FORMAT),
-        turnoId: values.turnoId,
-        areaId: values.areaId,
-        cargoId: values.cargoId,
-        especialidadId: values.especialidadId || null,
-        esMedicoTurno: values.esMedicoTurno,
-        aceptaConsultas: values.aceptaConsultas,
-        aceptaSinCita: values.aceptaSinCita,
-        maxPacientes: values.maxPacientes,
-        estado: values.estado,
+        turnoId: values.tipoAsignacion === 1 ? values.turnoId || null : null,
+        tipoAsignacion: values.tipoAsignacion,
         observacion: values.observacion?.trim() || null,
-        permiteMultiplesMedicosTurno: values.permiteMultiplesMedicosTurno,
     }
+}
+
+function formatHora(value?: string | null) {
+    return value ? value.slice(0, 5) : '—'
 }
 
 export function ProgramacionDiariaView() {
@@ -95,14 +75,13 @@ export function ProgramacionDiariaView() {
     const [drawerOpen, setDrawerOpen] = useState(false)
     const [editing, setEditing] = useState<ProgramacionDiaria | null>(null)
     const [form] = Form.useForm<ProgramacionFormValues>()
+    const tipoAsignacion = Form.useWatch('tipoAsignacion', form)
 
     const fecha = fechaFiltro.format(DATE_FORMAT)
     const { data, isFetching } = useProgramacionDiaria({ page, pageSize, fecha })
     const { data: turnosData } = useTurnos({ page: 1, pageSize: 100, activo: true })
     const { data: empleadosData } = useEmpleados(LOOKUP_QUERY)
-    const { data: areasData } = useAreas(LOOKUP_QUERY)
-    const { data: cargosData } = useCargos(LOOKUP_QUERY)
-    const { data: especialidadesData } = useEspecialidades(LOOKUP_QUERY)
+    const { data: programacionesLookup } = useProgramacionesLookup()
 
     const createMutation = useCreateProgramacionDiaria()
     const updateMutation = useUpdateProgramacionDiaria()
@@ -131,50 +110,25 @@ export function ProgramacionDiariaView() {
         [turnosData?.items],
     )
 
-    const areaOptions = useMemo(
+    const programacionOptions = useMemo(
         () =>
-            (areasData?.items ?? []).map((a) => ({
-                value: a.id,
-                label: `${a.codigo} – ${a.nombre}`,
+            (programacionesLookup ?? []).map((p) => ({
+                value: p.id,
+                label: `${p.nombre} · ${p.areaNombre} (${p.fechaInicio} → ${p.fechaFin})`,
             })),
-        [areasData?.items],
-    )
-
-    const cargoOptions = useMemo(
-        () =>
-            (cargosData?.items ?? []).map((c) => ({
-                value: c.id,
-                label: c.nombre,
-            })),
-        [cargosData?.items],
-    )
-
-    const especialidadOptions = useMemo(
-        () =>
-            (especialidadesData?.items ?? []).map((e) => ({
-                value: e.id,
-                label: e.nombre,
-            })),
-        [especialidadesData?.items],
+        [programacionesLookup],
     )
 
     useEffect(() => {
         if (!drawerOpen) return
         if (editing) {
             form.setFieldsValue({
+                programacionId: editing.programacionId,
                 empleadoId: editing.empleadoId,
                 fecha: dayjs(editing.fecha),
-                turnoId: editing.turnoId,
-                areaId: editing.areaId,
-                cargoId: editing.cargoId,
-                especialidadId: editing.especialidadId ?? undefined,
-                esMedicoTurno: editing.esMedicoTurno,
-                aceptaConsultas: editing.aceptaConsultas,
-                aceptaSinCita: editing.aceptaSinCita,
-                maxPacientes: editing.maxPacientes,
-                estado: editing.estado,
+                turnoId: editing.turnoId ?? undefined,
+                tipoAsignacion: editing.tipoAsignacion,
                 observacion: editing.observacion ?? '',
-                permiteMultiplesMedicosTurno: editing.permiteMultiplesMedicosTurno,
             })
         } else {
             form.setFieldsValue({ ...defaultValues, fecha: fechaFiltro })
@@ -193,32 +147,35 @@ export function ProgramacionDiariaView() {
                 title: 'Turno',
                 key: 'turno',
                 render: (_: unknown, row: ProgramacionDiaria) =>
-                    `${row.turnoNombre} (${row.horaInicio.slice(0, 5)}–${row.horaFin.slice(0, 5)})`,
+                    row.turnoNombre
+                        ? `${row.turnoNombre} (${formatHora(row.horaInicio)}–${formatHora(row.horaFin)})`
+                        : '—',
             },
             {
-                title: 'Área / Consultorio',
+                title: 'Programación',
+                dataIndex: 'programacionNombre',
+                key: 'programacion',
+            },
+            {
+                title: 'Área',
                 dataIndex: 'areaNombre',
                 key: 'area',
             },
             {
-                title: 'Especialidad',
-                dataIndex: 'especialidadNombre',
-                key: 'especialidad',
-                render: (value: string | null) => value ?? '—',
-            },
-            {
-                title: 'Médico turno',
-                dataIndex: 'esMedicoTurno',
-                key: 'esMedicoTurno',
-                render: (value: boolean) =>
-                    value ? <Tag color="blue">Principal</Tag> : null,
+                title: 'Tipo',
+                dataIndex: 'tipoAsignacion',
+                key: 'tipoAsignacion',
+                render: (value: TipoAsignacionProgramacion) =>
+                    value === 2 ? <Tag>Descanso</Tag> : <Tag color="blue">Regular</Tag>,
             },
             {
                 title: 'Estado',
-                dataIndex: 'estado',
+                dataIndex: 'programacionEstado',
                 key: 'estado',
-                render: (value: string) => (
-                    <Tag color={value === 'ACTIVO' ? 'success' : 'default'}>{value}</Tag>
+                render: (value: EstadoProgramacion) => (
+                    <Tag color={value === 2 ? 'success' : 'default'}>
+                        {ESTADO_PROGRAMACION_LABELS[value] ?? value}
+                    </Tag>
                 ),
             },
             {
@@ -307,7 +264,7 @@ export function ProgramacionDiariaView() {
             />
 
             <Drawer
-                title={editing ? 'Editar programación' : 'Nueva programación'}
+                title={editing ? 'Editar detalle' : 'Nuevo detalle'}
                 open={drawerOpen}
                 onClose={() => {
                     setDrawerOpen(false)
@@ -321,6 +278,17 @@ export function ProgramacionDiariaView() {
                 }
             >
                 <Form form={form} layout="vertical" initialValues={defaultValues}>
+                    <Form.Item
+                        name="programacionId"
+                        label="Programación"
+                        rules={[{ required: true, message: 'Seleccione una programación' }]}
+                    >
+                        <Select
+                            showSearch
+                            optionFilterProp="label"
+                            options={programacionOptions}
+                        />
+                    </Form.Item>
                     <Form.Item name="fecha" label="Fecha" rules={[{ required: true }]}>
                         <DatePicker format="DD/MM/YYYY" style={{ width: '100%' }} />
                     </Form.Item>
@@ -331,53 +299,22 @@ export function ProgramacionDiariaView() {
                             options={empleadoOptions}
                         />
                     </Form.Item>
-                    <Form.Item name="turnoId" label="Turno" rules={[{ required: true }]}>
-                        <Select options={turnoOptions} />
-                    </Form.Item>
                     <Form.Item
-                        name="areaId"
-                        label="Área / Consultorio"
+                        name="tipoAsignacion"
+                        label="Tipo de asignación"
                         rules={[{ required: true }]}
                     >
-                        <Select
-                            showSearch
-                            optionFilterProp="label"
-                            options={areaOptions}
-                        />
+                        <Select options={TIPO_ASIGNACION_OPTIONS} />
                     </Form.Item>
-                    <Form.Item name="cargoId" label="Cargo" rules={[{ required: true }]}>
-                        <Select options={cargoOptions} />
-                    </Form.Item>
-                    <Form.Item name="especialidadId" label="Especialidad (opcional)">
-                        <Select allowClear options={especialidadOptions} />
-                    </Form.Item>
-                    <Form.Item name="maxPacientes" label="Máx. pacientes" rules={[{ required: true }]}>
-                        <InputNumber min={1} max={999} style={{ width: '100%' }} />
-                    </Form.Item>
-                    <Form.Item name="estado" label="Estado" rules={[{ required: true }]}>
-                        <Select
-                            options={PROGRAMACION_ESTADOS.map((e) => ({
-                                value: e,
-                                label: e,
-                            }))}
-                        />
-                    </Form.Item>
-                    <Form.Item name="esMedicoTurno" label="Médico de turno" valuePropName="checked">
-                        <Switch />
-                    </Form.Item>
-                    <Form.Item name="aceptaConsultas" label="Acepta consultas" valuePropName="checked">
-                        <Switch />
-                    </Form.Item>
-                    <Form.Item name="aceptaSinCita" label="Acepta sin cita" valuePropName="checked">
-                        <Switch />
-                    </Form.Item>
-                    <Form.Item
-                        name="permiteMultiplesMedicosTurno"
-                        label="Permite múltiples médicos principales"
-                        valuePropName="checked"
-                    >
-                        <Switch />
-                    </Form.Item>
+                    {tipoAsignacion !== 2 && (
+                        <Form.Item
+                            name="turnoId"
+                            label="Turno"
+                            rules={[{ required: true, message: 'El turno es obligatorio' }]}
+                        >
+                            <Select options={turnoOptions} />
+                        </Form.Item>
+                    )}
                     <Form.Item name="observacion" label="Observación">
                         <Input.TextArea rows={3} />
                     </Form.Item>

@@ -142,7 +142,6 @@ export const AtencionRecepcionForm = forwardRef<
     const { data: medicosDisponibles } = useMedicoDisponibilidad({
         fecha: now.toISOString().slice(0, 10),
         hora: now.toTimeString().slice(0, 8),
-        especialidadId: especialidadId || undefined,
         incluirProximaDisponibilidad: true,
     })
 
@@ -150,7 +149,7 @@ export const AtencionRecepcionForm = forwardRef<
         .filter((m) => m.disponibleAhora)
         .map((m) => ({
             value: m.medicoId,
-            label: `${m.medicoNombre}${m.especialidadNombre ? ` · ${m.especialidadNombre}` : ''}`,
+            label: `${m.medicoNombre}${m.areaNombre ? ` · ${m.areaNombre}` : ''}`,
         }))
 
     const formularioActivo = useMemo(() => {
@@ -462,7 +461,6 @@ export const AtencionRecepcionForm = forwardRef<
                     </form.Field>
 
                     <MedicoDisponibilidadPanel
-                        especialidadId={especialidadId || undefined}
                         selectedMedicoId={medicoId || undefined}
                         onSelectMedico={(id) => form.setFieldValue('medicoId', id)}
                     />

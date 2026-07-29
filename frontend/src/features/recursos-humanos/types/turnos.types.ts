@@ -30,49 +30,56 @@ export type TurnoPagedQuery = PagedQuery & {
     activo?: boolean
 }
 
+/** Regular = 1, Descanso = 2 */
+export type TipoAsignacionProgramacion = 1 | 2
+
+/** Borrador = 1, Publicada = 2, Cerrada = 3, Cancelada = 4 */
+export type EstadoProgramacion = 1 | 2 | 3 | 4
+
+export type ProgramacionLookup = {
+    id: Guid
+    nombre: string
+    estado: EstadoProgramacion
+    grupoProgramacionId: Guid
+    grupoProgramacionNombre: string
+    areaId: Guid
+    areaNombre: string
+    fechaInicio: string
+    fechaFin: string
+}
+
 export type ProgramacionDiaria = {
     id: Guid
+    programacionId: Guid
+    programacionNombre: string
+    programacionEstado: EstadoProgramacion
+    grupoProgramacionId: Guid
+    grupoProgramacionNombre: string
+    areaId: Guid
+    areaCodigo: string
+    areaNombre: string
     empleadoId: Guid
     empleadoCodigo: string
     empleadoNombre: string
     fecha: string
-    turnoId: Guid
-    turnoCodigo: string
-    turnoNombre: string
-    horaInicio: string
-    horaFin: string
-    cruceDia: boolean
-    areaId: Guid
-    areaCodigo: string
-    areaNombre: string
-    cargoId: Guid
-    cargoNombre: string
-    especialidadId?: Guid | null
-    especialidadNombre?: string | null
-    esMedicoTurno: boolean
-    aceptaConsultas: boolean
-    aceptaSinCita: boolean
-    maxPacientes: number
-    estado: string
+    turnoId?: Guid | null
+    turnoCodigo?: string | null
+    turnoNombre?: string | null
+    horaInicio?: string | null
+    horaFin?: string | null
+    cruceDia?: boolean | null
+    tipoAsignacion: TipoAsignacionProgramacion
     observacion?: string | null
-    permiteMultiplesMedicosTurno: boolean
     medicoId?: Guid | null
 }
 
 export type CreateProgramacionDiariaPayload = {
+    programacionId: Guid
     empleadoId: Guid
     fecha: string
-    turnoId: Guid
-    areaId: Guid
-    cargoId: Guid
-    especialidadId?: Guid | null
-    esMedicoTurno: boolean
-    aceptaConsultas: boolean
-    aceptaSinCita: boolean
-    maxPacientes: number
-    estado: string
+    turnoId?: Guid | null
+    tipoAsignacion: TipoAsignacionProgramacion
     observacion?: string | null
-    permiteMultiplesMedicosTurno?: boolean
 }
 
 export type UpdateProgramacionDiariaPayload = CreateProgramacionDiariaPayload
@@ -84,29 +91,25 @@ export type ProgramacionDiariaPagedQuery = PagedQuery & {
     fechaHasta?: string
     empleadoId?: Guid
     turnoId?: Guid
+    programacionId?: Guid
+    grupoProgramacionId?: Guid
     areaId?: Guid
-    especialidadId?: Guid
-    estado?: string
-    esMedicoTurno?: boolean
+    tipoAsignacion?: TipoAsignacionProgramacion
+    estadoProgramacion?: EstadoProgramacion
 }
 
 export type MedicoDisponibilidad = {
+    programacionDiariaId: Guid
     programacionId: Guid
     medicoId: Guid
     empleadoId: Guid
     medicoNombre: string
-    especialidadNombre?: string | null
-    especialidadId?: Guid | null
     areaId: Guid
     areaNombre: string
-    turnoNombre: string
-    horaInicio: string
-    horaFin: string
+    turnoNombre?: string | null
+    horaInicio?: string | null
+    horaFin?: string | null
     cruceDia: boolean
-    esMedicoTurno: boolean
-    aceptaConsultas: boolean
-    aceptaSinCita: boolean
-    maxPacientes: number
     disponibleAhora: boolean
     proximaDisponibilidad?: string | null
 }
@@ -114,10 +117,19 @@ export type MedicoDisponibilidad = {
 export type MedicoDisponibilidadQuery = {
     fecha?: string
     hora?: string
-    especialidadId?: Guid
     areaId?: Guid
     soloDisponiblesAhora?: boolean
     incluirProximaDisponibilidad?: boolean
 }
 
-export const PROGRAMACION_ESTADOS = ['ACTIVO', 'INACTIVO', 'CANCELADO'] as const
+export const TIPO_ASIGNACION_OPTIONS = [
+    { value: 1 as TipoAsignacionProgramacion, label: 'Regular' },
+    { value: 2 as TipoAsignacionProgramacion, label: 'Descanso' },
+]
+
+export const ESTADO_PROGRAMACION_LABELS: Record<EstadoProgramacion, string> = {
+    1: 'Borrador',
+    2: 'Publicada',
+    3: 'Cerrada',
+    4: 'Cancelada',
+}

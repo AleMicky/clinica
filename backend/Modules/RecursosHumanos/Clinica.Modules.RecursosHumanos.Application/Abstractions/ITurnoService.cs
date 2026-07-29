@@ -27,4 +27,7 @@ public interface IProgramacionDiariaService
     Task EnsureMedicoDisponibleAsync(
         ValidarMedicoProgramadoRequest request,
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<ProgramacionLookupResponse>> GetProgramacionesLookupAsync(
+        CancellationToken cancellationToken = default);
 }

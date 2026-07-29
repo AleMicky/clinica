@@ -77,6 +77,13 @@ export function useMedicoDisponibilidad(query: MedicoDisponibilidadQuery) {
     })
 }
 
+export function useProgramacionesLookup() {
+    return useAppQuery({
+        queryKey: queryKeys.recursosHumanos.programacionDiaria.programacionesLookup,
+        queryFn: () => programacionDiariaService.getProgramacionesLookup(),
+    })
+}
+
 export function useCreateProgramacionDiaria() {
     const qc = useQueryClient()
     return useAppMutation({

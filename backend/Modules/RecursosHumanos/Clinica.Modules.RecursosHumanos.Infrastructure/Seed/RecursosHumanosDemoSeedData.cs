@@ -75,30 +75,29 @@ internal static class RecursosHumanosDemoSeedData
     ];
 
     /// <summary>
-    /// Programaciones relativas a "hoy" (OffsetDias). Códigos estables para upsert.
+    /// Grupos demo por área (código estable para upsert).
     /// </summary>
-    internal static readonly DemoProgramacionSeed[] Programaciones =
+    internal static readonly DemoGrupoProgramacionSeed[] GruposProgramacion =
     [
-        new("PROG-HOY-MAN", "EMP-00001", 0, "MAN", "DEP-011", "Médico", "Medicina Interna",
-            EsMedicoTurno: true, AceptaConsultas: true, AceptaSinCita: true, MaxPacientes: 20,
-            Estado: "ACTIVO", Observacion: "Médico de turno — consulta externa mañana",
-            PermiteMultiplesMedicosTurno: false),
-        new("PROG-HOY-TAR", "EMP-00001", 0, "TAR", "DEP-011", "Médico", "Medicina Interna",
-            EsMedicoTurno: true, AceptaConsultas: true, AceptaSinCita: false, MaxPacientes: 15,
-            Estado: "ACTIVO", Observacion: "Médico de turno — consulta externa tarde",
-            PermiteMultiplesMedicosTurno: false),
-        new("PROG-MAN-MAN", "EMP-00001", 1, "MAN", "DEP-011", "Médico", "Ginecología y Obstetricia",
-            EsMedicoTurno: false, AceptaConsultas: true, AceptaSinCita: false, MaxPacientes: 12,
-            Estado: "ACTIVO", Observacion: "Especialista del día (mañana)",
-            PermiteMultiplesMedicosTurno: false),
-        new("PROG-MAN-NOC", "EMP-00001", 1, "NOC", "DEP-011", "Médico", "Medicina Interna",
-            EsMedicoTurno: true, AceptaConsultas: true, AceptaSinCita: true, MaxPacientes: 10,
-            Estado: "ACTIVO", Observacion: "Guardia nocturna — permite múltiples médicos de turno",
-            PermiteMultiplesMedicosTurno: true),
-        new("PROG-HOY-ENF", "EMP-00003", 0, "MAN", "DEP-010", "Enfermero de Base", null,
-            EsMedicoTurno: false, AceptaConsultas: false, AceptaSinCita: false, MaxPacientes: 30,
-            Estado: "ACTIVO", Observacion: "Enfermería turno mañana",
-            PermiteMultiplesMedicosTurno: false)
+        new("GRP-DEP-011", "Grupo Consulta Externa", "DEP-011", "Médicos de consulta externa"),
+        new("GRP-DEP-010", "Grupo Enfermería", "DEP-010", "Personal de enfermería")
+    ];
+
+    /// <summary>
+    /// Detalles diarios relativos a "hoy" (OffsetDias). Códigos estables para upsert.
+    /// </summary>
+    internal static readonly DemoProgramacionDiariaSeed[] ProgramacionesDiarias =
+    [
+        new("PROG-HOY-MAN", "GRP-DEP-011", "EMP-00001", 0, "MAN", 1,
+            "Médico de turno — consulta externa mañana"),
+        new("PROG-HOY-TAR", "GRP-DEP-011", "EMP-00001", 0, "TAR", 1,
+            "Médico de turno — consulta externa tarde"),
+        new("PROG-MAN-MAN", "GRP-DEP-011", "EMP-00001", 1, "MAN", 1,
+            "Especialista del día (mañana)"),
+        new("PROG-MAN-NOC", "GRP-DEP-011", "EMP-00001", 1, "NOC", 1,
+            "Guardia nocturna"),
+        new("PROG-HOY-ENF", "GRP-DEP-010", "EMP-00003", 0, "MAN", 1,
+            "Enfermería turno mañana")
     ];
 
     internal sealed record AreaSeed(
@@ -130,19 +129,18 @@ internal static class RecursosHumanosDemoSeedData
         bool Activo,
         bool PermiteMultiplesMedicosTurno);
 
-    internal sealed record DemoProgramacionSeed(
+    internal sealed record DemoGrupoProgramacionSeed(
+        string Codigo,
+        string Nombre,
+        string AreaCodigo,
+        string? Descripcion);
+
+    internal sealed record DemoProgramacionDiariaSeed(
         string CodigoSeed,
+        string GrupoCodigo,
         string CodigoEmpleado,
         int OffsetDias,
         string TurnoCodigo,
-        string AreaCodigo,
-        string CargoNombre,
-        string? EspecialidadNombre,
-        bool EsMedicoTurno,
-        bool AceptaConsultas,
-        bool AceptaSinCita,
-        int MaxPacientes,
-        string Estado,
-        string? Observacion,
-        bool PermiteMultiplesMedicosTurno);
+        int TipoAsignacion,
+        string? Observacion);
 }

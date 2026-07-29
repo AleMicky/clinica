@@ -3,6 +3,7 @@ using Clinica.Modules.Personas.Infrastructure.Persistence;
 using Clinica.Modules.RecursosHumanos.Application.Abstractions;
 using Clinica.Modules.RecursosHumanos.Application.ProgramacionDiaria;
 using Clinica.Modules.RecursosHumanos.Domain.Entities;
+using Clinica.Modules.RecursosHumanos.Domain.Enums;
 using Clinica.Modules.RecursosHumanos.Infrastructure.Persistence;
 using Clinica.SharedKernel.Exceptions;
 using Clinica.SharedKernel.Pagination;
@@ -47,26 +48,30 @@ public sealed class ProgramacionDiariaService(
         if (request.TurnoId is { } turnoId && turnoId != Guid.Empty)
             query = query.Where(x => x.TurnoId == turnoId);
 
+        if (request.ProgramacionId is { } programacionId && programacionId != Guid.Empty)
+            query = query.Where(x => x.ProgramacionId == programacionId);
+
+        if (request.GrupoProgramacionId is { } grupoId && grupoId != Guid.Empty)
+            query = query.Where(x => x.Programacion.GrupoProgramacionId == grupoId);
+
         if (request.AreaId is { } areaId && areaId != Guid.Empty)
-            query = query.Where(x => x.AreaId == areaId);
+            query = query.Where(x => x.Programacion.GrupoProgramacion.AreaId == areaId);
 
-        if (request.EspecialidadId is { } especialidadId && especialidadId != Guid.Empty)
-            query = query.Where(x => x.EspecialidadId == especialidadId);
+        if (request.TipoAsignacion is { } tipoAsignacion)
+            query = query.Where(x => (int)x.TipoAsignacion == tipoAsignacion);
 
-        if (!string.IsNullOrWhiteSpace(request.Estado))
-            query = query.Where(x => x.Estado == request.Estado.Trim().ToUpperInvariant());
-
-        if (request.EsMedicoTurno is { } esMedicoTurno)
-            query = query.Where(x => x.EsMedicoTurno == esMedicoTurno);
+        if (request.EstadoProgramacion is { } estado)
+            query = query.Where(x => (int)x.Programacion.Estado == estado);
 
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var search = request.Search.Trim();
             query = query.Where(x =>
                 x.Empleado.CodigoEmpleado.Contains(search) ||
-                x.Area.Nombre.Contains(search) ||
-                x.Turno.Nombre.Contains(search) ||
-                (x.Especialidad != null && x.Especialidad.Nombre.Contains(search)) ||
+                x.Programacion.Nombre.Contains(search) ||
+                x.Programacion.GrupoProgramacion.Nombre.Contains(search) ||
+                x.Programacion.GrupoProgramacion.Area.Nombre.Contains(search) ||
+                (x.Turno != null && x.Turno.Nombre.Contains(search)) ||
                 context.Set<Persona>().Any(p =>
                     p.Id == x.Empleado.PersonaId &&
                     (p.Nombres.Contains(search) ||
@@ -76,7 +81,7 @@ public sealed class ProgramacionDiariaService(
 
         var paged = await query
             .OrderByDescending(x => x.Fecha)
-            .ThenBy(x => x.Turno.HoraInicio)
+            .ThenBy(x => x.Turno != null ? x.Turno.HoraInicio : TimeOnly.MinValue)
             .ToPagedResultAsync(request, cancellationToken);
 
         var medicoIds = await LoadMedicoIdsByEmpleadoIdsAsync(
@@ -122,16 +127,8 @@ public sealed class ProgramacionDiariaService(
     {
         await EnsureReferenciasExistAsync(request, cancellationToken);
 
-        var turno = await context.Turnos
-            .AsNoTracking()
-            .FirstAsync(x => x.Id == request.TurnoId, cancellationToken);
-
-        if (!turno.Activo)
-            throw new BusinessException("El turno seleccionado no está activo.");
-
         var entity = MapFromCreate(request);
         await EnsureNoTraslapeAsync(entity, null, cancellationToken);
-        await EnsureMedicoPrincipalUnicoAsync(entity, null, turno, cancellationToken);
 
         context.ProgramacionDiaria.Add(entity);
         await context.SaveChangesAsync(cancellationToken);
@@ -144,22 +141,13 @@ public sealed class ProgramacionDiariaService(
         UpdateProgramacionDiariaRequest request,
         CancellationToken cancellationToken = default)
     {
-        var entity = await context.ProgramacionDiaria
-            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
-            ?? throw new NotFoundException("Programación no encontrada.");
-
         await EnsureReferenciasExistAsync(request, cancellationToken);
 
-        var turno = await context.Turnos
-            .AsNoTracking()
-            .FirstAsync(x => x.Id == request.TurnoId, cancellationToken);
-
-        if (!turno.Activo)
-            throw new BusinessException("El turno seleccionado no está activo.");
+        var entity = await context.ProgramacionDiaria
+            .GetRequiredAsync(id, "Programación diaria no encontrada.", cancellationToken);
 
         ApplyUpdate(entity, request);
         await EnsureNoTraslapeAsync(entity, id, cancellationToken);
-        await EnsureMedicoPrincipalUnicoAsync(entity, id, turno, cancellationToken);
 
         await context.SaveChangesAsync(cancellationToken);
 
@@ -171,8 +159,7 @@ public sealed class ProgramacionDiariaService(
         CancellationToken cancellationToken = default)
     {
         var entity = await context.ProgramacionDiaria
-            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
-            ?? throw new NotFoundException("Programación no encontrada.");
+            .GetRequiredAsync(id, "Programación diaria no encontrada.", cancellationToken);
 
         context.ProgramacionDiaria.Remove(entity);
         await context.SaveChangesAsync(cancellationToken);
@@ -186,23 +173,17 @@ public sealed class ProgramacionDiariaService(
         var hora = request.Hora ?? TimeOnly.FromDateTime(DateTime.UtcNow);
         var instante = fecha.ToDateTime(hora);
 
-        var query = BuildQuery(includeTracking: false)
-            .Where(x => x.Estado == ProgramacionDiariaEstados.Activo)
-            .Where(x => x.Turno.Activo)
-            .Where(x => x.AceptaConsultas);
-
-        if (request.AreaId is { } areaId && areaId != Guid.Empty)
-            query = query.Where(x => x.AreaId == areaId);
-
-        if (request.EspecialidadId is { } especialidadId && especialidadId != Guid.Empty)
-            query = query.Where(x => x.EspecialidadId == especialidadId);
-
-        var programaciones = await query
+        var query = BuildDisponiblesQuery()
             .Where(x =>
                 x.Fecha == fecha ||
-                (x.Turno.CruceDia && x.Fecha == fecha.AddDays(-1)))
+                (x.Turno!.CruceDia && x.Fecha == fecha.AddDays(-1)));
+
+        if (request.AreaId is { } areaId && areaId != Guid.Empty)
+            query = query.Where(x => x.Programacion.GrupoProgramacion.AreaId == areaId);
+
+        var programaciones = await query
             .OrderBy(x => x.Fecha)
-            .ThenBy(x => x.Turno.HoraInicio)
+            .ThenBy(x => x.Turno!.HoraInicio)
             .ToListAsync(cancellationToken);
 
         var medicoIds = await LoadMedicoIdsByEmpleadoIdsAsync(
@@ -216,11 +197,12 @@ public sealed class ProgramacionDiariaService(
             if (!medicoIds.TryGetValue(prog.EmpleadoId, out var medicoId))
                 continue;
 
+            var turno = prog.Turno!;
             var ventana = TurnoVentanaHelper.Crear(
                 prog.Fecha,
-                prog.Turno.HoraInicio,
-                prog.Turno.HoraFin,
-                prog.Turno.CruceDia);
+                turno.HoraInicio,
+                turno.HoraFin,
+                turno.CruceDia);
 
             var disponibleAhora = TurnoVentanaHelper.ContieneHora(ventana, instante);
 
@@ -233,7 +215,6 @@ public sealed class ProgramacionDiariaService(
                 proxima = await FindProximaDisponibilidadAsync(
                     prog.EmpleadoId,
                     instante,
-                    request.EspecialidadId,
                     request.AreaId,
                     cancellationToken);
             }
@@ -248,21 +229,16 @@ public sealed class ProgramacionDiariaService(
 
             result.Add(new MedicoDisponibilidadResponse(
                 prog.Id,
+                prog.ProgramacionId,
                 medicoId,
                 prog.EmpleadoId,
                 $"{personaRow.Nombres} {personaRow.ApellidoPaterno} {personaRow.ApellidoMaterno}".Trim(),
-                prog.Especialidad?.Nombre,
-                prog.EspecialidadId,
-                prog.AreaId,
-                prog.Area.Nombre,
-                prog.Turno.Nombre,
-                prog.Turno.HoraInicio,
-                prog.Turno.HoraFin,
-                prog.Turno.CruceDia,
-                prog.EsMedicoTurno,
-                prog.AceptaConsultas,
-                prog.AceptaSinCita,
-                prog.MaxPacientes,
+                prog.Programacion.GrupoProgramacion.AreaId,
+                prog.Programacion.GrupoProgramacion.Area.Nombre,
+                turno.Nombre,
+                turno.HoraInicio,
+                turno.HoraFin,
+                turno.CruceDia,
                 disponibleAhora,
                 proxima));
         }
@@ -280,30 +256,18 @@ public sealed class ProgramacionDiariaService(
             ?? throw new BusinessException("El médico no existe.");
 
         var fecha = DateOnly.FromDateTime(request.FechaAtencion);
-        var hora = TimeOnly.FromDateTime(request.FechaAtencion);
 
-        var query = BuildQuery(includeTracking: false)
+        var programaciones = await BuildDisponiblesQuery()
             .Where(x => x.EmpleadoId == medico.EmpleadoId)
-            .Where(x => x.Estado == ProgramacionDiariaEstados.Activo)
-            .Where(x => x.Turno.Activo)
-            .Where(x => x.AceptaConsultas)
             .Where(x =>
                 x.Fecha == fecha ||
-                (x.Turno.CruceDia && x.Fecha == fecha.AddDays(-1)));
-
-        if (request.EspecialidadId is { } especialidadId && especialidadId != Guid.Empty)
-        {
-            query = query.Where(x =>
-                x.EspecialidadId == especialidadId ||
-                x.EspecialidadId == null);
-        }
-
-        var programaciones = await query.ToListAsync(cancellationToken);
+                (x.Turno!.CruceDia && x.Fecha == fecha.AddDays(-1)))
+            .ToListAsync(cancellationToken);
 
         var disponible = programaciones.Any(prog =>
             TurnoVentanaHelper.ContieneHora(
                 prog.Fecha,
-                prog.Turno.HoraInicio,
+                prog.Turno!.HoraInicio,
                 prog.Turno.HoraFin,
                 prog.Turno.CruceDia,
                 request.FechaAtencion));
@@ -311,8 +275,31 @@ public sealed class ProgramacionDiariaService(
         if (!disponible)
         {
             throw new BusinessException(
-                "El médico no está programado, activo o disponible para la fecha y hora indicadas.");
+                "El médico no está programado o disponible para la fecha y hora indicadas.");
         }
+    }
+
+    public async Task<IReadOnlyList<ProgramacionLookupResponse>> GetProgramacionesLookupAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return await context.Programacion
+            .AsNoTracking()
+            .Include(x => x.GrupoProgramacion)
+                .ThenInclude(x => x.Area)
+            .Where(x => x.Estado != EstadoProgramacion.Cancelada)
+            .OrderByDescending(x => x.FechaInicio)
+            .ThenBy(x => x.Nombre)
+            .Select(x => new ProgramacionLookupResponse(
+                x.Id,
+                x.Nombre,
+                x.Estado,
+                x.GrupoProgramacionId,
+                x.GrupoProgramacion.Nombre,
+                x.GrupoProgramacion.AreaId,
+                x.GrupoProgramacion.Area.Nombre,
+                x.FechaInicio,
+                x.FechaFin))
+            .ToListAsync(cancellationToken);
     }
 
     private IQueryable<ProgramacionDiaria> BuildQuery(bool includeTracking)
@@ -320,38 +307,40 @@ public sealed class ProgramacionDiariaService(
         var query = context.ProgramacionDiaria
             .Include(x => x.Empleado)
             .Include(x => x.Turno)
-            .Include(x => x.Area)
-            .Include(x => x.Cargo)
-            .Include(x => x.Especialidad)
+            .Include(x => x.Programacion)
+                .ThenInclude(x => x.GrupoProgramacion)
+                    .ThenInclude(x => x.Area)
             .AsQueryable();
 
         return includeTracking ? query : query.AsNoTracking();
     }
 
+    private IQueryable<ProgramacionDiaria> BuildDisponiblesQuery() =>
+        BuildQuery(includeTracking: false)
+            .Where(x => x.Programacion.Estado == EstadoProgramacion.Publicada)
+            .Where(x => x.TipoAsignacion == TipoAsignacionProgramacion.Regular)
+            .Where(x => x.TurnoId != null && x.Turno!.Activo);
+
     private async Task EnsureReferenciasExistAsync(
         CreateProgramacionDiariaRequest request,
         CancellationToken cancellationToken)
     {
+        await EnsureProgramacionExistsAsync(request.ProgramacionId, cancellationToken);
         await EnsureEmpleadoExistsAsync(request.EmpleadoId, cancellationToken);
-        await EnsureTurnoExistsAsync(request.TurnoId, cancellationToken);
-        await EnsureAreaExistsAsync(request.AreaId, cancellationToken);
-        await EnsureCargoExistsAsync(request.CargoId, cancellationToken);
 
-        if (request.EspecialidadId is { } especialidadId && especialidadId != Guid.Empty)
-            await EnsureEspecialidadExistsAsync(especialidadId, cancellationToken);
+        if (request.TurnoId is { } turnoId && turnoId != Guid.Empty)
+            await EnsureTurnoExistsAsync(turnoId, cancellationToken);
     }
 
     private async Task EnsureReferenciasExistAsync(
         UpdateProgramacionDiariaRequest request,
         CancellationToken cancellationToken)
     {
+        await EnsureProgramacionExistsAsync(request.ProgramacionId, cancellationToken);
         await EnsureEmpleadoExistsAsync(request.EmpleadoId, cancellationToken);
-        await EnsureTurnoExistsAsync(request.TurnoId, cancellationToken);
-        await EnsureAreaExistsAsync(request.AreaId, cancellationToken);
-        await EnsureCargoExistsAsync(request.CargoId, cancellationToken);
 
-        if (request.EspecialidadId is { } especialidadId && especialidadId != Guid.Empty)
-            await EnsureEspecialidadExistsAsync(especialidadId, cancellationToken);
+        if (request.TurnoId is { } turnoId && turnoId != Guid.Empty)
+            await EnsureTurnoExistsAsync(turnoId, cancellationToken);
     }
 
     private async Task EnsureNoTraslapeAsync(
@@ -359,6 +348,9 @@ public sealed class ProgramacionDiariaService(
         Guid? currentId,
         CancellationToken cancellationToken)
     {
+        if (entity.TurnoId is null || entity.TipoAsignacion == TipoAsignacionProgramacion.Descanso)
+            return;
+
         var turno = await context.Turnos
             .AsNoTracking()
             .FirstAsync(x => x.Id == entity.TurnoId, cancellationToken);
@@ -372,8 +364,11 @@ public sealed class ProgramacionDiariaService(
         var existentes = await context.ProgramacionDiaria
             .AsNoTracking()
             .Include(x => x.Turno)
+            .Include(x => x.Programacion)
             .Where(x => x.EmpleadoId == entity.EmpleadoId)
-            .Where(x => x.Estado != ProgramacionDiariaEstados.Cancelado)
+            .Where(x => x.TipoAsignacion == TipoAsignacionProgramacion.Regular)
+            .Where(x => x.TurnoId != null)
+            .Where(x => x.Programacion.Estado != EstadoProgramacion.Cancelada)
             .Where(x => !currentId.HasValue || x.Id != currentId.Value)
             .Where(x =>
                 x.Fecha == entity.Fecha ||
@@ -383,6 +378,9 @@ public sealed class ProgramacionDiariaService(
 
         foreach (var existente in existentes)
         {
+            if (existente.Turno is null)
+                continue;
+
             var ventanaExistente = TurnoVentanaHelper.Crear(
                 existente.Fecha,
                 existente.Turno.HoraInicio,
@@ -397,78 +395,21 @@ public sealed class ProgramacionDiariaService(
         }
     }
 
-    private async Task EnsureMedicoPrincipalUnicoAsync(
-        ProgramacionDiaria entity,
-        Guid? currentId,
-        Turno turno,
-        CancellationToken cancellationToken)
-    {
-        if (!entity.EsMedicoTurno)
-            return;
-
-        if (entity.PermiteMultiplesMedicosTurno || turno.PermiteMultiplesMedicosTurno)
-            return;
-
-        var ventanaNueva = TurnoVentanaHelper.Crear(
-            entity.Fecha,
-            turno.HoraInicio,
-            turno.HoraFin,
-            turno.CruceDia);
-
-        var candidatos = await context.ProgramacionDiaria
-            .AsNoTracking()
-            .Include(x => x.Turno)
-            .Where(x => x.AreaId == entity.AreaId)
-            .Where(x => x.EsMedicoTurno)
-            .Where(x => x.Estado == ProgramacionDiariaEstados.Activo)
-            .Where(x => !currentId.HasValue || x.Id != currentId.Value)
-            .Where(x =>
-                x.Fecha == entity.Fecha ||
-                x.Fecha == entity.Fecha.AddDays(-1) ||
-                x.Fecha == entity.Fecha.AddDays(1))
-            .ToListAsync(cancellationToken);
-
-        foreach (var candidato in candidatos)
-        {
-            if (candidato.PermiteMultiplesMedicosTurno || candidato.Turno.PermiteMultiplesMedicosTurno)
-                continue;
-
-            var ventanaCandidato = TurnoVentanaHelper.Crear(
-                candidato.Fecha,
-                candidato.Turno.HoraInicio,
-                candidato.Turno.HoraFin,
-                candidato.Turno.CruceDia);
-
-            if (ventanaNueva.SeTraslapaCon(ventanaCandidato))
-            {
-                throw new BusinessException(
-                    "Ya existe un médico principal de turno para el área y horario indicados.");
-            }
-        }
-    }
-
     private async Task<DateTime?> FindProximaDisponibilidadAsync(
         Guid empleadoId,
         DateTime desde,
-        Guid? especialidadId,
         Guid? areaId,
         CancellationToken cancellationToken)
     {
-        var query = BuildQuery(includeTracking: false)
-            .Where(x => x.EmpleadoId == empleadoId)
-            .Where(x => x.Estado == ProgramacionDiariaEstados.Activo)
-            .Where(x => x.Turno.Activo)
-            .Where(x => x.AceptaConsultas);
+        var query = BuildDisponiblesQuery()
+            .Where(x => x.EmpleadoId == empleadoId);
 
         if (areaId is { } area && area != Guid.Empty)
-            query = query.Where(x => x.AreaId == area);
-
-        if (especialidadId is { } esp && esp != Guid.Empty)
-            query = query.Where(x => x.EspecialidadId == esp || x.EspecialidadId == null);
+            query = query.Where(x => x.Programacion.GrupoProgramacion.AreaId == area);
 
         var programaciones = await query
             .OrderBy(x => x.Fecha)
-            .ThenBy(x => x.Turno.HoraInicio)
+            .ThenBy(x => x.Turno!.HoraInicio)
             .Take(30)
             .ToListAsync(cancellationToken);
 
@@ -476,7 +417,7 @@ public sealed class ProgramacionDiariaService(
         {
             var inicio = TurnoVentanaHelper.Crear(
                 prog.Fecha,
-                prog.Turno.HoraInicio,
+                prog.Turno!.HoraInicio,
                 prog.Turno.HoraFin,
                 prog.Turno.CruceDia).Inicio;
 
@@ -539,6 +480,12 @@ public sealed class ProgramacionDiariaService(
         return nombres.GetValueOrDefault(empleadoId, string.Empty);
     }
 
+    private async Task EnsureProgramacionExistsAsync(Guid id, CancellationToken ct)
+    {
+        if (!await context.Programacion.AnyAsync(x => x.Id == id, ct))
+            throw new BusinessException("La programación no existe.");
+    }
+
     private async Task EnsureEmpleadoExistsAsync(Guid id, CancellationToken ct)
     {
         if (!await context.Empleados.AnyAsync(x => x.Id == id, ct))
@@ -551,57 +498,25 @@ public sealed class ProgramacionDiariaService(
             throw new BusinessException("El turno no existe.");
     }
 
-    private async Task EnsureAreaExistsAsync(Guid id, CancellationToken ct)
-    {
-        if (!await context.Areas.AnyAsync(x => x.Id == id, ct))
-            throw new BusinessException("El área no existe.");
-    }
-
-    private async Task EnsureCargoExistsAsync(Guid id, CancellationToken ct)
-    {
-        if (!await context.Cargos.AnyAsync(x => x.Id == id, ct))
-            throw new BusinessException("El cargo no existe.");
-    }
-
-    private async Task EnsureEspecialidadExistsAsync(Guid id, CancellationToken ct)
-    {
-        if (!await context.Especialidades.AnyAsync(x => x.Id == id, ct))
-            throw new BusinessException("La especialidad no existe.");
-    }
-
     private static ProgramacionDiaria MapFromCreate(CreateProgramacionDiariaRequest request) =>
         new()
         {
+            ProgramacionId = request.ProgramacionId,
             EmpleadoId = request.EmpleadoId,
             Fecha = request.Fecha,
-            TurnoId = request.TurnoId,
-            AreaId = request.AreaId,
-            CargoId = request.CargoId,
-            EspecialidadId = request.EspecialidadId is { } esp && esp != Guid.Empty ? esp : null,
-            EsMedicoTurno = request.EsMedicoTurno,
-            AceptaConsultas = request.AceptaConsultas,
-            AceptaSinCita = request.AceptaSinCita,
-            MaxPacientes = request.MaxPacientes,
-            Estado = request.Estado.Trim().ToUpperInvariant(),
-            Observacion = StringNormalize.Optional(request.Observacion),
-            PermiteMultiplesMedicosTurno = request.PermiteMultiplesMedicosTurno
+            TurnoId = request.TurnoId is { } t && t != Guid.Empty ? t : null,
+            TipoAsignacion = request.TipoAsignacion,
+            Observacion = StringNormalize.Optional(request.Observacion)
         };
 
     private static void ApplyUpdate(ProgramacionDiaria entity, UpdateProgramacionDiariaRequest request)
     {
+        entity.ProgramacionId = request.ProgramacionId;
         entity.EmpleadoId = request.EmpleadoId;
         entity.Fecha = request.Fecha;
-        entity.TurnoId = request.TurnoId;
-        entity.AreaId = request.AreaId;
-        entity.CargoId = request.CargoId;
-        entity.EspecialidadId = request.EspecialidadId is { } esp && esp != Guid.Empty ? esp : null;
-        entity.EsMedicoTurno = request.EsMedicoTurno;
-        entity.AceptaConsultas = request.AceptaConsultas;
-        entity.AceptaSinCita = request.AceptaSinCita;
-        entity.MaxPacientes = request.MaxPacientes;
-        entity.Estado = request.Estado.Trim().ToUpperInvariant();
+        entity.TurnoId = request.TurnoId is { } t && t != Guid.Empty ? t : null;
+        entity.TipoAsignacion = request.TipoAsignacion;
         entity.Observacion = StringNormalize.Optional(request.Observacion);
-        entity.PermiteMultiplesMedicosTurno = request.PermiteMultiplesMedicosTurno;
     }
 
     private static ProgramacionDiariaResponse ToResponse(
@@ -610,29 +525,25 @@ public sealed class ProgramacionDiariaService(
         string empleadoNombre) =>
         new(
             entity.Id,
+            entity.ProgramacionId,
+            entity.Programacion.Nombre,
+            entity.Programacion.Estado,
+            entity.Programacion.GrupoProgramacionId,
+            entity.Programacion.GrupoProgramacion.Nombre,
+            entity.Programacion.GrupoProgramacion.AreaId,
+            entity.Programacion.GrupoProgramacion.Area.Codigo,
+            entity.Programacion.GrupoProgramacion.Area.Nombre,
             entity.EmpleadoId,
             entity.Empleado.CodigoEmpleado,
             empleadoNombre,
             entity.Fecha,
             entity.TurnoId,
-            entity.Turno.Codigo,
-            entity.Turno.Nombre,
-            entity.Turno.HoraInicio,
-            entity.Turno.HoraFin,
-            entity.Turno.CruceDia,
-            entity.AreaId,
-            entity.Area.Codigo,
-            entity.Area.Nombre,
-            entity.CargoId,
-            entity.Cargo.Nombre,
-            entity.EspecialidadId,
-            entity.Especialidad?.Nombre,
-            entity.EsMedicoTurno,
-            entity.AceptaConsultas,
-            entity.AceptaSinCita,
-            entity.MaxPacientes,
-            entity.Estado,
+            entity.Turno?.Codigo,
+            entity.Turno?.Nombre,
+            entity.Turno?.HoraInicio,
+            entity.Turno?.HoraFin,
+            entity.Turno?.CruceDia,
+            entity.TipoAsignacion,
             entity.Observacion,
-            entity.PermiteMultiplesMedicosTurno,
             medicoId);
 }

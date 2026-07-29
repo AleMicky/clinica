@@ -25,6 +25,12 @@ public class RecursosHumanosDbContext : DbContext
 
     public DbSet<Turno> Turnos => Set<Turno>();
 
+    public DbSet<GrupoProgramacion> GrupoProgramacion => Set<GrupoProgramacion>();
+
+    public DbSet<Programacion> Programacion => Set<Programacion>();
+
+    public DbSet<GrupoProgramacionEmpleado> GrupoProgramacionEmpleado => Set<GrupoProgramacionEmpleado>();
+
     public DbSet<ProgramacionDiaria> ProgramacionDiaria => Set<ProgramacionDiaria>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -90,6 +90,7 @@ export const queryKeys = {
                 ['recursos-humanos', 'programacion-diaria', 'list', query] as const,
             disponibilidad: (query: Record<string, unknown>) =>
                 ['recursos-humanos', 'programacion-diaria', 'disponibilidad', query] as const,
+            programacionesLookup: ['recursos-humanos', 'programacion-diaria', 'programaciones-lookup'] as const,
         },
     },
     catalogoClinico: {

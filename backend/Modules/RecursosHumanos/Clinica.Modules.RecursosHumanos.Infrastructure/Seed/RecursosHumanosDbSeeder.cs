@@ -454,46 +454,133 @@ public static class RecursosHumanosDbSeeder
         ILogger logger)
     {
         var hoy = DateOnly.FromDateTime(DateTime.Now);
-        var creadas = 0;
+        var gruposCreados = 0;
+        var detallesCreados = 0;
 
-        foreach (var item in RecursosHumanosDemoSeedData.Programaciones)
+        var gruposPorCodigo = new Dictionary<string, GrupoProgramacion>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var item in RecursosHumanosDemoSeedData.GruposProgramacion)
         {
+            var area = await context.Areas
+                .FirstOrDefaultAsync(x => x.Codigo == item.AreaCodigo);
+
+            if (area is null)
+            {
+                logger.LogWarning(
+                    "Área '{Area}' no encontrada para grupo '{Codigo}'; omitiendo.",
+                    item.AreaCodigo,
+                    item.Codigo);
+                continue;
+            }
+
+            var grupo = await context.GrupoProgramacion
+                .FirstOrDefaultAsync(x => x.Codigo == item.Codigo);
+
+            if (grupo is null)
+            {
+                grupo = new GrupoProgramacion
+                {
+                    Codigo = item.Codigo,
+                    Nombre = item.Nombre,
+                    Descripcion = item.Descripcion,
+                    AreaId = area.Id
+                };
+                context.GrupoProgramacion.Add(grupo);
+                gruposCreados++;
+            }
+            else
+            {
+                grupo.Nombre = item.Nombre;
+                grupo.Descripcion = item.Descripcion;
+                grupo.AreaId = area.Id;
+            }
+
+            gruposPorCodigo[item.Codigo] = grupo;
+        }
+
+        await context.SaveChangesAsync();
+
+        var offsets = RecursosHumanosDemoSeedData.ProgramacionesDiarias
+            .Select(x => x.OffsetDias)
+            .DefaultIfEmpty(0)
+            .ToList();
+        var fechaInicio = hoy.AddDays(offsets.Min());
+        var fechaFin = hoy.AddDays(offsets.Max());
+
+        var programacionesPorGrupo = new Dictionary<Guid, Programacion>();
+
+        foreach (var grupo in gruposPorCodigo.Values)
+        {
+            var programacion = await context.Programacion
+                .FirstOrDefaultAsync(x =>
+                    x.GrupoProgramacionId == grupo.Id &&
+                    x.FechaInicio == fechaInicio &&
+                    x.FechaFin == fechaFin);
+
+            if (programacion is null)
+            {
+                programacion = new Programacion
+                {
+                    Nombre = $"Programación demo {fechaInicio:yyyy-MM-dd} – {grupo.Nombre}",
+                    FechaInicio = fechaInicio,
+                    FechaFin = fechaFin,
+                    GrupoProgramacionId = grupo.Id,
+                    Estado = Domain.Enums.EstadoProgramacion.Publicada,
+                    Observacion = "Seed demo"
+                };
+                context.Programacion.Add(programacion);
+            }
+            else
+            {
+                programacion.Nombre = $"Programación demo {fechaInicio:yyyy-MM-dd} – {grupo.Nombre}";
+                programacion.Estado = Domain.Enums.EstadoProgramacion.Publicada;
+            }
+
+            programacionesPorGrupo[grupo.Id] = programacion;
+        }
+
+        await context.SaveChangesAsync();
+
+        foreach (var item in RecursosHumanosDemoSeedData.ProgramacionesDiarias)
+        {
+            if (!gruposPorCodigo.TryGetValue(item.GrupoCodigo, out var grupo))
+            {
+                logger.LogWarning(
+                    "Grupo '{Grupo}' no encontrado para detalle '{Codigo}'; omitiendo.",
+                    item.GrupoCodigo,
+                    item.CodigoSeed);
+                continue;
+            }
+
+            if (!programacionesPorGrupo.TryGetValue(grupo.Id, out var programacion))
+                continue;
+
             var empleado = await context.Empleados
                 .FirstOrDefaultAsync(x => x.CodigoEmpleado == item.CodigoEmpleado);
 
             var turno = await context.Turnos
                 .FirstOrDefaultAsync(x => x.Codigo == item.TurnoCodigo);
 
-            var area = await context.Areas
-                .FirstOrDefaultAsync(x => x.Codigo == item.AreaCodigo);
-
-            var cargo = await context.Cargos
-                .FirstOrDefaultAsync(x => x.Nombre == item.CargoNombre);
-
-            if (empleado is null || turno is null || area is null || cargo is null)
+            if (empleado is null || turno is null)
             {
                 logger.LogWarning(
-                    "Catálogo incompleto para programación '{Codigo}'; omitiendo.",
+                    "Catálogo incompleto para detalle '{Codigo}'; omitiendo.",
                     item.CodigoSeed);
                 continue;
             }
 
-            Guid? especialidadId = null;
-            if (!string.IsNullOrWhiteSpace(item.EspecialidadNombre))
+            var miembro = await context.GrupoProgramacionEmpleado
+                .FirstOrDefaultAsync(x =>
+                    x.GrupoProgramacionId == grupo.Id &&
+                    x.EmpleadoId == empleado.Id);
+
+            if (miembro is null)
             {
-                var especialidad = await context.Especialidades
-                    .FirstOrDefaultAsync(x => x.Nombre == item.EspecialidadNombre);
-
-                if (especialidad is null)
+                context.GrupoProgramacionEmpleado.Add(new GrupoProgramacionEmpleado
                 {
-                    logger.LogWarning(
-                        "Especialidad '{Especialidad}' no encontrada para '{Codigo}'; omitiendo.",
-                        item.EspecialidadNombre,
-                        item.CodigoSeed);
-                    continue;
-                }
-
-                especialidadId = especialidad.Id;
+                    GrupoProgramacionId = grupo.Id,
+                    EmpleadoId = empleado.Id
+                });
             }
 
             var fecha = hoy.AddDays(item.OffsetDias);
@@ -508,42 +595,29 @@ public static class RecursosHumanosDbSeeder
             {
                 context.ProgramacionDiaria.Add(new ProgramacionDiaria
                 {
+                    ProgramacionId = programacion.Id,
                     EmpleadoId = empleado.Id,
                     Fecha = fecha,
                     TurnoId = turno.Id,
-                    AreaId = area.Id,
-                    CargoId = cargo.Id,
-                    EspecialidadId = especialidadId,
-                    EsMedicoTurno = item.EsMedicoTurno,
-                    AceptaConsultas = item.AceptaConsultas,
-                    AceptaSinCita = item.AceptaSinCita,
-                    MaxPacientes = item.MaxPacientes,
-                    Estado = item.Estado,
-                    Observacion = item.Observacion,
-                    PermiteMultiplesMedicosTurno = item.PermiteMultiplesMedicosTurno
+                    TipoAsignacion = (Domain.Enums.TipoAsignacionProgramacion)item.TipoAsignacion,
+                    Observacion = item.Observacion
                 });
-                creadas++;
+                detallesCreados++;
             }
             else
             {
-                existing.AreaId = area.Id;
-                existing.CargoId = cargo.Id;
-                existing.EspecialidadId = especialidadId;
-                existing.EsMedicoTurno = item.EsMedicoTurno;
-                existing.AceptaConsultas = item.AceptaConsultas;
-                existing.AceptaSinCita = item.AceptaSinCita;
-                existing.MaxPacientes = item.MaxPacientes;
-                existing.Estado = item.Estado;
+                existing.ProgramacionId = programacion.Id;
+                existing.TipoAsignacion = (Domain.Enums.TipoAsignacionProgramacion)item.TipoAsignacion;
                 existing.Observacion = item.Observacion;
-                existing.PermiteMultiplesMedicosTurno = item.PermiteMultiplesMedicosTurno;
             }
         }
 
         await context.SaveChangesAsync();
         logger.LogInformation(
-            "Seed de programación diaria aplicado ({Creadas} nuevas / {Total} definidas).",
-            creadas,
-            RecursosHumanosDemoSeedData.Programaciones.Length);
+            "Seed de programación aplicado ({Grupos} grupos, {Detalles} detalles nuevos / {Total} definidos).",
+            gruposCreados,
+            detallesCreados,
+            RecursosHumanosDemoSeedData.ProgramacionesDiarias.Length);
     }
 
     private static void SyncMedicoEspecialidades(

@@ -16,13 +16,15 @@ public sealed class ProgramacionDiariaPagedRequest : PagedRequest
 
     public Guid? TurnoId { get; init; }
 
+    public Guid? ProgramacionId { get; init; }
+
+    public Guid? GrupoProgramacionId { get; init; }
+
     public Guid? AreaId { get; init; }
 
-    public Guid? EspecialidadId { get; init; }
+    public int? TipoAsignacion { get; init; }
 
-    public string? Estado { get; init; }
-
-    public bool? EsMedicoTurno { get; init; }
+    public int? EstadoProgramacion { get; init; }
 }
 
 public sealed class MedicoDisponibilidadRequest
@@ -30,8 +32,6 @@ public sealed class MedicoDisponibilidadRequest
     public DateOnly? Fecha { get; init; }
 
     public TimeOnly? Hora { get; init; }
-
-    public Guid? EspecialidadId { get; init; }
 
     public Guid? AreaId { get; init; }
 

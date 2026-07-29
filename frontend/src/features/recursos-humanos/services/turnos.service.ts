@@ -10,6 +10,7 @@ import type {
     MedicoDisponibilidadQuery,
     ProgramacionDiaria,
     ProgramacionDiariaPagedQuery,
+    ProgramacionLookup,
     Turno,
     TurnoPagedQuery,
     UpdateProgramacionDiariaPayload,
@@ -22,6 +23,7 @@ export const programacionDiariaEndpoints = createEndpoints(
     '/api/recursos-humanos/programacion-diaria',
     (root) => ({
         disponibilidad: `${root}/disponibilidad`,
+        programacionesLookup: `${root}/programaciones-lookup`,
     }),
 )
 
@@ -57,6 +59,14 @@ export class ProgramacionDiariaService {
             .get<ApiResponse<MedicoDisponibilidad[]>>(
                 programacionDiariaEndpoints.disponibilidad,
                 { params: query },
+            )
+            .then(({ data }) => unwrap(data))
+    }
+
+    getProgramacionesLookup() {
+        return api
+            .get<ApiResponse<ProgramacionLookup[]>>(
+                programacionDiariaEndpoints.programacionesLookup,
             )
             .then(({ data }) => unwrap(data))
     }

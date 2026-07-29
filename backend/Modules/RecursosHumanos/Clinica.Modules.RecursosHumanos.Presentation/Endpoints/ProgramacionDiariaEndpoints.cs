@@ -37,6 +37,15 @@ public static class ProgramacionDiariaEndpoints
             })
             .WithName("ProgramacionDiaria_GetDisponibilidad");
 
+        programacion.MapGet("/programaciones-lookup", async (
+                IProgramacionDiariaService service,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await service.GetProgramacionesLookupAsync(cancellationToken);
+                return ApiResults.Ok(result);
+            })
+            .WithName("ProgramacionDiaria_GetProgramacionesLookup");
+
         programacion.MapGet("/{id:guid}", async (
                 Guid id,
                 IProgramacionDiariaService service,

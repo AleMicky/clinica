@@ -6,14 +6,13 @@ import type { MedicoDisponibilidad } from '../../recursos-humanos/types/turnos.t
 const { Text } = Typography
 
 type MedicoDisponibilidadPanelProps = {
-    especialidadId?: string
     areaId?: string
     selectedMedicoId?: string
     onSelectMedico?: (medicoId: string) => void
 }
 
-function formatHora(value: string) {
-    return value.slice(0, 5)
+function formatHora(value?: string | null) {
+    return value ? value.slice(0, 5) : '—'
 }
 
 function formatProxima(value?: string | null) {
@@ -29,7 +28,6 @@ function formatProxima(value?: string | null) {
 }
 
 export function MedicoDisponibilidadPanel({
-    especialidadId,
     areaId,
     selectedMedicoId,
     onSelectMedico,
@@ -41,13 +39,11 @@ export function MedicoDisponibilidadPanel({
     const { data, isFetching } = useMedicoDisponibilidad({
         fecha,
         hora,
-        especialidadId: especialidadId || undefined,
         areaId: areaId || undefined,
         incluirProximaDisponibilidad: true,
     })
 
     const medicos = data ?? []
-    const medicosTurno = medicos.filter((m) => m.esMedicoTurno)
     const disponiblesAhora = medicos.filter((m) => m.disponibleAhora)
 
     const columns = [
@@ -55,12 +51,6 @@ export function MedicoDisponibilidadPanel({
             title: 'Médico',
             dataIndex: 'medicoNombre',
             key: 'medicoNombre',
-        },
-        {
-            title: 'Especialidad',
-            dataIndex: 'especialidadNombre',
-            key: 'especialidadNombre',
-            render: (value: string | null) => value ?? '—',
         },
         {
             title: 'Horario',
@@ -94,14 +84,12 @@ export function MedicoDisponibilidadPanel({
         <div className="atencion-recepcion-form__disponibilidad">
             <div className="atencion-recepcion-form__disponibilidad-head">
                 <Text strong>Médicos programados hoy</Text>
-                <Text type="secondary">
-                    {disponiblesAhora.length} disponible(s) · {medicosTurno.length} de turno
-                </Text>
+                <Text type="secondary">{disponiblesAhora.length} disponible(s)</Text>
             </div>
 
             <Table
                 size="small"
-                rowKey="programacionId"
+                rowKey="programacionDiariaId"
                 loading={isFetching}
                 columns={columns}
                 dataSource={medicos}

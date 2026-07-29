@@ -1,34 +1,20 @@
+using Clinica.Modules.RecursosHumanos.Domain.Enums;
 using FluentValidation;
 
 namespace Clinica.Modules.RecursosHumanos.Application.ProgramacionDiaria;
-
-public static class ProgramacionDiariaEstados
-{
-    public const string Activo = "ACTIVO";
-    public const string Inactivo = "INACTIVO";
-    public const string Cancelado = "CANCELADO";
-
-    public static readonly HashSet<string> Validos =
-    [
-        Activo,
-        Inactivo,
-        Cancelado
-    ];
-}
 
 public class CreateProgramacionDiariaRequestValidator : AbstractValidator<CreateProgramacionDiariaRequest>
 {
     public CreateProgramacionDiariaRequestValidator()
     {
+        RuleFor(x => x.ProgramacionId).NotEmpty();
         RuleFor(x => x.EmpleadoId).NotEmpty();
-        RuleFor(x => x.TurnoId).NotEmpty();
-        RuleFor(x => x.AreaId).NotEmpty();
-        RuleFor(x => x.CargoId).NotEmpty();
-        RuleFor(x => x.MaxPacientes).GreaterThan(0).LessThanOrEqualTo(999);
-        RuleFor(x => x.Estado)
+        RuleFor(x => x.Fecha).NotEmpty();
+        RuleFor(x => x.TipoAsignacion).IsInEnum();
+        RuleFor(x => x.TurnoId)
             .NotEmpty()
-            .Must(x => ProgramacionDiariaEstados.Validos.Contains(x))
-            .WithMessage("Estado inválido.");
+            .When(x => x.TipoAsignacion == TipoAsignacionProgramacion.Regular)
+            .WithMessage("El turno es obligatorio para asignaciones regulares.");
         RuleFor(x => x.Observacion).MaximumLength(1000);
     }
 }
@@ -37,15 +23,14 @@ public class UpdateProgramacionDiariaRequestValidator : AbstractValidator<Update
 {
     public UpdateProgramacionDiariaRequestValidator()
     {
+        RuleFor(x => x.ProgramacionId).NotEmpty();
         RuleFor(x => x.EmpleadoId).NotEmpty();
-        RuleFor(x => x.TurnoId).NotEmpty();
-        RuleFor(x => x.AreaId).NotEmpty();
-        RuleFor(x => x.CargoId).NotEmpty();
-        RuleFor(x => x.MaxPacientes).GreaterThan(0).LessThanOrEqualTo(999);
-        RuleFor(x => x.Estado)
+        RuleFor(x => x.Fecha).NotEmpty();
+        RuleFor(x => x.TipoAsignacion).IsInEnum();
+        RuleFor(x => x.TurnoId)
             .NotEmpty()
-            .Must(x => ProgramacionDiariaEstados.Validos.Contains(x))
-            .WithMessage("Estado inválido.");
+            .When(x => x.TipoAsignacion == TipoAsignacionProgramacion.Regular)
+            .WithMessage("El turno es obligatorio para asignaciones regulares.");
         RuleFor(x => x.Observacion).MaximumLength(1000);
     }
 }
