@@ -2,103 +2,153 @@ import { useEffect, useMemo, useState } from 'react'
 import {
     Button,
     DatePicker,
-    Drawer,
+    Empty,
     Flex,
-    Form,
-    Input,
-    Popconfirm,
     Select,
     Space,
-    Table,
     Tag,
+    Typography,
 } from 'antd'
-import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
-import dayjs from 'dayjs'
+import {
+    PlusOutlined,
+    SettingOutlined,
+    CalendarOutlined,
+} from '@ant-design/icons'
+import dayjs, { type Dayjs } from 'dayjs'
 
+import { useAreas } from '../../catalogo-clinico/hooks/catalogo-clinico.hooks'
 import { useEmpleados } from '../hooks/empleados.hooks'
 import {
+    useCreateGrupoProgramacion,
+    useCreateProgramacion,
     useCreateProgramacionDiaria,
     useDeleteProgramacionDiaria,
+    useGrupoProgramacion,
+    useGruposProgramacion,
     useProgramacionDiaria,
-    useProgramacionesLookup,
+    useProgramaciones,
+    useSetGrupoProgramacionEmpleados,
     useTurnos,
+    useUpdateGrupoProgramacion,
     useUpdateProgramacionDiaria,
+    useUpdateProgramacionEstado,
 } from '../hooks/turnos.hooks'
 import {
+    GrupoProgramacionFormDrawer,
+    type GrupoFormValues,
+} from '../components/GrupoProgramacionFormDrawer'
+import { ProgramacionCalendarioMatrix } from '../components/ProgramacionCalendarioMatrix'
+import {
+    ProgramacionCeldaDrawer,
+    toCeldaPayload,
+    type CeldaFormValues,
+} from '../components/ProgramacionCeldaDrawer'
+import {
     ESTADO_PROGRAMACION_LABELS,
-    TIPO_ASIGNACION_OPTIONS,
-    type EstadoProgramacion,
+    type GrupoProgramacion,
     type ProgramacionDiaria,
-    type TipoAsignacionProgramacion,
 } from '../types/turnos.types'
 
 const LOOKUP_QUERY = { page: 1, pageSize: 200 }
 const DATE_FORMAT = 'YYYY-MM-DD'
+const { Text } = Typography
 
-type ProgramacionFormValues = {
-    programacionId: string
-    empleadoId: string
-    fecha: dayjs.Dayjs
-    turnoId?: string
-    tipoAsignacion: TipoAsignacionProgramacion
-    observacion?: string
-}
-
-const defaultValues: ProgramacionFormValues = {
-    programacionId: '',
-    empleadoId: '',
-    fecha: dayjs(),
-    turnoId: undefined,
-    tipoAsignacion: 1,
-    observacion: '',
-}
-
-function toPayload(values: ProgramacionFormValues) {
-    return {
-        programacionId: values.programacionId,
-        empleadoId: values.empleadoId,
-        fecha: values.fecha.format(DATE_FORMAT),
-        turnoId: values.tipoAsignacion === 1 ? values.turnoId || null : null,
-        tipoAsignacion: values.tipoAsignacion,
-        observacion: values.observacion?.trim() || null,
+function daysOfMonth(month: Dayjs): string[] {
+    const days: string[] = []
+    const total = month.daysInMonth()
+    for (let d = 1; d <= total; d += 1) {
+        days.push(month.date(d).format(DATE_FORMAT))
     }
-}
-
-function formatHora(value?: string | null) {
-    return value ? value.slice(0, 5) : '—'
+    return days
 }
 
 export function ProgramacionDiariaView() {
-    const [page, setPage] = useState(1)
-    const [pageSize, setPageSize] = useState(20)
-    const [fechaFiltro, setFechaFiltro] = useState(dayjs())
-    const [drawerOpen, setDrawerOpen] = useState(false)
-    const [editing, setEditing] = useState<ProgramacionDiaria | null>(null)
-    const [form] = Form.useForm<ProgramacionFormValues>()
-    const tipoAsignacion = Form.useWatch('tipoAsignacion', form)
+    const [mes, setMes] = useState(() => dayjs().startOf('month'))
+    const [grupoId, setGrupoId] = useState<string | undefined>()
+    const [programacionId, setProgramacionId] = useState<string | undefined>()
 
-    const fecha = fechaFiltro.format(DATE_FORMAT)
-    const { data, isFetching } = useProgramacionDiaria({ page, pageSize, fecha })
+    const [celdaOpen, setCeldaOpen] = useState(false)
+    const [editingCelda, setEditingCelda] = useState<ProgramacionDiaria | null>(null)
+    const [celdaDefaults, setCeldaDefaults] = useState<{
+        fecha: string
+        empleadoId?: string
+    }>({ fecha: dayjs().format(DATE_FORMAT) })
+
+    const [grupoDrawerOpen, setGrupoDrawerOpen] = useState(false)
+    const [editingGrupo, setEditingGrupo] = useState<GrupoProgramacion | null>(null)
+
+    const fechaDesde = mes.startOf('month').format(DATE_FORMAT)
+    const fechaHasta = mes.endOf('month').format(DATE_FORMAT)
+    const dias = useMemo(() => daysOfMonth(mes), [mes])
+
+    const { data: gruposData, isFetching: loadingGrupos } = useGruposProgramacion(LOOKUP_QUERY)
+    const { data: grupoDetalle, isFetching: loadingGrupoDetalle } = useGrupoProgramacion(grupoId)
+    const { data: programacionesData, isFetching: loadingProgramaciones } = useProgramaciones(
+        {
+            page: 1,
+            pageSize: 50,
+            grupoProgramacionId: grupoId,
+            fechaDesde,
+            fechaHasta,
+        },
+        !!grupoId,
+    )
+    const { data: diariaData, isFetching: loadingDiaria } = useProgramacionDiaria(
+        {
+            page: 1,
+            pageSize: 500,
+            grupoProgramacionId: grupoId,
+            fechaDesde,
+            fechaHasta,
+            programacionId,
+        },
+        !!grupoId,
+    )
     const { data: turnosData } = useTurnos({ page: 1, pageSize: 100, activo: true })
     const { data: empleadosData } = useEmpleados(LOOKUP_QUERY)
-    const { data: programacionesLookup } = useProgramacionesLookup()
+    const { data: areasResult } = useAreas(LOOKUP_QUERY)
 
-    const createMutation = useCreateProgramacionDiaria()
-    const updateMutation = useUpdateProgramacionDiaria()
-    const deleteMutation = useDeleteProgramacionDiaria()
+    const createCelda = useCreateProgramacionDiaria()
+    const updateCelda = useUpdateProgramacionDiaria()
+    const deleteCelda = useDeleteProgramacionDiaria()
+    const createProgramacion = useCreateProgramacion()
+    const updateEstado = useUpdateProgramacionEstado()
+    const createGrupo = useCreateGrupoProgramacion()
+    const updateGrupo = useUpdateGrupoProgramacion()
+    const setEmpleados = useSetGrupoProgramacionEmpleados()
 
-    const loading =
-        isFetching ||
-        createMutation.isPending ||
-        updateMutation.isPending
+    const grupos = gruposData?.items ?? []
+    const programaciones = programacionesData?.items ?? []
+    const programacionActiva =
+        programaciones.find((p) => p.id === programacionId) ??
+        programaciones.find((p) => p.estado !== 4) ??
+        null
+
+    const grupoOptions = useMemo(
+        () =>
+            grupos.map((g) => ({
+                value: g.id,
+                label: `${g.codigo} – ${g.nombre}`,
+            })),
+        [grupos],
+    )
+
+    const programacionOptions = useMemo(
+        () =>
+            programaciones.map((p) => ({
+                value: p.id,
+                label: `${p.nombre} · ${ESTADO_PROGRAMACION_LABELS[p.estado]} (${p.fechaInicio} → ${p.fechaFin})`,
+            })),
+        [programaciones],
+    )
 
     const empleadoOptions = useMemo(
         () =>
-            (empleadosData?.items ?? []).map((e) => ({
-                value: e.id,
-                label: `${e.codigoEmpleado} – ${e.personaNombreCompleto}`,
+            (grupoDetalle?.empleados ?? []).map((e) => ({
+                value: e.empleadoId,
+                label: `${e.empleadoCodigo} – ${e.empleadoNombre}`,
             })),
-        [empleadosData?.items],
+        [grupoDetalle?.empleados],
     )
 
     const turnoOptions = useMemo(
@@ -110,216 +160,289 @@ export function ProgramacionDiariaView() {
         [turnosData?.items],
     )
 
-    const programacionOptions = useMemo(
+    const areaOptions = useMemo(
         () =>
-            (programacionesLookup ?? []).map((p) => ({
-                value: p.id,
-                label: `${p.nombre} · ${p.areaNombre} (${p.fechaInicio} → ${p.fechaFin})`,
+            (areasResult?.items ?? []).map((a) => ({
+                value: a.id,
+                label: `${a.codigo} – ${a.nombre}`,
             })),
-        [programacionesLookup],
+        [areasResult?.items],
+    )
+
+    const allEmpleadoTransfer = useMemo(
+        () =>
+            (empleadosData?.items ?? []).map((e) => ({
+                key: e.id,
+                title: `${e.codigoEmpleado} – ${e.personaNombreCompleto}`,
+            })),
+        [empleadosData?.items],
     )
 
     useEffect(() => {
-        if (!drawerOpen) return
-        if (editing) {
-            form.setFieldsValue({
-                programacionId: editing.programacionId,
-                empleadoId: editing.empleadoId,
-                fecha: dayjs(editing.fecha),
-                turnoId: editing.turnoId ?? undefined,
-                tipoAsignacion: editing.tipoAsignacion,
-                observacion: editing.observacion ?? '',
+        if (!grupoId) {
+            setProgramacionId(undefined)
+            return
+        }
+        if (programacionId && programaciones.some((p) => p.id === programacionId)) return
+        const preferred =
+            programaciones.find((p) => p.estado === 2) ??
+            programaciones.find((p) => p.estado === 1) ??
+            programaciones[0]
+        setProgramacionId(preferred?.id)
+    }, [grupoId, programaciones, programacionId])
+
+    const loading =
+        loadingGrupos ||
+        loadingGrupoDetalle ||
+        loadingProgramaciones ||
+        loadingDiaria ||
+        createCelda.isPending ||
+        updateCelda.isPending
+
+    const handleCreateMes = async () => {
+        if (!grupoId || !grupoDetalle) return
+        const nombre = `${grupoDetalle.nombre} · ${mes.format('MMMM YYYY')}`
+        const created = await createProgramacion.mutateAsync({
+            nombre,
+            fechaInicio: fechaDesde,
+            fechaFin: fechaHasta,
+            grupoProgramacionId: grupoId,
+            observacion: null,
+        })
+        setProgramacionId(created.id)
+    }
+
+    const handleCeldaClick = (
+        empleadoId: string,
+        fecha: string,
+        existing?: ProgramacionDiaria,
+    ) => {
+        if (!existing && !programacionId) {
+            return
+        }
+        setEditingCelda(existing ?? null)
+        setCeldaDefaults({ fecha, empleadoId })
+        setCeldaOpen(true)
+    }
+
+    const handleCeldaSubmit = async (values: CeldaFormValues) => {
+        const payload = toCeldaPayload(values)
+        if (editingCelda) {
+            await updateCelda.mutateAsync({ id: editingCelda.id, data: payload })
+        } else {
+            await createCelda.mutateAsync(payload)
+        }
+        setCeldaOpen(false)
+        setEditingCelda(null)
+    }
+
+    const handleGrupoSubmit = async (values: GrupoFormValues) => {
+        const payload = {
+            codigo: values.codigo.trim(),
+            nombre: values.nombre.trim(),
+            descripcion: values.descripcion?.trim() || null,
+            areaId: values.areaId,
+        }
+
+        if (editingGrupo) {
+            await updateGrupo.mutateAsync({ id: editingGrupo.id, data: payload })
+            await setEmpleados.mutateAsync({
+                id: editingGrupo.id,
+                data: { empleadoIds: values.empleadoIds },
             })
         } else {
-            form.setFieldsValue({ ...defaultValues, fecha: fechaFiltro })
-        }
-    }, [drawerOpen, editing, form, fechaFiltro])
-
-    const columns = useMemo(
-        () => [
-            {
-                title: 'Empleado',
-                key: 'empleado',
-                render: (_: unknown, row: ProgramacionDiaria) =>
-                    `${row.empleadoCodigo} – ${row.empleadoNombre}`,
-            },
-            {
-                title: 'Turno',
-                key: 'turno',
-                render: (_: unknown, row: ProgramacionDiaria) =>
-                    row.turnoNombre
-                        ? `${row.turnoNombre} (${formatHora(row.horaInicio)}–${formatHora(row.horaFin)})`
-                        : '—',
-            },
-            {
-                title: 'Programación',
-                dataIndex: 'programacionNombre',
-                key: 'programacion',
-            },
-            {
-                title: 'Área',
-                dataIndex: 'areaNombre',
-                key: 'area',
-            },
-            {
-                title: 'Tipo',
-                dataIndex: 'tipoAsignacion',
-                key: 'tipoAsignacion',
-                render: (value: TipoAsignacionProgramacion) =>
-                    value === 2 ? <Tag>Descanso</Tag> : <Tag color="blue">Regular</Tag>,
-            },
-            {
-                title: 'Estado',
-                dataIndex: 'programacionEstado',
-                key: 'estado',
-                render: (value: EstadoProgramacion) => (
-                    <Tag color={value === 2 ? 'success' : 'default'}>
-                        {ESTADO_PROGRAMACION_LABELS[value] ?? value}
-                    </Tag>
-                ),
-            },
-            {
-                title: 'Acciones',
-                key: 'actions',
-                render: (_: unknown, row: ProgramacionDiaria) => (
-                    <Space>
-                        <Button
-                            type="link"
-                            icon={<EditOutlined />}
-                            onClick={() => {
-                                setEditing(row)
-                                setDrawerOpen(true)
-                            }}
-                        >
-                            Editar
-                        </Button>
-                        <Popconfirm
-                            title="¿Eliminar programación?"
-                            onConfirm={async () => deleteMutation.mutateAsync(row.id)}
-                        >
-                            <Button type="link" danger icon={<DeleteOutlined />}>
-                                Eliminar
-                            </Button>
-                        </Popconfirm>
-                    </Space>
-                ),
-            },
-        ],
-        [deleteMutation],
-    )
-
-    const handleSubmit = async () => {
-        const values = await form.validateFields()
-        const payload = toPayload(values)
-
-        if (editing) {
-            await updateMutation.mutateAsync({ id: editing.id, data: payload })
-        } else {
-            await createMutation.mutateAsync(payload)
+            const created = await createGrupo.mutateAsync(payload)
+            if (values.empleadoIds.length > 0) {
+                await setEmpleados.mutateAsync({
+                    id: created.id,
+                    data: { empleadoIds: values.empleadoIds },
+                })
+            }
+            setGrupoId(created.id)
         }
 
-        setDrawerOpen(false)
-        setEditing(null)
+        setGrupoDrawerOpen(false)
+        setEditingGrupo(null)
+    }
+
+    const handleCambiarEstado = async () => {
+        if (!programacionActiva) return
+        if (programacionActiva.estado === 1) {
+            await updateEstado.mutateAsync({
+                id: programacionActiva.id,
+                data: { estado: 2 },
+            })
+            return
+        }
+        if (programacionActiva.estado === 2) {
+            await updateEstado.mutateAsync({
+                id: programacionActiva.id,
+                data: { estado: 3 },
+            })
+        }
     }
 
     return (
         <div className="rrhh-section-panel">
-            <Flex gap={12} wrap="wrap" style={{ marginBottom: 16 }}>
+            <Flex gap={12} wrap="wrap" align="center" style={{ marginBottom: 16 }}>
+                <Select
+                    placeholder="Seleccione un grupo"
+                    style={{ minWidth: 280 }}
+                    showSearch
+                    optionFilterProp="label"
+                    options={grupoOptions}
+                    value={grupoId}
+                    onChange={(value) => {
+                        setGrupoId(value)
+                        setProgramacionId(undefined)
+                    }}
+                    allowClear
+                />
                 <DatePicker
-                    value={fechaFiltro}
+                    picker="month"
+                    value={mes}
                     onChange={(value) => {
                         if (value) {
-                            setFechaFiltro(value)
-                            setPage(1)
+                            setMes(value.startOf('month'))
+                            setProgramacionId(undefined)
                         }
                     }}
-                    format="DD/MM/YYYY"
+                    format="MMMM YYYY"
+                    allowClear={false}
                 />
-                <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    onClick={() => {
-                        setEditing(null)
-                        setDrawerOpen(true)
-                    }}
-                >
-                    Nueva programación
-                </Button>
+                <Select
+                    placeholder="Programación del mes"
+                    style={{ minWidth: 280 }}
+                    showSearch
+                    optionFilterProp="label"
+                    options={programacionOptions}
+                    value={programacionId}
+                    onChange={setProgramacionId}
+                    disabled={!grupoId}
+                    allowClear
+                />
+                <Space wrap>
+                    <Button
+                        icon={<PlusOutlined />}
+                        onClick={() => {
+                            setEditingGrupo(null)
+                            setGrupoDrawerOpen(true)
+                        }}
+                    >
+                        Nuevo grupo
+                    </Button>
+                    <Button
+                        icon={<SettingOutlined />}
+                        disabled={!grupoDetalle}
+                        onClick={() => {
+                            if (!grupoDetalle) return
+                            setEditingGrupo(grupoDetalle)
+                            setGrupoDrawerOpen(true)
+                        }}
+                    >
+                        Editar grupo
+                    </Button>
+                    <Button
+                        icon={<CalendarOutlined />}
+                        type="dashed"
+                        disabled={!grupoId || createProgramacion.isPending}
+                        loading={createProgramacion.isPending}
+                        onClick={() => void handleCreateMes()}
+                    >
+                        Crear programación del mes
+                    </Button>
+                    {programacionActiva &&
+                        (programacionActiva.estado === 1 ||
+                            programacionActiva.estado === 2) && (
+                        <Button
+                            onClick={() => void handleCambiarEstado()}
+                            loading={updateEstado.isPending}
+                        >
+                            {programacionActiva.estado === 1 ? 'Publicar' : 'Cerrar'}
+                        </Button>
+                    )}
+                </Space>
             </Flex>
 
-            <Table
-                rowKey="id"
-                loading={loading}
-                columns={columns}
-                dataSource={data?.items ?? []}
-                pagination={{
-                    current: page,
-                    pageSize,
-                    total: data?.totalRecords ?? 0,
-                    onChange: (nextPage, nextSize) => {
-                        setPage(nextPage)
-                        setPageSize(nextSize)
-                    },
+            {grupoDetalle && (
+                <Flex gap={8} align="center" style={{ marginBottom: 12 }} wrap="wrap">
+                    <Text strong>
+                        Grupo: {grupoDetalle.nombre}
+                    </Text>
+                    <Text type="secondary">· {mes.format('MMMM YYYY')}</Text>
+                    <Tag>{grupoDetalle.areaNombre}</Tag>
+                    {programacionActiva && (
+                        <Tag color={programacionActiva.estado === 2 ? 'success' : 'default'}>
+                            {ESTADO_PROGRAMACION_LABELS[programacionActiva.estado]}
+                        </Tag>
+                    )}
+                    {!programacionId && grupoId && (
+                        <Tag color="warning">
+                            Cree o seleccione una programación del mes para asignar celdas
+                        </Tag>
+                    )}
+                    <Text type="secondary">
+                        {grupoDetalle.empleados.length} empleado
+                        {grupoDetalle.empleados.length === 1 ? '' : 's'}
+                    </Text>
+                </Flex>
+            )}
+
+            {!grupoId ? (
+                <Empty description="Seleccione un grupo para ver el calendario" />
+            ) : (
+                <ProgramacionCalendarioMatrix
+                    dias={dias}
+                    empleados={grupoDetalle?.empleados ?? []}
+                    asignaciones={diariaData?.items ?? []}
+                    loading={loading}
+                    onCellClick={handleCeldaClick}
+                />
+            )}
+
+            <ProgramacionCeldaDrawer
+                open={celdaOpen}
+                loading={createCelda.isPending || updateCelda.isPending}
+                deleting={deleteCelda.isPending}
+                editing={editingCelda}
+                defaultFecha={celdaDefaults.fecha}
+                defaultEmpleadoId={celdaDefaults.empleadoId}
+                programacionId={programacionId}
+                empleadoOptions={empleadoOptions}
+                turnoOptions={turnoOptions}
+                programacionOptions={programacionOptions}
+                onClose={() => {
+                    setCeldaOpen(false)
+                    setEditingCelda(null)
                 }}
+                onSubmit={handleCeldaSubmit}
+                onDelete={
+                    editingCelda
+                        ? async () => {
+                              await deleteCelda.mutateAsync(editingCelda.id)
+                              setCeldaOpen(false)
+                              setEditingCelda(null)
+                          }
+                        : undefined
+                }
             />
 
-            <Drawer
-                title={editing ? 'Editar detalle' : 'Nuevo detalle'}
-                open={drawerOpen}
-                onClose={() => {
-                    setDrawerOpen(false)
-                    setEditing(null)
-                }}
-                width={560}
-                extra={
-                    <Button type="primary" loading={loading} onClick={() => void handleSubmit()}>
-                        Guardar
-                    </Button>
+            <GrupoProgramacionFormDrawer
+                open={grupoDrawerOpen}
+                loading={
+                    createGrupo.isPending ||
+                    updateGrupo.isPending ||
+                    setEmpleados.isPending
                 }
-            >
-                <Form form={form} layout="vertical" initialValues={defaultValues}>
-                    <Form.Item
-                        name="programacionId"
-                        label="Programación"
-                        rules={[{ required: true, message: 'Seleccione una programación' }]}
-                    >
-                        <Select
-                            showSearch
-                            optionFilterProp="label"
-                            options={programacionOptions}
-                        />
-                    </Form.Item>
-                    <Form.Item name="fecha" label="Fecha" rules={[{ required: true }]}>
-                        <DatePicker format="DD/MM/YYYY" style={{ width: '100%' }} />
-                    </Form.Item>
-                    <Form.Item name="empleadoId" label="Empleado" rules={[{ required: true }]}>
-                        <Select
-                            showSearch
-                            optionFilterProp="label"
-                            options={empleadoOptions}
-                        />
-                    </Form.Item>
-                    <Form.Item
-                        name="tipoAsignacion"
-                        label="Tipo de asignación"
-                        rules={[{ required: true }]}
-                    >
-                        <Select options={TIPO_ASIGNACION_OPTIONS} />
-                    </Form.Item>
-                    {tipoAsignacion !== 2 && (
-                        <Form.Item
-                            name="turnoId"
-                            label="Turno"
-                            rules={[{ required: true, message: 'El turno es obligatorio' }]}
-                        >
-                            <Select options={turnoOptions} />
-                        </Form.Item>
-                    )}
-                    <Form.Item name="observacion" label="Observación">
-                        <Input.TextArea rows={3} />
-                    </Form.Item>
-                </Form>
-            </Drawer>
+                entity={editingGrupo}
+                areaOptions={areaOptions}
+                empleadoOptions={allEmpleadoTransfer}
+                onClose={() => {
+                    setGrupoDrawerOpen(false)
+                    setEditingGrupo(null)
+                }}
+                onSubmit={handleGrupoSubmit}
+            />
         </div>
     )
 }

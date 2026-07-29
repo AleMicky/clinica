@@ -24,6 +24,8 @@ public static class DependencyInjection
         services.AddScoped<IEmpleadoService, EmpleadoService>();
         services.AddScoped<IJerarquiaOrganizacionalService, JerarquiaOrganizacionalService>();
         services.AddScoped<ITurnoService, TurnoService>();
+        services.AddScoped<IGrupoProgramacionService, GrupoProgramacionService>();
+        services.AddScoped<IProgramacionService, ProgramacionService>();
         services.AddScoped<IProgramacionDiariaService, ProgramacionDiariaService>();
 
         return services;

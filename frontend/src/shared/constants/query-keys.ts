@@ -84,6 +84,18 @@ export const queryKeys = {
             list: (query: PagedQuery & Record<string, unknown>) =>
                 ['recursos-humanos', 'turnos', 'list', query] as const,
         },
+        gruposProgramacion: {
+            all: ['recursos-humanos', 'grupos-programacion'] as const,
+            list: (query: PagedQuery & Record<string, unknown>) =>
+                ['recursos-humanos', 'grupos-programacion', 'list', query] as const,
+            detail: (id: string) =>
+                ['recursos-humanos', 'grupos-programacion', 'detail', id] as const,
+        },
+        programaciones: {
+            all: ['recursos-humanos', 'programaciones'] as const,
+            list: (query: PagedQuery & Record<string, unknown>) =>
+                ['recursos-humanos', 'programaciones', 'list', query] as const,
+        },
         programacionDiaria: {
             all: ['recursos-humanos', 'programacion-diaria'] as const,
             list: (query: PagedQuery & Record<string, unknown>) =>

@@ -98,6 +98,77 @@ export type ProgramacionDiariaPagedQuery = PagedQuery & {
     estadoProgramacion?: EstadoProgramacion
 }
 
+export type GrupoProgramacionEmpleado = {
+    id: Guid
+    empleadoId: Guid
+    empleadoCodigo: string
+    empleadoNombre: string
+}
+
+export type GrupoProgramacion = {
+    id: Guid
+    codigo: string
+    nombre: string
+    descripcion?: string | null
+    areaId: Guid
+    areaCodigo: string
+    areaNombre: string
+    empleados: GrupoProgramacionEmpleado[]
+}
+
+export type CreateGrupoProgramacionPayload = {
+    codigo: string
+    nombre: string
+    descripcion?: string | null
+    areaId: Guid
+}
+
+export type UpdateGrupoProgramacionPayload = CreateGrupoProgramacionPayload
+
+export type SetGrupoProgramacionEmpleadosPayload = {
+    empleadoIds: Guid[]
+}
+
+export type GrupoProgramacionPagedQuery = PagedQuery & {
+    search?: string
+    areaId?: Guid
+}
+
+export type Programacion = {
+    id: Guid
+    nombre: string
+    fechaInicio: string
+    fechaFin: string
+    grupoProgramacionId: Guid
+    grupoProgramacionNombre: string
+    areaId: Guid
+    areaNombre: string
+    estado: EstadoProgramacion
+    observacion?: string | null
+}
+
+export type CreateProgramacionPayload = {
+    nombre: string
+    fechaInicio: string
+    fechaFin: string
+    grupoProgramacionId: Guid
+    observacion?: string | null
+}
+
+export type UpdateProgramacionPayload = CreateProgramacionPayload
+
+export type UpdateProgramacionEstadoPayload = {
+    estado: EstadoProgramacion
+}
+
+export type ProgramacionPagedQuery = PagedQuery & {
+    search?: string
+    grupoProgramacionId?: Guid
+    estado?: EstadoProgramacion
+    fechaDesde?: string
+    fechaHasta?: string
+}
+
 export type MedicoDisponibilidad = {
     programacionDiariaId: Guid
     programacionId: Guid
