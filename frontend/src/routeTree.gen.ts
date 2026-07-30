@@ -65,6 +65,7 @@ import { Route as AdminFarmaciaDispensacionesRouteImport } from './routes/_admin
 import { Route as AdminComprasProveedoresRouteImport } from './routes/_admin/compras/proveedores'
 import { Route as AdminComprasOrdenesRouteImport } from './routes/_admin/compras/ordenes'
 import { Route as AdminCajaMovimientosRouteImport } from './routes/_admin/caja/movimientos'
+import { Route as AdminCajaMetodosPagoRouteImport } from './routes/_admin/caja/metodos-pago'
 import { Route as AdminCajaCajasRouteImport } from './routes/_admin/caja/cajas'
 import { Route as AdminAtencionesTiposAtencionRouteImport } from './routes/_admin/atenciones/tipos-atencion'
 import { Route as AdminAtencionesFormulariosRouteImport } from './routes/_admin/atenciones/formularios'
@@ -381,6 +382,11 @@ const AdminCajaMovimientosRoute = AdminCajaMovimientosRouteImport.update({
   path: '/movimientos',
   getParentRoute: () => AdminCajaRoute,
 } as any)
+const AdminCajaMetodosPagoRoute = AdminCajaMetodosPagoRouteImport.update({
+  id: '/metodos-pago',
+  path: '/metodos-pago',
+  getParentRoute: () => AdminCajaRoute,
+} as any)
 const AdminCajaCajasRoute = AdminCajaCajasRouteImport.update({
   id: '/cajas',
   path: '/cajas',
@@ -486,6 +492,7 @@ export interface FileRoutesByFullPath {
   '/atenciones/formularios': typeof AdminAtencionesFormulariosRouteWithChildren
   '/atenciones/tipos-atencion': typeof AdminAtencionesTiposAtencionRoute
   '/caja/cajas': typeof AdminCajaCajasRoute
+  '/caja/metodos-pago': typeof AdminCajaMetodosPagoRoute
   '/caja/movimientos': typeof AdminCajaMovimientosRoute
   '/compras/ordenes': typeof AdminComprasOrdenesRoute
   '/compras/proveedores': typeof AdminComprasProveedoresRoute
@@ -551,6 +558,7 @@ export interface FileRoutesByTo {
   '/atenciones/formularios': typeof AdminAtencionesFormulariosRouteWithChildren
   '/atenciones/tipos-atencion': typeof AdminAtencionesTiposAtencionRoute
   '/caja/cajas': typeof AdminCajaCajasRoute
+  '/caja/metodos-pago': typeof AdminCajaMetodosPagoRoute
   '/caja/movimientos': typeof AdminCajaMovimientosRoute
   '/compras/ordenes': typeof AdminComprasOrdenesRoute
   '/compras/proveedores': typeof AdminComprasProveedoresRoute
@@ -624,6 +632,7 @@ export interface FileRoutesById {
   '/_admin/atenciones/formularios': typeof AdminAtencionesFormulariosRouteWithChildren
   '/_admin/atenciones/tipos-atencion': typeof AdminAtencionesTiposAtencionRoute
   '/_admin/caja/cajas': typeof AdminCajaCajasRoute
+  '/_admin/caja/metodos-pago': typeof AdminCajaMetodosPagoRoute
   '/_admin/caja/movimientos': typeof AdminCajaMovimientosRoute
   '/_admin/compras/ordenes': typeof AdminComprasOrdenesRoute
   '/_admin/compras/proveedores': typeof AdminComprasProveedoresRoute
@@ -697,6 +706,7 @@ export interface FileRouteTypes {
     | '/atenciones/formularios'
     | '/atenciones/tipos-atencion'
     | '/caja/cajas'
+    | '/caja/metodos-pago'
     | '/caja/movimientos'
     | '/compras/ordenes'
     | '/compras/proveedores'
@@ -762,6 +772,7 @@ export interface FileRouteTypes {
     | '/atenciones/formularios'
     | '/atenciones/tipos-atencion'
     | '/caja/cajas'
+    | '/caja/metodos-pago'
     | '/caja/movimientos'
     | '/compras/ordenes'
     | '/compras/proveedores'
@@ -834,6 +845,7 @@ export interface FileRouteTypes {
     | '/_admin/atenciones/formularios'
     | '/_admin/atenciones/tipos-atencion'
     | '/_admin/caja/cajas'
+    | '/_admin/caja/metodos-pago'
     | '/_admin/caja/movimientos'
     | '/_admin/compras/ordenes'
     | '/_admin/compras/proveedores'
@@ -1285,6 +1297,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCajaMovimientosRouteImport
       parentRoute: typeof AdminCajaRoute
     }
+    '/_admin/caja/metodos-pago': {
+      id: '/_admin/caja/metodos-pago'
+      path: '/metodos-pago'
+      fullPath: '/caja/metodos-pago'
+      preLoaderRoute: typeof AdminCajaMetodosPagoRouteImport
+      parentRoute: typeof AdminCajaRoute
+    }
     '/_admin/caja/cajas': {
       id: '/_admin/caja/cajas'
       path: '/cajas'
@@ -1446,6 +1465,7 @@ const AdminAtencionesRouteWithChildren = AdminAtencionesRoute._addFileChildren(
 
 interface AdminCajaRouteChildren {
   AdminCajaCajasRoute: typeof AdminCajaCajasRoute
+  AdminCajaMetodosPagoRoute: typeof AdminCajaMetodosPagoRoute
   AdminCajaMovimientosRoute: typeof AdminCajaMovimientosRoute
   AdminCajaIndexRoute: typeof AdminCajaIndexRoute
   AdminCajaCuentasCuentaIdRoute: typeof AdminCajaCuentasCuentaIdRoute
@@ -1454,6 +1474,7 @@ interface AdminCajaRouteChildren {
 
 const AdminCajaRouteChildren: AdminCajaRouteChildren = {
   AdminCajaCajasRoute: AdminCajaCajasRoute,
+  AdminCajaMetodosPagoRoute: AdminCajaMetodosPagoRoute,
   AdminCajaMovimientosRoute: AdminCajaMovimientosRoute,
   AdminCajaIndexRoute: AdminCajaIndexRoute,
   AdminCajaCuentasCuentaIdRoute: AdminCajaCuentasCuentaIdRoute,

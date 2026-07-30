@@ -65,7 +65,7 @@ public sealed class CajaPagoService(
 
         var metodoIds = request.Detalles.Select(d => d.MetodoPagoId).Distinct().ToList();
         var metodos = await context.MetodosPago
-            .Where(x => metodoIds.Contains(x.Id) && x.Activo)
+            .Where(x => metodoIds.Contains(x.Id))
             .ToDictionaryAsync(x => x.Id, cancellationToken);
 
         if (metodos.Count != metodoIds.Count)

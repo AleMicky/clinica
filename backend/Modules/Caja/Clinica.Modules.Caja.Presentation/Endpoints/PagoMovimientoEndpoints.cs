@@ -1,4 +1,5 @@
 using Clinica.Modules.Caja.Application.Abstractions;
+using Clinica.Modules.Caja.Application.Catalogos;
 using Clinica.Modules.Caja.Application.Movimientos;
 using Clinica.Modules.Caja.Application.Pagos;
 using Clinica.SharedKernel.Responses;
@@ -130,13 +131,68 @@ public static class PagoMovimientoEndpoints
 
     public static RouteGroupBuilder MapCatalogoEndpoints(this RouteGroupBuilder group)
     {
-        group.MapGet("/metodos-pago", async (
+        var metodos = group.MapGroup("/metodos-pago")
+            .RequireAuthorization()
+            .WithTags(CajaSwaggerTags.Catalogos);
+
+        metodos.MapGet("/", async (
                 IMetodoPagoCatalogService service,
                 CancellationToken cancellationToken) =>
             ApiResults.Ok(await service.GetAllAsync(cancellationToken)))
-            .RequireAuthorization()
-            .WithTags(CajaSwaggerTags.Catalogos)
             .WithName("Caja_GetMetodosPago");
+
+        metodos.MapGet("/{id:guid}", async (
+                Guid id,
+                IMetodoPagoCatalogService service,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await service.GetByIdAsync(id, cancellationToken);
+                return result is null
+                    ? ApiResults.NotFound("Método de pago no encontrado.")
+                    : ApiResults.Ok(result);
+            })
+            .WithName("Caja_GetMetodoPagoById");
+
+        metodos.MapPost("/", async (
+                CreateMetodoPagoRequest request,
+                IValidator<CreateMetodoPagoRequest> validator,
+                IMetodoPagoCatalogService service,
+                CancellationToken cancellationToken) =>
+            {
+                var validation = await validator.ValidateAsync(request, cancellationToken);
+                if (!validation.IsValid)
+                    return ApiResults.BadRequest($"Datos inválidos. {string.Join(", ", validation.Errors.Select(x => x.ErrorMessage).Distinct())}");
+
+                var result = await service.CreateAsync(request, cancellationToken);
+                return ApiResults.Created(result, "Método de pago creado correctamente.");
+            })
+            .WithName("Caja_CreateMetodoPago");
+
+        metodos.MapPut("/{id:guid}", async (
+                Guid id,
+                UpdateMetodoPagoRequest request,
+                IValidator<UpdateMetodoPagoRequest> validator,
+                IMetodoPagoCatalogService service,
+                CancellationToken cancellationToken) =>
+            {
+                var validation = await validator.ValidateAsync(request, cancellationToken);
+                if (!validation.IsValid)
+                    return ApiResults.BadRequest($"Datos inválidos. {string.Join(", ", validation.Errors.Select(x => x.ErrorMessage).Distinct())}");
+
+                var result = await service.UpdateAsync(id, request, cancellationToken);
+                return ApiResults.Ok(result, "Método de pago actualizado correctamente.");
+            })
+            .WithName("Caja_UpdateMetodoPago");
+
+        metodos.MapDelete("/{id:guid}", async (
+                Guid id,
+                IMetodoPagoCatalogService service,
+                CancellationToken cancellationToken) =>
+            {
+                await service.DeleteAsync(id, cancellationToken);
+                return ApiResults.Ok("Método de pago eliminado correctamente.");
+            })
+            .WithName("Caja_DeleteMetodoPago");
 
         group.MapGet("/conceptos", async (
                 IConceptoCajaCatalogService service,

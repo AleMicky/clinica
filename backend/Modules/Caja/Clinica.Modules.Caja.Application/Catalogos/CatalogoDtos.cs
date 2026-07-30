@@ -5,8 +5,18 @@ public sealed record MetodoPagoResponse(
     string Codigo,
     string Nombre,
     bool RequiereReferencia,
-    bool EsEfectivo,
-    bool Activo);
+    bool EsEfectivo);
+
+public sealed record CreateMetodoPagoRequest(
+    string Codigo,
+    string Nombre,
+    bool RequiereReferencia = false,
+    bool EsEfectivo = false);
+
+public sealed record UpdateMetodoPagoRequest(
+    string Nombre,
+    bool RequiereReferencia,
+    bool EsEfectivo);
 
 public sealed record ConceptoCajaResponse(
     Guid Id,

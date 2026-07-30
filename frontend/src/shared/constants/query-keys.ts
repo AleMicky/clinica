@@ -227,7 +227,10 @@ export const queryKeys = {
             list: (query: PagedQuery & Record<string, unknown>) =>
                 ['caja', 'movimientos', 'list', query] as const,
         },
-        metodosPago: ['caja', 'metodos-pago'] as const,
+        metodosPago: {
+            all: ['caja', 'metodos-pago'] as const,
+            list: ['caja', 'metodos-pago', 'list'] as const,
+        },
         conceptos: ['caja', 'conceptos'] as const,
     },
     atencionMedica: {

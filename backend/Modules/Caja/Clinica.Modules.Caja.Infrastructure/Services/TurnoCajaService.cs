@@ -68,7 +68,7 @@ public sealed class TurnoCajaService(
                 ?? throw new BusinessException("Concepto FONDO_INICIAL no configurado.");
 
             var efectivo = await context.MetodosPago.AsNoTracking()
-                .FirstOrDefaultAsync(x => x.Codigo == "EFECTIVO" && x.Activo, cancellationToken);
+                .FirstOrDefaultAsync(x => x.Codigo == "EFECTIVO", cancellationToken);
 
             var correlativo = await correlativoService.GenerarAsync(
                 new GenerarCorrelativoRequest("CAJA_MOVIMIENTO", Prefijo: "MOV-", Longitud: 6),

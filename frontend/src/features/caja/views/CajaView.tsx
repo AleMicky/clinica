@@ -23,6 +23,9 @@ export function CajaView() {
         if (pathname.startsWith('/caja/cajas')) {
             return { icon: <DollarOutlined />, title: 'Administración de cajas' }
         }
+        if (pathname.startsWith('/caja/metodos-pago')) {
+            return { icon: <DollarOutlined />, title: 'Métodos de pago' }
+        }
         return { icon: <DollarOutlined />, title: 'Operación' }
     })()
 

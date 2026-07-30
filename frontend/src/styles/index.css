@@ -1833,6 +1833,7 @@ body {
 .admin-layout__content-inner:has(.atencion-medica-module),
 .admin-layout__content-inner:has(.parametros-module),
 .admin-layout__content-inner:has(.laboratorio-module),
+.admin-layout__content-inner:has(.caja-module),
 .admin-layout__content-inner:has(.workflow-module) {
     display: flex;
     flex-direction: column;
@@ -1847,6 +1848,7 @@ body {
 .atencion-medica-module,
 .parametros-module,
 .laboratorio-module,
+.caja-module,
 .workflow-module {
     flex: 1;
     min-height: 0;
@@ -1859,7 +1861,8 @@ body {
 .pacientes-module .module-object-page,
 .atencion-medica-module .module-object-page,
 .parametros-module .module-object-page,
-.laboratorio-module .module-object-page {
+.laboratorio-module .module-object-page,
+.caja-module .module-object-page {
     flex: 1;
     min-height: 0;
     overflow: hidden;
@@ -1870,7 +1873,8 @@ body {
 .pacientes-module .module-object-page__header > .ant-flex,
 .atencion-medica-module .module-object-page__header > .ant-flex,
 .parametros-module .module-object-page__header > .ant-flex,
-.laboratorio-module .module-object-page__header > .ant-flex {
+.laboratorio-module .module-object-page__header > .ant-flex,
+.caja-module .module-object-page__header > .ant-flex {
     gap: 10px !important;
 }
 
@@ -1878,7 +1882,8 @@ body {
 .pacientes-module .module-object-page__header,
 .atencion-medica-module .module-object-page__header,
 .parametros-module .module-object-page__header,
-.laboratorio-module .module-object-page__header {
+.laboratorio-module .module-object-page__header,
+.caja-module .module-object-page__header {
     flex-shrink: 0;
     padding: 8px 12px;
     border-radius: 10px;
@@ -1891,7 +1896,8 @@ body {
 .pacientes-module .module-object-page__header-icon,
 .atencion-medica-module .module-object-page__header-icon,
 .parametros-module .module-object-page__header-icon,
-.laboratorio-module .module-object-page__header-icon {
+.laboratorio-module .module-object-page__header-icon,
+.caja-module .module-object-page__header-icon {
     width: 32px;
     height: 32px;
     border-radius: 8px;
@@ -1902,7 +1908,8 @@ body {
 .pacientes-module .module-object-page__title,
 .atencion-medica-module .module-object-page__title,
 .parametros-module .module-object-page__title,
-.laboratorio-module .module-object-page__title {
+.laboratorio-module .module-object-page__title,
+.caja-module .module-object-page__title {
     margin: 0 !important;
     font-size: 16px !important;
     line-height: 1.25 !important;
@@ -1912,7 +1919,8 @@ body {
 .pacientes-module .module-object-page__subtitle,
 .atencion-medica-module .module-object-page__subtitle,
 .parametros-module .module-object-page__subtitle,
-.laboratorio-module .module-object-page__subtitle {
+.laboratorio-module .module-object-page__subtitle,
+.caja-module .module-object-page__subtitle {
     font-size: 12px;
     line-height: 1.3;
     max-width: 52ch;
@@ -1922,7 +1930,8 @@ body {
 .pacientes-module .module-object-page__stat,
 .atencion-medica-module .module-object-page__stat,
 .parametros-module .module-object-page__stat,
-.laboratorio-module .module-object-page__stat {
+.laboratorio-module .module-object-page__stat,
+.caja-module .module-object-page__stat {
     gap: 6px;
     padding: 4px 10px;
     font-size: 12px;
@@ -1933,7 +1942,8 @@ body {
 .rrhh-module .module-object-page__section-badge,
 .atencion-medica-module .module-object-page__section-badge,
 .parametros-module .module-object-page__section-badge,
-.laboratorio-module .module-object-page__section-badge {
+.laboratorio-module .module-object-page__section-badge,
+.caja-module .module-object-page__section-badge {
     padding: 6px 10px;
     background: #f8fafc;
     border-color: #e2e8f0;
@@ -1942,7 +1952,8 @@ body {
 .rrhh-module .module-object-page__section-badge-icon,
 .atencion-medica-module .module-object-page__section-badge-icon,
 .parametros-module .module-object-page__section-badge-icon,
-.laboratorio-module .module-object-page__section-badge-icon {
+.laboratorio-module .module-object-page__section-badge-icon,
+.caja-module .module-object-page__section-badge-icon {
     width: 26px;
     height: 26px;
     font-size: 13px;
@@ -1952,7 +1963,8 @@ body {
 .pacientes-module .module-object-page__workspace,
 .atencion-medica-module .module-object-page__workspace,
 .parametros-module .module-object-page__workspace,
-.laboratorio-module .module-object-page__workspace {
+.laboratorio-module .module-object-page__workspace,
+.caja-module .module-object-page__workspace {
     flex: 1;
     min-height: 0;
     overflow: hidden;
@@ -1967,7 +1979,8 @@ body {
 .pacientes-module .module-object-page__content,
 .atencion-medica-module .module-object-page__content,
 .parametros-module .module-object-page__content,
-.laboratorio-module .module-object-page__content {
+.laboratorio-module .module-object-page__content,
+.caja-module .module-object-page__content {
     flex: 1;
     min-height: 0;
     overflow: hidden;
@@ -2197,10 +2210,13 @@ body {
 [data-theme='dark'] .atencion-medica-module .module-object-page__section-badge,
 [data-theme='dark'] .parametros-module .module-object-page__header,
 [data-theme='dark'] .laboratorio-module .module-object-page__header,
+[data-theme='dark'] .caja-module .module-object-page__header,
 [data-theme='dark'] .parametros-module .module-object-page__stat,
 [data-theme='dark'] .laboratorio-module .module-object-page__stat,
+[data-theme='dark'] .caja-module .module-object-page__stat,
 [data-theme='dark'] .parametros-module .module-object-page__section-badge,
 [data-theme='dark'] .laboratorio-module .module-object-page__section-badge,
+[data-theme='dark'] .caja-module .module-object-page__section-badge,
 [data-theme='dark'] .rrhh-section-panel {
     background: #161b22;
     border-color: rgba(255, 255, 255, 0.08);
@@ -2282,6 +2298,7 @@ body {
     .admin-layout__content-inner:has(.atencion-medica-module),
     .admin-layout__content-inner:has(.parametros-module),
     .admin-layout__content-inner:has(.laboratorio-module),
+    .admin-layout__content-inner:has(.caja-module),
     .admin-layout__content-inner:has(.workflow-module) {
         height: auto;
         max-height: none;
@@ -2293,22 +2310,26 @@ body {
     .atencion-medica-module,
     .parametros-module,
     .laboratorio-module,
+    .caja-module,
     .workflow-module,
     .rrhh-module .module-object-page,
     .pacientes-module .module-object-page,
     .atencion-medica-module .module-object-page,
     .parametros-module .module-object-page,
     .laboratorio-module .module-object-page,
+    .caja-module .module-object-page,
     .rrhh-module .module-object-page__workspace,
     .pacientes-module .module-object-page__workspace,
     .atencion-medica-module .module-object-page__workspace,
     .parametros-module .module-object-page__workspace,
     .laboratorio-module .module-object-page__workspace,
+    .caja-module .module-object-page__workspace,
     .rrhh-module .module-object-page__content,
     .pacientes-module .module-object-page__content,
     .atencion-medica-module .module-object-page__content,
     .parametros-module .module-object-page__content,
     .laboratorio-module .module-object-page__content,
+    .caja-module .module-object-page__content,
     .rrhh-section-panel,
     .rrhh-section-panel__body,
     .rrhh-empleados__table,

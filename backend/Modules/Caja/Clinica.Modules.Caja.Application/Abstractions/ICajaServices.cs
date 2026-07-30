@@ -133,6 +133,19 @@ public interface IArqueoCajaService
 public interface IMetodoPagoCatalogService
 {
     Task<IReadOnlyList<MetodoPagoResponse>> GetAllAsync(CancellationToken cancellationToken = default);
+
+    Task<MetodoPagoResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<MetodoPagoResponse> CreateAsync(
+        CreateMetodoPagoRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<MetodoPagoResponse> UpdateAsync(
+        Guid id,
+        UpdateMetodoPagoRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 }
 
 public interface IConceptoCajaCatalogService

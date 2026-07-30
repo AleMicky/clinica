@@ -1,4 +1,4 @@
-import { get, getPaged, patch, post, put } from '../../../shared/api/http'
+import { get, getPaged, patch, post, put, del } from '../../../shared/api/http'
 import { cajaEndpoints } from '../../../shared/api/endpoints'
 import type {
     AbrirTurnoPayload,
@@ -8,6 +8,7 @@ import type {
     CerrarArqueoPayload,
     ConceptoCaja,
     CreateCajaPayload,
+    CreateMetodoPagoPayload,
     Cuenta,
     CuentaListItem,
     CuentaPagedQuery,
@@ -20,6 +21,7 @@ import type {
     ResumenTurno,
     TurnoCaja,
     UpdateCajaPayload,
+    UpdateMetodoPagoPayload,
 } from '../types/caja.types'
 
 export const cajaService = {
@@ -111,7 +113,25 @@ export const cajaService = {
     },
 
     getMetodosPago() {
-        return get<MetodoPago[]>(cajaEndpoints.metodosPago)
+        return get<MetodoPago[]>(cajaEndpoints.metodosPago.root)
+    },
+
+    createMetodoPago(payload: CreateMetodoPagoPayload) {
+        return post<MetodoPago, CreateMetodoPagoPayload>(
+            cajaEndpoints.metodosPago.root,
+            payload,
+        )
+    },
+
+    updateMetodoPago(id: string, payload: UpdateMetodoPagoPayload) {
+        return put<MetodoPago, UpdateMetodoPagoPayload>(
+            cajaEndpoints.metodosPago.byId(id),
+            payload,
+        )
+    },
+
+    deleteMetodoPago(id: string) {
+        return del<string>(cajaEndpoints.metodosPago.byId(id))
     },
 
     getConceptos() {

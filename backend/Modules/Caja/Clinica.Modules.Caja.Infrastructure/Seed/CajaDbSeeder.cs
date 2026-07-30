@@ -50,7 +50,6 @@ public static class CajaDbSeeder
                 Nombre = item.Nombre,
                 RequiereReferencia = item.RequiereReferencia,
                 EsEfectivo = item.EsEfectivo,
-                Activo = true,
                 CreatedAt = DateTime.UtcNow,
             });
         }

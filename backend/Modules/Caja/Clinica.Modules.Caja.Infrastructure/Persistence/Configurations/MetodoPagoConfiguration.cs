@@ -16,7 +16,6 @@ public sealed class MetodoPagoConfiguration : BaseEntityConfiguration<MetodoPago
         builder.Property(x => x.Codigo).HasMaxLength(50).IsRequired();
         builder.HasIndex(x => x.Codigo).IsUnique();
         builder.Property(x => x.Nombre).HasMaxLength(200).IsRequired();
-        builder.Property(x => x.Activo).HasDefaultValue(true);
 
         builder.Property(x => x.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
         builder.Property(x => x.CreatedBy).HasMaxLength(100);

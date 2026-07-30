@@ -149,7 +149,7 @@ public sealed class MovimientoCajaService(
         if (request.MetodoPagoId.HasValue)
         {
             var metodoExists = await context.MetodosPago.AnyAsync(
-                x => x.Id == request.MetodoPagoId && x.Activo,
+                x => x.Id == request.MetodoPagoId,
                 cancellationToken);
             if (!metodoExists)
                 throw new NotFoundException("Método de pago no encontrado.");

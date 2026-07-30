@@ -141,7 +141,19 @@ export type MetodoPago = {
     nombre: string
     requiereReferencia: boolean
     esEfectivo: boolean
-    activo: boolean
+}
+
+export type CreateMetodoPagoPayload = {
+    codigo: string
+    nombre: string
+    requiereReferencia?: boolean
+    esEfectivo?: boolean
+}
+
+export type UpdateMetodoPagoPayload = {
+    nombre: string
+    requiereReferencia: boolean
+    esEfectivo: boolean
 }
 
 export type ConceptoCaja = {

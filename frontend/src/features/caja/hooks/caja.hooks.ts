@@ -10,11 +10,13 @@ import type {
     AbrirTurnoPayload,
     CerrarArqueoPayload,
     CreateCajaPayload,
+    CreateMetodoPagoPayload,
     CuentaPagedQuery,
     MovimientoPagedQuery,
     RegistrarMovimientoPayload,
     RegistrarPagoPayload,
     UpdateCajaPayload,
+    UpdateMetodoPagoPayload,
 } from '../types/caja.types'
 
 export function useCuentas(query: CuentaPagedQuery) {
@@ -65,7 +67,7 @@ export function useCajas(query: { page?: number; pageSize?: number; search?: str
 
 export function useMetodosPago() {
     return useAppQuery({
-        queryKey: queryKeys.caja.metodosPago,
+        queryKey: queryKeys.caja.metodosPago.list,
         queryFn: () => cajaService.getMetodosPago(),
     })
 }
@@ -188,5 +190,42 @@ export function useUpdateCaja() {
             notify.success('Caja actualizada', 'Los cambios se guardaron.')
         },
         onError: (e) => notify.error('Error al actualizar caja', getApiErrorMessage(e)),
+    })
+}
+
+export function useCreateMetodoPago() {
+    const qc = useQueryClient()
+    return useAppMutation({
+        mutationFn: (payload: CreateMetodoPagoPayload) => cajaService.createMetodoPago(payload),
+        onSuccess: () => {
+            void qc.invalidateQueries({ queryKey: queryKeys.caja.metodosPago.all })
+            notify.success('Método de pago creado', 'Se registró correctamente.')
+        },
+        onError: (e) => notify.error('Error al crear método de pago', getApiErrorMessage(e)),
+    })
+}
+
+export function useUpdateMetodoPago() {
+    const qc = useQueryClient()
+    return useAppMutation({
+        mutationFn: ({ id, payload }: { id: string; payload: UpdateMetodoPagoPayload }) =>
+            cajaService.updateMetodoPago(id, payload),
+        onSuccess: () => {
+            void qc.invalidateQueries({ queryKey: queryKeys.caja.metodosPago.all })
+            notify.success('Método de pago actualizado', 'Los cambios se guardaron.')
+        },
+        onError: (e) => notify.error('Error al actualizar método de pago', getApiErrorMessage(e)),
+    })
+}
+
+export function useDeleteMetodoPago() {
+    const qc = useQueryClient()
+    return useAppMutation({
+        mutationFn: (id: string) => cajaService.deleteMetodoPago(id),
+        onSuccess: () => {
+            void qc.invalidateQueries({ queryKey: queryKeys.caja.metodosPago.all })
+            notify.success('Método de pago eliminado', 'Se eliminó correctamente.')
+        },
+        onError: (e) => notify.error('Error al eliminar método de pago', getApiErrorMessage(e)),
     })
 }
