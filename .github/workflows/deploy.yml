@@ -13,10 +13,33 @@ jobs:
     env:
       APP_DIR: /opt/infraestructura/clinica
       SSH_PORT: 22
+      ENV_BACKUP: /tmp/clinica.docker.env.bak
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      # SCP con overwrite no elimina archivos borrados del repo; esos restos
+      # rompen el build (TS/C# huérfanos). Hay que vaciar el destino.
+      # docker/.env vive solo en el VPS (gitignored): respaldarlo antes.
+      - name: Backup remote docker/.env
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || env.SSH_PORT }}
+          script_stop: true
+          script: |
+            set -e
+            APP_DIR="${{ secrets.VPS_APP_PATH || env.APP_DIR }}"
+            ENV_BACKUP="${{ env.ENV_BACKUP }}"
+            if [ -f "$APP_DIR/docker/.env" ]; then
+              cp "$APP_DIR/docker/.env" "$ENV_BACKUP"
+              echo "Backup de docker/.env en $ENV_BACKUP"
+            else
+              echo "No hay docker/.env previo en $APP_DIR"
+            fi
 
       - name: Copy project to VPS
         uses: appleboy/scp-action@v0.1.7
@@ -28,7 +51,7 @@ jobs:
           source: "."
           target: ${{ secrets.VPS_APP_PATH || env.APP_DIR }}
           overwrite: true
-          rm: false
+          rm: true
 
       - name: Deploy application
         uses: appleboy/ssh-action@v1.2.0
@@ -42,21 +65,23 @@ jobs:
             set -e
 
             APP_DIR="${{ secrets.VPS_APP_PATH || env.APP_DIR }}"
+            ENV_BACKUP="${{ env.ENV_BACKUP }}"
 
             echo "Directorio de despliegue: $APP_DIR"
 
             cd "$APP_DIR"
 
-            echo "Archivos copiados:"
-            ls -lah
-
-            # SCP con rm:false no borra archivos eliminados del repo.
-            # Limpiar restos (p. ej. componentes TS viejos) sin tocar docker/.env (gitignored).
-            if git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
-              echo ">> sincronizar working tree con el commit desplegado"
-              git reset --hard HEAD
-              git clean -fd
+            mkdir -p docker
+            if [ -f "$ENV_BACKUP" ]; then
+              cp "$ENV_BACKUP" docker/.env
+              echo "docker/.env restaurado desde backup"
+            elif [ ! -f docker/.env ]; then
+              echo "ERROR: falta docker/.env y no hay backup en $ENV_BACKUP"
+              exit 1
             fi
+
+            echo "Archivos desplegados:"
+            ls -lah
 
             chmod +x docker/deploy.sh
 
