@@ -9400,3 +9400,146 @@ body {
     }
 }
 
+
+/* Solicitud detalle — layout compacto */
+.solicitud-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+}
+
+.solicitud-detail__header {
+    padding: 2px 0 4px;
+}
+
+.solicitud-detail__heading {
+    min-width: 0;
+}
+
+.solicitud-detail__heading-text {
+    min-width: 0;
+}
+
+.solicitud-detail__title {
+    margin: 4px 0 2px !important;
+    font-size: 18px !important;
+    line-height: 1.3 !important;
+}
+
+.solicitud-detail__subtitle {
+    font-size: 12px;
+}
+
+.solicitud-detail__actions {
+    flex-shrink: 0;
+}
+
+.solicitud-detail__summary {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.solicitud-detail__meta {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.solicitud-detail__meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+}
+
+.solicitud-detail__meta-label {
+    display: block;
+    font-size: 11px;
+    line-height: 1.2;
+}
+
+.solicitud-detail__obs {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-top: 4px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.solicitud-detail__content {
+    flex: 1;
+    min-height: 0;
+    border-radius: 10px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    overflow: hidden;
+}
+
+.solicitud-detail__tabs {
+    height: 100%;
+}
+
+.solicitud-detail__tabs > .ant-tabs-nav {
+    margin: 0;
+    padding: 0 12px;
+}
+
+.solicitud-detail__tabs > .ant-tabs-content-holder {
+    padding: 0;
+}
+
+.solicitud-detail__tab-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 14px 16px;
+}
+
+.solicitud-detail__tab-actions {
+    margin-bottom: 2px;
+}
+
+.solicitud-detail__subblock {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 10px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.solicitud-detail__subblock-title {
+    font-size: 13px;
+}
+
+[data-theme='dark'] .solicitud-detail__summary,
+[data-theme='dark'] .solicitud-detail__content {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme='dark'] .solicitud-detail__meta-item {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .solicitud-detail__obs,
+[data-theme='dark'] .solicitud-detail__subblock {
+    border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 767px) {
+    .solicitud-detail__meta {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}

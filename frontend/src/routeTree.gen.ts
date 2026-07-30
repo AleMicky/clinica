@@ -74,6 +74,7 @@ import { Route as AdminAlmacenProductosRouteImport } from './routes/_admin/almac
 import { Route as AdminAlmacenMovimientosRouteImport } from './routes/_admin/almacen/movimientos'
 import { Route as AdminAlmacenExistenciasRouteImport } from './routes/_admin/almacen/existencias'
 import { Route as AdminAlmacenCategoriasRouteImport } from './routes/_admin/almacen/categorias'
+import { Route as AdminLaboratorioSolicitudesIndexRouteImport } from './routes/_admin/laboratorio/solicitudes.index'
 import { Route as AdminCajaCuentasIndexRouteImport } from './routes/_admin/caja/cuentas/index'
 import { Route as AdminWorkflowInstancesInstanceIdRouteImport } from './routes/_admin/workflow/instances/$instanceId'
 import { Route as AdminWorkflowDesignerDefinitionIdRouteImport } from './routes/_admin/workflow/designer/$definitionId'
@@ -430,6 +431,12 @@ const AdminAlmacenCategoriasRoute = AdminAlmacenCategoriasRouteImport.update({
   path: '/categorias',
   getParentRoute: () => AdminAlmacenRoute,
 } as any)
+const AdminLaboratorioSolicitudesIndexRoute =
+  AdminLaboratorioSolicitudesIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AdminLaboratorioSolicitudesRoute,
+  } as any)
 const AdminCajaCuentasIndexRoute = AdminCajaCuentasIndexRouteImport.update({
   id: '/cuentas/',
   path: '/cuentas/',
@@ -536,6 +543,7 @@ export interface FileRoutesByFullPath {
   '/workflow/designer/$definitionId': typeof AdminWorkflowDesignerDefinitionIdRoute
   '/workflow/instances/$instanceId': typeof AdminWorkflowInstancesInstanceIdRoute
   '/caja/cuentas/': typeof AdminCajaCuentasIndexRoute
+  '/laboratorio/solicitudes/': typeof AdminLaboratorioSolicitudesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof AdminIndexRoute
@@ -563,7 +571,6 @@ export interface FileRoutesByTo {
   '/laboratorio/parametros': typeof AdminLaboratorioParametrosRoute
   '/laboratorio/pruebas': typeof AdminLaboratorioPruebasRoute
   '/laboratorio/resultados': typeof AdminLaboratorioResultadosRoute
-  '/laboratorio/solicitudes': typeof AdminLaboratorioSolicitudesRouteWithChildren
   '/laboratorio/tipos-examen': typeof AdminLaboratorioTiposExamenRoute
   '/parametros/catalogos': typeof AdminParametrosCatalogosRoute
   '/parametros/correlativos': typeof AdminParametrosCorrelativosRoute
@@ -601,6 +608,7 @@ export interface FileRoutesByTo {
   '/workflow/designer/$definitionId': typeof AdminWorkflowDesignerDefinitionIdRoute
   '/workflow/instances/$instanceId': typeof AdminWorkflowInstancesInstanceIdRoute
   '/caja/cuentas': typeof AdminCajaCuentasIndexRoute
+  '/laboratorio/solicitudes': typeof AdminLaboratorioSolicitudesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -675,6 +683,7 @@ export interface FileRoutesById {
   '/_admin/workflow/designer/$definitionId': typeof AdminWorkflowDesignerDefinitionIdRoute
   '/_admin/workflow/instances/$instanceId': typeof AdminWorkflowInstancesInstanceIdRoute
   '/_admin/caja/cuentas/': typeof AdminCajaCuentasIndexRoute
+  '/_admin/laboratorio/solicitudes/': typeof AdminLaboratorioSolicitudesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -748,6 +757,7 @@ export interface FileRouteTypes {
     | '/workflow/designer/$definitionId'
     | '/workflow/instances/$instanceId'
     | '/caja/cuentas/'
+    | '/laboratorio/solicitudes/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -775,7 +785,6 @@ export interface FileRouteTypes {
     | '/laboratorio/parametros'
     | '/laboratorio/pruebas'
     | '/laboratorio/resultados'
-    | '/laboratorio/solicitudes'
     | '/laboratorio/tipos-examen'
     | '/parametros/catalogos'
     | '/parametros/correlativos'
@@ -813,6 +822,7 @@ export interface FileRouteTypes {
     | '/workflow/designer/$definitionId'
     | '/workflow/instances/$instanceId'
     | '/caja/cuentas'
+    | '/laboratorio/solicitudes'
   id:
     | '__root__'
     | '/_admin'
@@ -886,6 +896,7 @@ export interface FileRouteTypes {
     | '/_admin/workflow/designer/$definitionId'
     | '/_admin/workflow/instances/$instanceId'
     | '/_admin/caja/cuentas/'
+    | '/_admin/laboratorio/solicitudes/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1350,6 +1361,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAlmacenCategoriasRouteImport
       parentRoute: typeof AdminAlmacenRoute
     }
+    '/_admin/laboratorio/solicitudes/': {
+      id: '/_admin/laboratorio/solicitudes/'
+      path: '/'
+      fullPath: '/laboratorio/solicitudes/'
+      preLoaderRoute: typeof AdminLaboratorioSolicitudesIndexRouteImport
+      parentRoute: typeof AdminLaboratorioSolicitudesRoute
+    }
     '/_admin/caja/cuentas/': {
       id: '/_admin/caja/cuentas/'
       path: '/cuentas'
@@ -1498,11 +1516,14 @@ const AdminFarmaciaRouteWithChildren = AdminFarmaciaRoute._addFileChildren(
 
 interface AdminLaboratorioSolicitudesRouteChildren {
   AdminLaboratorioSolicitudesIdRoute: typeof AdminLaboratorioSolicitudesIdRoute
+  AdminLaboratorioSolicitudesIndexRoute: typeof AdminLaboratorioSolicitudesIndexRoute
 }
 
 const AdminLaboratorioSolicitudesRouteChildren: AdminLaboratorioSolicitudesRouteChildren =
   {
     AdminLaboratorioSolicitudesIdRoute: AdminLaboratorioSolicitudesIdRoute,
+    AdminLaboratorioSolicitudesIndexRoute:
+      AdminLaboratorioSolicitudesIndexRoute,
   }
 
 const AdminLaboratorioSolicitudesRouteWithChildren =

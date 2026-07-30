@@ -1,7 +1,9 @@
-import { createFileRoute } from '@tanstack/react-router'
-
-import { SolicitudesView } from '../../../features/laboratorio/solicitudes/views/SolicitudesView'
+import { createFileRoute, Outlet } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_admin/laboratorio/solicitudes')({
-    component: SolicitudesView,
+    component: SolicitudesLayout,
 })
+
+function SolicitudesLayout() {
+    return <Outlet />
+}

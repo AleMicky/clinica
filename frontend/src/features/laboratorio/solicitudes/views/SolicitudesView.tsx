@@ -126,6 +126,13 @@ export function SolicitudesView() {
         })
     }
 
+    const handleView = (item: Solicitud) => {
+        void navigate({
+            to: '/laboratorio/solicitudes/$id',
+            params: { id: item.id },
+        })
+    }
+
     const handleDelete = async (item: Solicitud) => {
         modal.setDeletingId(item.id)
         try {
@@ -225,6 +232,7 @@ export function SolicitudesView() {
                     page={filters.page}
                     pageSize={filters.pageSize}
                     onPageChange={filters.handlePageChange}
+                    onView={handleView}
                     onEdit={modal.openEdit}
                     onDelete={handleDelete}
                     onCreate={modal.openCreate}

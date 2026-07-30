@@ -7,7 +7,6 @@ import {
     ExperimentOutlined,
     EyeOutlined,
 } from '@ant-design/icons'
-import { Link } from '@tanstack/react-router'
 
 import { AppDataTable } from '../../../../shared/components/ui/data-table/AppDataTable'
 import { useAppQuery } from '../../../../shared/hooks/use-app-query'
@@ -80,6 +79,7 @@ type SolicitudesTableProps = {
     page: number
     pageSize: number
     onPageChange: (page: number, pageSize: number) => void
+    onView: (item: Solicitud) => void
     onEdit: (item: Solicitud) => void
     onDelete: (item: Solicitud) => void
     onCreate?: () => void
@@ -95,6 +95,7 @@ export function SolicitudesTable({
     page,
     pageSize,
     onPageChange,
+    onView,
     onEdit,
     onDelete,
     onCreate,
@@ -108,8 +109,23 @@ export function SolicitudesTable({
                 columnHelper.accessor('numero', {
                     header: 'Número',
                     size: 120,
-                    cell: ({ getValue }) => (
-                        <Tag className="paciente-hc-tag">{getValue()}</Tag>
+                    cell: ({ row }) => (
+                        <Tag
+                            className="paciente-hc-tag"
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => onView(row.original)}
+                            role="link"
+                            tabIndex={0}
+                            onKeyDown={(event) => {
+                                if (event.key === 'Enter' || event.key === ' ') {
+                                    event.preventDefault()
+                                    onView(row.original)
+                                }
+                            }}
+                            aria-label={`Ver solicitud ${row.original.numero}`}
+                        >
+                            {row.original.numero}
+                        </Tag>
                     ),
                 }),
                 columnHelper.display({
@@ -153,17 +169,13 @@ export function SolicitudesTable({
                         return (
                             <Space size={4}>
                                 <Tooltip title="Ver solicitud">
-                                    <Link
-                                        to="/laboratorio/solicitudes/$id"
-                                        params={{ id: item.id }}
-                                    >
-                                        <Button
-                                            type="text"
-                                            size="small"
-                                            icon={<EyeOutlined />}
-                                            aria-label={`Ver solicitud ${item.numero}`}
-                                        />
-                                    </Link>
+                                    <Button
+                                        type="text"
+                                        size="small"
+                                        icon={<EyeOutlined />}
+                                        aria-label={`Ver solicitud ${item.numero}`}
+                                        onClick={() => onView(item)}
+                                    />
                                 </Tooltip>
                                 {canMutate ? (
                                     <>
@@ -205,7 +217,7 @@ export function SolicitudesTable({
                     },
                 }),
             ] as ColumnDef<Solicitud, unknown>[],
-        [onEdit, onDelete, deletingId],
+        [onView, onEdit, onDelete, deletingId],
     )
 
     const showCustomEmpty = !loading && solicitudes.length === 0
