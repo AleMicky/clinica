@@ -117,7 +117,6 @@ export const AtencionRecepcionForm = forwardRef<
 
     const modoPaciente = useStore(form.store, (state) => state.values.modoPaciente)
     const formValues = useStore(form.store, (state) => state.values)
-    const especialidadId = useStore(form.store, (state) => state.values.especialidadId)
     const medicoId = useStore(form.store, (state) => state.values.medicoId)
     const tipoAtencionIdForQuery = tipoAtencionId || undefined
 
