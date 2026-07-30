@@ -2,11 +2,9 @@ import { del, get, getPaged, post, put } from '../../../../shared/api/http'
 import { laboratorioEndpoints } from '../../../../shared/api/endpoints'
 import type {
     CreateSolicitudPayload,
-    DerivarDetallePayload,
     EnviarACajaPayload,
     SetSolicitudEstadoPayload,
     Solicitud,
-    SolicitudDetalle,
     SolicitudPagedQuery,
     UpdateSolicitudPayload,
 } from '../types/solicitud.types'
@@ -42,12 +40,6 @@ export const solicitudesService = {
     enviarACaja(id: string, data: EnviarACajaPayload) {
         return post<Solicitud, EnviarACajaPayload>(
             laboratorioEndpoints.solicitudes.enviarACaja(id),
-            data,
-        )
-    },
-    derivarDetalle(id: string, detalleId: string, data: DerivarDetallePayload) {
-        return post<SolicitudDetalle, DerivarDetallePayload>(
-            laboratorioEndpoints.solicitudes.derivar(id, detalleId),
             data,
         )
     },

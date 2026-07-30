@@ -73,16 +73,6 @@ export function PruebasTable({
                             <Text type="secondary">No</Text>
                         ),
                 }),
-                columnHelper.accessor('esDerivable', {
-                    header: 'Derivable',
-                    size: 100,
-                    cell: ({ getValue }) =>
-                        getValue() ? (
-                            <Tag color="blue">Sí</Tag>
-                        ) : (
-                            <Text type="secondary">No</Text>
-                        ),
-                }),
                 columnHelper.display({
                     id: 'precios',
                     header: '',

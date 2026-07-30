@@ -36,10 +36,9 @@ import {
     type Resultado,
 } from '../../resultados/types/resultado.types'
 import type { Muestra } from '../../muestras/types/muestra.types'
-import { DerivarDetalleModal } from '../components/DerivarDetalleModal'
 import { RegistrarResultadosModal } from '../components/RegistrarResultadosModal'
 import { TomarMuestraModal } from '../components/TomarMuestraModal'
-import { useDerivarDetalle, useEnviarACaja, useSetSolicitudEstado, useSolicitud } from '../hooks/solicitudes.hooks'
+import { useEnviarACaja, useSetSolicitudEstado, useSolicitud } from '../hooks/solicitudes.hooks'
 import {
     SOLICITUD_ESTADO_COLORS,
     SOLICITUD_ESTADO_LABELS,
@@ -82,14 +81,12 @@ export function SolicitudDetailView({ solicitudId }: SolicitudDetailViewProps) {
     })
 
     const enviarACaja = useEnviarACaja()
-    const derivarDetalle = useDerivarDetalle()
     const setSolicitudEstado = useSetSolicitudEstado()
     const tomarMuestra = useTomarMuestra()
     const registrarResultados = useRegistrarResultados()
     const validarResultado = useValidarResultado()
 
     const [empleadoId, setEmpleadoId] = useState('')
-    const [derivarTarget, setDerivarTarget] = useState<SolicitudDetalle | null>(null)
     const [muestraModalOpen, setMuestraModalOpen] = useState(false)
     const [resultadosModalOpen, setResultadosModalOpen] = useState(false)
     const [workflowModalOpen, setWorkflowModalOpen] = useState(false)
@@ -314,28 +311,6 @@ export function SolicitudDetailView({ solicitudId }: SolicitudDetailViewProps) {
                                                             record.cantidad,
                                                     ),
                                             },
-                                            {
-                                                title: 'Derivación',
-                                                key: 'derivacion',
-                                                width: 180,
-                                                render: (_, record: SolicitudDetalle) =>
-                                                    record.esDerivada ? (
-                                                        <Tag color="purple">
-                                                            {record.laboratorioExternoNombre ||
-                                                                'Derivada'}
-                                                        </Tag>
-                                                    ) : (
-                                                        <Button
-                                                            type="link"
-                                                            size="small"
-                                                            onClick={() =>
-                                                                setDerivarTarget(record)
-                                                            }
-                                                        >
-                                                            Derivar
-                                                        </Button>
-                                                    ),
-                                            },
                                         ]}
                                         summary={() => (
                                             <Table.Summary.Row>
@@ -347,7 +322,6 @@ export function SolicitudDetailView({ solicitudId }: SolicitudDetailViewProps) {
                                                         {formatMoney(totalPruebas)}
                                                     </Text>
                                                 </Table.Summary.Cell>
-                                                <Table.Summary.Cell index={2} />
                                             </Table.Summary.Row>
                                         )}
                                     />
@@ -585,23 +559,6 @@ export function SolicitudDetailView({ solicitudId }: SolicitudDetailViewProps) {
                     ]}
                 />
             </section>
-
-            <DerivarDetalleModal
-                key={derivarTarget?.id ?? 'none'}
-                open={derivarTarget !== null}
-                detalle={derivarTarget}
-                loading={derivarDetalle.isPending}
-                onClose={() => setDerivarTarget(null)}
-                onSubmit={async (values) => {
-                    if (!derivarTarget) return
-                    await derivarDetalle.mutateAsync({
-                        id: solicitud.id,
-                        detalleId: derivarTarget.id,
-                        data: values,
-                    })
-                    setDerivarTarget(null)
-                }}
-            />
 
             <TomarMuestraModal
                 key={muestraModalOpen ? 'open' : 'closed'}

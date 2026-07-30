@@ -286,51 +286,6 @@ public sealed class SolicitudService(
         return await GetRequiredResponseAsync(solicitud.Id, cancellationToken);
     }
 
-    public async Task<SolicitudDetalleResponse> DerivarDetalleAsync(
-        Guid solicitudId,
-        Guid detalleId,
-        DerivarDetalleRequest request,
-        CancellationToken cancellationToken = default)
-    {
-        var detalle = await context.SolicitudDetalles
-            .Include(x => x.Prueba)
-            .FirstOrDefaultAsync(
-                x => x.Id == detalleId && x.SolicitudId == solicitudId,
-                cancellationToken)
-            ?? throw new NotFoundException("Detalle de solicitud no encontrado.");
-
-        if (!detalle.Prueba.EsDerivable)
-            throw new BusinessException($"La prueba '{detalle.Prueba.Nombre}' no es derivable a laboratorio externo.");
-
-        var laboratorioExterno = await context.LaboratoriosExternos
-            .FirstOrDefaultAsync(x => x.Id == request.LaboratorioExternoId, cancellationToken)
-            ?? throw new BusinessException("El laboratorio externo no existe.");
-
-        if (!laboratorioExterno.Activo)
-            throw new BusinessException("El laboratorio externo no está activo.");
-
-        detalle.EsDerivada = true;
-        detalle.LaboratorioExternoId = laboratorioExterno.Id;
-
-        if (request.Observaciones is not null)
-            detalle.Observaciones = StringNormalize.Optional(request.Observaciones);
-
-        detalle.UpdatedAt = DateTime.UtcNow;
-
-        await context.SaveChangesAsync(cancellationToken);
-
-        return new SolicitudDetalleResponse(
-            detalle.Id,
-            detalle.PruebaId,
-            detalle.Prueba.Nombre,
-            detalle.PrecioUnitario,
-            detalle.Cantidad,
-            detalle.EsDerivada,
-            detalle.LaboratorioExternoId,
-            laboratorioExterno.Nombre,
-            detalle.Observaciones);
-    }
-
     public async Task SetEstadoAsync(
         Guid id,
         string estado,

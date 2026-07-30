@@ -177,13 +177,6 @@ export const queryKeys = {
             detail: (id: EntityId) =>
                 ['laboratorio', 'valores-referencia', 'detail', id] as const,
         },
-        laboratoriosExternos: {
-            all: ['laboratorio', 'laboratorios-externos'] as const,
-            list: (query: PagedQuery) =>
-                ['laboratorio', 'laboratorios-externos', 'list', query] as const,
-            detail: (id: EntityId) =>
-                ['laboratorio', 'laboratorios-externos', 'detail', id] as const,
-        },
         solicitudes: {
             all: ['laboratorio', 'solicitudes'] as const,
             list: (query: PagedQuery & Record<string, unknown>) =>

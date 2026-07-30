@@ -47,7 +47,6 @@ public static class SwaggerExtensions
         LaboratorioSwaggerTags.PruebaPrecios,
         LaboratorioSwaggerTags.Parametros,
         LaboratorioSwaggerTags.ValoresReferencia,
-        LaboratorioSwaggerTags.LaboratoriosExternos,
         LaboratorioSwaggerTags.Solicitudes,
         LaboratorioSwaggerTags.Muestras,
         LaboratorioSwaggerTags.Resultados,

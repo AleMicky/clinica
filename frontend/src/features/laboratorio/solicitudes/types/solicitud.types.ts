@@ -112,11 +112,6 @@ export type SetSolicitudEstadoPayload = {
     estado: string
 }
 
-export type DerivarDetallePayload = {
-    laboratorioExternoId: string
-    observaciones?: string | null
-}
-
 export type SolicitudPagedQuery = PagedQuery & {
     pacienteId?: string
     atencionId?: string

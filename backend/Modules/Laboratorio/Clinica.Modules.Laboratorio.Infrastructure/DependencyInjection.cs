@@ -22,7 +22,6 @@ public static class DependencyInjection
         services.AddScoped<IPruebaPrecioService, PruebaPrecioService>();
         services.AddScoped<IParametroService, ParametroService>();
         services.AddScoped<IValorReferenciaService, ValorReferenciaService>();
-        services.AddScoped<ILaboratorioExternoService, LaboratorioExternoService>();
         services.AddScoped<ISolicitudService, SolicitudService>();
         services.AddScoped<IMuestraService, MuestraService>();
         services.AddScoped<IResultadoService, ResultadoService>();

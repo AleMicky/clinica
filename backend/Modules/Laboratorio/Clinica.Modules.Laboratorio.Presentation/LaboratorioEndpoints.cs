@@ -23,7 +23,6 @@ public static class LaboratorioEndpoints
         group.MapPruebaPrecioEndpoints();
         group.MapParametroEndpoints();
         group.MapValorReferenciaEndpoints();
-        group.MapLaboratorioExternoEndpoints();
         group.MapSolicitudEndpoints();
         group.MapMuestraEndpoints();
         group.MapSolicitudMuestraEndpoints();

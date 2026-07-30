@@ -17,7 +17,6 @@ export const pruebaSchema = z
         tipoMuestraId: z.string().trim().min(1, 'Seleccione un tipo de muestra.'),
         requiereAyuno: z.boolean(),
         horasAyuno: z.number().int().min(0).max(72).nullable(),
-        esDerivable: z.boolean(),
     })
     .superRefine((values, ctx) => {
         if (values.requiereAyuno && (values.horasAyuno ?? 0) <= 0) {
@@ -39,5 +38,4 @@ export const pruebaDefaultValues: PruebaFormValues = {
     tipoMuestraId: '',
     requiereAyuno: false,
     horasAyuno: null,
-    esDerivable: false,
 }

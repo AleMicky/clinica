@@ -41,7 +41,6 @@ public static class LaboratorioDbSeeder
 
         await SeedPruebasAsync(context, tipoMuestras);
         await SeedPruebaPreciosAsync(context);
-        await SeedLaboratoriosExternosAsync(context);
         await SeedParametrosAsync(context);
     }
 
@@ -183,37 +182,6 @@ public static class LaboratorioDbSeeder
                 RequiereAyuno = item.RequiereAyuno,
                 HorasAyuno = item.RequiereAyuno ? item.HorasAyuno : null,
                 EsDerivable = item.EsDerivable,
-            });
-        }
-
-        await context.SaveChangesAsync();
-    }
-
-    private static async Task SeedLaboratoriosExternosAsync(LaboratorioDbContext context)
-    {
-        (string Codigo, string Nombre, string Contacto, string Telefono, string Email)[] items =
-        [
-            ("LABEXT01", "Laboratorio Central de Referencia", "Ing. Rosa Fernández", "591-2-2445566", "contacto@labcentral.com.bo"),
-            ("LABEXT02", "BioAnálisis Especializado S.R.L.", "Lic. Mario Quispe", "591-3-3456789", "info@bioanalisis.com.bo"),
-        ];
-
-        foreach (var item in items)
-        {
-            var exists = await context.LaboratoriosExternos
-                .AnyAsync(x => x.Codigo == item.Codigo);
-
-            if (exists)
-                continue;
-
-            context.LaboratoriosExternos.Add(new LaboratorioExterno
-            {
-                Codigo = item.Codigo,
-                Nombre = item.Nombre,
-                Descripcion = "Laboratorio externo para derivación de pruebas especializadas.",
-                Contacto = item.Contacto,
-                Telefono = item.Telefono,
-                Email = item.Email,
-                Activo = true,
             });
         }
 

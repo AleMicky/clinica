@@ -8,7 +8,6 @@ import { getApiErrorMessage } from '../../../../shared/utils/api-error'
 import { solicitudesService } from '../services/solicitudes.service'
 import type {
     CreateSolicitudPayload,
-    DerivarDetallePayload,
     EnviarACajaPayload,
     SetSolicitudEstadoPayload,
     SolicitudPagedQuery,
@@ -95,26 +94,5 @@ export function useEnviarACaja() {
             notify.success('Solicitud enviada a caja', 'Se generó el cargo correspondiente.')
         },
         onError: (e) => notify.error('Error al enviar a caja', getApiErrorMessage(e)),
-    })
-}
-
-export function useDerivarDetalle() {
-    const qc = useQueryClient()
-
-    return useAppMutation({
-        mutationFn: ({
-            id,
-            detalleId,
-            data,
-        }: {
-            id: string
-            detalleId: string
-            data: DerivarDetallePayload
-        }) => solicitudesService.derivarDetalle(id, detalleId, data),
-        onSuccess: () => {
-            void qc.invalidateQueries({ queryKey: queryKeys.laboratorio.solicitudes.all })
-            notify.success('Prueba derivada', 'La prueba se derivó correctamente.')
-        },
-        onError: (e) => notify.error('Error al derivar', getApiErrorMessage(e)),
     })
 }

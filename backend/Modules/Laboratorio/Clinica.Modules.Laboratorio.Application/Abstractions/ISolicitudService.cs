@@ -31,12 +31,6 @@ public interface ISolicitudService
         EnviarACajaRequest request,
         CancellationToken cancellationToken = default);
 
-    Task<SolicitudDetalleResponse> DerivarDetalleAsync(
-        Guid solicitudId,
-        Guid detalleId,
-        DerivarDetalleRequest request,
-        CancellationToken cancellationToken = default);
-
     Task SetEstadoAsync(
         Guid id,
         string estado,

@@ -110,7 +110,6 @@ export function PruebaFormDrawer({
             form.setFieldValue('tipoMuestraId', entity.tipoMuestraId)
             form.setFieldValue('requiereAyuno', entity.requiereAyuno)
             form.setFieldValue('horasAyuno', entity.horasAyuno)
-            form.setFieldValue('esDerivable', entity.esDerivable)
             return
         }
 
@@ -355,22 +354,6 @@ export function PruebaFormDrawer({
                                     </Form.Item>
                                 )
                             }}
-                        </form.Field>
-                    </Col>
-
-                    <Col xs={24}>
-                        <form.Field name="esDerivable">
-                            {(field) => (
-                                <Form.Item label="Es derivable">
-                                    <Switch
-                                        checked={field.state.value}
-                                        onChange={(checked) =>
-                                            field.handleChange(checked)
-                                        }
-                                        disabled={loading}
-                                    />
-                                </Form.Item>
-                            )}
                         </form.Field>
                     </Col>
                 </Row>

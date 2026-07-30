@@ -147,29 +147,6 @@ public static class SolicitudEndpoints
             .Produces<ApiResponse<object>>(StatusCodes.Status400BadRequest)
             .Produces<ApiResponse<object>>(StatusCodes.Status404NotFound);
 
-        solicitudes.MapPost("/{id:guid}/detalles/{detalleId:guid}/derivar", async (
-                Guid id,
-                Guid detalleId,
-                DerivarDetalleRequest request,
-                IValidator<DerivarDetalleRequest> validator,
-                ISolicitudService service,
-                CancellationToken cancellationToken) =>
-            {
-                var validation = await validator.ValidateAsync(request, cancellationToken);
-                if (!validation.IsValid)
-                {
-                    var message = $"Datos inválidos. {string.Join(", ",
-                        validation.Errors.Select(x => x.ErrorMessage).Distinct())}";
-                    return ApiResults.BadRequest(message);
-                }
-
-                var result = await service.DerivarDetalleAsync(id, detalleId, request, cancellationToken);
-                return ApiResults.Ok(result, "Prueba derivada correctamente.");
-            })
-            .WithName("LaboratorioSolicitud_DerivarDetalle")
-            .Produces<ApiResponse<SolicitudDetalleResponse>>(StatusCodes.Status200OK)
-            .Produces<ApiResponse<object>>(StatusCodes.Status400BadRequest);
-
         return group;
     }
 }

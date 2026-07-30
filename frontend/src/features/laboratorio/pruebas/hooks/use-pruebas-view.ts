@@ -56,7 +56,7 @@ export function usePruebasView() {
             tipoMuestraId: values.tipoMuestraId,
             requiereAyuno: values.requiereAyuno,
             horasAyuno: values.requiereAyuno ? values.horasAyuno : null,
-            esDerivable: values.esDerivable,
+            esDerivable: false,
         }
 
         if (modal.editing) {

@@ -58,7 +58,6 @@ import { Route as AdminLaboratorioResultadosRouteImport } from './routes/_admin/
 import { Route as AdminLaboratorioPruebasRouteImport } from './routes/_admin/laboratorio/pruebas'
 import { Route as AdminLaboratorioParametrosRouteImport } from './routes/_admin/laboratorio/parametros'
 import { Route as AdminLaboratorioMuestrasRouteImport } from './routes/_admin/laboratorio/muestras'
-import { Route as AdminLaboratorioLaboratoriosExternosRouteImport } from './routes/_admin/laboratorio/laboratorios-externos'
 import { Route as AdminLaboratorioEspecialidadesRouteImport } from './routes/_admin/laboratorio/especialidades'
 import { Route as AdminFarmaciaRecetasRouteImport } from './routes/_admin/farmacia/recetas'
 import { Route as AdminFarmaciaPreciosRouteImport } from './routes/_admin/farmacia/precios'
@@ -345,12 +344,6 @@ const AdminLaboratorioMuestrasRoute =
     path: '/muestras',
     getParentRoute: () => AdminLaboratorioRoute,
   } as any)
-const AdminLaboratorioLaboratoriosExternosRoute =
-  AdminLaboratorioLaboratoriosExternosRouteImport.update({
-    id: '/laboratorios-externos',
-    path: '/laboratorios-externos',
-    getParentRoute: () => AdminLaboratorioRoute,
-  } as any)
 const AdminLaboratorioEspecialidadesRoute =
   AdminLaboratorioEspecialidadesRouteImport.update({
     id: '/especialidades',
@@ -500,7 +493,6 @@ export interface FileRoutesByFullPath {
   '/farmacia/precios': typeof AdminFarmaciaPreciosRoute
   '/farmacia/recetas': typeof AdminFarmaciaRecetasRoute
   '/laboratorio/especialidades': typeof AdminLaboratorioEspecialidadesRoute
-  '/laboratorio/laboratorios-externos': typeof AdminLaboratorioLaboratoriosExternosRoute
   '/laboratorio/muestras': typeof AdminLaboratorioMuestrasRoute
   '/laboratorio/parametros': typeof AdminLaboratorioParametrosRoute
   '/laboratorio/pruebas': typeof AdminLaboratorioPruebasRoute
@@ -566,7 +558,6 @@ export interface FileRoutesByTo {
   '/farmacia/precios': typeof AdminFarmaciaPreciosRoute
   '/farmacia/recetas': typeof AdminFarmaciaRecetasRoute
   '/laboratorio/especialidades': typeof AdminLaboratorioEspecialidadesRoute
-  '/laboratorio/laboratorios-externos': typeof AdminLaboratorioLaboratoriosExternosRoute
   '/laboratorio/muestras': typeof AdminLaboratorioMuestrasRoute
   '/laboratorio/parametros': typeof AdminLaboratorioParametrosRoute
   '/laboratorio/pruebas': typeof AdminLaboratorioPruebasRoute
@@ -640,7 +631,6 @@ export interface FileRoutesById {
   '/_admin/farmacia/precios': typeof AdminFarmaciaPreciosRoute
   '/_admin/farmacia/recetas': typeof AdminFarmaciaRecetasRoute
   '/_admin/laboratorio/especialidades': typeof AdminLaboratorioEspecialidadesRoute
-  '/_admin/laboratorio/laboratorios-externos': typeof AdminLaboratorioLaboratoriosExternosRoute
   '/_admin/laboratorio/muestras': typeof AdminLaboratorioMuestrasRoute
   '/_admin/laboratorio/parametros': typeof AdminLaboratorioParametrosRoute
   '/_admin/laboratorio/pruebas': typeof AdminLaboratorioPruebasRoute
@@ -714,7 +704,6 @@ export interface FileRouteTypes {
     | '/farmacia/precios'
     | '/farmacia/recetas'
     | '/laboratorio/especialidades'
-    | '/laboratorio/laboratorios-externos'
     | '/laboratorio/muestras'
     | '/laboratorio/parametros'
     | '/laboratorio/pruebas'
@@ -780,7 +769,6 @@ export interface FileRouteTypes {
     | '/farmacia/precios'
     | '/farmacia/recetas'
     | '/laboratorio/especialidades'
-    | '/laboratorio/laboratorios-externos'
     | '/laboratorio/muestras'
     | '/laboratorio/parametros'
     | '/laboratorio/pruebas'
@@ -853,7 +841,6 @@ export interface FileRouteTypes {
     | '/_admin/farmacia/precios'
     | '/_admin/farmacia/recetas'
     | '/_admin/laboratorio/especialidades'
-    | '/_admin/laboratorio/laboratorios-externos'
     | '/_admin/laboratorio/muestras'
     | '/_admin/laboratorio/parametros'
     | '/_admin/laboratorio/pruebas'
@@ -1249,13 +1236,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLaboratorioMuestrasRouteImport
       parentRoute: typeof AdminLaboratorioRoute
     }
-    '/_admin/laboratorio/laboratorios-externos': {
-      id: '/_admin/laboratorio/laboratorios-externos'
-      path: '/laboratorios-externos'
-      fullPath: '/laboratorio/laboratorios-externos'
-      preLoaderRoute: typeof AdminLaboratorioLaboratoriosExternosRouteImport
-      parentRoute: typeof AdminLaboratorioRoute
-    }
     '/_admin/laboratorio/especialidades': {
       id: '/_admin/laboratorio/especialidades'
       path: '/especialidades'
@@ -1533,7 +1513,6 @@ const AdminLaboratorioSolicitudesRouteWithChildren =
 
 interface AdminLaboratorioRouteChildren {
   AdminLaboratorioEspecialidadesRoute: typeof AdminLaboratorioEspecialidadesRoute
-  AdminLaboratorioLaboratoriosExternosRoute: typeof AdminLaboratorioLaboratoriosExternosRoute
   AdminLaboratorioMuestrasRoute: typeof AdminLaboratorioMuestrasRoute
   AdminLaboratorioParametrosRoute: typeof AdminLaboratorioParametrosRoute
   AdminLaboratorioPruebasRoute: typeof AdminLaboratorioPruebasRoute
@@ -1545,8 +1524,6 @@ interface AdminLaboratorioRouteChildren {
 
 const AdminLaboratorioRouteChildren: AdminLaboratorioRouteChildren = {
   AdminLaboratorioEspecialidadesRoute: AdminLaboratorioEspecialidadesRoute,
-  AdminLaboratorioLaboratoriosExternosRoute:
-    AdminLaboratorioLaboratoriosExternosRoute,
   AdminLaboratorioMuestrasRoute: AdminLaboratorioMuestrasRoute,
   AdminLaboratorioParametrosRoute: AdminLaboratorioParametrosRoute,
   AdminLaboratorioPruebasRoute: AdminLaboratorioPruebasRoute,

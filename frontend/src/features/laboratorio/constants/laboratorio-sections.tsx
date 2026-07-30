@@ -2,7 +2,6 @@ import {
     ExperimentOutlined,
     FileDoneOutlined,
     FileSearchOutlined,
-    GlobalOutlined,
     MedicineBoxOutlined,
     OrderedListOutlined,
     SolutionOutlined,
@@ -49,11 +48,6 @@ export const laboratorioPageSections: LaboratorioPageSection[] = [
         path: '/laboratorio/parametros',
         title: 'Parámetros',
         icon: <OrderedListOutlined />,
-    },
-    {
-        path: '/laboratorio/laboratorios-externos',
-        title: 'Laboratorios externos',
-        icon: <GlobalOutlined />,
     },
 ]
 

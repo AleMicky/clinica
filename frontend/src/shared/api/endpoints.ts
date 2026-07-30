@@ -106,12 +106,9 @@ export const laboratorioEndpoints = {
     pruebaPrecios: createEndpoints(`${api.laboratorio}/prueba-precios`),
     parametros: createEndpoints(`${api.laboratorio}/parametros`),
     valoresReferencia: createEndpoints(`${api.laboratorio}/valores-referencia`),
-    laboratoriosExternos: createEndpoints(`${api.laboratorio}/laboratorios-externos`),
     solicitudes: createEndpoints(`${api.laboratorio}/solicitudes`, (root) => ({
         enviarACaja: (id: EntityId) => `${root}/${id}/enviar-a-caja`,
         estado: (id: EntityId) => `${root}/${id}/estado`,
-        derivar: (id: EntityId, detalleId: EntityId) =>
-            `${root}/${id}/detalles/${detalleId}/derivar`,
         tomarMuestra: (id: EntityId) => `${root}/${id}/muestras`,
         registrarResultados: (id: EntityId) => `${root}/${id}/resultados`,
     })),
