@@ -34,8 +34,11 @@ export function useCreateSolicitud() {
 
     return useAppMutation({
         mutationFn: (data: CreateSolicitudPayload) => solicitudesService.create(data),
-        onSuccess: () => {
-            void qc.invalidateQueries({ queryKey: queryKeys.laboratorio.solicitudes.all })
+        onSuccess: (created) => {
+            qc.setQueryData(queryKeys.laboratorio.solicitudes.detail(created.id), created)
+            void qc.invalidateQueries({
+                queryKey: [...queryKeys.laboratorio.solicitudes.all, 'list'],
+            })
             notify.success('Solicitud creada', 'La solicitud se registró correctamente.')
         },
         onError: (e) => notify.error('Error al crear la solicitud', getApiErrorMessage(e)),

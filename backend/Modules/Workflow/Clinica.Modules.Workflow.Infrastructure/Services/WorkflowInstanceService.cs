@@ -22,47 +22,55 @@ public sealed class WorkflowInstanceService(
     {
         EnsureAuthenticated();
 
+        var definitionCode = StringNormalize.Required(request.WorkflowDefinitionCode);
+        var referenceModule = StringNormalize.Required(request.ReferenceModule);
+        var referenceEntity = StringNormalize.Required(request.ReferenceEntity);
+
         var definition = await context.WorkflowDefinitions
             .AsNoTracking()
-            .FirstOrDefaultAsync(x =>
-                    x.Code == StringNormalize.Required(request.WorkflowDefinitionCode) &&
-                    x.IsActive,
-                cancellationToken);
+            .Where(x => x.Code == definitionCode && x.IsActive)
+            .Select(x => new
+            {
+                x.Id,
+                x.Code,
+                x.Name,
+                InitialState = x.States
+                    .Where(s => s.IsInitial)
+                    .Select(s => new { s.Id, s.Code, s.Name, s.Color, s.IsFinal })
+                    .FirstOrDefault()
+            })
+            .FirstOrDefaultAsync(cancellationToken);
 
         if (definition is null)
             throw new NotFoundException("Definición de workflow no encontrada o inactiva.");
 
+        if (definition.InitialState is null)
+            throw new BusinessException("La definición no tiene un estado inicial configurado.");
+
         var existing = await context.WorkflowInstances
             .AnyAsync(x =>
-                    x.ReferenceModule == StringNormalize.Required(request.ReferenceModule) &&
-                    x.ReferenceEntity == StringNormalize.Required(request.ReferenceEntity) &&
+                    x.ReferenceModule == referenceModule &&
+                    x.ReferenceEntity == referenceEntity &&
                     x.ReferenceId == request.ReferenceId,
                 cancellationToken);
 
         if (existing)
             throw new BusinessException("Ya existe una instancia de workflow para la referencia indicada.");
 
-        var initialState = await context.WorkflowStates
-            .FirstOrDefaultAsync(x =>
-                    x.WorkflowDefinitionId == definition.Id &&
-                    x.IsInitial,
-                cancellationToken);
-
-        if (initialState is null)
-            throw new BusinessException("La definición no tiene un estado inicial configurado.");
-
         var now = DateTime.UtcNow;
+        var initialState = definition.InitialState;
 
         var instance = new WorkflowInstance
         {
             Id = Guid.NewGuid(),
             WorkflowDefinitionId = definition.Id,
-            ReferenceModule = StringNormalize.Required(request.ReferenceModule),
-            ReferenceEntity = StringNormalize.Required(request.ReferenceEntity),
+            ReferenceModule = referenceModule,
+            ReferenceEntity = referenceEntity,
             ReferenceId = request.ReferenceId,
             CurrentStateId = initialState.Id,
             StartedByEmployeeId = request.EmployeeId,
             StartedAt = now,
+            CreatedAt = now,
             IsCompleted = initialState.IsFinal,
             FinishedAt = initialState.IsFinal ? now : null
         };
@@ -77,13 +85,30 @@ public sealed class WorkflowInstanceService(
             ToStateId = initialState.Id,
             Comment = null,
             ExecutedByEmployeeId = request.EmployeeId,
-            PerformedAt = now
+            PerformedAt = now,
+            CreatedAt = now
         });
 
         await context.SaveChangesAsync(cancellationToken);
 
-        return await GetByIdAsync(instance.Id, cancellationToken)
-            ?? throw new BusinessException("No se pudo recuperar la instancia creada.");
+        return new WorkflowInstanceResponse(
+            instance.Id,
+            definition.Id,
+            definition.Code,
+            definition.Name,
+            instance.ReferenceModule,
+            instance.ReferenceEntity,
+            instance.ReferenceId,
+            initialState.Id,
+            initialState.Code,
+            initialState.Name,
+            initialState.Color,
+            instance.StartedByEmployeeId,
+            instance.StartedAt,
+            instance.FinishedAt,
+            instance.IsCompleted,
+            instance.CreatedAt,
+            instance.UpdatedAt);
     }
 
     public async Task<WorkflowInstanceResponse?> GetByIdAsync(

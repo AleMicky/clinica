@@ -95,7 +95,7 @@ public sealed class SolicitudService(
         if (request.Lineas.Count == 0)
             throw new BusinessException("Debe incluir al menos una línea de solicitud.");
 
-        var detalles = await BuildDetallesAsync(request.Lineas, cancellationToken);
+        var (detalles, pruebas) = await BuildDetallesAsync(request.Lineas, cancellationToken);
 
         var correlativo = await correlativoService.GenerarAsync(
             new GenerarCorrelativoRequest(CorrelativoCodigo, Prefijo: "LAB-", Longitud: 6),
@@ -103,6 +103,7 @@ public sealed class SolicitudService(
 
         var entity = new Solicitud
         {
+            Id = Guid.NewGuid(),
             Numero = correlativo.NumeroFormateado,
             PacienteId = request.PacienteId,
             Origen = StringNormalize.Required(request.Origen).ToUpperInvariant(),
@@ -115,9 +116,6 @@ public sealed class SolicitudService(
             Detalles = detalles,
         };
 
-        context.Solicitudes.Add(entity);
-        await context.SaveChangesAsync(cancellationToken);
-
         var instance = await workflowInstanceService.StartAsync(
             new StartWorkflowInstanceRequest(
                 WorkflowDefinitionCode,
@@ -128,9 +126,10 @@ public sealed class SolicitudService(
             cancellationToken);
 
         entity.WorkflowInstanceId = instance.Id;
+        context.Solicitudes.Add(entity);
         await context.SaveChangesAsync(cancellationToken);
 
-        return await GetRequiredResponseAsync(entity.Id, cancellationToken);
+        return MapCreatedResponse(entity, pruebas);
     }
 
     public async Task<SolicitudResponse> UpdateAsync(
@@ -152,7 +151,7 @@ public sealed class SolicitudService(
         context.SolicitudDetalles.RemoveRange(existentes);
         entity.Detalles.Clear();
 
-        var detalles = await BuildDetallesAsync(request.Lineas, cancellationToken);
+        var (detalles, _) = await BuildDetallesAsync(request.Lineas, cancellationToken);
         foreach (var detalle in detalles)
             entity.Detalles.Add(detalle);
 
@@ -321,7 +320,7 @@ public sealed class SolicitudService(
         }
     }
 
-    private async Task<List<SolicitudDetalle>> BuildDetallesAsync(
+    private async Task<(List<SolicitudDetalle> Detalles, Dictionary<Guid, Prueba> Pruebas)> BuildDetallesAsync(
         IReadOnlyList<CreateSolicitudLineaRequest> lineas,
         CancellationToken cancellationToken)
     {
@@ -336,26 +335,33 @@ public sealed class SolicitudService(
             throw new BusinessException("Una o más pruebas indicadas no existen.");
 
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var detalles = new List<SolicitudDetalle>();
+
+        var preciosVigentes = await context.PruebaPrecios
+            .AsNoTracking()
+            .Where(x =>
+                pruebaIds.Contains(x.PruebaId) &&
+                x.FechaInicio <= today &&
+                (x.FechaFin == null || x.FechaFin >= today))
+            .ToListAsync(cancellationToken);
+
+        var precioPorPrueba = preciosVigentes
+            .GroupBy(x => x.PruebaId)
+            .ToDictionary(
+                g => g.Key,
+                g => g.OrderByDescending(x => x.FechaInicio).First());
+
+        var detalles = new List<SolicitudDetalle>(lineas.Count);
 
         foreach (var linea in lineas)
         {
             var prueba = pruebas[linea.PruebaId];
 
-            var precio = await context.PruebaPrecios
-                .AsNoTracking()
-                .Where(x =>
-                    x.PruebaId == prueba.Id &&
-                    x.FechaInicio <= today &&
-                    (x.FechaFin == null || x.FechaFin >= today))
-                .OrderByDescending(x => x.FechaInicio)
-                .FirstOrDefaultAsync(cancellationToken);
-
-            if (precio is null)
+            if (!precioPorPrueba.TryGetValue(prueba.Id, out var precio))
                 throw new BusinessException($"La prueba '{prueba.Nombre}' no tiene un precio vigente.");
 
             detalles.Add(new SolicitudDetalle
             {
+                Id = Guid.NewGuid(),
                 PruebaId = prueba.Id,
                 PrecioUnitario = precio.ImporteFacturado,
                 Cantidad = linea.Cantidad,
@@ -365,7 +371,39 @@ public sealed class SolicitudService(
             });
         }
 
-        return detalles;
+        return (detalles, pruebas);
+    }
+
+    private static SolicitudResponse MapCreatedResponse(
+        Solicitud entity,
+        IReadOnlyDictionary<Guid, Prueba> pruebas)
+    {
+        var detalles = entity.Detalles
+            .Select(d => new SolicitudDetalleResponse(
+                d.Id,
+                d.PruebaId,
+                pruebas[d.PruebaId].Nombre,
+                d.PrecioUnitario,
+                d.Cantidad,
+                d.EsDerivada,
+                d.LaboratorioExternoId,
+                null,
+                d.Observaciones))
+            .ToList();
+
+        return new SolicitudResponse(
+            entity.Id,
+            entity.Numero,
+            entity.PacienteId,
+            entity.Origen,
+            entity.AtencionId,
+            entity.MedicoSolicitanteId,
+            entity.MedicoExternoNombre,
+            entity.Estado,
+            entity.Observaciones,
+            entity.FechaSolicitud,
+            detalles,
+            []);
     }
 
     private async Task<SolicitudResponse> GetRequiredResponseAsync(
