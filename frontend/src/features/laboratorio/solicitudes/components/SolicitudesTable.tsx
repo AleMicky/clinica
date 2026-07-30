@@ -1,7 +1,12 @@
 import { useMemo } from 'react'
 import { createColumnHelper, type ColumnDef } from '@tanstack/react-table'
-import { Button, Popconfirm, Space, Tag, Typography } from 'antd'
-import { DeleteOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons'
+import { Button, Empty, Popconfirm, Space, Tag, Tooltip, Typography } from 'antd'
+import {
+    DeleteOutlined,
+    EditOutlined,
+    ExperimentOutlined,
+    EyeOutlined,
+} from '@ant-design/icons'
 import { Link } from '@tanstack/react-router'
 
 import { AppDataTable } from '../../../../shared/components/ui/data-table/AppDataTable'
@@ -11,31 +16,61 @@ import { pacientesService } from '../../../pacientes/services/pacientes.service'
 import {
     SOLICITUD_ESTADO_COLORS,
     SOLICITUD_ESTADO_LABELS,
-    SOLICITUD_ORIGEN_LABELS,
     type Solicitud,
 } from '../types/solicitud.types'
 
 const { Text } = Typography
 const columnHelper = createColumnHelper<Solicitud>()
 
-function formatDateTime(value: string) {
-    const date = new Date(value)
-    if (Number.isNaN(date.getTime())) return value
-    return date.toLocaleString('es-BO')
+const ORIGEN_SHORT_LABELS: Record<string, string> = {
+    PACIENTE: 'Mostrador',
+    ATENCION_MEDICA: 'Atención médica',
+    MEDICO_EXTERNO: 'Médico externo',
 }
 
-function PacienteCell({ pacienteId }: { pacienteId: string }) {
+function formatDate(value: string) {
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) return value
+    return date.toLocaleDateString('es-BO')
+}
+
+function getInitials(nombre: string) {
+    const parts = nombre.trim().split(/\s+/).filter(Boolean)
+
+    if (parts.length >= 2) {
+        return `${parts[0][0] ?? ''}${parts[1][0] ?? ''}`.toUpperCase()
+    }
+
+    return nombre.trim().slice(0, 2).toUpperCase() || '—'
+}
+
+function PacienteIdentityCell({ solicitud }: { solicitud: Solicitud }) {
     const { data: paciente, isFetching } = useAppQuery({
-        queryKey: queryKeys.pacientes.detail(pacienteId),
-        queryFn: () => pacientesService.getById(pacienteId),
+        queryKey: queryKeys.pacientes.detail(solicitud.pacienteId),
+        queryFn: () => pacientesService.getById(solicitud.pacienteId),
         staleTime: 5 * 60 * 1000,
     })
 
-    if (isFetching && !paciente) {
-        return <Text type="secondary">Cargando…</Text>
-    }
+    const nombre = paciente?.personaNombreCompleto?.trim()
+    const display = nombre || (isFetching ? 'Cargando…' : 'Paciente')
+    const origen = ORIGEN_SHORT_LABELS[solicitud.origen] ?? solicitud.origen
+    const pruebas = solicitud.detalles.length
 
-    return <Text>{paciente?.personaNombreCompleto ?? '—'}</Text>
+    return (
+        <div className="paciente-cell">
+            <span className="paciente-cell__avatar" aria-hidden>
+                {getInitials(nombre || 'PA')}
+            </span>
+            <span className="paciente-cell__text">
+                <Text strong className="paciente-cell__name">
+                    {display}
+                </Text>
+                <Text type="secondary" className="paciente-cell__sub">
+                    {origen} · {pruebas} {pruebas === 1 ? 'prueba' : 'pruebas'}
+                </Text>
+            </span>
+        </div>
+    )
 }
 
 type SolicitudesTableProps = {
@@ -47,7 +82,9 @@ type SolicitudesTableProps = {
     onPageChange: (page: number, pageSize: number) => void
     onEdit: (item: Solicitud) => void
     onDelete: (item: Solicitud) => void
+    onCreate?: () => void
     deletingId: string | null
+    hasActiveFilters?: boolean
     className?: string
 }
 
@@ -60,7 +97,9 @@ export function SolicitudesTable({
     onPageChange,
     onEdit,
     onDelete,
+    onCreate,
     deletingId,
+    hasActiveFilters = false,
     className,
 }: SolicitudesTableProps) {
     const columns = useMemo(
@@ -68,37 +107,28 @@ export function SolicitudesTable({
             [
                 columnHelper.accessor('numero', {
                     header: 'Número',
-                    size: 130,
-                    cell: ({ getValue }) => <Text code>{getValue()}</Text>,
-                }),
-                columnHelper.accessor('fechaSolicitud', {
-                    header: 'Fecha',
-                    size: 170,
-                    cell: ({ getValue }) => formatDateTime(getValue()),
+                    size: 120,
+                    cell: ({ getValue }) => (
+                        <Tag className="paciente-hc-tag">{getValue()}</Tag>
+                    ),
                 }),
                 columnHelper.display({
                     id: 'paciente',
                     header: 'Paciente',
-                    size: 200,
-                    cell: ({ row }) => <PacienteCell pacienteId={row.original.pacienteId} />,
+                    cell: ({ row }) => <PacienteIdentityCell solicitud={row.original} />,
                 }),
-                columnHelper.accessor('origen', {
-                    header: 'Origen',
-                    size: 150,
-                    cell: ({ getValue }) => {
-                        const value = getValue()
-                        return SOLICITUD_ORIGEN_LABELS[value] ?? value
-                    },
-                }),
-                columnHelper.display({
-                    id: 'detalles',
-                    header: 'Pruebas',
-                    size: 100,
-                    cell: ({ row }) => <Tag>{row.original.detalles.length}</Tag>,
+                columnHelper.accessor('fechaSolicitud', {
+                    header: 'Fecha',
+                    size: 110,
+                    cell: ({ getValue }) => (
+                        <Tag variant="filled" className="rrhh-page__date-tag">
+                            {formatDate(getValue())}
+                        </Tag>
+                    ),
                 }),
                 columnHelper.accessor('estado', {
                     header: 'Estado',
-                    size: 160,
+                    size: 150,
                     cell: ({ getValue }) => {
                         const value = getValue()
                         return (
@@ -108,41 +138,44 @@ export function SolicitudesTable({
                         )
                     },
                 }),
-                columnHelper.accessor('observaciones', {
-                    header: 'Observaciones',
-                    cell: ({ getValue }) => getValue()?.trim() || '—',
-                }),
                 columnHelper.display({
                     id: 'actions',
                     header: '',
-                    size: 120,
-                    meta: { align: 'right', headerAlign: 'right' },
+                    size: 110,
+                    meta: {
+                        align: 'right',
+                        headerAlign: 'right',
+                    },
                     cell: ({ row }) => {
                         const item = row.original
                         const canMutate = item.estado === 'BORRADOR'
 
                         return (
-                            <Space size={0}>
-                                <Link
-                                    to="/laboratorio/solicitudes/$id"
-                                    params={{ id: item.id }}
-                                >
-                                    <Button
-                                        type="text"
-                                        size="small"
-                                        icon={<EyeOutlined />}
-                                        aria-label={`Ver solicitud ${item.numero}`}
-                                    />
-                                </Link>
-                                {canMutate ? (
-                                    <>
+                            <Space size={4}>
+                                <Tooltip title="Ver solicitud">
+                                    <Link
+                                        to="/laboratorio/solicitudes/$id"
+                                        params={{ id: item.id }}
+                                    >
                                         <Button
                                             type="text"
                                             size="small"
-                                            icon={<EditOutlined />}
-                                            aria-label={`Editar solicitud ${item.numero}`}
-                                            onClick={() => onEdit(item)}
+                                            icon={<EyeOutlined />}
+                                            aria-label={`Ver solicitud ${item.numero}`}
                                         />
+                                    </Link>
+                                </Tooltip>
+                                {canMutate ? (
+                                    <>
+                                        <Tooltip title="Editar solicitud">
+                                            <Button
+                                                type="text"
+                                                size="small"
+                                                icon={<EditOutlined />}
+                                                aria-label={`Editar solicitud ${item.numero}`}
+                                                onClick={() => onEdit(item)}
+                                            />
+                                        </Tooltip>
                                         <Popconfirm
                                             title="Eliminar solicitud"
                                             description={`¿Eliminar "${item.numero}"?`}
@@ -154,14 +187,16 @@ export function SolicitudesTable({
                                             }}
                                             onConfirm={() => onDelete(item)}
                                         >
-                                            <Button
-                                                type="text"
-                                                size="small"
-                                                danger
-                                                icon={<DeleteOutlined />}
-                                                aria-label={`Eliminar solicitud ${item.numero}`}
-                                                loading={deletingId === item.id}
-                                            />
+                                            <Tooltip title="Eliminar solicitud">
+                                                <Button
+                                                    type="text"
+                                                    size="small"
+                                                    danger
+                                                    icon={<DeleteOutlined />}
+                                                    aria-label={`Eliminar solicitud ${item.numero}`}
+                                                    loading={deletingId === item.id}
+                                                />
+                                            </Tooltip>
                                         </Popconfirm>
                                     </>
                                 ) : null}
@@ -173,14 +208,45 @@ export function SolicitudesTable({
         [onEdit, onDelete, deletingId],
     )
 
+    const showCustomEmpty = !loading && solicitudes.length === 0
+
+    if (showCustomEmpty) {
+        return (
+            <div className={className}>
+                <div className="app-data-table__wrapper">
+                    <div className="pacientes-empty">
+                        <Empty
+                            image={
+                                <ExperimentOutlined
+                                    style={{ fontSize: 48, color: '#94a3b8' }}
+                                />
+                            }
+                            description={
+                                hasActiveFilters
+                                    ? 'No se encontraron solicitudes con los filtros aplicados.'
+                                    : 'No hay solicitudes registradas.'
+                            }
+                        >
+                            {!hasActiveFilters && onCreate ? (
+                                <Button type="primary" onClick={onCreate}>
+                                    Nueva solicitud
+                                </Button>
+                            ) : null}
+                        </Empty>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <AppDataTable
+            className={className}
             data={solicitudes}
             columns={columns}
             loading={loading}
             emptyText="No hay solicitudes registradas."
             getRowId={(row) => row.id}
-            className={['solicitudes-table', className].filter(Boolean).join(' ')}
             pagination={{
                 page,
                 pageSize,

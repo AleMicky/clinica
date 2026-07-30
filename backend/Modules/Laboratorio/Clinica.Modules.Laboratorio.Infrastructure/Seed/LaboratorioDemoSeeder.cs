@@ -29,7 +29,7 @@ public static class LaboratorioDemoSeeder
             .CreateLogger("LaboratorioDemoSeeder");
         var configuration = services.GetRequiredService<IConfiguration>();
 
-        if (!configuration.GetValue("Seed:SeedDemoLaboratorio", true))
+        if (!configuration.GetValue("Seed:SeedDemoLaboratorio", false))
         {
             logger.LogInformation("Seed demo de Laboratorio deshabilitado.");
             return;

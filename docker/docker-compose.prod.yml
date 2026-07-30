@@ -20,6 +20,8 @@ services:
       Seed__AdminEmail: ${ADMIN_EMAIL:-admin@clinica.com}
       Seed__AdminPassword: ${ADMIN_PASSWORD}
       Seed__SeedDemoUsers: ${SEED_DEMO_USERS:-false}
+      Seed__SeedDemoEmpleados: ${SEED_DEMO_EMPLEADOS:-false}
+      Seed__SeedDemoLaboratorio: ${SEED_DEMO_LABORATORIO:-false}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped

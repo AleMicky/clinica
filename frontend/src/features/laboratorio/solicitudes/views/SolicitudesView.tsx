@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { Select } from 'antd'
+import { Button, Flex, Input, Select, theme } from 'antd'
+import { ClearOutlined, SearchOutlined } from '@ant-design/icons'
 import { useNavigate } from '@tanstack/react-router'
 
 import {
     CrudCreateHeader,
-    CrudSearchFiltersBar,
     CrudSectionPanel,
 } from '../../../../shared/components/ui/crud-section'
 import { useCrudModalState } from '../../../../shared/hooks/use-crud-modal-state'
@@ -29,6 +29,16 @@ import type { SolicitudFormValues } from '../schemas/solicitud.schema'
 const ESTADO_OPTIONS = Object.entries(SOLICITUD_ESTADO_LABELS).map(([value, label]) => ({
     value,
     label,
+}))
+
+const ORIGEN_FILTER_OPTIONS = SOLICITUD_ORIGEN_OPTIONS.map((option) => ({
+    value: option.value,
+    label:
+        option.value === 'PACIENTE'
+            ? 'Mostrador'
+            : option.value === 'ATENCION_MEDICA'
+              ? 'Atención'
+              : 'Externo',
 }))
 
 function toLineas(values: SolicitudFormValues) {
@@ -66,6 +76,7 @@ function toUpdatePayload(values: SolicitudFormValues): UpdateSolicitudPayload {
 
 export function SolicitudesView() {
     const navigate = useNavigate()
+    const { token } = theme.useToken()
     const filters = usePagedSearchFilters()
     const modal = useCrudModalState<Solicitud>()
     const [estado, setEstado] = useState<string | undefined>(undefined)
@@ -87,8 +98,15 @@ export function SolicitudesView() {
               item.numero.toLowerCase().includes(filters.search.toLowerCase()),
           )
         : items
+    const hasActiveFilters = Boolean(filters.search || estado || origen)
     const total = filters.search ? filteredItems.length : (data?.totalRecords ?? 0)
     const isSaving = createSolicitud.isPending || updateSolicitud.isPending
+
+    const clearAllFilters = () => {
+        filters.clearFilters()
+        setEstado(undefined)
+        setOrigen(undefined)
+    }
 
     const handleSubmit = async (values: SolicitudFormValues) => {
         if (modal.editing) {
@@ -120,40 +138,76 @@ export function SolicitudesView() {
     return (
         <>
             <CrudSectionPanel
-                className="laboratorio-solicitudes"
+                className="rrhh-empleados"
                 filters={
-                    <>
-                        <CrudSearchFiltersBar
-                            searchInput={filters.searchInput}
-                            hasActiveFilters={filters.hasActiveFilters}
-                            onSearchInputChange={filters.handleSearchInputChange}
-                            onSearch={filters.handleSearch}
-                            onClearFilters={filters.clearFilters}
-                            ariaLabel="Filtros de solicitudes"
-                            searchAriaLabel="Buscar solicitud"
+                    <Flex
+                        gap={6}
+                        wrap="wrap"
+                        align="center"
+                        className="rrhh-empleados__filters"
+                        role="search"
+                        aria-label="Filtros de solicitudes"
+                    >
+                        <Input
+                            allowClear
+                            size="small"
+                            className="rrhh-empleados__filter-search"
+                            prefix={
+                                <SearchOutlined
+                                    style={{ color: token.colorTextQuaternary }}
+                                />
+                            }
                             placeholder="Buscar por número…"
+                            value={filters.searchInput}
+                            onChange={(event) =>
+                                filters.handleSearchInputChange(event.target.value)
+                            }
+                            onPressEnter={() => filters.handleSearch(filters.searchInput)}
+                            onClear={() => {
+                                filters.handleSearchInputChange('')
+                                filters.handleSearch('')
+                            }}
+                            aria-label="Buscar solicitud"
                         />
                         <Select
                             allowClear
                             size="small"
-                            style={{ minWidth: 180 }}
-                            placeholder="Filtrar por estado"
+                            placeholder="Estado"
                             options={ESTADO_OPTIONS}
                             value={estado}
-                            onChange={(value) => setEstado(value ?? undefined)}
+                            onChange={(value) => {
+                                setEstado(value ?? undefined)
+                                filters.handlePageChange(1, filters.pageSize)
+                            }}
+                            className="rrhh-empleados__filter-select"
                             aria-label="Filtrar por estado"
                         />
                         <Select
                             allowClear
                             size="small"
-                            style={{ minWidth: 180 }}
-                            placeholder="Filtrar por origen"
-                            options={SOLICITUD_ORIGEN_OPTIONS}
+                            placeholder="Origen"
+                            options={ORIGEN_FILTER_OPTIONS}
                             value={origen}
-                            onChange={(value) => setOrigen(value ?? undefined)}
+                            onChange={(value) => {
+                                setOrigen(value ?? undefined)
+                                filters.handlePageChange(1, filters.pageSize)
+                            }}
+                            className="rrhh-empleados__filter-select"
                             aria-label="Filtrar por origen"
                         />
-                    </>
+                        {hasActiveFilters ? (
+                            <Button
+                                type="text"
+                                size="small"
+                                icon={<ClearOutlined />}
+                                onClick={clearAllFilters}
+                                className="rrhh-empleados__filter-clear"
+                                aria-label="Limpiar filtros"
+                            >
+                                Limpiar
+                            </Button>
+                        ) : null}
+                    </Flex>
                 }
                 actions={
                     <CrudCreateHeader
@@ -162,7 +216,7 @@ export function SolicitudesView() {
                         onCreate={modal.openCreate}
                     />
                 }
-                caption={formatRegistrosCaption(total, Boolean(filters.search || estado || origen))}
+                caption={formatRegistrosCaption(total, hasActiveFilters)}
             >
                 <SolicitudesTable
                     solicitudes={filteredItems}
@@ -173,7 +227,10 @@ export function SolicitudesView() {
                     onPageChange={filters.handlePageChange}
                     onEdit={modal.openEdit}
                     onDelete={handleDelete}
+                    onCreate={modal.openCreate}
                     deletingId={modal.deletingId}
+                    hasActiveFilters={hasActiveFilters}
+                    className="rrhh-empleados__table"
                 />
             </CrudSectionPanel>
 
