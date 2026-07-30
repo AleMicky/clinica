@@ -13,6 +13,7 @@ import {
     ArrowLeftOutlined,
     DollarOutlined,
     ExperimentOutlined,
+    NodeIndexOutlined,
     SolutionOutlined,
 } from '@ant-design/icons'
 import { Link } from '@tanstack/react-router'
@@ -20,7 +21,7 @@ import { Link } from '@tanstack/react-router'
 import { useAppQuery } from '../../../../shared/hooks/use-app-query'
 import { queryKeys } from '../../../../shared/constants/query-keys'
 import { pacientesService } from '../../../pacientes/services/pacientes.service'
-import { WorkflowEntityPanel } from '../../../workflow/components/WorkflowEntityPanel'
+import { WorkflowEntityModal } from '../../../workflow/components/WorkflowEntityModal'
 import { WorkflowEmployeeSelect } from '../../../workflow/components/WorkflowEmployeeSelect'
 import { useMuestras, useTomarMuestra } from '../../muestras/hooks/muestras.hooks'
 import { MUESTRA_ESTADO_COLORS, MUESTRA_ESTADO_LABELS } from '../../muestras/types/muestra.types'
@@ -38,7 +39,7 @@ import type { Muestra } from '../../muestras/types/muestra.types'
 import { DerivarDetalleModal } from '../components/DerivarDetalleModal'
 import { RegistrarResultadosModal } from '../components/RegistrarResultadosModal'
 import { TomarMuestraModal } from '../components/TomarMuestraModal'
-import { useDerivarDetalle, useEnviarACaja, useSolicitud } from '../hooks/solicitudes.hooks'
+import { useDerivarDetalle, useEnviarACaja, useSetSolicitudEstado, useSolicitud } from '../hooks/solicitudes.hooks'
 import {
     SOLICITUD_ESTADO_COLORS,
     SOLICITUD_ESTADO_LABELS,
@@ -82,6 +83,7 @@ export function SolicitudDetailView({ solicitudId }: SolicitudDetailViewProps) {
 
     const enviarACaja = useEnviarACaja()
     const derivarDetalle = useDerivarDetalle()
+    const setSolicitudEstado = useSetSolicitudEstado()
     const tomarMuestra = useTomarMuestra()
     const registrarResultados = useRegistrarResultados()
     const validarResultado = useValidarResultado()
@@ -90,6 +92,7 @@ export function SolicitudDetailView({ solicitudId }: SolicitudDetailViewProps) {
     const [derivarTarget, setDerivarTarget] = useState<SolicitudDetalle | null>(null)
     const [muestraModalOpen, setMuestraModalOpen] = useState(false)
     const [resultadosModalOpen, setResultadosModalOpen] = useState(false)
+    const [workflowModalOpen, setWorkflowModalOpen] = useState(false)
     const [validarEmpleadoId, setValidarEmpleadoId] = useState('')
 
     const muestras = muestrasData?.items ?? []
@@ -157,40 +160,50 @@ export function SolicitudDetailView({ solicitudId }: SolicitudDetailViewProps) {
                         </div>
                     </Flex>
 
-                    {canSendToCaja ? (
-                        <Flex
-                            gap={8}
-                            align="center"
-                            wrap="wrap"
-                            className="solicitud-detail__actions"
+                    <Flex
+                        gap={8}
+                        align="center"
+                        wrap="wrap"
+                        className="solicitud-detail__actions"
+                    >
+                        <Button
+                            icon={<NodeIndexOutlined />}
+                            onClick={() => setWorkflowModalOpen(true)}
                         >
-                            <WorkflowEmployeeSelect
-                                value={empleadoId || undefined}
-                                onChange={(value) =>
-                                    setEmpleadoId(
-                                        typeof value === 'string' ? value : value[0] ?? '',
-                                    )
-                                }
-                                placeholder="Empleado ejecutor"
-                            />
-                            <Button
-                                type="primary"
-                                icon={<DollarOutlined />}
-                                loading={enviarACaja.isPending}
-                                disabled={!empleadoId}
-                                onClick={() =>
-                                    void enviarACaja
-                                        .mutateAsync({
-                                            id: solicitud.id,
-                                            data: { empleadoId },
-                                        })
-                                        .then(() => refetch())
-                                }
-                            >
-                                Enviar a caja
-                            </Button>
-                        </Flex>
-                    ) : null}
+                            Flujo
+                        </Button>
+                        {canSendToCaja ? (
+                            <>
+                                <WorkflowEmployeeSelect
+                                    value={empleadoId || undefined}
+                                    onChange={(value) =>
+                                        setEmpleadoId(
+                                            typeof value === 'string'
+                                                ? value
+                                                : value[0] ?? '',
+                                        )
+                                    }
+                                    placeholder="Empleado ejecutor"
+                                />
+                                <Button
+                                    type="primary"
+                                    icon={<DollarOutlined />}
+                                    loading={enviarACaja.isPending}
+                                    disabled={!empleadoId}
+                                    onClick={() =>
+                                        void enviarACaja
+                                            .mutateAsync({
+                                                id: solicitud.id,
+                                                data: { empleadoId },
+                                            })
+                                            .then(() => refetch())
+                                    }
+                                >
+                                    Enviar a caja
+                                </Button>
+                            </>
+                        ) : null}
+                    </Flex>
                 </Flex>
             </header>
 
@@ -569,24 +582,6 @@ export function SolicitudDetailView({ solicitudId }: SolicitudDetailViewProps) {
                                 </div>
                             ),
                         },
-                        {
-                            key: 'flujo',
-                            label: 'Flujo',
-                            children: (
-                                <div className="solicitud-detail__tab-body">
-                                    <WorkflowEntityPanel
-                                        referenceModule="Laboratorio"
-                                        referenceEntity="Solicitud"
-                                        referenceId={solicitud.id}
-                                        definitionCode="LABORATORIO"
-                                        variant="embedded"
-                                        onStateChange={() => {
-                                            void refetch()
-                                        }}
-                                    />
-                                </div>
-                            ),
-                        },
                     ]}
                 />
             </section>
@@ -633,6 +628,22 @@ export function SolicitudDetailView({ solicitudId }: SolicitudDetailViewProps) {
                         data,
                     })
                     setResultadosModalOpen(false)
+                }}
+            />
+
+            <WorkflowEntityModal
+                open={workflowModalOpen}
+                onClose={() => setWorkflowModalOpen(false)}
+                title={`Flujo · ${solicitud.numero}`}
+                referenceModule="Laboratorio"
+                referenceEntity="Solicitud"
+                referenceId={solicitud.id}
+                definitionCode="LABORATORIO"
+                onStateChange={(instance) => {
+                    void setSolicitudEstado.mutateAsync({
+                        id: instance.referenceId,
+                        data: { estado: instance.currentStateCode },
+                    })
                 }}
             />
         </div>

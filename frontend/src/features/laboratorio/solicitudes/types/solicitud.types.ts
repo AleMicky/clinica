@@ -108,6 +108,10 @@ export type EnviarACajaPayload = {
     empleadoId: string
 }
 
+export type SetSolicitudEstadoPayload = {
+    estado: string
+}
+
 export type DerivarDetallePayload = {
     laboratorioExternoId: string
     observaciones?: string | null

@@ -4,6 +4,7 @@ import type {
     CreateSolicitudPayload,
     DerivarDetallePayload,
     EnviarACajaPayload,
+    SetSolicitudEstadoPayload,
     Solicitud,
     SolicitudDetalle,
     SolicitudPagedQuery,
@@ -26,6 +27,12 @@ export const solicitudesService = {
     update(id: string, data: UpdateSolicitudPayload) {
         return put<Solicitud, UpdateSolicitudPayload>(
             laboratorioEndpoints.solicitudes.byId(id),
+            data,
+        )
+    },
+    setEstado(id: string, data: SetSolicitudEstadoPayload) {
+        return put<Solicitud, SetSolicitudEstadoPayload>(
+            laboratorioEndpoints.solicitudes.estado(id),
             data,
         )
     },

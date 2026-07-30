@@ -121,6 +121,32 @@ public static class SolicitudEndpoints
             .Produces<ApiResponse<SolicitudResponse>>(StatusCodes.Status200OK)
             .Produces<ApiResponse<object>>(StatusCodes.Status400BadRequest);
 
+        solicitudes.MapPut("/{id:guid}/estado", async (
+                Guid id,
+                SetSolicitudEstadoRequest request,
+                IValidator<SetSolicitudEstadoRequest> validator,
+                ISolicitudService service,
+                CancellationToken cancellationToken) =>
+            {
+                var validation = await validator.ValidateAsync(request, cancellationToken);
+                if (!validation.IsValid)
+                {
+                    var message = $"Datos inválidos. {string.Join(", ",
+                        validation.Errors.Select(x => x.ErrorMessage).Distinct())}";
+                    return ApiResults.BadRequest(message);
+                }
+
+                await service.SetEstadoAsync(id, request.Estado, cancellationToken);
+                var result = await service.GetByIdAsync(id, cancellationToken);
+                return result is null
+                    ? ApiResults.NotFound("Solicitud no encontrada.")
+                    : ApiResults.Ok(result, "Estado de solicitud actualizado correctamente.");
+            })
+            .WithName("LaboratorioSolicitud_SetEstado")
+            .Produces<ApiResponse<SolicitudResponse>>(StatusCodes.Status200OK)
+            .Produces<ApiResponse<object>>(StatusCodes.Status400BadRequest)
+            .Produces<ApiResponse<object>>(StatusCodes.Status404NotFound);
+
         solicitudes.MapPost("/{id:guid}/detalles/{detalleId:guid}/derivar", async (
                 Guid id,
                 Guid detalleId,

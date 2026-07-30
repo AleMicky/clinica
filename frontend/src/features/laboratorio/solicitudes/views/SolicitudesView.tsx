@@ -10,11 +10,13 @@ import {
 import { useCrudModalState } from '../../../../shared/hooks/use-crud-modal-state'
 import { formatRegistrosCaption } from '../../../../shared/utils/crud-search'
 import { usePagedSearchFilters } from '../../../../shared/hooks/use-paged-search-filters'
+import { WorkflowEntityModal } from '../../../workflow/components/WorkflowEntityModal'
 import { SolicitudFormDrawer } from '../components/SolicitudFormDrawer'
 import { SolicitudesTable } from '../components/SolicitudesTable'
 import {
     useCreateSolicitud,
     useDeleteSolicitud,
+    useSetSolicitudEstado,
     useSolicitudes,
     useUpdateSolicitud,
 } from '../hooks/solicitudes.hooks'
@@ -81,6 +83,7 @@ export function SolicitudesView() {
     const modal = useCrudModalState<Solicitud>()
     const [estado, setEstado] = useState<string | undefined>(undefined)
     const [origen, setOrigen] = useState<string | undefined>(undefined)
+    const [workflowTarget, setWorkflowTarget] = useState<Solicitud | null>(null)
 
     const { data, isFetching } = useSolicitudes({
         page: filters.page,
@@ -91,6 +94,7 @@ export function SolicitudesView() {
     const createSolicitud = useCreateSolicitud()
     const updateSolicitud = useUpdateSolicitud()
     const deleteSolicitud = useDeleteSolicitud()
+    const setSolicitudEstado = useSetSolicitudEstado()
 
     const items = data?.items ?? []
     const filteredItems = filters.search
@@ -235,6 +239,7 @@ export function SolicitudesView() {
                     onView={handleView}
                     onEdit={modal.openEdit}
                     onDelete={handleDelete}
+                    onWorkflow={setWorkflowTarget}
                     onCreate={modal.openCreate}
                     deletingId={modal.deletingId}
                     hasActiveFilters={hasActiveFilters}
@@ -248,6 +253,26 @@ export function SolicitudesView() {
                 loading={isSaving}
                 onClose={() => modal.close(isSaving)}
                 onSubmit={handleSubmit}
+            />
+
+            <WorkflowEntityModal
+                open={workflowTarget !== null}
+                onClose={() => setWorkflowTarget(null)}
+                title={
+                    workflowTarget
+                        ? `Flujo · ${workflowTarget.numero}`
+                        : 'Flujo de trabajo'
+                }
+                referenceModule="Laboratorio"
+                referenceEntity="Solicitud"
+                referenceId={workflowTarget?.id}
+                definitionCode="LABORATORIO"
+                onStateChange={(instance) => {
+                    void setSolicitudEstado.mutateAsync({
+                        id: instance.referenceId,
+                        data: { estado: instance.currentStateCode },
+                    })
+                }}
             />
         </>
     )

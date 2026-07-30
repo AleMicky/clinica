@@ -109,6 +109,7 @@ export const laboratorioEndpoints = {
     laboratoriosExternos: createEndpoints(`${api.laboratorio}/laboratorios-externos`),
     solicitudes: createEndpoints(`${api.laboratorio}/solicitudes`, (root) => ({
         enviarACaja: (id: EntityId) => `${root}/${id}/enviar-a-caja`,
+        estado: (id: EntityId) => `${root}/${id}/estado`,
         derivar: (id: EntityId, detalleId: EntityId) =>
             `${root}/${id}/detalles/${detalleId}/derivar`,
         tomarMuestra: (id: EntityId) => `${root}/${id}/muestras`,

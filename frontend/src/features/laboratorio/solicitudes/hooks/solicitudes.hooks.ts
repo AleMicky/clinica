@@ -10,6 +10,7 @@ import type {
     CreateSolicitudPayload,
     DerivarDetallePayload,
     EnviarACajaPayload,
+    SetSolicitudEstadoPayload,
     SolicitudPagedQuery,
     UpdateSolicitudPayload,
 } from '../types/solicitud.types'
@@ -53,6 +54,20 @@ export function useUpdateSolicitud() {
             notify.success('Solicitud actualizada', 'Los cambios se guardaron correctamente.')
         },
         onError: (e) => notify.error('Error al actualizar la solicitud', getApiErrorMessage(e)),
+    })
+}
+
+export function useSetSolicitudEstado() {
+    const qc = useQueryClient()
+
+    return useAppMutation({
+        mutationFn: ({ id, data }: { id: string; data: SetSolicitudEstadoPayload }) =>
+            solicitudesService.setEstado(id, data),
+        onSuccess: () => {
+            void qc.invalidateQueries({ queryKey: queryKeys.laboratorio.solicitudes.all })
+        },
+        onError: (e) =>
+            notify.error('Error al sincronizar estado', getApiErrorMessage(e)),
     })
 }
 

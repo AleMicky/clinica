@@ -6,6 +6,7 @@ import {
     EditOutlined,
     ExperimentOutlined,
     EyeOutlined,
+    NodeIndexOutlined,
 } from '@ant-design/icons'
 
 import { AppDataTable } from '../../../../shared/components/ui/data-table/AppDataTable'
@@ -82,6 +83,7 @@ type SolicitudesTableProps = {
     onView: (item: Solicitud) => void
     onEdit: (item: Solicitud) => void
     onDelete: (item: Solicitud) => void
+    onWorkflow?: (item: Solicitud) => void
     onCreate?: () => void
     deletingId: string | null
     hasActiveFilters?: boolean
@@ -98,6 +100,7 @@ export function SolicitudesTable({
     onView,
     onEdit,
     onDelete,
+    onWorkflow,
     onCreate,
     deletingId,
     hasActiveFilters = false,
@@ -157,7 +160,7 @@ export function SolicitudesTable({
                 columnHelper.display({
                     id: 'actions',
                     header: '',
-                    size: 110,
+                    size: onWorkflow ? 140 : 110,
                     meta: {
                         align: 'right',
                         headerAlign: 'right',
@@ -177,6 +180,17 @@ export function SolicitudesTable({
                                         onClick={() => onView(item)}
                                     />
                                 </Tooltip>
+                                {onWorkflow ? (
+                                    <Tooltip title="Flujo de trabajo">
+                                        <Button
+                                            type="text"
+                                            size="small"
+                                            icon={<NodeIndexOutlined />}
+                                            aria-label={`Abrir flujo de ${item.numero}`}
+                                            onClick={() => onWorkflow(item)}
+                                        />
+                                    </Tooltip>
+                                ) : null}
                                 {canMutate ? (
                                     <>
                                         <Tooltip title="Editar solicitud">
@@ -217,7 +231,7 @@ export function SolicitudesTable({
                     },
                 }),
             ] as ColumnDef<Solicitud, unknown>[],
-        [onView, onEdit, onDelete, deletingId],
+        [onView, onEdit, onDelete, onWorkflow, deletingId],
     )
 
     const showCustomEmpty = !loading && solicitudes.length === 0

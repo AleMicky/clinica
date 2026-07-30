@@ -7822,6 +7822,14 @@ body {
     padding: 0;
 }
 
+.workflow-entity-modal .workflow-entity-panel__header {
+    margin-bottom: 12px;
+}
+
+.workflow-entity-modal .workflow-entity-panel__title {
+    display: none;
+}
+
 .workflow-entity-panel__header {
     display: flex;
     justify-content: space-between;

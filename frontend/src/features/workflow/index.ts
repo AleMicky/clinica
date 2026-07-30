@@ -1,23 +1,25 @@
 /**
  * API pública del feature Workflow para integrar en otros módulos.
  *
- * Ejemplo en una vista de dominio:
+ * Ejemplo en una vista de dominio (modal):
  *
  * ```tsx
- * <WorkflowEntityPanel
- *   referenceModule="AtencionMedica"
- *   referenceEntity="Atencion"
- *   referenceId={atencion.id}
- *   definitionCode="ATENCION"
- *   employeeId={empleadoId}
- *   variant="embedded"
- *   onStateChange={(instance) => { ... }}
+ * <WorkflowEntityModal
+ *   open={open}
+ *   onClose={() => setOpen(false)}
+ *   referenceModule="Laboratorio"
+ *   referenceEntity="Solicitud"
+ *   referenceId={solicitud.id}
+ *   definitionCode="LABORATORIO"
+ *   onStateChange={() => { void refetch() }}
  * />
  * ```
  */
 
 export { WorkflowEntityPanel } from './components/WorkflowEntityPanel'
 export type { WorkflowEntityPanelProps } from './components/WorkflowEntityPanel'
+export { WorkflowEntityModal } from './components/WorkflowEntityModal'
+export type { WorkflowEntityModalProps } from './components/WorkflowEntityModal'
 export { WorkflowActionsPanel } from './components/WorkflowActionsPanel'
 export { WorkflowStateBadge } from './components/WorkflowStateBadge'
 export { WorkflowTimeline } from './components/WorkflowTimeline'
