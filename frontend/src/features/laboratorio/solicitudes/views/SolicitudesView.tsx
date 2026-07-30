@@ -9,7 +9,7 @@ import {
 } from '../../../../shared/components/ui/crud-section'
 import { formatRegistrosCaption } from '../../../../shared/utils/crud-search'
 import { usePagedSearchFilters } from '../../../../shared/hooks/use-paged-search-filters'
-import { SolicitudFormModal } from '../components/SolicitudFormModal'
+import { SolicitudFormDrawer } from '../components/SolicitudFormDrawer'
 import { SolicitudesTable } from '../components/SolicitudesTable'
 import { useCreateSolicitud, useSolicitudes } from '../hooks/solicitudes.hooks'
 import type { CreateSolicitudPayload } from '../types/solicitud.types'
@@ -43,7 +43,7 @@ export function SolicitudesView() {
     const filters = usePagedSearchFilters()
     const [estado, setEstado] = useState<string | undefined>(undefined)
     const [origen, setOrigen] = useState<string | undefined>(undefined)
-    const [modalOpen, setModalOpen] = useState(false)
+    const [drawerOpen, setDrawerOpen] = useState(false)
 
     const { data, isFetching } = useSolicitudes({
         page: filters.page,
@@ -63,7 +63,7 @@ export function SolicitudesView() {
 
     const handleCreate = async (values: SolicitudFormValues) => {
         const created = await createSolicitud.mutateAsync(toCreatePayload(values))
-        setModalOpen(false)
+        setDrawerOpen(false)
         void navigate({
             to: '/laboratorio/solicitudes/$id',
             params: { id: created.id },
@@ -112,7 +112,7 @@ export function SolicitudesView() {
                     <CrudCreateHeader
                         label="Nueva solicitud"
                         ariaLabel="Crear nueva solicitud de laboratorio"
-                        onCreate={() => setModalOpen(true)}
+                        onCreate={() => setDrawerOpen(true)}
                     />
                 }
                 caption={formatRegistrosCaption(total, Boolean(filters.search || estado || origen))}
@@ -127,10 +127,10 @@ export function SolicitudesView() {
                 />
             </CrudSectionPanel>
 
-            <SolicitudFormModal
-                open={modalOpen}
+            <SolicitudFormDrawer
+                open={drawerOpen}
                 loading={createSolicitud.isPending}
-                onClose={() => setModalOpen(false)}
+                onClose={() => setDrawerOpen(false)}
                 onSubmit={handleCreate}
             />
         </>

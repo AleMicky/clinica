@@ -335,8 +335,8 @@ function WorkflowFlowCanvas({
                     />
                 ) : (
                     <Text type="secondary" className="workflow-flow-view__hint">
-                        Shift + arrastre para multi-selección · Delete elimina · Arrastre nodos
-                        para reposicionar
+                        Arrastre para desplazar · Shift + clic para multi-selección · Rueda para
+                        desplazar · Pinch/Ctrl+rueda para zoom · Delete elimina
                     </Text>
                 )}
 
@@ -363,14 +363,16 @@ function WorkflowFlowCanvas({
                         nodesDraggable
                         nodesConnectable
                         elementsSelectable
-                        selectionOnDrag
+                        selectionOnDrag={false}
                         selectionMode={SelectionMode.Partial}
                         multiSelectionKeyCode="Shift"
                         deleteKeyCode={null}
                         snapToGrid
                         snapGrid={[16, 16]}
-                        panOnDrag={[1, 2]}
-                        zoomOnScroll
+                        panOnDrag
+                        panOnScroll
+                        zoomOnScroll={false}
+                        zoomOnPinch
                         fitView
                         fitViewOptions={{ padding: 0.28, maxZoom: 1.15 }}
                         minZoom={0.3}

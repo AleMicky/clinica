@@ -19,7 +19,7 @@ export function useTiposExamenView() {
     const filters = usePagedSearchFilters()
     const modal = useCrudModalState<TipoExamen>()
 
-    const { data, isFetching } = useTiposExamen({
+    const { data, isLoading, isFetching } = useTiposExamen({
         page: filters.page,
         pageSize: filters.pageSize,
     })
@@ -67,7 +67,8 @@ export function useTiposExamenView() {
     }
 
     return {
-        loading: isFetching,
+        // Solo skeleton en carga inicial; el refetch tras CRUD no bloquea la tabla.
+        loading: isLoading || (isFetching && !data),
         caption: formatRegistrosCaption(total, filters.hasActiveFilters),
         filters: {
             searchInput: filters.searchInput,
@@ -86,12 +87,12 @@ export function useTiposExamenView() {
             onDelete: handleDelete,
             deletingId: modal.deletingId,
         },
-        formModal: {
+        formDrawer: {
             open: modal.open,
             entity: modal.editing,
             isSaving,
-            openCreateModal: modal.openCreate,
-            closeModal: () => modal.close(isSaving),
+            openCreate: modal.openCreate,
+            closeDrawer: () => modal.close(isSaving),
             handleSubmit,
         },
     }

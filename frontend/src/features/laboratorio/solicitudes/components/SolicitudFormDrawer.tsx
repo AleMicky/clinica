@@ -3,14 +3,17 @@ import { useForm, useStore } from '@tanstack/react-form'
 import {
     Button,
     Col,
+    Drawer,
     Empty,
+    Flex,
     Form,
+    Grid,
     Input,
     InputNumber,
-    Modal,
     Row,
     Select,
     Table,
+    Typography,
 } from 'antd'
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
 
@@ -30,22 +33,28 @@ import {
 } from '../schemas/solicitud.schema'
 import { SOLICITUD_ORIGEN_OPTIONS, SolicitudOrigen } from '../types/solicitud.types'
 
+const { Text } = Typography
 const { TextArea } = Input
+const { useBreakpoint } = Grid
+
 const LOOKUP_QUERY = { page: 1, pageSize: 200 } as const
 
-type SolicitudFormModalProps = {
+type SolicitudFormDrawerProps = {
     open: boolean
     loading: boolean
     onClose: () => void
     onSubmit: (values: SolicitudFormValues) => Promise<void>
 }
 
-export function SolicitudFormModal({
+export function SolicitudFormDrawer({
     open,
     loading,
     onClose,
     onSubmit,
-}: SolicitudFormModalProps) {
+}: SolicitudFormDrawerProps) {
+    const screens = useBreakpoint()
+    const drawerWidth = screens.lg ? 720 : screens.md ? 560 : '95%'
+
     const { data: pruebasResult, isFetching: loadingPruebas } = usePruebas(LOOKUP_QUERY)
     const { data: medicosResult, isFetching: loadingMedicos } = useMedicos(LOOKUP_QUERY)
 
@@ -82,25 +91,49 @@ export function SolicitudFormModal({
         [medicosResult?.items],
     )
 
+    const handleClose = () => {
+        if (loading) return
+        onClose()
+    }
+
     const handlePacienteChange = (paciente: PacienteSeleccionado | null) => {
         form.setFieldValue('pacienteId', paciente?.id ?? '')
     }
 
     return (
-        <Modal
+        <Drawer
             title="Nueva solicitud de laboratorio"
             open={open}
-            onCancel={() => {
-                if (!loading) onClose()
-            }}
-            onOk={() => void form.handleSubmit()}
-            okText="Crear"
-            cancelText="Cancelar"
-            confirmLoading={loading}
+            onClose={handleClose}
+            width={drawerWidth}
             destroyOnHidden
-            width={760}
+            className="usuario-drawer"
+            footer={
+                <Flex justify="flex-end" gap={8} className="usuario-drawer__footer">
+                    <Button onClick={handleClose} disabled={loading}>
+                        Cancelar
+                    </Button>
+                    <Button
+                        type="primary"
+                        loading={loading}
+                        onClick={() => void form.handleSubmit()}
+                    >
+                        Crear
+                    </Button>
+                </Flex>
+            }
         >
-            <Form layout="vertical" requiredMark={false}>
+            <Form
+                layout="vertical"
+                requiredMark
+                size="small"
+                className="usuario-drawer__form usuario-drawer__form--compact"
+            >
+                <Text type="secondary" className="usuario-drawer__required-hint">
+                    Los campos marcados con <Text type="danger">*</Text> son
+                    obligatorios.
+                </Text>
+
                 <form.Field name="pacienteId">
                     {(field) => {
                         const error = getFieldError(field.state.meta.errors)
@@ -124,6 +157,7 @@ export function SolicitudFormModal({
                                 return (
                                     <Form.Item
                                         label="Origen"
+                                        required
                                         validateStatus={error ? 'error' : undefined}
                                         help={error || undefined}
                                     >
@@ -147,6 +181,7 @@ export function SolicitudFormModal({
                                 return (
                                     <Form.Item
                                         label="Registrado por"
+                                        required
                                         validateStatus={error ? 'error' : undefined}
                                         help={error || undefined}
                                     >
@@ -154,7 +189,9 @@ export function SolicitudFormModal({
                                             value={field.state.value || undefined}
                                             onChange={(value) =>
                                                 field.handleChange(
-                                                    typeof value === 'string' ? value : value[0] ?? '',
+                                                    typeof value === 'string'
+                                                        ? value
+                                                        : (value[0] ?? ''),
                                                 )
                                             }
                                             placeholder="Empleado que registra"
@@ -173,6 +210,7 @@ export function SolicitudFormModal({
                                     return (
                                         <Form.Item
                                             label="Atención médica"
+                                            required
                                             validateStatus={error ? 'error' : undefined}
                                             help={error || 'ID de la atención asociada'}
                                         >
@@ -200,6 +238,7 @@ export function SolicitudFormModal({
                                     return (
                                         <Form.Item
                                             label="Médico externo"
+                                            required
                                             validateStatus={error ? 'error' : undefined}
                                             help={error || undefined}
                                         >
@@ -229,7 +268,9 @@ export function SolicitudFormModal({
                                             placeholder="Seleccionar médico"
                                             options={medicoOptions}
                                             value={field.state.value || undefined}
-                                            onChange={(value) => field.handleChange(value ?? null)}
+                                            onChange={(value) =>
+                                                field.handleChange(value ?? null)
+                                            }
                                             onBlur={field.handleBlur}
                                             disabled={loading || loadingMedicos}
                                         />
@@ -265,6 +306,7 @@ export function SolicitudFormModal({
                         return (
                             <Form.Item
                                 label="Pruebas solicitadas"
+                                required
                                 validateStatus={lineasError ? 'error' : undefined}
                                 help={lineasError || undefined}
                             >
@@ -378,7 +420,9 @@ export function SolicitudFormModal({
                                     style={{ marginTop: 8, width: '100%' }}
                                     disabled={loading}
                                     onClick={() =>
-                                        lineasField.pushValue({ ...solicitudLineaDefaultValues })
+                                        lineasField.pushValue({
+                                            ...solicitudLineaDefaultValues,
+                                        })
                                     }
                                 >
                                     Agregar prueba
@@ -388,6 +432,6 @@ export function SolicitudFormModal({
                     }}
                 </form.Field>
             </Form>
-        </Modal>
+        </Drawer>
     )
 }

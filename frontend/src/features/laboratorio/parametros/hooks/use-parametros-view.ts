@@ -122,13 +122,13 @@ export function useParametrosView() {
             onDelete: handleDelete,
             deletingId: modal.deletingId,
         },
-        formModal: {
+        formDrawer: {
             open: modal.open,
             entity: modal.editing,
             isSaving,
             initialPruebaId: pruebaId,
-            openCreateModal: modal.openCreate,
-            closeModal: () => modal.close(isSaving),
+            openCreate: modal.openCreate,
+            closeDrawer: () => modal.close(isSaving),
             handleSubmit,
         },
     }

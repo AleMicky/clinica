@@ -1,4 +1,6 @@
-import { Typography } from 'antd'
+import { Link } from '@tanstack/react-router'
+import { ArrowLeftOutlined } from '@ant-design/icons'
+import { Button, Typography } from 'antd'
 
 import { WorkflowEntityPanel } from '../components/WorkflowEntityPanel'
 
@@ -12,6 +14,16 @@ export function WorkflowInstancePage({ instanceId }: WorkflowInstancePageProps) 
     return (
         <div className="workflow-module workflow-instance-page">
             <div className="workflow-module__header workflow-module__header--list">
+                <Link to="/workflow">
+                    <Button
+                        type="link"
+                        size="small"
+                        icon={<ArrowLeftOutlined />}
+                        className="workflow-module__back"
+                    >
+                        Volver al listado
+                    </Button>
+                </Link>
                 <Title level={4} className="workflow-module__title">
                     Instancia de workflow
                 </Title>
@@ -20,13 +32,16 @@ export function WorkflowInstancePage({ instanceId }: WorkflowInstancePageProps) 
                 </Text>
             </div>
 
-            <WorkflowEntityPanel
-                instanceId={instanceId}
-                title="Estado y acciones"
-                showHistory
-                allowStart={false}
-                variant="card"
-            />
+            <div className="workflow-instance-page__body">
+                <WorkflowEntityPanel
+                    instanceId={instanceId}
+                    title="Estado y acciones"
+                    showHistory
+                    historyDefaultOpen
+                    allowStart={false}
+                    variant="card"
+                />
+            </div>
         </div>
     )
 }

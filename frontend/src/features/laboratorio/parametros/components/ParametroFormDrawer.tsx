@@ -1,6 +1,19 @@
 import { useEffect, useMemo } from 'react'
 import { useForm } from '@tanstack/react-form'
-import { Col, Form, Input, InputNumber, Modal, Row, Select, Switch } from 'antd'
+import {
+    Button,
+    Col,
+    Drawer,
+    Flex,
+    Form,
+    Grid,
+    Input,
+    InputNumber,
+    Row,
+    Select,
+    Switch,
+    Typography,
+} from 'antd'
 
 import { getFieldError } from '../../../../shared/utils/form-errors'
 import { normalizeCodigoInput } from '../../../../shared/utils/format-codigo'
@@ -13,7 +26,10 @@ import {
 } from '../schemas/parametro.schema'
 import { PARAMETRO_TIPO_DATO_OPTIONS, type Parametro } from '../types/parametro.types'
 
-type ParametroFormModalProps = {
+const { Text } = Typography
+const { useBreakpoint } = Grid
+
+type ParametroFormDrawerProps = {
     open: boolean
     entity: Parametro | null
     loading: boolean
@@ -24,14 +40,16 @@ type ParametroFormModalProps = {
 
 const LOOKUP_QUERY = { page: 1, pageSize: 200 } as const
 
-export function ParametroFormModal({
+export function ParametroFormDrawer({
     open,
     entity,
     loading,
     initialPruebaId,
     onClose,
     onSubmit,
-}: ParametroFormModalProps) {
+}: ParametroFormDrawerProps) {
+    const screens = useBreakpoint()
+    const drawerWidth = screens.md ? 560 : '95%'
     const isEditing = entity !== null
 
     const { data: pruebasResult, isFetching: loadingPruebas } = usePruebas(LOOKUP_QUERY)
@@ -85,23 +103,47 @@ export function ParametroFormModal({
         }
     }, [open, entity, initialPruebaId, form])
 
+    const handleClose = () => {
+        if (loading) return
+        onClose()
+    }
+
     const lookupsLoading = loadingPruebas || loadingUnidades
 
     return (
-        <Modal
+        <Drawer
             title={isEditing ? 'Editar parámetro' : 'Nuevo parámetro'}
             open={open}
-            onCancel={() => {
-                if (!loading) onClose()
-            }}
-            onOk={() => void form.handleSubmit()}
-            okText={isEditing ? 'Guardar' : 'Crear'}
-            cancelText="Cancelar"
-            confirmLoading={loading}
+            onClose={handleClose}
+            width={drawerWidth}
             destroyOnHidden
-            width={600}
+            className="usuario-drawer"
+            footer={
+                <Flex justify="flex-end" gap={8} className="usuario-drawer__footer">
+                    <Button onClick={handleClose} disabled={loading}>
+                        Cancelar
+                    </Button>
+                    <Button
+                        type="primary"
+                        loading={loading}
+                        onClick={() => void form.handleSubmit()}
+                    >
+                        {isEditing ? 'Guardar' : 'Crear'}
+                    </Button>
+                </Flex>
+            }
         >
-            <Form layout="vertical" requiredMark={false}>
+            <Form
+                layout="vertical"
+                requiredMark
+                size="small"
+                className="usuario-drawer__form usuario-drawer__form--compact"
+            >
+                <Text type="secondary" className="usuario-drawer__required-hint">
+                    Los campos marcados con <Text type="danger">*</Text> son
+                    obligatorios.
+                </Text>
+
                 <Row gutter={16}>
                     <Col xs={24}>
                         <form.Field name="pruebaId">
@@ -110,6 +152,7 @@ export function ParametroFormModal({
                                 return (
                                     <Form.Item
                                         label="Prueba"
+                                        required
                                         validateStatus={error ? 'error' : undefined}
                                         help={error || undefined}
                                     >
@@ -121,7 +164,9 @@ export function ParametroFormModal({
                                             value={field.state.value || undefined}
                                             onChange={(value) => field.handleChange(value)}
                                             onBlur={field.handleBlur}
-                                            disabled={loading || lookupsLoading || isEditing}
+                                            disabled={
+                                                loading || lookupsLoading || isEditing
+                                            }
                                         />
                                     </Form.Item>
                                 )
@@ -136,8 +181,11 @@ export function ParametroFormModal({
                                 return (
                                     <Form.Item
                                         label="Código"
+                                        required
                                         validateStatus={error ? 'error' : undefined}
-                                        help={error || 'Identificador único, ej. GLU_VALOR'}
+                                        help={
+                                            error || 'Identificador único, ej. GLU_VALOR'
+                                        }
                                     >
                                         <Input
                                             placeholder="Ej. GLU_VALOR"
@@ -164,6 +212,7 @@ export function ParametroFormModal({
                                 return (
                                     <Form.Item
                                         label="Nombre"
+                                        required
                                         validateStatus={error ? 'error' : undefined}
                                         help={error || undefined}
                                     >
@@ -190,6 +239,7 @@ export function ParametroFormModal({
                                 return (
                                     <Form.Item
                                         label="Tipo de dato"
+                                        required
                                         validateStatus={error ? 'error' : undefined}
                                         help={error || undefined}
                                     >
@@ -242,8 +292,12 @@ export function ParametroFormModal({
                                 return (
                                     <Form.Item
                                         label="Orden"
+                                        required
                                         validateStatus={error ? 'error' : undefined}
-                                        help={error || 'Posición en listados (0 = primero)'}
+                                        help={
+                                            error ||
+                                            'Posición en listados (0 = primero)'
+                                        }
                                     >
                                         <InputNumber
                                             min={0}
@@ -268,7 +322,9 @@ export function ParametroFormModal({
                                 <Form.Item label="Activo">
                                     <Switch
                                         checked={field.state.value}
-                                        onChange={(checked) => field.handleChange(checked)}
+                                        onChange={(checked) =>
+                                            field.handleChange(checked)
+                                        }
                                         disabled={loading}
                                     />
                                 </Form.Item>
@@ -277,6 +333,6 @@ export function ParametroFormModal({
                     </Col>
                 </Row>
             </Form>
-        </Modal>
+        </Drawer>
     )
 }

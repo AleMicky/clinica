@@ -1,14 +1,14 @@
 import {
-    CodigoNombreDescripcionFormModal,
     CrudCreateHeader,
     CrudSearchFiltersBar,
     CrudSectionPanel,
 } from '../../../../shared/components/ui/crud-section'
+import { TipoExamenFormDrawer } from '../components/TipoExamenFormDrawer'
 import { TiposExamenTable } from '../components/TiposExamenTable'
 import { useTiposExamenView } from '../hooks/use-tipos-examen-view'
 
 export function TiposExamenView() {
-    const { loading, caption, filters, table, formModal } = useTiposExamenView()
+    const { loading, caption, filters, table, formDrawer } = useTiposExamenView()
 
     return (
         <>
@@ -28,7 +28,7 @@ export function TiposExamenView() {
                     <CrudCreateHeader
                         label="Nuevo tipo de examen"
                         ariaLabel="Crear nuevo tipo de examen"
-                        onCreate={formModal.openCreateModal}
+                        onCreate={formDrawer.openCreate}
                     />
                 }
                 caption={caption}
@@ -47,16 +47,12 @@ export function TiposExamenView() {
                 />
             </CrudSectionPanel>
 
-            <CodigoNombreDescripcionFormModal
-                open={formModal.open}
-                entityLabel="tipo de examen"
-                entity={formModal.entity}
-                loading={formModal.isSaving}
-                onClose={formModal.closeModal}
-                onSubmit={formModal.handleSubmit}
-                codigoHelp="Identificador único, ej. HEMOGRAMA"
-                codigoPlaceholder="Ej. HEMOGRAMA"
-                nombrePlaceholder="Hemograma completo"
+            <TipoExamenFormDrawer
+                open={formDrawer.open}
+                entity={formDrawer.entity}
+                loading={formDrawer.isSaving}
+                onClose={formDrawer.closeDrawer}
+                onSubmit={formDrawer.handleSubmit}
             />
         </>
     )

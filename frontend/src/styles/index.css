@@ -1832,7 +1832,8 @@ body {
 .admin-layout__content-inner:has(.pacientes-module),
 .admin-layout__content-inner:has(.atencion-medica-module),
 .admin-layout__content-inner:has(.parametros-module),
-.admin-layout__content-inner:has(.laboratorio-module) {
+.admin-layout__content-inner:has(.laboratorio-module),
+.admin-layout__content-inner:has(.workflow-module) {
     display: flex;
     flex-direction: column;
     height: calc(100dvh - 44px - clamp(8px, 1.5vw, 12px) * 2);
@@ -1845,7 +1846,8 @@ body {
 .pacientes-module,
 .atencion-medica-module,
 .parametros-module,
-.laboratorio-module {
+.laboratorio-module,
+.workflow-module {
     flex: 1;
     min-height: 0;
     overflow: hidden;
@@ -2279,7 +2281,8 @@ body {
     .admin-layout__content-inner:has(.pacientes-module),
     .admin-layout__content-inner:has(.atencion-medica-module),
     .admin-layout__content-inner:has(.parametros-module),
-    .admin-layout__content-inner:has(.laboratorio-module) {
+    .admin-layout__content-inner:has(.laboratorio-module),
+    .admin-layout__content-inner:has(.workflow-module) {
         height: auto;
         max-height: none;
         overflow: visible;
@@ -2290,6 +2293,7 @@ body {
     .atencion-medica-module,
     .parametros-module,
     .laboratorio-module,
+    .workflow-module,
     .rrhh-module .module-object-page,
     .pacientes-module .module-object-page,
     .atencion-medica-module .module-object-page,
@@ -6811,7 +6815,7 @@ body {
     flex-direction: column;
     gap: 12px;
     min-height: 0;
-    padding: 4px 0 16px;
+    padding: 4px 0 0;
     background: #f8fafc;
 }
 
@@ -6888,7 +6892,10 @@ body {
 
 .workflow-module__card--table {
     flex: 1;
-    min-height: 420px;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .workflow-module__tabs {
@@ -6976,7 +6983,7 @@ body {
 .workflow-module__table .app-data-table__wrapper {
     flex: 1;
     min-height: 0;
-    max-height: calc(100vh - 320px);
+    max-height: none;
     overflow: auto;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
@@ -7115,6 +7122,7 @@ body {
 .workflow-flow-view {
     display: flex;
     flex-direction: column;
+    flex: 1;
     min-height: 0;
     height: 100%;
 }
@@ -7165,8 +7173,8 @@ body {
 
 .workflow-flow-canvas {
     width: 100%;
-    height: calc(100vh - 260px);
-    min-height: 420px;
+    height: 100%;
+    min-height: 0;
     border: 1px solid #dbe3ee;
     border-radius: 10px;
     overflow: hidden;
@@ -7352,7 +7360,7 @@ body {
 
 .bpmn-designer__main .workflow-flow-canvas {
     flex: 1;
-    min-height: 420px;
+    min-height: 0;
 }
 
 .bpmn-properties {
@@ -7711,15 +7719,20 @@ body {
     padding-top: 8px;
 }
 
-.workflow-definitions-page {
-    min-height: calc(100vh - 120px);
+.workflow-definitions-page,
+.workflow-custom-queries-page {
+    min-height: 0;
 }
 
 .workflow-designer-page {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    min-height: calc(100vh - 120px);
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
+    padding-bottom: 0;
 }
 
 .workflow-designer-page__toolbar {
@@ -7729,10 +7742,13 @@ body {
 .workflow-designer-page__canvas {
     flex: 1;
     min-height: 0;
+    display: flex;
+    flex-direction: column;
     padding: 12px;
     border: 1px solid #e2e8f0;
     border-radius: 12px;
     background: #ffffff;
+    overflow: hidden;
 }
 
 .workflow-designer-page__panel-hint {
@@ -7751,11 +7767,22 @@ body {
 }
 
 .workflow-instance-page {
-    padding: 4px 0 16px;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    padding-bottom: 0;
+}
+
+.workflow-instance-page__body {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding-bottom: 16px;
 }
 
 .workflow-instance-page .workflow-entity-panel {
-    margin-top: 4px;
+    margin-top: 0;
+    min-height: min(100%, 520px);
 }
 
 .workflow-timeline__header {
@@ -7958,10 +7985,6 @@ body {
 }
 
 @media (max-width: 1366px) {
-    .workflow-module__table .app-data-table__wrapper {
-        max-height: calc(100vh - 280px);
-    }
-
     .workflow-module__tab-panel--flow {
         max-height: calc(100vh - 280px);
     }

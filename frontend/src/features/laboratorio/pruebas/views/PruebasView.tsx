@@ -3,14 +3,14 @@ import {
     CrudSearchFiltersBar,
     CrudSectionPanel,
 } from '../../../../shared/components/ui/crud-section'
-import { PruebaFormModal } from '../components/PruebaFormModal'
+import { PruebaFormDrawer } from '../components/PruebaFormDrawer'
 import { PruebaPreciosDrawer } from '../components/PruebaPreciosDrawer'
 import { PruebasTable } from '../components/PruebasTable'
 import { usePruebaPreciosDrawer } from '../hooks/use-prueba-precios-drawer'
 import { usePruebasView } from '../hooks/use-pruebas-view'
 
 export function PruebasView() {
-    const { loading, caption, filters, table, formModal } = usePruebasView()
+    const { loading, caption, filters, table, formDrawer } = usePruebasView()
     const precios = usePruebaPreciosDrawer()
 
     return (
@@ -31,7 +31,7 @@ export function PruebasView() {
                     <CrudCreateHeader
                         label="Nueva prueba"
                         ariaLabel="Crear nueva prueba de laboratorio"
-                        onCreate={formModal.openCreateModal}
+                        onCreate={formDrawer.openCreate}
                     />
                 }
                 caption={caption}
@@ -51,12 +51,12 @@ export function PruebasView() {
                 />
             </CrudSectionPanel>
 
-            <PruebaFormModal
-                open={formModal.open}
-                entity={formModal.entity}
-                loading={formModal.isSaving}
-                onClose={formModal.closeModal}
-                onSubmit={formModal.handleSubmit}
+            <PruebaFormDrawer
+                open={formDrawer.open}
+                entity={formDrawer.entity}
+                loading={formDrawer.isSaving}
+                onClose={formDrawer.closeDrawer}
+                onSubmit={formDrawer.handleSubmit}
             />
 
             <PruebaPreciosDrawer

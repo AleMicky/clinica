@@ -121,7 +121,7 @@ public sealed class CorrelativoService(ParametrosDbContext context) : ICorrelati
         command.Transaction = context.Database.CurrentTransaction?.GetDbTransaction();
         command.CommandText =
             """
-            UPDATE Correlativos
+            UPDATE [parametros].[Correlativos]
             SET UltimoNumero = UltimoNumero + 1,
                 FechaActualizacion = @now,
                 Prefijo = CASE WHEN @updatePrefijo = 1 THEN @prefijo ELSE Prefijo END,

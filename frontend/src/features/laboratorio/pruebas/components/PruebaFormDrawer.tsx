@@ -1,6 +1,19 @@
 import { useEffect, useMemo } from 'react'
 import { useForm, useStore } from '@tanstack/react-form'
-import { Col, Form, Input, InputNumber, Modal, Row, Select, Switch } from 'antd'
+import {
+    Button,
+    Col,
+    Drawer,
+    Flex,
+    Form,
+    Grid,
+    Input,
+    InputNumber,
+    Row,
+    Select,
+    Switch,
+    Typography,
+} from 'antd'
 
 import { useCatalogoGruposGrouped } from '../../../parametros/catalogos/hooks/catalogo-grupos.hooks'
 import { getFieldError } from '../../../../shared/utils/form-errors'
@@ -14,7 +27,10 @@ import {
 } from '../schemas/prueba.schema'
 import type { Prueba } from '../types/prueba.types'
 
-type PruebaFormModalProps = {
+const { Text } = Typography
+const { useBreakpoint } = Grid
+
+type PruebaFormDrawerProps = {
     open: boolean
     entity: Prueba | null
     loading: boolean
@@ -25,13 +41,15 @@ type PruebaFormModalProps = {
 const LOOKUP_QUERY = { page: 1, pageSize: 200 } as const
 const TIPO_MUESTRA_GRUPO = 'TIPO_MUESTRA'
 
-export function PruebaFormModal({
+export function PruebaFormDrawer({
     open,
     entity,
     loading,
     onClose,
     onSubmit,
-}: PruebaFormModalProps) {
+}: PruebaFormDrawerProps) {
+    const screens = useBreakpoint()
+    const drawerWidth = screens.md ? 560 : '95%'
     const isEditing = entity !== null
 
     const { data: especialidadesResult, isFetching: loadingEspecialidades } =
@@ -99,24 +117,52 @@ export function PruebaFormModal({
         form.reset()
     }, [open, entity, form])
 
+    const handleClose = () => {
+        if (loading) return
+        onClose()
+    }
+
     const lookupsLoading =
         loadingEspecialidades || loadingTiposExamen || loadingCatalogos
 
     return (
-        <Modal
-            title={isEditing ? 'Editar prueba de laboratorio' : 'Nueva prueba de laboratorio'}
+        <Drawer
+            title={
+                isEditing
+                    ? 'Editar prueba de laboratorio'
+                    : 'Nueva prueba de laboratorio'
+            }
             open={open}
-            onCancel={() => {
-                if (!loading) onClose()
-            }}
-            onOk={() => void form.handleSubmit()}
-            okText={isEditing ? 'Guardar' : 'Crear'}
-            cancelText="Cancelar"
-            confirmLoading={loading}
+            onClose={handleClose}
+            width={drawerWidth}
             destroyOnHidden
-            width={640}
+            className="usuario-drawer"
+            footer={
+                <Flex justify="flex-end" gap={8} className="usuario-drawer__footer">
+                    <Button onClick={handleClose} disabled={loading}>
+                        Cancelar
+                    </Button>
+                    <Button
+                        type="primary"
+                        loading={loading}
+                        onClick={() => void form.handleSubmit()}
+                    >
+                        {isEditing ? 'Guardar' : 'Crear'}
+                    </Button>
+                </Flex>
+            }
         >
-            <Form layout="vertical" requiredMark={false}>
+            <Form
+                layout="vertical"
+                requiredMark
+                size="small"
+                className="usuario-drawer__form usuario-drawer__form--compact"
+            >
+                <Text type="secondary" className="usuario-drawer__required-hint">
+                    Los campos marcados con <Text type="danger">*</Text> son
+                    obligatorios.
+                </Text>
+
                 <Row gutter={16}>
                     <Col xs={24} sm={10}>
                         <form.Field name="codigo">
@@ -125,6 +171,7 @@ export function PruebaFormModal({
                                 return (
                                     <Form.Item
                                         label="Código"
+                                        required
                                         validateStatus={error ? 'error' : undefined}
                                         help={error || 'Identificador único, ej. GLU'}
                                     >
@@ -153,6 +200,7 @@ export function PruebaFormModal({
                                 return (
                                     <Form.Item
                                         label="Nombre"
+                                        required
                                         validateStatus={error ? 'error' : undefined}
                                         help={error || undefined}
                                     >
@@ -179,6 +227,7 @@ export function PruebaFormModal({
                                 return (
                                     <Form.Item
                                         label="Especialidad"
+                                        required
                                         validateStatus={error ? 'error' : undefined}
                                         help={error || undefined}
                                     >
@@ -207,6 +256,7 @@ export function PruebaFormModal({
                                 return (
                                     <Form.Item
                                         label="Tipo de examen"
+                                        required
                                         validateStatus={error ? 'error' : undefined}
                                         help={error || undefined}
                                     >
@@ -235,6 +285,7 @@ export function PruebaFormModal({
                                 return (
                                     <Form.Item
                                         label="Tipo de muestra"
+                                        required
                                         validateStatus={error ? 'error' : undefined}
                                         help={
                                             error ||
@@ -285,6 +336,7 @@ export function PruebaFormModal({
                                 return (
                                     <Form.Item
                                         label="Horas de ayuno"
+                                        required={requiereAyuno}
                                         validateStatus={error ? 'error' : undefined}
                                         help={error || undefined}
                                     >
@@ -323,6 +375,6 @@ export function PruebaFormModal({
                     </Col>
                 </Row>
             </Form>
-        </Modal>
+        </Drawer>
     )
 }

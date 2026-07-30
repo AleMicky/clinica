@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { HistoryOutlined } from '@ant-design/icons'
 import { Alert, Collapse, Empty, Flex, Form, Skeleton, Tag, Typography } from 'antd'
 
+import { getApiErrorMessage } from '../../../shared/utils/api-error'
 import {
     getWorkflowEntityLabel,
     getWorkflowModuleLabel,
@@ -37,6 +38,8 @@ export type WorkflowEntityPanelProps = {
     employeeId?: string
     title?: string
     showHistory?: boolean
+    /** Abre el historial al montar (útil en la página de instancia). */
+    historyDefaultOpen?: boolean
     allowStart?: boolean
     /** card = panel autónomo; embedded = sin marco, para insertar en otra vista. */
     variant?: 'card' | 'embedded'
@@ -53,6 +56,7 @@ export function WorkflowEntityPanel({
     employeeId: employeeIdProp,
     title = 'Workflow',
     showHistory = true,
+    historyDefaultOpen = false,
     allowStart = true,
     variant = 'card',
     className,
@@ -75,6 +79,11 @@ export function WorkflowEntityPanel({
     )
 
     const instance = instanceIdProp ? instanceQuery.data : referenceQuery.data ?? undefined
+    const instanceError = instanceIdProp
+        ? instanceQuery.error
+        : byReference
+          ? referenceQuery.error
+          : null
     const loadingInstance =
         (byReference && referenceQuery.isFetching) ||
         (Boolean(instanceIdProp) && instanceQuery.isFetching)
@@ -194,6 +203,13 @@ export function WorkflowEntityPanel({
 
             {loadingInstance ? (
                 <Skeleton active paragraph={{ rows: 3 }} />
+            ) : instanceError ? (
+                <Alert
+                    type="error"
+                    showIcon
+                    message="No se pudo cargar la instancia"
+                    description={getApiErrorMessage(instanceError)}
+                />
             ) : !instance ? (
                 allowStart ? (
                     <WorkflowStartPanel
@@ -216,6 +232,18 @@ export function WorkflowEntityPanel({
                             <div>
                                 <Text strong>{instance.workflowDefinitionName}</Text>
                                 <Text type="secondary"> · {instance.workflowDefinitionCode}</Text>
+                            </div>
+                        </div>
+                        <div>
+                            <Text type="secondary">Referencia</Text>
+                            <div>
+                                <Text>
+                                    {getWorkflowModuleLabel(instance.referenceModule)} ·{' '}
+                                    {getWorkflowEntityLabel(
+                                        instance.referenceModule,
+                                        instance.referenceEntity,
+                                    )}
+                                </Text>
                             </div>
                         </div>
                         <div>
@@ -247,6 +275,7 @@ export function WorkflowEntityPanel({
                         <Collapse
                             ghost
                             className="workflow-entity-panel__history"
+                            defaultActiveKey={historyDefaultOpen ? ['history'] : undefined}
                             items={[
                                 {
                                     key: 'history',

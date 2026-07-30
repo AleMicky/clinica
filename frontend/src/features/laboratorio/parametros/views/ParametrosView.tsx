@@ -5,12 +5,12 @@ import {
     CrudSearchFiltersBar,
     CrudSectionPanel,
 } from '../../../../shared/components/ui/crud-section'
-import { ParametroFormModal } from '../components/ParametroFormModal'
+import { ParametroFormDrawer } from '../components/ParametroFormDrawer'
 import { ParametrosTable } from '../components/ParametrosTable'
 import { useParametrosView } from '../hooks/use-parametros-view'
 
 export function ParametrosView() {
-    const { loading, caption, filters, table, formModal } = useParametrosView()
+    const { loading, caption, filters, table, formDrawer } = useParametrosView()
 
     return (
         <>
@@ -44,7 +44,7 @@ export function ParametrosView() {
                     <CrudCreateHeader
                         label="Nuevo parámetro"
                         ariaLabel="Crear nuevo parámetro"
-                        onCreate={formModal.openCreateModal}
+                        onCreate={formDrawer.openCreate}
                     />
                 }
                 caption={caption}
@@ -63,13 +63,13 @@ export function ParametrosView() {
                 />
             </CrudSectionPanel>
 
-            <ParametroFormModal
-                open={formModal.open}
-                entity={formModal.entity}
-                loading={formModal.isSaving}
-                initialPruebaId={formModal.initialPruebaId}
-                onClose={formModal.closeModal}
-                onSubmit={formModal.handleSubmit}
+            <ParametroFormDrawer
+                open={formDrawer.open}
+                entity={formDrawer.entity}
+                loading={formDrawer.isSaving}
+                initialPruebaId={formDrawer.initialPruebaId}
+                onClose={formDrawer.closeDrawer}
+                onSubmit={formDrawer.handleSubmit}
             />
         </>
     )

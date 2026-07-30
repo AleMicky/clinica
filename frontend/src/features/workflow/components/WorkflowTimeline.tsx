@@ -44,12 +44,12 @@ export function WorkflowTimeline({
                             </div>
                             <div className="workflow-timeline__states">
                                 <WorkflowStateBadge
-                                    name={entry.fromStateName}
+                                    name={entry.fromStateName || '—'}
                                     code={entry.fromStateCode}
                                 />
                                 <Text type="secondary">→</Text>
                                 <WorkflowStateBadge
-                                    name={entry.toStateName}
+                                    name={entry.toStateName || '—'}
                                     code={entry.toStateCode}
                                 />
                             </div>
