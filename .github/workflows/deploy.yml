@@ -50,6 +50,14 @@ jobs:
             echo "Archivos copiados:"
             ls -lah
 
+            # SCP con rm:false no borra archivos eliminados del repo.
+            # Limpiar restos (p. ej. componentes TS viejos) sin tocar docker/.env (gitignored).
+            if git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+              echo ">> sincronizar working tree con el commit desplegado"
+              git reset --hard HEAD
+              git clean -fd
+            fi
+
             chmod +x docker/deploy.sh
 
             export SKIP_GIT_PULL=1
