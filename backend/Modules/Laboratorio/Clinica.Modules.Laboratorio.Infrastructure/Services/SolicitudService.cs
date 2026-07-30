@@ -95,45 +95,7 @@ public sealed class SolicitudService(
         if (request.Lineas.Count == 0)
             throw new BusinessException("Debe incluir al menos una línea de solicitud.");
 
-        var pruebaIds = request.Lineas.Select(l => l.PruebaId).Distinct().ToList();
-
-        var pruebas = await context.Pruebas
-            .AsNoTracking()
-            .Where(x => pruebaIds.Contains(x.Id))
-            .ToDictionaryAsync(x => x.Id, cancellationToken);
-
-        if (pruebas.Count != pruebaIds.Count)
-            throw new BusinessException("Una o más pruebas indicadas no existen.");
-
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var detalles = new List<SolicitudDetalle>();
-
-        foreach (var linea in request.Lineas)
-        {
-            var prueba = pruebas[linea.PruebaId];
-
-            var precio = await context.PruebaPrecios
-                .AsNoTracking()
-                .Where(x =>
-                    x.PruebaId == prueba.Id &&
-                    x.FechaInicio <= today &&
-                    (x.FechaFin == null || x.FechaFin >= today))
-                .OrderByDescending(x => x.FechaInicio)
-                .FirstOrDefaultAsync(cancellationToken);
-
-            if (precio is null)
-                throw new BusinessException($"La prueba '{prueba.Nombre}' no tiene un precio vigente.");
-
-            detalles.Add(new SolicitudDetalle
-            {
-                PruebaId = prueba.Id,
-                PrecioUnitario = precio.ImporteFacturado,
-                Cantidad = linea.Cantidad,
-                EsDerivada = false,
-                LaboratorioExternoId = null,
-                Observaciones = StringNormalize.Optional(linea.Observaciones),
-            });
-        }
+        var detalles = await BuildDetallesAsync(request.Lineas, cancellationToken);
 
         var correlativo = await correlativoService.GenerarAsync(
             new GenerarCorrelativoRequest(CorrelativoCodigo, Prefijo: "LAB-", Longitud: 6),
@@ -169,6 +131,62 @@ public sealed class SolicitudService(
         await context.SaveChangesAsync(cancellationToken);
 
         return await GetRequiredResponseAsync(entity.Id, cancellationToken);
+    }
+
+    public async Task<SolicitudResponse> UpdateAsync(
+        Guid id,
+        UpdateSolicitudRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (request.Lineas.Count == 0)
+            throw new BusinessException("Debe incluir al menos una línea de solicitud.");
+
+        var entity = await context.Solicitudes
+            .Include(x => x.Detalles)
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
+            ?? throw new NotFoundException(NotFoundMessage);
+
+        EnsureEditable(entity);
+
+        var existentes = entity.Detalles.ToList();
+        context.SolicitudDetalles.RemoveRange(existentes);
+        entity.Detalles.Clear();
+
+        var detalles = await BuildDetallesAsync(request.Lineas, cancellationToken);
+        foreach (var detalle in detalles)
+            entity.Detalles.Add(detalle);
+
+        entity.PacienteId = request.PacienteId;
+        entity.Origen = StringNormalize.Required(request.Origen).ToUpperInvariant();
+        entity.AtencionId = request.AtencionId;
+        entity.MedicoSolicitanteId = request.MedicoSolicitanteId;
+        entity.MedicoExternoNombre = StringNormalize.Optional(request.MedicoExternoNombre);
+        entity.Observaciones = StringNormalize.Optional(request.Observaciones);
+        entity.UpdatedAt = DateTime.UtcNow;
+
+        await context.SaveChangesAsync(cancellationToken);
+
+        return await GetRequiredResponseAsync(entity.Id, cancellationToken);
+    }
+
+    public async Task DeleteAsync(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await context.Solicitudes
+            .Include(x => x.Detalles)
+            .Include(x => x.Pagos)
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
+            ?? throw new NotFoundException(NotFoundMessage);
+
+        EnsureEditable(entity);
+
+        if (entity.Pagos.Count > 0)
+            throw new BusinessException("No se puede eliminar una solicitud con pagos asociados.");
+
+        context.SolicitudDetalles.RemoveRange(entity.Detalles);
+        context.Solicitudes.Remove(entity);
+        await context.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<SolicitudResponse> EnviarACajaAsync(
@@ -337,6 +355,62 @@ public sealed class SolicitudService(
         }
 
         await context.SaveChangesAsync(cancellationToken);
+    }
+
+    private static void EnsureEditable(Solicitud entity)
+    {
+        if (entity.Estado != SolicitudEstados.Borrador)
+        {
+            throw new BusinessException(
+                $"Solo se pueden modificar o eliminar solicitudes en borrador (estado actual: {entity.Estado}).");
+        }
+    }
+
+    private async Task<List<SolicitudDetalle>> BuildDetallesAsync(
+        IReadOnlyList<CreateSolicitudLineaRequest> lineas,
+        CancellationToken cancellationToken)
+    {
+        var pruebaIds = lineas.Select(l => l.PruebaId).Distinct().ToList();
+
+        var pruebas = await context.Pruebas
+            .AsNoTracking()
+            .Where(x => pruebaIds.Contains(x.Id))
+            .ToDictionaryAsync(x => x.Id, cancellationToken);
+
+        if (pruebas.Count != pruebaIds.Count)
+            throw new BusinessException("Una o más pruebas indicadas no existen.");
+
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var detalles = new List<SolicitudDetalle>();
+
+        foreach (var linea in lineas)
+        {
+            var prueba = pruebas[linea.PruebaId];
+
+            var precio = await context.PruebaPrecios
+                .AsNoTracking()
+                .Where(x =>
+                    x.PruebaId == prueba.Id &&
+                    x.FechaInicio <= today &&
+                    (x.FechaFin == null || x.FechaFin >= today))
+                .OrderByDescending(x => x.FechaInicio)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (precio is null)
+                throw new BusinessException($"La prueba '{prueba.Nombre}' no tiene un precio vigente.");
+
+            detalles.Add(new SolicitudDetalle
+            {
+                PruebaId = prueba.Id,
+                PrecioUnitario = precio.ImporteFacturado,
+                Cantidad = linea.Cantidad,
+                EsDerivada = false,
+                LaboratorioExternoId = null,
+                Observaciones = StringNormalize.Optional(linea.Observaciones),
+            });
+        }
+
+        return detalles;
     }
 
     private async Task<SolicitudResponse> GetRequiredResponseAsync(

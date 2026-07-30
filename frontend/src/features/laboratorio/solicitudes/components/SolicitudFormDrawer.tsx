@@ -31,16 +31,22 @@ import {
     solicitudSchema,
     type SolicitudFormValues,
 } from '../schemas/solicitud.schema'
-import { SOLICITUD_ORIGEN_OPTIONS, SolicitudOrigen } from '../types/solicitud.types'
+import {
+    SOLICITUD_ORIGEN_OPTIONS,
+    SolicitudOrigen,
+    type Solicitud,
+} from '../types/solicitud.types'
 
 const { Text } = Typography
 const { TextArea } = Input
 const { useBreakpoint } = Grid
 
 const LOOKUP_QUERY = { page: 1, pageSize: 200 } as const
+const EDIT_EMPLEADO_PLACEHOLDER = '__edit__'
 
 type SolicitudFormDrawerProps = {
     open: boolean
+    entity?: Solicitud | null
     loading: boolean
     onClose: () => void
     onSubmit: (values: SolicitudFormValues) => Promise<void>
@@ -48,12 +54,14 @@ type SolicitudFormDrawerProps = {
 
 export function SolicitudFormDrawer({
     open,
+    entity = null,
     loading,
     onClose,
     onSubmit,
 }: SolicitudFormDrawerProps) {
     const screens = useBreakpoint()
     const drawerWidth = screens.lg ? 720 : screens.md ? 560 : '95%'
+    const isEditing = entity !== null
 
     const { data: pruebasResult, isFetching: loadingPruebas } = usePruebas(LOOKUP_QUERY)
     const { data: medicosResult, isFetching: loadingMedicos } = useMedicos(LOOKUP_QUERY)
@@ -70,8 +78,34 @@ export function SolicitudFormDrawer({
 
     useEffect(() => {
         if (!open) return
+
+        if (entity) {
+            form.reset()
+            form.setFieldValue('pacienteId', entity.pacienteId)
+            form.setFieldValue(
+                'origen',
+                entity.origen as SolicitudFormValues['origen'],
+            )
+            form.setFieldValue('atencionId', entity.atencionId ?? null)
+            form.setFieldValue('medicoSolicitanteId', entity.medicoSolicitanteId ?? null)
+            form.setFieldValue('medicoExternoNombre', entity.medicoExternoNombre ?? null)
+            form.setFieldValue('observaciones', entity.observaciones ?? null)
+            form.setFieldValue('empleadoId', EDIT_EMPLEADO_PLACEHOLDER)
+            form.setFieldValue(
+                'lineas',
+                entity.detalles.length > 0
+                    ? entity.detalles.map((detalle) => ({
+                          pruebaId: detalle.pruebaId,
+                          cantidad: Number(detalle.cantidad) || 1,
+                          observaciones: detalle.observaciones ?? null,
+                      }))
+                    : [{ ...solicitudLineaDefaultValues }],
+            )
+            return
+        }
+
         form.reset()
-    }, [open, form])
+    }, [open, entity, form])
 
     const pruebaOptions = useMemo(
         () =>
@@ -102,7 +136,11 @@ export function SolicitudFormDrawer({
 
     return (
         <Drawer
-            title="Nueva solicitud de laboratorio"
+            title={
+                isEditing
+                    ? `Editar solicitud ${entity.numero}`
+                    : 'Nueva solicitud de laboratorio'
+            }
             open={open}
             onClose={handleClose}
             width={drawerWidth}
@@ -118,7 +156,7 @@ export function SolicitudFormDrawer({
                         loading={loading}
                         onClick={() => void form.handleSubmit()}
                     >
-                        Crear
+                        {isEditing ? 'Guardar' : 'Crear'}
                     </Button>
                 </Flex>
             }
@@ -174,33 +212,35 @@ export function SolicitudFormDrawer({
                         </form.Field>
                     </Col>
 
-                    <Col xs={24} sm={12}>
-                        <form.Field name="empleadoId">
-                            {(field) => {
-                                const error = getFieldError(field.state.meta.errors)
-                                return (
-                                    <Form.Item
-                                        label="Registrado por"
-                                        required
-                                        validateStatus={error ? 'error' : undefined}
-                                        help={error || undefined}
-                                    >
-                                        <WorkflowEmployeeSelect
-                                            value={field.state.value || undefined}
-                                            onChange={(value) =>
-                                                field.handleChange(
-                                                    typeof value === 'string'
-                                                        ? value
-                                                        : (value[0] ?? ''),
-                                                )
-                                            }
-                                            placeholder="Empleado que registra"
-                                        />
-                                    </Form.Item>
-                                )
-                            }}
-                        </form.Field>
-                    </Col>
+                    {!isEditing ? (
+                        <Col xs={24} sm={12}>
+                            <form.Field name="empleadoId">
+                                {(field) => {
+                                    const error = getFieldError(field.state.meta.errors)
+                                    return (
+                                        <Form.Item
+                                            label="Registrado por"
+                                            required
+                                            validateStatus={error ? 'error' : undefined}
+                                            help={error || undefined}
+                                        >
+                                            <WorkflowEmployeeSelect
+                                                value={field.state.value || undefined}
+                                                onChange={(value) =>
+                                                    field.handleChange(
+                                                        typeof value === 'string'
+                                                            ? value
+                                                            : (value[0] ?? ''),
+                                                    )
+                                                }
+                                                placeholder="Empleado que registra"
+                                            />
+                                        </Form.Item>
+                                    )
+                                }}
+                            </form.Field>
+                        </Col>
+                    ) : null}
 
                     {origen === SolicitudOrigen.AtencionMedica ? (
                         <Col xs={24} sm={12}>

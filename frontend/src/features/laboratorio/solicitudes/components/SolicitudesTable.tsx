@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { createColumnHelper, type ColumnDef } from '@tanstack/react-table'
-import { Button, Space, Tag, Typography } from 'antd'
-import { EyeOutlined } from '@ant-design/icons'
+import { Button, Popconfirm, Space, Tag, Typography } from 'antd'
+import { DeleteOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons'
 import { Link } from '@tanstack/react-router'
 
 import { AppDataTable } from '../../../../shared/components/ui/data-table/AppDataTable'
@@ -45,6 +45,9 @@ type SolicitudesTableProps = {
     page: number
     pageSize: number
     onPageChange: (page: number, pageSize: number) => void
+    onEdit: (item: Solicitud) => void
+    onDelete: (item: Solicitud) => void
+    deletingId: string | null
     className?: string
 }
 
@@ -55,6 +58,9 @@ export function SolicitudesTable({
     page,
     pageSize,
     onPageChange,
+    onEdit,
+    onDelete,
+    deletingId,
     className,
 }: SolicitudesTableProps) {
     const columns = useMemo(
@@ -109,26 +115,62 @@ export function SolicitudesTable({
                 columnHelper.display({
                     id: 'actions',
                     header: '',
-                    size: 72,
+                    size: 120,
                     meta: { align: 'right', headerAlign: 'right' },
-                    cell: ({ row }) => (
-                        <Space size={0}>
-                            <Link
-                                to="/laboratorio/solicitudes/$id"
-                                params={{ id: row.original.id }}
-                            >
-                                <Button
-                                    type="text"
-                                    size="small"
-                                    icon={<EyeOutlined />}
-                                    aria-label={`Ver solicitud ${row.original.numero}`}
-                                />
-                            </Link>
-                        </Space>
-                    ),
+                    cell: ({ row }) => {
+                        const item = row.original
+                        const canMutate = item.estado === 'BORRADOR'
+
+                        return (
+                            <Space size={0}>
+                                <Link
+                                    to="/laboratorio/solicitudes/$id"
+                                    params={{ id: item.id }}
+                                >
+                                    <Button
+                                        type="text"
+                                        size="small"
+                                        icon={<EyeOutlined />}
+                                        aria-label={`Ver solicitud ${item.numero}`}
+                                    />
+                                </Link>
+                                {canMutate ? (
+                                    <>
+                                        <Button
+                                            type="text"
+                                            size="small"
+                                            icon={<EditOutlined />}
+                                            aria-label={`Editar solicitud ${item.numero}`}
+                                            onClick={() => onEdit(item)}
+                                        />
+                                        <Popconfirm
+                                            title="Eliminar solicitud"
+                                            description={`¿Eliminar "${item.numero}"?`}
+                                            okText="Eliminar"
+                                            cancelText="Cancelar"
+                                            okButtonProps={{
+                                                danger: true,
+                                                loading: deletingId === item.id,
+                                            }}
+                                            onConfirm={() => onDelete(item)}
+                                        >
+                                            <Button
+                                                type="text"
+                                                size="small"
+                                                danger
+                                                icon={<DeleteOutlined />}
+                                                aria-label={`Eliminar solicitud ${item.numero}`}
+                                                loading={deletingId === item.id}
+                                            />
+                                        </Popconfirm>
+                                    </>
+                                ) : null}
+                            </Space>
+                        )
+                    },
                 }),
             ] as ColumnDef<Solicitud, unknown>[],
-        [],
+        [onEdit, onDelete, deletingId],
     )
 
     return (

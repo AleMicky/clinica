@@ -63,6 +63,42 @@ public static class SolicitudEndpoints
             .Produces<ApiResponse<SolicitudResponse>>(StatusCodes.Status201Created)
             .Produces<ApiResponse<object>>(StatusCodes.Status400BadRequest);
 
+        solicitudes.MapPut("/{id:guid}", async (
+                Guid id,
+                UpdateSolicitudRequest request,
+                IValidator<UpdateSolicitudRequest> validator,
+                ISolicitudService service,
+                CancellationToken cancellationToken) =>
+            {
+                var validation = await validator.ValidateAsync(request, cancellationToken);
+                if (!validation.IsValid)
+                {
+                    var message = $"Datos inválidos. {string.Join(", ",
+                        validation.Errors.Select(x => x.ErrorMessage).Distinct())}";
+                    return ApiResults.BadRequest(message);
+                }
+
+                var result = await service.UpdateAsync(id, request, cancellationToken);
+                return ApiResults.Ok(result, "Solicitud actualizada correctamente.");
+            })
+            .WithName("LaboratorioSolicitud_Update")
+            .Produces<ApiResponse<SolicitudResponse>>(StatusCodes.Status200OK)
+            .Produces<ApiResponse<object>>(StatusCodes.Status400BadRequest)
+            .Produces<ApiResponse<object>>(StatusCodes.Status404NotFound);
+
+        solicitudes.MapDelete("/{id:guid}", async (
+                Guid id,
+                ISolicitudService service,
+                CancellationToken cancellationToken) =>
+            {
+                await service.DeleteAsync(id, cancellationToken);
+                return ApiResults.NoContent();
+            })
+            .WithName("LaboratorioSolicitud_Delete")
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces<ApiResponse<object>>(StatusCodes.Status400BadRequest)
+            .Produces<ApiResponse<object>>(StatusCodes.Status404NotFound);
+
         solicitudes.MapPost("/{id:guid}/enviar-a-caja", async (
                 Guid id,
                 EnviarACajaRequest request,

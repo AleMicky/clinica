@@ -11,6 +11,7 @@ import type {
     DerivarDetallePayload,
     EnviarACajaPayload,
     SolicitudPagedQuery,
+    UpdateSolicitudPayload,
 } from '../types/solicitud.types'
 
 export function useSolicitudes(query: SolicitudPagedQuery) {
@@ -38,6 +39,33 @@ export function useCreateSolicitud() {
             notify.success('Solicitud creada', 'La solicitud se registró correctamente.')
         },
         onError: (e) => notify.error('Error al crear la solicitud', getApiErrorMessage(e)),
+    })
+}
+
+export function useUpdateSolicitud() {
+    const qc = useQueryClient()
+
+    return useAppMutation({
+        mutationFn: ({ id, data }: { id: string; data: UpdateSolicitudPayload }) =>
+            solicitudesService.update(id, data),
+        onSuccess: () => {
+            void qc.invalidateQueries({ queryKey: queryKeys.laboratorio.solicitudes.all })
+            notify.success('Solicitud actualizada', 'Los cambios se guardaron correctamente.')
+        },
+        onError: (e) => notify.error('Error al actualizar la solicitud', getApiErrorMessage(e)),
+    })
+}
+
+export function useDeleteSolicitud() {
+    const qc = useQueryClient()
+
+    return useAppMutation({
+        mutationFn: (id: string) => solicitudesService.delete(id),
+        onSuccess: () => {
+            void qc.invalidateQueries({ queryKey: queryKeys.laboratorio.solicitudes.all })
+            notify.success('Solicitud eliminada', 'Se eliminó correctamente.')
+        },
+        onError: (e) => notify.error('Error al eliminar la solicitud', getApiErrorMessage(e)),
     })
 }
 

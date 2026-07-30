@@ -17,6 +17,15 @@ public interface ISolicitudService
         CreateSolicitudRequest request,
         CancellationToken cancellationToken = default);
 
+    Task<SolicitudResponse> UpdateAsync(
+        Guid id,
+        UpdateSolicitudRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task DeleteAsync(
+        Guid id,
+        CancellationToken cancellationToken = default);
+
     Task<SolicitudResponse> EnviarACajaAsync(
         Guid id,
         EnviarACajaRequest request,

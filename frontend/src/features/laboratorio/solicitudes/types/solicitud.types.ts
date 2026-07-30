@@ -94,6 +94,16 @@ export type CreateSolicitudPayload = {
     lineas: CreateSolicitudLineaPayload[]
 }
 
+export type UpdateSolicitudPayload = {
+    pacienteId: string
+    origen: string
+    atencionId?: string | null
+    medicoSolicitanteId?: string | null
+    medicoExternoNombre?: string | null
+    observaciones?: string | null
+    lineas: CreateSolicitudLineaPayload[]
+}
+
 export type EnviarACajaPayload = {
     empleadoId: string
 }
