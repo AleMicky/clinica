@@ -222,7 +222,10 @@ export const queryKeys = {
         },
         pagos: {
             all: ['caja', 'pagos'] as const,
+            list: (query: PagedQuery & Record<string, unknown>) =>
+                ['caja', 'pagos', 'list', query] as const,
             detail: (id: EntityId) => ['caja', 'pagos', 'detail', id] as const,
+            recibo: (id: EntityId) => ['caja', 'pagos', 'recibo', id] as const,
         },
         movimientos: {
             all: ['caja', 'movimientos'] as const,

@@ -264,6 +264,13 @@ export const menuGroups: MenuGroup[] = [
                 roles: [AppRole.Admin, AppRole.Caja, AppRole.Recepcion],
             },
             {
+                key: '/caja/pagos',
+                to: '/caja/pagos',
+                icon: <DollarOutlined />,
+                label: 'Pagos',
+                roles: [AppRole.Admin, AppRole.Caja, AppRole.Recepcion],
+            },
+            {
                 key: '/caja/movimientos',
                 to: '/caja/movimientos',
                 icon: <DollarOutlined />,

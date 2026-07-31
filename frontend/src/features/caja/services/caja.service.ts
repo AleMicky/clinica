@@ -3,6 +3,7 @@ import { cajaEndpoints } from '../../../shared/api/endpoints'
 import type {
     AbrirTurnoPayload,
     AgregarCargosPayload,
+    AnularPagoPayload,
     ArqueoCaja,
     CajaFisica,
     CerrarArqueoPayload,
@@ -17,6 +18,9 @@ import type {
     MovimientoCaja,
     MovimientoPagedQuery,
     PagoDetalleCompleto,
+    PagoListItem,
+    PagoPagedQuery,
+    Recibo,
     RegistrarMovimientoPayload,
     RegistrarPagoPayload,
     ResumenTurno,
@@ -59,6 +63,22 @@ export const cajaService = {
         return post<string, { motivo?: string }>(cajaEndpoints.cuentas.anular(id), {
             motivo,
         })
+    },
+
+    getPagos(query: PagoPagedQuery = {}) {
+        return getPaged<PagoListItem>(cajaEndpoints.pagos.root, query)
+    },
+
+    getPagoById(id: string) {
+        return get<PagoDetalleCompleto>(cajaEndpoints.pagos.byId(id))
+    },
+
+    anularPago(id: string, payload: AnularPagoPayload) {
+        return post<string, AnularPagoPayload>(cajaEndpoints.pagos.anular(id), payload)
+    },
+
+    getRecibo(id: string) {
+        return get<Recibo>(cajaEndpoints.pagos.recibo(id))
     },
 
     getCajas(query: { page?: number; pageSize?: number; search?: string; activo?: boolean } = {}) {

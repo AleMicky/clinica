@@ -65,6 +65,7 @@ import { Route as AdminFarmaciaDispensacionesRouteImport } from './routes/_admin
 import { Route as AdminComprasProveedoresRouteImport } from './routes/_admin/compras/proveedores'
 import { Route as AdminComprasOrdenesRouteImport } from './routes/_admin/compras/ordenes'
 import { Route as AdminCajaTurnosRouteImport } from './routes/_admin/caja/turnos'
+import { Route as AdminCajaPagosRouteImport } from './routes/_admin/caja/pagos'
 import { Route as AdminCajaMovimientosRouteImport } from './routes/_admin/caja/movimientos'
 import { Route as AdminCajaMetodosPagoRouteImport } from './routes/_admin/caja/metodos-pago'
 import { Route as AdminCajaConceptosRouteImport } from './routes/_admin/caja/conceptos'
@@ -384,6 +385,11 @@ const AdminCajaTurnosRoute = AdminCajaTurnosRouteImport.update({
   path: '/turnos',
   getParentRoute: () => AdminCajaRoute,
 } as any)
+const AdminCajaPagosRoute = AdminCajaPagosRouteImport.update({
+  id: '/pagos',
+  path: '/pagos',
+  getParentRoute: () => AdminCajaRoute,
+} as any)
 const AdminCajaMovimientosRoute = AdminCajaMovimientosRouteImport.update({
   id: '/movimientos',
   path: '/movimientos',
@@ -507,6 +513,7 @@ export interface FileRoutesByFullPath {
   '/caja/conceptos': typeof AdminCajaConceptosRoute
   '/caja/metodos-pago': typeof AdminCajaMetodosPagoRoute
   '/caja/movimientos': typeof AdminCajaMovimientosRoute
+  '/caja/pagos': typeof AdminCajaPagosRoute
   '/caja/turnos': typeof AdminCajaTurnosRoute
   '/compras/ordenes': typeof AdminComprasOrdenesRoute
   '/compras/proveedores': typeof AdminComprasProveedoresRoute
@@ -575,6 +582,7 @@ export interface FileRoutesByTo {
   '/caja/conceptos': typeof AdminCajaConceptosRoute
   '/caja/metodos-pago': typeof AdminCajaMetodosPagoRoute
   '/caja/movimientos': typeof AdminCajaMovimientosRoute
+  '/caja/pagos': typeof AdminCajaPagosRoute
   '/caja/turnos': typeof AdminCajaTurnosRoute
   '/compras/ordenes': typeof AdminComprasOrdenesRoute
   '/compras/proveedores': typeof AdminComprasProveedoresRoute
@@ -651,6 +659,7 @@ export interface FileRoutesById {
   '/_admin/caja/conceptos': typeof AdminCajaConceptosRoute
   '/_admin/caja/metodos-pago': typeof AdminCajaMetodosPagoRoute
   '/_admin/caja/movimientos': typeof AdminCajaMovimientosRoute
+  '/_admin/caja/pagos': typeof AdminCajaPagosRoute
   '/_admin/caja/turnos': typeof AdminCajaTurnosRoute
   '/_admin/compras/ordenes': typeof AdminComprasOrdenesRoute
   '/_admin/compras/proveedores': typeof AdminComprasProveedoresRoute
@@ -727,6 +736,7 @@ export interface FileRouteTypes {
     | '/caja/conceptos'
     | '/caja/metodos-pago'
     | '/caja/movimientos'
+    | '/caja/pagos'
     | '/caja/turnos'
     | '/compras/ordenes'
     | '/compras/proveedores'
@@ -795,6 +805,7 @@ export interface FileRouteTypes {
     | '/caja/conceptos'
     | '/caja/metodos-pago'
     | '/caja/movimientos'
+    | '/caja/pagos'
     | '/caja/turnos'
     | '/compras/ordenes'
     | '/compras/proveedores'
@@ -870,6 +881,7 @@ export interface FileRouteTypes {
     | '/_admin/caja/conceptos'
     | '/_admin/caja/metodos-pago'
     | '/_admin/caja/movimientos'
+    | '/_admin/caja/pagos'
     | '/_admin/caja/turnos'
     | '/_admin/compras/ordenes'
     | '/_admin/compras/proveedores'
@@ -1321,6 +1333,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCajaTurnosRouteImport
       parentRoute: typeof AdminCajaRoute
     }
+    '/_admin/caja/pagos': {
+      id: '/_admin/caja/pagos'
+      path: '/pagos'
+      fullPath: '/caja/pagos'
+      preLoaderRoute: typeof AdminCajaPagosRouteImport
+      parentRoute: typeof AdminCajaRoute
+    }
     '/_admin/caja/movimientos': {
       id: '/_admin/caja/movimientos'
       path: '/movimientos'
@@ -1506,6 +1525,7 @@ interface AdminCajaRouteChildren {
   AdminCajaConceptosRoute: typeof AdminCajaConceptosRoute
   AdminCajaMetodosPagoRoute: typeof AdminCajaMetodosPagoRoute
   AdminCajaMovimientosRoute: typeof AdminCajaMovimientosRoute
+  AdminCajaPagosRoute: typeof AdminCajaPagosRoute
   AdminCajaTurnosRoute: typeof AdminCajaTurnosRoute
   AdminCajaIndexRoute: typeof AdminCajaIndexRoute
   AdminCajaCuentasCuentaIdRoute: typeof AdminCajaCuentasCuentaIdRoute
@@ -1517,6 +1537,7 @@ const AdminCajaRouteChildren: AdminCajaRouteChildren = {
   AdminCajaConceptosRoute: AdminCajaConceptosRoute,
   AdminCajaMetodosPagoRoute: AdminCajaMetodosPagoRoute,
   AdminCajaMovimientosRoute: AdminCajaMovimientosRoute,
+  AdminCajaPagosRoute: AdminCajaPagosRoute,
   AdminCajaTurnosRoute: AdminCajaTurnosRoute,
   AdminCajaIndexRoute: AdminCajaIndexRoute,
   AdminCajaCuentasCuentaIdRoute: AdminCajaCuentasCuentaIdRoute,

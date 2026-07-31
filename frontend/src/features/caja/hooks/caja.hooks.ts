@@ -8,12 +8,14 @@ import { getApiErrorMessage } from '../../../shared/utils/api-error'
 import { cajaService } from '../services/caja.service'
 import type {
     AbrirTurnoPayload,
+    AnularPagoPayload,
     CerrarArqueoPayload,
     CreateCajaPayload,
     CreateConceptoCajaPayload,
     CreateMetodoPagoPayload,
     CuentaPagedQuery,
     MovimientoPagedQuery,
+    PagoPagedQuery,
     RegistrarMovimientoPayload,
     RegistrarPagoPayload,
     TurnoPagedQuery,
@@ -93,6 +95,42 @@ export function useMovimientos(query: MovimientoPagedQuery) {
     return useAppQuery({
         queryKey: queryKeys.caja.movimientos.list(query),
         queryFn: () => cajaService.getMovimientos(query),
+    })
+}
+
+export function usePagos(query: PagoPagedQuery) {
+    return useAppQuery({
+        queryKey: queryKeys.caja.pagos.list(query),
+        queryFn: () => cajaService.getPagos(query),
+    })
+}
+
+export function usePago(id: string | undefined) {
+    return useAppQuery({
+        queryKey: queryKeys.caja.pagos.detail(id ?? ''),
+        queryFn: () => cajaService.getPagoById(id!),
+        enabled: Boolean(id),
+    })
+}
+
+export function useRecibo(pagoId: string | undefined) {
+    return useAppQuery({
+        queryKey: queryKeys.caja.pagos.recibo(pagoId ?? ''),
+        queryFn: () => cajaService.getRecibo(pagoId!),
+        enabled: Boolean(pagoId),
+    })
+}
+
+export function useAnularPago() {
+    const qc = useQueryClient()
+    return useAppMutation({
+        mutationFn: ({ id, payload }: { id: string; payload: AnularPagoPayload }) =>
+            cajaService.anularPago(id, payload),
+        onSuccess: () => {
+            void qc.invalidateQueries({ queryKey: queryKeys.caja.all })
+            notify.success('Pago anulado', 'El pago se anuló correctamente.')
+        },
+        onError: (e) => notify.error('Error al anular pago', getApiErrorMessage(e)),
     })
 }
 

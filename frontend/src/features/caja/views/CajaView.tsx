@@ -20,6 +20,9 @@ export function CajaView() {
         if (pathname.startsWith('/caja/turnos')) {
             return { icon: <DollarOutlined />, title: 'Turnos de caja' }
         }
+        if (pathname.startsWith('/caja/pagos')) {
+            return { icon: <DollarOutlined />, title: 'Pagos' }
+        }
         if (pathname.startsWith('/caja/movimientos')) {
             return { icon: <DollarOutlined />, title: 'Movimientos' }
         }

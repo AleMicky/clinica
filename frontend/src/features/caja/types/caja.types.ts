@@ -241,6 +241,32 @@ export type Recibo = {
     observaciones?: string | null
 }
 
+export type PagoListItem = {
+    id: string
+    numero: string
+    pacienteId: string
+    cuentaId: string
+    turnoCajaId?: string | null
+    fechaPago: string
+    monto: number
+    estado: PagoEstado | string
+    observaciones?: string | null
+}
+
+export type PagoPagedQuery = {
+    page?: number
+    pageSize?: number
+    search?: string
+    estado?: string
+    cuentaId?: string
+    turnoCajaId?: string
+    pacienteId?: string
+}
+
+export type AnularPagoPayload = {
+    motivo: string
+}
+
 export type PagoDetalleCompleto = {
     id: string
     numero: string

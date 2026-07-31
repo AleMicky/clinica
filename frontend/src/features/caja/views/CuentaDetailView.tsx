@@ -1,5 +1,12 @@
 import { useMemo, useState } from 'react'
-import { ArrowLeftOutlined, MinusCircleOutlined, PlusOutlined } from '@ant-design/icons'
+import {
+    ArrowLeftOutlined,
+    EyeOutlined,
+    FileTextOutlined,
+    MinusCircleOutlined,
+    PlusOutlined,
+    StopOutlined,
+} from '@ant-design/icons'
 import { Link } from '@tanstack/react-router'
 import {
     Alert,
@@ -13,16 +20,22 @@ import {
     Space,
     Table,
     Tag,
+    Tooltip,
     Typography,
 } from 'antd'
 
 import { WorkflowEmployeeSelect } from '../../workflow/components/WorkflowEmployeeSelect'
+import { AnularPagoDrawer } from '../components/AnularPagoDrawer'
+import { PagoDetailDrawer } from '../components/PagoDetailDrawer'
 import {
+    useAnularPago,
     useCuenta,
     useMetodosPago,
+    usePago,
     useRegistrarPago,
     useTurnoAbierto,
 } from '../hooks/caja.hooks'
+import type { AnularPagoPayload, Pago } from '../types/caja.types'
 
 const { Title, Text } = Typography
 
@@ -46,12 +59,16 @@ export function CuentaDetailView({ cuentaId }: CuentaDetailViewProps) {
     const { data: turno } = useTurnoAbierto()
     const { data: metodos } = useMetodosPago()
     const registrarPago = useRegistrarPago()
+    const anularPagoMutation = useAnularPago()
     const [lineas, setLineas] = useState<LineaPago[]>([
         { key: '1', importe: 0 },
     ])
     const [observaciones, setObservaciones] = useState('')
     const [empleadoId, setEmpleadoId] = useState('')
     const [ultimoPago, setUltimoPago] = useState<{ numero: string; recibo?: string } | null>(null)
+    const [detailPagoId, setDetailPagoId] = useState<string | null>(null)
+    const [anularTarget, setAnularTarget] = useState<Pago | null>(null)
+    const { data: pagoDetalle, isFetching: detailLoading } = usePago(detailPagoId ?? undefined)
 
     const totalIngresado = useMemo(
         () => Math.round(lineas.reduce((acc, l) => acc + (l.importe || 0), 0) * 100) / 100,
@@ -189,8 +206,63 @@ export function CuentaDetailView({ cuentaId }: CuentaDetailViewProps) {
                                     dataIndex: 'monto',
                                     render: (v: number) => formatMoney(v),
                                 },
-                                { title: 'Estado', dataIndex: 'estado' },
-                                { title: 'Fecha', dataIndex: 'fechaPago' },
+                                {
+                                    title: 'Estado',
+                                    dataIndex: 'estado',
+                                    render: (v: string | undefined) =>
+                                        v ? <Tag>{v}</Tag> : '—',
+                                },
+                                {
+                                    title: 'Fecha',
+                                    dataIndex: 'fechaPago',
+                                    render: (v: string) => new Date(v).toLocaleString(),
+                                },
+                                {
+                                    title: '',
+                                    key: 'actions',
+                                    render: (_: unknown, pago: Pago) => {
+                                        const canAnular = pago.estado === 'CONFIRMADO'
+                                        return (
+                                            <Space>
+                                                <Tooltip title="Ver detalle">
+                                                    <Button
+                                                        type="text"
+                                                        size="small"
+                                                        icon={<EyeOutlined />}
+                                                        onClick={() => setDetailPagoId(pago.id)}
+                                                        aria-label="Ver detalle del pago"
+                                                    />
+                                                </Tooltip>
+                                                <Tooltip title="Ver recibo">
+                                                    <Button
+                                                        type="text"
+                                                        size="small"
+                                                        icon={<FileTextOutlined />}
+                                                        onClick={() => setDetailPagoId(pago.id)}
+                                                        aria-label="Ver recibo"
+                                                    />
+                                                </Tooltip>
+                                                {canAnular ? (
+                                                    <Tooltip title="Anular pago">
+                                                        <Button
+                                                            type="text"
+                                                            size="small"
+                                                            danger
+                                                            icon={<StopOutlined />}
+                                                            loading={
+                                                                anularPagoMutation.isPending &&
+                                                                anularPagoMutation.variables?.id ===
+                                                                    pago.id
+                                                            }
+                                                            onClick={() => setAnularTarget(pago)}
+                                                            aria-label="Anular pago"
+                                                        />
+                                                    </Tooltip>
+                                                ) : null}
+                                            </Space>
+                                        )
+                                    },
+                                },
                             ]}
                         />
                     </section>
@@ -367,6 +439,41 @@ export function CuentaDetailView({ cuentaId }: CuentaDetailViewProps) {
                     </section>
                 ) : null}
             </div>
+
+            <PagoDetailDrawer
+                open={Boolean(detailPagoId)}
+                pago={pagoDetalle}
+                loading={detailLoading}
+                onClose={() => setDetailPagoId(null)}
+                onAnular={() => {
+                    if (!pagoDetalle) return
+                    setAnularTarget({
+                        id: pagoDetalle.id,
+                        numero: pagoDetalle.numero,
+                        monto: pagoDetalle.monto,
+                        estado: pagoDetalle.estado,
+                        fechaPago: pagoDetalle.fechaPago,
+                        observaciones: pagoDetalle.observaciones,
+                        createdAt: pagoDetalle.createdAt,
+                    })
+                }}
+            />
+
+            <AnularPagoDrawer
+                open={Boolean(anularTarget)}
+                pago={anularTarget}
+                loading={anularPagoMutation.isPending}
+                onClose={() => setAnularTarget(null)}
+                onSubmit={async (payload: AnularPagoPayload) => {
+                    if (!anularTarget) return
+                    await anularPagoMutation.mutateAsync({
+                        id: anularTarget.id,
+                        payload,
+                    })
+                    setAnularTarget(null)
+                    setDetailPagoId(null)
+                }}
+            />
         </div>
     )
 }
