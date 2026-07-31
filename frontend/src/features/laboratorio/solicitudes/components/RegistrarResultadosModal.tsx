@@ -79,14 +79,18 @@ export function RegistrarResultadosModal({
         )
     }
 
-    const lineasValidas = lineas.filter(
-        (linea) =>
-            linea.incluido &&
-            linea.solicitudDetalleId &&
-            (linea.tipoDato === ParametroTipoDato.Texto
-                ? Boolean(linea.valorTexto?.trim())
-                : linea.valorNumerico !== null),
-    )
+    const lineasValidas = lineas.filter((linea) => {
+        if (!linea.incluido || !linea.solicitudDetalleId) return false
+
+        if (
+            linea.tipoDato === ParametroTipoDato.Texto ||
+            linea.tipoDato === ParametroTipoDato.Booleano
+        ) {
+            return Boolean(linea.valorTexto?.trim())
+        }
+
+        return linea.valorNumerico !== null
+    })
 
     const handleOk = async () => {
         if (!empleadoId || lineasValidas.length === 0) return
@@ -95,15 +99,19 @@ export function RegistrarResultadosModal({
             muestraId: muestraId ?? null,
             observaciones: observaciones.trim() || null,
             empleadoId,
-            lineas: lineasValidas.map((linea) => ({
-                parametroId: linea.parametroId,
-                solicitudDetalleId: linea.solicitudDetalleId,
-                valorNumerico:
-                    linea.tipoDato === ParametroTipoDato.Texto ? null : linea.valorNumerico,
-                valorTexto:
-                    linea.tipoDato === ParametroTipoDato.Texto ? linea.valorTexto : null,
-                observaciones: null,
-            })),
+            lineas: lineasValidas.map((linea) => {
+                const esTexto =
+                    linea.tipoDato === ParametroTipoDato.Texto ||
+                    linea.tipoDato === ParametroTipoDato.Booleano
+
+                return {
+                    parametroId: linea.parametroId,
+                    solicitudDetalleId: linea.solicitudDetalleId,
+                    valorNumerico: esTexto ? null : linea.valorNumerico,
+                    valorTexto: esTexto ? linea.valorTexto : null,
+                    observaciones: null,
+                }
+            }),
         })
     }
 
@@ -185,18 +193,44 @@ export function RegistrarResultadosModal({
                             {
                                 title: 'Valor',
                                 key: 'valor',
-                                render: (_, record: LineaEstado) =>
-                                    record.tipoDato === ParametroTipoDato.Texto ? (
-                                        <Input
-                                            value={record.valorTexto ?? ''}
-                                            onChange={(e) =>
-                                                updateLinea(record.parametroId, {
-                                                    valorTexto: e.target.value,
-                                                })
-                                            }
-                                            disabled={loading || !record.incluido}
-                                        />
-                                    ) : (
+                                render: (_, record: LineaEstado) => {
+                                    if (record.tipoDato === ParametroTipoDato.Texto) {
+                                        return (
+                                            <Input
+                                                value={record.valorTexto ?? ''}
+                                                onChange={(e) =>
+                                                    updateLinea(record.parametroId, {
+                                                        valorTexto: e.target.value,
+                                                    })
+                                                }
+                                                disabled={loading || !record.incluido}
+                                            />
+                                        )
+                                    }
+
+                                    if (record.tipoDato === ParametroTipoDato.Booleano) {
+                                        return (
+                                            <Select
+                                                allowClear
+                                                style={{ width: '100%' }}
+                                                placeholder="Seleccionar"
+                                                options={[
+                                                    { label: 'Sí', value: 'true' },
+                                                    { label: 'No', value: 'false' },
+                                                ]}
+                                                value={record.valorTexto ?? undefined}
+                                                onChange={(value) =>
+                                                    updateLinea(record.parametroId, {
+                                                        valorTexto: value ?? null,
+                                                        valorNumerico: null,
+                                                    })
+                                                }
+                                                disabled={loading || !record.incluido}
+                                            />
+                                        )
+                                    }
+
+                                    return (
                                         <InputNumber
                                             style={{ width: '100%' }}
                                             value={record.valorNumerico ?? undefined}
@@ -207,7 +241,8 @@ export function RegistrarResultadosModal({
                                             }
                                             disabled={loading || !record.incluido}
                                         />
-                                    ),
+                                    )
+                                },
                             },
                         ]}
                     />

@@ -7,8 +7,6 @@ public sealed record SolicitudDetalleResponse(
     decimal PrecioUnitario,
     decimal Cantidad,
     bool EsDerivada,
-    Guid? LaboratorioExternoId,
-    string? LaboratorioExternoNombre,
     string? Observaciones
 );
 

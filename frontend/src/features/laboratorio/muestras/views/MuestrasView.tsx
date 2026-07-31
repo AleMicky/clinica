@@ -38,19 +38,18 @@ export function MuestrasView() {
     const { data, isFetching } = useMuestras({
         page: filters.page,
         pageSize: filters.pageSize,
+        estado,
+        search: filters.search || undefined,
     })
 
-    const items = useMemo(() => {
-        const source = data?.items ?? []
-        const bySearch = filters.search
-            ? source.filter((item) =>
-                  item.codigo.toLowerCase().includes(filters.search.toLowerCase()),
-              )
-            : source
-        return estado ? bySearch.filter((item) => item.estado === estado) : bySearch
-    }, [data?.items, filters.search, estado])
+    const items = data?.items ?? []
+    const total = data?.totalRecords ?? 0
+    const hasActiveFilters = Boolean(filters.search || estado)
 
-    const total = filters.search || estado ? items.length : (data?.totalRecords ?? 0)
+    const clearAllFilters = () => {
+        filters.clearFilters()
+        setEstado(undefined)
+    }
 
     const columns = useMemo(
         () =>
@@ -117,10 +116,10 @@ export function MuestrasView() {
                 <>
                     <CrudSearchFiltersBar
                         searchInput={filters.searchInput}
-                        hasActiveFilters={filters.hasActiveFilters}
+                        hasActiveFilters={hasActiveFilters}
                         onSearchInputChange={filters.handleSearchInputChange}
                         onSearch={filters.handleSearch}
-                        onClearFilters={filters.clearFilters}
+                        onClearFilters={clearAllFilters}
                         ariaLabel="Filtros de muestras"
                         searchAriaLabel="Buscar muestra"
                         placeholder="Buscar por código…"
@@ -132,13 +131,16 @@ export function MuestrasView() {
                         placeholder="Filtrar por estado"
                         options={ESTADO_OPTIONS}
                         value={estado}
-                        onChange={(value) => setEstado(value ?? undefined)}
+                        onChange={(value) => {
+                            setEstado(value ?? undefined)
+                            filters.handlePageChange(1, filters.pageSize)
+                        }}
                         aria-label="Filtrar por estado"
                     />
                 </>
             }
             actions={<span />}
-            caption={formatRegistrosCaption(total, Boolean(filters.search || estado))}
+            caption={formatRegistrosCaption(total, hasActiveFilters)}
         >
             <AppDataTable
                 data={items}

@@ -3,13 +3,13 @@ import type { PagedQuery } from '../../../../shared/types/pagination.types'
 export const RESULTADO_ESTADO_LABELS: Record<string, string> = {
     REGISTRADO: 'Registrado',
     VALIDADO: 'Validado',
-    RECHAZADO: 'Rechazado',
+    ENTREGADO: 'Entregado',
 }
 
 export const RESULTADO_ESTADO_COLORS: Record<string, string> = {
     REGISTRADO: 'processing',
     VALIDADO: 'success',
-    RECHAZADO: 'error',
+    ENTREGADO: 'default',
 }
 
 export type ResultadoDetalle = {
@@ -36,6 +36,7 @@ export type Resultado = {
 
 export type ResultadoPagedQuery = PagedQuery & {
     solicitudId?: string
+    estado?: string
 }
 
 export type RegistrarResultadoLineaPayload = {
@@ -57,3 +58,5 @@ export type ValidarResultadoPayload = {
     empleadoId: string
     observaciones?: string | null
 }
+
+export type EntregarResultadoPayload = ValidarResultadoPayload

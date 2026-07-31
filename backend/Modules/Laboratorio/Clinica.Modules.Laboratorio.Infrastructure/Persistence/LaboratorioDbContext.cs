@@ -17,7 +17,6 @@ public class LaboratorioDbContext : DbContext
     public DbSet<PruebaPrecio> PruebaPrecios => Set<PruebaPrecio>();
     public DbSet<Parametro> Parametros => Set<Parametro>();
     public DbSet<ValorReferencia> ValoresReferencia => Set<ValorReferencia>();
-    public DbSet<LaboratorioExterno> LaboratoriosExternos => Set<LaboratorioExterno>();
     public DbSet<Solicitud> Solicitudes => Set<Solicitud>();
     public DbSet<SolicitudDetalle> SolicitudDetalles => Set<SolicitudDetalle>();
     public DbSet<SolicitudPago> SolicitudPagos => Set<SolicitudPago>();

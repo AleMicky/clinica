@@ -7,6 +7,7 @@ import { notify } from '../../../../shared/utils/notify'
 import { getApiErrorMessage } from '../../../../shared/utils/api-error'
 import { resultadosService } from '../services/resultados.service'
 import type {
+    EntregarResultadoPayload,
     RegistrarResultadosPayload,
     ResultadoPagedQuery,
     ValidarResultadoPayload,
@@ -64,5 +65,25 @@ export function useValidarResultado() {
             notify.success('Resultado validado', 'El resultado se validó correctamente.')
         },
         onError: (e) => notify.error('Error al validar', getApiErrorMessage(e)),
+    })
+}
+
+export function useEntregarResultado() {
+    const qc = useQueryClient()
+
+    return useAppMutation({
+        mutationFn: ({
+            id,
+            data,
+        }: {
+            id: string
+            data: EntregarResultadoPayload
+        }) => resultadosService.entregar(id, data),
+        onSuccess: () => {
+            void qc.invalidateQueries({ queryKey: queryKeys.laboratorio.resultados.all })
+            void qc.invalidateQueries({ queryKey: queryKeys.laboratorio.solicitudes.all })
+            notify.success('Resultado entregado', 'El resultado se entregó correctamente.')
+        },
+        onError: (e) => notify.error('Error al entregar', getApiErrorMessage(e)),
     })
 }

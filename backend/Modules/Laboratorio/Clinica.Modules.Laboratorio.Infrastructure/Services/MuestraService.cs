@@ -35,6 +35,18 @@ public sealed class MuestraService(
         if (request.SolicitudId is { } solicitudId && solicitudId != Guid.Empty)
             query = query.Where(x => x.SolicitudId == solicitudId);
 
+        if (!string.IsNullOrWhiteSpace(request.Estado))
+        {
+            var estado = request.Estado.Trim().ToUpperInvariant();
+            query = query.Where(x => x.Estado == estado);
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            var search = request.Search.Trim();
+            query = query.Where(x => x.Codigo.Contains(search));
+        }
+
         var ordered = query.OrderByDescending(x => x.FechaToma);
 
         var idsPaged = await ordered

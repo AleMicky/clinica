@@ -3,7 +3,8 @@ import {
     createColumnHelper,
     type ColumnDef,
 } from '@tanstack/react-table'
-import { Tag } from 'antd'
+import { Button, Tag } from 'antd'
+import { LineChartOutlined } from '@ant-design/icons'
 
 import { AppDataTable } from '../../../../shared/components/ui/data-table/AppDataTable'
 import {
@@ -28,6 +29,7 @@ type ParametrosTableProps = {
     onPageChange: (page: number, pageSize: number) => void
     onEdit: (item: Parametro) => void
     onDelete: (item: Parametro) => void
+    onManageValoresRef: (item: Parametro) => void
     deletingId: string | null
     className?: string
 }
@@ -41,6 +43,7 @@ export function ParametrosTable({
     onPageChange,
     onEdit,
     onDelete,
+    onManageValoresRef,
     deletingId,
     className,
 }: ParametrosTableProps) {
@@ -75,6 +78,20 @@ export function ParametrosTable({
                     size: 100,
                     cell: ({ getValue }) => <StatusBadge active={getValue()} />,
                 }),
+                columnHelper.display({
+                    id: 'valoresRef',
+                    header: '',
+                    size: 44,
+                    cell: ({ row }) => (
+                        <Button
+                            type="text"
+                            size="small"
+                            icon={<LineChartOutlined />}
+                            aria-label={`Valores de referencia de ${row.original.nombre}`}
+                            onClick={() => onManageValoresRef(row.original)}
+                        />
+                    ),
+                }),
                 createRowActionsColumn<Parametro>({
                     onEdit,
                     onDelete,
@@ -82,7 +99,7 @@ export function ParametrosTable({
                     deleteTitle: 'Eliminar parámetro',
                 }),
             ] as ColumnDef<Parametro, unknown>[],
-        [onEdit, onDelete, deletingId],
+        [onEdit, onDelete, onManageValoresRef, deletingId],
     )
 
     return (

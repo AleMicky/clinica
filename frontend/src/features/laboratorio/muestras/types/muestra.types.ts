@@ -2,14 +2,10 @@ import type { PagedQuery } from '../../../../shared/types/pagination.types'
 
 export const MUESTRA_ESTADO_LABELS: Record<string, string> = {
     TOMADA: 'Tomada',
-    RECHAZADA: 'Rechazada',
-    PROCESADA: 'Procesada',
 }
 
 export const MUESTRA_ESTADO_COLORS: Record<string, string> = {
     TOMADA: 'blue',
-    RECHAZADA: 'error',
-    PROCESADA: 'success',
 }
 
 export type MuestraDetalle = {
@@ -34,6 +30,8 @@ export type Muestra = {
 
 export type MuestraPagedQuery = PagedQuery & {
     solicitudId?: string
+    estado?: string
+    search?: string
 }
 
 export type TomarMuestraPayload = {

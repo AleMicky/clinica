@@ -49,8 +49,6 @@ export type SolicitudDetalle = {
     precioUnitario: number
     cantidad: number
     esDerivada: boolean
-    laboratorioExternoId?: string | null
-    laboratorioExternoNombre?: string | null
     observaciones?: string | null
 }
 

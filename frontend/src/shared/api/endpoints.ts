@@ -115,6 +115,7 @@ export const laboratorioEndpoints = {
     muestras: createEndpoints(`${api.laboratorio}/muestras`),
     resultados: createEndpoints(`${api.laboratorio}/resultados`, (root) => ({
         validar: (id: EntityId) => `${root}/${id}/validar`,
+        entregar: (id: EntityId) => `${root}/${id}/entregar`,
     })),
 } as const
 

@@ -64,6 +64,28 @@ public static class ResultadoEndpoints
             .Produces<ApiResponse<ResultadoResponse>>(StatusCodes.Status200OK)
             .Produces<ApiResponse<object>>(StatusCodes.Status400BadRequest);
 
+        resultados.MapPost("/{id:guid}/entregar", async (
+                Guid id,
+                EntregarResultadoRequest request,
+                IValidator<EntregarResultadoRequest> validator,
+                IResultadoService service,
+                CancellationToken cancellationToken) =>
+            {
+                var validation = await validator.ValidateAsync(request, cancellationToken);
+                if (!validation.IsValid)
+                {
+                    var message = $"Datos inválidos. {string.Join(", ",
+                        validation.Errors.Select(x => x.ErrorMessage).Distinct())}";
+                    return ApiResults.BadRequest(message);
+                }
+
+                var result = await service.EntregarAsync(id, request, cancellationToken);
+                return ApiResults.Ok(result, "Resultado entregado correctamente.");
+            })
+            .WithName("LaboratorioResultado_Entregar")
+            .Produces<ApiResponse<ResultadoResponse>>(StatusCodes.Status200OK)
+            .Produces<ApiResponse<object>>(StatusCodes.Status400BadRequest);
+
         return group;
     }
 

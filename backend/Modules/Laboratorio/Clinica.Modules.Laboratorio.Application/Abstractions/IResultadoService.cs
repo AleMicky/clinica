@@ -22,4 +22,9 @@ public interface IResultadoService
         Guid resultadoId,
         ValidarResultadoRequest request,
         CancellationToken cancellationToken = default);
+
+    Task<ResultadoResponse> EntregarAsync(
+        Guid resultadoId,
+        EntregarResultadoRequest request,
+        CancellationToken cancellationToken = default);
 }

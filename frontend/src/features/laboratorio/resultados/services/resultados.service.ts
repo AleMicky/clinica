@@ -1,6 +1,7 @@
 import { get, getPaged, post } from '../../../../shared/api/http'
 import { laboratorioEndpoints } from '../../../../shared/api/endpoints'
 import type {
+    EntregarResultadoPayload,
     RegistrarResultadosPayload,
     Resultado,
     ResultadoPagedQuery,
@@ -23,6 +24,12 @@ export const resultadosService = {
     validar(id: string, data: ValidarResultadoPayload) {
         return post<Resultado, ValidarResultadoPayload>(
             laboratorioEndpoints.resultados.validar(id),
+            data,
+        )
+    },
+    entregar(id: string, data: EntregarResultadoPayload) {
+        return post<Resultado, EntregarResultadoPayload>(
+            laboratorioEndpoints.resultados.entregar(id),
             data,
         )
     },

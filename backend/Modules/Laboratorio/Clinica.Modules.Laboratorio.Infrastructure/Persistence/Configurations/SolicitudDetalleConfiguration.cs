@@ -34,11 +34,6 @@ public sealed class SolicitudDetalleConfiguration : BaseEntityConfiguration<Soli
             .HasForeignKey(x => x.PruebaId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(x => x.LaboratorioExterno)
-            .WithMany()
-            .HasForeignKey(x => x.LaboratorioExternoId)
-            .OnDelete(DeleteBehavior.Restrict);
-
         builder.HasIndex(x => x.SolicitudId);
         builder.HasIndex(x => x.PruebaId);
 

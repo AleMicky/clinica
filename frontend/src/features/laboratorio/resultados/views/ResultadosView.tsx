@@ -1,18 +1,24 @@
 import { useMemo, useState } from 'react'
 import { createColumnHelper, type ColumnDef } from '@tanstack/react-table'
-import { Button, Popconfirm, Select, Tag, Typography } from 'antd'
-import { CheckCircleOutlined } from '@ant-design/icons'
+import { Button, Drawer, Popconfirm, Select, Space, Tag, Typography } from 'antd'
+import {
+    CheckCircleOutlined,
+    EyeOutlined,
+    SendOutlined,
+} from '@ant-design/icons'
 import { Link } from '@tanstack/react-router'
 
 import { AppDataTable } from '../../../../shared/components/ui/data-table/AppDataTable'
-import {
-    CrudSearchFiltersBar,
-    CrudSectionPanel,
-} from '../../../../shared/components/ui/crud-section'
+import { CrudSectionPanel } from '../../../../shared/components/ui/crud-section'
 import { formatRegistrosCaption } from '../../../../shared/utils/crud-search'
 import { usePagedSearchFilters } from '../../../../shared/hooks/use-paged-search-filters'
 import { WorkflowEmployeeSelect } from '../../../workflow/components/WorkflowEmployeeSelect'
-import { useResultados, useValidarResultado } from '../hooks/resultados.hooks'
+import { ResultadoDetallesTable } from '../components/ResultadoDetallesTable'
+import {
+    useEntregarResultado,
+    useResultados,
+    useValidarResultado,
+} from '../hooks/resultados.hooks'
 import {
     RESULTADO_ESTADO_COLORS,
     RESULTADO_ESTADO_LABELS,
@@ -31,19 +37,19 @@ export function ResultadosView() {
     const filters = usePagedSearchFilters()
     const [estado, setEstado] = useState<string | undefined>(undefined)
     const [empleadoId, setEmpleadoId] = useState('')
+    const [detalle, setDetalle] = useState<Resultado | null>(null)
 
     const { data, isFetching } = useResultados({
         page: filters.page,
         pageSize: filters.pageSize,
+        estado,
     })
     const validarMutation = useValidarResultado()
+    const entregarMutation = useEntregarResultado()
 
-    const items = useMemo(() => {
-        const source = data?.items ?? []
-        return estado ? source.filter((item) => item.estado === estado) : source
-    }, [data?.items, estado])
-
-    const total = estado ? items.length : (data?.totalRecords ?? 0)
+    const items = data?.items ?? []
+    const total = data?.totalRecords ?? 0
+    const hasActiveFilters = Boolean(estado)
 
     const columns = useMemo(
         () =>
@@ -77,7 +83,19 @@ export function ResultadosView() {
                     id: 'detalles',
                     header: 'Parámetros',
                     size: 110,
-                    cell: ({ row }) => <Tag>{row.original.detalles.length}</Tag>,
+                    cell: ({ row }) => {
+                        const fueraDeRango = row.original.detalles.filter(
+                            (d) => d.fueraDeRango,
+                        ).length
+                        return (
+                            <Space size={4}>
+                                <Tag>{row.original.detalles.length}</Tag>
+                                {fueraDeRango > 0 ? (
+                                    <Tag color="error">{fueraDeRango} fuera</Tag>
+                                ) : null}
+                            </Space>
+                        )
+                    },
                 }),
                 columnHelper.accessor('fechaValidacion', {
                     header: 'Validado',
@@ -98,59 +116,90 @@ export function ResultadosView() {
                 columnHelper.display({
                     id: 'actions',
                     header: '',
-                    size: 130,
+                    size: 220,
                     meta: { align: 'right', headerAlign: 'right' },
                     cell: ({ row }) => {
                         const resultado = row.original
-                        if (resultado.estado !== 'REGISTRADO') return null
-
                         return (
-                            <Popconfirm
-                                title="Validar resultado"
-                                description="¿Confirma la validación de este resultado?"
-                                okText="Validar"
-                                cancelText="Cancelar"
-                                disabled={!empleadoId}
-                                okButtonProps={{ loading: validarMutation.isPending }}
-                                onConfirm={() =>
-                                    void validarMutation.mutateAsync({
-                                        id: resultado.id,
-                                        data: { empleadoId },
-                                    })
-                                }
-                            >
+                            <Space size={4}>
                                 <Button
                                     type="text"
                                     size="small"
-                                    icon={<CheckCircleOutlined />}
-                                    disabled={!empleadoId}
-                                    aria-label="Validar resultado"
+                                    icon={<EyeOutlined />}
+                                    aria-label="Ver detalle del resultado"
+                                    onClick={() => setDetalle(resultado)}
                                 >
-                                    Validar
+                                    Detalle
                                 </Button>
-                            </Popconfirm>
+                                {resultado.estado === 'REGISTRADO' ? (
+                                    <Popconfirm
+                                        title="Validar resultado"
+                                        description="¿Confirma la validación de este resultado?"
+                                        okText="Validar"
+                                        cancelText="Cancelar"
+                                        disabled={!empleadoId}
+                                        okButtonProps={{
+                                            loading: validarMutation.isPending,
+                                        }}
+                                        onConfirm={() =>
+                                            void validarMutation.mutateAsync({
+                                                id: resultado.id,
+                                                data: { empleadoId },
+                                            })
+                                        }
+                                    >
+                                        <Button
+                                            type="text"
+                                            size="small"
+                                            icon={<CheckCircleOutlined />}
+                                            disabled={!empleadoId}
+                                            aria-label="Validar resultado"
+                                        >
+                                            Validar
+                                        </Button>
+                                    </Popconfirm>
+                                ) : null}
+                                {resultado.estado === 'VALIDADO' ? (
+                                    <Popconfirm
+                                        title="Entregar resultado"
+                                        description="¿Confirma la entrega de este resultado?"
+                                        okText="Entregar"
+                                        cancelText="Cancelar"
+                                        disabled={!empleadoId}
+                                        okButtonProps={{
+                                            loading: entregarMutation.isPending,
+                                        }}
+                                        onConfirm={() =>
+                                            void entregarMutation.mutateAsync({
+                                                id: resultado.id,
+                                                data: { empleadoId },
+                                            })
+                                        }
+                                    >
+                                        <Button
+                                            type="text"
+                                            size="small"
+                                            icon={<SendOutlined />}
+                                            disabled={!empleadoId}
+                                            aria-label="Entregar resultado"
+                                        >
+                                            Entregar
+                                        </Button>
+                                    </Popconfirm>
+                                ) : null}
+                            </Space>
                         )
                     },
                 }),
             ] as ColumnDef<Resultado, unknown>[],
-        [empleadoId, validarMutation],
+        [empleadoId, validarMutation, entregarMutation],
     )
 
     return (
-        <CrudSectionPanel
-            className="laboratorio-resultados"
-            filters={
-                <>
-                    <CrudSearchFiltersBar
-                        searchInput={filters.searchInput}
-                        hasActiveFilters={filters.hasActiveFilters}
-                        onSearchInputChange={filters.handleSearchInputChange}
-                        onSearch={filters.handleSearch}
-                        onClearFilters={filters.clearFilters}
-                        ariaLabel="Filtros de resultados"
-                        searchAriaLabel="Buscar resultado"
-                        placeholder="Buscar…"
-                    />
+        <>
+            <CrudSectionPanel
+                className="laboratorio-resultados"
+                filters={
                     <Select
                         allowClear
                         size="small"
@@ -158,36 +207,53 @@ export function ResultadosView() {
                         placeholder="Filtrar por estado"
                         options={ESTADO_OPTIONS}
                         value={estado}
-                        onChange={(value) => setEstado(value ?? undefined)}
+                        onChange={(value) => {
+                            setEstado(value ?? undefined)
+                            filters.handlePageChange(1, filters.pageSize)
+                        }}
                         aria-label="Filtrar por estado"
                     />
-                </>
-            }
-            actions={
-                <WorkflowEmployeeSelect
-                    value={empleadoId || undefined}
-                    onChange={(value) =>
-                        setEmpleadoId(typeof value === 'string' ? value : value[0] ?? '')
-                    }
-                    placeholder="Empleado validador"
+                }
+                actions={
+                    <WorkflowEmployeeSelect
+                        value={empleadoId || undefined}
+                        onChange={(value) =>
+                            setEmpleadoId(
+                                typeof value === 'string' ? value : value[0] ?? '',
+                            )
+                        }
+                        placeholder="Empleado"
+                    />
+                }
+                caption={formatRegistrosCaption(total, hasActiveFilters)}
+            >
+                <AppDataTable
+                    data={items}
+                    columns={columns}
+                    loading={isFetching}
+                    emptyText="No hay resultados registrados."
+                    getRowId={(row) => row.id}
+                    pagination={{
+                        page: filters.page,
+                        pageSize: filters.pageSize,
+                        total,
+                        pageSizeOptions: [10, 20, 50],
+                        onChange: filters.handlePageChange,
+                    }}
                 />
-            }
-            caption={formatRegistrosCaption(total, Boolean(estado))}
-        >
-            <AppDataTable
-                data={items}
-                columns={columns}
-                loading={isFetching}
-                emptyText="No hay resultados registrados."
-                getRowId={(row) => row.id}
-                pagination={{
-                    page: filters.page,
-                    pageSize: filters.pageSize,
-                    total,
-                    pageSizeOptions: [10, 20, 50],
-                    onChange: filters.handlePageChange,
-                }}
-            />
-        </CrudSectionPanel>
+            </CrudSectionPanel>
+
+            <Drawer
+                title="Detalle del resultado"
+                open={Boolean(detalle)}
+                onClose={() => setDetalle(null)}
+                width={720}
+                destroyOnHidden
+            >
+                {detalle ? (
+                    <ResultadoDetallesTable detalles={detalle.detalles} />
+                ) : null}
+            </Drawer>
+        </>
     )
 }

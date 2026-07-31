@@ -19,6 +19,8 @@ public sealed class ResultadoService(
     private const string NotFoundMessage = "Resultado no encontrado.";
     private const string EstadoRegistrado = "REGISTRADO";
     private const string EstadoValidado = "VALIDADO";
+    private const string EstadoEntregado = "ENTREGADO";
+    private const int ObservacionesMaxLength = 1000;
     private const string WorkflowDefinitionCode = "LABORATORIO";
     private const string ReferenceModule = "Laboratorio";
     private const string ReferenceEntity = "Solicitud";
@@ -31,6 +33,12 @@ public sealed class ResultadoService(
 
         if (request.SolicitudId is { } solicitudId && solicitudId != Guid.Empty)
             query = query.Where(x => x.SolicitudId == solicitudId);
+
+        if (!string.IsNullOrWhiteSpace(request.Estado))
+        {
+            var estado = request.Estado.Trim().ToUpperInvariant();
+            query = query.Where(x => x.Estado == estado);
+        }
 
         var ordered = query.OrderByDescending(x => x.CreatedAt);
 
@@ -203,11 +211,7 @@ public sealed class ResultadoService(
         resultado.Estado = EstadoValidado;
 
         if (!string.IsNullOrWhiteSpace(request.Observaciones))
-        {
-            resultado.Observaciones = string.IsNullOrWhiteSpace(resultado.Observaciones)
-                ? request.Observaciones.Trim()
-                : $"{resultado.Observaciones} | {request.Observaciones.Trim()}";
-        }
+            resultado.Observaciones = AppendObservaciones(resultado.Observaciones, request.Observaciones);
 
         resultado.UpdatedAt = DateTime.UtcNow;
 
@@ -239,6 +243,74 @@ public sealed class ResultadoService(
         await context.SaveChangesAsync(cancellationToken);
 
         return (await GetByIdAsync(resultado.Id, cancellationToken))!;
+    }
+
+    public async Task<ResultadoResponse> EntregarAsync(
+        Guid resultadoId,
+        EntregarResultadoRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var resultado = await context.Resultados
+            .Include(x => x.Solicitud)
+            .FirstOrDefaultAsync(x => x.Id == resultadoId, cancellationToken)
+            ?? throw new NotFoundException(NotFoundMessage);
+
+        if (resultado.Estado != EstadoValidado)
+            throw new BusinessException(
+                $"El resultado debe estar validado para poder entregarse (estado actual: {resultado.Estado}).");
+
+        var solicitud = resultado.Solicitud;
+
+        if (!string.Equals(solicitud.Estado, SolicitudEstados.Validado, StringComparison.OrdinalIgnoreCase))
+            throw new BusinessException(
+                $"La solicitud debe estar validada para entregar el resultado (estado actual: {solicitud.Estado}).");
+
+        if (!string.IsNullOrWhiteSpace(request.Observaciones))
+            resultado.Observaciones = AppendObservaciones(resultado.Observaciones, request.Observaciones);
+
+        resultado.Estado = EstadoEntregado;
+        resultado.UpdatedAt = DateTime.UtcNow;
+
+        var instance = solicitud.WorkflowInstanceId.HasValue
+            ? await workflowInstanceService.GetByIdAsync(solicitud.WorkflowInstanceId.Value, cancellationToken)
+            : await workflowInstanceService.GetByReferenceAsync(
+                ReferenceModule,
+                ReferenceEntity,
+                solicitud.Id,
+                cancellationToken);
+
+        if (instance is not null &&
+            string.Equals(instance.CurrentStateCode, SolicitudEstados.Validado, StringComparison.OrdinalIgnoreCase))
+        {
+            await workflowInstanceService.ExecuteAsync(
+                instance.Id,
+                new ExecuteWorkflowTransitionRequest(
+                    "ENTREGAR",
+                    request.EmpleadoId,
+                    "Resultado entregado."),
+                cancellationToken);
+        }
+
+        solicitud.Estado = SolicitudEstados.Entregado;
+        solicitud.UpdatedAt = DateTime.UtcNow;
+
+        await context.SaveChangesAsync(cancellationToken);
+
+        return (await GetByIdAsync(resultado.Id, cancellationToken))!;
+    }
+
+    private static string AppendObservaciones(string? existing, string addition)
+    {
+        var trimmed = addition.Trim();
+        var combined = string.IsNullOrWhiteSpace(existing)
+            ? trimmed
+            : $"{existing} | {trimmed}";
+
+        if (combined.Length > ObservacionesMaxLength)
+            throw new BusinessException(
+                $"Las observaciones no pueden superar {ObservacionesMaxLength} caracteres al concatenarse.");
+
+        return combined;
     }
 
     private static bool CalcularFueraDeRango(Parametro parametro, decimal? valorNumerico)

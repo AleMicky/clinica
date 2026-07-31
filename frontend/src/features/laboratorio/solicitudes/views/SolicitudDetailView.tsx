@@ -3,6 +3,7 @@ import {
     Button,
     Empty,
     Flex,
+    Popconfirm,
     Skeleton,
     Table,
     Tabs,
@@ -26,10 +27,12 @@ import { WorkflowEmployeeSelect } from '../../../workflow/components/WorkflowEmp
 import { useMuestras, useTomarMuestra } from '../../muestras/hooks/muestras.hooks'
 import { MUESTRA_ESTADO_COLORS, MUESTRA_ESTADO_LABELS } from '../../muestras/types/muestra.types'
 import {
+    useEntregarResultado,
     useRegistrarResultados,
     useResultados,
     useValidarResultado,
 } from '../../resultados/hooks/resultados.hooks'
+import { ResultadoDetallesTable } from '../../resultados/components/ResultadoDetallesTable'
 import {
     RESULTADO_ESTADO_COLORS,
     RESULTADO_ESTADO_LABELS,
@@ -85,6 +88,7 @@ export function SolicitudDetailView({ solicitudId }: SolicitudDetailViewProps) {
     const tomarMuestra = useTomarMuestra()
     const registrarResultados = useRegistrarResultados()
     const validarResultado = useValidarResultado()
+    const entregarResultado = useEntregarResultado()
 
     const [empleadoId, setEmpleadoId] = useState('')
     const [muestraModalOpen, setMuestraModalOpen] = useState(false)
@@ -120,6 +124,11 @@ export function SolicitudDetailView({ solicitudId }: SolicitudDetailViewProps) {
     }
 
     const canSendToCaja = solicitud.estado === 'BORRADOR'
+    const canTomarMuestra =
+        solicitud.estado === 'PENDIENTE_MUESTRA' || solicitud.estado === 'MUESTRA_TOMADA'
+    const canRegistrarResultados =
+        solicitud.estado === 'MUESTRA_TOMADA' || solicitud.estado === 'EN_PROCESO'
+    const canValidarResultado = solicitud.estado === 'RESULTADO_REGISTRADO'
     const pacienteNombre =
         paciente?.personaNombreCompleto?.trim() || 'Paciente no disponible'
     const origenLabel = SOLICITUD_ORIGEN_LABELS[solicitud.origen] ?? solicitud.origen
@@ -376,15 +385,20 @@ export function SolicitudDetailView({ solicitudId }: SolicitudDetailViewProps) {
                             ),
                             children: (
                                 <div className="solicitud-detail__tab-body">
-                                    <Flex justify="flex-end" className="solicitud-detail__tab-actions">
-                                        <Button
-                                            size="small"
-                                            type="primary"
-                                            onClick={() => setMuestraModalOpen(true)}
+                                    {canTomarMuestra ? (
+                                        <Flex
+                                            justify="flex-end"
+                                            className="solicitud-detail__tab-actions"
                                         >
-                                            Tomar muestra
-                                        </Button>
-                                    </Flex>
+                                            <Button
+                                                size="small"
+                                                type="primary"
+                                                onClick={() => setMuestraModalOpen(true)}
+                                            >
+                                                Tomar muestra
+                                            </Button>
+                                        </Flex>
+                                    ) : null}
                                     <Table
                                         size="small"
                                         rowKey="id"
@@ -458,30 +472,44 @@ export function SolicitudDetailView({ solicitudId }: SolicitudDetailViewProps) {
                                         wrap="wrap"
                                         className="solicitud-detail__tab-actions"
                                     >
-                                        <WorkflowEmployeeSelect
-                                            value={validarEmpleadoId || undefined}
-                                            onChange={(value) =>
-                                                setValidarEmpleadoId(
-                                                    typeof value === 'string'
-                                                        ? value
-                                                        : value[0] ?? '',
-                                                )
-                                            }
-                                            placeholder="Empleado validador"
-                                        />
-                                        <Button
-                                            size="small"
-                                            type="primary"
-                                            onClick={() => setResultadosModalOpen(true)}
-                                        >
-                                            Registrar resultados
-                                        </Button>
+                                        {(canValidarResultado ||
+                                            solicitud.estado === 'VALIDADO') && (
+                                            <WorkflowEmployeeSelect
+                                                value={validarEmpleadoId || undefined}
+                                                onChange={(value) =>
+                                                    setValidarEmpleadoId(
+                                                        typeof value === 'string'
+                                                            ? value
+                                                            : value[0] ?? '',
+                                                    )
+                                                }
+                                                placeholder="Empleado"
+                                            />
+                                        )}
+                                        {canRegistrarResultados ? (
+                                            <Button
+                                                size="small"
+                                                type="primary"
+                                                onClick={() => setResultadosModalOpen(true)}
+                                            >
+                                                Registrar resultados
+                                            </Button>
+                                        ) : null}
                                     </Flex>
                                     <Table
                                         size="small"
                                         rowKey="id"
                                         pagination={false}
                                         dataSource={resultados}
+                                        expandable={{
+                                            expandedRowRender: (record: Resultado) => (
+                                                <ResultadoDetallesTable
+                                                    detalles={record.detalles}
+                                                />
+                                            ),
+                                            rowExpandable: (record: Resultado) =>
+                                                record.detalles.length > 0,
+                                        }}
                                         locale={{
                                             emptyText: (
                                                 <Empty
@@ -510,10 +538,25 @@ export function SolicitudDetailView({ solicitudId }: SolicitudDetailViewProps) {
                                             {
                                                 title: 'Parámetros',
                                                 key: 'detalles',
-                                                width: 110,
+                                                width: 140,
                                                 align: 'center',
-                                                render: (_, record: Resultado) =>
-                                                    record.detalles.length,
+                                                render: (_, record: Resultado) => {
+                                                    const fuera = record.detalles.filter(
+                                                        (d) => d.fueraDeRango,
+                                                    ).length
+                                                    return (
+                                                        <Flex gap={4} justify="center">
+                                                            <Tag>
+                                                                {record.detalles.length}
+                                                            </Tag>
+                                                            {fuera > 0 ? (
+                                                                <Tag color="error">
+                                                                    {fuera} fuera
+                                                                </Tag>
+                                                            ) : null}
+                                                        </Flex>
+                                                    )
+                                                },
                                             },
                                             {
                                                 title: 'Validado',
@@ -524,32 +567,87 @@ export function SolicitudDetailView({ solicitudId }: SolicitudDetailViewProps) {
                                             {
                                                 title: '',
                                                 key: 'actions',
-                                                width: 100,
+                                                width: 120,
                                                 align: 'right',
-                                                render: (_, record: Resultado) =>
-                                                    record.estado === 'REGISTRADO' ? (
-                                                        <Button
-                                                            type="link"
-                                                            size="small"
-                                                            disabled={!validarEmpleadoId}
-                                                            loading={
-                                                                validarResultado.isPending
-                                                            }
-                                                            onClick={() =>
-                                                                void validarResultado.mutateAsync(
-                                                                    {
-                                                                        id: record.id,
-                                                                        data: {
-                                                                            empleadoId:
-                                                                                validarEmpleadoId,
+                                                render: (_, record: Resultado) => {
+                                                    if (
+                                                        record.estado === 'REGISTRADO' &&
+                                                        canValidarResultado
+                                                    ) {
+                                                        return (
+                                                            <Popconfirm
+                                                                title="Validar resultado"
+                                                                description="¿Confirma la validación de este resultado?"
+                                                                okText="Validar"
+                                                                cancelText="Cancelar"
+                                                                disabled={!validarEmpleadoId}
+                                                                okButtonProps={{
+                                                                    loading:
+                                                                        validarResultado.isPending,
+                                                                }}
+                                                                onConfirm={() =>
+                                                                    void validarResultado.mutateAsync(
+                                                                        {
+                                                                            id: record.id,
+                                                                            data: {
+                                                                                empleadoId:
+                                                                                    validarEmpleadoId,
+                                                                            },
                                                                         },
-                                                                    },
-                                                                )
-                                                            }
-                                                        >
-                                                            Validar
-                                                        </Button>
-                                                    ) : null,
+                                                                    )
+                                                                }
+                                                            >
+                                                                <Button
+                                                                    type="link"
+                                                                    size="small"
+                                                                    disabled={!validarEmpleadoId}
+                                                                >
+                                                                    Validar
+                                                                </Button>
+                                                            </Popconfirm>
+                                                        )
+                                                    }
+
+                                                    if (
+                                                        record.estado === 'VALIDADO' &&
+                                                        solicitud.estado === 'VALIDADO'
+                                                    ) {
+                                                        return (
+                                                            <Popconfirm
+                                                                title="Entregar resultado"
+                                                                description="¿Confirma la entrega de este resultado?"
+                                                                okText="Entregar"
+                                                                cancelText="Cancelar"
+                                                                disabled={!validarEmpleadoId}
+                                                                okButtonProps={{
+                                                                    loading:
+                                                                        entregarResultado.isPending,
+                                                                }}
+                                                                onConfirm={() =>
+                                                                    void entregarResultado.mutateAsync(
+                                                                        {
+                                                                            id: record.id,
+                                                                            data: {
+                                                                                empleadoId:
+                                                                                    validarEmpleadoId,
+                                                                            },
+                                                                        },
+                                                                    )
+                                                                }
+                                                            >
+                                                                <Button
+                                                                    type="link"
+                                                                    size="small"
+                                                                    disabled={!validarEmpleadoId}
+                                                                >
+                                                                    Entregar
+                                                                </Button>
+                                                            </Popconfirm>
+                                                        )
+                                                    }
+
+                                                    return null
+                                                },
                                             },
                                         ]}
                                     />

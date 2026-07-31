@@ -7,7 +7,7 @@ public class RegistrarResultadosRequestValidator : AbstractValidator<RegistrarRe
     public RegistrarResultadosRequestValidator()
     {
         RuleFor(x => x.EmpleadoId).NotEmpty();
-        RuleFor(x => x.Observaciones).MaximumLength(2000);
+        RuleFor(x => x.Observaciones).MaximumLength(1000);
 
         RuleFor(x => x.Lineas)
             .NotEmpty()

@@ -366,7 +366,6 @@ public sealed class SolicitudService(
                 PrecioUnitario = precio.ImporteFacturado,
                 Cantidad = linea.Cantidad,
                 EsDerivada = false,
-                LaboratorioExternoId = null,
                 Observaciones = StringNormalize.Optional(linea.Observaciones),
             });
         }
@@ -386,8 +385,6 @@ public sealed class SolicitudService(
                 d.PrecioUnitario,
                 d.Cantidad,
                 d.EsDerivada,
-                d.LaboratorioExternoId,
-                null,
                 d.Observaciones))
             .ToList();
 
@@ -422,8 +419,6 @@ public sealed class SolicitudService(
             .AsNoTracking()
             .Include(x => x.Detalles)
                 .ThenInclude(d => d.Prueba)
-            .Include(x => x.Detalles)
-                .ThenInclude(d => d.LaboratorioExterno)
             .Include(x => x.Pagos)
             .Where(predicate)
             .ToListAsync(cancellationToken);
@@ -440,8 +435,6 @@ public sealed class SolicitudService(
                 d.PrecioUnitario,
                 d.Cantidad,
                 d.EsDerivada,
-                d.LaboratorioExternoId,
-                d.LaboratorioExterno?.Nombre,
                 d.Observaciones))
             .ToList();
 
