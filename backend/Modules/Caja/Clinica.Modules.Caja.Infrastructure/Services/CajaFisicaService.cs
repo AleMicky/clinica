@@ -94,6 +94,20 @@ public sealed class CajaFisicaService(CajaDbContext context) : ICajaFisicaServic
         await context.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var entity = await context.Cajas.FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
+            ?? throw new NotFoundException("Caja no encontrada.");
+
+        var tieneTurnos = await context.TurnosCaja.AnyAsync(x => x.CajaId == id, cancellationToken);
+        if (tieneTurnos)
+            throw new BusinessException(
+                "No se puede eliminar la caja porque ya tiene turnos registrados.");
+
+        context.Cajas.Remove(entity);
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
     private static CajaResponse Map(CajaFisica x) => new(
         x.Id, x.Codigo, x.Nombre, x.Descripcion, x.Activo, x.CreatedAt, x.UpdatedAt);
 }

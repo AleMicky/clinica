@@ -193,6 +193,18 @@ export function useUpdateCaja() {
     })
 }
 
+export function useDeleteCaja() {
+    const qc = useQueryClient()
+    return useAppMutation({
+        mutationFn: (id: string) => cajaService.deleteCaja(id),
+        onSuccess: () => {
+            void qc.invalidateQueries({ queryKey: queryKeys.caja.cajas.all })
+            notify.success('Caja eliminada', 'Se eliminó correctamente.')
+        },
+        onError: (e) => notify.error('Error al eliminar caja', getApiErrorMessage(e)),
+    })
+}
+
 export function useCreateMetodoPago() {
     const qc = useQueryClient()
     return useAppMutation({

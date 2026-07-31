@@ -77,6 +77,16 @@ public static class CajaFisicaEndpoints
             })
             .WithName("Caja_ChangeCajaStatus");
 
+        cajas.MapDelete("/{id:guid}", async (
+                Guid id,
+                ICajaFisicaService service,
+                CancellationToken cancellationToken) =>
+            {
+                await service.DeleteAsync(id, cancellationToken);
+                return ApiResults.Ok("Caja eliminada correctamente.");
+            })
+            .WithName("Caja_DeleteCaja");
+
         return group;
     }
 }

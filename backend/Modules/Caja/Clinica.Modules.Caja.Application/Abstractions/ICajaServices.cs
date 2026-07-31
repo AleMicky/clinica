@@ -82,6 +82,8 @@ public interface ICajaFisicaService
     Task<CajaResponse> UpdateAsync(Guid id, UpdateCajaRequest request, CancellationToken cancellationToken = default);
 
     Task ChangeStatusAsync(Guid id, ChangeCajaStatusRequest request, CancellationToken cancellationToken = default);
+
+    Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 }
 
 public interface ITurnoCajaService

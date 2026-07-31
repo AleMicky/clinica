@@ -74,6 +74,10 @@ export const cajaService = {
         return patch<string, { activo: boolean }>(cajaEndpoints.cajas.estado(id), { activo })
     },
 
+    deleteCaja(id: string) {
+        return del<string>(cajaEndpoints.cajas.byId(id))
+    },
+
     getTurnoAbierto() {
         return get<TurnoCaja | null>(cajaEndpoints.turnos.abierto)
     },
