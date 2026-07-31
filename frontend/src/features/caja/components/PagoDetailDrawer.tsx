@@ -7,11 +7,13 @@ import {
     Spin,
     Table,
     Tag,
+    Tooltip,
     Typography,
 } from 'antd'
 import { StopOutlined } from '@ant-design/icons'
 
 import type { PagoDetalleCompleto } from '../types/caja.types'
+import { ANULAR_PAGO_DISABLED_HINT } from '../utils/pago-anular'
 
 const { Text, Title } = Typography
 const { useBreakpoint } = Grid
@@ -27,6 +29,7 @@ type PagoDetailDrawerProps = {
     open: boolean
     pago: PagoDetalleCompleto | undefined
     loading: boolean
+    canAnular: boolean
     onClose: () => void
     onAnular: () => void
 }
@@ -39,12 +42,13 @@ export function PagoDetailDrawer({
     open,
     pago,
     loading,
+    canAnular,
     onClose,
     onAnular,
 }: PagoDetailDrawerProps) {
     const screens = useBreakpoint()
     const drawerWidth = screens.md ? 560 : '95%'
-    const canAnular = pago?.estado === 'CONFIRMADO'
+    const showAnularDisabled = pago?.estado === 'CONFIRMADO' && !canAnular
 
     return (
         <Drawer
@@ -60,6 +64,12 @@ export function PagoDetailDrawer({
                         <Button danger icon={<StopOutlined />} onClick={onAnular}>
                             Anular
                         </Button>
+                    ) : showAnularDisabled ? (
+                        <Tooltip title={ANULAR_PAGO_DISABLED_HINT}>
+                            <Button danger disabled icon={<StopOutlined />}>
+                                Anular
+                            </Button>
+                        </Tooltip>
                     ) : null}
                     <Button onClick={onClose}>Cerrar</Button>
                 </Flex>

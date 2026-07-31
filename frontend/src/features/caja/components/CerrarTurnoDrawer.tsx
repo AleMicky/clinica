@@ -157,6 +157,8 @@ export function CerrarTurnoDrawer({
                     >
                         <Input.TextArea
                             rows={3}
+                            maxLength={2000}
+                            showCount
                             placeholder={
                                 requiereObs
                                     ? 'Obligatoria por diferencia'

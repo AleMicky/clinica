@@ -2,10 +2,20 @@ import { AnularPagoDrawer } from '../components/AnularPagoDrawer'
 import { PagoDetailDrawer } from '../components/PagoDetailDrawer'
 import { PagosFiltersBar } from '../components/PagosFiltersBar'
 import { PagosTable } from '../components/PagosTable'
+import { ReciboDrawer } from '../components/ReciboDrawer'
 import { usePagosView } from '../hooks/use-pagos-view'
 
 export function PagosView() {
-    const { loading, caption, filters, table, detailDrawer, anularDrawer } = usePagosView()
+    const {
+        loading,
+        caption,
+        turnoAbiertoId,
+        filters,
+        table,
+        detailDrawer,
+        reciboDrawer,
+        anularDrawer,
+    } = usePagosView()
 
     return (
         <>
@@ -31,6 +41,7 @@ export function PagosView() {
                         total={table.total}
                         page={table.page}
                         pageSize={table.pageSize}
+                        turnoAbiertoId={turnoAbiertoId}
                         onPageChange={table.onPageChange}
                         onOpen={table.onOpen}
                         onAnular={table.onAnular}
@@ -44,8 +55,17 @@ export function PagosView() {
                 open={detailDrawer.open}
                 pago={detailDrawer.pago}
                 loading={detailDrawer.loading}
+                canAnular={detailDrawer.canAnular}
                 onClose={detailDrawer.onClose}
                 onAnular={detailDrawer.onAnular}
+            />
+
+            <ReciboDrawer
+                open={reciboDrawer.open}
+                recibo={reciboDrawer.recibo}
+                loading={reciboDrawer.loading}
+                notFound={reciboDrawer.notFound}
+                onClose={reciboDrawer.onClose}
             />
 
             <AnularPagoDrawer

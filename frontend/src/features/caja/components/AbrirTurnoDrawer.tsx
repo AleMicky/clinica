@@ -111,6 +111,8 @@ export function AbrirTurnoDrawer({
                 <Form.Item label="Observación">
                     <Input.TextArea
                         rows={3}
+                        maxLength={2000}
+                        showCount
                         placeholder="Opcional"
                         value={observacion}
                         onChange={(event) => setObservacion(event.target.value)}

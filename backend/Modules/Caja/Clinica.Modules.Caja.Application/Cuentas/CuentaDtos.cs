@@ -21,7 +21,8 @@ public sealed record PagoResponse(
     string Estado,
     DateTime FechaPago,
     string? Observaciones,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    Guid? TurnoCajaId = null);
 
 public sealed record CuentaResponse(
     Guid Id,

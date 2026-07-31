@@ -1,13 +1,15 @@
 import { useState } from 'react'
 
 import { usePagedSearchFilters } from '../../../shared/hooks/use-paged-search-filters'
-import { useAnularPago, usePago, usePagos } from './caja.hooks'
+import { useAnularPago, usePago, usePagos, useRecibo, useTurnoAbierto } from './caja.hooks'
 import type { AnularPagoPayload, PagoListItem } from '../types/caja.types'
+import { canAnularPago } from '../utils/pago-anular'
 
 export function usePagosView() {
     const filters = usePagedSearchFilters({ defaultPageSize: 10 })
     const [estadoFilter, setEstadoFilter] = useState<string | undefined>(undefined)
     const [detailPagoId, setDetailPagoId] = useState<string | null>(null)
+    const [reciboPagoId, setReciboPagoId] = useState<string | null>(null)
     const [anularPago, setAnularPago] = useState<PagoListItem | null>(null)
 
     const query = {
@@ -17,8 +19,16 @@ export function usePagosView() {
         estado: estadoFilter || undefined,
     }
 
+    const { data: turno } = useTurnoAbierto()
+    const turnoAbiertoId = turno?.id ?? null
+
     const { data, isFetching } = usePagos(query)
     const { data: pagoDetalle, isFetching: detailLoading } = usePago(detailPagoId ?? undefined)
+    const {
+        data: recibo,
+        isFetching: reciboLoading,
+        isError: reciboError,
+    } = useRecibo(reciboPagoId ?? undefined)
     const anularMutation = useAnularPago()
 
     const items = data?.items ?? []
@@ -29,6 +39,7 @@ export function usePagosView() {
     return {
         loading: isFetching,
         caption: `${total} pago${total === 1 ? '' : 's'}`,
+        turnoAbiertoId,
         filters: {
             searchInput: filters.searchInput,
             hasActiveFilters: filters.hasActiveFilters || hasExtraFilters,
@@ -53,8 +64,19 @@ export function usePagosView() {
             pageSize: filters.pageSize,
             onPageChange: filters.handlePageChange,
             onOpen: (pago: PagoListItem) => setDetailPagoId(pago.id),
-            onAnular: (pago: PagoListItem) => setAnularPago(pago),
-            onRecibo: (pago: PagoListItem) => setDetailPagoId(pago.id),
+            onAnular: (pago: PagoListItem) => {
+                if (
+                    !canAnularPago({
+                        estado: pago.estado,
+                        turnoCajaId: pago.turnoCajaId,
+                        turnoAbiertoId,
+                    })
+                ) {
+                    return
+                }
+                setAnularPago(pago)
+            },
+            onRecibo: (pago: PagoListItem) => setReciboPagoId(pago.id),
             anulatingId: anularMutation.isPending
                 ? (anularMutation.variables?.id ?? null)
                 : null,
@@ -63,9 +85,23 @@ export function usePagosView() {
             open: Boolean(detailPagoId),
             pago: pagoDetalle,
             loading: detailLoading,
+            canAnular: canAnularPago({
+                estado: pagoDetalle?.estado,
+                turnoCajaId: pagoDetalle?.turnoCajaId,
+                turnoAbiertoId,
+            }),
             onClose: () => setDetailPagoId(null),
             onAnular: () => {
                 if (!pagoDetalle) return
+                if (
+                    !canAnularPago({
+                        estado: pagoDetalle.estado,
+                        turnoCajaId: pagoDetalle.turnoCajaId,
+                        turnoAbiertoId,
+                    })
+                ) {
+                    return
+                }
                 setAnularPago({
                     id: pagoDetalle.id,
                     numero: pagoDetalle.numero,
@@ -78,6 +114,13 @@ export function usePagosView() {
                     observaciones: pagoDetalle.observaciones,
                 })
             },
+        },
+        reciboDrawer: {
+            open: Boolean(reciboPagoId),
+            recibo,
+            loading: reciboLoading,
+            notFound: reciboError,
+            onClose: () => setReciboPagoId(null),
         },
         anularDrawer: {
             open: Boolean(anularPago),

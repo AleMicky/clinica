@@ -27,15 +27,18 @@ import {
 import { WorkflowEmployeeSelect } from '../../workflow/components/WorkflowEmployeeSelect'
 import { AnularPagoDrawer } from '../components/AnularPagoDrawer'
 import { PagoDetailDrawer } from '../components/PagoDetailDrawer'
+import { ReciboDrawer } from '../components/ReciboDrawer'
 import {
     useAnularPago,
     useCuenta,
     useMetodosPago,
     usePago,
+    useRecibo,
     useRegistrarPago,
     useTurnoAbierto,
 } from '../hooks/caja.hooks'
 import type { AnularPagoPayload, Pago } from '../types/caja.types'
+import { ANULAR_PAGO_DISABLED_HINT, canAnularPago } from '../utils/pago-anular'
 
 const { Title, Text } = Typography
 
@@ -67,8 +70,15 @@ export function CuentaDetailView({ cuentaId }: CuentaDetailViewProps) {
     const [empleadoId, setEmpleadoId] = useState('')
     const [ultimoPago, setUltimoPago] = useState<{ numero: string; recibo?: string } | null>(null)
     const [detailPagoId, setDetailPagoId] = useState<string | null>(null)
+    const [reciboPagoId, setReciboPagoId] = useState<string | null>(null)
     const [anularTarget, setAnularTarget] = useState<Pago | null>(null)
     const { data: pagoDetalle, isFetching: detailLoading } = usePago(detailPagoId ?? undefined)
+    const {
+        data: recibo,
+        isFetching: reciboLoading,
+        isError: reciboError,
+    } = useRecibo(reciboPagoId ?? undefined)
+    const turnoAbiertoId = turno?.id ?? null
 
     const totalIngresado = useMemo(
         () => Math.round(lineas.reduce((acc, l) => acc + (l.importe || 0), 0) * 100) / 100,
@@ -84,7 +94,7 @@ export function CuentaDetailView({ cuentaId }: CuentaDetailViewProps) {
     }
 
     const canPay = cuenta.estado === 'ABIERTA' || cuenta.estado === 'PARCIAL'
-    const diferencia = Math.round((totalIngresado - cuenta.saldo) * 100) / 100
+    const pendienteTrasCobro = Math.round((cuenta.saldo - totalIngresado) * 100) / 100
 
     const metodosInvalidos = lineas.some((linea) => {
         if (!linea.metodoPagoId || linea.importe <= 0) return true
@@ -99,7 +109,6 @@ export function CuentaDetailView({ cuentaId }: CuentaDetailViewProps) {
         canPay &&
         Boolean(empleadoId) &&
         !metodosInvalidos &&
-        Math.abs(diferencia) < 0.009 &&
         totalIngresado > 0 &&
         totalIngresado <= cuenta.saldo
 
@@ -221,7 +230,13 @@ export function CuentaDetailView({ cuentaId }: CuentaDetailViewProps) {
                                     title: '',
                                     key: 'actions',
                                     render: (_: unknown, pago: Pago) => {
-                                        const canAnular = pago.estado === 'CONFIRMADO'
+                                        const allowAnular = canAnularPago({
+                                            estado: pago.estado,
+                                            turnoCajaId: pago.turnoCajaId,
+                                            turnoAbiertoId,
+                                        })
+                                        const showAnularHint =
+                                            pago.estado === 'CONFIRMADO' && !allowAnular
                                         return (
                                             <Space>
                                                 <Tooltip title="Ver detalle">
@@ -238,11 +253,11 @@ export function CuentaDetailView({ cuentaId }: CuentaDetailViewProps) {
                                                         type="text"
                                                         size="small"
                                                         icon={<FileTextOutlined />}
-                                                        onClick={() => setDetailPagoId(pago.id)}
+                                                        onClick={() => setReciboPagoId(pago.id)}
                                                         aria-label="Ver recibo"
                                                     />
                                                 </Tooltip>
-                                                {canAnular ? (
+                                                {allowAnular ? (
                                                     <Tooltip title="Anular pago">
                                                         <Button
                                                             type="text"
@@ -256,6 +271,17 @@ export function CuentaDetailView({ cuentaId }: CuentaDetailViewProps) {
                                                             }
                                                             onClick={() => setAnularTarget(pago)}
                                                             aria-label="Anular pago"
+                                                        />
+                                                    </Tooltip>
+                                                ) : showAnularHint ? (
+                                                    <Tooltip title={ANULAR_PAGO_DISABLED_HINT}>
+                                                        <Button
+                                                            type="text"
+                                                            size="small"
+                                                            danger
+                                                            disabled
+                                                            icon={<StopOutlined />}
+                                                            aria-label="Anular pago no disponible"
                                                         />
                                                     </Tooltip>
                                                 ) : null}
@@ -336,6 +362,7 @@ export function CuentaDetailView({ cuentaId }: CuentaDetailViewProps) {
                                             <Form.Item label={index === 0 ? 'Referencia' : ' '}>
                                                 <Input
                                                     style={{ width: 180 }}
+                                                    maxLength={100}
                                                     value={linea.numeroReferencia}
                                                     onChange={(e) =>
                                                         setLineas((prev) =>
@@ -390,9 +417,17 @@ export function CuentaDetailView({ cuentaId }: CuentaDetailViewProps) {
                                 <Descriptions.Item label="Total ingresado">
                                     {formatMoney(totalIngresado)}
                                 </Descriptions.Item>
-                                <Descriptions.Item label="Diferencia">
-                                    <Tag color={Math.abs(diferencia) < 0.009 ? 'green' : 'orange'}>
-                                        {formatMoney(diferencia)}
+                                <Descriptions.Item label="Pendiente">
+                                    <Tag
+                                        color={
+                                            pendienteTrasCobro <= 0.009
+                                                ? 'green'
+                                                : totalIngresado > cuenta.saldo
+                                                  ? 'red'
+                                                  : 'orange'
+                                        }
+                                    >
+                                        {formatMoney(Math.max(0, pendienteTrasCobro))}
                                     </Tag>
                                 </Descriptions.Item>
                             </Descriptions>
@@ -400,6 +435,8 @@ export function CuentaDetailView({ cuentaId }: CuentaDetailViewProps) {
                             <Form.Item label="Observaciones">
                                 <Input.TextArea
                                     rows={2}
+                                    maxLength={2000}
+                                    showCount
                                     value={observaciones}
                                     onChange={(e) => setObservaciones(e.target.value)}
                                 />
@@ -444,9 +481,23 @@ export function CuentaDetailView({ cuentaId }: CuentaDetailViewProps) {
                 open={Boolean(detailPagoId)}
                 pago={pagoDetalle}
                 loading={detailLoading}
+                canAnular={canAnularPago({
+                    estado: pagoDetalle?.estado,
+                    turnoCajaId: pagoDetalle?.turnoCajaId,
+                    turnoAbiertoId,
+                })}
                 onClose={() => setDetailPagoId(null)}
                 onAnular={() => {
                     if (!pagoDetalle) return
+                    if (
+                        !canAnularPago({
+                            estado: pagoDetalle.estado,
+                            turnoCajaId: pagoDetalle.turnoCajaId,
+                            turnoAbiertoId,
+                        })
+                    ) {
+                        return
+                    }
                     setAnularTarget({
                         id: pagoDetalle.id,
                         numero: pagoDetalle.numero,
@@ -455,8 +506,17 @@ export function CuentaDetailView({ cuentaId }: CuentaDetailViewProps) {
                         fechaPago: pagoDetalle.fechaPago,
                         observaciones: pagoDetalle.observaciones,
                         createdAt: pagoDetalle.createdAt,
+                        turnoCajaId: pagoDetalle.turnoCajaId,
                     })
                 }}
+            />
+
+            <ReciboDrawer
+                open={Boolean(reciboPagoId)}
+                recibo={recibo}
+                loading={reciboLoading}
+                notFound={reciboError}
+                onClose={() => setReciboPagoId(null)}
             />
 
             <AnularPagoDrawer

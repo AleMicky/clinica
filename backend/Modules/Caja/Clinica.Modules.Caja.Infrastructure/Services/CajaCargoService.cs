@@ -208,7 +208,8 @@ public sealed class CajaCargoService(
                 p.Estado,
                 p.FechaPago,
                 p.Observaciones,
-                p.CreatedAt))
+                p.CreatedAt,
+                p.TurnoCajaId))
             .ToList();
 
         return new CuentaResponse(

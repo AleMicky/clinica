@@ -239,6 +239,8 @@ export function CajaOperacionView() {
                     <Form.Item label="Observación">
                         <Input.TextArea
                             rows={2}
+                            maxLength={2000}
+                            showCount
                             value={obsApertura}
                             onChange={(e) => setObsApertura(e.target.value)}
                         />
@@ -251,6 +253,9 @@ export function CajaOperacionView() {
                 open={openMovimiento != null}
                 onCancel={() => setOpenMovimiento(null)}
                 confirmLoading={registrarIngreso.isPending || registrarEgreso.isPending}
+                okButtonProps={{
+                    disabled: !conceptoId || importeMov <= 0,
+                }}
                 onOk={() => {
                     if (!conceptoId || importeMov <= 0) return
                     const payload = {
@@ -305,6 +310,8 @@ export function CajaOperacionView() {
                     <Form.Item label="Descripción">
                         <Input.TextArea
                             rows={2}
+                            maxLength={2000}
+                            showCount
                             value={descMov}
                             onChange={(e) => setDescMov(e.target.value)}
                         />
@@ -370,6 +377,8 @@ export function CajaOperacionView() {
                         >
                             <Input.TextArea
                                 rows={2}
+                                maxLength={2000}
+                                showCount
                                 value={obsArqueo}
                                 onChange={(e) => setObsArqueo(e.target.value)}
                             />

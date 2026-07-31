@@ -25,6 +25,7 @@ export type Pago = {
     fechaPago: string
     observaciones?: string | null
     createdAt: string
+    turnoCajaId?: string | null
 }
 
 export type CuentaListItem = {

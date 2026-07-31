@@ -5,6 +5,7 @@ import { EyeOutlined, FileTextOutlined, StopOutlined } from '@ant-design/icons'
 
 import { AppDataTable } from '../../../shared/components/ui/data-table/AppDataTable'
 import type { PagoListItem } from '../types/caja.types'
+import { ANULAR_PAGO_DISABLED_HINT, canAnularPago } from '../utils/pago-anular'
 
 const columnHelper = createColumnHelper<PagoListItem>()
 
@@ -21,6 +22,7 @@ type PagosTableProps = {
     total: number
     page: number
     pageSize: number
+    turnoAbiertoId: string | null
     onPageChange: (page: number, pageSize: number) => void
     onOpen: (pago: PagoListItem) => void
     onAnular: (pago: PagoListItem) => void
@@ -38,6 +40,7 @@ export function PagosTable({
     total,
     page,
     pageSize,
+    turnoAbiertoId,
     onPageChange,
     onOpen,
     onAnular,
@@ -73,7 +76,12 @@ export function PagosTable({
                     header: '',
                     cell: ({ row }) => {
                         const pago = row.original
-                        const canAnular = pago.estado === 'CONFIRMADO'
+                        const allowAnular = canAnularPago({
+                            estado: pago.estado,
+                            turnoCajaId: pago.turnoCajaId,
+                            turnoAbiertoId,
+                        })
+                        const showAnularHint = pago.estado === 'CONFIRMADO' && !allowAnular
                         return (
                             <Space>
                                 <Tooltip title="Ver detalle">
@@ -94,7 +102,7 @@ export function PagosTable({
                                         aria-label="Ver recibo"
                                     />
                                 </Tooltip>
-                                {canAnular ? (
+                                {allowAnular ? (
                                     <Tooltip title="Anular pago">
                                         <Button
                                             type="text"
@@ -106,13 +114,24 @@ export function PagosTable({
                                             aria-label="Anular pago"
                                         />
                                     </Tooltip>
+                                ) : showAnularHint ? (
+                                    <Tooltip title={ANULAR_PAGO_DISABLED_HINT}>
+                                        <Button
+                                            type="text"
+                                            size="small"
+                                            danger
+                                            disabled
+                                            icon={<StopOutlined />}
+                                            aria-label="Anular pago no disponible"
+                                        />
+                                    </Tooltip>
                                 ) : null}
                             </Space>
                         )
                     },
                 }),
             ] as ColumnDef<PagoListItem, unknown>[],
-        [onOpen, onAnular, onRecibo, anulatingId],
+        [onOpen, onAnular, onRecibo, anulatingId, turnoAbiertoId],
     )
 
     return (

@@ -1,4 +1,4 @@
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { useAppMutation } from '../../../shared/hooks/use-app-mutation'
 import { useAppQuery } from '../../../shared/hooks/use-app-query'
@@ -114,10 +114,12 @@ export function usePago(id: string | undefined) {
 }
 
 export function useRecibo(pagoId: string | undefined) {
-    return useAppQuery({
+    // Sin notify global: el drawer muestra “Sin recibo asociado” ante 404.
+    return useQuery({
         queryKey: queryKeys.caja.pagos.recibo(pagoId ?? ''),
         queryFn: () => cajaService.getRecibo(pagoId!),
         enabled: Boolean(pagoId),
+        retry: false,
     })
 }
 
