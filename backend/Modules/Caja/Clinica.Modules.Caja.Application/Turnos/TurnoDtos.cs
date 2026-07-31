@@ -7,8 +7,10 @@ public sealed record TurnoCajaResponse(
     Guid CajaId,
     string CajaCodigo,
     string CajaNombre,
-    Guid UsuarioAperturaId,
-    Guid? UsuarioCierreId,
+    Guid EmpleadoAperturaId,
+    string? EmpleadoAperturaNombre,
+    Guid? EmpleadoCierreId,
+    string? EmpleadoCierreNombre,
     DateTime FechaApertura,
     DateTime? FechaCierre,
     decimal MontoInicial,
@@ -32,5 +34,5 @@ public sealed class TurnoCajaPagedRequest : PagedRequest
 {
     public Guid? CajaId { get; set; }
     public string? Estado { get; set; }
-    public Guid? UsuarioId { get; set; }
+    public Guid? EmpleadoId { get; set; }
 }

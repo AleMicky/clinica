@@ -4,6 +4,8 @@ using Clinica.Modules.Caja.Domain.Entities;
 using Clinica.Modules.Caja.Infrastructure.Persistence;
 using Clinica.Modules.Parametros.Application.Abstractions;
 using Clinica.Modules.Parametros.Application.Correlativos;
+using Clinica.Modules.Personas.Domain.Entities;
+using Clinica.Modules.RecursosHumanos.Domain.Entities;
 using Clinica.SharedKernel.Abstractions;
 using Clinica.SharedKernel.Exceptions;
 using Clinica.SharedKernel.Pagination;
@@ -37,17 +39,17 @@ public sealed class TurnoCajaService(
         if (cajaConTurno)
             throw new BusinessException("La caja ya tiene un turno abierto.");
 
-        var usuarioConTurno = await context.TurnosCaja.AnyAsync(
-            x => x.UsuarioAperturaId == userId && x.Estado == TurnoCajaEstados.Abierto,
+        var empleadoConTurno = await context.TurnosCaja.AnyAsync(
+            x => x.EmpleadoAperturaId == userId && x.Estado == TurnoCajaEstados.Abierto,
             cancellationToken);
-        if (usuarioConTurno)
-            throw new BusinessException("El usuario ya tiene un turno abierto.");
+        if (empleadoConTurno)
+            throw new BusinessException("El empleado ya tiene un turno abierto.");
 
         var turno = new TurnoCaja
         {
             Id = Guid.NewGuid(),
             CajaId = caja.Id,
-            UsuarioAperturaId = userId,
+            EmpleadoAperturaId = userId,
             FechaApertura = DateTime.UtcNow,
             MontoInicial = request.MontoInicial,
             Estado = TurnoCajaEstados.Abierto,
@@ -104,7 +106,7 @@ public sealed class TurnoCajaService(
             return null;
 
         var turnoId = await context.TurnosCaja.AsNoTracking()
-            .Where(x => x.UsuarioAperturaId == userId && x.Estado == TurnoCajaEstados.Abierto)
+            .Where(x => x.EmpleadoAperturaId == userId && x.Estado == TurnoCajaEstados.Abierto)
             .Select(x => x.Id)
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -141,7 +143,7 @@ public sealed class TurnoCajaService(
         turno.MontoContado = request.MontoContado;
         turno.Diferencia = Math.Round(request.MontoContado - efectivoEsperado, 2, MidpointRounding.AwayFromZero);
         turno.FechaCierre = DateTime.UtcNow;
-        turno.UsuarioCierreId = userId;
+        turno.EmpleadoCierreId = userId;
         turno.ObservacionCierre = string.IsNullOrWhiteSpace(request.ObservacionCierre)
             ? null
             : request.ObservacionCierre.Trim();
@@ -166,51 +168,169 @@ public sealed class TurnoCajaService(
         if (!string.IsNullOrWhiteSpace(request.Estado))
             query = query.Where(x => x.Estado == request.Estado.Trim().ToUpperInvariant());
 
-        if (request.UsuarioId.HasValue)
-            query = query.Where(x => x.UsuarioAperturaId == request.UsuarioId.Value);
+        if (request.EmpleadoId.HasValue)
+            query = query.Where(x => x.EmpleadoAperturaId == request.EmpleadoId.Value);
 
-        return await query
-            .OrderByDescending(x => x.FechaApertura)
-            .Select(x => new TurnoCajaResponse(
-                x.Id,
-                x.CajaId,
-                x.Caja.Codigo,
-                x.Caja.Nombre,
-                x.UsuarioAperturaId,
-                x.UsuarioCierreId,
-                x.FechaApertura,
-                x.FechaCierre,
-                x.MontoInicial,
-                x.MontoEsperado,
-                x.MontoContado,
-                x.Diferencia,
-                x.Estado,
-                x.ObservacionApertura,
-                x.ObservacionCierre))
+        var page = await ProjectTurnos(query.OrderByDescending(x => x.FechaApertura))
             .ToPagedResultAsync(request, cancellationToken);
+
+        return await WithEmpleadoNombresAsync(page, cancellationToken);
     }
 
     public async Task<TurnoCajaResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await context.TurnosCaja.AsNoTracking()
-            .Where(x => x.Id == id)
-            .Select(x => new TurnoCajaResponse(
-                x.Id,
-                x.CajaId,
-                x.Caja.Codigo,
-                x.Caja.Nombre,
-                x.UsuarioAperturaId,
-                x.UsuarioCierreId,
-                x.FechaApertura,
-                x.FechaCierre,
-                x.MontoInicial,
-                x.MontoEsperado,
-                x.MontoContado,
-                x.Diferencia,
-                x.Estado,
-                x.ObservacionApertura,
-                x.ObservacionCierre))
+        var turno = await ProjectTurnos(
+                context.TurnosCaja.AsNoTracking().Where(x => x.Id == id))
             .FirstOrDefaultAsync(cancellationToken);
+
+        if (turno is null)
+            return null;
+
+        var nombres = await ResolveEmpleadoNombresAsync(
+            [turno.EmpleadoAperturaId, turno.EmpleadoCierreId],
+            cancellationToken);
+
+        return EnrichNombre(turno, nombres);
+    }
+
+    private static IQueryable<TurnoCajaResponse> ProjectTurnos(IQueryable<TurnoCaja> turnos) =>
+        turnos.Select(t => new TurnoCajaResponse(
+            t.Id,
+            t.CajaId,
+            t.Caja.Codigo,
+            t.Caja.Nombre,
+            t.EmpleadoAperturaId,
+            null,
+            t.EmpleadoCierreId,
+            null,
+            t.FechaApertura,
+            t.FechaCierre,
+            t.MontoInicial,
+            t.MontoEsperado,
+            t.MontoContado,
+            t.Diferencia,
+            t.Estado,
+            t.ObservacionApertura,
+            t.ObservacionCierre));
+
+    private async Task<PagedResult<TurnoCajaResponse>> WithEmpleadoNombresAsync(
+        PagedResult<TurnoCajaResponse> page,
+        CancellationToken cancellationToken)
+    {
+        if (page.Items.Count == 0)
+            return page;
+
+        var ids = page.Items
+            .SelectMany(x => new Guid?[] { x.EmpleadoAperturaId, x.EmpleadoCierreId })
+            .ToList();
+
+        var nombres = await ResolveEmpleadoNombresAsync(ids, cancellationToken);
+        var enriched = page.Items.Select(x => EnrichNombre(x, nombres)).ToList();
+
+        return new PagedResult<TurnoCajaResponse>(
+            enriched,
+            page.TotalRecords,
+            page.Page,
+            page.PageSize);
+    }
+
+    private async Task<Dictionary<Guid, string>> ResolveEmpleadoNombresAsync(
+        IEnumerable<Guid?> ids,
+        CancellationToken cancellationToken)
+    {
+        var idList = ids
+            .Where(x => x.HasValue && x.Value != Guid.Empty)
+            .Select(x => x!.Value)
+            .Distinct()
+            .ToList();
+
+        if (idList.Count == 0)
+            return [];
+
+        var result = new Dictionary<Guid, string>();
+
+        // Los turnos guardan UserId (seguridad.usuarios) en EmpleadoAperturaId / EmpleadoCierreId.
+        var usuarios = await context.Set<UsuarioLookup>().AsNoTracking()
+            .Where(x => idList.Contains(x.Id))
+            .Select(x => new { x.Id, x.NombreCompleto, x.PersonaId })
+            .ToListAsync(cancellationToken);
+
+        var personaIds = usuarios
+            .Where(x => x.PersonaId.HasValue)
+            .Select(x => x.PersonaId!.Value)
+            .Distinct()
+            .ToList();
+
+        Dictionary<Guid, string> nombresPorPersona = [];
+        if (personaIds.Count > 0)
+        {
+            nombresPorPersona = await context.Set<Persona>().AsNoTracking()
+                .Where(x => personaIds.Contains(x.Id))
+                .Select(x => new
+                {
+                    x.Id,
+                    Nombre = (x.Nombres + " " + x.ApellidoPaterno + " " + x.ApellidoMaterno).Trim(),
+                })
+                .ToDictionaryAsync(x => x.Id, x => x.Nombre, cancellationToken);
+        }
+
+        foreach (var usuario in usuarios)
+        {
+            string? nombre = null;
+            if (usuario.PersonaId is Guid personaId
+                && nombresPorPersona.TryGetValue(personaId, out var desdePersona)
+                && !string.IsNullOrWhiteSpace(desdePersona))
+            {
+                nombre = desdePersona;
+            }
+            else if (!string.IsNullOrWhiteSpace(usuario.NombreCompleto))
+            {
+                nombre = usuario.NombreCompleto.Trim();
+            }
+
+            if (!string.IsNullOrWhiteSpace(nombre))
+                result[usuario.Id] = nombre;
+        }
+
+        // Fallback si algún Id fuera realmente Empleado.Id (no UserId).
+        var missing = idList.Where(id => !result.ContainsKey(id)).ToList();
+        if (missing.Count > 0)
+        {
+            var desdeEmpleado = await (
+                from e in context.Set<Empleado>().AsNoTracking()
+                join p in context.Set<Persona>().AsNoTracking() on e.PersonaId equals p.Id
+                where missing.Contains(e.Id)
+                select new
+                {
+                    e.Id,
+                    Nombre = (p.Nombres + " " + p.ApellidoPaterno + " " + p.ApellidoMaterno).Trim(),
+                })
+                .ToListAsync(cancellationToken);
+
+            foreach (var row in desdeEmpleado)
+            {
+                if (!string.IsNullOrWhiteSpace(row.Nombre))
+                    result[row.Id] = row.Nombre;
+            }
+        }
+
+        return result;
+    }
+
+    private static TurnoCajaResponse EnrichNombre(
+        TurnoCajaResponse turno,
+        IReadOnlyDictionary<Guid, string> nombres)
+    {
+        nombres.TryGetValue(turno.EmpleadoAperturaId, out var apertura);
+        string? cierre = null;
+        if (turno.EmpleadoCierreId is Guid cierreId)
+            nombres.TryGetValue(cierreId, out cierre);
+
+        return turno with
+        {
+            EmpleadoAperturaNombre = string.IsNullOrWhiteSpace(apertura) ? null : apertura,
+            EmpleadoCierreNombre = string.IsNullOrWhiteSpace(cierre) ? null : cierre,
+        };
     }
 
     private async Task<decimal> CalcularEfectivoEsperadoAsync(Guid turnoId, CancellationToken cancellationToken)
@@ -231,7 +351,6 @@ public sealed class TurnoCajaService(
             .Select(x => x.MontoInicial)
             .FirstAsync(cancellationToken);
 
-        // Si el fondo inicial ya está como movimiento, no sumar MontoInicial aparte.
         var tieneFondoMovimiento = movimientos.Any(x => x.EsFondo);
         var baseInicial = tieneFondoMovimiento ? 0m : turno;
 

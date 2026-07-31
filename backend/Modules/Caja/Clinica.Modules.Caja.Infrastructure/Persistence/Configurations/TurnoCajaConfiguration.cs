@@ -22,7 +22,7 @@ public sealed class TurnoCajaConfiguration : BaseEntityConfiguration<TurnoCaja>
         builder.Property(x => x.ObservacionCierre).HasMaxLength(2000);
 
         builder.HasIndex(x => new { x.CajaId, x.Estado });
-        builder.HasIndex(x => new { x.UsuarioAperturaId, x.Estado });
+        builder.HasIndex(x => new { x.EmpleadoAperturaId, x.Estado });
 
         builder.HasOne(x => x.Caja)
             .WithMany(x => x.Turnos)

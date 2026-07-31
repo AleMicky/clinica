@@ -132,7 +132,7 @@ public sealed class MovimientoCajaService(
 
         var turno = await context.TurnosCaja
             .FirstOrDefaultAsync(
-                x => x.UsuarioAperturaId == userId && x.Estado == TurnoCajaEstados.Abierto,
+                x => x.EmpleadoAperturaId == userId && x.Estado == TurnoCajaEstados.Abierto,
                 cancellationToken)
             ?? throw new BusinessException("No hay un turno de caja abierto.");
 

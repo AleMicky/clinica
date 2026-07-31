@@ -214,6 +214,8 @@ export const queryKeys = {
         },
         turnos: {
             all: ['caja', 'turnos'] as const,
+            list: (query: PagedQuery & Record<string, unknown>) =>
+                ['caja', 'turnos', 'list', query] as const,
             abierto: ['caja', 'turnos', 'abierto'] as const,
             resumen: (id: EntityId) => ['caja', 'turnos', 'resumen', id] as const,
             arqueo: (id: EntityId) => ['caja', 'turnos', 'arqueo', id] as const,

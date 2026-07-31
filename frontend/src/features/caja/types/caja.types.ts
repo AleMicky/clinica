@@ -116,8 +116,10 @@ export type TurnoCaja = {
     cajaId: string
     cajaCodigo: string
     cajaNombre: string
-    usuarioAperturaId: string
-    usuarioCierreId?: string | null
+    empleadoAperturaId: string
+    empleadoAperturaNombre?: string | null
+    empleadoCierreId?: string | null
+    empleadoCierreNombre?: string | null
     fechaApertura: string
     fechaCierre?: string | null
     montoInicial: number
@@ -127,6 +129,14 @@ export type TurnoCaja = {
     estado: TurnoEstado | string
     observacionApertura?: string | null
     observacionCierre?: string | null
+}
+
+export type TurnoPagedQuery = {
+    page?: number
+    pageSize?: number
+    cajaId?: string
+    estado?: string
+    empleadoId?: string
 }
 
 export type AbrirTurnoPayload = {

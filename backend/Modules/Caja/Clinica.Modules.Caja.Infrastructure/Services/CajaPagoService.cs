@@ -43,7 +43,7 @@ public sealed class CajaPagoService(
 
         var turno = await context.TurnosCaja
             .FirstOrDefaultAsync(
-                x => x.UsuarioAperturaId == userId && x.Estado == TurnoCajaEstados.Abierto,
+                x => x.EmpleadoAperturaId == userId && x.Estado == TurnoCajaEstados.Abierto,
                 cancellationToken)
             ?? throw new BusinessException("Debe tener un turno de caja abierto para registrar cobros.");
 

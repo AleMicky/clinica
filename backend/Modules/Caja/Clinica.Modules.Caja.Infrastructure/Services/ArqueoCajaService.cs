@@ -93,7 +93,7 @@ public sealed class ArqueoCajaService(
         turno.MontoContado = request.MontoContado;
         turno.Diferencia = diferencia;
         turno.FechaCierre = DateTime.UtcNow;
-        turno.UsuarioCierreId = userId;
+        turno.EmpleadoCierreId = userId;
         turno.ObservacionCierre = arqueo.Observaciones;
         turno.Estado = TurnoCajaEstados.Cerrado;
         turno.UpdatedAt = DateTime.UtcNow;

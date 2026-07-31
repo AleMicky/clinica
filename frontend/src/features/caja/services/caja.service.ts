@@ -20,6 +20,7 @@ import type {
     RegistrarPagoPayload,
     ResumenTurno,
     TurnoCaja,
+    TurnoPagedQuery,
     UpdateCajaPayload,
     UpdateMetodoPagoPayload,
 } from '../types/caja.types'
@@ -76,6 +77,10 @@ export const cajaService = {
 
     deleteCaja(id: string) {
         return del<string>(cajaEndpoints.cajas.byId(id))
+    },
+
+    getTurnos(query: TurnoPagedQuery = {}) {
+        return getPaged<TurnoCaja>(cajaEndpoints.turnos.root, query)
     },
 
     getTurnoAbierto() {

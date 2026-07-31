@@ -15,6 +15,7 @@ import type {
     MovimientoPagedQuery,
     RegistrarMovimientoPayload,
     RegistrarPagoPayload,
+    TurnoPagedQuery,
     UpdateCajaPayload,
     UpdateMetodoPagoPayload,
 } from '../types/caja.types'
@@ -31,6 +32,13 @@ export function useCuenta(id: string | undefined) {
         queryKey: queryKeys.caja.cuentas.detail(id ?? ''),
         queryFn: () => cajaService.getById(id!),
         enabled: Boolean(id),
+    })
+}
+
+export function useTurnos(query: TurnoPagedQuery) {
+    return useAppQuery({
+        queryKey: queryKeys.caja.turnos.list(query),
+        queryFn: () => cajaService.getTurnos(query),
     })
 }
 
