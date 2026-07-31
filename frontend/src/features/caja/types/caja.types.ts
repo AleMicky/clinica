@@ -201,6 +201,7 @@ export type MovimientoCaja = {
     metodoPagoId?: string | null
     metodoPagoCodigo?: string | null
     pagoId?: string | null
+    numeroReferencia?: string | null
     descripcion?: string | null
     estado: string
     createdBy?: string | null
@@ -311,6 +312,7 @@ export type RegistrarMovimientoPayload = {
     conceptoCajaId: string
     importe: number
     metodoPagoId?: string | null
+    numeroReferencia?: string | null
     descripcion?: string | null
 }
 

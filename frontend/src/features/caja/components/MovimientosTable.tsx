@@ -49,6 +49,10 @@ export function MovimientosTable({
                     header: 'Método',
                     cell: (info) => info.getValue() ?? '—',
                 }),
+                columnHelper.accessor('numeroReferencia', {
+                    header: 'Referencia',
+                    cell: (info) => info.getValue() ?? '—',
+                }),
                 columnHelper.accessor('descripcion', {
                     header: 'Descripción',
                     cell: (info) => info.getValue() ?? '—',

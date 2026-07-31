@@ -68,6 +68,7 @@ public sealed class MovimientoCajaService(
                 x.MetodoPagoId,
                 x.MetodoPago != null ? x.MetodoPago.Codigo : null,
                 x.PagoId,
+                x.NumeroReferencia,
                 x.Descripcion,
                 x.Estado,
                 x.CreatedBy))
@@ -148,11 +149,13 @@ public sealed class MovimientoCajaService(
 
         if (request.MetodoPagoId.HasValue)
         {
-            var metodoExists = await context.MetodosPago.AnyAsync(
-                x => x.Id == request.MetodoPagoId,
-                cancellationToken);
-            if (!metodoExists)
-                throw new NotFoundException("Método de pago no encontrado.");
+            var metodo = await context.MetodosPago
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == request.MetodoPagoId, cancellationToken)
+                ?? throw new NotFoundException("Método de pago no encontrado.");
+
+            if (metodo.RequiereReferencia && string.IsNullOrWhiteSpace(request.NumeroReferencia))
+                throw new BusinessException($"El método {metodo.Nombre} requiere número de referencia.");
         }
 
         var correlativo = await correlativoService.GenerarAsync(
@@ -169,6 +172,9 @@ public sealed class MovimientoCajaService(
             Fecha = DateTime.UtcNow,
             Importe = Math.Round(request.Importe, 2, MidpointRounding.AwayFromZero),
             MetodoPagoId = request.MetodoPagoId,
+            NumeroReferencia = string.IsNullOrWhiteSpace(request.NumeroReferencia)
+                ? null
+                : request.NumeroReferencia.Trim(),
             Descripcion = string.IsNullOrWhiteSpace(request.Descripcion) ? null : request.Descripcion.Trim(),
             Estado = MovimientoCajaEstados.Confirmado,
             CreatedAt = DateTime.UtcNow,
@@ -193,6 +199,7 @@ public sealed class MovimientoCajaService(
                 x.MetodoPagoId,
                 x.MetodoPago != null ? x.MetodoPago.Codigo : null,
                 x.PagoId,
+                x.NumeroReferencia,
                 x.Descripcion,
                 x.Estado,
                 x.CreatedBy))

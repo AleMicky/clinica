@@ -18,6 +18,7 @@ public class MovimientoCaja : AuditableEntity
     public Pago? Pago { get; set; }
     public string? ModuloOrigen { get; set; }
     public Guid? ReferenciaId { get; set; }
+    public string? NumeroReferencia { get; set; }
     public string? Descripcion { get; set; }
     public string Estado { get; set; } = MovimientoCajaEstados.Confirmado;
 }

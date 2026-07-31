@@ -20,6 +20,7 @@ public sealed class MovimientoCajaConfiguration : BaseEntityConfiguration<Movimi
         builder.Property(x => x.TipoMovimiento).HasMaxLength(30).IsRequired();
         builder.Property(x => x.Importe).HasPrecision(18, 2);
         builder.Property(x => x.ModuloOrigen).HasMaxLength(100);
+        builder.Property(x => x.NumeroReferencia).HasMaxLength(100);
         builder.Property(x => x.Descripcion).HasMaxLength(2000);
         builder.Property(x => x.Estado).HasMaxLength(30).IsRequired();
 

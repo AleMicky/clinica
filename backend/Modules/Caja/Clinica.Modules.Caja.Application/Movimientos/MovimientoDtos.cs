@@ -6,6 +6,7 @@ public sealed record RegistrarMovimientoCajaRequest(
     Guid ConceptoCajaId,
     decimal Importe,
     Guid? MetodoPagoId,
+    string? NumeroReferencia,
     string? Descripcion);
 
 public sealed record MovimientoCajaResponse(
@@ -21,6 +22,7 @@ public sealed record MovimientoCajaResponse(
     Guid? MetodoPagoId,
     string? MetodoPagoCodigo,
     Guid? PagoId,
+    string? NumeroReferencia,
     string? Descripcion,
     string Estado,
     string? CreatedBy);

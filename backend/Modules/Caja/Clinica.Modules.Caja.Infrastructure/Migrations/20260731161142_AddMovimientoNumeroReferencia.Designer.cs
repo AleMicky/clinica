@@ -4,6 +4,7 @@ using Clinica.Modules.Caja.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Clinica.Modules.Caja.Infrastructure.Migrations
 {
     [DbContext(typeof(CajaDbContext))]
-    partial class CajaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260731161142_AddMovimientoNumeroReferencia")]
+    partial class AddMovimientoNumeroReferencia
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
