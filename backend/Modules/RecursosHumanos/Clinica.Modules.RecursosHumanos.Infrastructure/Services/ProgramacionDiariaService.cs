@@ -206,11 +206,11 @@ public sealed class ProgramacionDiariaService(
 
             var disponibleAhora = TurnoVentanaHelper.ContieneHora(ventana, instante);
 
-            if (request.SoloDisponiblesAhora && !disponibleAhora)
+            if (request.SoloDisponiblesAhora == true && !disponibleAhora)
                 continue;
 
             DateTime? proxima = null;
-            if (request.IncluirProximaDisponibilidad && !disponibleAhora)
+            if ((request.IncluirProximaDisponibilidad ?? true) && !disponibleAhora)
             {
                 proxima = await FindProximaDisponibilidadAsync(
                     prog.EmpleadoId,

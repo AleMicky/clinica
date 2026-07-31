@@ -35,7 +35,8 @@ public sealed class MedicoDisponibilidadRequest
 
     public Guid? AreaId { get; init; }
 
-    public bool SoloDisponiblesAhora { get; init; }
+    // bool? so [AsParameters] does not require these query params.
+    public bool? SoloDisponiblesAhora { get; init; }
 
-    public bool IncluirProximaDisponibilidad { get; init; } = true;
+    public bool? IncluirProximaDisponibilidad { get; init; }
 }
