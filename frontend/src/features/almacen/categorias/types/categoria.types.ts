@@ -1,14 +1,12 @@
-export type Categoria = {
+export type CategoriaProducto = {
   id: string
   codigo: string
   nombre: string
-  activo: boolean
+  descripcion?: string | null
 }
 
-export type CreateCategoriaPayload = {
+export type CategoriaProductoPayload = {
   codigo: string
   nombre: string
-  activo?: boolean
+  descripcion?: string | null
 }
-
-export type UpdateCategoriaPayload = CreateCategoriaPayload

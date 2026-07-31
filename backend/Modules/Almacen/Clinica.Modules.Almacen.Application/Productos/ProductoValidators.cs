@@ -11,6 +11,9 @@ public sealed class CreateProductoRequestValidator : AbstractValidator<CreatePro
         RuleFor(x => x.CategoriaId).NotEmpty();
         RuleFor(x => x.UnidadMedidaId).NotEmpty();
         RuleFor(x => x.StockMinimo).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.StockMaximo).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.CodigoBarras).MaximumLength(100);
+        RuleFor(x => x.Descripcion).MaximumLength(500);
     }
 }
 
@@ -23,5 +26,8 @@ public sealed class UpdateProductoRequestValidator : AbstractValidator<UpdatePro
         RuleFor(x => x.CategoriaId).NotEmpty();
         RuleFor(x => x.UnidadMedidaId).NotEmpty();
         RuleFor(x => x.StockMinimo).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.StockMaximo).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.CodigoBarras).MaximumLength(100);
+        RuleFor(x => x.Descripcion).MaximumLength(500);
     }
 }

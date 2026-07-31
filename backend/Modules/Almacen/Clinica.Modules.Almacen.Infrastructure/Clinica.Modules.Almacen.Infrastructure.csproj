@@ -3,8 +3,6 @@
     <ProjectReference Include="..\Clinica.Modules.Almacen.Application\Clinica.Modules.Almacen.Application.csproj" />
     <ProjectReference Include="..\Clinica.Modules.Almacen.Domain\Clinica.Modules.Almacen.Domain.csproj" />
     <ProjectReference Include="..\..\Parametros\Clinica.Modules.Parametros.Application\Clinica.Modules.Parametros.Application.csproj" />
-    <ProjectReference Include="..\..\Parametros\Clinica.Modules.Parametros.Domain\Clinica.Modules.Parametros.Domain.csproj" />
-    <ProjectReference Include="..\..\Workflow\Clinica.Modules.Workflow.Application\Clinica.Modules.Workflow.Application.csproj" />
     <ProjectReference Include="..\..\..\Clinica.SharedKernel\Clinica.SharedKernel.csproj" />
   </ItemGroup>
   <ItemGroup>

@@ -1,57 +1,73 @@
 using Clinica.Modules.Almacen.Application.Abstractions;
-using Clinica.Modules.Almacen.Application.Existencias;
-using Clinica.Modules.Almacen.Application.Movimientos;
+using Clinica.Modules.Almacen.Application.Stock;
 using Clinica.Modules.Almacen.Domain.Entities;
+using Clinica.Modules.Almacen.Domain.Enums;
 using Clinica.Modules.Almacen.Infrastructure.Persistence;
+using Clinica.Modules.Almacen.Infrastructure.Seed;
 using Clinica.Modules.Parametros.Application.Abstractions;
 using Clinica.Modules.Parametros.Application.Correlativos;
-using Clinica.Modules.Workflow.Application.Abstractions;
-using Clinica.Modules.Workflow.Application.WorkflowInstances;
 using Clinica.SharedKernel.Exceptions;
 using Clinica.SharedKernel.Pagination;
 using Microsoft.EntityFrameworkCore;
+using AlmacenEntity = Clinica.Modules.Almacen.Domain.Entities.Almacen;
 
 namespace Clinica.Modules.Almacen.Infrastructure.Services;
 
 public sealed class AlmacenStockService(
     AlmacenDbContext context,
-    ICorrelativoService correlativoService,
-    IWorkflowInstanceService workflowInstanceService) : IAlmacenStockService
+    ICorrelativoService correlativoService) : IAlmacenStockService
 {
     public const string CorrelativoCodigo = "ALM_MOVIMIENTO";
-    public const string WorkflowDefinitionCode = "ALMACEN_MOVIMIENTO";
+
+    public const string TipoIngreso = "INGRESO";
+    public const string TipoSalida = "SALIDA";
+    public const string TipoAjuste = "AJUSTE";
+    public const string TipoBaja = "BAJA";
+    public const string TipoTransferencia = "TRANSFERENCIA";
 
     public async Task<DisponibilidadProductoResponse> ConsultarDisponibilidadAsync(
         Guid productoId,
         CancellationToken cancellationToken = default)
     {
+        var almacenId = AlmacenDbSeeder.AlmacenPrincipalId;
         var producto = await context.Productos
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == productoId, cancellationToken)
             ?? throw new NotFoundException("Producto no encontrado.");
 
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var lotes = await context.Existencias
+        var lotes = await context.ProductosLote
             .AsNoTracking()
-            .Include(x => x.Lote)
-            .Where(x => x.ProductoId == productoId && x.Cantidad > 0)
-            .Where(x => x.Lote.FechaVencimiento == null || x.Lote.FechaVencimiento >= today)
-            .OrderBy(x => x.Lote.FechaVencimiento ?? DateOnly.MaxValue)
+            .Where(x => x.ProductoId == productoId
+                && x.AlmacenId == almacenId
+                && x.CantidadDisponible > 0
+                && !x.Bloqueado)
+            .Where(x => x.FechaVencimiento == null || x.FechaVencimiento >= today)
+            .OrderBy(x => x.FechaVencimiento ?? DateOnly.MaxValue)
             .Select(x => new DisponibilidadLoteResponse(
-                x.LoteId,
-                x.Lote.Numero,
-                x.Lote.FechaVencimiento,
-                x.Cantidad))
+                x.Id,
+                x.NumeroLote,
+                x.FechaVencimiento,
+                x.CantidadDisponible - x.CantidadReservada))
             .ToListAsync(cancellationToken);
 
-        var disponible = lotes.Sum(x => x.Cantidad);
+        var stock = await context.ProductosStock
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.ProductoId == productoId && x.AlmacenId == almacenId, cancellationToken);
+
+        var disponible = lotes.Count > 0
+            ? lotes.Sum(x => x.Cantidad)
+            : stock?.CantidadUtilizable ?? 0;
+
+        var stockMinimo = stock?.StockMinimo > 0 ? stock.StockMinimo : producto.StockMinimo;
+
         return new DisponibilidadProductoResponse(
             producto.Id,
             producto.Codigo,
             producto.Nombre,
             disponible,
-            producto.StockMinimo,
-            disponible < producto.StockMinimo,
+            stockMinimo,
+            disponible < stockMinimo,
             lotes);
     }
 
@@ -61,41 +77,41 @@ public sealed class AlmacenStockService(
     {
         await using var tx = await context.Database.BeginTransactionAsync(cancellationToken);
 
+        var almacenId = ResolveAlmacenId(request.AlmacenId);
+        var almacen = await GetAlmacenAsync(almacenId, cancellationToken);
+        var tipo = await GetTipoMovimientoAsync(TipoIngreso, cancellationToken);
         var movimiento = await CreateMovimientoHeaderAsync(
-            MovimientoTipos.Ingreso,
-            requiereAprobacion: false,
-            MovimientoEstados.Aplicado,
+            tipo,
+            EstadoMovimientoAlmacen.Confirmado,
             request.Observaciones,
             request.ModuloOrigen,
             request.EntidadOrigen,
             request.ReferenciaId,
-            request.ProveedorId,
+            almacenOrigenId: null,
+            almacenDestinoId: almacenId,
             cancellationToken);
 
         foreach (var linea in request.Lineas)
         {
             var producto = await GetProductoAsync(linea.ProductoId, cancellationToken);
-            var lote = await ResolveOrCreateLoteAsync(
-                producto,
-                linea,
-                request.ProveedorId,
-                cancellationToken);
+            var lote = await ResolveOrCreateLoteAsync(producto, almacenId, linea, cancellationToken);
+            await ApplyStockDeltaAsync(producto.Id, almacen, lote, linea.Cantidad, cancellationToken);
 
-            await ApplyStockDeltaAsync(producto.Id, lote.Id, linea.Cantidad, cancellationToken);
-
-            movimiento.Detalles.Add(new MovimientoDetalle
+            var costo = linea.CostoUnitario ?? lote.CostoUnitario;
+            movimiento.Detalles.Add(new MovimientoAlmacenDetalle
             {
                 Id = Guid.NewGuid(),
-                MovimientoId = movimiento.Id,
+                MovimientoAlmacenId = movimiento.Id,
                 ProductoId = producto.Id,
-                LoteId = lote.Id,
+                ProductoLoteId = lote.Id,
                 Cantidad = linea.Cantidad,
-                CostoUnitario = linea.CostoUnitario,
+                CostoUnitario = costo,
+                CostoTotal = costo * linea.Cantidad,
                 CreatedAt = DateTime.UtcNow,
             });
         }
 
-        context.Movimientos.Add(movimiento);
+        context.MovimientosAlmacen.Add(movimiento);
         await context.SaveChangesAsync(cancellationToken);
         await tx.CommitAsync(cancellationToken);
 
@@ -108,52 +124,44 @@ public sealed class AlmacenStockService(
     {
         await using var tx = await context.Database.BeginTransactionAsync(cancellationToken);
 
+        var almacenId = ResolveAlmacenId(request.AlmacenId);
+        var almacen = await GetAlmacenAsync(almacenId, cancellationToken);
+        var tipo = await GetTipoMovimientoAsync(TipoSalida, cancellationToken);
         var movimiento = await CreateMovimientoHeaderAsync(
-            MovimientoTipos.Salida,
-            requiereAprobacion: false,
-            MovimientoEstados.Aplicado,
+            tipo,
+            EstadoMovimientoAlmacen.Confirmado,
             request.Observaciones,
             request.ModuloOrigen,
             request.EntidadOrigen,
             request.ReferenciaId,
-            null,
+            almacenOrigenId: almacenId,
+            almacenDestinoId: null,
             cancellationToken);
 
         foreach (var linea in request.Lineas)
         {
+            var producto = await GetProductoAsync(linea.ProductoId, cancellationToken);
+
             if (request.UsarFefo || linea.LoteId is null)
             {
-                var allocations = await AllocateFefoAsync(linea.ProductoId, linea.Cantidad, cancellationToken);
+                var allocations = await AllocateFefoAsync(producto.Id, almacenId, linea.Cantidad, cancellationToken);
                 foreach (var alloc in allocations)
                 {
-                    await ApplyStockDeltaAsync(linea.ProductoId, alloc.LoteId, -alloc.Cantidad, cancellationToken);
-                    movimiento.Detalles.Add(new MovimientoDetalle
-                    {
-                        Id = Guid.NewGuid(),
-                        MovimientoId = movimiento.Id,
-                        ProductoId = linea.ProductoId,
-                        LoteId = alloc.LoteId,
-                        Cantidad = alloc.Cantidad,
-                        CreatedAt = DateTime.UtcNow,
-                    });
+                    var lote = await context.ProductosLote
+                        .FirstAsync(x => x.Id == alloc.LoteId, cancellationToken);
+                    await ApplyStockDeltaAsync(producto.Id, almacen, lote, -alloc.Cantidad, cancellationToken);
+                    movimiento.Detalles.Add(CreateDetalle(movimiento.Id, producto.Id, lote.Id, alloc.Cantidad, lote.CostoUnitario));
                 }
             }
             else
             {
-                await ApplyStockDeltaAsync(linea.ProductoId, linea.LoteId.Value, -linea.Cantidad, cancellationToken);
-                movimiento.Detalles.Add(new MovimientoDetalle
-                {
-                    Id = Guid.NewGuid(),
-                    MovimientoId = movimiento.Id,
-                    ProductoId = linea.ProductoId,
-                    LoteId = linea.LoteId,
-                    Cantidad = linea.Cantidad,
-                    CreatedAt = DateTime.UtcNow,
-                });
+                var lote = await GetLoteAsync(linea.LoteId.Value, producto.Id, almacenId, cancellationToken);
+                await ApplyStockDeltaAsync(producto.Id, almacen, lote, -linea.Cantidad, cancellationToken);
+                movimiento.Detalles.Add(CreateDetalle(movimiento.Id, producto.Id, lote.Id, linea.Cantidad, lote.CostoUnitario));
             }
         }
 
-        context.Movimientos.Add(movimiento);
+        context.MovimientosAlmacen.Add(movimiento);
         await context.SaveChangesAsync(cancellationToken);
         await tx.CommitAsync(cancellationToken);
 
@@ -171,7 +179,8 @@ public sealed class AlmacenStockService(
                 request.ModuloOrigen,
                 request.EntidadOrigen,
                 request.ReferenciaId,
-                UsarFefo: true),
+                UsarFefo: true,
+                request.AlmacenId),
             cancellationToken);
 
         return new DescontarFefoResponse(
@@ -186,35 +195,174 @@ public sealed class AlmacenStockService(
                 .ToList());
     }
 
-    public Task<MovimientoResponse> RegistrarAjusteAsync(
+    public async Task<MovimientoResponse> RegistrarAjusteAsync(
         RegistrarAjusteRequest request,
-        CancellationToken cancellationToken = default) =>
-        CreatePendingApprovalMovimientoAsync(
-            MovimientoTipos.Ajuste,
-            request.Lineas,
+        CancellationToken cancellationToken = default)
+    {
+        await using var tx = await context.Database.BeginTransactionAsync(cancellationToken);
+
+        var almacenId = ResolveAlmacenId(request.AlmacenId);
+        var almacen = await GetAlmacenAsync(almacenId, cancellationToken);
+        var tipo = await GetTipoMovimientoAsync(TipoAjuste, cancellationToken);
+        var movimiento = await CreateMovimientoHeaderAsync(
+            tipo,
+            EstadoMovimientoAlmacen.Confirmado,
             request.Observaciones,
-            request.EmpleadoId,
+            null,
+            null,
+            null,
+            almacenOrigenId: almacenId,
+            almacenDestinoId: almacenId,
             cancellationToken);
 
-    public Task<MovimientoResponse> RegistrarBajaAsync(
+        foreach (var linea in request.Lineas)
+        {
+            var producto = await GetProductoAsync(linea.ProductoId, cancellationToken);
+            var lote = await ResolveOrCreateLoteAsync(producto, almacenId, linea, cancellationToken);
+            await ApplyStockDeltaAsync(producto.Id, almacen, lote, linea.Cantidad, cancellationToken);
+            var costo = linea.CostoUnitario ?? lote.CostoUnitario;
+            movimiento.Detalles.Add(CreateDetalle(movimiento.Id, producto.Id, lote.Id, linea.Cantidad, costo));
+        }
+
+        context.MovimientosAlmacen.Add(movimiento);
+        await context.SaveChangesAsync(cancellationToken);
+        await tx.CommitAsync(cancellationToken);
+
+        return (await GetMovimientoByIdAsync(movimiento.Id, cancellationToken))!;
+    }
+
+    public async Task<MovimientoResponse> RegistrarBajaAsync(
         RegistrarBajaRequest request,
-        CancellationToken cancellationToken = default) =>
-        CreatePendingApprovalMovimientoAsync(
-            MovimientoTipos.Baja,
-            request.Lineas,
+        CancellationToken cancellationToken = default)
+    {
+        await using var tx = await context.Database.BeginTransactionAsync(cancellationToken);
+
+        var almacenId = ResolveAlmacenId(request.AlmacenId);
+        var almacen = await GetAlmacenAsync(almacenId, cancellationToken);
+        var tipo = await GetTipoMovimientoAsync(TipoBaja, cancellationToken);
+        var movimiento = await CreateMovimientoHeaderAsync(
+            tipo,
+            EstadoMovimientoAlmacen.Confirmado,
             request.Observaciones,
-            request.EmpleadoId,
+            null,
+            null,
+            null,
+            almacenOrigenId: almacenId,
+            almacenDestinoId: null,
             cancellationToken);
 
-    public Task<MovimientoResponse> RegistrarTransferenciaAsync(
+        foreach (var linea in request.Lineas)
+        {
+            var producto = await GetProductoAsync(linea.ProductoId, cancellationToken);
+            ProductoLote lote;
+            if (linea.LoteId.HasValue)
+            {
+                lote = await GetLoteAsync(linea.LoteId.Value, producto.Id, almacenId, cancellationToken);
+            }
+            else
+            {
+                var allocations = await AllocateFefoAsync(producto.Id, almacenId, linea.Cantidad, cancellationToken);
+                foreach (var alloc in allocations)
+                {
+                    lote = await context.ProductosLote.FirstAsync(x => x.Id == alloc.LoteId, cancellationToken);
+                    await ApplyStockDeltaAsync(producto.Id, almacen, lote, -alloc.Cantidad, cancellationToken);
+                    movimiento.Detalles.Add(CreateDetalle(movimiento.Id, producto.Id, lote.Id, alloc.Cantidad, lote.CostoUnitario));
+                }
+
+                continue;
+            }
+
+            await ApplyStockDeltaAsync(producto.Id, almacen, lote, -Math.Abs(linea.Cantidad), cancellationToken);
+            movimiento.Detalles.Add(CreateDetalle(movimiento.Id, producto.Id, lote.Id, Math.Abs(linea.Cantidad), lote.CostoUnitario));
+        }
+
+        context.MovimientosAlmacen.Add(movimiento);
+        await context.SaveChangesAsync(cancellationToken);
+        await tx.CommitAsync(cancellationToken);
+
+        return (await GetMovimientoByIdAsync(movimiento.Id, cancellationToken))!;
+    }
+
+    public async Task<MovimientoResponse> RegistrarTransferenciaAsync(
         RegistrarTransferenciaRequest request,
-        CancellationToken cancellationToken = default) =>
-        CreatePendingApprovalMovimientoAsync(
-            MovimientoTipos.Transferencia,
-            request.Lineas,
+        CancellationToken cancellationToken = default)
+    {
+        if (request.AlmacenDestinoId is null || request.AlmacenDestinoId == Guid.Empty)
+            throw new BusinessException("Debe indicar el almacén destino.");
+
+        var origenId = ResolveAlmacenId(request.AlmacenOrigenId);
+        var destinoId = request.AlmacenDestinoId.Value;
+        if (origenId == destinoId)
+            throw new BusinessException("El almacén origen y destino deben ser distintos.");
+
+        await using var tx = await context.Database.BeginTransactionAsync(cancellationToken);
+
+        var origen = await GetAlmacenAsync(origenId, cancellationToken);
+        var destino = await GetAlmacenAsync(destinoId, cancellationToken);
+        var tipo = await GetTipoMovimientoAsync(TipoTransferencia, cancellationToken);
+        var movimiento = await CreateMovimientoHeaderAsync(
+            tipo,
+            EstadoMovimientoAlmacen.Confirmado,
             request.Observaciones,
-            request.EmpleadoId,
+            null,
+            null,
+            null,
+            origenId,
+            destinoId,
             cancellationToken);
+
+        foreach (var linea in request.Lineas)
+        {
+            var producto = await GetProductoAsync(linea.ProductoId, cancellationToken);
+            List<(Guid LoteId, decimal Cantidad)> allocations;
+
+            if (linea.LoteId.HasValue)
+            {
+                allocations = [(linea.LoteId.Value, linea.Cantidad)];
+            }
+            else
+            {
+                allocations = await AllocateFefoAsync(producto.Id, origenId, linea.Cantidad, cancellationToken);
+            }
+
+            foreach (var alloc in allocations)
+            {
+                var loteOrigen = await GetLoteAsync(alloc.LoteId, producto.Id, origenId, cancellationToken);
+                await ApplyStockDeltaAsync(producto.Id, origen, loteOrigen, -alloc.Cantidad, cancellationToken);
+
+                var loteDestino = await ResolveOrCreateLoteAsync(
+                    producto,
+                    destinoId,
+                    new MovimientoDetalleLineaRequest(
+                        producto.Id,
+                        null,
+                        alloc.Cantidad,
+                        loteOrigen.CostoUnitario,
+                        loteOrigen.NumeroLote,
+                        loteOrigen.FechaVencimiento),
+                    cancellationToken);
+                if (loteDestino.FechaFabricacion is null)
+                    loteDestino.FechaFabricacion = loteOrigen.FechaFabricacion;
+                if (loteDestino.CostoUnitario == 0)
+                    loteDestino.CostoUnitario = loteOrigen.CostoUnitario;
+
+                await ApplyStockDeltaAsync(producto.Id, destino, loteDestino, alloc.Cantidad, cancellationToken);
+
+                movimiento.Detalles.Add(CreateDetalle(
+                    movimiento.Id,
+                    producto.Id,
+                    loteOrigen.Id,
+                    alloc.Cantidad,
+                    loteOrigen.CostoUnitario));
+            }
+        }
+
+        context.MovimientosAlmacen.Add(movimiento);
+        await context.SaveChangesAsync(cancellationToken);
+        await tx.CommitAsync(cancellationToken);
+
+        return (await GetMovimientoByIdAsync(movimiento.Id, cancellationToken))!;
+    }
 
     public async Task<MovimientoResponse> AplicarMovimientoAsync(
         Guid movimientoId,
@@ -223,63 +371,22 @@ public sealed class AlmacenStockService(
     {
         await using var tx = await context.Database.BeginTransactionAsync(cancellationToken);
 
-        var movimiento = await context.Movimientos
+        var movimiento = await context.MovimientosAlmacen
+            .Include(x => x.TipoMovimientoAlmacen)
             .Include(x => x.Detalles)
             .FirstOrDefaultAsync(x => x.Id == movimientoId, cancellationToken)
             ?? throw new NotFoundException("Movimiento no encontrado.");
 
-        if (movimiento.Estado == MovimientoEstados.Aplicado)
+        if (movimiento.Estado == EstadoMovimientoAlmacen.Confirmado)
             return (await GetMovimientoByIdAsync(movimientoId, cancellationToken))!;
 
-        if (movimiento.RequiereAprobacion
-            && movimiento.Estado is not (MovimientoEstados.Aprobado or MovimientoEstados.PendienteAprobacion))
-        {
-            throw new BusinessException(
-                $"El movimiento no puede aplicarse en estado {movimiento.Estado}.");
-        }
+        if (movimiento.Estado != EstadoMovimientoAlmacen.Borrador)
+            throw new BusinessException($"El movimiento no puede aplicarse en estado {movimiento.Estado}.");
 
-        foreach (var detalle in movimiento.Detalles)
-        {
-            if (detalle.LoteId is null)
-                throw new BusinessException("El detalle del movimiento no tiene lote asignado.");
+        await ApplyMovimientoStockAsync(movimiento, reverse: false, cancellationToken);
 
-            var delta = movimiento.Tipo switch
-            {
-                MovimientoTipos.Ingreso or MovimientoTipos.Ajuste when detalle.Cantidad > 0 => detalle.Cantidad,
-                MovimientoTipos.Ajuste when detalle.Cantidad < 0 => detalle.Cantidad,
-                MovimientoTipos.Salida or MovimientoTipos.Baja or MovimientoTipos.Transferencia
-                    => -Math.Abs(detalle.Cantidad),
-                _ => detalle.Cantidad,
-            };
-
-            // Transferencia: cantidades positivas suman, negativas restan (ya vienen firmadas).
-            if (movimiento.Tipo == MovimientoTipos.Transferencia)
-                delta = detalle.Cantidad;
-
-            if (movimiento.Tipo == MovimientoTipos.Ajuste)
-                delta = detalle.Cantidad;
-
-            await ApplyStockDeltaAsync(detalle.ProductoId, detalle.LoteId.Value, delta, cancellationToken);
-        }
-
-        movimiento.Estado = MovimientoEstados.Aplicado;
+        movimiento.Estado = EstadoMovimientoAlmacen.Confirmado;
         movimiento.UpdatedAt = DateTime.UtcNow;
-
-        if (movimiento.WorkflowInstanceId.HasValue && request?.EmpleadoId is Guid empId && empId != Guid.Empty)
-        {
-            try
-            {
-                await workflowInstanceService.ExecuteAsync(
-                    movimiento.WorkflowInstanceId.Value,
-                    new ExecuteWorkflowTransitionRequest("APLICAR", empId, "Movimiento aplicado a stock."),
-                    cancellationToken);
-            }
-            catch
-            {
-                // El stock ya se aplicó; el estado de workflow puede sincronizarse aparte.
-            }
-        }
-
         await context.SaveChangesAsync(cancellationToken);
         await tx.CommitAsync(cancellationToken);
 
@@ -290,12 +397,13 @@ public sealed class AlmacenStockService(
         Guid id,
         CancellationToken cancellationToken = default)
     {
-        var movimiento = await context.Movimientos
+        var movimiento = await context.MovimientosAlmacen
             .AsNoTracking()
+            .Include(x => x.TipoMovimientoAlmacen)
             .Include(x => x.Detalles)
             .ThenInclude(d => d.Producto)
             .Include(x => x.Detalles)
-            .ThenInclude(d => d.Lote)
+            .ThenInclude(d => d.ProductoLote)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         return movimiento is null ? null : MapMovimiento(movimiento);
@@ -305,13 +413,22 @@ public sealed class AlmacenStockService(
         MovimientoPagedRequest request,
         CancellationToken cancellationToken = default)
     {
-        var query = context.Movimientos.AsNoTracking().AsQueryable();
+        var query = context.MovimientosAlmacen
+            .AsNoTracking()
+            .Include(x => x.TipoMovimientoAlmacen)
+            .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(request.Tipo))
-            query = query.Where(x => x.Tipo == request.Tipo.Trim().ToUpperInvariant());
+        {
+            var tipo = request.Tipo.Trim().ToUpperInvariant();
+            query = query.Where(x => x.TipoMovimientoAlmacen.Codigo == tipo);
+        }
 
-        if (!string.IsNullOrWhiteSpace(request.Estado))
-            query = query.Where(x => x.Estado == request.Estado.Trim().ToUpperInvariant());
+        if (!string.IsNullOrWhiteSpace(request.Estado)
+            && Enum.TryParse<EstadoMovimientoAlmacen>(request.Estado.Trim(), true, out var estado))
+        {
+            query = query.Where(x => x.Estado == estado);
+        }
 
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
@@ -324,11 +441,11 @@ public sealed class AlmacenStockService(
             .Select(x => new MovimientoListItemResponse(
                 x.Id,
                 x.Numero,
-                x.Tipo,
+                x.TipoMovimientoAlmacen.Codigo,
                 x.Fecha,
-                x.Estado,
-                x.RequiereAprobacion,
-                x.WorkflowInstanceId))
+                x.Estado.ToString(),
+                false,
+                null))
             .ToPagedResultAsync(request, cancellationToken);
     }
 
@@ -337,274 +454,347 @@ public sealed class AlmacenStockService(
         string estado,
         CancellationToken cancellationToken = default)
     {
-        var movimiento = await context.Movimientos
+        if (!Enum.TryParse<EstadoMovimientoAlmacen>(estado.Trim(), true, out var nuevoEstado))
+            throw new BusinessException($"Estado de movimiento inválido: {estado}");
+
+        await using var tx = await context.Database.BeginTransactionAsync(cancellationToken);
+
+        var movimiento = await context.MovimientosAlmacen
+            .Include(x => x.TipoMovimientoAlmacen)
+            .Include(x => x.Detalles)
             .FirstOrDefaultAsync(x => x.Id == movimientoId, cancellationToken)
             ?? throw new NotFoundException("Movimiento no encontrado.");
 
-        movimiento.Estado = estado.Trim().ToUpperInvariant();
-        movimiento.UpdatedAt = DateTime.UtcNow;
+        if (movimiento.Estado == nuevoEstado)
+        {
+            await tx.CommitAsync(cancellationToken);
+            return;
+        }
 
-        if (movimiento.Estado == MovimientoEstados.Aprobado)
-            await AplicarMovimientoAsync(movimientoId, null, cancellationToken);
+        if (nuevoEstado == EstadoMovimientoAlmacen.Confirmado
+            && movimiento.Estado == EstadoMovimientoAlmacen.Borrador)
+        {
+            await ApplyMovimientoStockAsync(movimiento, reverse: false, cancellationToken);
+            movimiento.Estado = EstadoMovimientoAlmacen.Confirmado;
+        }
+        else if (nuevoEstado == EstadoMovimientoAlmacen.Anulado
+            && movimiento.Estado == EstadoMovimientoAlmacen.Confirmado)
+        {
+            await ApplyMovimientoStockAsync(movimiento, reverse: true, cancellationToken);
+            movimiento.Estado = EstadoMovimientoAlmacen.Anulado;
+        }
+        else if (nuevoEstado == EstadoMovimientoAlmacen.Anulado
+            && movimiento.Estado == EstadoMovimientoAlmacen.Borrador)
+        {
+            movimiento.Estado = EstadoMovimientoAlmacen.Anulado;
+        }
         else
-            await context.SaveChangesAsync(cancellationToken);
+        {
+            throw new BusinessException(
+                $"No se puede cambiar el movimiento de {movimiento.Estado} a {nuevoEstado}.");
+        }
+
+        movimiento.UpdatedAt = DateTime.UtcNow;
+        await context.SaveChangesAsync(cancellationToken);
+        await tx.CommitAsync(cancellationToken);
     }
 
-    private async Task<MovimientoResponse> CreatePendingApprovalMovimientoAsync(
-        string tipo,
-        IReadOnlyList<MovimientoDetalleLineaRequest> lineas,
-        string? observaciones,
-        Guid? empleadoId,
+    private async Task ApplyMovimientoStockAsync(
+        MovimientoAlmacen movimiento,
+        bool reverse,
         CancellationToken cancellationToken)
     {
-        await using var tx = await context.Database.BeginTransactionAsync(cancellationToken);
+        var codigo = movimiento.TipoMovimientoAlmacen.Codigo;
+        var factor = reverse ? -1m : 1m;
 
-        var movimiento = await CreateMovimientoHeaderAsync(
-            tipo,
-            requiereAprobacion: true,
-            MovimientoEstados.PendienteAprobacion,
-            observaciones,
-            null,
-            null,
-            null,
-            null,
-            cancellationToken);
-
-        foreach (var linea in lineas)
+        if (codigo == TipoTransferencia)
         {
-            await GetProductoAsync(linea.ProductoId, cancellationToken);
+            if (movimiento.AlmacenOrigenId is null || movimiento.AlmacenDestinoId is null)
+                throw new BusinessException("La transferencia requiere almacén origen y destino.");
 
-            Guid? loteId = linea.LoteId;
-            if (loteId is null && !string.IsNullOrWhiteSpace(linea.NumeroLote))
+            var origen = await GetAlmacenAsync(movimiento.AlmacenOrigenId.Value, cancellationToken);
+            var destino = await GetAlmacenAsync(movimiento.AlmacenDestinoId.Value, cancellationToken);
+
+            foreach (var detalle in movimiento.Detalles)
             {
-                var lote = await ResolveOrCreateLoteAsync(
-                    await GetProductoAsync(linea.ProductoId, cancellationToken),
-                    linea,
-                    null,
+                if (detalle.ProductoLoteId is null)
+                    throw new BusinessException("El detalle del movimiento no tiene lote asignado.");
+
+                var loteOrigen = await context.ProductosLote
+                    .FirstAsync(x => x.Id == detalle.ProductoLoteId.Value, cancellationToken);
+                var producto = await GetProductoAsync(detalle.ProductoId, cancellationToken);
+                var cantidad = detalle.Cantidad * factor;
+
+                await ApplyStockDeltaAsync(detalle.ProductoId, origen, loteOrigen, -cantidad, cancellationToken);
+
+                var loteDestino = await ResolveOrCreateLoteAsync(
+                    producto,
+                    destino.Id,
+                    new MovimientoDetalleLineaRequest(
+                        detalle.ProductoId,
+                        null,
+                        detalle.Cantidad,
+                        detalle.CostoUnitario,
+                        loteOrigen.NumeroLote,
+                        loteOrigen.FechaVencimiento),
                     cancellationToken);
-                loteId = lote.Id;
+                await ApplyStockDeltaAsync(detalle.ProductoId, destino, loteDestino, cantidad, cancellationToken);
             }
 
-            if (loteId is null)
-                throw new BusinessException("Debe indicar el lote para movimientos con aprobación.");
-
-            movimiento.Detalles.Add(new MovimientoDetalle
-            {
-                Id = Guid.NewGuid(),
-                MovimientoId = movimiento.Id,
-                ProductoId = linea.ProductoId,
-                LoteId = loteId,
-                Cantidad = linea.Cantidad,
-                CostoUnitario = linea.CostoUnitario,
-                CreatedAt = DateTime.UtcNow,
-            });
+            return;
         }
 
-        context.Movimientos.Add(movimiento);
-        await context.SaveChangesAsync(cancellationToken);
-
-        if (empleadoId is Guid emp && emp != Guid.Empty)
+        foreach (var detalle in movimiento.Detalles)
         {
-            try
+            if (detalle.ProductoLoteId is null)
+                throw new BusinessException("El detalle del movimiento no tiene lote asignado.");
+
+            var almacenId = codigo switch
             {
-                var instance = await workflowInstanceService.StartAsync(
-                    new StartWorkflowInstanceRequest(
-                        WorkflowDefinitionCode,
-                        "Almacen",
-                        "Movimiento",
-                        movimiento.Id,
-                        emp),
-                    cancellationToken);
+                TipoIngreso => movimiento.AlmacenDestinoId ?? ResolveAlmacenId(null),
+                TipoSalida or TipoBaja => movimiento.AlmacenOrigenId ?? ResolveAlmacenId(null),
+                TipoAjuste => movimiento.AlmacenOrigenId
+                    ?? movimiento.AlmacenDestinoId
+                    ?? ResolveAlmacenId(null),
+                _ => movimiento.AlmacenOrigenId ?? movimiento.AlmacenDestinoId ?? ResolveAlmacenId(null),
+            };
 
-                movimiento.WorkflowInstanceId = instance.Id;
+            var almacen = await GetAlmacenAsync(almacenId, cancellationToken);
+            var lote = await context.ProductosLote
+                .FirstAsync(x => x.Id == detalle.ProductoLoteId.Value, cancellationToken);
 
-                await workflowInstanceService.ExecuteAsync(
-                    instance.Id,
-                    new ExecuteWorkflowTransitionRequest(
-                        "SOLICITAR_APROBACION",
-                        emp,
-                        observaciones),
-                    cancellationToken);
-
-                await context.SaveChangesAsync(cancellationToken);
-            }
-            catch
+            var delta = codigo switch
             {
-                // Workflow puede no estar seedado aún; el movimiento queda pendiente.
-            }
+                TipoIngreso => detalle.Cantidad,
+                TipoSalida or TipoBaja => -Math.Abs(detalle.Cantidad),
+                TipoAjuste => detalle.Cantidad,
+                _ => detalle.Cantidad,
+            };
+
+            await ApplyStockDeltaAsync(detalle.ProductoId, almacen, lote, delta * factor, cancellationToken);
         }
-
-        await tx.CommitAsync(cancellationToken);
-        return (await GetMovimientoByIdAsync(movimiento.Id, cancellationToken))!;
     }
 
-    private async Task<Movimiento> CreateMovimientoHeaderAsync(
-        string tipo,
-        bool requiereAprobacion,
-        string estado,
+    private async Task<MovimientoAlmacen> CreateMovimientoHeaderAsync(
+        TipoMovimientoAlmacen tipo,
+        EstadoMovimientoAlmacen estado,
         string? observaciones,
         string? moduloOrigen,
         string? entidadOrigen,
         Guid? referenciaId,
-        Guid? proveedorId,
+        Guid? almacenOrigenId,
+        Guid? almacenDestinoId,
         CancellationToken cancellationToken)
     {
         var correlativo = await correlativoService.GenerarAsync(
             new GenerarCorrelativoRequest(CorrelativoCodigo, Prefijo: "ALM-", Longitud: 6),
             cancellationToken);
 
-        return new Movimiento
+        return new MovimientoAlmacen
         {
             Id = Guid.NewGuid(),
             Numero = correlativo.NumeroFormateado,
-            Tipo = tipo,
             Fecha = DateTime.UtcNow,
-            Estado = estado,
-            Observaciones = observaciones,
+            TipoMovimientoAlmacenId = tipo.Id,
+            TipoMovimientoAlmacen = tipo,
+            AlmacenOrigenId = almacenOrigenId,
+            AlmacenDestinoId = almacenDestinoId,
             ModuloOrigen = moduloOrigen,
             EntidadOrigen = entidadOrigen,
             ReferenciaId = referenciaId,
-            ProveedorId = proveedorId,
-            RequiereAprobacion = requiereAprobacion,
+            Estado = estado,
+            Observacion = observaciones,
             CreatedAt = DateTime.UtcNow,
         };
     }
 
-    private async Task<Producto> GetProductoAsync(Guid productoId, CancellationToken cancellationToken)
-    {
-        return await context.Productos
+    private static MovimientoAlmacenDetalle CreateDetalle(
+        Guid movimientoId,
+        Guid productoId,
+        Guid loteId,
+        decimal cantidad,
+        decimal costoUnitario) =>
+        new()
+        {
+            Id = Guid.NewGuid(),
+            MovimientoAlmacenId = movimientoId,
+            ProductoId = productoId,
+            ProductoLoteId = loteId,
+            Cantidad = cantidad,
+            CostoUnitario = costoUnitario,
+            CostoTotal = costoUnitario * Math.Abs(cantidad),
+            CreatedAt = DateTime.UtcNow,
+        };
+
+    private static Guid ResolveAlmacenId(Guid? almacenId) =>
+        almacenId is null || almacenId == Guid.Empty
+            ? AlmacenDbSeeder.AlmacenPrincipalId
+            : almacenId.Value;
+
+    private async Task<AlmacenEntity> GetAlmacenAsync(Guid almacenId, CancellationToken cancellationToken) =>
+        await context.Almacenes.FirstOrDefaultAsync(x => x.Id == almacenId, cancellationToken)
+            ?? throw new NotFoundException("Almacén no encontrado.");
+
+    private async Task<TipoMovimientoAlmacen> GetTipoMovimientoAsync(
+        string codigo,
+        CancellationToken cancellationToken) =>
+        await context.TiposMovimientoAlmacen
+            .FirstOrDefaultAsync(x => x.Codigo == codigo, cancellationToken)
+            ?? throw new BusinessException($"Tipo de movimiento '{codigo}' no configurado.");
+
+    private async Task<Producto> GetProductoAsync(Guid productoId, CancellationToken cancellationToken) =>
+        await context.Productos
             .FirstOrDefaultAsync(x => x.Id == productoId && x.Activo, cancellationToken)
             ?? throw new NotFoundException("Producto no encontrado o inactivo.");
-    }
 
-    private async Task<Lote> ResolveOrCreateLoteAsync(
+    private async Task<ProductoLote> GetLoteAsync(
+        Guid loteId,
+        Guid productoId,
+        Guid almacenId,
+        CancellationToken cancellationToken) =>
+        await context.ProductosLote
+            .FirstOrDefaultAsync(
+                x => x.Id == loteId && x.ProductoId == productoId && x.AlmacenId == almacenId,
+                cancellationToken)
+            ?? throw new NotFoundException("Lote no encontrado.");
+
+    private async Task<ProductoLote> ResolveOrCreateLoteAsync(
         Producto producto,
+        Guid almacenId,
         MovimientoDetalleLineaRequest linea,
-        Guid? proveedorId,
         CancellationToken cancellationToken)
     {
         if (linea.LoteId.HasValue)
-        {
-            return await context.Lotes
-                .FirstOrDefaultAsync(x => x.Id == linea.LoteId.Value && x.ProductoId == producto.Id, cancellationToken)
-                ?? throw new NotFoundException("Lote no encontrado.");
-        }
+            return await GetLoteAsync(linea.LoteId.Value, producto.Id, almacenId, cancellationToken);
 
         var numero = string.IsNullOrWhiteSpace(linea.NumeroLote)
-            ? $"AUTO-{DateTime.UtcNow:yyyyMMddHHmmss}"
+            ? (producto.ManejaLote ? $"AUTO-{DateTime.UtcNow:yyyyMMddHHmmss}" : "SIN-LOTE")
             : linea.NumeroLote.Trim();
 
-        var existing = await context.Lotes
+        var existing = await context.ProductosLote
             .FirstOrDefaultAsync(
-                x => x.ProductoId == producto.Id && x.Numero == numero,
+                x => x.ProductoId == producto.Id && x.AlmacenId == almacenId && x.NumeroLote == numero,
                 cancellationToken);
 
         if (existing is not null)
+        {
+            if (linea.CostoUnitario is decimal costo && costo > 0)
+                existing.CostoUnitario = costo;
+            if (linea.FechaVencimiento.HasValue)
+                existing.FechaVencimiento = linea.FechaVencimiento;
             return existing;
+        }
 
-        var lote = new Lote
+        var lote = new ProductoLote
         {
             Id = Guid.NewGuid(),
             ProductoId = producto.Id,
-            Numero = numero,
+            AlmacenId = almacenId,
+            NumeroLote = numero,
             FechaVencimiento = linea.FechaVencimiento,
-            FechaIngreso = DateTime.UtcNow,
-            ProveedorId = proveedorId,
+            CostoUnitario = linea.CostoUnitario ?? 0,
+            CantidadInicial = 0,
+            CantidadDisponible = 0,
             CreatedAt = DateTime.UtcNow,
         };
-
-        context.Lotes.Add(lote);
+        context.ProductosLote.Add(lote);
         return lote;
     }
 
     private async Task ApplyStockDeltaAsync(
         Guid productoId,
-        Guid loteId,
+        AlmacenEntity almacen,
+        ProductoLote lote,
         decimal delta,
         CancellationToken cancellationToken)
     {
-        var existencia = await context.Existencias
-            .FirstOrDefaultAsync(x => x.LoteId == loteId, cancellationToken);
+        lote.AplicarDelta(delta, almacen.PermiteStockNegativo);
 
-        if (existencia is null)
+        var stock = await context.ProductosStock
+            .FirstOrDefaultAsync(x => x.ProductoId == productoId && x.AlmacenId == almacen.Id, cancellationToken);
+
+        if (stock is null)
         {
-            if (delta < 0)
-                throw new BusinessException("No hay existencia suficiente para el lote indicado.");
+            if (delta < 0 && !almacen.PermiteStockNegativo)
+                throw new BusinessException("No hay existencia suficiente para el producto indicado.");
 
-            existencia = new Existencia
+            var producto = await context.Productos.FirstAsync(x => x.Id == productoId, cancellationToken);
+            stock = new ProductoStock
             {
                 Id = Guid.NewGuid(),
                 ProductoId = productoId,
-                LoteId = loteId,
-                Cantidad = 0,
+                AlmacenId = almacen.Id,
+                CantidadDisponible = 0,
+                StockMinimo = producto.StockMinimo,
+                StockMaximo = producto.StockMaximo,
                 CreatedAt = DateTime.UtcNow,
             };
-            context.Existencias.Add(existencia);
+            context.ProductosStock.Add(stock);
         }
 
-        var nueva = existencia.Cantidad + delta;
-        if (nueva < 0)
-            throw new BusinessException("No se permite stock negativo.");
-
-        existencia.Cantidad = nueva;
-        existencia.UpdatedAt = DateTime.UtcNow;
+        stock.AplicarDelta(delta, almacen.PermiteStockNegativo);
     }
 
     private async Task<List<(Guid LoteId, decimal Cantidad)>> AllocateFefoAsync(
         Guid productoId,
+        Guid almacenId,
         decimal cantidad,
         CancellationToken cancellationToken)
     {
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var lotes = await context.Existencias
-            .Include(x => x.Lote)
-            .Where(x => x.ProductoId == productoId && x.Cantidad > 0)
-            .Where(x => x.Lote.FechaVencimiento == null || x.Lote.FechaVencimiento >= today)
-            .OrderBy(x => x.Lote.FechaVencimiento ?? DateOnly.MaxValue)
-            .ThenBy(x => x.Lote.FechaIngreso)
+        var lotes = await context.ProductosLote
+            .Where(x => x.ProductoId == productoId
+                && x.AlmacenId == almacenId
+                && x.CantidadDisponible > x.CantidadReservada
+                && !x.Bloqueado)
+            .Where(x => x.FechaVencimiento == null || x.FechaVencimiento >= today)
+            .OrderBy(x => x.FechaVencimiento ?? DateOnly.MaxValue)
+            .ThenBy(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
 
         var restante = cantidad;
         var result = new List<(Guid, decimal)>();
 
-        foreach (var existencia in lotes)
+        foreach (var lote in lotes)
         {
             if (restante <= 0)
                 break;
 
-            var tomar = Math.Min(existencia.Cantidad, restante);
-            result.Add((existencia.LoteId, tomar));
+            var tomar = Math.Min(lote.CantidadUtilizable, restante);
+            result.Add((lote.Id, tomar));
             restante -= tomar;
         }
 
         if (restante > 0)
             throw new BusinessException(
-                "Stock insuficiente o solo hay lotes vencidos para el producto solicitado.");
+                "Stock insuficiente o solo hay lotes vencidos/bloqueados para el producto solicitado.");
 
         return result;
     }
 
-    private static MovimientoResponse MapMovimiento(Movimiento movimiento) =>
+    private static MovimientoResponse MapMovimiento(MovimientoAlmacen movimiento) =>
         new(
             movimiento.Id,
             movimiento.Numero,
-            movimiento.Tipo,
+            movimiento.TipoMovimientoAlmacen?.Codigo ?? string.Empty,
             movimiento.Fecha,
-            movimiento.Estado,
-            movimiento.Observaciones,
+            movimiento.Estado.ToString(),
+            movimiento.Observacion,
             movimiento.ModuloOrigen,
             movimiento.EntidadOrigen,
             movimiento.ReferenciaId,
-            movimiento.ProveedorId,
-            movimiento.WorkflowInstanceId,
-            movimiento.RequiereAprobacion,
+            ProveedorId: null,
+            WorkflowInstanceId: null,
+            RequiereAprobacion: false,
             movimiento.Detalles.Select(d => new MovimientoDetalleResponse(
                 d.Id,
                 d.ProductoId,
                 d.Producto?.Codigo ?? string.Empty,
                 d.Producto?.Nombre ?? string.Empty,
-                d.LoteId,
-                d.Lote?.Numero,
+                d.ProductoLoteId,
+                d.ProductoLote?.NumeroLote,
                 d.Cantidad,
-                d.CostoUnitario)).ToList());
+                d.CostoUnitario)).ToList(),
+            movimiento.AlmacenOrigenId,
+            movimiento.AlmacenDestinoId);
 }

@@ -1,9 +1,8 @@
 import { almacenEndpoints } from '../../../../shared/api/endpoints'
 import { createGuidCrudService } from '../../../../shared/services/guid-crud.service'
-import type { Categoria, CreateCategoriaPayload, UpdateCategoriaPayload } from '../types/categoria.types'
+import type { CategoriaProducto, CategoriaProductoPayload } from '../types/categoria.types'
 
-export const categoriasAlmacenService = createGuidCrudService<
-  Categoria,
-  CreateCategoriaPayload,
-  UpdateCategoriaPayload
+export const categoriasProductoService = createGuidCrudService<
+  CategoriaProducto,
+  CategoriaProductoPayload
 >(almacenEndpoints.categorias.root)

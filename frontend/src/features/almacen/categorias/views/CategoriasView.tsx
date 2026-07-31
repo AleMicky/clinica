@@ -1,32 +1,60 @@
 import { useMemo, useState } from 'react'
-import { Button, Form, Input, Modal, Space, Switch, Table, Tag } from 'antd'
+import { Button, Form, Input, Modal, Space, Table } from 'antd'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   CrudCreateHeader,
   CrudSearchFiltersBar,
   CrudSectionPanel,
 } from '../../../../shared/components/ui/crud-section'
+import { useAppMutation } from '../../../../shared/hooks/use-app-mutation'
+import { useAppQuery } from '../../../../shared/hooks/use-app-query'
 import { usePagedSearchFilters } from '../../../../shared/hooks/use-paged-search-filters'
+import { queryKeys } from '../../../../shared/constants/query-keys'
 import { formatRegistrosCaption } from '../../../../shared/utils/crud-search'
-import {
-  useCategoriasAlmacen,
-  useCreateCategoriaAlmacen,
-  useDeleteCategoriaAlmacen,
-  useUpdateCategoriaAlmacen,
-} from '../hooks/categorias.hooks'
-import type { Categoria } from '../types/categoria.types'
+import { notify } from '../../../../shared/utils/notify'
+import { getApiErrorMessage } from '../../../../shared/utils/api-error'
+import { categoriasProductoService } from '../services/categorias.service'
+import type { CategoriaProducto } from '../types/categoria.types'
 
-export function CategoriasAlmacenView() {
+export function CategoriasProductoView() {
   const filters = usePagedSearchFilters()
-  const { data, isFetching } = useCategoriasAlmacen({
-    page: filters.page,
-    pageSize: filters.pageSize,
+  const qc = useQueryClient()
+  const { data, isFetching } = useAppQuery({
+    queryKey: queryKeys.almacen.categorias.list({
+      page: filters.page,
+      pageSize: filters.pageSize,
+    }),
+    queryFn: () =>
+      categoriasProductoService.getPaged({ page: filters.page, pageSize: filters.pageSize }),
   })
-  const createMutation = useCreateCategoriaAlmacen()
-  const updateMutation = useUpdateCategoriaAlmacen()
-  const deleteMutation = useDeleteCategoriaAlmacen()
+  const createMutation = useAppMutation({
+    mutationFn: categoriasProductoService.create,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.almacen.categorias.all })
+      notify.success('Categoría creada', 'Registro guardado.')
+    },
+    onError: (e) => notify.error('Error', getApiErrorMessage(e)),
+  })
+  const updateMutation = useAppMutation({
+    mutationFn: ({ id, data }: { id: string; data: Parameters<typeof categoriasProductoService.update>[1] }) =>
+      categoriasProductoService.update(id, data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.almacen.categorias.all })
+      notify.success('Categoría actualizada', 'Cambios guardados.')
+    },
+    onError: (e) => notify.error('Error', getApiErrorMessage(e)),
+  })
+  const deleteMutation = useAppMutation({
+    mutationFn: categoriasProductoService.delete,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.almacen.categorias.all })
+      notify.success('Categoría eliminada', 'Se eliminó correctamente.')
+    },
+    onError: (e) => notify.error('Error', getApiErrorMessage(e)),
+  })
 
   const [open, setOpen] = useState(false)
-  const [editing, setEditing] = useState<Categoria | null>(null)
+  const [editing, setEditing] = useState<CategoriaProducto | null>(null)
   const [form] = Form.useForm()
 
   const items = useMemo(() => {
@@ -34,30 +62,14 @@ export function CategoriasAlmacenView() {
     if (!filters.search) return source
     const s = filters.search.toLowerCase()
     return source.filter(
-      (x) =>
-        x.codigo.toLowerCase().includes(s) || x.nombre.toLowerCase().includes(s),
+      (x) => x.codigo.toLowerCase().includes(s) || x.nombre.toLowerCase().includes(s),
     )
   }, [data?.items, filters.search])
 
-  const openCreate = () => {
-    setEditing(null)
-    form.setFieldsValue({ codigo: '', nombre: '', activo: true })
-    setOpen(true)
-  }
-
-  const openEdit = (row: Categoria) => {
-    setEditing(row)
-    form.setFieldsValue(row)
-    setOpen(true)
-  }
-
   const handleOk = async () => {
     const values = await form.validateFields()
-    if (editing) {
-      await updateMutation.mutateAsync({ id: editing.id, data: values })
-    } else {
-      await createMutation.mutateAsync(values)
-    }
+    if (editing) await updateMutation.mutateAsync({ id: editing.id, data: values })
+    else await createMutation.mutateAsync(values)
     setOpen(false)
   }
 
@@ -80,7 +92,11 @@ export function CategoriasAlmacenView() {
           <CrudCreateHeader
             label="Nueva categoría"
             ariaLabel="Crear categoría"
-            onCreate={openCreate}
+            onCreate={() => {
+              setEditing(null)
+              form.resetFields()
+              setOpen(true)
+            }}
           />
         }
         caption={formatRegistrosCaption(
@@ -101,26 +117,22 @@ export function CategoriasAlmacenView() {
           columns={[
             { title: 'Código', dataIndex: 'codigo' },
             { title: 'Nombre', dataIndex: 'nombre' },
-            {
-              title: 'Estado',
-              dataIndex: 'activo',
-              render: (v: boolean) => (
-                <Tag color={v ? 'green' : 'default'}>{v ? 'Activo' : 'Inactivo'}</Tag>
-              ),
-            },
+            { title: 'Descripción', dataIndex: 'descripcion' },
             {
               title: 'Acciones',
               render: (_, row) => (
                 <Space>
-                  <Button size="small" onClick={() => openEdit(row)}>
-                    Editar
-                  </Button>
                   <Button
                     size="small"
-                    danger
-                    loading={deleteMutation.isPending}
-                    onClick={() => void deleteMutation.mutateAsync(row.id)}
+                    onClick={() => {
+                      setEditing(row)
+                      form.setFieldsValue(row)
+                      setOpen(true)
+                    }}
                   >
+                    Editar
+                  </Button>
+                  <Button size="small" danger onClick={() => void deleteMutation.mutateAsync(row.id)}>
                     Eliminar
                   </Button>
                 </Space>
@@ -129,7 +141,6 @@ export function CategoriasAlmacenView() {
           ]}
         />
       </CrudSectionPanel>
-
       <Modal
         title={editing ? 'Editar categoría' : 'Nueva categoría'}
         open={open}
@@ -145,8 +156,8 @@ export function CategoriasAlmacenView() {
           <Form.Item name="nombre" label="Nombre" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="activo" label="Activo" valuePropName="checked">
-            <Switch />
+          <Form.Item name="descripcion" label="Descripción">
+            <Input.TextArea rows={2} />
           </Form.Item>
         </Form>
       </Modal>

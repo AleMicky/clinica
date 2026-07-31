@@ -4,16 +4,31 @@ namespace Clinica.Modules.Almacen.Domain.Entities;
 
 public class Producto : AuditableEntity, ICodedEntity
 {
-    public string Codigo { get; set; } = string.Empty;
-    public string Nombre { get; set; } = string.Empty;
-    public Guid CategoriaId { get; set; }
-    public Categoria Categoria { get; set; } = null!;
+    public string Codigo { get; set; } = null!;
+    public string Nombre { get; set; } = null!;
+    public string? Descripcion { get; set; }
+
+    public string? CodigoBarras { get; set; }
+
+    public Guid CategoriaProductoId { get; set; }
+    public CategoriaProducto CategoriaProducto { get; set; } = null!;
+
     public Guid UnidadMedidaId { get; set; }
-    public decimal StockMinimo { get; set; }
-    public bool ControlaLote { get; set; } = true;
-    public bool ControlaVencimiento { get; set; } = true;
+    public UnidadMedida UnidadMedida { get; set; } = null!;
+
     public bool EsMedicamento { get; set; }
+
+    public bool ManejaLote { get; set; }
+    public bool ManejaVencimiento { get; set; }
+    public bool ManejaSerie { get; set; }
+
+    public decimal StockMinimo { get; set; }
+    public decimal StockMaximo { get; set; }
+
     public bool Activo { get; set; } = true;
-    public ICollection<Lote> Lotes { get; set; } = [];
-    public ICollection<Existencia> Existencias { get; set; } = [];
+
+    public MedicamentoDetalle? MedicamentoDetalle { get; set; }
+
+    public ICollection<ProductoStock> Stocks { get; set; } = [];
+    public ICollection<ProductoLote> Lotes { get; set; } = [];
 }

@@ -23,16 +23,11 @@ namespace Clinica.Modules.Almacen.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.Categoria", b =>
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.Almacen", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("Activo")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
 
                     b.Property<string>("Codigo")
                         .IsRequired()
@@ -47,6 +42,76 @@ namespace Clinica.Modules.Almacen.Infrastructure.Migrations
                     b.Property<string>("CreatedBy")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("PermiteDispensacion")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("PermiteStockNegativo")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("PermiteVenta")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ResponsableEmpleadoId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TipoAlmacenId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Codigo")
+                        .IsUnique();
+
+                    b.HasIndex("TipoAlmacenId");
+
+                    b.ToTable("Almacenes", "almacen");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.CategoriaProducto", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
@@ -70,16 +135,127 @@ namespace Clinica.Modules.Almacen.Infrastructure.Migrations
                     b.HasIndex("Codigo")
                         .IsUnique();
 
-                    b.ToTable("Categorias", "almacen");
+                    b.ToTable("CategoriasProducto", "almacen");
                 });
 
-            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.Existencia", b =>
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.FormaFarmaceutica", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<decimal>("Cantidad")
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Codigo")
+                        .IsUnique();
+
+                    b.ToTable("FormasFarmaceuticas", "almacen");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.InventarioFisico", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AlmacenId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("Estado")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("FechaFinalizacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FechaInicio")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Numero")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Observacion")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AlmacenId");
+
+                    b.HasIndex("Numero")
+                        .IsUnique();
+
+                    b.ToTable("InventariosFisicos", "almacen");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.InventarioFisicoDetalle", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("CantidadContada")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("CantidadSistema")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
 
@@ -92,15 +268,22 @@ namespace Clinica.Modules.Almacen.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<Guid>("InventarioFisicoId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<Guid>("LoteId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("Observacion")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<Guid>("ProductoId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ProductoLoteId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -112,19 +295,24 @@ namespace Clinica.Modules.Almacen.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("LoteId")
-                        .IsUnique();
+                    b.HasIndex("InventarioFisicoId");
 
                     b.HasIndex("ProductoId");
 
-                    b.ToTable("Existencias", "almacen");
+                    b.HasIndex("ProductoLoteId");
+
+                    b.ToTable("InventariosFisicoDetalle", "almacen");
                 });
 
-            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.Lote", b =>
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.MedicamentoDetalle", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Concentracion")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -135,27 +323,34 @@ namespace Clinica.Modules.Almacen.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<DateTime>("FechaIngreso")
-                        .HasColumnType("datetime2");
+                    b.Property<bool>("EsControlado")
+                        .HasColumnType("bit");
 
-                    b.Property<DateOnly?>("FechaVencimiento")
-                        .HasColumnType("date");
+                    b.Property<Guid?>("FormaFarmaceuticaId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<string>("Numero")
-                        .IsRequired()
+                    b.Property<string>("NombreComercial")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("NombreGenerico")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Presentacion")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<Guid>("ProductoId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("ProveedorId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<bool>("RequiereReceta")
+                        .HasColumnType("bit");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -166,16 +361,24 @@ namespace Clinica.Modules.Almacen.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProductoId", "Numero")
+                    b.HasIndex("FormaFarmaceuticaId");
+
+                    b.HasIndex("ProductoId")
                         .IsUnique();
 
-                    b.ToTable("Lotes", "almacen");
+                    b.ToTable("MedicamentosDetalle", "almacen");
                 });
 
-            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.Movimiento", b =>
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.MovimientoAlmacen", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("AlmacenDestinoId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("AlmacenOrigenId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -191,10 +394,8 @@ namespace Clinica.Modules.Almacen.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("Estado")
-                        .IsRequired()
-                        .HasMaxLength(40)
-                        .HasColumnType("nvarchar(40)");
+                    b.Property<int>("Estado")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("Fecha")
                         .HasColumnType("datetime2");
@@ -213,23 +414,15 @@ namespace Clinica.Modules.Almacen.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<string>("Observaciones")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<Guid?>("ProveedorId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("Observacion")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
 
                     b.Property<Guid?>("ReferenciaId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<bool>("RequiereAprobacion")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Tipo")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
+                    b.Property<Guid>("TipoMovimientoAlmacenId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -238,18 +431,21 @@ namespace Clinica.Modules.Almacen.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<Guid?>("WorkflowInstanceId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.HasKey("Id");
+
+                    b.HasIndex("AlmacenDestinoId");
+
+                    b.HasIndex("AlmacenOrigenId");
 
                     b.HasIndex("Numero")
                         .IsUnique();
 
-                    b.ToTable("Movimientos", "almacen");
+                    b.HasIndex("TipoMovimientoAlmacenId");
+
+                    b.ToTable("MovimientosAlmacen", "almacen");
                 });
 
-            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.MovimientoDetalle", b =>
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.MovimientoAlmacenDetalle", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -259,7 +455,11 @@ namespace Clinica.Modules.Almacen.Infrastructure.Migrations
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
 
-                    b.Property<decimal?>("CostoUnitario")
+                    b.Property<decimal>("CostoTotal")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("CostoUnitario")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
 
@@ -277,13 +477,13 @@ namespace Clinica.Modules.Almacen.Infrastructure.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<Guid?>("LoteId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("MovimientoId")
+                    b.Property<Guid>("MovimientoAlmacenId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("ProductoId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ProductoLoteId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -295,13 +495,13 @@ namespace Clinica.Modules.Almacen.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("LoteId");
-
-                    b.HasIndex("MovimientoId");
+                    b.HasIndex("MovimientoAlmacenId");
 
                     b.HasIndex("ProductoId");
 
-                    b.ToTable("MovimientoDetalles", "almacen");
+                    b.HasIndex("ProductoLoteId");
+
+                    b.ToTable("MovimientosAlmacenDetalle", "almacen");
                 });
 
             modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.Producto", b =>
@@ -315,7 +515,7 @@ namespace Clinica.Modules.Almacen.Infrastructure.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
 
-                    b.Property<Guid>("CategoriaId")
+                    b.Property<Guid>("CategoriaProductoId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Codigo")
@@ -323,11 +523,9 @@ namespace Clinica.Modules.Almacen.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<bool>("ControlaLote")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("ControlaVencimiento")
-                        .HasColumnType("bit");
+                    b.Property<string>("CodigoBarras")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -338,6 +536,10 @@ namespace Clinica.Modules.Almacen.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<bool>("EsMedicamento")
                         .HasColumnType("bit");
 
@@ -346,10 +548,25 @@ namespace Clinica.Modules.Almacen.Infrastructure.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
+                    b.Property<bool>("ManejaLote")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ManejaSerie")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ManejaVencimiento")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<decimal>("StockMaximo")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasDefaultValue(0m);
 
                     b.Property<decimal>("StockMinimo")
                         .ValueGeneratedOnAdd()
@@ -369,17 +586,276 @@ namespace Clinica.Modules.Almacen.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CategoriaId");
+                    b.HasIndex("CategoriaProductoId");
 
                     b.HasIndex("Codigo")
                         .IsUnique();
+
+                    b.HasIndex("CodigoBarras")
+                        .IsUnique()
+                        .HasFilter("[CodigoBarras] IS NOT NULL");
 
                     b.HasIndex("UnidadMedidaId");
 
                     b.ToTable("Productos", "almacen");
                 });
 
-            modelBuilder.Entity("Clinica.Modules.Parametros.Domain.Entities.UnidadesMedida", b =>
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.ProductoLote", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AlmacenId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("Bloqueado")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal>("CantidadDisponible")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("CantidadInicial")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("CantidadReservada")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("CostoUnitario")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateOnly?>("FechaFabricacion")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("FechaVencimiento")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("MotivoBloqueo")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("NumeroLote")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("ProductoId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AlmacenId");
+
+                    b.HasIndex("ProductoId", "AlmacenId", "NumeroLote")
+                        .IsUnique();
+
+                    b.ToTable("ProductosLote", "almacen");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.ProductoStock", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AlmacenId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("CantidadDisponible")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("CantidadReservada")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<Guid>("ProductoId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("StockMaximo")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("StockMinimo")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AlmacenId");
+
+                    b.HasIndex("ProductoId", "AlmacenId")
+                        .IsUnique();
+
+                    b.ToTable("ProductosStock", "almacen");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.SolicitudAlmacen", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AlmacenId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AreaSolicitanteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("EmpleadoSolicitanteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Estado")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("FechaSolicitud")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Numero")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Observacion")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AlmacenId");
+
+                    b.HasIndex("Numero")
+                        .IsUnique();
+
+                    b.ToTable("SolicitudesAlmacen", "almacen");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.SolicitudAlmacenDetalle", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("CantidadAprobada")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("CantidadEntregada")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("CantidadSolicitada")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Observacion")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("ProductoId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("SolicitudAlmacenId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductoId");
+
+                    b.HasIndex("SolicitudAlmacenId");
+
+                    b.ToTable("SolicitudesAlmacenDetalle", "almacen");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.TipoAlmacen", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -387,79 +863,319 @@ namespace Clinica.Modules.Almacen.Infrastructure.Migrations
 
                     b.Property<string>("Codigo")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("Nombre")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Simbolo")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("UnidadesMedida", "parametros", t =>
-                        {
-                            t.ExcludeFromMigrations();
-                        });
+                    b.HasIndex("Codigo")
+                        .IsUnique();
+
+                    b.ToTable("TiposAlmacen", "almacen");
                 });
 
-            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.Existencia", b =>
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.TipoMovimientoAlmacen", b =>
                 {
-                    b.HasOne("Clinica.Modules.Almacen.Domain.Entities.Lote", "Lote")
-                        .WithOne("Existencia")
-                        .HasForeignKey("Clinica.Modules.Almacen.Domain.Entities.Existencia", "LoteId")
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("OperacionStock")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Codigo")
+                        .IsUnique();
+
+                    b.ToTable("TiposMovimientoAlmacen", "almacen");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.TransferenciaAlmacen", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AlmacenDestinoId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AlmacenOrigenId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid?>("EmpleadoAprobadorId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("EmpleadoDespachoId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("EmpleadoRecepcionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EmpleadoSolicitanteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Estado")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("FechaEnvio")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaRecepcion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FechaSolicitud")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Numero")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Observacion")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AlmacenDestinoId");
+
+                    b.HasIndex("AlmacenOrigenId");
+
+                    b.HasIndex("Numero")
+                        .IsUnique();
+
+                    b.ToTable("TransferenciasAlmacen", "almacen");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.TransferenciaAlmacenDetalle", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("CantidadEnviada")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("CantidadRecibida")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("CantidadSolicitada")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Observacion")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("ProductoId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ProductoLoteOrigenId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TransferenciaAlmacenId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductoId");
+
+                    b.HasIndex("ProductoLoteOrigenId");
+
+                    b.HasIndex("TransferenciaAlmacenId");
+
+                    b.ToTable("TransferenciasAlmacenDetalle", "almacen");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.UnidadMedida", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Abreviatura")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("PermiteDecimales")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Codigo")
+                        .IsUnique();
+
+                    b.ToTable("UnidadesMedida", "almacen");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.Almacen", b =>
+                {
+                    b.HasOne("Clinica.Modules.Almacen.Domain.Entities.TipoAlmacen", "TipoAlmacen")
+                        .WithMany("Almacenes")
+                        .HasForeignKey("TipoAlmacenId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Clinica.Modules.Almacen.Domain.Entities.Producto", "Producto")
-                        .WithMany("Existencias")
-                        .HasForeignKey("ProductoId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Lote");
-
-                    b.Navigation("Producto");
+                    b.Navigation("TipoAlmacen");
                 });
 
-            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.Lote", b =>
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.InventarioFisico", b =>
                 {
-                    b.HasOne("Clinica.Modules.Almacen.Domain.Entities.Producto", "Producto")
-                        .WithMany("Lotes")
-                        .HasForeignKey("ProductoId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Producto");
-                });
-
-            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.MovimientoDetalle", b =>
-                {
-                    b.HasOne("Clinica.Modules.Almacen.Domain.Entities.Lote", "Lote")
+                    b.HasOne("Clinica.Modules.Almacen.Domain.Entities.Almacen", "Almacen")
                         .WithMany()
-                        .HasForeignKey("LoteId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("AlmacenId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
-                    b.HasOne("Clinica.Modules.Almacen.Domain.Entities.Movimiento", "Movimiento")
+                    b.Navigation("Almacen");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.InventarioFisicoDetalle", b =>
+                {
+                    b.HasOne("Clinica.Modules.Almacen.Domain.Entities.InventarioFisico", "InventarioFisico")
                         .WithMany("Detalles")
-                        .HasForeignKey("MovimientoId")
+                        .HasForeignKey("InventarioFisicoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -469,50 +1185,273 @@ namespace Clinica.Modules.Almacen.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Lote");
+                    b.HasOne("Clinica.Modules.Almacen.Domain.Entities.ProductoLote", "ProductoLote")
+                        .WithMany()
+                        .HasForeignKey("ProductoLoteId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
-                    b.Navigation("Movimiento");
+                    b.Navigation("InventarioFisico");
+
+                    b.Navigation("Producto");
+
+                    b.Navigation("ProductoLote");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.MedicamentoDetalle", b =>
+                {
+                    b.HasOne("Clinica.Modules.Almacen.Domain.Entities.FormaFarmaceutica", "FormaFarmaceutica")
+                        .WithMany("Medicamentos")
+                        .HasForeignKey("FormaFarmaceuticaId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Clinica.Modules.Almacen.Domain.Entities.Producto", "Producto")
+                        .WithOne("MedicamentoDetalle")
+                        .HasForeignKey("Clinica.Modules.Almacen.Domain.Entities.MedicamentoDetalle", "ProductoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("FormaFarmaceutica");
 
                     b.Navigation("Producto");
                 });
 
-            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.Producto", b =>
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.MovimientoAlmacen", b =>
                 {
-                    b.HasOne("Clinica.Modules.Almacen.Domain.Entities.Categoria", "Categoria")
-                        .WithMany("Productos")
-                        .HasForeignKey("CategoriaId")
+                    b.HasOne("Clinica.Modules.Almacen.Domain.Entities.Almacen", "AlmacenDestino")
+                        .WithMany()
+                        .HasForeignKey("AlmacenDestinoId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Clinica.Modules.Almacen.Domain.Entities.Almacen", "AlmacenOrigen")
+                        .WithMany()
+                        .HasForeignKey("AlmacenOrigenId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Clinica.Modules.Almacen.Domain.Entities.TipoMovimientoAlmacen", "TipoMovimientoAlmacen")
+                        .WithMany("Movimientos")
+                        .HasForeignKey("TipoMovimientoAlmacenId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Clinica.Modules.Parametros.Domain.Entities.UnidadesMedida", null)
+                    b.Navigation("AlmacenDestino");
+
+                    b.Navigation("AlmacenOrigen");
+
+                    b.Navigation("TipoMovimientoAlmacen");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.MovimientoAlmacenDetalle", b =>
+                {
+                    b.HasOne("Clinica.Modules.Almacen.Domain.Entities.MovimientoAlmacen", "MovimientoAlmacen")
+                        .WithMany("Detalles")
+                        .HasForeignKey("MovimientoAlmacenId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Clinica.Modules.Almacen.Domain.Entities.Producto", "Producto")
+                        .WithMany()
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Clinica.Modules.Almacen.Domain.Entities.ProductoLote", "ProductoLote")
+                        .WithMany()
+                        .HasForeignKey("ProductoLoteId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("MovimientoAlmacen");
+
+                    b.Navigation("Producto");
+
+                    b.Navigation("ProductoLote");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.Producto", b =>
+                {
+                    b.HasOne("Clinica.Modules.Almacen.Domain.Entities.CategoriaProducto", "CategoriaProducto")
+                        .WithMany("Productos")
+                        .HasForeignKey("CategoriaProductoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Clinica.Modules.Almacen.Domain.Entities.UnidadMedida", "UnidadMedida")
                         .WithMany()
                         .HasForeignKey("UnidadMedidaId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Categoria");
+                    b.Navigation("CategoriaProducto");
+
+                    b.Navigation("UnidadMedida");
                 });
 
-            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.Categoria", b =>
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.ProductoLote", b =>
+                {
+                    b.HasOne("Clinica.Modules.Almacen.Domain.Entities.Almacen", "Almacen")
+                        .WithMany("Lotes")
+                        .HasForeignKey("AlmacenId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Clinica.Modules.Almacen.Domain.Entities.Producto", "Producto")
+                        .WithMany("Lotes")
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Almacen");
+
+                    b.Navigation("Producto");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.ProductoStock", b =>
+                {
+                    b.HasOne("Clinica.Modules.Almacen.Domain.Entities.Almacen", "Almacen")
+                        .WithMany("Stocks")
+                        .HasForeignKey("AlmacenId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Clinica.Modules.Almacen.Domain.Entities.Producto", "Producto")
+                        .WithMany("Stocks")
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Almacen");
+
+                    b.Navigation("Producto");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.SolicitudAlmacen", b =>
+                {
+                    b.HasOne("Clinica.Modules.Almacen.Domain.Entities.Almacen", "Almacen")
+                        .WithMany()
+                        .HasForeignKey("AlmacenId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Almacen");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.SolicitudAlmacenDetalle", b =>
+                {
+                    b.HasOne("Clinica.Modules.Almacen.Domain.Entities.Producto", "Producto")
+                        .WithMany()
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Clinica.Modules.Almacen.Domain.Entities.SolicitudAlmacen", "SolicitudAlmacen")
+                        .WithMany("Detalles")
+                        .HasForeignKey("SolicitudAlmacenId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Producto");
+
+                    b.Navigation("SolicitudAlmacen");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.TransferenciaAlmacen", b =>
+                {
+                    b.HasOne("Clinica.Modules.Almacen.Domain.Entities.Almacen", "AlmacenDestino")
+                        .WithMany()
+                        .HasForeignKey("AlmacenDestinoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Clinica.Modules.Almacen.Domain.Entities.Almacen", "AlmacenOrigen")
+                        .WithMany()
+                        .HasForeignKey("AlmacenOrigenId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("AlmacenDestino");
+
+                    b.Navigation("AlmacenOrigen");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.TransferenciaAlmacenDetalle", b =>
+                {
+                    b.HasOne("Clinica.Modules.Almacen.Domain.Entities.Producto", "Producto")
+                        .WithMany()
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Clinica.Modules.Almacen.Domain.Entities.ProductoLote", "ProductoLoteOrigen")
+                        .WithMany()
+                        .HasForeignKey("ProductoLoteOrigenId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Clinica.Modules.Almacen.Domain.Entities.TransferenciaAlmacen", "TransferenciaAlmacen")
+                        .WithMany("Detalles")
+                        .HasForeignKey("TransferenciaAlmacenId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Producto");
+
+                    b.Navigation("ProductoLoteOrigen");
+
+                    b.Navigation("TransferenciaAlmacen");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.Almacen", b =>
+                {
+                    b.Navigation("Lotes");
+
+                    b.Navigation("Stocks");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.CategoriaProducto", b =>
                 {
                     b.Navigation("Productos");
                 });
 
-            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.Lote", b =>
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.FormaFarmaceutica", b =>
                 {
-                    b.Navigation("Existencia");
+                    b.Navigation("Medicamentos");
                 });
 
-            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.Movimiento", b =>
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.InventarioFisico", b =>
+                {
+                    b.Navigation("Detalles");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.MovimientoAlmacen", b =>
                 {
                     b.Navigation("Detalles");
                 });
 
             modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.Producto", b =>
                 {
-                    b.Navigation("Existencias");
-
                     b.Navigation("Lotes");
+
+                    b.Navigation("MedicamentoDetalle");
+
+                    b.Navigation("Stocks");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.SolicitudAlmacen", b =>
+                {
+                    b.Navigation("Detalles");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.TipoAlmacen", b =>
+                {
+                    b.Navigation("Almacenes");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.TipoMovimientoAlmacen", b =>
+                {
+                    b.Navigation("Movimientos");
+                });
+
+            modelBuilder.Entity("Clinica.Modules.Almacen.Domain.Entities.TransferenciaAlmacen", b =>
+                {
+                    b.Navigation("Detalles");
                 });
 #pragma warning restore 612, 618
         }

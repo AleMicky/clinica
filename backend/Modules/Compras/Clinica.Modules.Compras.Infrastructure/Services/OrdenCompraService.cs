@@ -1,5 +1,5 @@
 using Clinica.Modules.Almacen.Application.Abstractions;
-using Clinica.Modules.Almacen.Application.Movimientos;
+using Clinica.Modules.Almacen.Application.Stock;
 using Clinica.Modules.Compras.Application.Abstractions;
 using Clinica.Modules.Compras.Application.OrdenesCompra;
 using Clinica.Modules.Compras.Domain.Entities;

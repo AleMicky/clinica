@@ -1,6 +1,6 @@
 using Clinica.Modules.Almacen.Domain.Entities;
-using Clinica.Modules.Parametros.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using AlmacenEntity = Clinica.Modules.Almacen.Domain.Entities.Almacen;
 
 namespace Clinica.Modules.Almacen.Infrastructure.Persistence;
 
@@ -11,26 +11,28 @@ public class AlmacenDbContext : DbContext
     {
     }
 
-    public DbSet<Categoria> Categorias => Set<Categoria>();
+    public DbSet<TipoAlmacen> TiposAlmacen => Set<TipoAlmacen>();
+    public DbSet<AlmacenEntity> Almacenes => Set<AlmacenEntity>();
+    public DbSet<CategoriaProducto> CategoriasProducto => Set<CategoriaProducto>();
+    public DbSet<UnidadMedida> UnidadesMedida => Set<UnidadMedida>();
+    public DbSet<FormaFarmaceutica> FormasFarmaceuticas => Set<FormaFarmaceutica>();
     public DbSet<Producto> Productos => Set<Producto>();
-    public DbSet<Lote> Lotes => Set<Lote>();
-    public DbSet<Existencia> Existencias => Set<Existencia>();
-    public DbSet<Movimiento> Movimientos => Set<Movimiento>();
-    public DbSet<MovimientoDetalle> MovimientoDetalles => Set<MovimientoDetalle>();
+    public DbSet<MedicamentoDetalle> MedicamentosDetalle => Set<MedicamentoDetalle>();
+    public DbSet<ProductoStock> ProductosStock => Set<ProductoStock>();
+    public DbSet<ProductoLote> ProductosLote => Set<ProductoLote>();
+    public DbSet<TipoMovimientoAlmacen> TiposMovimientoAlmacen => Set<TipoMovimientoAlmacen>();
+    public DbSet<MovimientoAlmacen> MovimientosAlmacen => Set<MovimientoAlmacen>();
+    public DbSet<MovimientoAlmacenDetalle> MovimientosAlmacenDetalle => Set<MovimientoAlmacenDetalle>();
+    public DbSet<TransferenciaAlmacen> TransferenciasAlmacen => Set<TransferenciaAlmacen>();
+    public DbSet<TransferenciaAlmacenDetalle> TransferenciasAlmacenDetalle => Set<TransferenciaAlmacenDetalle>();
+    public DbSet<SolicitudAlmacen> SolicitudesAlmacen => Set<SolicitudAlmacen>();
+    public DbSet<SolicitudAlmacenDetalle> SolicitudesAlmacenDetalle => Set<SolicitudAlmacenDetalle>();
+    public DbSet<InventarioFisico> InventariosFisicos => Set<InventarioFisico>();
+    public DbSet<InventarioFisicoDetalle> InventariosFisicoDetalle => Set<InventarioFisicoDetalle>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("almacen");
-        ConfigureExternalEntities(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AlmacenDbContext).Assembly);
-    }
-
-    private static void ConfigureExternalEntities(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<UnidadesMedida>(entity =>
-        {
-            entity.ToTable("UnidadesMedida", "parametros", t => t.ExcludeFromMigrations());
-            entity.HasKey(x => x.Id);
-        });
     }
 }

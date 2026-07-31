@@ -1,5 +1,5 @@
 using Clinica.Modules.Almacen.Application.Abstractions;
-using Clinica.Modules.Almacen.Application.Movimientos;
+using Clinica.Modules.Almacen.Application.Stock;
 using Clinica.SharedKernel.Responses;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
@@ -34,6 +34,13 @@ public static class MovimientoEndpoints
                     : ApiResults.Ok(result);
             })
             .WithName("AlmacenMovimiento_GetById");
+
+        movimientos.MapGet("/disponibilidad/{productoId:guid}", async (
+                Guid productoId,
+                IAlmacenStockService service,
+                CancellationToken cancellationToken) =>
+            ApiResults.Ok(await service.ConsultarDisponibilidadAsync(productoId, cancellationToken)))
+            .WithName("AlmacenMovimiento_Disponibilidad");
 
         movimientos.MapPost("/ingresos", async (
                 RegistrarIngresoRequest request,
@@ -76,7 +83,7 @@ public static class MovimientoEndpoints
                     return ApiResults.BadRequest(string.Join(", ", validation.Errors.Select(e => e.ErrorMessage)));
 
                 var result = await service.RegistrarAjusteAsync(request, cancellationToken);
-                return ApiResults.Created(result, "Ajuste registrado (pendiente de aprobación).");
+                return ApiResults.Created(result, "Ajuste registrado.");
             })
             .WithName("AlmacenMovimiento_Ajuste");
 
@@ -91,7 +98,7 @@ public static class MovimientoEndpoints
                     return ApiResults.BadRequest(string.Join(", ", validation.Errors.Select(e => e.ErrorMessage)));
 
                 var result = await service.RegistrarBajaAsync(request, cancellationToken);
-                return ApiResults.Created(result, "Baja registrada (pendiente de aprobación).");
+                return ApiResults.Created(result, "Baja registrada.");
             })
             .WithName("AlmacenMovimiento_Baja");
 
@@ -106,9 +113,24 @@ public static class MovimientoEndpoints
                     return ApiResults.BadRequest(string.Join(", ", validation.Errors.Select(e => e.ErrorMessage)));
 
                 var result = await service.RegistrarTransferenciaAsync(request, cancellationToken);
-                return ApiResults.Created(result, "Transferencia registrada (pendiente de aprobación).");
+                return ApiResults.Created(result, "Transferencia registrada.");
             })
             .WithName("AlmacenMovimiento_Transferencia");
+
+        movimientos.MapPost("/fefo", async (
+                DescontarFefoRequest request,
+                IValidator<DescontarFefoRequest> validator,
+                IAlmacenStockService service,
+                CancellationToken cancellationToken) =>
+            {
+                var validation = await validator.ValidateAsync(request, cancellationToken);
+                if (!validation.IsValid)
+                    return ApiResults.BadRequest(string.Join(", ", validation.Errors.Select(e => e.ErrorMessage)));
+
+                var result = await service.DescontarFefoAsync(request, cancellationToken);
+                return ApiResults.Created(result, "Descuento FEFO aplicado.");
+            })
+            .WithName("AlmacenMovimiento_Fefo");
 
         movimientos.MapPost("/{id:guid}/aplicar", async (
                 Guid id,
@@ -120,6 +142,17 @@ public static class MovimientoEndpoints
                 return ApiResults.Ok(result, "Movimiento aplicado.");
             })
             .WithName("AlmacenMovimiento_Aplicar");
+
+        movimientos.MapPost("/{id:guid}/anular", async (
+                Guid id,
+                IAlmacenStockService service,
+                CancellationToken cancellationToken) =>
+            {
+                await service.SetMovimientoEstadoAsync(id, "Anulado", cancellationToken);
+                var result = await service.GetMovimientoByIdAsync(id, cancellationToken);
+                return ApiResults.Ok(result, "Movimiento anulado.");
+            })
+            .WithName("AlmacenMovimiento_Anular");
 
         return movimientos;
     }

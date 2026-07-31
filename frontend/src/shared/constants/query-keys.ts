@@ -315,23 +315,52 @@ export const queryKeys = {
         },
     },
     almacen: {
-        categorias: {
-            all: ['almacen', 'categorias'] as const,
-            list: (query: PagedQuery) => ['almacen', 'categorias', 'list', query] as const,
-        },
         productos: {
             all: ['almacen', 'productos'] as const,
             list: (query: PagedQuery) => ['almacen', 'productos', 'list', query] as const,
         },
-        existencias: {
-            all: ['almacen', 'existencias'] as const,
-            list: (query: PagedQuery & Record<string, unknown>) =>
-                ['almacen', 'existencias', 'list', query] as const,
+        categorias: {
+            all: ['almacen', 'categorias'] as const,
+            list: (query: PagedQuery) => ['almacen', 'categorias', 'list', query] as const,
+        },
+        unidadesMedida: {
+            all: ['almacen', 'unidades-medida'] as const,
+            list: (query: PagedQuery) => ['almacen', 'unidades-medida', 'list', query] as const,
+        },
+        formasFarmaceuticas: {
+            all: ['almacen', 'formas-farmaceuticas'] as const,
+            list: (query: PagedQuery) =>
+                ['almacen', 'formas-farmaceuticas', 'list', query] as const,
+        },
+        almacenes: {
+            all: ['almacen', 'almacenes'] as const,
+            list: (query: PagedQuery) => ['almacen', 'almacenes', 'list', query] as const,
+            tipos: ['almacen', 'almacenes', 'tipos'] as const,
+        },
+        stock: {
+            disponibilidad: (productoId: string) =>
+                ['almacen', 'stock', 'disponibilidad', productoId] as const,
         },
         movimientos: {
             all: ['almacen', 'movimientos'] as const,
             list: (query: PagedQuery & Record<string, unknown>) =>
                 ['almacen', 'movimientos', 'list', query] as const,
+            detail: (id: string) => ['almacen', 'movimientos', 'detail', id] as const,
+        },
+        transferencias: {
+            all: ['almacen', 'transferencias'] as const,
+            list: (query: PagedQuery & Record<string, unknown>) =>
+                ['almacen', 'transferencias', 'list', query] as const,
+        },
+        solicitudes: {
+            all: ['almacen', 'solicitudes'] as const,
+            list: (query: PagedQuery & Record<string, unknown>) =>
+                ['almacen', 'solicitudes', 'list', query] as const,
+        },
+        inventarios: {
+            all: ['almacen', 'inventarios'] as const,
+            list: (query: PagedQuery & Record<string, unknown>) =>
+                ['almacen', 'inventarios', 'list', query] as const,
         },
     },
     compras: {

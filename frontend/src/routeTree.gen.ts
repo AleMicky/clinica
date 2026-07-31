@@ -73,10 +73,16 @@ import { Route as AdminCajaCajasRouteImport } from './routes/_admin/caja/cajas'
 import { Route as AdminAtencionesTiposAtencionRouteImport } from './routes/_admin/atenciones/tipos-atencion'
 import { Route as AdminAtencionesFormulariosRouteImport } from './routes/_admin/atenciones/formularios'
 import { Route as AdminAtencionesAtencionIdRouteImport } from './routes/_admin/atenciones/$atencionId'
+import { Route as AdminAlmacenUnidadesMedidaRouteImport } from './routes/_admin/almacen/unidades-medida'
+import { Route as AdminAlmacenTransferenciasRouteImport } from './routes/_admin/almacen/transferencias'
+import { Route as AdminAlmacenStockRouteImport } from './routes/_admin/almacen/stock'
+import { Route as AdminAlmacenSolicitudesRouteImport } from './routes/_admin/almacen/solicitudes'
 import { Route as AdminAlmacenProductosRouteImport } from './routes/_admin/almacen/productos'
 import { Route as AdminAlmacenMovimientosRouteImport } from './routes/_admin/almacen/movimientos'
-import { Route as AdminAlmacenExistenciasRouteImport } from './routes/_admin/almacen/existencias'
+import { Route as AdminAlmacenInventariosRouteImport } from './routes/_admin/almacen/inventarios'
+import { Route as AdminAlmacenFormasFarmaceuticasRouteImport } from './routes/_admin/almacen/formas-farmaceuticas'
 import { Route as AdminAlmacenCategoriasRouteImport } from './routes/_admin/almacen/categorias'
+import { Route as AdminAlmacenAlmacenesRouteImport } from './routes/_admin/almacen/almacenes'
 import { Route as AdminLaboratorioSolicitudesIndexRouteImport } from './routes/_admin/laboratorio/solicitudes.index'
 import { Route as AdminCajaCuentasIndexRouteImport } from './routes/_admin/caja/cuentas/index'
 import { Route as AdminWorkflowInstancesInstanceIdRouteImport } from './routes/_admin/workflow/instances/$instanceId'
@@ -428,6 +434,28 @@ const AdminAtencionesAtencionIdRoute =
     path: '/$atencionId',
     getParentRoute: () => AdminAtencionesRoute,
   } as any)
+const AdminAlmacenUnidadesMedidaRoute =
+  AdminAlmacenUnidadesMedidaRouteImport.update({
+    id: '/unidades-medida',
+    path: '/unidades-medida',
+    getParentRoute: () => AdminAlmacenRoute,
+  } as any)
+const AdminAlmacenTransferenciasRoute =
+  AdminAlmacenTransferenciasRouteImport.update({
+    id: '/transferencias',
+    path: '/transferencias',
+    getParentRoute: () => AdminAlmacenRoute,
+  } as any)
+const AdminAlmacenStockRoute = AdminAlmacenStockRouteImport.update({
+  id: '/stock',
+  path: '/stock',
+  getParentRoute: () => AdminAlmacenRoute,
+} as any)
+const AdminAlmacenSolicitudesRoute = AdminAlmacenSolicitudesRouteImport.update({
+  id: '/solicitudes',
+  path: '/solicitudes',
+  getParentRoute: () => AdminAlmacenRoute,
+} as any)
 const AdminAlmacenProductosRoute = AdminAlmacenProductosRouteImport.update({
   id: '/productos',
   path: '/productos',
@@ -438,14 +466,25 @@ const AdminAlmacenMovimientosRoute = AdminAlmacenMovimientosRouteImport.update({
   path: '/movimientos',
   getParentRoute: () => AdminAlmacenRoute,
 } as any)
-const AdminAlmacenExistenciasRoute = AdminAlmacenExistenciasRouteImport.update({
-  id: '/existencias',
-  path: '/existencias',
+const AdminAlmacenInventariosRoute = AdminAlmacenInventariosRouteImport.update({
+  id: '/inventarios',
+  path: '/inventarios',
   getParentRoute: () => AdminAlmacenRoute,
 } as any)
+const AdminAlmacenFormasFarmaceuticasRoute =
+  AdminAlmacenFormasFarmaceuticasRouteImport.update({
+    id: '/formas-farmaceuticas',
+    path: '/formas-farmaceuticas',
+    getParentRoute: () => AdminAlmacenRoute,
+  } as any)
 const AdminAlmacenCategoriasRoute = AdminAlmacenCategoriasRouteImport.update({
   id: '/categorias',
   path: '/categorias',
+  getParentRoute: () => AdminAlmacenRoute,
+} as any)
+const AdminAlmacenAlmacenesRoute = AdminAlmacenAlmacenesRouteImport.update({
+  id: '/almacenes',
+  path: '/almacenes',
   getParentRoute: () => AdminAlmacenRoute,
 } as any)
 const AdminLaboratorioSolicitudesIndexRoute =
@@ -502,10 +541,16 @@ export interface FileRoutesByFullPath {
   '/recursos-humanos': typeof AdminRecursosHumanosRouteWithChildren
   '/seguridad': typeof AdminSeguridadRouteWithChildren
   '/login': typeof AuthLoginRoute
+  '/almacen/almacenes': typeof AdminAlmacenAlmacenesRoute
   '/almacen/categorias': typeof AdminAlmacenCategoriasRoute
-  '/almacen/existencias': typeof AdminAlmacenExistenciasRoute
+  '/almacen/formas-farmaceuticas': typeof AdminAlmacenFormasFarmaceuticasRoute
+  '/almacen/inventarios': typeof AdminAlmacenInventariosRoute
   '/almacen/movimientos': typeof AdminAlmacenMovimientosRoute
   '/almacen/productos': typeof AdminAlmacenProductosRoute
+  '/almacen/solicitudes': typeof AdminAlmacenSolicitudesRoute
+  '/almacen/stock': typeof AdminAlmacenStockRoute
+  '/almacen/transferencias': typeof AdminAlmacenTransferenciasRoute
+  '/almacen/unidades-medida': typeof AdminAlmacenUnidadesMedidaRoute
   '/atenciones/$atencionId': typeof AdminAtencionesAtencionIdRoute
   '/atenciones/formularios': typeof AdminAtencionesFormulariosRouteWithChildren
   '/atenciones/tipos-atencion': typeof AdminAtencionesTiposAtencionRoute
@@ -571,10 +616,16 @@ export interface FileRoutesByTo {
   '/compras': typeof AdminComprasRouteWithChildren
   '/farmacia': typeof AdminFarmaciaRouteWithChildren
   '/login': typeof AuthLoginRoute
+  '/almacen/almacenes': typeof AdminAlmacenAlmacenesRoute
   '/almacen/categorias': typeof AdminAlmacenCategoriasRoute
-  '/almacen/existencias': typeof AdminAlmacenExistenciasRoute
+  '/almacen/formas-farmaceuticas': typeof AdminAlmacenFormasFarmaceuticasRoute
+  '/almacen/inventarios': typeof AdminAlmacenInventariosRoute
   '/almacen/movimientos': typeof AdminAlmacenMovimientosRoute
   '/almacen/productos': typeof AdminAlmacenProductosRoute
+  '/almacen/solicitudes': typeof AdminAlmacenSolicitudesRoute
+  '/almacen/stock': typeof AdminAlmacenStockRoute
+  '/almacen/transferencias': typeof AdminAlmacenTransferenciasRoute
+  '/almacen/unidades-medida': typeof AdminAlmacenUnidadesMedidaRoute
   '/atenciones/$atencionId': typeof AdminAtencionesAtencionIdRoute
   '/atenciones/formularios': typeof AdminAtencionesFormulariosRouteWithChildren
   '/atenciones/tipos-atencion': typeof AdminAtencionesTiposAtencionRoute
@@ -648,10 +699,16 @@ export interface FileRoutesById {
   '/_admin/seguridad': typeof AdminSeguridadRouteWithChildren
   '/_auth/login': typeof AuthLoginRoute
   '/_admin/': typeof AdminIndexRoute
+  '/_admin/almacen/almacenes': typeof AdminAlmacenAlmacenesRoute
   '/_admin/almacen/categorias': typeof AdminAlmacenCategoriasRoute
-  '/_admin/almacen/existencias': typeof AdminAlmacenExistenciasRoute
+  '/_admin/almacen/formas-farmaceuticas': typeof AdminAlmacenFormasFarmaceuticasRoute
+  '/_admin/almacen/inventarios': typeof AdminAlmacenInventariosRoute
   '/_admin/almacen/movimientos': typeof AdminAlmacenMovimientosRoute
   '/_admin/almacen/productos': typeof AdminAlmacenProductosRoute
+  '/_admin/almacen/solicitudes': typeof AdminAlmacenSolicitudesRoute
+  '/_admin/almacen/stock': typeof AdminAlmacenStockRoute
+  '/_admin/almacen/transferencias': typeof AdminAlmacenTransferenciasRoute
+  '/_admin/almacen/unidades-medida': typeof AdminAlmacenUnidadesMedidaRoute
   '/_admin/atenciones/$atencionId': typeof AdminAtencionesAtencionIdRoute
   '/_admin/atenciones/formularios': typeof AdminAtencionesFormulariosRouteWithChildren
   '/_admin/atenciones/tipos-atencion': typeof AdminAtencionesTiposAtencionRoute
@@ -725,10 +782,16 @@ export interface FileRouteTypes {
     | '/recursos-humanos'
     | '/seguridad'
     | '/login'
+    | '/almacen/almacenes'
     | '/almacen/categorias'
-    | '/almacen/existencias'
+    | '/almacen/formas-farmaceuticas'
+    | '/almacen/inventarios'
     | '/almacen/movimientos'
     | '/almacen/productos'
+    | '/almacen/solicitudes'
+    | '/almacen/stock'
+    | '/almacen/transferencias'
+    | '/almacen/unidades-medida'
     | '/atenciones/$atencionId'
     | '/atenciones/formularios'
     | '/atenciones/tipos-atencion'
@@ -794,10 +857,16 @@ export interface FileRouteTypes {
     | '/compras'
     | '/farmacia'
     | '/login'
+    | '/almacen/almacenes'
     | '/almacen/categorias'
-    | '/almacen/existencias'
+    | '/almacen/formas-farmaceuticas'
+    | '/almacen/inventarios'
     | '/almacen/movimientos'
     | '/almacen/productos'
+    | '/almacen/solicitudes'
+    | '/almacen/stock'
+    | '/almacen/transferencias'
+    | '/almacen/unidades-medida'
     | '/atenciones/$atencionId'
     | '/atenciones/formularios'
     | '/atenciones/tipos-atencion'
@@ -870,10 +939,16 @@ export interface FileRouteTypes {
     | '/_admin/seguridad'
     | '/_auth/login'
     | '/_admin/'
+    | '/_admin/almacen/almacenes'
     | '/_admin/almacen/categorias'
-    | '/_admin/almacen/existencias'
+    | '/_admin/almacen/formas-farmaceuticas'
+    | '/_admin/almacen/inventarios'
     | '/_admin/almacen/movimientos'
     | '/_admin/almacen/productos'
+    | '/_admin/almacen/solicitudes'
+    | '/_admin/almacen/stock'
+    | '/_admin/almacen/transferencias'
+    | '/_admin/almacen/unidades-medida'
     | '/_admin/atenciones/$atencionId'
     | '/_admin/atenciones/formularios'
     | '/_admin/atenciones/tipos-atencion'
@@ -1389,6 +1464,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAtencionesAtencionIdRouteImport
       parentRoute: typeof AdminAtencionesRoute
     }
+    '/_admin/almacen/unidades-medida': {
+      id: '/_admin/almacen/unidades-medida'
+      path: '/unidades-medida'
+      fullPath: '/almacen/unidades-medida'
+      preLoaderRoute: typeof AdminAlmacenUnidadesMedidaRouteImport
+      parentRoute: typeof AdminAlmacenRoute
+    }
+    '/_admin/almacen/transferencias': {
+      id: '/_admin/almacen/transferencias'
+      path: '/transferencias'
+      fullPath: '/almacen/transferencias'
+      preLoaderRoute: typeof AdminAlmacenTransferenciasRouteImport
+      parentRoute: typeof AdminAlmacenRoute
+    }
+    '/_admin/almacen/stock': {
+      id: '/_admin/almacen/stock'
+      path: '/stock'
+      fullPath: '/almacen/stock'
+      preLoaderRoute: typeof AdminAlmacenStockRouteImport
+      parentRoute: typeof AdminAlmacenRoute
+    }
+    '/_admin/almacen/solicitudes': {
+      id: '/_admin/almacen/solicitudes'
+      path: '/solicitudes'
+      fullPath: '/almacen/solicitudes'
+      preLoaderRoute: typeof AdminAlmacenSolicitudesRouteImport
+      parentRoute: typeof AdminAlmacenRoute
+    }
     '/_admin/almacen/productos': {
       id: '/_admin/almacen/productos'
       path: '/productos'
@@ -1403,11 +1506,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAlmacenMovimientosRouteImport
       parentRoute: typeof AdminAlmacenRoute
     }
-    '/_admin/almacen/existencias': {
-      id: '/_admin/almacen/existencias'
-      path: '/existencias'
-      fullPath: '/almacen/existencias'
-      preLoaderRoute: typeof AdminAlmacenExistenciasRouteImport
+    '/_admin/almacen/inventarios': {
+      id: '/_admin/almacen/inventarios'
+      path: '/inventarios'
+      fullPath: '/almacen/inventarios'
+      preLoaderRoute: typeof AdminAlmacenInventariosRouteImport
+      parentRoute: typeof AdminAlmacenRoute
+    }
+    '/_admin/almacen/formas-farmaceuticas': {
+      id: '/_admin/almacen/formas-farmaceuticas'
+      path: '/formas-farmaceuticas'
+      fullPath: '/almacen/formas-farmaceuticas'
+      preLoaderRoute: typeof AdminAlmacenFormasFarmaceuticasRouteImport
       parentRoute: typeof AdminAlmacenRoute
     }
     '/_admin/almacen/categorias': {
@@ -1415,6 +1525,13 @@ declare module '@tanstack/react-router' {
       path: '/categorias'
       fullPath: '/almacen/categorias'
       preLoaderRoute: typeof AdminAlmacenCategoriasRouteImport
+      parentRoute: typeof AdminAlmacenRoute
+    }
+    '/_admin/almacen/almacenes': {
+      id: '/_admin/almacen/almacenes'
+      path: '/almacenes'
+      fullPath: '/almacen/almacenes'
+      preLoaderRoute: typeof AdminAlmacenAlmacenesRouteImport
       parentRoute: typeof AdminAlmacenRoute
     }
     '/_admin/laboratorio/solicitudes/': {
@@ -1470,17 +1587,29 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminAlmacenRouteChildren {
+  AdminAlmacenAlmacenesRoute: typeof AdminAlmacenAlmacenesRoute
   AdminAlmacenCategoriasRoute: typeof AdminAlmacenCategoriasRoute
-  AdminAlmacenExistenciasRoute: typeof AdminAlmacenExistenciasRoute
+  AdminAlmacenFormasFarmaceuticasRoute: typeof AdminAlmacenFormasFarmaceuticasRoute
+  AdminAlmacenInventariosRoute: typeof AdminAlmacenInventariosRoute
   AdminAlmacenMovimientosRoute: typeof AdminAlmacenMovimientosRoute
   AdminAlmacenProductosRoute: typeof AdminAlmacenProductosRoute
+  AdminAlmacenSolicitudesRoute: typeof AdminAlmacenSolicitudesRoute
+  AdminAlmacenStockRoute: typeof AdminAlmacenStockRoute
+  AdminAlmacenTransferenciasRoute: typeof AdminAlmacenTransferenciasRoute
+  AdminAlmacenUnidadesMedidaRoute: typeof AdminAlmacenUnidadesMedidaRoute
 }
 
 const AdminAlmacenRouteChildren: AdminAlmacenRouteChildren = {
+  AdminAlmacenAlmacenesRoute: AdminAlmacenAlmacenesRoute,
   AdminAlmacenCategoriasRoute: AdminAlmacenCategoriasRoute,
-  AdminAlmacenExistenciasRoute: AdminAlmacenExistenciasRoute,
+  AdminAlmacenFormasFarmaceuticasRoute: AdminAlmacenFormasFarmaceuticasRoute,
+  AdminAlmacenInventariosRoute: AdminAlmacenInventariosRoute,
   AdminAlmacenMovimientosRoute: AdminAlmacenMovimientosRoute,
   AdminAlmacenProductosRoute: AdminAlmacenProductosRoute,
+  AdminAlmacenSolicitudesRoute: AdminAlmacenSolicitudesRoute,
+  AdminAlmacenStockRoute: AdminAlmacenStockRoute,
+  AdminAlmacenTransferenciasRoute: AdminAlmacenTransferenciasRoute,
+  AdminAlmacenUnidadesMedidaRoute: AdminAlmacenUnidadesMedidaRoute,
 }
 
 const AdminAlmacenRouteWithChildren = AdminAlmacenRoute._addFileChildren(

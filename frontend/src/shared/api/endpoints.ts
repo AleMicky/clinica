@@ -152,19 +152,46 @@ export const cajaEndpoints = {
 
 
 export const almacenEndpoints = {
-    categorias: createEndpoints(`${api.almacen}/categorias`),
     productos: createEndpoints(`${api.almacen}/productos`),
-    existencias: createEndpoints(`${api.almacen}/existencias`, (root) => ({
-        disponibilidad: (productoId: EntityId) => `${root}/disponibilidad/${productoId}`,
+    categorias: createEndpoints(`${api.almacen}/categorias`),
+    unidadesMedida: createEndpoints(`${api.almacen}/unidades-medida`),
+    formasFarmaceuticas: createEndpoints(`${api.almacen}/formas-farmaceuticas`),
+    almacenes: createEndpoints(`${api.almacen}/almacenes`, (root) => ({
+        tipos: `${root}/tipos`,
     })),
-    lotes: createEndpoints(`${api.almacen}/lotes`),
     movimientos: createEndpoints(`${api.almacen}/movimientos`, (root) => ({
+        disponibilidad: (productoId: EntityId) => `${root}/disponibilidad/${productoId}`,
         ingresos: `${root}/ingresos`,
         salidas: `${root}/salidas`,
         ajustes: `${root}/ajustes`,
         bajas: `${root}/bajas`,
         transferencias: `${root}/transferencias`,
+        fefo: `${root}/fefo`,
         aplicar: (id: EntityId) => `${root}/${id}/aplicar`,
+        anular: (id: EntityId) => `${root}/${id}/anular`,
+    })),
+    transferencias: createEndpoints(`${api.almacen}/transferencias`, (root) => ({
+        solicitar: (id: EntityId) => `${root}/${id}/solicitar`,
+        aprobar: (id: EntityId) => `${root}/${id}/aprobar`,
+        preparar: (id: EntityId) => `${root}/${id}/preparar`,
+        enviar: (id: EntityId) => `${root}/${id}/enviar`,
+        recibir: (id: EntityId) => `${root}/${id}/recibir`,
+        rechazar: (id: EntityId) => `${root}/${id}/rechazar`,
+        anular: (id: EntityId) => `${root}/${id}/anular`,
+    })),
+    solicitudes: createEndpoints(`${api.almacen}/solicitudes`, (root) => ({
+        solicitar: (id: EntityId) => `${root}/${id}/solicitar`,
+        aprobar: (id: EntityId) => `${root}/${id}/aprobar`,
+        atender: (id: EntityId) => `${root}/${id}/atender`,
+        rechazar: (id: EntityId) => `${root}/${id}/rechazar`,
+        anular: (id: EntityId) => `${root}/${id}/anular`,
+    })),
+    inventariosFisicos: createEndpoints(`${api.almacen}/inventarios-fisicos`, (root) => ({
+        iniciarConteo: (id: EntityId) => `${root}/${id}/iniciar-conteo`,
+        contar: (id: EntityId) => `${root}/${id}/contar`,
+        finalizarConteo: (id: EntityId) => `${root}/${id}/finalizar-conteo`,
+        aprobar: (id: EntityId) => `${root}/${id}/aprobar`,
+        anular: (id: EntityId) => `${root}/${id}/anular`,
     })),
 } as const
 

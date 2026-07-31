@@ -2,18 +2,18 @@ using FluentValidation;
 
 namespace Clinica.Modules.Almacen.Application.Categorias;
 
-public sealed class CreateCategoriaRequestValidator : AbstractValidator<CreateCategoriaRequest>
+public sealed class CreateCategoriaProductoRequestValidator : AbstractValidator<CreateCategoriaProductoRequest>
 {
-    public CreateCategoriaRequestValidator()
+    public CreateCategoriaProductoRequestValidator()
     {
         RuleFor(x => x.Codigo).NotEmpty().MaximumLength(50);
         RuleFor(x => x.Nombre).NotEmpty().MaximumLength(200);
     }
 }
 
-public sealed class UpdateCategoriaRequestValidator : AbstractValidator<UpdateCategoriaRequest>
+public sealed class UpdateCategoriaProductoRequestValidator : AbstractValidator<UpdateCategoriaProductoRequest>
 {
-    public UpdateCategoriaRequestValidator()
+    public UpdateCategoriaProductoRequestValidator()
     {
         RuleFor(x => x.Codigo).NotEmpty().MaximumLength(50);
         RuleFor(x => x.Nombre).NotEmpty().MaximumLength(200);

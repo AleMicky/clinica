@@ -16,11 +16,15 @@ public static class DependencyInjection
         services.AddDbContext<AlmacenDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
-        services.AddScoped<ICategoriaService, CategoriaService>();
         services.AddScoped<IProductoService, ProductoService>();
-        services.AddScoped<IExistenciaService, ExistenciaService>();
-        services.AddScoped<ILoteConsultaService, LoteConsultaService>();
+        services.AddScoped<ICategoriaProductoService, CategoriaProductoService>();
+        services.AddScoped<IUnidadMedidaService, UnidadMedidaService>();
+        services.AddScoped<IAlmacenCatalogService, AlmacenCatalogService>();
+        services.AddScoped<IFormaFarmaceuticaService, FormaFarmaceuticaService>();
         services.AddScoped<IAlmacenStockService, AlmacenStockService>();
+        services.AddScoped<ITransferenciaAlmacenService, TransferenciaAlmacenService>();
+        services.AddScoped<ISolicitudAlmacenService, SolicitudAlmacenService>();
+        services.AddScoped<IInventarioFisicoService, InventarioFisicoService>();
 
         return services;
     }

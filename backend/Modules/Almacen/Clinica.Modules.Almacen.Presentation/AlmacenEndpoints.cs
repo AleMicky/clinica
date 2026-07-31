@@ -1,13 +1,5 @@
-using Clinica.Modules.Almacen.Application.Abstractions;
-using Clinica.Modules.Almacen.Application.Categorias;
-using Clinica.Modules.Almacen.Application.Existencias;
-using Clinica.Modules.Almacen.Application.Lotes;
-using Clinica.Modules.Almacen.Application.Movimientos;
-using Clinica.Modules.Almacen.Application.Productos;
 using Clinica.Modules.Almacen.Presentation.Endpoints;
-using Clinica.SharedKernel.Crud;
 using Clinica.SharedKernel.Responses;
-using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -23,11 +15,15 @@ public static class AlmacenEndpoints
     {
         var group = app.MapGroup(BasePath);
         MapHealth(group);
-        group.MapCategoriaEndpoints();
         group.MapProductoEndpoints();
-        group.MapExistenciaEndpoints();
-        group.MapLoteEndpoints();
         group.MapMovimientoEndpoints();
+        group.MapCategoriaEndpoints();
+        group.MapUnidadMedidaEndpoints();
+        group.MapAlmacenCatalogEndpoints();
+        group.MapFormaFarmaceuticaEndpoints();
+        group.MapTransferenciaEndpoints();
+        group.MapSolicitudEndpoints();
+        group.MapInventarioFisicoEndpoints();
         return app;
     }
 
@@ -45,9 +41,13 @@ public static class AlmacenEndpoints
 public static class AlmacenSwaggerTags
 {
     public const string Module = "Almacén";
-    public const string Categorias = "Almacén · Categorías";
     public const string Productos = "Almacén · Productos";
-    public const string Existencias = "Almacén · Existencias";
-    public const string Lotes = "Almacén · Lotes";
     public const string Movimientos = "Almacén · Movimientos";
+    public const string Categorias = "Almacén · Categorías";
+    public const string UnidadesMedida = "Almacén · Unidades de medida";
+    public const string Almacenes = "Almacén · Almacenes";
+    public const string FormasFarmaceuticas = "Almacén · Formas farmacéuticas";
+    public const string Transferencias = "Almacén · Transferencias";
+    public const string Solicitudes = "Almacén · Solicitudes";
+    public const string Inventarios = "Almacén · Inventarios físicos";
 }
