@@ -70,6 +70,7 @@ export function CajaOperacionView() {
         if (!conceptos || !openMovimiento) return []
         return conceptos.filter(
             (c) =>
+                c.activo &&
                 c.tipoMovimiento === openMovimiento &&
                 c.codigo !== 'FONDO_INICIAL',
         )

@@ -24,3 +24,14 @@ public sealed record ConceptoCajaResponse(
     string Nombre,
     string TipoMovimiento,
     bool Activo);
+
+public sealed record CreateConceptoCajaRequest(
+    string Codigo,
+    string Nombre,
+    string TipoMovimiento,
+    bool Activo = true);
+
+public sealed record UpdateConceptoCajaRequest(
+    string Nombre,
+    string TipoMovimiento,
+    bool Activo);

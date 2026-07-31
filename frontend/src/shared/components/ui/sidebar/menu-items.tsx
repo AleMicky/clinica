@@ -284,6 +284,13 @@ export const menuGroups: MenuGroup[] = [
                 label: 'Métodos de pago',
                 roles: [AppRole.Admin, AppRole.Caja],
             },
+            {
+                key: '/caja/conceptos',
+                to: '/caja/conceptos',
+                icon: <DollarOutlined />,
+                label: 'Conceptos',
+                roles: [AppRole.Admin, AppRole.Caja],
+            },
         ],
     },
     {

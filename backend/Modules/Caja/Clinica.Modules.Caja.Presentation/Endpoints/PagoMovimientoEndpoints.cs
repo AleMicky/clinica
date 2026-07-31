@@ -194,13 +194,68 @@ public static class PagoMovimientoEndpoints
             })
             .WithName("Caja_DeleteMetodoPago");
 
-        group.MapGet("/conceptos", async (
+        var conceptos = group.MapGroup("/conceptos")
+            .RequireAuthorization()
+            .WithTags(CajaSwaggerTags.Catalogos);
+
+        conceptos.MapGet("/", async (
                 IConceptoCajaCatalogService service,
                 CancellationToken cancellationToken) =>
             ApiResults.Ok(await service.GetAllAsync(cancellationToken)))
-            .RequireAuthorization()
-            .WithTags(CajaSwaggerTags.Catalogos)
             .WithName("Caja_GetConceptos");
+
+        conceptos.MapGet("/{id:guid}", async (
+                Guid id,
+                IConceptoCajaCatalogService service,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await service.GetByIdAsync(id, cancellationToken);
+                return result is null
+                    ? ApiResults.NotFound("Concepto de caja no encontrado.")
+                    : ApiResults.Ok(result);
+            })
+            .WithName("Caja_GetConceptoById");
+
+        conceptos.MapPost("/", async (
+                CreateConceptoCajaRequest request,
+                IValidator<CreateConceptoCajaRequest> validator,
+                IConceptoCajaCatalogService service,
+                CancellationToken cancellationToken) =>
+            {
+                var validation = await validator.ValidateAsync(request, cancellationToken);
+                if (!validation.IsValid)
+                    return ApiResults.BadRequest($"Datos inválidos. {string.Join(", ", validation.Errors.Select(x => x.ErrorMessage).Distinct())}");
+
+                var result = await service.CreateAsync(request, cancellationToken);
+                return ApiResults.Created(result, "Concepto de caja creado correctamente.");
+            })
+            .WithName("Caja_CreateConcepto");
+
+        conceptos.MapPut("/{id:guid}", async (
+                Guid id,
+                UpdateConceptoCajaRequest request,
+                IValidator<UpdateConceptoCajaRequest> validator,
+                IConceptoCajaCatalogService service,
+                CancellationToken cancellationToken) =>
+            {
+                var validation = await validator.ValidateAsync(request, cancellationToken);
+                if (!validation.IsValid)
+                    return ApiResults.BadRequest($"Datos inválidos. {string.Join(", ", validation.Errors.Select(x => x.ErrorMessage).Distinct())}");
+
+                var result = await service.UpdateAsync(id, request, cancellationToken);
+                return ApiResults.Ok(result, "Concepto de caja actualizado correctamente.");
+            })
+            .WithName("Caja_UpdateConcepto");
+
+        conceptos.MapDelete("/{id:guid}", async (
+                Guid id,
+                IConceptoCajaCatalogService service,
+                CancellationToken cancellationToken) =>
+            {
+                await service.DeleteAsync(id, cancellationToken);
+                return ApiResults.Ok("Concepto de caja eliminado correctamente.");
+            })
+            .WithName("Caja_DeleteConcepto");
 
         return group;
     }

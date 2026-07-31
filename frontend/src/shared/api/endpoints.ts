@@ -146,7 +146,7 @@ export const cajaEndpoints = {
         egreso: `${root}/egreso`,
     })),
     metodosPago: createEndpoints(`${api.caja}/metodos-pago`),
-    conceptos: `${api.caja}/conceptos`,
+    conceptos: createEndpoints(`${api.caja}/conceptos`),
 } as const
 
 

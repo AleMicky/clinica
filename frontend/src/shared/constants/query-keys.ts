@@ -233,7 +233,10 @@ export const queryKeys = {
             all: ['caja', 'metodos-pago'] as const,
             list: ['caja', 'metodos-pago', 'list'] as const,
         },
-        conceptos: ['caja', 'conceptos'] as const,
+        conceptos: {
+            all: ['caja', 'conceptos'] as const,
+            list: ['caja', 'conceptos', 'list'] as const,
+        },
     },
     atencionMedica: {
         all: ['atencion-medica'] as const,

@@ -153,4 +153,17 @@ public interface IMetodoPagoCatalogService
 public interface IConceptoCajaCatalogService
 {
     Task<IReadOnlyList<ConceptoCajaResponse>> GetAllAsync(CancellationToken cancellationToken = default);
+
+    Task<ConceptoCajaResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<ConceptoCajaResponse> CreateAsync(
+        CreateConceptoCajaRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<ConceptoCajaResponse> UpdateAsync(
+        Guid id,
+        UpdateConceptoCajaRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 }

@@ -174,6 +174,19 @@ export type ConceptoCaja = {
     activo: boolean
 }
 
+export type CreateConceptoCajaPayload = {
+    codigo: string
+    nombre: string
+    tipoMovimiento: string
+    activo?: boolean
+}
+
+export type UpdateConceptoCajaPayload = {
+    nombre: string
+    tipoMovimiento: string
+    activo: boolean
+}
+
 export type MovimientoCaja = {
     id: string
     numero: string

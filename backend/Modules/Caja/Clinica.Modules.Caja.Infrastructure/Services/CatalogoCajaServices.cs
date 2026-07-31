@@ -98,10 +98,85 @@ public sealed class ConceptoCajaCatalogService(CajaDbContext context) : IConcept
     public async Task<IReadOnlyList<ConceptoCajaResponse>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await context.ConceptosCaja.AsNoTracking()
-            .Where(x => x.Activo)
+            .Where(x => !x.IsDeleted)
             .OrderBy(x => x.Nombre)
             .Select(x => new ConceptoCajaResponse(
                 x.Id, x.Codigo, x.Nombre, x.TipoMovimiento, x.Activo))
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<ConceptoCajaResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var entity = await context.ConceptosCaja.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, cancellationToken);
+        return entity is null ? null : Map(entity);
+    }
+
+    public async Task<ConceptoCajaResponse> CreateAsync(
+        CreateConceptoCajaRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var codigo = request.Codigo.Trim().ToUpperInvariant();
+        var exists = await context.ConceptosCaja.AnyAsync(
+            x => x.Codigo == codigo && !x.IsDeleted,
+            cancellationToken);
+        if (exists)
+            throw new BusinessException($"Ya existe un concepto con código {codigo}.");
+
+        var entity = new ConceptoCaja
+        {
+            Id = Guid.NewGuid(),
+            Codigo = codigo,
+            Nombre = request.Nombre.Trim(),
+            TipoMovimiento = request.TipoMovimiento.Trim().ToUpperInvariant(),
+            Activo = request.Activo,
+            CreatedAt = DateTime.UtcNow,
+        };
+
+        context.ConceptosCaja.Add(entity);
+        await context.SaveChangesAsync(cancellationToken);
+        return Map(entity);
+    }
+
+    public async Task<ConceptoCajaResponse> UpdateAsync(
+        Guid id,
+        UpdateConceptoCajaRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await context.ConceptosCaja.FirstOrDefaultAsync(
+                x => x.Id == id && !x.IsDeleted,
+                cancellationToken)
+            ?? throw new NotFoundException("Concepto de caja no encontrado.");
+
+        entity.Nombre = request.Nombre.Trim();
+        entity.TipoMovimiento = request.TipoMovimiento.Trim().ToUpperInvariant();
+        entity.Activo = request.Activo;
+        entity.UpdatedAt = DateTime.UtcNow;
+
+        await context.SaveChangesAsync(cancellationToken);
+        return Map(entity);
+    }
+
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var entity = await context.ConceptosCaja.FirstOrDefaultAsync(
+                x => x.Id == id && !x.IsDeleted,
+                cancellationToken)
+            ?? throw new NotFoundException("Concepto de caja no encontrado.");
+
+        if (entity.Codigo == TurnoCajaService.ConceptoFondoInicial)
+            throw new BusinessException(
+                "No se puede eliminar el concepto FONDO_INICIAL porque es requerido para abrir turnos.");
+
+        var enUso = await context.MovimientosCaja.AnyAsync(x => x.ConceptoCajaId == id, cancellationToken);
+        if (enUso)
+            throw new BusinessException(
+                "No se puede eliminar el concepto porque ya fue usado en movimientos.");
+
+        context.ConceptosCaja.Remove(entity);
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
+    private static ConceptoCajaResponse Map(ConceptoCaja x) => new(
+        x.Id, x.Codigo, x.Nombre, x.TipoMovimiento, x.Activo);
 }

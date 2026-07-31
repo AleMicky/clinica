@@ -8,6 +8,7 @@ import type {
     CerrarArqueoPayload,
     ConceptoCaja,
     CreateCajaPayload,
+    CreateConceptoCajaPayload,
     CreateMetodoPagoPayload,
     Cuenta,
     CuentaListItem,
@@ -22,6 +23,7 @@ import type {
     TurnoCaja,
     TurnoPagedQuery,
     UpdateCajaPayload,
+    UpdateConceptoCajaPayload,
     UpdateMetodoPagoPayload,
 } from '../types/caja.types'
 
@@ -144,6 +146,24 @@ export const cajaService = {
     },
 
     getConceptos() {
-        return get<ConceptoCaja[]>(cajaEndpoints.conceptos)
+        return get<ConceptoCaja[]>(cajaEndpoints.conceptos.root)
+    },
+
+    createConcepto(payload: CreateConceptoCajaPayload) {
+        return post<ConceptoCaja, CreateConceptoCajaPayload>(
+            cajaEndpoints.conceptos.root,
+            payload,
+        )
+    },
+
+    updateConcepto(id: string, payload: UpdateConceptoCajaPayload) {
+        return put<ConceptoCaja, UpdateConceptoCajaPayload>(
+            cajaEndpoints.conceptos.byId(id),
+            payload,
+        )
+    },
+
+    deleteConcepto(id: string) {
+        return del<string>(cajaEndpoints.conceptos.byId(id))
     },
 }

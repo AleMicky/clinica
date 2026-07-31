@@ -10,6 +10,7 @@ import type {
     AbrirTurnoPayload,
     CerrarArqueoPayload,
     CreateCajaPayload,
+    CreateConceptoCajaPayload,
     CreateMetodoPagoPayload,
     CuentaPagedQuery,
     MovimientoPagedQuery,
@@ -17,6 +18,7 @@ import type {
     RegistrarPagoPayload,
     TurnoPagedQuery,
     UpdateCajaPayload,
+    UpdateConceptoCajaPayload,
     UpdateMetodoPagoPayload,
 } from '../types/caja.types'
 
@@ -82,7 +84,7 @@ export function useMetodosPago() {
 
 export function useConceptosCaja() {
     return useAppQuery({
-        queryKey: queryKeys.caja.conceptos,
+        queryKey: queryKeys.caja.conceptos.list,
         queryFn: () => cajaService.getConceptos(),
     })
 }
@@ -247,5 +249,42 @@ export function useDeleteMetodoPago() {
             notify.success('Método de pago eliminado', 'Se eliminó correctamente.')
         },
         onError: (e) => notify.error('Error al eliminar método de pago', getApiErrorMessage(e)),
+    })
+}
+
+export function useCreateConceptoCaja() {
+    const qc = useQueryClient()
+    return useAppMutation({
+        mutationFn: (payload: CreateConceptoCajaPayload) => cajaService.createConcepto(payload),
+        onSuccess: () => {
+            void qc.invalidateQueries({ queryKey: queryKeys.caja.conceptos.all })
+            notify.success('Concepto creado', 'Se registró correctamente.')
+        },
+        onError: (e) => notify.error('Error al crear concepto', getApiErrorMessage(e)),
+    })
+}
+
+export function useUpdateConceptoCaja() {
+    const qc = useQueryClient()
+    return useAppMutation({
+        mutationFn: ({ id, payload }: { id: string; payload: UpdateConceptoCajaPayload }) =>
+            cajaService.updateConcepto(id, payload),
+        onSuccess: () => {
+            void qc.invalidateQueries({ queryKey: queryKeys.caja.conceptos.all })
+            notify.success('Concepto actualizado', 'Los cambios se guardaron.')
+        },
+        onError: (e) => notify.error('Error al actualizar concepto', getApiErrorMessage(e)),
+    })
+}
+
+export function useDeleteConceptoCaja() {
+    const qc = useQueryClient()
+    return useAppMutation({
+        mutationFn: (id: string) => cajaService.deleteConcepto(id),
+        onSuccess: () => {
+            void qc.invalidateQueries({ queryKey: queryKeys.caja.conceptos.all })
+            notify.success('Concepto eliminado', 'Se eliminó correctamente.')
+        },
+        onError: (e) => notify.error('Error al eliminar concepto', getApiErrorMessage(e)),
     })
 }
