@@ -120,7 +120,13 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 
-    app.MapScalarApiReference(options => { options.Title = "Clínica API"; });
+    app.MapScalarApiReference(options =>
+    {
+        options
+            .WithTitle("Clínica API")
+            .WithPreferredScheme("Bearer")
+            .WithHttpBearerAuthentication(bearer => { bearer.Token = string.Empty; });
+    });
 }
 
 app.UseAuthentication();
