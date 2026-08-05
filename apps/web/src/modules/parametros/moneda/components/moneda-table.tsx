@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 import {
   Search,
   MoreHorizontal,
@@ -13,11 +13,21 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-} from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+  RefreshCw,
+  AlertCircle,
+} from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -25,7 +35,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,65 +43,86 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Moneda } from "../types/moneda.types"
+} from "@/components/ui/select";
+import type { Moneda, MonedaResponse } from "../types/moneda.types";
+
+export interface MonedaItem {
+  id: number | string;
+  codigo: string;
+  simbolo: string;
+  nombre: string;
+  decimales: number;
+  esBase: boolean;
+  activo: boolean;
+}
 
 interface MonedaTableProps {
-  monedas: Moneda[]
-  onSetMonedaBase?: (id: string) => void
-  onEdit?: (moneda: Moneda) => void
-  onInactivate?: (id: string) => void
+  monedas: MonedaItem[];
+  isLoading?: boolean;
+  isError?: boolean;
+  errorMessage?: string;
+  totalItems?: number;
+  currentPage?: number;
+  pageSize?: number;
+  searchTerm?: string;
+  onSearchChange?: (value: string) => void;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (size: number) => void;
+  onSetMonedaBase?: (id: number | string) => void;
+  onEdit?: (moneda: MonedaItem) => void;
+  onInactivate?: (id: number | string) => void;
+  onRefresh?: () => void;
 }
 
 export function MonedaTable({
   monedas,
+  isLoading = false,
+  isError = false,
+  errorMessage,
+  totalItems = 0,
+  currentPage = 1,
+  pageSize = 10,
+  searchTerm = "",
+  onSearchChange,
+  onPageChange,
+  onPageSizeChange,
   onSetMonedaBase,
   onEdit,
   onInactivate,
+  onRefresh,
 }: MonedaTableProps) {
-  const [searchTerm, setSearchTerm] = React.useState("")
-  const [currentPage, setCurrentPage] = React.useState(1)
-  const [pageSize, setPageSize] = React.useState(5)
-
-  // Reset pagination when filter changes
-  React.useEffect(() => {
-    setCurrentPage(1)
-  }, [searchTerm, pageSize])
-
-  const filteredMonedas = React.useMemo(() => {
-    return monedas.filter(
-      (m) =>
-        m.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        m.codigo.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  }, [monedas, searchTerm])
-
-  const totalItems = filteredMonedas.length
-  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
-
-  const paginatedMonedas = React.useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize
-    return filteredMonedas.slice(startIndex, startIndex + pageSize)
-  }, [filteredMonedas, currentPage, pageSize])
-
-  const fromItem = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1
-  const toItem = Math.min(totalItems, currentPage * pageSize)
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const fromItem = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const toItem = Math.min(totalItems, currentPage * pageSize);
 
   return (
     <Card className="shadow-xs">
       <CardHeader>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <CardTitle>Listado de Divisas</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              Listado de Divisas
+              {onRefresh && (
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={onRefresh}
+                  disabled={isLoading}
+                  title="Recargar datos de la API"
+                >
+                  <RefreshCw className={`size-4 ${isLoading ? "animate-spin" : ""}`} />
+                </Button>
+              )}
+            </CardTitle>
             <CardDescription>
-              Monedas configuradas para emisión de presupuestos, cobros y cajas.
+              Monedas obtenidas directamente de la API backend de la clínica.
             </CardDescription>
           </div>
           <div className="relative w-full sm:w-64">
@@ -99,7 +130,7 @@ export function MonedaTable({
             <Input
               placeholder="Buscar por código o nombre..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => onSearchChange?.(e.target.value)}
               className="pl-9 text-sm"
             />
           </div>
@@ -119,14 +150,60 @@ export function MonedaTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedMonedas.length === 0 ? (
+            {isLoading ? (
+              // Skeleton Loader Rows
+              Array.from({ length: 5 }).map((_, idx) => (
+                <TableRow key={idx}>
+                  <TableCell className="pl-6">
+                    <Skeleton className="h-4 w-12" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-8" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-32" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-16" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-5 w-20 rounded-full" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                  </TableCell>
+                  <TableCell className="text-right pr-6">
+                    <Skeleton className="h-8 w-8 rounded-md ml-auto" />
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : isError ? (
+              // Error State
               <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center text-muted-foreground text-sm">
-                  No se encontraron monedas que coincidan con la búsqueda.
+                <TableCell colSpan={7} className="h-32 text-center text-destructive">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <AlertCircle className="size-6 text-destructive" />
+                    <p className="font-semibold text-sm">
+                      {errorMessage || "Error al cargar la información desde la API."}
+                    </p>
+                    {onRefresh && (
+                      <Button variant="outline" size="sm" onClick={onRefresh} className="mt-1 gap-2">
+                        <RefreshCw className="size-3.5" /> Reintentar
+                      </Button>
+                    )}
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : monedas.length === 0 ? (
+              // Empty State
+              <TableRow>
+                <TableCell colSpan={7} className="h-28 text-center text-muted-foreground text-sm">
+                  No se encontraron monedas registradas o coincidentes.
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedMonedas.map((moneda) => (
+              // Data Rows from API
+              monedas.map((moneda) => (
                 <TableRow key={moneda.id}>
                   <TableCell className="pl-6 font-mono font-bold text-sm">
                     {moneda.codigo}
@@ -141,7 +218,7 @@ export function MonedaTable({
                     {moneda.decimales} decimales
                   </TableCell>
                   <TableCell>
-                    {moneda.esMonedaBase ? (
+                    {moneda.esBase ? (
                       <Badge variant="default" className="gap-1 text-xs">
                         <Star className="size-3 fill-current" /> Moneda Base
                       </Badge>
@@ -153,18 +230,19 @@ export function MonedaTable({
                   </TableCell>
                   <TableCell>
                     <Badge
-                      variant={moneda.estado === "Activo" ? "outline" : "destructive"}
-                      className={`w-fit gap-1 text-xs ${moneda.estado === "Activo"
+                      variant={moneda.activo ? "outline" : "destructive"}
+                      className={`w-fit gap-1 text-xs ${
+                        moneda.activo
                           ? "bg-green-500/10 text-green-600 border-green-500/20"
                           : ""
-                        }`}
+                      }`}
                     >
-                      {moneda.estado === "Activo" ? (
+                      {moneda.activo ? (
                         <CheckCircle2 className="size-3" />
                       ) : (
                         <XCircle className="size-3" />
                       )}
-                      {moneda.estado}
+                      {moneda.activo ? "Activo" : "Inactivo"}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right pr-6">
@@ -181,7 +259,7 @@ export function MonedaTable({
                         >
                           <Edit className="size-4" /> Editar Moneda
                         </DropdownMenuItem>
-                        {!moneda.esMonedaBase && (
+                        {!moneda.esBase && (
                           <DropdownMenuItem
                             onClick={() => onSetMonedaBase?.(moneda.id)}
                             className="gap-2 cursor-pointer"
@@ -190,7 +268,7 @@ export function MonedaTable({
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuSeparator />
-                        {!moneda.esMonedaBase && (
+                        {!moneda.esBase && (
                           <DropdownMenuItem
                             onClick={() => onInactivate?.(moneda.id)}
                             className="gap-2 text-destructive cursor-pointer"
@@ -223,7 +301,7 @@ export function MonedaTable({
             <span className="text-xs text-muted-foreground">Filas por página</span>
             <Select
               value={String(pageSize)}
-              onValueChange={(val) => setPageSize(Number(val))}
+              onValueChange={(val) => onPageSizeChange?.(Number(val))}
             >
               <SelectTrigger className="h-8 w-16 text-xs">
                 <SelectValue placeholder={String(pageSize)} />
@@ -246,8 +324,8 @@ export function MonedaTable({
               variant="outline"
               size="icon"
               className="size-8"
-              onClick={() => setCurrentPage(1)}
-              disabled={currentPage === 1}
+              onClick={() => onPageChange?.(1)}
+              disabled={currentPage <= 1 || isLoading}
             >
               <ChevronsLeft className="size-4" />
               <span className="sr-only">Primera página</span>
@@ -258,8 +336,8 @@ export function MonedaTable({
               variant="outline"
               size="icon"
               className="size-8"
-              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
+              onClick={() => onPageChange?.(Math.max(1, currentPage - 1))}
+              disabled={currentPage <= 1 || isLoading}
             >
               <ChevronLeft className="size-4" />
               <span className="sr-only">Página anterior</span>
@@ -270,8 +348,8 @@ export function MonedaTable({
               variant="outline"
               size="icon"
               className="size-8"
-              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-              disabled={currentPage === totalPages}
+              onClick={() => onPageChange?.(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage >= totalPages || isLoading}
             >
               <ChevronRight className="size-4" />
               <span className="sr-only">Página siguiente</span>
@@ -282,8 +360,8 @@ export function MonedaTable({
               variant="outline"
               size="icon"
               className="size-8"
-              onClick={() => setCurrentPage(totalPages)}
-              disabled={currentPage === totalPages}
+              onClick={() => onPageChange?.(totalPages)}
+              disabled={currentPage >= totalPages || isLoading}
             >
               <ChevronsRight className="size-4" />
               <span className="sr-only">Última página</span>
@@ -292,5 +370,5 @@ export function MonedaTable({
         </div>
       </CardFooter>
     </Card>
-  )
+  );
 }

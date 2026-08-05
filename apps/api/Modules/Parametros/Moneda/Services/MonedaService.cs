@@ -129,8 +129,6 @@ public sealed class MonedaService(AppDbContext dbContext)
             throw new ConflictException(
                 $"Ya existe una moneda con el código '{codigo}'.");
         }
-
-        await ValidarEsBaseAsync(request.EsBase, null, cancellationToken);
     }
 
     protected override async Task ValidateUpdateAsync(
@@ -151,8 +149,6 @@ public sealed class MonedaService(AppDbContext dbContext)
             throw new ConflictException(
                 $"Ya existe otra moneda con el código '{codigo}'.");
         }
-
-        await ValidarEsBaseAsync(request.EsBase, id, cancellationToken);
     }
 
     protected override IQueryable<MonedaEntity> ApplySearch(
@@ -166,28 +162,6 @@ public sealed class MonedaService(AppDbContext dbContext)
             x.Codigo.Contains(search) ||
             x.Nombre.Contains(search) ||
             x.Simbolo.Contains(search));
-    }
-
-    private async Task ValidarEsBaseAsync(
-        bool esBase,
-        int? excludeId,
-        CancellationToken cancellationToken)
-    {
-        if (!esBase)
-            return;
-
-        var existeBase = excludeId is null
-            ? await Entities.AnyAsync(x => x.EsBase, cancellationToken)
-            : await Entities.AnyAsync(
-                x => x.EsBase && x.Id != excludeId,
-                cancellationToken);
-
-        if (existeBase)
-        {
-            throw new ConflictException(
-                "Ya existe otra moneda marcada como base. " +
-                "Sólo puede haber una moneda base.");
-        }
     }
 
     private Task DesmarcarOtrasBasesAsync(
