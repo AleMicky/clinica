@@ -1,4 +1,6 @@
 using Clinica.Api.Modules.Seguridad.Auth;
+using Clinica.Api.Modules.Seguridad.Personas.Endpoints;
+using Clinica.Api.Modules.Seguridad.Personas.Services;
 using Clinica.Api.Modules.Seguridad.Roles;
 using Clinica.Api.Modules.Seguridad.Usuarios;
 
@@ -12,6 +14,7 @@ public static class SeguridadModule
         services.AddScoped<RolService>();
         services.AddScoped<UsuarioService>();
         services.AddScoped<AuthService>();
+        services.AddScoped<PersonaService>();
 
         return services;
     }
@@ -22,6 +25,7 @@ public static class SeguridadModule
         app.MapRolEndpoints();
         app.MapUsuarioEndpoints();
         app.MapAuthEndpoints();
+        app.MapPersonaEndpoints();
 
         return app;
     }

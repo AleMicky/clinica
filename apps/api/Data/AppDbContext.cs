@@ -3,6 +3,7 @@ using Clinica.Api.Modules.Parametros.Catalogo.Entity;
 using Clinica.Api.Modules.Parametros.Moneda.Entity;
 using Clinica.Api.Modules.Parametros.UnidadesMedida;
 using Clinica.Api.Modules.Parametros.UnidadesMedida.Entity;
+using Clinica.Api.Modules.Seguridad.Personas.Entity;
 using Clinica.Api.Modules.Seguridad.Roles;
 using Clinica.Api.Modules.Seguridad.Usuarios;
 using Microsoft.AspNetCore.Identity;
@@ -24,6 +25,8 @@ public class AppDbContext(
     public DbSet<Moneda> Monedas => Set<Moneda>();
 
     public DbSet<TipoCambio> TiposCambio => Set<TipoCambio>();
+
+    public DbSet<Persona> Personas => Set<Persona>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
