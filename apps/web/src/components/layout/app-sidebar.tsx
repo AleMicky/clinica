@@ -1,213 +1,224 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import * as React from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import {
-  LayoutDashboard,
-  Users,
-  Calendar,
-  Stethoscope,
-  FileText,
-  Settings,
+  ChevronLeft,
+  ChevronRight,
+  MoreVertical,
   Activity,
-  LogOut,
-  User,
-  ChevronsUpDown,
-  ShieldCheck,
-} from "lucide-react";
+} from "lucide-react"
 
-import { useAuth } from "@/providers/auth-provider";
-import { useLogout } from "@/modules/auth/hooks/use-logout";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarRail,
-} from "@/components/ui/sidebar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  SidebarGroup,
+  SidebarGroupContent,
+} from "@/components/ui/sidebar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { directNavItems, moduleGroups, NavGroup } from "@/config/navigation"
 
-const navigationItems = [
-  {
-    title: "Dashboard",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    title: "Pacientes",
-    href: "/pacientes",
-    icon: Users,
-  },
-  {
-    title: "Citas",
-    href: "/citas",
-    icon: Calendar,
-  },
-  {
-    title: "Médicos",
-    href: "/medicos",
-    icon: Stethoscope,
-  },
-  {
-    title: "Reportes",
-    href: "/reportes",
-    icon: FileText,
-  },
-  {
-    title: "Configuración",
-    href: "/configuracion",
-    icon: Settings,
-  },
-];
+export function AppSidebar({ variant = "inset", ...props }: React.ComponentProps<typeof Sidebar>) {
+  const pathname = usePathname()
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const pathname = usePathname();
-  const { user } = useAuth();
-  const logoutMutation = useLogout();
+  // Detect if current pathname matches a grouped module item
+  const detectedGroup = React.useMemo(() => {
+    if (!pathname) return null
+    return (
+      moduleGroups.find((group) =>
+        group.items.some(
+          (item) =>
+            pathname === item.href ||
+            (item.href !== "/dashboard" && pathname.startsWith(item.href))
+        )
+      ) ?? null
+    )
+  }, [pathname])
 
-  const displayName = user?.nombres
-    ? `${user.nombres} ${user.apellidos ?? ""}`.trim()
-    : user?.userName ?? "Usuario";
+  // Track active group title (null = Main Menu view)
+  const [activeGroupTitle, setActiveGroupTitle] = React.useState<string | null>(
+    () => detectedGroup?.title ?? null
+  )
 
-  const initials = displayName
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .substring(0, 2)
-    .toUpperCase();
+  // Auto update open group when navigating directly to a grouped route
+  React.useEffect(() => {
+    if (detectedGroup) {
+      setActiveGroupTitle(detectedGroup.title)
+    } else {
+      const isDirectRoute = directNavItems.some(
+        (item) =>
+          pathname === item.href ||
+          (item.href !== "/dashboard" && pathname?.startsWith(item.href))
+      )
+      if (isDirectRoute) {
+        setActiveGroupTitle(null)
+      }
+    }
+  }, [detectedGroup, pathname])
 
-  const handleLogout = () => {
-    logoutMutation.mutate();
-  };
+  const activeGroup: NavGroup | undefined = moduleGroups.find(
+    (g) => g.title === activeGroupTitle
+  )
 
   return (
-    <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader className="border-b border-sidebar-border p-4">
+    <Sidebar variant={variant} collapsible="offcanvas" {...props}>
+      <SidebarHeader className="p-2">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              size="lg"
-              render={<Link href="/dashboard" />}
-              className="hover:bg-transparent flex items-center gap-3"
-            >
-              <div className="flex aspect-square size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-                <Activity className="size-5" />
+            <SidebarMenuButton size="default" className="data-[slot=sidebar-menu-button]:p-1.5! h-8">
+              <div className="flex size-5 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
+                <Activity className="size-3.5" />
               </div>
-              <div className="flex flex-col gap-0.5 text-left leading-none">
-                <span className="font-semibold text-base tracking-tight">MedClinica</span>
-                <span className="text-xs text-muted-foreground">Gestión Médica</span>
-              </div>
+              <span className="text-base font-semibold">Sistema Médico</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
 
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Menú Principal</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navigationItems.map((item) => {
-                const isActive =
-                  pathname === item.href || pathname?.startsWith(`${item.href}/`);
-                const Icon = item.icon;
+      <SidebarContent className="gap-2 p-2">
+        {activeGroupTitle === null ? (
+          /* ================= VISTA: MENÚ PRINCIPAL ================= */
+          <SidebarGroup className="p-0">
+            <SidebarGroupContent>
+              <SidebarMenu className="gap-1">
+                {/* 1. Ítems Directos (Inicio, Pacientes, Citas, Reportes) */}
+                {directNavItems.map((item) => {
+                  const Icon = item.icon
+                  const isActive =
+                    pathname === item.href ||
+                    (item.href !== "/dashboard" && pathname?.startsWith(item.href))
 
-                return (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                      render={<Link href={item.href} />}
-                      isActive={isActive}
-                      tooltip={item.title}
-                      className="flex items-center gap-3"
-                    >
-                      <Icon className="size-4" />
-                      <span>{item.title}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton
+                        isActive={isActive}
+                        tooltip={item.title}
+                        render={<Link href={item.href} />}
+                        className="h-9 text-sm px-2.5 rounded-md"
+                      >
+                        {Icon && <Icon className="size-4 shrink-0 text-primary" />}
+                        <span className="font-medium">{item.title}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )
+                })}
 
-      <SidebarFooter className="border-t border-sidebar-border p-2">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger render={<SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground" />}>
-                <div className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-primary font-medium text-xs">
-                  {initials}
-                </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{displayName}</span>
-                  <span className="truncate text-xs text-muted-foreground">
-                    {user?.email ?? user?.roles?.[0] ?? "Personal de salud"}
+                {/* Separador sutil */}
+                <div className="my-1 border-t border-sidebar-border/40" />
+
+                {/* 2. Módulos Agrupados (Seguridad, Recursos Humanos, Parámetros) */}
+                {moduleGroups.map((group) => {
+                  const GroupIcon = group.icon
+                  const itemCount = group.items.length
+                  const isCurrentActiveGroup = detectedGroup?.title === group.title
+
+                  return (
+                    <SidebarMenuItem key={group.title}>
+                      <SidebarMenuButton
+                        onClick={() => setActiveGroupTitle(group.title)}
+                        isActive={isCurrentActiveGroup}
+                        className="h-9 text-sm justify-between px-2.5 rounded-md hover:bg-sidebar-accent duration-150 transition-colors"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          {GroupIcon && <GroupIcon className="size-4 text-primary shrink-0" />}
+                          <span className="font-medium">{group.title}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-sidebar-foreground/50">
+                          <span className="text-xs font-normal">({itemCount})</span>
+                          <ChevronRight className="size-4" />
+                        </div>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ) : (
+          /* ================= VISTA: NÚCLEO DEL GRUPO SELECCIONADO ================= */
+          <div className="flex flex-col gap-3">
+            {/* Botón para Volver al Menú Principal */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setActiveGroupTitle(null)}
+              className="h-8 justify-start gap-2 px-2 text-xs font-medium text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent/80 transition-all"
+            >
+              <ChevronLeft className="size-4" />
+              <span>Volver al menú principal</span>
+            </Button>
+
+            {/* Cabecera del Grupo Actual */}
+            {activeGroup && (
+              <SidebarGroup className="p-0">
+                <div className="flex items-center gap-2 px-2 py-1 mb-1 border-b border-sidebar-border/40 pb-2">
+                  {activeGroup.icon && (
+                    <activeGroup.icon className="size-4 text-primary shrink-0" />
+                  )}
+                  <span className="text-sm font-semibold text-sidebar-foreground">
+                    {activeGroup.title}
                   </span>
                 </div>
-                <ChevronsUpDown className="ml-auto size-4" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className="w-(--anchor-width) min-w-56 rounded-lg"
-                side="top"
-                align="end"
-                sideOffset={4}
-              >
-                <DropdownMenuLabel className="p-0 font-normal">
-                  <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                    <div className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-primary font-medium text-xs">
-                      {initials}
-                    </div>
-                    <div className="grid flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-semibold">{displayName}</span>
-                      <span className="truncate text-xs text-muted-foreground">
-                        {user?.email ?? user?.userName}
-                      </span>
-                    </div>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup>
-                  <DropdownMenuItem render={<Link href="/perfil" />} className="flex items-center gap-2 cursor-pointer">
-                    <User className="size-4" />
-                    <span>Mi Perfil</span>
-                  </DropdownMenuItem>
-                  {user?.roles && user.roles.length > 0 && (
-                    <DropdownMenuItem disabled className="flex items-center gap-2">
-                      <ShieldCheck className="size-4" />
-                      <span className="capitalize">{user.roles.join(", ")}</span>
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuGroup>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={handleLogout}
-                  className="flex items-center gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
-                >
-                  <LogOut className="size-4" />
-                  <span>Cerrar sesión</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+
+                {/* Sub-elementos del Grupo */}
+                <SidebarGroupContent className="mt-1">
+                  <SidebarMenu className="gap-1">
+                    {activeGroup.items.map((item) => {
+                      const Icon = item.icon
+                      const isActive =
+                        pathname === item.href ||
+                        (item.href !== "/dashboard" && pathname?.startsWith(item.href))
+
+                      return (
+                        <SidebarMenuItem key={item.title}>
+                          <SidebarMenuButton
+                            isActive={isActive}
+                            tooltip={item.title}
+                            render={<Link href={item.href} />}
+                            className="h-9 text-sm px-2.5 rounded-md"
+                          >
+                            {Icon && <Icon className="size-4 shrink-0" />}
+                            <span className="truncate">{item.title}</span>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      )
+                    })}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            )}
+          </div>
+        )}
+      </SidebarContent>
+
+      {/* User Footer */}
+      <SidebarFooter className="p-2 border-t border-sidebar-border">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              size="lg"
+              className="h-12 text-sm data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+            >
+              <Avatar className="h-8 w-8 rounded-lg">
+                <AvatarImage src="/avatars/shadcn.jpg" alt="Usuario" />
+                <AvatarFallback className="rounded-lg bg-muted text-xs text-muted-foreground">AD</AvatarFallback>
+              </Avatar>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-medium">Administrador</span>
+                <span className="truncate text-xs text-muted-foreground">admin@clinica.com</span>
+              </div>
+              <MoreVertical className="ml-auto size-4 text-sidebar-foreground/70" />
+            </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
-      <SidebarRail />
     </Sidebar>
-  );
+  )
 }

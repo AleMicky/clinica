@@ -12,15 +12,13 @@ type DashboardLayoutWrapperProps = {
 export function DashboardLayoutWrapper({ children }: DashboardLayoutWrapperProps) {
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="flex min-h-screen w-full bg-background text-foreground">
-        <AppSidebar />
-        <SidebarInset className="flex flex-col flex-1 min-w-0">
-          <AppHeader />
-          <main className="flex-1 p-6 md:p-8 overflow-y-auto">
-            {children}
-          </main>
-        </SidebarInset>
-      </div>
+      <AppSidebar variant="inset" />
+      <SidebarInset className="flex flex-col flex-1 min-w-0 border border-sidebar-border overflow-hidden">
+        <AppHeader />
+        <main className="flex-1 p-6 md:p-8 overflow-y-auto">
+          {children}
+        </main>
+      </SidebarInset>
     </SidebarProvider>
   );
 }
