@@ -5,6 +5,7 @@ export const ROUTES = {
   },
   SEGURIDAD: {
     ROOT: "/seguridad",
+    PERSONAS: "/seguridad/personas",
     USUARIOS: "/seguridad/usuarios",
     ROLES: "/seguridad/roles",
     AUDITORIA: "/seguridad/auditoria",
@@ -20,11 +21,11 @@ export const ROUTES = {
   },
   PARAMETROS: {
     ROOT: "/parametros",
-    GENERAL: "/parametros/general",
     CATALOGOS: "/parametros/catalogos",
-    TARIFAS: "/parametros/tarifas",
-    NOTIFICACIONES: "/parametros/notificaciones",
-    SISTEMA: "/parametros/sistema",
+    MONEDAS: "/parametros/monedas",
+    TIPO_CAMBIO: "/parametros/tipo-cambio",
+    UNIDADES_MEDIDA: "/parametros/unidades-medida",
+    GENERAL: "/parametros/general",
   },
 } as const
 

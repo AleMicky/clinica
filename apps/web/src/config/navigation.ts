@@ -1,7 +1,5 @@
 import {
   Home,
-  LayoutDashboard,
-  BarChart3,
   Shield,
   UserCheck,
   Key,
@@ -15,11 +13,12 @@ import {
   Sliders,
   Settings,
   Database,
-  Tag,
-  Bell,
-  SlidersHorizontal,
   FileBarChart,
   HeartPulse,
+  User,
+  Coins,
+  TrendingUp,
+  Scale,
   type LucideIcon,
 } from "lucide-react"
 
@@ -71,8 +70,14 @@ export const directNavItems: NavItem[] = [
 export const seguridadNav: NavGroup = {
   title: "Seguridad",
   icon: Shield,
-  description: "Usuarios, roles, accesos y auditoría",
+  description: "Personas, usuarios, roles, accesos y auditoría",
   items: [
+    {
+      title: "Personas",
+      href: "/seguridad/personas",
+      icon: User,
+      description: "Directorio general de personas y datos personales",
+    },
     {
       title: "Usuarios",
       href: "/seguridad/usuarios",
@@ -141,37 +146,37 @@ export const recursosHumanosNav: NavGroup = {
 export const parametrosNav: NavGroup = {
   title: "Parámetros",
   icon: Sliders,
-  description: "Configuración global, catálogos y tarifas",
+  description: "Catálogos, monedas, tipos de cambio y unidades de medida",
   items: [
+    {
+      title: "Catálogos",
+      href: "/parametros/catalogos",
+      icon: Database,
+      description: "Especialidades, diagnósticos, servicios y tablas maestras",
+    },
+    {
+      title: "Monedas",
+      href: "/parametros/monedas",
+      icon: Coins,
+      description: "Definición de divisas y monedas de facturación",
+    },
+    {
+      title: "Tipo de Cambio",
+      href: "/parametros/tipo-cambio",
+      icon: TrendingUp,
+      description: "Histórico y cotización diaria de divisas",
+    },
+    {
+      title: "Unidades de Medida",
+      href: "/parametros/unidades-medida",
+      icon: Scale,
+      description: "Unidades de dosificación, pesaje y mediciones clínicas",
+    },
     {
       title: "Configuración General",
       href: "/parametros/general",
       icon: Settings,
-      description: "Ajustes globales de la clínica y sistema",
-    },
-    {
-      title: "Catálogos Médicos",
-      href: "/parametros/catalogos",
-      icon: Database,
-      description: "Especialidades, diagnósticos y servicios",
-    },
-    {
-      title: "Tarifas y Precios",
-      href: "/parametros/tarifas",
-      icon: Tag,
-      description: "Gestión de aranceles y planes tarifarios",
-    },
-    {
-      title: "Notificaciones",
-      href: "/parametros/notificaciones",
-      icon: Bell,
-      description: "Plantillas de correo, SMS y recordatorios",
-    },
-    {
-      title: "Parámetros del Sistema",
-      href: "/parametros/sistema",
-      icon: SlidersHorizontal,
-      description: "Variables de entorno y reglas del sistema",
+      description: "Ajustes globales del sistema",
     },
   ],
 }
