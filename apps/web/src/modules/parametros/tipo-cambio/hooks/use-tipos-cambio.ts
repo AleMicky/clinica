@@ -7,13 +7,13 @@ import {
   getTipoCambioById,
   getTiposCambio,
   updateTipoCambio,
-} from "../api/moneda.api";
-import { tipoCambioKeys } from "../api/moneda.key";
+} from "../api/tipo-cambio.api";
+import { tipoCambioKeys } from "../api/tipo-cambio.key";
 import type {
   CreateTipoCambioRequest,
   TipoCambioQueryParams,
   UpdateTipoCambioRequest,
-} from "../types/moneda.types";
+} from "../types/tipo-cambio.types";
 
 export function useTiposCambio(params?: TipoCambioQueryParams) {
   return useQuery({

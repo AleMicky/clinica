@@ -50,37 +50,7 @@ export interface CreateMonedaRequest {
 
 export interface UpdateMonedaRequest extends CreateMonedaRequest {}
 
-export interface TipoCambioResponse {
-  id: number;
-  monedaOrigenId: number;
-  monedaDestinoId: number;
-  compra: number;
-  venta: number;
-  fecha: string;
-  activo: boolean;
-  fechaCreacion?: string;
-  fechaModificacion?: string;
-  creadoPor?: string;
-  modificadoPor?: string;
-}
-
-export interface CreateTipoCambioRequest {
-  monedaOrigenId: number;
-  monedaDestinoId: number;
-  compra: number;
-  venta: number;
-  fecha: string;
-}
-
-export interface UpdateTipoCambioRequest extends CreateTipoCambioRequest {}
-
 export interface MonedaQueryParams {
-  page?: number;
-  pageSize?: number;
-  search?: string;
-}
-
-export interface TipoCambioQueryParams {
   page?: number;
   pageSize?: number;
   search?: string;
