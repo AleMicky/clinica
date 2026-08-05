@@ -105,8 +105,20 @@ export function TipoCambioModuleView() {
     }
   };
 
-  // Compute metrics from latest rates
+  // Compute metrics from real API dataset
   const latestRate = tiposCambio[0];
+
+  const avgCompra = React.useMemo(() => {
+    if (!tiposCambio || tiposCambio.length === 0) return "-";
+    const sum = tiposCambio.reduce((acc, curr) => acc + curr.compra, 0);
+    return (sum / tiposCambio.length).toFixed(4);
+  }, [tiposCambio]);
+
+  const ultimaTasa = latestRate ? latestRate.venta.toFixed(4) : "-";
+  const parOriginal = latestRate
+    ? `${latestRate.monedaOrigenCodigo || `ID:${latestRate.monedaOrigenId}`} → ${latestRate.monedaDestinoCodigo || `ID:${latestRate.monedaDestinoId}`}`
+    : "Sin registros";
+  const ultimaFecha = latestRate ? latestRate.fecha : "-";
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -116,15 +128,12 @@ export function TipoCambioModuleView() {
         isLoading={isLoading}
       />
       <TipoCambioMetricsCards
-        ultimaTasa={latestRate ? latestRate.venta.toFixed(4) : "3.7500"}
-        parOriginal={
-          latestRate
-            ? `${latestRate.monedaOrigenCodigo || "USD"} → ${latestRate.monedaDestinoCodigo || "PEN"}`
-            : "USD → PEN"
-        }
-        tasaCompraPromedio={latestRate ? latestRate.compra.toFixed(4) : "3.7200"}
-        totalRegistros={apiData?.totalItems ?? tiposCambio.length}
-        ultimaFecha={latestRate ? latestRate.fecha : new Date().toISOString().split("T")[0]}
+        ultimaTasa={ultimaTasa}
+        parOriginal={parOriginal}
+        tasaCompraPromedio={avgCompra}
+        totalRegistros={apiData?.totalItems ?? 0}
+        ultimaFecha={ultimaFecha}
+        isLoading={isLoading}
       />
       <TipoCambioTable
         tiposCambio={tiposCambio}

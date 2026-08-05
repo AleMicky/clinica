@@ -4,6 +4,7 @@ import * as React from "react";
 import { TrendingUp, Calendar, ArrowRightLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface TipoCambioMetricsProps {
   ultimaTasa?: string;
@@ -11,19 +12,19 @@ interface TipoCambioMetricsProps {
   tasaCompraPromedio?: string;
   totalRegistros?: number;
   ultimaFecha?: string;
+  isLoading?: boolean;
 }
 
 export function TipoCambioMetricsCards({
-  ultimaTasa = "3.7500",
-  parOriginal = "Tasa del día",
-  tasaCompraPromedio = "3.7200",
+  ultimaTasa = "-",
+  parOriginal = "Sin cotización",
+  tasaCompraPromedio = "-",
   totalRegistros = 0,
-  ultimaFecha = new Date().toISOString().split("T")[0],
+  ultimaFecha = "-",
+  isLoading = false,
 }: TipoCambioMetricsProps) {
   const [calcAmount, setCalcAmount] = React.useState<number>(100);
-  const [calcRate, setCalcRate] = React.useState<number>(
-    parseFloat(ultimaTasa) || 3.75
-  );
+  const [calcRate, setCalcRate] = React.useState<number>(1.0);
 
   React.useEffect(() => {
     const num = parseFloat(ultimaTasa);
@@ -82,6 +83,7 @@ export function TipoCambioMetricsCards({
 
       {/* Métricas Diarias */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:col-span-2 gap-4">
+        {/* Última Tasa */}
         <Card className="shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-semibold text-muted-foreground uppercase">
@@ -90,11 +92,16 @@ export function TipoCambioMetricsCards({
             <TrendingUp className="size-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold font-mono">{ultimaTasa}</div>
+            {isLoading ? (
+              <Skeleton className="h-8 w-24 mb-1" />
+            ) : (
+              <div className="text-2xl font-bold font-mono">{ultimaTasa}</div>
+            )}
             <p className="text-xs text-green-600 font-medium mt-1">{parOriginal}</p>
           </CardContent>
         </Card>
 
+        {/* Tasa Compra Promedio */}
         <Card className="shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-semibold text-muted-foreground uppercase">
@@ -103,13 +110,18 @@ export function TipoCambioMetricsCards({
             <TrendingUp className="size-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold font-mono">{tasaCompraPromedio}</div>
+            {isLoading ? (
+              <Skeleton className="h-8 w-24 mb-1" />
+            ) : (
+              <div className="text-2xl font-bold font-mono">{tasaCompraPromedio}</div>
+            )}
             <p className="text-xs text-muted-foreground mt-1">
-              Cotización oficial de compra
+              Cotización de compra
             </p>
           </CardContent>
         </Card>
 
+        {/* Total Registros */}
         <Card className="shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-semibold text-muted-foreground uppercase">
@@ -118,13 +130,18 @@ export function TipoCambioMetricsCards({
             <TrendingUp className="size-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalRegistros}</div>
+            {isLoading ? (
+              <Skeleton className="h-8 w-16 mb-1" />
+            ) : (
+              <div className="text-2xl font-bold">{totalRegistros}</div>
+            )}
             <p className="text-xs text-muted-foreground mt-1">
               Tasas de cambio guardadas
             </p>
           </CardContent>
         </Card>
 
+        {/* Última Fecha */}
         <Card className="shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-semibold text-muted-foreground uppercase">
@@ -133,7 +150,11 @@ export function TipoCambioMetricsCards({
             <Calendar className="size-4 text-amber-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold font-mono">{ultimaFecha}</div>
+            {isLoading ? (
+              <Skeleton className="h-8 w-28 mb-1" />
+            ) : (
+              <div className="text-2xl font-bold font-mono">{ultimaFecha}</div>
+            )}
             <p className="text-xs text-muted-foreground mt-1">
               Fecha del último registro
             </p>
