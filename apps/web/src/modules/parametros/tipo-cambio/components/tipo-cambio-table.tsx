@@ -38,7 +38,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { StatusBadge, DataTablePagination } from "@/components/shared";
+import { StatusBadge, DataTablePagination, SearchInput } from "@/components/shared";
 import type { MonedaResponse } from "../../moneda/types/moneda.types";
 import type { TipoCambioResponse } from "../types/tipo-cambio.types";
 
@@ -121,15 +121,11 @@ export function TipoCambioTable({
               Registro oficial de valores de compra y venta de divisas por fecha.
             </CardDescription>
           </div>
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por fecha (YYYY-MM-DD)..."
-              value={searchTerm}
-              onChange={(e) => onSearchChange?.(e.target.value)}
-              className="pl-9 text-sm"
-            />
-          </div>
+          <SearchInput
+            placeholder="Buscar por fecha (YYYY-MM-DD)..."
+            value={searchTerm}
+            onChange={onSearchChange}
+          />
         </div>
       </CardHeader>
       <CardContent className="p-0">

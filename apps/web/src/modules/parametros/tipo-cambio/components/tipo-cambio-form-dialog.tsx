@@ -86,6 +86,16 @@ export function TipoCambioFormDialog({
   const origenIdValue = watch("monedaOrigenId");
   const destinoIdValue = watch("monedaDestinoId");
 
+  const selectedOrigen = React.useMemo(
+    () => monedas.find((m) => Number(m.id) === Number(origenIdValue)),
+    [monedas, origenIdValue]
+  );
+
+  const selectedDestino = React.useMemo(
+    () => monedas.find((m) => Number(m.id) === Number(destinoIdValue)),
+    [monedas, destinoIdValue]
+  );
+
   React.useEffect(() => {
     if (open) {
       if (tipoCambioToEdit) {
@@ -205,12 +215,18 @@ export function TipoCambioFormDialog({
                 onValueChange={(val) => setValue("monedaOrigenId", Number(val))}
               >
                 <SelectTrigger id="monedaOrigenId" className={cn("w-full h-9 text-sm", errors.monedaOrigenId && "border-destructive")}>
-                  <SelectValue placeholder="Seleccione moneda origen" />
+                  <SelectValue placeholder="Seleccione moneda origen">
+                    {selectedOrigen && (
+                      <span className="font-medium text-xs truncate">
+                        <strong className="font-mono text-primary font-bold">{selectedOrigen.codigo}</strong> ({selectedOrigen.simbolo}) - {selectedOrigen.nombre}
+                      </span>
+                    )}
+                  </SelectValue>
                 </SelectTrigger>
-                <SelectContent className="w-[220px]">
+                <SelectContent className="w-[240px]">
                   {monedas.map((m) => (
                     <SelectItem key={m.id} value={String(m.id)}>
-                      <span className="font-semibold font-mono">{m.codigo}</span> - {m.nombre}
+                      <span className="font-bold font-mono text-primary">{m.codigo}</span> ({m.simbolo}) - {m.nombre}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -230,12 +246,18 @@ export function TipoCambioFormDialog({
                 onValueChange={(val) => setValue("monedaDestinoId", Number(val))}
               >
                 <SelectTrigger id="monedaDestinoId" className={cn("w-full h-9 text-sm", errors.monedaDestinoId && "border-destructive")}>
-                  <SelectValue placeholder="Seleccione moneda destino" />
+                  <SelectValue placeholder="Seleccione moneda destino">
+                    {selectedDestino && (
+                      <span className="font-medium text-xs truncate">
+                        <strong className="font-mono text-primary font-bold">{selectedDestino.codigo}</strong> ({selectedDestino.simbolo}) - {selectedDestino.nombre}
+                      </span>
+                    )}
+                  </SelectValue>
                 </SelectTrigger>
-                <SelectContent className="w-[220px]">
+                <SelectContent className="w-[240px]">
                   {monedas.map((m) => (
                     <SelectItem key={m.id} value={String(m.id)}>
-                      <span className="font-semibold font-mono">{m.codigo}</span> - {m.nombre}
+                      <span className="font-bold font-mono text-primary">{m.codigo}</span> ({m.simbolo}) - {m.nombre}
                     </SelectItem>
                   ))}
                 </SelectContent>

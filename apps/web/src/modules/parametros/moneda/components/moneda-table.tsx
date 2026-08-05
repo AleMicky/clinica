@@ -38,7 +38,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { StatusBadge, DataTablePagination } from "@/components/shared";
+import { StatusBadge, DataTablePagination, SearchInput } from "@/components/shared";
 
 export interface MonedaItem {
   id: number | string;
@@ -113,15 +113,11 @@ export function MonedaTable({
               Monedas obtenidas directamente de la API backend de la clínica.
             </CardDescription>
           </div>
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por código o nombre..."
-              value={searchTerm}
-              onChange={(e) => onSearchChange?.(e.target.value)}
-              className="pl-9 text-sm"
-            />
-          </div>
+          <SearchInput
+            placeholder="Buscar por código o nombre..."
+            value={searchTerm}
+            onChange={onSearchChange}
+          />
         </div>
       </CardHeader>
       <CardContent className="p-0">

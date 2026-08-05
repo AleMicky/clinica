@@ -1,10 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { TrendingUp, Calendar, ArrowRightLeft } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
+import { TrendingUp, Calendar } from "lucide-react";
+import { MetricCard, CurrencyConverterCard } from "@/components/shared";
 
 interface TipoCambioMetricsProps {
   ultimaTasa?: string;
@@ -23,143 +21,54 @@ export function TipoCambioMetricsCards({
   ultimaFecha = "-",
   isLoading = false,
 }: TipoCambioMetricsProps) {
-  const [calcAmount, setCalcAmount] = React.useState<number>(100);
-  const [calcRate, setCalcRate] = React.useState<number>(1.0);
-
-  React.useEffect(() => {
-    const num = parseFloat(ultimaTasa);
-    if (!isNaN(num) && num > 0) {
-      setCalcRate(num);
-    }
-  }, [ultimaTasa]);
+  const numericRate = parseFloat(ultimaTasa);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Calculadora de Conversión Rápida */}
-      <Card className="shadow-xs lg:col-span-1 border-primary/20 bg-primary/5">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <ArrowRightLeft className="size-4 text-primary" />
-            Calculadora de Conversión
-          </CardTitle>
-          <CardDescription className="text-xs">
-            Simulación de cambio en tiempo real
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <div>
-            <label className="text-xs font-semibold text-muted-foreground mb-1 block">
-              Monto Origen
-            </label>
-            <Input
-              type="number"
-              value={calcAmount}
-              onChange={(e) => setCalcAmount(Number(e.target.value) || 0)}
-              className="bg-background text-base font-bold"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-semibold text-muted-foreground mb-1 block">
-              Tasa de Conversión Aplicada
-            </label>
-            <Input
-              type="number"
-              step="0.0001"
-              value={calcRate}
-              onChange={(e) => setCalcRate(Number(e.target.value) || 0)}
-              className="bg-background text-sm font-mono"
-            />
-          </div>
-          <div className="pt-2 border-t border-primary/20 flex items-center justify-between">
-            <span className="text-xs font-semibold text-muted-foreground">
-              Resultado estimado:
-            </span>
-            <span className="text-xl font-bold text-primary">
-              {(calcAmount * calcRate).toFixed(2)}
-            </span>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Calculadora de Conversión Rápida Centralizada */}
+      <CurrencyConverterCard
+        className="lg:col-span-1"
+        initialRate={!isNaN(numericRate) && numericRate > 0 ? numericRate : 1.0}
+      />
 
-      {/* Métricas Diarias */}
+      {/* Métricas Diarias Centralizadas */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:col-span-2 gap-4">
-        {/* Última Tasa */}
-        <Card className="shadow-xs">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-semibold text-muted-foreground uppercase">
-              Última Tasa Registrada
-            </CardTitle>
-            <TrendingUp className="size-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-8 w-24 mb-1" />
-            ) : (
-              <div className="text-2xl font-bold font-mono">{ultimaTasa}</div>
-            )}
-            <p className="text-xs text-green-600 font-medium mt-1">{parOriginal}</p>
-          </CardContent>
-        </Card>
+        <MetricCard
+          title="Última Tasa Registrada"
+          value={ultimaTasa}
+          description={parOriginal}
+          icon={TrendingUp}
+          iconClassName="text-green-600"
+          isLoading={isLoading}
+        />
 
-        {/* Tasa Compra Promedio */}
-        <Card className="shadow-xs">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-semibold text-muted-foreground uppercase">
-              Tasa Compra Promedio
-            </CardTitle>
-            <TrendingUp className="size-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-8 w-24 mb-1" />
-            ) : (
-              <div className="text-2xl font-bold font-mono">{tasaCompraPromedio}</div>
-            )}
-            <p className="text-xs text-muted-foreground mt-1">
-              Cotización de compra
-            </p>
-          </CardContent>
-        </Card>
+        <MetricCard
+          title="Tasa Compra Promedio"
+          value={tasaCompraPromedio}
+          description="Cotización de compra"
+          icon={TrendingUp}
+          iconClassName="text-primary"
+          isLoading={isLoading}
+        />
 
-        {/* Total Registros */}
-        <Card className="shadow-xs">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-semibold text-muted-foreground uppercase">
-              Total Registros
-            </CardTitle>
-            <TrendingUp className="size-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-8 w-16 mb-1" />
-            ) : (
-              <div className="text-2xl font-bold">{totalRegistros}</div>
-            )}
-            <p className="text-xs text-muted-foreground mt-1">
-              Tasas de cambio guardadas
-            </p>
-          </CardContent>
-        </Card>
+        <MetricCard
+          title="Total Registros"
+          value={totalRegistros}
+          description="Tasas de cambio guardadas"
+          icon={TrendingUp}
+          iconClassName="text-blue-500"
+          isLoading={isLoading}
+          isMono={false}
+        />
 
-        {/* Última Fecha */}
-        <Card className="shadow-xs">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-semibold text-muted-foreground uppercase">
-              Última Fecha
-            </CardTitle>
-            <Calendar className="size-4 text-amber-500" />
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-8 w-28 mb-1" />
-            ) : (
-              <div className="text-2xl font-bold font-mono">{ultimaFecha}</div>
-            )}
-            <p className="text-xs text-muted-foreground mt-1">
-              Fecha del último registro
-            </p>
-          </CardContent>
-        </Card>
+        <MetricCard
+          title="Última Fecha"
+          value={ultimaFecha}
+          description="Fecha del último registro"
+          icon={Calendar}
+          iconClassName="text-amber-500"
+          isLoading={isLoading}
+        />
       </div>
     </div>
   );

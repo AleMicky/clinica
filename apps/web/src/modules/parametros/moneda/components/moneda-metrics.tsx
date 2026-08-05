@@ -1,62 +1,51 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Star, Coins, Globe } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { MonedaMetrics } from "../types/moneda.types"
+import * as React from "react";
+import { Star, Coins, Globe } from "lucide-react";
+import { MetricCard } from "@/components/shared";
+import type { MonedaMetrics } from "../types/moneda.types";
 
 interface MonedaMetricsProps {
-  metrics: MonedaMetrics
+  metrics: MonedaMetrics;
 }
 
 export function MonedaMetricsCards({ metrics }: MonedaMetricsProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <Card className="shadow-xs">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-xs font-semibold text-muted-foreground uppercase">Moneda Principal</CardTitle>
-          <Star className="size-4 text-amber-500 fill-amber-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{metrics.monedaBase}</div>
-          <p className="text-xs text-muted-foreground mt-1">Moneda base del sistema</p>
-        </CardContent>
-      </Card>
+      <MetricCard
+        title="Moneda Principal"
+        value={metrics.monedaBase}
+        description="Moneda base del sistema"
+        icon={Star}
+        iconClassName="text-amber-500 fill-amber-500"
+      />
 
-      <Card className="shadow-xs">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-xs font-semibold text-muted-foreground uppercase">Monedas Habilitadas</CardTitle>
-          <Coins className="size-4 text-primary" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{metrics.monedasHabilitadas}</div>
-          <p className="text-xs text-muted-foreground mt-1">Disponibles en cobros</p>
-        </CardContent>
-      </Card>
+      <MetricCard
+        title="Monedas Habilitadas"
+        value={metrics.monedasHabilitadas}
+        description="Disponibles en cobros"
+        icon={Coins}
+        iconClassName="text-primary"
+        isMono={false}
+      />
 
-      <Card className="shadow-xs">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-xs font-semibold text-muted-foreground uppercase">Facturación Multimoneda</CardTitle>
-          <Globe className="size-4 text-green-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
-            {metrics.facturacionMultimoneda ? "Activa" : "Inactiva"}
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">Conversión en tiempo real</p>
-        </CardContent>
-      </Card>
+      <MetricCard
+        title="Facturación Multimoneda"
+        value={metrics.facturacionMultimoneda ? "Activa" : "Inactiva"}
+        description="Conversión en tiempo real"
+        icon={Globe}
+        iconClassName="text-green-500"
+        isMono={false}
+      />
 
-      <Card className="shadow-xs">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-xs font-semibold text-muted-foreground uppercase">Monedas Inactivas</CardTitle>
-          <Coins className="size-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{metrics.monedasInactivas}</div>
-          <p className="text-xs text-muted-foreground mt-1">Fuera de circulación local</p>
-        </CardContent>
-      </Card>
+      <MetricCard
+        title="Monedas Inactivas"
+        value={metrics.monedasInactivas}
+        description="Fuera de circulación local"
+        icon={Coins}
+        iconClassName="text-muted-foreground"
+        isMono={false}
+      />
     </div>
-  )
+  );
 }
