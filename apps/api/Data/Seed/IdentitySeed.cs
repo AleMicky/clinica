@@ -1,6 +1,9 @@
+using Clinica.Api.Data;
+using Clinica.Api.Modules.Seguridad.Personas.Entity;
 using Clinica.Api.Modules.Seguridad.Roles;
 using Clinica.Api.Modules.Seguridad.Usuarios;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace Clinica.Api.Data.Seed;
 
@@ -12,9 +15,10 @@ public static class IdentitySeed
 
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Rol>>();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Usuario>>();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
         await SeedRoles(roleManager);
-        await SeedAdmin(userManager);
+        await SeedAdmin(userManager, dbContext);
     }
 
     private static async Task SeedRoles(RoleManager<Rol> roleManager)
@@ -43,7 +47,9 @@ public static class IdentitySeed
         }
     }
 
-    private static async Task SeedAdmin(UserManager<Usuario> userManager)
+    private static async Task SeedAdmin(
+        UserManager<Usuario> userManager,
+        AppDbContext dbContext)
     {
         const string email = "admin@clinica.local";
 
@@ -52,14 +58,32 @@ public static class IdentitySeed
         if (usuario != null)
             return;
 
+        var persona = await dbContext.Personas.FirstOrDefaultAsync(
+            x => x.TipoDocumento == "CI" && x.NumeroDocumento == "0000000");
+
+        if (persona is null)
+        {
+            persona = new Persona
+            {
+                Nombres = "Administrador",
+                ApellidoPaterno = "Sistema",
+                TipoDocumento = "CI",
+                NumeroDocumento = "0000000",
+                Activo = true
+            };
+
+            await dbContext.Personas.AddAsync(persona);
+            await dbContext.SaveChangesAsync();
+        }
+
         usuario = new Usuario
         {
             UserName = "admin",
             Email = email,
             EmailConfirmed = true,
-            Nombres = "Administrador",
-            Apellidos = "Sistema",
-            Activo = true
+            Activo = true,
+            DebeCambiarPassword = false,
+            PersonaId = persona.Id
         };
 
         var result = await userManager.CreateAsync(

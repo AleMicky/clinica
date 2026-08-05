@@ -4,6 +4,7 @@ using Clinica.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Clinica.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260805184008_AddPersonaUsuarioRelation")]
+    partial class AddPersonaUsuarioRelation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -283,275 +286,6 @@ namespace Clinica.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("UnidadesMedida", (string)null);
-                });
-
-            modelBuilder.Entity("Clinica.Api.Modules.RecursosHumanos.Area.Entity.Area", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("Activo")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<int?>("AreaPadreId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Codigo")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<string>("CreadoPor")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Descripcion")
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)");
-
-                    b.Property<DateTime>("FechaCreacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("FechaModificacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ModificadoPor")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Nombre")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("TipoAreaId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AreaPadreId");
-
-                    b.HasIndex("TipoAreaId", "Codigo")
-                        .IsUnique();
-
-                    b.ToTable("Areas", (string)null);
-                });
-
-            modelBuilder.Entity("Clinica.Api.Modules.RecursosHumanos.AsignacionEmpleado.Entity.AsignacionEmpleado", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("Activo")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<int>("AreaId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CargoId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("CreadoPor")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("EmpleadoId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("FechaCreacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateOnly?>("FechaFin")
-                        .HasColumnType("date");
-
-                    b.Property<DateOnly>("FechaInicio")
-                        .HasColumnType("date");
-
-                    b.Property<DateTime?>("FechaModificacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ModificadoPor")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Observacion")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AreaId");
-
-                    b.HasIndex("CargoId");
-
-                    b.HasIndex("EmpleadoId", "FechaInicio");
-
-                    b.ToTable("AsignacionesEmpleado", (string)null);
-                });
-
-            modelBuilder.Entity("Clinica.Api.Modules.RecursosHumanos.Cargo.Entity.Cargo", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("Activo")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<string>("Codigo")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<string>("CreadoPor")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Descripcion")
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)");
-
-                    b.Property<DateTime>("FechaCreacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("FechaModificacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ModificadoPor")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Nombre")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Codigo")
-                        .IsUnique();
-
-                    b.ToTable("Cargos", (string)null);
-                });
-
-            modelBuilder.Entity("Clinica.Api.Modules.RecursosHumanos.Empleado.Entity.Empleado", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("Activo")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<string>("CodigoEmpleado")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
-                    b.Property<string>("CreadoPor")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("FechaCreacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateOnly>("FechaIngreso")
-                        .HasColumnType("date");
-
-                    b.Property<DateTime?>("FechaModificacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateOnly?>("FechaRetiro")
-                        .HasColumnType("date");
-
-                    b.Property<string>("ModificadoPor")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("PersonaId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CodigoEmpleado")
-                        .IsUnique();
-
-                    b.HasIndex("PersonaId")
-                        .IsUnique();
-
-                    b.ToTable("Empleados", (string)null);
-                });
-
-            modelBuilder.Entity("Clinica.Api.Modules.RecursosHumanos.TipoArea.Entity.TipoArea", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("Activo")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<string>("Codigo")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<string>("CreadoPor")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Descripcion")
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)");
-
-                    b.Property<DateTime>("FechaCreacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("FechaModificacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ModificadoPor")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Nombre")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("Orden")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Codigo")
-                        .IsUnique();
-
-                    b.ToTable("TiposArea", (string)null);
                 });
 
             modelBuilder.Entity("Clinica.Api.Modules.Seguridad.Personas.Entity.Persona", b =>
@@ -896,62 +630,6 @@ namespace Clinica.Api.Migrations
                     b.Navigation("MonedaOrigen");
                 });
 
-            modelBuilder.Entity("Clinica.Api.Modules.RecursosHumanos.Area.Entity.Area", b =>
-                {
-                    b.HasOne("Clinica.Api.Modules.RecursosHumanos.Area.Entity.Area", "AreaPadre")
-                        .WithMany("Subareas")
-                        .HasForeignKey("AreaPadreId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Clinica.Api.Modules.RecursosHumanos.TipoArea.Entity.TipoArea", "TipoArea")
-                        .WithMany("Areas")
-                        .HasForeignKey("TipoAreaId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("AreaPadre");
-
-                    b.Navigation("TipoArea");
-                });
-
-            modelBuilder.Entity("Clinica.Api.Modules.RecursosHumanos.AsignacionEmpleado.Entity.AsignacionEmpleado", b =>
-                {
-                    b.HasOne("Clinica.Api.Modules.RecursosHumanos.Area.Entity.Area", "Area")
-                        .WithMany("Asignaciones")
-                        .HasForeignKey("AreaId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Clinica.Api.Modules.RecursosHumanos.Cargo.Entity.Cargo", "Cargo")
-                        .WithMany("Asignaciones")
-                        .HasForeignKey("CargoId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Clinica.Api.Modules.RecursosHumanos.Empleado.Entity.Empleado", "Empleado")
-                        .WithMany("Asignaciones")
-                        .HasForeignKey("EmpleadoId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Area");
-
-                    b.Navigation("Cargo");
-
-                    b.Navigation("Empleado");
-                });
-
-            modelBuilder.Entity("Clinica.Api.Modules.RecursosHumanos.Empleado.Entity.Empleado", b =>
-                {
-                    b.HasOne("Clinica.Api.Modules.Seguridad.Personas.Entity.Persona", "Persona")
-                        .WithMany()
-                        .HasForeignKey("PersonaId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Persona");
-                });
-
             modelBuilder.Entity("Clinica.Api.Modules.Seguridad.Usuarios.Usuario", b =>
                 {
                     b.HasOne("Clinica.Api.Modules.Seguridad.Personas.Entity.Persona", "Persona")
@@ -1017,28 +695,6 @@ namespace Clinica.Api.Migrations
             modelBuilder.Entity("Clinica.Api.Modules.Parametros.Catalogo.Entity.CatalogoGrupo", b =>
                 {
                     b.Navigation("Items");
-                });
-
-            modelBuilder.Entity("Clinica.Api.Modules.RecursosHumanos.Area.Entity.Area", b =>
-                {
-                    b.Navigation("Asignaciones");
-
-                    b.Navigation("Subareas");
-                });
-
-            modelBuilder.Entity("Clinica.Api.Modules.RecursosHumanos.Cargo.Entity.Cargo", b =>
-                {
-                    b.Navigation("Asignaciones");
-                });
-
-            modelBuilder.Entity("Clinica.Api.Modules.RecursosHumanos.Empleado.Entity.Empleado", b =>
-                {
-                    b.Navigation("Asignaciones");
-                });
-
-            modelBuilder.Entity("Clinica.Api.Modules.RecursosHumanos.TipoArea.Entity.TipoArea", b =>
-                {
-                    b.Navigation("Areas");
                 });
 #pragma warning restore 612, 618
         }

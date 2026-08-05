@@ -1,9 +1,11 @@
 using System.Security.Claims;
+using Clinica.Api.Modules.Seguridad.Personas.Entity;
 using Clinica.Api.Modules.Seguridad.Usuarios;
 using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Extensions;
 using Clinica.Api.Shared.Jwt;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace Clinica.Api.Modules.Seguridad.Auth;
 
@@ -15,9 +17,11 @@ public sealed class AuthService(
     public async Task<LoginResponse> LoginAsync(
         LoginRequest request)
     {
-        var usuario = await userManager.FindByNameAsync(request.UserName)
-            ?? throw new BusinessException(
-                "Usuario o contraseña incorrectos.");
+        var usuario = await userManager.Users
+                          .Include(x => x.Persona)
+                          .FirstOrDefaultAsync(x => x.UserName == request.UserName)
+                      ?? throw new BusinessException(
+                          "Usuario o contraseña incorrectos.");
 
         if (!usuario.Activo)
         {
@@ -40,7 +44,8 @@ public sealed class AuthService(
 
         return new LoginResponse(
             token,
-            DateTime.UtcNow.AddMinutes(480));
+            DateTime.UtcNow.AddMinutes(480),
+            usuario.DebeCambiarPassword);
     }
 
     public async Task<MeResponse> MeAsync(
@@ -50,7 +55,11 @@ public sealed class AuthService(
             ?? principal.FindFirstValue("sub")
             ?? principal.FindFirstValue(ClaimTypes.Name);
 
-        var usuario = (userIdStr != null ? await userManager.FindByIdAsync(userIdStr) : null)
+        var usuario = (userIdStr != null
+                ? await userManager.Users
+                    .Include(x => x.Persona)
+                    .FirstOrDefaultAsync(x => x.Id.ToString() == userIdStr)
+                : null)
             ?? await userManager.GetUserAsync(principal)
             ?? throw new UnauthorizedAccessException();
 
@@ -61,8 +70,7 @@ public sealed class AuthService(
             Id = usuario.Id,
             UserName = usuario.UserName ?? string.Empty,
             Email = usuario.Email ?? string.Empty,
-            Nombres = usuario.Nombres,
-            Apellidos = usuario.Apellidos,
+            NombreCompleto = ConstruirNombreCompleto(usuario.Persona),
             Roles = roles.ToList()
         };
     }
@@ -79,6 +87,13 @@ public sealed class AuthService(
             request.CurrentPassword,
             request.NewPassword))
             .EnsureSuccess();
+
+        if (usuario.DebeCambiarPassword)
+        {
+            usuario.DebeCambiarPassword = false;
+            (await userManager.UpdateAsync(usuario))
+                .EnsureSuccess();
+        }
     }
 
     public Task LogoutAsync()
@@ -90,5 +105,15 @@ public sealed class AuthService(
         RefreshTokenRequest request)
     {
         throw new NotImplementedException();
+    }
+
+    private static string ConstruirNombreCompleto(Persona? persona)
+    {
+        if (persona is null)
+            return string.Empty;
+
+        return string.Join(" ",
+            new[] { persona.Nombres, persona.ApellidoPaterno, persona.ApellidoMaterno }
+                .Where(x => !string.IsNullOrWhiteSpace(x)));
     }
 }

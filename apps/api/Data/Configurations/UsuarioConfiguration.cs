@@ -12,15 +12,21 @@ public class UsuarioConfiguration
     {
         builder.ToTable("Usuarios");
 
-        builder.Property(x => x.Nombres)
-            .HasMaxLength(100)
-            .IsRequired();
-
-        builder.Property(x => x.Apellidos)
-            .HasMaxLength(100)
-            .IsRequired();
-
         builder.Property(x => x.Activo)
             .HasDefaultValue(true);
+
+        builder.Property(x => x.DebeCambiarPassword)
+            .HasDefaultValue(false);
+
+        builder.Property(x => x.PersonaId)
+            .IsRequired();
+
+        builder.HasIndex(x => x.PersonaId)
+            .IsUnique();
+
+        builder.HasOne(x => x.Persona)
+            .WithMany()
+            .HasForeignKey(x => x.PersonaId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -6,15 +6,15 @@ public record LoginRequest(
 
 public record LoginResponse(
     string AccessToken,
-    DateTime ExpiresAt);
+    DateTime ExpiresAt,
+    bool DebeCambiarPassword);
 
 public record MeResponse
 {
     public int Id { get; init; }
     public string UserName { get; init; } = string.Empty;
     public string Email { get; init; } = string.Empty;
-    public string Nombres { get; init; } = string.Empty;
-    public string Apellidos { get; init; } = string.Empty;
+    public string NombreCompleto { get; init; } = string.Empty;
     public List<string> Roles { get; init; } = [];
 }
 
@@ -28,6 +28,3 @@ public record RefreshTokenRequest(
 public record RefreshTokenResponse(
     string AccessToken,
     DateTime ExpiresAt);
-
-public record LogoutRequest(
-    string? RefreshToken);

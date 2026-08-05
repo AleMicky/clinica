@@ -3,6 +3,11 @@ using Clinica.Api.Modules.Parametros.Catalogo.Entity;
 using Clinica.Api.Modules.Parametros.Moneda.Entity;
 using Clinica.Api.Modules.Parametros.UnidadesMedida;
 using Clinica.Api.Modules.Parametros.UnidadesMedida.Entity;
+using Clinica.Api.Modules.RecursosHumanos.Area.Entity;
+using Clinica.Api.Modules.RecursosHumanos.AsignacionEmpleado.Entity;
+using Clinica.Api.Modules.RecursosHumanos.Cargo.Entity;
+using Clinica.Api.Modules.RecursosHumanos.Empleado.Entity;
+using Clinica.Api.Modules.RecursosHumanos.TipoArea.Entity;
 using Clinica.Api.Modules.Seguridad.Personas.Entity;
 using Clinica.Api.Modules.Seguridad.Roles;
 using Clinica.Api.Modules.Seguridad.Usuarios;
@@ -27,6 +32,17 @@ public class AppDbContext(
     public DbSet<TipoCambio> TiposCambio => Set<TipoCambio>();
 
     public DbSet<Persona> Personas => Set<Persona>();
+
+    public DbSet<TipoArea> TiposArea => Set<TipoArea>();
+
+    public DbSet<Area> Areas => Set<Area>();
+
+    public DbSet<Cargo> Cargos => Set<Cargo>();
+
+    public DbSet<Empleado> Empleados => Set<Empleado>();
+
+    public DbSet<AsignacionEmpleado> AsignacionesEmpleado
+        => Set<AsignacionEmpleado>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
