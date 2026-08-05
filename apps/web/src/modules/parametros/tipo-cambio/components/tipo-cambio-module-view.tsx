@@ -121,7 +121,7 @@ export function TipoCambioModuleView() {
   const ultimaFecha = latestRate ? latestRate.fecha : "-";
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6 w-full">
       <TipoCambioHeader
         onAddClick={handleOpenAdd}
         onRefreshClick={() => refetch()}

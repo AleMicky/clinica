@@ -17,7 +17,7 @@ export default function DashboardPage() {
   const userName = user?.nombres ?? user?.userName ?? "Doctor";
 
   return (
-    <div className="flex-1 space-y-6">
+    <div className="flex-1 space-y-6 w-full">
       {/* Top Banner & Quick Actions */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>

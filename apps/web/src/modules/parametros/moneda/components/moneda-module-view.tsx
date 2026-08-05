@@ -152,7 +152,7 @@ export function MonedaModuleView() {
   };
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6 w-full">
       <MonedaHeader onAddClick={handleOpenAdd} />
       <MonedaMetricsCards metrics={metrics} />
       <MonedaTable

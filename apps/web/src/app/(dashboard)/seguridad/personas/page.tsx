@@ -113,7 +113,7 @@ export default function PersonasPage() {
   })
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6 w-full">
       {/* Cabecera de Página */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>

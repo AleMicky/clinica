@@ -85,7 +85,7 @@ export default function RolesPage() {
   const [selectedRole, setSelectedRole] = React.useState(mockRoles[0])
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6 w-full">
       {/* Cabecera */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
