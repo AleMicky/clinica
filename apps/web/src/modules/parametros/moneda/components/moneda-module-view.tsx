@@ -6,6 +6,7 @@ import { MonedaHeader } from "./moneda-header";
 import { MonedaMetricsCards } from "./moneda-metrics";
 import { MonedaTable, type MonedaItem } from "./moneda-table";
 import { MonedaFormDialog } from "./moneda-form-dialog";
+import { MonedaDeleteDialog } from "./moneda-delete-dialog";
 import {
   useMonedas,
   useUpdateMoneda,
@@ -17,10 +18,14 @@ import type {
 } from "../types/moneda.types";
 
 export function MonedaModuleView() {
-  const [dialogOpen, setDialogOpen] = React.useState(false);
+  const [formDialogOpen, setFormDialogOpen] = React.useState(false);
   const [monedaToEdit, setMonedaToEdit] = React.useState<
     MonedaResponse | MonedaItem | null
   >(null);
+
+  // State for Delete AlertDialog confirmation
+  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
+  const [monedaToDelete, setMonedaToDelete] = React.useState<MonedaItem | null>(null);
 
   // State for server-side pagination & search parameters
   const [currentPage, setCurrentPage] = React.useState(1);
@@ -83,12 +88,12 @@ export function MonedaModuleView() {
 
   const handleOpenAdd = () => {
     setMonedaToEdit(null);
-    setDialogOpen(true);
+    setFormDialogOpen(true);
   };
 
   const handleOpenEdit = (moneda: MonedaItem) => {
     setMonedaToEdit(moneda);
-    setDialogOpen(true);
+    setFormDialogOpen(true);
   };
 
   const handleSetMonedaBase = async (id: number | string) => {
@@ -118,18 +123,31 @@ export function MonedaModuleView() {
     }
   };
 
-  const handleInactivate = async (id: number | string) => {
-    const numId = Number(id);
+  // Triggers AlertDialog for inactivating moneda
+  const handleOpenDelete = (id: number | string) => {
+    const target = monedas.find((m) => m.id === id || m.id === Number(id));
+    if (target) {
+      setMonedaToDelete(target);
+      setDeleteDialogOpen(true);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!monedaToDelete) return;
+    const numId = Number(monedaToDelete.id);
+
     try {
       await deleteMonedaMutation.mutateAsync(numId);
-      toast.success("Moneda inactivada correctamente.");
+      toast.success(`Moneda ${monedaToDelete.codigo} eliminada correctamente.`);
       refetch();
     } catch (err: any) {
       toast.error(
         err?.response?.data?.message ||
           err?.message ||
-          "Error al inactivar la moneda."
+          "Error al eliminar la moneda."
       );
+    } finally {
+      setMonedaToDelete(null);
     }
   };
 
@@ -151,14 +169,21 @@ export function MonedaModuleView() {
         onPageSizeChange={handlePageSizeChange}
         onSetMonedaBase={handleSetMonedaBase}
         onEdit={handleOpenEdit}
-        onInactivate={handleInactivate}
+        onDelete={handleOpenDelete}
         onRefresh={() => refetch()}
       />
       <MonedaFormDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        open={formDialogOpen}
+        onOpenChange={setFormDialogOpen}
         monedaToEdit={monedaToEdit}
         onSuccessCallback={() => refetch()}
+      />
+      <MonedaDeleteDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        moneda={monedaToDelete}
+        onConfirm={handleConfirmDelete}
+        isLoading={deleteMonedaMutation.isPending}
       />
     </div>
   );

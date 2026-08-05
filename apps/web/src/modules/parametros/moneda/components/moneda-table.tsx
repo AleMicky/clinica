@@ -39,6 +39,7 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -77,6 +78,7 @@ interface MonedaTableProps {
   onPageSizeChange?: (size: number) => void;
   onSetMonedaBase?: (id: number | string) => void;
   onEdit?: (moneda: MonedaItem) => void;
+  onDelete?: (id: number | string) => void;
   onInactivate?: (id: number | string) => void;
   onRefresh?: () => void;
 }
@@ -95,6 +97,7 @@ export function MonedaTable({
   onPageSizeChange,
   onSetMonedaBase,
   onEdit,
+  onDelete,
   onInactivate,
   onRefresh,
 }: MonedaTableProps) {
@@ -252,28 +255,30 @@ export function MonedaTable({
                         <span className="sr-only">Acciones</span>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                        <DropdownMenuItem
-                          onClick={() => onEdit?.(moneda)}
-                          className="gap-2 cursor-pointer"
-                        >
-                          <Edit className="size-4" /> Editar Moneda
-                        </DropdownMenuItem>
-                        {!moneda.esBase && (
+                        <DropdownMenuGroup>
+                          <DropdownMenuLabel>Acciones</DropdownMenuLabel>
                           <DropdownMenuItem
-                            onClick={() => onSetMonedaBase?.(moneda.id)}
+                            onClick={() => onEdit?.(moneda)}
                             className="gap-2 cursor-pointer"
                           >
-                            <Star className="size-4 text-amber-500" /> Establecer como Moneda Base
+                            <Edit className="size-4" /> Editar Moneda
                           </DropdownMenuItem>
-                        )}
+                          {!moneda.esBase && (
+                            <DropdownMenuItem
+                              onClick={() => onSetMonedaBase?.(moneda.id)}
+                              className="gap-2 cursor-pointer"
+                            >
+                              <Star className="size-4 text-amber-500" /> Establecer como Moneda Base
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuGroup>
                         <DropdownMenuSeparator />
                         {!moneda.esBase && (
                           <DropdownMenuItem
-                            onClick={() => onInactivate?.(moneda.id)}
+                            onClick={() => (onDelete ?? onInactivate)?.(moneda.id)}
                             className="gap-2 text-destructive cursor-pointer"
                           >
-                            <Trash2 className="size-4" /> Inactivar
+                            <Trash2 className="size-4" /> Eliminar Moneda
                           </DropdownMenuItem>
                         )}
                       </DropdownMenuContent>

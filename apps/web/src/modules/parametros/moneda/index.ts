@@ -9,5 +9,7 @@ export * from "./components/moneda-header";
 export * from "./components/moneda-metrics";
 export * from "./components/moneda-table";
 export * from "./components/moneda-form-dialog";
+export * from "./components/moneda-delete-dialog";
 export * from "./components/moneda-module-view";
+
 
