@@ -6,13 +6,7 @@ import {
   MoreHorizontal,
   Edit,
   Trash2,
-  CheckCircle2,
-  XCircle,
   Star,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
   RefreshCw,
   AlertCircle,
 } from "lucide-react";
@@ -23,7 +17,6 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-  CardFooter,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -45,14 +38,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import type { Moneda, MonedaResponse } from "../types/moneda.types";
+import { StatusBadge, DataTablePagination } from "@/components/shared";
 
 export interface MonedaItem {
   id: number | string;
@@ -101,9 +87,7 @@ export function MonedaTable({
   onInactivate,
   onRefresh,
 }: MonedaTableProps) {
-  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
-  const fromItem = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
-  const toItem = Math.min(totalItems, currentPage * pageSize);
+  const handleDeleteAction = onDelete ?? onInactivate;
 
   return (
     <Card className="shadow-xs">
@@ -111,7 +95,7 @@ export function MonedaTable({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <CardTitle className="flex items-center gap-2">
-              Listado de Divisas
+              <span>Listado de Divisas</span>
               {onRefresh && (
                 <Button
                   variant="ghost"
@@ -119,6 +103,7 @@ export function MonedaTable({
                   onClick={onRefresh}
                   disabled={isLoading}
                   title="Recargar datos de la API"
+                  className="cursor-pointer"
                 >
                   <RefreshCw className={`size-4 ${isLoading ? "animate-spin" : ""}`} />
                 </Button>
@@ -190,7 +175,7 @@ export function MonedaTable({
                       {errorMessage || "Error al cargar la información desde la API."}
                     </p>
                     {onRefresh && (
-                      <Button variant="outline" size="sm" onClick={onRefresh} className="mt-1 gap-2">
+                      <Button variant="outline" size="sm" onClick={onRefresh} className="mt-1 gap-2 cursor-pointer">
                         <RefreshCw className="size-3.5" /> Reintentar
                       </Button>
                     )}
@@ -232,21 +217,7 @@ export function MonedaTable({
                     )}
                   </TableCell>
                   <TableCell>
-                    <Badge
-                      variant={moneda.activo ? "outline" : "destructive"}
-                      className={`w-fit gap-1 text-xs ${
-                        moneda.activo
-                          ? "bg-green-500/10 text-green-600 border-green-500/20"
-                          : ""
-                      }`}
-                    >
-                      {moneda.activo ? (
-                        <CheckCircle2 className="size-3" />
-                      ) : (
-                        <XCircle className="size-3" />
-                      )}
-                      {moneda.activo ? "Activo" : "Inactivo"}
-                    </Badge>
+                    <StatusBadge active={moneda.activo} />
                   </TableCell>
                   <TableCell className="text-right pr-6">
                     <DropdownMenu>
@@ -275,7 +246,7 @@ export function MonedaTable({
                         <DropdownMenuSeparator />
                         {!moneda.esBase && (
                           <DropdownMenuItem
-                            onClick={() => (onDelete ?? onInactivate)?.(moneda.id)}
+                            onClick={() => handleDeleteAction?.(moneda.id)}
                             className="gap-2 text-destructive cursor-pointer"
                           >
                             <Trash2 className="size-4" /> Eliminar Moneda
@@ -291,89 +262,16 @@ export function MonedaTable({
         </Table>
       </CardContent>
 
-      {/* Pie de Tabla con Controles de Paginación */}
-      <CardFooter className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-border/50 text-sm">
-        {/* Información de Registros */}
-        <div className="text-xs text-muted-foreground">
-          Mostrando <span className="font-semibold text-foreground">{fromItem}</span> a{" "}
-          <span className="font-semibold text-foreground">{toItem}</span> de{" "}
-          <span className="font-semibold text-foreground">{totalItems}</span> divisas
-        </div>
-
-        {/* Selector de Filas por Página y Botones de Navegación */}
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">Filas por página</span>
-            <Select
-              value={String(pageSize)}
-              onValueChange={(val) => onPageSizeChange?.(Number(val))}
-            >
-              <SelectTrigger className="h-8 w-16 text-xs">
-                <SelectValue placeholder={String(pageSize)} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="5">5</SelectItem>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="20">20</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex items-center gap-1">
-            <span className="text-xs text-muted-foreground mr-2 font-medium">
-              Página {currentPage} de {totalPages}
-            </span>
-
-            {/* Primera Página */}
-            <Button
-              variant="outline"
-              size="icon"
-              className="size-8"
-              onClick={() => onPageChange?.(1)}
-              disabled={currentPage <= 1 || isLoading}
-            >
-              <ChevronsLeft className="size-4" />
-              <span className="sr-only">Primera página</span>
-            </Button>
-
-            {/* Página Anterior */}
-            <Button
-              variant="outline"
-              size="icon"
-              className="size-8"
-              onClick={() => onPageChange?.(Math.max(1, currentPage - 1))}
-              disabled={currentPage <= 1 || isLoading}
-            >
-              <ChevronLeft className="size-4" />
-              <span className="sr-only">Página anterior</span>
-            </Button>
-
-            {/* Página Siguiente */}
-            <Button
-              variant="outline"
-              size="icon"
-              className="size-8"
-              onClick={() => onPageChange?.(Math.min(totalPages, currentPage + 1))}
-              disabled={currentPage >= totalPages || isLoading}
-            >
-              <ChevronRight className="size-4" />
-              <span className="sr-only">Página siguiente</span>
-            </Button>
-
-            {/* Última Página */}
-            <Button
-              variant="outline"
-              size="icon"
-              className="size-8"
-              onClick={() => onPageChange?.(totalPages)}
-              disabled={currentPage >= totalPages || isLoading}
-            >
-              <ChevronsRight className="size-4" />
-              <span className="sr-only">Última página</span>
-            </Button>
-          </div>
-        </div>
-      </CardFooter>
+      {/* Pie de Tabla con Controles de Paginación Centralizados */}
+      <DataTablePagination
+        totalItems={totalItems}
+        currentPage={currentPage}
+        pageSize={pageSize}
+        onPageChange={onPageChange || (() => {})}
+        onPageSizeChange={onPageSizeChange}
+        isLoading={isLoading}
+        itemLabel="divisas"
+      />
     </Card>
   );
 }
