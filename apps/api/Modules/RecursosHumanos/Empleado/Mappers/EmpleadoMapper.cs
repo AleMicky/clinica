@@ -7,6 +7,7 @@ namespace Clinica.Api.Modules.RecursosHumanos.Empleado.Mappers;
 [Mapper]
 public static partial class EmpleadoMapper
 {
+    [MapperIgnoreTarget(nameof(EmpleadoResponse.Persona))]
     public static partial EmpleadoResponse ToResponse(
         EmpleadoEntity entity
     );

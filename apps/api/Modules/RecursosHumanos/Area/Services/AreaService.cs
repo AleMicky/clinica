@@ -58,6 +58,29 @@ public sealed class AreaService(AppDbContext dbContext)
         };
     }
 
+    public override async Task<AreaResponse> CrearAsync(
+        CreateAreaRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        await ValidateCreateAsync(request, cancellationToken);
+
+        var entity = MapToNewEntity(request);
+        entity.Activo = true;
+
+        await Entities.AddAsync(entity, cancellationToken);
+        await DbContext.SaveChangesAsync(cancellationToken);
+
+        if (entity.TipoArea is null)
+        {
+            await DbContext
+                .Entry(entity)
+                .Reference(e => e.TipoArea)
+                .LoadAsync(cancellationToken);
+        }
+
+        return MapToResponse(entity);
+    }
+
     protected override IReadOnlyCollection<AreaResponse>
         MapToResponseList(IEnumerable<AreaEntity> entities)
     {

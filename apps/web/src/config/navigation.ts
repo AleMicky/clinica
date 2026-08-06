@@ -19,6 +19,8 @@ import {
   Coins,
   TrendingUp,
   Scale,
+  Building2,
+  Network,
   type LucideIcon,
 } from "lucide-react"
 
@@ -115,6 +117,24 @@ export const recursosHumanosNav: NavGroup = {
       href: "/recursos-humanos/empleados",
       icon: UserCheck,
       description: "Expediente del personal médico y administrativo",
+    },
+    {
+      title: "Cargos",
+      href: "/recursos-humanos/cargos",
+      icon: Briefcase,
+      description: "Administración de cargos y puestos del personal",
+    },
+    {
+      title: "Tipos de Área",
+      href: "/recursos-humanos/tipos-area",
+      icon: Building2,
+      description: "Clasificación de áreas organizacionales",
+    },
+    {
+      title: "Áreas",
+      href: "/recursos-humanos/areas",
+      icon: Network,
+      description: "Administración jerárquica de áreas",
     },
     {
       title: "Horarios y Turnos",

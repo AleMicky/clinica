@@ -143,5 +143,6 @@ app.MapModules();
 
 await IdentitySeed.SeedAsync(app.Services);
 await CatalogoSeed.SeedAsync(app.Services);
+await RecursosHumanosSeed.SeedAsync(app.Services);
 
 app.Run();

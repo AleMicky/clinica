@@ -7,6 +7,7 @@ namespace Clinica.Api.Modules.RecursosHumanos.Area.Mappers;
 [Mapper]
 public static partial class AreaMapper
 {
+    [MapperIgnoreTarget(nameof(AreaResponse.TipoAreaNombre))]
     public static partial AreaResponse ToResponse(
         AreaEntity entity
     );

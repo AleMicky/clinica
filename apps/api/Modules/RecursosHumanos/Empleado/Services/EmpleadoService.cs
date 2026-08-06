@@ -1,6 +1,7 @@
 using Clinica.Api.Data;
 using Clinica.Api.Modules.RecursosHumanos.Empleado.Dtos;
 using Clinica.Api.Modules.RecursosHumanos.Empleado.Mappers;
+using Clinica.Api.Modules.Seguridad.Personas.Mappers;
 using Clinica.Api.Shared.Crud;
 using Clinica.Api.Shared.Exceptions;
 using Microsoft.EntityFrameworkCore;
@@ -51,13 +52,76 @@ public sealed class EmpleadoService(AppDbContext dbContext)
     protected override EmpleadoResponse MapToResponse(
         EmpleadoEntity entity)
     {
-        return EmpleadoMapper.ToResponse(entity);
+        var response = EmpleadoMapper.ToResponse(entity);
+        return response with
+        {
+            Persona = entity.Persona is null
+                ? null
+                : PersonaMapper.ToResponse(entity.Persona)
+        };
     }
 
     protected override IReadOnlyCollection<EmpleadoResponse>
         MapToResponseList(IEnumerable<EmpleadoEntity> entities)
     {
         return EmpleadoMapper.ToResponse(entities);
+    }
+
+    public override async Task<EmpleadoResponse> CrearAsync(
+        CreateEmpleadoRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        await ValidateCreateAsync(request, cancellationToken);
+
+        var entity = MapToNewEntity(request);
+        entity.Activo = true;
+
+        await Entities.AddAsync(entity, cancellationToken);
+        await DbContext.SaveChangesAsync(cancellationToken);
+
+        if (entity.Persona is null)
+        {
+            await DbContext
+                .Entry(entity)
+                .Reference(e => e.Persona)
+                .LoadAsync(cancellationToken);
+        }
+
+        return MapToResponse(entity);
+    }
+
+    public override async Task<EmpleadoResponse> ActualizarAsync(
+        int id,
+        UpdateEmpleadoRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await Entities
+            .FirstOrDefaultAsync(
+                x => x.Id == id && x.Activo,
+                cancellationToken);
+
+        if (entity is null)
+            throw CreateNotFoundException(id);
+
+        await ValidateUpdateAsync(
+            id,
+            request,
+            entity,
+            cancellationToken);
+
+        MapToExistingEntity(request, entity);
+
+        await DbContext.SaveChangesAsync(cancellationToken);
+
+        if (entity.Persona is null)
+        {
+            await DbContext
+                .Entry(entity)
+                .Reference(e => e.Persona)
+                .LoadAsync(cancellationToken);
+        }
+
+        return MapToResponse(entity);
     }
 
     protected override async Task ValidateCreateAsync(
