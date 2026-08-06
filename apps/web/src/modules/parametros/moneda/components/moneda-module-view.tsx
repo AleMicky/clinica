@@ -36,8 +36,6 @@ export function MonedaModuleView() {
   const {
     data: apiData,
     isLoading,
-    isError,
-    error,
     refetch,
   } = useMonedas({
     page: currentPage,
@@ -114,12 +112,7 @@ export function MonedaModuleView() {
       });
       toast.success(`Moneda ${target.codigo} establecida como Moneda Base.`);
       refetch();
-    } catch (err: any) {
-      toast.error(
-        err?.response?.data?.message ||
-          err?.message ||
-          "Error al actualizar la moneda base."
-      );
+    } catch {
     }
   };
 
@@ -140,12 +133,7 @@ export function MonedaModuleView() {
       await deleteMonedaMutation.mutateAsync(numId);
       toast.success(`Moneda ${monedaToDelete.codigo} eliminada correctamente.`);
       refetch();
-    } catch (err: any) {
-      toast.error(
-        err?.response?.data?.message ||
-          err?.message ||
-          "Error al eliminar la moneda."
-      );
+    } catch {
     } finally {
       setMonedaToDelete(null);
     }
@@ -158,8 +146,6 @@ export function MonedaModuleView() {
       <MonedaTable
         monedas={monedas}
         isLoading={isLoading}
-        isError={isError}
-        errorMessage={(error as any)?.message}
         totalItems={apiData?.totalItems ?? 0}
         currentPage={currentPage}
         pageSize={pageSize}

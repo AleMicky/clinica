@@ -14,7 +14,6 @@ import {
     useDeleteEmpleado,
     useEmpleados,
 } from "../hooks/use-empleados";
-import { getApiErrorMessage } from "@/lib/api/api-error";
 import type { EmpleadoResponse } from "../types/empleado.types";
 
 type EmpleadoEditable = EmpleadoResponse | EmpleadoItem;
@@ -35,8 +34,6 @@ export function EmpleadoModuleView() {
     const {
         data: apiData,
         isLoading,
-        isError,
-        error,
         refetch,
     } = useEmpleados({
         page: currentPage,
@@ -134,8 +131,7 @@ export function EmpleadoModuleView() {
                 `Empleado ${empleadoToDelete.codigoEmpleado} eliminado correctamente.`,
             );
             refetch();
-        } catch (err) {
-            toast.error(getApiErrorMessage(err));
+        } catch {
         } finally {
             setEmpleadoToDelete(null);
         }
@@ -148,8 +144,6 @@ export function EmpleadoModuleView() {
             <EmpleadoTable
                 empleados={empleados}
                 isLoading={isLoading}
-                isError={isError}
-                errorMessage={getApiErrorMessage(error)}
                 totalItems={apiData?.totalItems ?? 0}
                 currentPage={currentPage}
                 pageSize={pageSize}

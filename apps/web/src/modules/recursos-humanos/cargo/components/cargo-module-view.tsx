@@ -11,7 +11,6 @@ import {
     useCargos,
     useDeleteCargo,
 } from "../hooks/use-cargos";
-import { getApiErrorMessage } from "@/lib/api/api-error";
 import type { CargoResponse } from "../types/cargo.types";
 
 export function CargoModuleView() {
@@ -30,8 +29,6 @@ export function CargoModuleView() {
     const {
         data: apiData,
         isLoading,
-        isError,
-        error,
         refetch,
     } = useCargos({
         page: currentPage,
@@ -94,8 +91,7 @@ export function CargoModuleView() {
             await deleteCargoMutation.mutateAsync(numId);
             toast.success(`Cargo ${cargoToDelete.codigo} eliminado correctamente.`);
             refetch();
-        } catch (err) {
-            toast.error(getApiErrorMessage(err));
+        } catch {
         } finally {
             setCargoToDelete(null);
         }
@@ -108,8 +104,6 @@ export function CargoModuleView() {
             <CargoTable
                 cargos={cargos}
                 isLoading={isLoading}
-                isError={isError}
-                errorMessage={getApiErrorMessage(error)}
                 totalItems={apiData?.totalItems ?? 0}
                 currentPage={currentPage}
                 pageSize={pageSize}

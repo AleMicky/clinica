@@ -33,8 +33,6 @@ export function TipoCambioModuleView() {
   const {
     data: apiData,
     isLoading,
-    isError,
-    error,
     refetch,
   } = useTiposCambio({
     page: currentPage,
@@ -94,12 +92,7 @@ export function TipoCambioModuleView() {
       await deleteMutation.mutateAsync(itemToDelete.id);
       toast.success("Registro de tipo de cambio eliminado correctamente.");
       refetch();
-    } catch (err: any) {
-      toast.error(
-        err?.response?.data?.message ||
-          err?.message ||
-          "Error al eliminar el registro de tipo de cambio."
-      );
+    } catch {
     } finally {
       setItemToDelete(null);
     }
@@ -139,8 +132,6 @@ export function TipoCambioModuleView() {
         tiposCambio={tiposCambio}
         monedasMap={monedasMap}
         isLoading={isLoading}
-        isError={isError}
-        errorMessage={(error as any)?.message}
         totalItems={apiData?.totalItems ?? 0}
         currentPage={currentPage}
         pageSize={pageSize}

@@ -32,7 +32,6 @@ import { useCreateArea, useUpdateArea } from "../hooks/use-areas";
 import type { AreaItem } from "./area-table";
 import type { AreaResponse } from "../types/area.types";
 import { useTiposArea } from "@/modules/recursos-humanos/tipo-area";
-import { getApiErrorMessage } from "@/lib/api/api-error";
 
 interface AreaFormDialogProps {
     open: boolean;
@@ -126,8 +125,7 @@ export function AreaFormDialog({
             }
             onSuccessCallback?.();
             onOpenChange(false);
-        } catch (error) {
-            toast.error(getApiErrorMessage(error));
+        } catch {
         }
     };
 

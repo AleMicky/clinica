@@ -14,7 +14,6 @@ import {
     useDeleteTipoArea,
     useTiposArea,
 } from "../hooks/use-tipos-area";
-import { getApiErrorMessage } from "@/lib/api/api-error";
 import type { TipoAreaResponse } from "../types/tipo-area.types";
 
 export function TipoAreaModuleView() {
@@ -33,8 +32,6 @@ export function TipoAreaModuleView() {
     const {
         data: apiData,
         isLoading,
-        isError,
-        error,
         refetch,
     } = useTiposArea({
         page: currentPage,
@@ -106,8 +103,7 @@ export function TipoAreaModuleView() {
                 `Tipo de área ${tipoAreaToDelete.codigo} eliminado correctamente.`,
             );
             refetch();
-        } catch (err) {
-            toast.error(getApiErrorMessage(err));
+        } catch {
         } finally {
             setTipoAreaToDelete(null);
         }
@@ -120,8 +116,6 @@ export function TipoAreaModuleView() {
             <TipoAreaTable
                 tiposArea={tiposArea}
                 isLoading={isLoading}
-                isError={isError}
-                errorMessage={getApiErrorMessage(error)}
                 totalItems={apiData?.totalItems ?? 0}
                 currentPage={currentPage}
                 pageSize={pageSize}

@@ -9,7 +9,6 @@ import {
     Trash2,
     Plus,
     RefreshCw,
-    AlertCircle,
     Network,
     Search,
     ChevronsDownUp,
@@ -47,8 +46,6 @@ type AreaTreeItem = AreaResponse | AreaItem;
 
 interface AreaTreeViewProps {
     isLoading?: boolean;
-    isError?: boolean;
-    errorMessage?: string;
     onRefresh?: () => void;
     onEdit?: (area: AreaTreeItem) => void;
     onAddSubarea?: (parentId: number) => void;
@@ -127,8 +124,6 @@ function recogerIdsRaices(nodos: AreaArbolResponse[]): Set<number> {
 
 export function AreaTreeView({
     isLoading = false,
-    isError = false,
-    errorMessage,
     onRefresh,
     onEdit,
     onAddSubarea,
@@ -309,24 +304,6 @@ export function AreaTreeView({
                                 />
                             </div>
                         ))}
-                    </div>
-                ) : isError ? (
-                    <div className="flex flex-col items-center justify-center gap-2 py-10 text-center text-destructive">
-                        <AlertCircle className="size-6 text-destructive" />
-                        <p className="font-semibold text-sm">
-                            {errorMessage ||
-                                "Error al cargar el árbol de áreas."}
-                        </p>
-                        {onRefresh && (
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={onRefresh}
-                                className="mt-1 gap-2 cursor-pointer"
-                            >
-                                <RefreshCw className="size-3.5" /> Reintentar
-                            </Button>
-                        )}
                     </div>
                 ) : !hayArbol ? (
                     <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">

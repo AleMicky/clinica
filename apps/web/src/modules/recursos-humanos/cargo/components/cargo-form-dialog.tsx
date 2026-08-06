@@ -22,7 +22,6 @@ import { cn } from "@/lib/utils";
 
 import { cargoSchema, type CargoFormValues } from "../schemas/cargo.schema";
 import { useCreateCargo, useUpdateCargo } from "../hooks/use-cargos";
-import { getApiErrorMessage } from "@/lib/api/api-error";
 import type { CargoItem } from "./cargo-table";
 import type { CargoResponse } from "../types/cargo.types";
 
@@ -97,8 +96,7 @@ export function CargoFormDialog({
             }
             onSuccessCallback?.();
             onOpenChange(false);
-        } catch (error) {
-            toast.error(getApiErrorMessage(error));
+        } catch {
         }
     };
 

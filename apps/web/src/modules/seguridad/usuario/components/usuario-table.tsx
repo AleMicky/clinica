@@ -6,7 +6,6 @@ import {
   Edit,
   Trash2,
   RefreshCw,
-  AlertCircle,
   Mail,
   User,
 } from "lucide-react";
@@ -44,8 +43,6 @@ import type { UsuarioResponse } from "../types/usuario.types";
 interface UsuarioTableProps {
   usuarios: UsuarioResponse[];
   isLoading?: boolean;
-  isError?: boolean;
-  errorMessage?: string;
   totalItems?: number;
   currentPage?: number;
   pageSize?: number;
@@ -61,8 +58,6 @@ interface UsuarioTableProps {
 export function UsuarioTable({
   usuarios,
   isLoading = false,
-  isError = false,
-  errorMessage,
   totalItems = 0,
   currentPage = 1,
   pageSize = 10,
@@ -144,23 +139,6 @@ export function UsuarioTable({
                   </TableCell>
                 </TableRow>
               ))
-            ) : isError ? (
-              // Error State
-              <TableRow>
-                <TableCell colSpan={5} className="h-28 text-center text-destructive">
-                  <div className="flex flex-col items-center justify-center gap-1.5">
-                    <AlertCircle className="size-5 text-destructive" />
-                    <p className="font-semibold text-xs">
-                      {errorMessage || "Error al cargar las cuentas de usuario desde la API."}
-                    </p>
-                    {onRefresh && (
-                      <Button variant="outline" size="sm" onClick={onRefresh} className="h-7 text-xs mt-1 gap-1.5 cursor-pointer">
-                        <RefreshCw className="size-3" /> Reintentar
-                      </Button>
-                    )}
-                  </div>
-                </TableCell>
-              </TableRow>
             ) : usuarios.length === 0 ? (
               // Empty State
               <TableRow>

@@ -22,7 +22,6 @@ import { cn } from "@/lib/utils";
 
 import { tipoAreaSchema, type TipoAreaFormValues } from "../schemas/tipo-area.schema";
 import { useCreateTipoArea, useUpdateTipoArea } from "../hooks/use-tipos-area";
-import { getApiErrorMessage } from "@/lib/api/api-error";
 import type { TipoAreaItem } from "./tipo-area-table";
 import type { TipoAreaResponse } from "../types/tipo-area.types";
 
@@ -101,8 +100,7 @@ export function TipoAreaFormDialog({
             }
             onSuccessCallback?.();
             onOpenChange(false);
-        } catch (error) {
-            toast.error(getApiErrorMessage(error));
+        } catch {
         }
     };
 

@@ -6,7 +6,6 @@ import {
     Edit,
     Trash2,
     RefreshCw,
-    AlertCircle,
 } from "lucide-react";
 import {
     Card,
@@ -51,8 +50,6 @@ export interface CargoItem {
 interface CargoTableProps {
     cargos: CargoItem[];
     isLoading?: boolean;
-    isError?: boolean;
-    errorMessage?: string;
     totalItems?: number;
     currentPage?: number;
     pageSize?: number;
@@ -68,8 +65,6 @@ interface CargoTableProps {
 export function CargoTable({
     cargos,
     isLoading = false,
-    isError = false,
-    errorMessage,
     totalItems = 0,
     currentPage = 1,
     pageSize = 10,
@@ -144,27 +139,6 @@ export function CargoTable({
                                     </TableCell>
                                 </TableRow>
                             ))
-                        ) : isError ? (
-                            <TableRow>
-                                <TableCell colSpan={5} className="h-32 text-center text-destructive">
-                                    <div className="flex flex-col items-center justify-center gap-2">
-                                        <AlertCircle className="size-6 text-destructive" />
-                                        <p className="font-semibold text-sm">
-                                            {errorMessage || "Error al cargar la información desde la API."}
-                                        </p>
-                                        {onRefresh && (
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={onRefresh}
-                                                className="mt-1 gap-2 cursor-pointer"
-                                            >
-                                                <RefreshCw className="size-3.5" /> Reintentar
-                                            </Button>
-                                        )}
-                                    </div>
-                                </TableCell>
-                            </TableRow>
                         ) : cargos.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={5} className="h-28 text-center text-muted-foreground text-sm">

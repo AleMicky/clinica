@@ -58,8 +58,6 @@ export function CatalogoModuleView() {
   const {
     data: itemsData,
     isLoading: isLoadingItems,
-    isError: isErrorItems,
-    error: itemsError,
     refetch: refetchItems,
   } = useCatalogoItems(selectedGrupo?.id ?? 0, {
     page: itemPage,
@@ -113,10 +111,7 @@ export function CatalogoModuleView() {
         setSelectedGrupo(null);
       }
       refetchGrupos();
-    } catch (err: any) {
-      toast.error(
-        err?.response?.data?.message || err?.message || "Error al eliminar el catálogo."
-      );
+    } catch {
     } finally {
       setGrupoToDelete(null);
       setGrupoDeleteOpen(false);
@@ -159,10 +154,7 @@ export function CatalogoModuleView() {
       });
       toast.success(`Elemento ${itemToDelete.nombre} eliminado correctamente.`);
       refetchItems();
-    } catch (err: any) {
-      toast.error(
-        err?.response?.data?.message || err?.message || "Error al eliminar el elemento."
-      );
+    } catch {
     } finally {
       setItemToDelete(null);
       setItemDeleteOpen(false);
@@ -210,8 +202,6 @@ export function CatalogoModuleView() {
             selectedGrupo={selectedGrupo}
             items={items}
             isLoading={isLoadingItems}
-            isError={isErrorItems}
-            errorMessage={(itemsError as any)?.message}
             totalItems={itemsData?.totalItems ?? 0}
             currentPage={itemPage}
             pageSize={itemPageSize}

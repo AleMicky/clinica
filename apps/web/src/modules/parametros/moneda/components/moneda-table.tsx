@@ -8,7 +8,6 @@ import {
   Trash2,
   Star,
   RefreshCw,
-  AlertCircle,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -53,8 +52,6 @@ export interface MonedaItem {
 interface MonedaTableProps {
   monedas: MonedaItem[];
   isLoading?: boolean;
-  isError?: boolean;
-  errorMessage?: string;
   totalItems?: number;
   currentPage?: number;
   pageSize?: number;
@@ -72,8 +69,6 @@ interface MonedaTableProps {
 export function MonedaTable({
   monedas,
   isLoading = false,
-  isError = false,
-  errorMessage,
   totalItems = 0,
   currentPage = 1,
   pageSize = 10,
@@ -161,23 +156,6 @@ export function MonedaTable({
                   </TableCell>
                 </TableRow>
               ))
-            ) : isError ? (
-              // Error State
-              <TableRow>
-                <TableCell colSpan={7} className="h-32 text-center text-destructive">
-                  <div className="flex flex-col items-center justify-center gap-2">
-                    <AlertCircle className="size-6 text-destructive" />
-                    <p className="font-semibold text-sm">
-                      {errorMessage || "Error al cargar la información desde la API."}
-                    </p>
-                    {onRefresh && (
-                      <Button variant="outline" size="sm" onClick={onRefresh} className="mt-1 gap-2 cursor-pointer">
-                        <RefreshCw className="size-3.5" /> Reintentar
-                      </Button>
-                    )}
-                  </div>
-                </TableCell>
-              </TableRow>
             ) : monedas.length === 0 ? (
               // Empty State
               <TableRow>

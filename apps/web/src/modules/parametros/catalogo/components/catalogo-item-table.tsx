@@ -15,7 +15,6 @@ import {
   ChevronsLeft,
   ChevronsRight,
   RefreshCw,
-  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,8 +50,6 @@ interface CatalogoItemTableProps {
   selectedGrupo: CatalogoGrupoResponse | null;
   items: CatalogoItemResponse[];
   isLoading: boolean;
-  isError: boolean;
-  errorMessage?: string;
   totalItems: number;
   currentPage: number;
   pageSize: number;
@@ -70,8 +67,6 @@ export function CatalogoItemTable({
   selectedGrupo,
   items,
   isLoading,
-  isError,
-  errorMessage,
   totalItems,
   currentPage,
   pageSize,
@@ -149,21 +144,7 @@ export function CatalogoItemTable({
         </div>
 
         <div className="p-0 overflow-x-auto">
-          {isError ? (
-            <div className="flex flex-col items-center justify-center p-6 text-center gap-2">
-              <AlertTriangle className="size-7 text-destructive" />
-              <div>
-                <p className="text-xs font-semibold text-destructive">Error al cargar elementos</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">
-                  {errorMessage || "No se pudo obtener la lista de ítems."}
-                </p>
-              </div>
-              <Button variant="outline" size="sm" onClick={onRefresh} className="gap-1.5 h-7 text-xs mt-1">
-                <RefreshCw className="size-3" /> Reintentar
-              </Button>
-            </div>
-          ) : (
-            <Table>
+          <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent border-b border-border/60 text-[11px]">
                   <TableHead className="pl-4 py-2 w-[70px]">Orden</TableHead>
@@ -246,9 +227,8 @@ export function CatalogoItemTable({
                     </TableRow>
                   ))
                 )}
-              </TableBody>
-            </Table>
-          )}
+          </TableBody>
+        </Table>
         </div>
       </div>
 

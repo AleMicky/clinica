@@ -11,6 +11,8 @@ export function useLogin() {
     return useMutation({
         mutationFn: login,
 
+        meta: { skipGlobalError: true } as Record<string, unknown>,
+
         onSuccess: async (data) => {
             if (typeof window !== "undefined" && data.accessToken) {
                 localStorage.setItem("auth_token", data.accessToken);

@@ -14,7 +14,6 @@ import {
     useDeleteArea,
 } from "../hooks/use-areas";
 import { useTiposArea } from "@/modules/recursos-humanos/tipo-area";
-import { getApiErrorMessage } from "@/lib/api/api-error";
 import type { AreaArbolResponse, AreaResponse } from "../types/area.types";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -54,8 +53,6 @@ export function AreaModuleView() {
     const {
         data: apiData,
         isLoading,
-        isError,
-        error,
         refetch,
     } = useAreas({
         page: currentPage,
@@ -133,8 +130,7 @@ export function AreaModuleView() {
             await deleteAreaMutation.mutateAsync(areaToDeleteId);
             toast.success(`Área eliminada correctamente.`);
             refetch();
-        } catch (err) {
-            toast.error(getApiErrorMessage(err));
+        } catch {
         } finally {
             setAreaToDeleteId(null);
         }
@@ -164,8 +160,6 @@ export function AreaModuleView() {
                     <AreaTreeView
                         arbol={arbolQuery.data ?? null}
                         isLoading={arbolQuery.isLoading}
-                        isError={arbolQuery.isError}
-                        errorMessage={getApiErrorMessage(arbolQuery.error)}
                         onRefresh={() => arbolQuery.refetch()}
                         onEdit={handleOpenEdit}
                         onAddSubarea={handleOpenAddSubarea}
@@ -178,8 +172,6 @@ export function AreaModuleView() {
                     <AreaTable
                         areas={areas}
                         isLoading={isLoading}
-                        isError={isError}
-                        errorMessage={getApiErrorMessage(error)}
                         totalItems={apiData?.totalItems ?? 0}
                         currentPage={currentPage}
                         pageSize={pageSize}

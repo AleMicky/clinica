@@ -10,6 +10,49 @@ export type ProblemDetails = {
     errors?: Record<string, string[]>;
 };
 
+export type ApiErrorInfo = {
+    title?: string;
+    status?: number;
+    detail?: string;
+    message?: string;
+};
+
+export function getApiErrorInfo(error: unknown): ApiErrorInfo {
+    if (axios.isAxiosError<ProblemDetails>(error)) {
+        const data = error.response?.data;
+
+        if (data?.detail || data?.title || data?.message) {
+            return {
+                title: data.title,
+                status: error.response?.status,
+                detail: data.detail,
+                message: data.message,
+            };
+        }
+
+        if (data?.errors) {
+            const firstError = Object.values(data.errors).flat()[0];
+            if (firstError) {
+                return {
+                    status: error.response?.status,
+                    detail: firstError,
+                };
+            }
+        }
+
+        const status = error.response?.status;
+        if (status) {
+            return { status, detail: getApiErrorMessage(error) };
+        }
+    }
+
+    if (error instanceof Error) {
+        return { detail: error.message };
+    }
+
+    return { detail: "Ocurrió un error inesperado." };
+}
+
 export function getApiErrorMessage(
     error: unknown,
 ): string {

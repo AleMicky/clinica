@@ -27,8 +27,6 @@ export function UsuarioModuleView() {
   const {
     data: apiData,
     isLoading,
-    isError,
-    error,
     refetch,
   } = useUsuarios({
     page: currentPage,
@@ -91,12 +89,7 @@ export function UsuarioModuleView() {
         `Usuario @${usuarioToDelete.userName} eliminado correctamente.`
       );
       refetch();
-    } catch (err: any) {
-      toast.error(
-        err?.response?.data?.message ||
-          err?.message ||
-          "Error al eliminar el usuario."
-      );
+    } catch {
     } finally {
       setUsuarioToDelete(null);
     }
@@ -109,8 +102,6 @@ export function UsuarioModuleView() {
       <UsuarioTable
         usuarios={usuarios}
         isLoading={isLoading}
-        isError={isError}
-        errorMessage={(error as any)?.message}
         totalItems={apiData?.totalItems ?? 0}
         currentPage={currentPage}
         pageSize={pageSize}

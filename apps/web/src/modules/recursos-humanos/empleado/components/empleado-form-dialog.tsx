@@ -47,7 +47,6 @@ import {
     useEmpleados as useEmpleadosLista,
 } from "../hooks/use-empleados";
 import { usePersonas } from "@/modules/seguridad/persona";
-import { getApiErrorMessage } from "@/lib/api/api-error";
 import {
     nombreCompleto,
     documentoCompleto,
@@ -202,8 +201,7 @@ export function EmpleadoFormDialog({
             }
             onSuccessCallback?.();
             onOpenChange(false);
-        } catch (error) {
-            toast.error(getApiErrorMessage(error));
+        } catch {
         }
     };
 

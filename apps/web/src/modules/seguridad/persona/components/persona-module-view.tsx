@@ -27,8 +27,6 @@ export function PersonaModuleView() {
   const {
     data: apiData,
     isLoading,
-    isError,
-    error,
     refetch,
   } = usePersonas({
     page: currentPage,
@@ -86,12 +84,7 @@ export function PersonaModuleView() {
         `Persona ${personaToDelete.nombres} ${personaToDelete.apellidoPaterno} eliminada correctamente.`
       );
       refetch();
-    } catch (err: any) {
-      toast.error(
-        err?.response?.data?.message ||
-          err?.message ||
-          "Error al eliminar la persona."
-      );
+    } catch {
     } finally {
       setPersonaToDelete(null);
     }
@@ -104,8 +97,6 @@ export function PersonaModuleView() {
       <PersonaTable
         personas={personas}
         isLoading={isLoading}
-        isError={isError}
-        errorMessage={(error as any)?.message}
         totalItems={apiData?.totalItems ?? 0}
         currentPage={currentPage}
         pageSize={pageSize}
