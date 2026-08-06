@@ -13,10 +13,26 @@ public sealed class GlobalExceptionHandler(
         Exception exception,
         CancellationToken cancellationToken)
     {
-        logger.LogError(
-            exception,
-            "Error no controlado: {Message}",
-            exception.Message);
+        var isClientError = exception is NotFoundException
+            or ConflictException
+            or BusinessException
+            or ValidationException
+            or UnauthorizedAccessException;
+
+        if (isClientError)
+        {
+            logger.LogWarning(
+                "Excepción de dominio controlada: {ExceptionType} - {Message}",
+                exception.GetType().Name,
+                exception.Message);
+        }
+        else
+        {
+            logger.LogError(
+                exception,
+                "Error no controlado: {Message}",
+                exception.Message);
+        }
 
         var problemDetails = exception switch
         {

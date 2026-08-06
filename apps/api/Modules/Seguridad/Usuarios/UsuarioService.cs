@@ -121,7 +121,7 @@ public sealed class UsuarioService(
 
             if (request.Roles.Count > 0)
             {
-                var nombresRoles = await ObtenerRoles(request.Roles);
+                var nombresRoles = await ValidarRolesAsync(request.Roles);
 
                 (await userManager.AddToRolesAsync(usuario, nombresRoles))
                     .EnsureSuccess();
@@ -176,7 +176,7 @@ public sealed class UsuarioService(
 
         if (request.Roles.Count > 0)
         {
-            var nombresRoles = await ObtenerRoles(request.Roles);
+            var nombresRoles = await ValidarRolesAsync(request.Roles);
 
             (await userManager.AddToRolesAsync(usuario, nombresRoles))
                 .EnsureSuccess();
@@ -288,21 +288,23 @@ public sealed class UsuarioService(
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 
-    private async Task<List<string>> ObtenerRoles(
-        IEnumerable<int> ids)
+    private async Task<List<string>> ValidarRolesAsync(
+        IEnumerable<string> nombres)
     {
-        var roles = await roleManager.Roles
-            .Where(x => ids.Contains(x.Id))
-            .ToListAsync();
+        var lista = nombres
+            .Where(n => !string.IsNullOrWhiteSpace(n))
+            .Select(n => n.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
 
-        if (roles.Count != ids.Count())
+        foreach (var nombre in lista)
         {
-            throw new BusinessException(
-                "Uno o más roles no existen.");
+            if (!await roleManager.RoleExistsAsync(nombre))
+            {
+                throw new BusinessException($"El rol '{nombre}' no existe.");
+            }
         }
 
-        return roles
-            .Select(x => x.Name!)
-            .ToList();
+        return lista;
     }
 }

@@ -50,13 +50,13 @@ public record CreateUsuarioRequest(
     string Email,
     string UserName,
     string Password,
-    List<int> Roles);
+    List<string> Roles);
 
 public record UpdateUsuarioRequest(
     string Email,
     string UserName,
     bool Activo,
-    List<int> Roles);
+    List<string> Roles);
 
 public record UsuarioResponse
 {
