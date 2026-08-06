@@ -171,7 +171,7 @@ export function PersonaFormDialog({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="sm:!max-w-2xl md:!max-w-3xl lg:!max-w-4xl w-full p-7 flex flex-col h-full overflow-y-auto"
+        className="sm:!max-w-2xl md:!max-w-3xl lg:!max-w-4xl w-full p-5 flex flex-col h-full overflow-y-auto"
       >
         <SheetHeader className="p-0 space-y-1.5 pb-4 border-b">
           <SheetTitle className="flex items-center gap-2.5 text-xl font-bold">
@@ -195,22 +195,22 @@ export function PersonaFormDialog({
           </div>
 
           {/* Bloque 1: Nombres y Apellidos */}
-          <div className="space-y-4">
+          <div className="space-y-2.5">
             <div className="flex items-center gap-2 text-xs font-bold text-foreground uppercase tracking-wider">
               <UserCheck className="size-4 text-primary" />
               <span>Nombres y Apellidos</span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {/* Nombres */}
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="nombres" className="text-sm font-medium flex items-center gap-1">
                   Nombres <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="nombres"
                   placeholder="ej. María Elena"
-                  className={cn("w-full h-10 text-sm", errors.nombres && "border-destructive focus-visible:ring-destructive")}
+                  className={cn("w-full h-8 text-sm", errors.nombres && "border-destructive focus-visible:ring-destructive")}
                   {...register("nombres")}
                 />
                 {errors.nombres && (
@@ -219,14 +219,14 @@ export function PersonaFormDialog({
               </div>
 
               {/* Apellido Paterno */}
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="apellidoPaterno" className="text-sm font-medium flex items-center gap-1">
                   Apellido Paterno <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="apellidoPaterno"
                   placeholder="ej. Gómez"
-                  className={cn("w-full h-10 text-sm", errors.apellidoPaterno && "border-destructive focus-visible:ring-destructive")}
+                  className={cn("w-full h-8 text-sm", errors.apellidoPaterno && "border-destructive focus-visible:ring-destructive")}
                   {...register("apellidoPaterno")}
                 />
                 {errors.apellidoPaterno && (
@@ -235,14 +235,14 @@ export function PersonaFormDialog({
               </div>
 
               {/* Apellido Materno */}
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="apellidoMaterno" className="text-sm font-medium">
                   Apellido Materno
                 </Label>
                 <Input
                   id="apellidoMaterno"
                   placeholder="ej. Pérez"
-                  className="w-full h-10 text-sm"
+                  className="w-full h-8 text-sm"
                   {...register("apellidoMaterno")}
                 />
               </div>
@@ -250,15 +250,15 @@ export function PersonaFormDialog({
           </div>
 
           {/* Bloque 2: Identificación y Documento */}
-          <div className="space-y-4 pt-4 border-t border-border/50">
+          <div className="space-y-2.5 pt-4 border-t border-border/50">
             <div className="flex items-center gap-2 text-xs font-bold text-foreground uppercase tracking-wider">
               <CreditCard className="size-4 text-primary" />
               <span>Documento de Identidad</span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
               {/* Tipo Documento */}
-              <div className="space-y-2 sm:col-span-1">
+              <div className="space-y-1 sm:col-span-1">
                 <Label htmlFor="tipoDocumento" className="text-sm font-medium flex items-center gap-1">
                   Tipo Doc. <span className="text-destructive">*</span>
                 </Label>
@@ -266,7 +266,7 @@ export function PersonaFormDialog({
                   value={tipoDocumentoValue}
                   onValueChange={(val) => setValue("tipoDocumento", val || "CI")}
                 >
-                  <SelectTrigger id="tipoDocumento" className="w-full h-10 text-sm">
+                  <SelectTrigger id="tipoDocumento" className="w-full h-8 text-sm">
                     <SelectValue placeholder="Tipo" />
                   </SelectTrigger>
                   <SelectContent>
@@ -280,14 +280,14 @@ export function PersonaFormDialog({
               </div>
 
               {/* Número Documento */}
-              <div className="space-y-2 sm:col-span-1">
+              <div className="space-y-1 sm:col-span-1">
                 <Label htmlFor="numeroDocumento" className="text-sm font-medium flex items-center gap-1">
                   Número <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="numeroDocumento"
                   placeholder="12345678"
-                  className={cn("w-full font-mono h-10 text-sm", errors.numeroDocumento && "border-destructive focus-visible:ring-destructive")}
+                  className={cn("w-full font-mono h-8 text-sm", errors.numeroDocumento && "border-destructive focus-visible:ring-destructive")}
                   {...register("numeroDocumento")}
                 />
                 {errors.numeroDocumento && (
@@ -296,7 +296,7 @@ export function PersonaFormDialog({
               </div>
 
               {/* Extensión */}
-              <div className="space-y-2 sm:col-span-1">
+              <div className="space-y-1 sm:col-span-1">
                 <Label htmlFor="extensionDocumento" className="text-sm font-medium">
                   Extensión (Dpto.)
                 </Label>
@@ -304,7 +304,7 @@ export function PersonaFormDialog({
                   value={extensionDocumentoValue || "none"}
                   onValueChange={(val) => setValue("extensionDocumento", !val || val === "none" ? "" : val)}
                 >
-                  <SelectTrigger id="extensionDocumento" className="w-full h-10 text-sm">
+                  <SelectTrigger id="extensionDocumento" className="w-full h-8 text-sm">
                     <SelectValue placeholder="Sin ext." />
                   </SelectTrigger>
                   <SelectContent>
@@ -319,14 +319,14 @@ export function PersonaFormDialog({
               </div>
 
               {/* Complemento */}
-              <div className="space-y-2 sm:col-span-1">
+              <div className="space-y-1 sm:col-span-1">
                 <Label htmlFor="complementoDocumento" className="text-sm font-medium">
                   Complemento
                 </Label>
                 <Input
                   id="complementoDocumento"
                   placeholder="1A"
-                  className="w-full font-mono h-10 text-sm uppercase"
+                  className="w-full font-mono h-8 text-sm uppercase"
                   {...register("complementoDocumento")}
                 />
               </div>
@@ -334,22 +334,22 @@ export function PersonaFormDialog({
           </div>
 
           {/* Bloque 3: Información Filiatoria */}
-          <div className="space-y-4 pt-4 border-t border-border/50">
+          <div className="space-y-2.5 pt-4 border-t border-border/50">
             <div className="flex items-center gap-2 text-xs font-bold text-foreground uppercase tracking-wider">
               <User className="size-4 text-primary" />
               <span>Información Personal y Filiatoria</span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {/* Fecha Nacimiento */}
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="fechaNacimiento" className="text-sm font-medium flex items-center gap-1">
                   Fecha de Nacimiento <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="fechaNacimiento"
                   type="date"
-                  className={cn("w-full h-10 text-sm", errors.fechaNacimiento && "border-destructive focus-visible:ring-destructive")}
+                  className={cn("w-full h-8 text-sm", errors.fechaNacimiento && "border-destructive focus-visible:ring-destructive")}
                   {...register("fechaNacimiento")}
                 />
                 {errors.fechaNacimiento && (
@@ -358,7 +358,7 @@ export function PersonaFormDialog({
               </div>
 
               {/* Género */}
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="genero" className="text-sm font-medium">
                   Género
                 </Label>
@@ -366,7 +366,7 @@ export function PersonaFormDialog({
                   value={generoValue}
                   onValueChange={(val) => setValue("genero", val || "")}
                 >
-                  <SelectTrigger id="genero" className="w-full h-10 text-sm">
+                  <SelectTrigger id="genero" className="w-full h-8 text-sm">
                     <SelectValue placeholder="Seleccione género" />
                   </SelectTrigger>
                   <SelectContent>
@@ -380,7 +380,7 @@ export function PersonaFormDialog({
               </div>
 
               {/* Estado Civil */}
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="estadoCivil" className="text-sm font-medium">
                   Estado Civil
                 </Label>
@@ -388,7 +388,7 @@ export function PersonaFormDialog({
                   value={estadoCivilValue}
                   onValueChange={(val) => setValue("estadoCivil", val || "")}
                 >
-                  <SelectTrigger id="estadoCivil" className="w-full h-10 text-sm">
+                  <SelectTrigger id="estadoCivil" className="w-full h-8 text-sm">
                     <SelectValue placeholder="Seleccione estado civil" />
                   </SelectTrigger>
                   <SelectContent>
@@ -404,35 +404,35 @@ export function PersonaFormDialog({
           </div>
 
           {/* Bloque 4: Contacto */}
-          <div className="space-y-4 pt-4 border-t border-border/50">
+          <div className="space-y-2.5 pt-4 border-t border-border/50">
             <div className="flex items-center gap-2 text-xs font-bold text-foreground uppercase tracking-wider">
               <Phone className="size-4 text-primary" />
               <span>Contacto y Ubicación</span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Teléfono */}
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="telefono" className="text-sm font-medium">
                   Teléfono / Celular
                 </Label>
                 <Input
                   id="telefono"
                   placeholder="+593 99 123 4567"
-                  className="w-full h-10 text-sm"
+                  className="w-full h-8 text-sm"
                   {...register("telefono")}
                 />
               </div>
 
               {/* Dirección */}
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="direccion" className="text-sm font-medium">
                   Dirección de Domicilio
                 </Label>
                 <Input
                   id="direccion"
                   placeholder="Av. Principal #123"
-                  className="w-full h-10 text-sm"
+                  className="w-full h-8 text-sm"
                   {...register("direccion")}
                 />
               </div>
@@ -443,7 +443,6 @@ export function PersonaFormDialog({
             <Button
               type="button"
               variant="outline"
-              size="lg"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
               className="cursor-pointer"
@@ -451,7 +450,7 @@ export function PersonaFormDialog({
               Cancelar
             </Button>
 
-            <Button type="submit" size="lg" disabled={isLoading} className="gap-2 cursor-pointer">
+            <Button type="submit" disabled={isLoading} className="gap-2 cursor-pointer">
               {isLoading && <Loader2 className="size-4 animate-spin" />}
               {isEditing ? "Guardar Cambios" : "Registrar Persona"}
             </Button>
