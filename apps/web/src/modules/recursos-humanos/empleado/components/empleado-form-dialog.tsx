@@ -41,7 +41,11 @@ import {
     empleadoSchema,
     type EmpleadoFormValues,
 } from "../schemas/empleado.schema";
-import { useCreateEmpleado, useUpdateEmpleado } from "../hooks/use-empleados";
+import {
+    useCreateEmpleado,
+    useUpdateEmpleado,
+    useEmpleados as useEmpleadosLista,
+} from "../hooks/use-empleados";
 import { usePersonas } from "@/modules/seguridad/persona";
 import { getApiErrorMessage } from "@/lib/api/api-error";
 import {
@@ -103,6 +107,21 @@ export function EmpleadoFormDialog({
         [personasQuery.data],
     );
 
+    // Empleados existentes para evitar seleccionar personas que ya son
+    // empleados (la validación del backend rechaza este caso con 409).
+    const empleadosExistentesQuery = useEmpleadosLista({
+        page: 1,
+        pageSize: 500,
+    });
+    const personasOcupadas = React.useMemo(() => {
+        const ids = new Set<number>();
+        const editingId = Number(empleadoToEdit?.id);
+        empleadosExistentesQuery.data?.items?.forEach((emp) => {
+            if (emp.id !== editingId) ids.add(emp.personaId);
+        });
+        return ids;
+    }, [empleadosExistentesQuery.data, empleadoToEdit]);
+
     const [busquedaPersona, setBusquedaPersona] = React.useState("");
     const [comboOpen, setComboOpen] = React.useState(false);
 
@@ -114,8 +133,15 @@ export function EmpleadoFormDialog({
 
     const personasFiltradas = React.useMemo(() => {
         const t = busquedaPersona.trim().toLowerCase();
-        if (!t) return personas;
         return personas.filter((p) => {
+            // Excluir personas que ya son empleado de otro registro.
+            if (
+                personasOcupadas.has(p.id) &&
+                p.id !== personaIdWatch
+            ) {
+                return false;
+            }
+            if (!t) return true;
             const nombre = nombreCompleto(p).toLowerCase();
             const doc = documentoCompleto(p).toLowerCase();
             return (
@@ -124,7 +150,7 @@ export function EmpleadoFormDialog({
                 p.nombres.toLowerCase().includes(t)
             );
         });
-    }, [personas, busquedaPersona]);
+    }, [personas, busquedaPersona, personasOcupadas, personaIdWatch]);
 
     React.useEffect(() => {
         if (open) {
@@ -304,7 +330,9 @@ export function EmpleadoFormDialog({
                                               0 ? (
                                                 <p className="px-2 py-6 text-center text-xs text-muted-foreground">
                                                     No se encontraron
-                                                    coincidencias.
+                                                    coincidencias. Las personas
+                                                    ya registradas como empleado
+                                                    se ocultan.
                                                 </p>
                                             ) : (
                                                 personasFiltradas
@@ -356,8 +384,9 @@ export function EmpleadoFormDialog({
                                 </p>
                             )}
                             <p className="text-[11px] text-muted-foreground">
-                                Busque por nombre o documento y seleccione una
-                                persona activa.
+                                Busque por nombre o documento. Las personas ya
+                                registradas como empleado se ocultan
+                                automáticamente.
                             </p>
                         </div>
                     </div>

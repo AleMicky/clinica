@@ -136,30 +136,6 @@ export const recursosHumanosNav: NavGroup = {
       icon: Network,
       description: "Administración jerárquica de áreas",
     },
-    {
-      title: "Horarios y Turnos",
-      href: "/recursos-humanos/horarios",
-      icon: Calendar,
-      description: "Programación de turnos y asignación de horarios",
-    },
-    {
-      title: "Control de Asistencia",
-      href: "/recursos-humanos/asistencia",
-      icon: Clock,
-      description: "Registro de entradas, salidas y fichajes",
-    },
-    {
-      title: "Contratos y Licencias",
-      href: "/recursos-humanos/contratos",
-      icon: Briefcase,
-      description: "Gestión de contratos, vacantes y permisos",
-    },
-    {
-      title: "Nómina y Pagos",
-      href: "/recursos-humanos/nomina",
-      icon: FileSpreadsheet,
-      description: "Resumen de honorarios y pagos al personal",
-    },
   ],
 }
 

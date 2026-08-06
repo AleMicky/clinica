@@ -82,6 +82,18 @@ export function EmpleadoModuleView() {
             fechaIngreso: item.fechaIngreso,
             fechaRetiro: item.fechaRetiro ?? null,
             activo: item.activo,
+            telefono: item.persona?.telefono ?? null,
+            fechaNacimiento: item.persona?.fechaNacimiento,
+            genero: item.persona?.genero ?? null,
+            estadoCivil: item.persona?.estadoCivil ?? null,
+            complementoDocumento: item.persona?.complementoDocumento ?? null,
+            extensionDocumento: item.persona?.extensionDocumento ?? null,
+            tipoDocumento: item.persona?.tipoDocumento,
+            numeroDocumento: item.persona?.numeroDocumento,
+            fechaCreacion: item.fechaCreacion,
+            fechaModificacion: item.fechaModificacion ?? null,
+            creadoPor: item.creadoPor ?? null,
+            modificadoPor: item.modificadoPor ?? null,
         }));
     }, [apiData]);
 

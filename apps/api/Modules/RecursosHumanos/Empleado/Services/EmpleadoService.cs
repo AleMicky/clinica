@@ -64,7 +64,14 @@ public sealed class EmpleadoService(AppDbContext dbContext)
     protected override IReadOnlyCollection<EmpleadoResponse>
         MapToResponseList(IEnumerable<EmpleadoEntity> entities)
     {
-        return EmpleadoMapper.ToResponse(entities);
+        return entities
+            .Select(e => EmpleadoMapper.ToResponse(e) with
+            {
+                Persona = e.Persona is null
+                    ? null
+                    : PersonaMapper.ToResponse(e.Persona)
+            })
+            .ToList();
     }
 
     public override async Task<EmpleadoResponse> CrearAsync(

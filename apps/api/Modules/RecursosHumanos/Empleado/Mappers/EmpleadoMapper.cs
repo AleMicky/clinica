@@ -12,10 +12,6 @@ public static partial class EmpleadoMapper
         EmpleadoEntity entity
     );
 
-    public static partial List<EmpleadoResponse> ToResponse(
-        IEnumerable<EmpleadoEntity> entities
-    );
-
     [MapperIgnoreTarget(nameof(EmpleadoEntity.Id))]
     [MapperIgnoreTarget(nameof(EmpleadoEntity.Activo))]
     [MapperIgnoreTarget(nameof(EmpleadoEntity.FechaCreacion))]

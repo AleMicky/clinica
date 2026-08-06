@@ -10,6 +10,12 @@ export interface PersonaRef {
     tipoDocumento: string;
     numeroDocumento: string;
     extensionDocumento?: string | null;
+    complementoDocumento?: string | null;
+    fechaNacimiento?: string;
+    telefono?: string | null;
+    direccion?: string | null;
+    genero?: string | null;
+    estadoCivil?: string | null;
 }
 
 export interface EmpleadoResponse {
