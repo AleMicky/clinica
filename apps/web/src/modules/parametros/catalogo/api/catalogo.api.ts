@@ -62,6 +62,17 @@ export async function getCatalogoItems(
   return response.data;
 }
 
+export async function getCatalogoItemsByCodigo(
+  codigo: string,
+  params?: CatalogoQueryParams
+): Promise<PagedResult<CatalogoItemResponse>> {
+  const response = await apiClient.get<PagedResult<CatalogoItemResponse>>(
+    `/catalogos/${codigo}/items`,
+    { params }
+  );
+  return response.data;
+}
+
 export async function getCatalogoItemById(
   grupoId: number,
   itemId: number

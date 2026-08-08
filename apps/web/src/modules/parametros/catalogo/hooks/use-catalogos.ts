@@ -10,6 +10,7 @@ import {
   getCatalogoGrupos,
   getCatalogoItemById,
   getCatalogoItems,
+  getCatalogoItemsByCodigo,
   updateCatalogoGrupo,
   updateCatalogoItem,
 } from "../api/catalogo.api";
@@ -87,6 +88,18 @@ export function useCatalogoItems(grupoId: number, params?: CatalogoQueryParams) 
     queryKey: catalogoKeys.itemList(grupoId, params as Record<string, unknown>),
     queryFn: () => getCatalogoItems(grupoId, params),
     enabled: grupoId > 0,
+  });
+}
+
+export function useCatalogoItemsByCodigo(
+  codigo: string,
+  params?: CatalogoQueryParams,
+  options?: { enabled?: boolean }
+) {
+  return useQuery({
+    queryKey: catalogoKeys.itemsPorCodigo(codigo, params as Record<string, unknown>),
+    queryFn: () => getCatalogoItemsByCodigo(codigo, params),
+    enabled: (options?.enabled ?? true) && Boolean(codigo),
   });
 }
 

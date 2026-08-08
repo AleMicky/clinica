@@ -14,6 +14,10 @@ public sealed class UnidadesMedidaConfiguration
     {
         builder.ToTable("UnidadesMedida");
 
+        builder.Property(x => x.Categoria)
+            .HasMaxLength(200)
+            .IsRequired();
+        
         builder.Property(x => x.Codigo)
             .HasMaxLength(50)
             .IsRequired();

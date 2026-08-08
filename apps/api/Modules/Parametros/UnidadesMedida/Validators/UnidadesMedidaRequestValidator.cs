@@ -9,12 +9,6 @@ public abstract class UnidadesMedidaRequestValidator<TRequest>
 {
     protected UnidadesMedidaRequestValidator()
     {
-        RuleFor(x => x.Categoria)
-            .NotEmpty()
-            .WithMessage("La categoría es obligatoria.")
-            .MaximumLength(50)
-            .WithMessage("La categoría no puede superar los 50 caracteres.");
-
         RuleFor(x => x.Codigo)
             .NotEmpty()
             .WithMessage("El código es obligatorio.")
@@ -32,6 +26,10 @@ public abstract class UnidadesMedidaRequestValidator<TRequest>
             .WithMessage("El símbolo es obligatorio.")
             .MaximumLength(20)
             .WithMessage("El símbolo no puede superar los 20 caracteres.");
+
+        RuleFor(x => x.Categoria)
+            .NotEmpty()
+            .MaximumLength(50);
     }
 }
 

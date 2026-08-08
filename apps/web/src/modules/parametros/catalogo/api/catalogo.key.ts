@@ -4,6 +4,8 @@ export const catalogoKeys = {
   grupoList: (filters?: Record<string, unknown>) => [...catalogoKeys.grupos(), "list", filters] as const,
   grupoDetail: (id: number) => [...catalogoKeys.grupos(), "detail", id] as const,
   items: (grupoId: number) => [...catalogoKeys.all, "grupo", grupoId, "items"] as const,
+  itemsPorCodigo: (codigo: string, filters?: Record<string, unknown>) =>
+    [...catalogoKeys.all, "codigo", codigo, "items", filters] as const,
   itemList: (grupoId: number, filters?: Record<string, unknown>) =>
     [...catalogoKeys.items(grupoId), "list", filters] as const,
   itemDetail: (grupoId: number, itemId: number) =>

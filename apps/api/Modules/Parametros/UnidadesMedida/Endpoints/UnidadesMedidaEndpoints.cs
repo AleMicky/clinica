@@ -18,9 +18,9 @@ public static class UnidadesMedidaEndpoints
 
         group.MapGet("/", ListarAsync).WithName("ListarUnidadesMedida");
         group.MapGet("/{id:int}", ObtenerAsync).WithName("ObtenerUnidadMedida");
-        group.MapPost("/", CrearAsync).WithName("CrearUnidadMedida").Validate<CreateUnidadesMedidaRequestValidator>();
+        group.MapPost("/", CrearAsync).WithName("CrearUnidadMedida").Validate<CreateUnidadesMedidaRequest>();
         group.MapPut("/{id:int}", ActualizarAsync).WithName("ActualizarUnidadMedida")
-            .Validate<UpdateUnidadesMedidaRequestValidator>();
+            .Validate<UpdateUnidadesMedidaRequest>();
         group.MapDelete("/{id:int}", EliminarAsync).WithName("EliminarUnidadMedida");
 
         return app;
