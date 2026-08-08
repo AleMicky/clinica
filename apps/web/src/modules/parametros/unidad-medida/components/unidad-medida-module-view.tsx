@@ -128,7 +128,7 @@ export function UnidadMedidaModuleView() {
   };
 
   return (
-    <div className="flex flex-col gap-6 w-full">
+    <div className="flex flex-col gap-4 w-full">
       <UnidadMedidaHeader onAddClick={handleOpenAdd} />
       <UnidadMedidaMetricsCards metrics={metrics} />
       <UnidadMedidaTable
