@@ -1,6 +1,8 @@
 using Clinica.Api.Modules.Parametros.Catalogo.Dtos;
 using Clinica.Api.Modules.Parametros.Catalogo.Services;
+using Clinica.Api.Modules.Parametros.Catalogo.Validators;
 using Clinica.Api.Shared.Pagination;
+using Clinica.Api.Shared.Validation;
 
 namespace Clinica.Api.Modules.Parametros.Catalogo.Endpoints;
 
@@ -22,18 +24,19 @@ public static class CatalogoEndpoints
     private static void MapGrupos(RouteGroupBuilder group)
     {
         group.MapGet("/", ListarGruposAsync).WithName("ListarCatalogos");
-        group.MapPost("/", CrearGrupoAsync).WithName("CrearCatalogo");
+        group.MapPost("/", CrearGrupoAsync).WithName("CrearCatalogo").Validate<CreateCatalogoGrupoRequestValidator>();
         group.MapGet("/{id:int}", ObtenerGrupoAsync).WithName("ObtenerCatalogo");
-        group.MapPut("/{id:int}", ActualizarGrupoAsync).WithName("ActualizarCatalogo");
+        group.MapPut("/{id:int}", ActualizarGrupoAsync).WithName("ActualizarCatalogo").Validate<UpdateCatalogoGrupoRequestValidator>();
         group.MapDelete("/{id:int}", EliminarGrupoAsync).WithName("EliminarCatalogo");
     }
 
     private static void MapItems(RouteGroupBuilder group)
     {
         group.MapGet("/{grupoId:int}/items", ListarItemsAsync).WithName("ListarCatalogoItems");
+        group.MapGet("/{codigo}/items", ListarItemsPorCodigoAsync).WithName("ListarCatalogoItemsPorCodigo");
         group.MapGet("/{grupoId:int}/items/{itemId:int}", ObtenerItemAsync).WithName("ObtenerCatalogoItem");
-        group.MapPost("/{grupoId:int}/items", CrearItemAsync).WithName("CrearCatalogoItem");
-        group.MapPut("/{grupoId:int}/items/{itemId:int}", ActualizarItemAsync).WithName("ActualizarCatalogoItem");
+        group.MapPost("/{grupoId:int}/items", CrearItemAsync).WithName("CrearCatalogoItem").Validate<CreateCatalogoItemRequestValidator>();
+        group.MapPut("/{grupoId:int}/items/{itemId:int}", ActualizarItemAsync).WithName("ActualizarCatalogoItem").Validate<UpdateCatalogoItemRequestValidator>();
         group.MapDelete("/{grupoId:int}/items/{itemId:int}", EliminarItemAsync).WithName("EliminarCatalogoItem");
     }
 
@@ -105,6 +108,22 @@ public static class CatalogoEndpoints
         return Results.Ok(
             await service.ListarAsync(
                 grupoId,
+                pagination,
+                search,
+                cancellationToken)
+        );
+    }
+
+    private static async Task<IResult> ListarItemsPorCodigoAsync(
+        string codigo,
+        [AsParameters] PaginationRequest pagination,
+        string? search,
+        CatalogoItemService service,
+        CancellationToken cancellationToken)
+    {
+        return Results.Ok(
+            await service.ListarPorCodigoAsync(
+                codigo,
                 pagination,
                 search,
                 cancellationToken)

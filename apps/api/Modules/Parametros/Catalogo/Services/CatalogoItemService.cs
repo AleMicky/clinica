@@ -51,6 +51,22 @@ public sealed class CatalogoItemService(AppDbContext dbContext)
             totalItems);
     }
 
+    public async Task<PagedResult<CatalogoItemResponse>> ListarPorCodigoAsync(
+        string codigo,
+        PaginationRequest pagination,
+        string? search,
+        CancellationToken cancellationToken = default)
+    {
+        var grupo = await dbContext.CatalogosGrupos
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Codigo == codigo && x.Activo, cancellationToken);
+
+        if (grupo is null)
+            throw new NotFoundException("CatalogoGrupo", codigo);
+
+        return await ListarAsync(grupo.Id, pagination, search, cancellationToken);
+    }
+
     public async Task<CatalogoItemResponse> ObtenerAsync(
         int grupoId,
         int itemId,

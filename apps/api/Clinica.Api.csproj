@@ -26,6 +26,7 @@
     <Folder Include="Modules\Almacen\" />
     <Folder Include="Modules\Caja\" />
     <Folder Include="Modules\Farmacia\" />
+    <Folder Include="Modules\Parametros\Catalogo\Validators\" />
     <Folder Include="Modules\Parametros\Correlativo\Dtos\" />
     <Folder Include="Modules\Parametros\Correlativo\Endpoints\" />
     <Folder Include="Modules\Parametros\Correlativo\Mappers\" />
