@@ -1,6 +1,8 @@
 using Clinica.Api.Modules.Parametros.UnidadesMedida.Dtos;
 using Clinica.Api.Modules.Parametros.UnidadesMedida.Services;
+using Clinica.Api.Modules.Parametros.UnidadesMedida.Validators;
 using Clinica.Api.Shared.Pagination;
+using Clinica.Api.Shared.Validation;
 
 namespace Clinica.Api.Modules.Parametros.UnidadesMedida.Endpoints;
 
@@ -16,8 +18,9 @@ public static class UnidadesMedidaEndpoints
 
         group.MapGet("/", ListarAsync).WithName("ListarUnidadesMedida");
         group.MapGet("/{id:int}", ObtenerAsync).WithName("ObtenerUnidadMedida");
-        group.MapPost("/", CrearAsync).WithName("CrearUnidadMedida");
-        group.MapPut("/{id:int}", ActualizarAsync).WithName("ActualizarUnidadMedida");
+        group.MapPost("/", CrearAsync).WithName("CrearUnidadMedida").Validate<CreateUnidadesMedidaRequestValidator>();
+        group.MapPut("/{id:int}", ActualizarAsync).WithName("ActualizarUnidadMedida")
+            .Validate<UpdateUnidadesMedidaRequestValidator>();
         group.MapDelete("/{id:int}", EliminarAsync).WithName("EliminarUnidadMedida");
 
         return app;

@@ -28,6 +28,7 @@ public sealed class UnidadesMedidaService(AppDbContext dbContext)
 
         Normalizar(
             entity,
+            request.Categoria,
             request.Codigo,
             request.Nombre,
             request.Simbolo);
@@ -43,6 +44,7 @@ public sealed class UnidadesMedidaService(AppDbContext dbContext)
 
         Normalizar(
             entity,
+            request.Categoria,
             request.Codigo,
             request.Nombre,
             request.Simbolo);
@@ -106,16 +108,19 @@ public sealed class UnidadesMedidaService(AppDbContext dbContext)
 
         return query.Where(x =>
             x.Codigo.Contains(search) ||
+            x.Categoria.Contains(search) ||
             x.Nombre.Contains(search) ||
             x.Simbolo.Contains(search));
     }
 
     private static void Normalizar(
         Entity.UnidadesMedida entity,
+        string categoria,
         string codigo,
         string nombre,
         string simbolo)
     {
+        entity.Categoria = categoria.Trim();
         entity.Codigo = NormalizarCodigo(codigo);
         entity.Nombre = nombre.Trim();
         entity.Simbolo = simbolo.Trim();
