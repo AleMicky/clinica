@@ -3,6 +3,7 @@ using Clinica.Api.Modules.Parametros.Catalogo.Entity;
 using Clinica.Api.Modules.Parametros.Moneda.Entity;
 using Clinica.Api.Modules.Parametros.UnidadesMedida;
 using Clinica.Api.Modules.Parametros.UnidadesMedida.Entity;
+using Clinica.Api.Modules.Recepcion.Pacientes.Entity;
 using Clinica.Api.Modules.RecursosHumanos.Area.Entity;
 using Clinica.Api.Modules.RecursosHumanos.AsignacionEmpleado.Entity;
 using Clinica.Api.Modules.RecursosHumanos.Cargo.Entity;
@@ -22,27 +23,17 @@ public class AppDbContext(
     : IdentityDbContext<Usuario, Rol, int>(options)
 {
     public DbSet<CatalogoGrupo> CatalogosGrupos => Set<CatalogoGrupo>();
-
     public DbSet<CatalogoItem> CatalogosItems => Set<CatalogoItem>();
-
     public DbSet<UnidadesMedida> UnidadesMedida => Set<UnidadesMedida>();
-
     public DbSet<Moneda> Monedas => Set<Moneda>();
-
     public DbSet<TipoCambio> TiposCambio => Set<TipoCambio>();
-
     public DbSet<Persona> Personas => Set<Persona>();
-
     public DbSet<TipoArea> TiposArea => Set<TipoArea>();
-
     public DbSet<Area> Areas => Set<Area>();
-
     public DbSet<Cargo> Cargos => Set<Cargo>();
-
     public DbSet<Empleado> Empleados => Set<Empleado>();
-
-    public DbSet<AsignacionEmpleado> AsignacionesEmpleado
-        => Set<AsignacionEmpleado>();
+    public DbSet<AsignacionEmpleado> AsignacionesEmpleado => Set<AsignacionEmpleado>();
+    public DbSet<Paciente> Pacientes => Set<Paciente>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

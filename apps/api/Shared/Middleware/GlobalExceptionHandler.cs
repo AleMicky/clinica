@@ -1,6 +1,7 @@
 using Clinica.Api.Shared.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
 namespace Clinica.Api.Shared.Middleware;
 
@@ -17,12 +18,14 @@ public sealed class GlobalExceptionHandler(
             or ConflictException
             or BusinessException
             or ValidationException
+            or BadHttpRequestException
+            or JsonException
             or UnauthorizedAccessException;
 
         if (isClientError)
         {
             logger.LogWarning(
-                "Excepción de dominio controlada: {ExceptionType} - {Message}",
+                "Excepción de dominio/cliente controlada: {ExceptionType} - {Message}",
                 exception.GetType().Name,
                 exception.Message);
         }
@@ -59,6 +62,20 @@ public sealed class GlobalExceptionHandler(
 
             ValidationException validation => CreateValidationProblem(
                 validation),
+
+            BadHttpRequestException badRequest => new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "Solicitud incorrecta",
+                Detail = badRequest.InnerException?.Message ?? badRequest.Message
+            },
+
+            JsonException jsonException => new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "Error de formato JSON",
+                Detail = jsonException.Message
+            },
 
             UnauthorizedAccessException unauthorized => new ProblemDetails
             {

@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.10" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.10" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
@@ -19,6 +20,19 @@
     <PackageReference Include="Riok.Mapperly" Version="4.3.1" />
     <PackageReference Include="Scalar.AspNetCore" Version="2.16.17" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.22.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Modules\Parametros\Correlativo\Dtos\" />
+    <Folder Include="Modules\Parametros\Correlativo\Endpoints\" />
+    <Folder Include="Modules\Parametros\Correlativo\Mappers\" />
+    <Folder Include="Modules\Parametros\Correlativo\Services\" />
+    <Folder Include="Modules\Recepcion\Directorio\Dtos\" />
+    <Folder Include="Modules\Recepcion\Directorio\Endpoints\" />
+    <Folder Include="Modules\Recepcion\Directorio\Entity\" />
+    <Folder Include="Modules\Recepcion\Directorio\Mappers\" />
+    <Folder Include="Modules\Recepcion\Directorio\Services\" />
+    <Folder Include="Modules\Recepcion\Directorio\Validators\" />
   </ItemGroup>
 
 </Project>

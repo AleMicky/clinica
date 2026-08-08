@@ -166,9 +166,8 @@ export function PersonaTable({
                   (persona.nombres[0] || "") + (persona.apellidoPaterno[0] || "")
                 ).toUpperCase();
 
-                const docFormatted = `${persona.tipoDocumento} ${persona.numeroDocumento}${
-                  persona.extensionDocumento ? ` ${persona.extensionDocumento}` : ""
-                }${persona.complementoDocumento ? `-${persona.complementoDocumento}` : ""}`;
+                const docFormatted = `${persona.tipoDocumento} ${persona.numeroDocumento}${persona.extensionDocumento ? ` ${persona.extensionDocumento}` : ""
+                  }${persona.complementoDocumento ? `-${persona.complementoDocumento}` : ""}`;
 
                 return (
                   <TableRow key={persona.id} className="h-12 hover:bg-muted/40 transition-colors">
@@ -276,7 +275,7 @@ export function PersonaTable({
         totalItems={totalItems}
         currentPage={currentPage}
         pageSize={pageSize}
-        onPageChange={onPageChange || (() => {})}
+        onPageChange={onPageChange || (() => { })}
         onPageSizeChange={onPageSizeChange}
         isLoading={isLoading}
         itemLabel="personas"

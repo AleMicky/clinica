@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 const string CorsPolicy = "DefaultCors";
@@ -102,6 +103,7 @@ builder.Services.AddCors(options =>
             .AllowCredentials();
     });
 });
+
 
 builder.Services.AddScoped<IJwtService, JwtService>();
 
