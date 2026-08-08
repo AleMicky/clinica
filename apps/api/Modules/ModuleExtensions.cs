@@ -3,6 +3,7 @@ using Clinica.Api.Modules.Recepcion;
 using Clinica.Api.Modules.RecursosHumanos;
 using Clinica.Api.Modules.Seguridad;
 using Clinica.Api.Modules.Servicios;
+using Clinica.Api.Modules.Ventas;
 using Clinica.Api.Shared.Constants;
 
 namespace Clinica.Api.Modules;
@@ -18,6 +19,7 @@ public static class ModuleExtensions
         services.AddRecursosHumanosModule();
         services.AddRecepcionModule();
         services.AddServiciosModule();
+        services.AddVentasModule();
         return services;
     }
 
@@ -31,6 +33,7 @@ public static class ModuleExtensions
         api.MapRecursosHumanosModule();
         api.MapRecepcionModule();
         api.MapServiciosModule();
+        api.MapVentasModule();
         return app;
     }
 }

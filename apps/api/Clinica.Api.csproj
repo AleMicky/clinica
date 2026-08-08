@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <Folder Include="Modules\Almacen\" />
+    <Folder Include="Modules\Caja\" />
     <Folder Include="Modules\Farmacia\" />
     <Folder Include="Modules\Parametros\Correlativo\Dtos\" />
     <Folder Include="Modules\Parametros\Correlativo\Endpoints\" />
@@ -69,6 +70,11 @@
     <Folder Include="Modules\Servicios\Tarifas\Mappers\" />
     <Folder Include="Modules\Servicios\Tarifas\Services\" />
     <Folder Include="Modules\Servicios\Tarifas\Validators\" />
+    <Folder Include="Modules\Ventas\Venta\Dtos\" />
+    <Folder Include="Modules\Ventas\Venta\Endpoints\" />
+    <Folder Include="Modules\Ventas\Venta\Mappers\" />
+    <Folder Include="Modules\Ventas\Venta\Services\" />
+    <Folder Include="Modules\Ventas\Venta\Validators\" />
   </ItemGroup>
 
 </Project>
