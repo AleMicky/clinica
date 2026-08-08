@@ -8,6 +8,7 @@ using Clinica.Api.Modules.RecursosHumanos.Area.Entity;
 using Clinica.Api.Modules.RecursosHumanos.AsignacionEmpleado.Entity;
 using Clinica.Api.Modules.RecursosHumanos.Cargo.Entity;
 using Clinica.Api.Modules.RecursosHumanos.Empleado.Entity;
+using Clinica.Api.Modules.RecursosHumanos.Especialidad.Entity;
 using Clinica.Api.Modules.RecursosHumanos.TipoArea.Entity;
 using Clinica.Api.Modules.Seguridad.Personas.Entity;
 using Clinica.Api.Modules.Seguridad.Roles;
@@ -37,6 +38,7 @@ public class AppDbContext(
     public DbSet<Cargo> Cargos => Set<Cargo>();
     public DbSet<Empleado> Empleados => Set<Empleado>();
     public DbSet<AsignacionEmpleado> AsignacionesEmpleado => Set<AsignacionEmpleado>();
+    public DbSet<Especialidad> Especialidades => Set<Especialidad>();
     public DbSet<Paciente> Pacientes => Set<Paciente>();
     public DbSet<CategoriaServicio> CategoriaServicio => Set<CategoriaServicio>();
     public DbSet<Convenio> Convenios => Set<Convenio>();

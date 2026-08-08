@@ -23,6 +23,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Modules\Almacen\" />
+    <Folder Include="Modules\Farmacia\" />
     <Folder Include="Modules\Parametros\Correlativo\Dtos\" />
     <Folder Include="Modules\Parametros\Correlativo\Endpoints\" />
     <Folder Include="Modules\Parametros\Correlativo\Mappers\" />
@@ -33,6 +35,16 @@
     <Folder Include="Modules\Recepcion\Directorio\Mappers\" />
     <Folder Include="Modules\Recepcion\Directorio\Services\" />
     <Folder Include="Modules\Recepcion\Directorio\Validators\" />
+    <Folder Include="Modules\RecursosHumanos\Especialidad\Dtos\" />
+    <Folder Include="Modules\RecursosHumanos\Especialidad\Endpoints\" />
+    <Folder Include="Modules\RecursosHumanos\Especialidad\Mappers\" />
+    <Folder Include="Modules\RecursosHumanos\Especialidad\Services\" />
+    <Folder Include="Modules\RecursosHumanos\Especialidad\Validators\" />
+    <Folder Include="Modules\RecursosHumanos\Medico\Dtos\" />
+    <Folder Include="Modules\RecursosHumanos\Medico\Endpoints\" />
+    <Folder Include="Modules\RecursosHumanos\Medico\Mappers\" />
+    <Folder Include="Modules\RecursosHumanos\Medico\Services\" />
+    <Folder Include="Modules\RecursosHumanos\Medico\Validators\" />
     <Folder Include="Modules\Servicios\Convenios\Dtos\" />
     <Folder Include="Modules\Servicios\Convenios\Endpoints\" />
     <Folder Include="Modules\Servicios\Convenios\Mappers\" />
