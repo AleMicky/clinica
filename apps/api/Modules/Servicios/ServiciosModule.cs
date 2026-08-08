@@ -4,6 +4,8 @@ using Clinica.Api.Modules.Servicios.Convenios.Endpoints;
 using Clinica.Api.Modules.Servicios.Convenios.Services;
 using Clinica.Api.Modules.Servicios.Servicios.Endpoints;
 using Clinica.Api.Modules.Servicios.Servicios.Services;
+using Clinica.Api.Modules.Servicios.Tarifas.Endpoints;
+using Clinica.Api.Modules.Servicios.Tarifas.Services;
 
 namespace Clinica.Api.Modules.Servicios;
 
@@ -15,6 +17,8 @@ public static class ServiciosModule
         services.AddScoped<CategoriaServicioService>();
         services.AddScoped<ConvenioService>();
         services.AddScoped<ServicioService>();
+        services.AddScoped<TarifarioService>();
+        services.AddScoped<TarifarioDetalleService>();
 
         return services;
     }
@@ -25,6 +29,7 @@ public static class ServiciosModule
         app.MapCategoriaServicioEndpoints();
         app.MapConvenioEndpoints();
         app.MapServicioEndpoints();
+        app.MapTarifarioEndpoints();
 
         return app;
     }

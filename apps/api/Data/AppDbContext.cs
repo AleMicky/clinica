@@ -15,6 +15,7 @@ using Clinica.Api.Modules.Seguridad.Usuarios;
 using Clinica.Api.Modules.Servicios.CategoriaServicio.Entity;
 using Clinica.Api.Modules.Servicios.Convenios.Entity;
 using Clinica.Api.Modules.Servicios.Servicios.Entity;
+using Clinica.Api.Modules.Servicios.Tarifas.Entity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -40,6 +41,8 @@ public class AppDbContext(
     public DbSet<CategoriaServicio> CategoriaServicio => Set<CategoriaServicio>();
     public DbSet<Convenio> Convenios => Set<Convenio>();
     public DbSet<Servicio> Servicio => Set<Servicio>();
+    public DbSet<Tarifario> Tarifarios => Set<Tarifario>();
+    public DbSet<TarifarioDetalle> TarifarioDetalles => Set<TarifarioDetalle>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
