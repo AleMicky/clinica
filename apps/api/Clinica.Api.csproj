@@ -29,6 +29,11 @@
     <Folder Include="Modules\Parametros\Correlativo\Endpoints\" />
     <Folder Include="Modules\Parametros\Correlativo\Mappers\" />
     <Folder Include="Modules\Parametros\Correlativo\Services\" />
+    <Folder Include="Modules\Parametros\MetodoPago\Dtos\" />
+    <Folder Include="Modules\Parametros\MetodoPago\Endpoints\" />
+    <Folder Include="Modules\Parametros\MetodoPago\Mappers\" />
+    <Folder Include="Modules\Parametros\MetodoPago\Services\" />
+    <Folder Include="Modules\Parametros\MetodoPago\Validators\" />
     <Folder Include="Modules\Recepcion\Admision\Dtos\" />
     <Folder Include="Modules\Recepcion\Admision\Endpoints\" />
     <Folder Include="Modules\Recepcion\Admision\Mappers\" />

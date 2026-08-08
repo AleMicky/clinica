@@ -1,5 +1,7 @@
 using Clinica.Api.Modules.Parametros.Catalogo.Endpoints;
 using Clinica.Api.Modules.Parametros.Catalogo.Services;
+using Clinica.Api.Modules.Parametros.MetodoPago.Endpoints;
+using Clinica.Api.Modules.Parametros.MetodoPago.Services;
 using Clinica.Api.Modules.Parametros.Moneda.Endpoints;
 using Clinica.Api.Modules.Parametros.Moneda.Services;
 using Clinica.Api.Modules.Parametros.UnidadesMedida.Endpoints;
@@ -17,6 +19,7 @@ public static class ParametrosModule
         services.AddScoped<UnidadesMedidaService>();
         services.AddScoped<MonedaService>();
         services.AddScoped<TipoCambioService>();
+        services.AddScoped<MetodoPagoService>();
 
         return services;
     }
@@ -27,6 +30,7 @@ public static class ParametrosModule
         app.MapUnidadesMedidaEndpoints();
         app.MapMonedaEndpoints();
         app.MapTipoCambioEndpoints();
+        app.MapMetodoPagoEndpoints();
 
         return app;
     }
