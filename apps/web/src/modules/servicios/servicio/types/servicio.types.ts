@@ -1,0 +1,45 @@
+export interface ServicioResponse {
+  id: number;
+  categoriaServicioId: number;
+  codigo: string;
+  nombre: string;
+  descripcion?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
+}
+
+export interface CreateServicioRequest {
+  codigo: string;
+  nombre: string;
+  descripcion?: string | null;
+}
+
+export interface UpdateServicioRequest extends CreateServicioRequest {}
+
+export interface ServicioQueryParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+}
+
+export interface PagedResult<T> {
+  items: T[];
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages?: number;
+  hasPreviousPage?: boolean;
+  hasNextPage?: boolean;
+}
+
+export interface ServicioItem extends ServicioResponse {
+  categoriaNombre?: string;
+}
+
+export interface ServicioMetrics {
+  totalServicios: number;
+  totalCategoriasCount: number;
+  conDescripcionCount: number;
+}

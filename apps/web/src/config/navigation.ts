@@ -21,6 +21,11 @@ import {
   Scale,
   Building2,
   Network,
+  Stethoscope,
+  Layers,
+  Tag,
+  Handshake,
+  Activity,
   type LucideIcon,
 } from "lucide-react"
 
@@ -69,6 +74,38 @@ export const directNavItems: NavItem[] = [
 ]
 
 // 2. Módulos Agrupados (Núcleos desplegables con sub-menú)
+export const serviciosNav: NavGroup = {
+  title: "Servicios",
+  icon: Stethoscope,
+  description: "Categorías, servicios clínicos, tarifarios y convenios",
+  items: [
+    {
+      title: "Categorías de Servicio",
+      href: "/servicios/categorias",
+      icon: Layers,
+      description: "Clasificación general de prestaciones y servicios",
+    },
+    {
+      title: "Servicios / Prestaciones",
+      href: "/servicios/servicios",
+      icon: Activity,
+      description: "Catálogo de prestaciones y procedimientos médicos",
+    },
+    {
+      title: "Tarifarios",
+      href: "/servicios/tarifarios",
+      icon: Tag,
+      description: "Listas de precios vigentes y detalle por servicio",
+    },
+    {
+      title: "Convenios",
+      href: "/servicios/convenios",
+      icon: Handshake,
+      description: "Convenios institucionales y asignación de tarifarios",
+    },
+  ],
+}
+
 export const seguridadNav: NavGroup = {
   title: "Seguridad",
   icon: Shield,
@@ -179,6 +216,7 @@ export const parametrosNav: NavGroup = {
 
 // Módulos agrupados
 export const moduleGroups: NavGroup[] = [
+  serviciosNav,
   seguridadNav,
   recursosHumanosNav,
   parametrosNav,
@@ -188,9 +226,11 @@ export const moduleGroups: NavGroup[] = [
 export const navigationConfig = {
   directNavItems,
   moduleGroups,
+  servicios: serviciosNav,
   seguridad: seguridadNav,
   recursosHumanos: recursosHumanosNav,
   parametros: parametrosNav,
 }
 
 export default navigationConfig
+
