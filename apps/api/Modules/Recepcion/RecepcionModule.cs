@@ -9,6 +9,7 @@ public static class RecepcionModule
         this IServiceCollection services)
     {
         services.AddScoped<PacienteService>();
+        services.AddScoped<PacienteConvenioService>();
 
         return services;
     }

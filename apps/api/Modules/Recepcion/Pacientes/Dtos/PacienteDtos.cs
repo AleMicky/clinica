@@ -45,3 +45,42 @@ public sealed record PacientePersonaResponse
     public string? Genero { get; init; }
     public string? EstadoCivil { get; init; }
 }
+
+public abstract record PacienteConvenioRequest
+{
+    public required int ConvenioId { get; init; }
+    public string? NumeroAfiliado { get; init; }
+    public required DateOnly FechaInicio { get; init; }
+    public DateOnly? FechaFin { get; init; }
+    public bool EsPrincipal { get; init; }
+}
+
+public sealed record CreatePacienteConvenioRequest
+    : PacienteConvenioRequest;
+
+public sealed record UpdatePacienteConvenioRequest
+    : PacienteConvenioRequest;
+
+public sealed record PacienteConvenioResponse
+{
+    public int Id { get; init; }
+    public int PacienteId { get; init; }
+    public int ConvenioId { get; init; }
+    public ConvenioInfo? Convenio { get; init; }
+    public string? NumeroAfiliado { get; init; }
+    public DateOnly FechaInicio { get; init; }
+    public DateOnly? FechaFin { get; init; }
+    public bool EsPrincipal { get; init; }
+    public bool Activo { get; init; }
+    public DateTime FechaCreacion { get; init; }
+    public DateTime? FechaModificacion { get; init; }
+    public string? CreadoPor { get; init; }
+    public string? ModificadoPor { get; init; }
+}
+
+public sealed record ConvenioInfo
+{
+    public int Id { get; init; }
+    public string Codigo { get; init; } = string.Empty;
+    public string Nombre { get; init; } = string.Empty;
+}

@@ -15,6 +15,8 @@ public static class PacienteEndpoints
             .WithTags("Pacientes")
             .RequireAuthorization();
 
+        MapConvenios(group);
+
         group.MapGet("/", ListarAsync)
             .WithName("ListarPacientes");
 
@@ -33,6 +35,26 @@ public static class PacienteEndpoints
             .WithName("EliminarPaciente");
 
         return app;
+    }
+
+    private static void MapConvenios(RouteGroupBuilder group)
+    {
+        group.MapGet("/{pacienteId:int}/convenios", ListarConveniosAsync)
+            .WithName("ListarPacienteConvenios");
+
+        group.MapGet("/{pacienteId:int}/convenios/{id:int}", ObtenerConvenioAsync)
+            .WithName("ObtenerPacienteConvenio");
+
+        group.MapPost("/{pacienteId:int}/convenios", CrearConvenioAsync)
+            .WithName("CrearPacienteConvenio")
+            .Validate<CreatePacienteConvenioRequest>();
+
+        group.MapPut("/{pacienteId:int}/convenios/{id:int}", ActualizarConvenioAsync)
+            .WithName("ActualizarPacienteConvenio")
+            .Validate<UpdatePacienteConvenioRequest>();
+
+        group.MapDelete("/{pacienteId:int}/convenios/{id:int}", EliminarConvenioAsync)
+            .WithName("EliminarPacienteConvenio");
     }
 
     private static async Task<IResult> ListarAsync(
@@ -96,6 +118,84 @@ public static class PacienteEndpoints
         CancellationToken cancellationToken)
     {
         await service.EliminarAsync(
+            id,
+            cancellationToken);
+
+        return Results.NoContent();
+    }
+
+    private static async Task<IResult> ListarConveniosAsync(
+        int pacienteId,
+        [AsParameters] PaginationRequest pagination,
+        string? search,
+        PacienteConvenioService service,
+        CancellationToken cancellationToken)
+    {
+        return Results.Ok(
+            await service.ListarAsync(
+                pacienteId,
+                pagination,
+                search,
+                cancellationToken));
+    }
+
+    private static async Task<IResult> ObtenerConvenioAsync(
+        int pacienteId,
+        int id,
+        PacienteConvenioService service,
+        CancellationToken cancellationToken)
+    {
+        return Results.Ok(
+            await service.ObtenerAsync(
+                pacienteId,
+                id,
+                cancellationToken));
+    }
+
+    private static async Task<IResult> CrearConvenioAsync(
+        int pacienteId,
+        CreatePacienteConvenioRequest request,
+        PacienteConvenioService service,
+        CancellationToken cancellationToken)
+    {
+        var result = await service.CrearAsync(
+            pacienteId,
+            request,
+            cancellationToken);
+
+        return Results.CreatedAtRoute(
+            routeName: "ObtenerPacienteConvenio",
+            routeValues: new
+            {
+                pacienteId,
+                id = result.Id
+            },
+            value: result);
+    }
+
+    private static async Task<IResult> ActualizarConvenioAsync(
+        int pacienteId,
+        int id,
+        UpdatePacienteConvenioRequest request,
+        PacienteConvenioService service,
+        CancellationToken cancellationToken)
+    {
+        return Results.Ok(
+            await service.ActualizarAsync(
+                pacienteId,
+                id,
+                request,
+                cancellationToken));
+    }
+
+    private static async Task<IResult> EliminarConvenioAsync(
+        int pacienteId,
+        int id,
+        PacienteConvenioService service,
+        CancellationToken cancellationToken)
+    {
+        await service.EliminarAsync(
+            pacienteId,
             id,
             cancellationToken);
 
