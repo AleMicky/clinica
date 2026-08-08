@@ -7,6 +7,7 @@ namespace Clinica.Api.Modules.Servicios.Convenios.Mappers;
 [Mapper]
 public static partial class ConvenioMapper
 {
+    [MapperIgnoreSource(nameof(ConvenioEntity.Tarifarios))]
     public static partial ConvenioResponse ToResponse(
         ConvenioEntity entity
     );
@@ -16,6 +17,7 @@ public static partial class ConvenioMapper
     );
 
     [MapperIgnoreTarget(nameof(ConvenioEntity.Id))]
+    [MapperIgnoreTarget(nameof(ConvenioEntity.Tarifarios))]
     [MapperIgnoreTarget(nameof(ConvenioEntity.Activo))]
     [MapperIgnoreTarget(nameof(ConvenioEntity.FechaCreacion))]
     [MapperIgnoreTarget(nameof(ConvenioEntity.FechaModificacion))]
@@ -26,6 +28,7 @@ public static partial class ConvenioMapper
     );
 
     [MapperIgnoreTarget(nameof(ConvenioEntity.Id))]
+    [MapperIgnoreTarget(nameof(ConvenioEntity.Tarifarios))]
     [MapperIgnoreTarget(nameof(ConvenioEntity.Activo))]
     [MapperIgnoreTarget(nameof(ConvenioEntity.FechaCreacion))]
     [MapperIgnoreTarget(nameof(ConvenioEntity.FechaModificacion))]

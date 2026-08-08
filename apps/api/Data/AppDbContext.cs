@@ -40,6 +40,7 @@ public class AppDbContext(
     public DbSet<Paciente> Pacientes => Set<Paciente>();
     public DbSet<CategoriaServicio> CategoriaServicio => Set<CategoriaServicio>();
     public DbSet<Convenio> Convenios => Set<Convenio>();
+    public DbSet<ConvenioTarifario> ConveniosTarifarios => Set<ConvenioTarifario>();
     public DbSet<Servicio> Servicio => Set<Servicio>();
     public DbSet<Tarifario> Tarifarios => Set<Tarifario>();
     public DbSet<TarifarioDetalle> TarifarioDetalles => Set<TarifarioDetalle>();

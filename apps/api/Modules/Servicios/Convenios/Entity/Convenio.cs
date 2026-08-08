@@ -10,6 +10,5 @@ public sealed class Convenio : AuditableEntity
 
     public DateOnly FechaInicio { get; set; }
     public DateOnly? FechaFin { get; set; }
-    
-    
+    public ICollection<ConvenioTarifario> Tarifarios { get; set; } = [];
 }

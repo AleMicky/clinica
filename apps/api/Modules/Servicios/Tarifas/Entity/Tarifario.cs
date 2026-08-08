@@ -1,4 +1,5 @@
 using Clinica.Api.Modules.Parametros.Moneda.Entity;
+using Clinica.Api.Modules.Servicios.Convenios.Entity;
 using Clinica.Api.Shared.Abstractions;
 
 namespace Clinica.Api.Modules.Servicios.Tarifas.Entity;
@@ -18,4 +19,5 @@ public sealed class Tarifario : AuditableEntity
     public bool EsPrincipal { get; set; }
 
     public ICollection<TarifarioDetalle> Detalles { get; set; } = [];
-}
+    public ICollection<ConvenioTarifario> Convenios { get; set; } = [];
+ }

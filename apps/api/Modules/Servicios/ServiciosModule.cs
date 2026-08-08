@@ -16,6 +16,7 @@ public static class ServiciosModule
     {
         services.AddScoped<CategoriaServicioService>();
         services.AddScoped<ConvenioService>();
+        services.AddScoped<ConvenioTarifarioService>();
         services.AddScoped<ServicioService>();
         services.AddScoped<TarifarioService>();
         services.AddScoped<TarifarioDetalleService>();

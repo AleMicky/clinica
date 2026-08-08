@@ -15,6 +15,8 @@ public static class ConvenioEndpoints
             .WithTags("Convenios")
             .RequireAuthorization();
 
+        MapTarifarios(group);
+
         group.MapGet("/", ListarAsync)
             .WithName("ListarConvenios");
 
@@ -33,6 +35,26 @@ public static class ConvenioEndpoints
             .WithName("EliminarConvenio");
 
         return app;
+    }
+
+    private static void MapTarifarios(RouteGroupBuilder group)
+    {
+        group.MapGet("/{convenioId:int}/tarifarios", ListarTarifariosAsync)
+            .WithName("ListarConvenioTarifarios");
+
+        group.MapGet("/{convenioId:int}/tarifarios/{tarifarioId:int}", ObtenerTarifarioAsync)
+            .WithName("ObtenerConvenioTarifario");
+
+        group.MapPost("/{convenioId:int}/tarifarios", CrearTarifarioAsync)
+            .WithName("CrearConvenioTarifario")
+            .Validate<CreateConvenioTarifarioRequest>();
+
+        group.MapPut("/{convenioId:int}/tarifarios/{tarifarioId:int}", ActualizarTarifarioAsync)
+            .WithName("ActualizarConvenioTarifario")
+            .Validate<UpdateConvenioTarifarioRequest>();
+
+        group.MapDelete("/{convenioId:int}/tarifarios/{tarifarioId:int}", EliminarTarifarioAsync)
+            .WithName("EliminarConvenioTarifario");
     }
 
     private static async Task<IResult> ListarAsync(
@@ -93,6 +115,79 @@ public static class ConvenioEndpoints
     {
         await service.EliminarAsync(
             id,
+            cancellationToken);
+
+        return Results.NoContent();
+    }
+
+    private static async Task<IResult> ListarTarifariosAsync(
+        int convenioId,
+        [AsParameters] PaginationRequest pagination,
+        string? search,
+        ConvenioTarifarioService service,
+        CancellationToken cancellationToken)
+    {
+        return Results.Ok(
+            await service.ListarAsync(
+                convenioId,
+                pagination,
+                search,
+                cancellationToken));
+    }
+
+    private static async Task<IResult> ObtenerTarifarioAsync(
+        int convenioId,
+        int tarifarioId,
+        ConvenioTarifarioService service,
+        CancellationToken cancellationToken)
+    {
+        return Results.Ok(
+            await service.ObtenerAsync(
+                convenioId,
+                tarifarioId,
+                cancellationToken));
+    }
+
+    private static async Task<IResult> CrearTarifarioAsync(
+        int convenioId,
+        CreateConvenioTarifarioRequest request,
+        ConvenioTarifarioService service,
+        CancellationToken cancellationToken)
+    {
+        var result = await service.CrearAsync(
+            convenioId,
+            request,
+            cancellationToken);
+
+        return Results.Created(
+            $"/convenios/{convenioId}/tarifarios/{result.Id}",
+            result);
+    }
+
+    private static async Task<IResult> ActualizarTarifarioAsync(
+        int convenioId,
+        int tarifarioId,
+        UpdateConvenioTarifarioRequest request,
+        ConvenioTarifarioService service,
+        CancellationToken cancellationToken)
+    {
+        return Results.Ok(
+            await service.ActualizarAsync(
+                convenioId,
+                tarifarioId,
+                request,
+                cancellationToken));
+    }
+
+    private static async Task<IResult> EliminarTarifarioAsync(
+        int convenioId,
+        int tarifarioId,
+        ConvenioTarifarioService service,
+        CancellationToken cancellationToken)
+    {
+        await service.EliminarAsync(
+            convenioId,
+            tarifarioId,
             cancellationToken);
 
         return Results.NoContent();

@@ -9,6 +9,7 @@ public static partial class TarifarioMapper
 {
     [MapperIgnoreSource(nameof(TarifarioEntity.Moneda))]
     [MapperIgnoreSource(nameof(TarifarioEntity.Detalles))]
+    [MapperIgnoreSource(nameof(TarifarioEntity.Convenios))]
     public static partial TarifarioResponse ToResponse(
         TarifarioEntity entity
     );
@@ -20,6 +21,7 @@ public static partial class TarifarioMapper
     [MapperIgnoreTarget(nameof(TarifarioEntity.Id))]
     [MapperIgnoreTarget(nameof(TarifarioEntity.Moneda))]
     [MapperIgnoreTarget(nameof(TarifarioEntity.Detalles))]
+    [MapperIgnoreTarget(nameof(TarifarioEntity.Convenios))]
     [MapperIgnoreTarget(nameof(TarifarioEntity.MonedaId))]
     [MapperIgnoreTarget(nameof(TarifarioEntity.Activo))]
     [MapperIgnoreTarget(nameof(TarifarioEntity.FechaCreacion))]
@@ -33,6 +35,7 @@ public static partial class TarifarioMapper
     [MapperIgnoreTarget(nameof(TarifarioEntity.Id))]
     [MapperIgnoreTarget(nameof(TarifarioEntity.Moneda))]
     [MapperIgnoreTarget(nameof(TarifarioEntity.Detalles))]
+    [MapperIgnoreTarget(nameof(TarifarioEntity.Convenios))]
     [MapperIgnoreTarget(nameof(TarifarioEntity.MonedaId))]
     [MapperIgnoreTarget(nameof(TarifarioEntity.Activo))]
     [MapperIgnoreTarget(nameof(TarifarioEntity.FechaCreacion))]
