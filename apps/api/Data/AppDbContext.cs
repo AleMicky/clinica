@@ -12,6 +12,8 @@ using Clinica.Api.Modules.RecursosHumanos.TipoArea.Entity;
 using Clinica.Api.Modules.Seguridad.Personas.Entity;
 using Clinica.Api.Modules.Seguridad.Roles;
 using Clinica.Api.Modules.Seguridad.Usuarios;
+using Clinica.Api.Modules.Servicios.CategoriaServicio.Entity;
+using Clinica.Api.Modules.Servicios.Servicios.Entity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -34,6 +36,8 @@ public class AppDbContext(
     public DbSet<Empleado> Empleados => Set<Empleado>();
     public DbSet<AsignacionEmpleado> AsignacionesEmpleado => Set<AsignacionEmpleado>();
     public DbSet<Paciente> Pacientes => Set<Paciente>();
+    public DbSet<CategoriaServicio> CategoriaServicio => Set<CategoriaServicio>();
+    public DbSet<Servicio> Servicio => Set<Servicio>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
