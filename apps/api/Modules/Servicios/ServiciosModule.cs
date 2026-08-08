@@ -1,5 +1,7 @@
 using Clinica.Api.Modules.Servicios.CategoriaServicio.Endpoints;
 using Clinica.Api.Modules.Servicios.CategoriaServicio.Services;
+using Clinica.Api.Modules.Servicios.Convenios.Endpoints;
+using Clinica.Api.Modules.Servicios.Convenios.Services;
 using Clinica.Api.Modules.Servicios.Servicios.Endpoints;
 using Clinica.Api.Modules.Servicios.Servicios.Services;
 
@@ -11,6 +13,7 @@ public static class ServiciosModule
         this IServiceCollection services)
     {
         services.AddScoped<CategoriaServicioService>();
+        services.AddScoped<ConvenioService>();
         services.AddScoped<ServicioService>();
 
         return services;
@@ -20,6 +23,7 @@ public static class ServiciosModule
         this IEndpointRouteBuilder app)
     {
         app.MapCategoriaServicioEndpoints();
+        app.MapConvenioEndpoints();
         app.MapServicioEndpoints();
 
         return app;

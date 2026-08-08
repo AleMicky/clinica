@@ -35,7 +35,6 @@
     <Folder Include="Modules\Recepcion\Directorio\Validators\" />
     <Folder Include="Modules\Servicios\Convenios\Dtos\" />
     <Folder Include="Modules\Servicios\Convenios\Endpoints\" />
-    <Folder Include="Modules\Servicios\Convenios\Entity\" />
     <Folder Include="Modules\Servicios\Convenios\Mappers\" />
     <Folder Include="Modules\Servicios\Convenios\Services\" />
     <Folder Include="Modules\Servicios\Convenios\Validators\" />
@@ -45,7 +44,6 @@
     <Folder Include="Modules\Servicios\Servicios\Services\" />
     <Folder Include="Modules\Servicios\Tarifas\Dtos\" />
     <Folder Include="Modules\Servicios\Tarifas\Endpoints\" />
-    <Folder Include="Modules\Servicios\Tarifas\Entity\" />
     <Folder Include="Modules\Servicios\Tarifas\Mappers\" />
     <Folder Include="Modules\Servicios\Tarifas\Services\" />
     <Folder Include="Modules\Servicios\Tarifas\Validators\" />

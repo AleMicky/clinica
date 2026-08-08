@@ -1,3 +1,4 @@
+using Clinica.Api.Modules.Servicios.Tarifas.Entity;
 using Clinica.Api.Shared.Abstractions;
 
 namespace Clinica.Api.Modules.Servicios.Servicios.Entity;
@@ -10,4 +11,5 @@ public class Servicio : AuditableEntity
 
     public int CategoriaServicioId { get; set; }
     public CategoriaServicio.Entity.CategoriaServicio CategoriaServicio { get; set; } = null!;
+    public ICollection<TarifarioDetalle> Tarifas { get; set; } = [];
 }

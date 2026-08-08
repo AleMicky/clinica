@@ -9,6 +9,7 @@ using ServicioEntity = Clinica.Api.Modules.Servicios.Servicios.Entity.Servicio;
 public static partial class ServicioMapper
 {
     [MapperIgnoreSource(nameof(ServicioEntity.CategoriaServicio))]
+    [MapperIgnoreSource(nameof(ServicioEntity.Tarifas))]
     public static partial ServicioResponse ToResponse(
         ServicioEntity entity
     );
@@ -19,6 +20,7 @@ public static partial class ServicioMapper
 
     [MapperIgnoreTarget(nameof(ServicioEntity.Id))]
     [MapperIgnoreTarget(nameof(ServicioEntity.CategoriaServicio))]
+    [MapperIgnoreTarget(nameof(ServicioEntity.Tarifas))]
     [MapperIgnoreTarget(nameof(ServicioEntity.CategoriaServicioId))]
     [MapperIgnoreTarget(nameof(ServicioEntity.Activo))]
     [MapperIgnoreTarget(nameof(ServicioEntity.FechaCreacion))]
@@ -31,6 +33,7 @@ public static partial class ServicioMapper
 
     [MapperIgnoreTarget(nameof(ServicioEntity.Id))]
     [MapperIgnoreTarget(nameof(ServicioEntity.CategoriaServicio))]
+    [MapperIgnoreTarget(nameof(ServicioEntity.Tarifas))]
     [MapperIgnoreTarget(nameof(ServicioEntity.CategoriaServicioId))]
     [MapperIgnoreTarget(nameof(ServicioEntity.Activo))]
     [MapperIgnoreTarget(nameof(ServicioEntity.FechaCreacion))]
