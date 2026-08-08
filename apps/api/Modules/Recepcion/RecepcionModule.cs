@@ -1,3 +1,5 @@
+using Clinica.Api.Modules.Recepcion.Admision.Endpoints;
+using Clinica.Api.Modules.Recepcion.Admision.Services;
 using Clinica.Api.Modules.Recepcion.Pacientes.Endpoints;
 using Clinica.Api.Modules.Recepcion.Pacientes.Services;
 
@@ -10,6 +12,8 @@ public static class RecepcionModule
     {
         services.AddScoped<PacienteService>();
         services.AddScoped<PacienteConvenioService>();
+        services.AddScoped<AdmisionService>();
+        services.AddScoped<AdmisionDetalleService>();
 
         return services;
     }
@@ -18,6 +22,7 @@ public static class RecepcionModule
         this IEndpointRouteBuilder app)
     {
         app.MapPacienteEndpoints();
+        app.MapAdmisionEndpoints();
 
         return app;
     }

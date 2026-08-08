@@ -3,6 +3,7 @@ using Clinica.Api.Modules.Parametros.Catalogo.Entity;
 using Clinica.Api.Modules.Parametros.Moneda.Entity;
 using Clinica.Api.Modules.Parametros.UnidadesMedida;
 using Clinica.Api.Modules.Parametros.UnidadesMedida.Entity;
+using Clinica.Api.Modules.Recepcion.Admision.Entity;
 using Clinica.Api.Modules.Recepcion.Pacientes.Entity;
 using Clinica.Api.Modules.RecursosHumanos.Area.Entity;
 using Clinica.Api.Modules.RecursosHumanos.AsignacionEmpleado.Entity;
@@ -45,6 +46,8 @@ public class AppDbContext(
     public DbSet<MedicoServicioAcuerdo> MedicosServiciosAcuerdos => Set<MedicoServicioAcuerdo>();
     public DbSet<Paciente> Pacientes => Set<Paciente>();
     public DbSet<PacienteConvenio> PacientesConvenios => Set<PacienteConvenio>();
+    public DbSet<Admision> Admisiones => Set<Admision>();
+    public DbSet<AdmisionDetalle> AdmisionesDetalles => Set<AdmisionDetalle>();
     public DbSet<CategoriaServicio> CategoriaServicio => Set<CategoriaServicio>();
     public DbSet<Convenio> Convenios => Set<Convenio>();
     public DbSet<ConvenioTarifario> ConveniosTarifarios => Set<ConvenioTarifario>();
