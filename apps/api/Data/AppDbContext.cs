@@ -42,6 +42,7 @@ public class AppDbContext(
     public DbSet<Especialidad> Especialidades => Set<Especialidad>();
     public DbSet<Medico> Medicos => Set<Medico>();
     public DbSet<MedicoEspecialidad> MedicosEspecialidades => Set<MedicoEspecialidad>();
+    public DbSet<MedicoServicioAcuerdo> MedicosServiciosAcuerdos => Set<MedicoServicioAcuerdo>();
     public DbSet<Paciente> Pacientes => Set<Paciente>();
     public DbSet<CategoriaServicio> CategoriaServicio => Set<CategoriaServicio>();
     public DbSet<Convenio> Convenios => Set<Convenio>();

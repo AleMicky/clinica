@@ -14,6 +14,10 @@ using MedicoEspecialidadEndpoints =
     Clinica.Api.Modules.RecursosHumanos.Medico.Endpoints.MedicoEspecialidadEndpoints;
 using MedicoEspecialidadService =
     Clinica.Api.Modules.RecursosHumanos.Medico.Services.MedicoEspecialidadService;
+using MedicoServicioAcuerdoEndpoints =
+    Clinica.Api.Modules.RecursosHumanos.Medico.Endpoints.MedicoServicioAcuerdoEndpoints;
+using MedicoServicioAcuerdoService =
+    Clinica.Api.Modules.RecursosHumanos.Medico.Services.MedicoServicioAcuerdoService;
 using Clinica.Api.Modules.RecursosHumanos.TipoArea.Endpoints;
 using Clinica.Api.Modules.RecursosHumanos.TipoArea.Services;
 
@@ -32,6 +36,7 @@ public static class RecursosHumanosModule
         services.AddScoped<EspecialidadService>();
         services.AddScoped<MedicoService>();
         services.AddScoped<MedicoEspecialidadService>();
+        services.AddScoped<MedicoServicioAcuerdoService>();
 
         return services;
     }
@@ -47,6 +52,7 @@ public static class RecursosHumanosModule
         app.MapEspecialidadEndpoints();
         app.MapMedicoEndpoints();
         app.MapMedicoEspecialidadEndpoints();
+        app.MapMedicoServicioAcuerdoEndpoints();
 
         return app;
     }
