@@ -18,12 +18,16 @@ public sealed class TarifarioDetalleService(AppDbContext dbContext)
         string? search,
         CancellationToken cancellationToken = default)
     {
-        await EnsureTarifarioExistsAsync(tarifarioId, cancellationToken);
+        await EnsureTarifarioExistsAsync(
+            tarifarioId,
+            cancellationToken);
 
         var query = dbContext.TarifarioDetalles
             .AsNoTracking()
             .Include(x => x.Servicio)
-            .Where(x => x.TarifarioId == tarifarioId && x.Activo);
+            .Where(x =>
+                x.TarifarioId == tarifarioId &&
+                x.Activo);
 
         var normalizedSearch = string.IsNullOrWhiteSpace(search)
             ? null
@@ -36,9 +40,12 @@ public sealed class TarifarioDetalleService(AppDbContext dbContext)
                 x.Servicio.Nombre.Contains(normalizedSearch));
         }
 
-        var totalItems = await query.CountAsync(cancellationToken);
+        var totalItems = await query.CountAsync(
+            cancellationToken);
 
-        var offset = (pagination.ValidPage - 1) * pagination.ValidPageSize;
+        var offset =
+            (pagination.ValidPage - 1) *
+            pagination.ValidPageSize;
 
         var entities = await query
             .OrderBy(x => x.Servicio.Nombre)
@@ -47,8 +54,11 @@ public sealed class TarifarioDetalleService(AppDbContext dbContext)
             .Take(pagination.ValidPageSize)
             .ToListAsync(cancellationToken);
 
+        var items = TarifarioDetalleMapper.ToResponse(
+            entities);
+
         return new PagedResult<TarifarioDetalleResponse>(
-            TarifarioDetalleMapper.ToResponse(entities),
+            items,
             pagination.ValidPage,
             pagination.ValidPageSize,
             totalItems);

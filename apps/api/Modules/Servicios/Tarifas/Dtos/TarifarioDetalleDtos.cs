@@ -21,6 +21,13 @@ public sealed record TarifarioDetalleResponse : AuditableResponse
 {
     public int Id { get; init; }
     public int TarifarioId { get; init; }
-    public int ServicioId { get; init; }
+    public ServicioResumenResponse Servicio { get; init; }
     public decimal Precio { get; init; }
+}
+
+public sealed record ServicioResumenResponse
+{
+    public int Id { get; init; }
+    public string Codigo { get; init; }
+    public string Nombre { get; init; }
 }

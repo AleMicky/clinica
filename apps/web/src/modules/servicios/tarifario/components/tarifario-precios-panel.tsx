@@ -198,12 +198,13 @@ export function TarifarioPreciosPanel({
       toast.error("Ingrese un precio válido.");
       return;
     }
+    const targetServicioId = d.servicio?.id ?? d.servicioId ?? 0;
     try {
       await updateDetalleMutation.mutateAsync({
         tarifarioId,
         detalleId: d.id,
         data: {
-          servicioId: d.servicioId,
+          servicioId: targetServicioId,
           precio: parsed,
         },
       });
@@ -240,12 +241,18 @@ export function TarifarioPreciosPanel({
     const items = detallesData?.items ?? [];
     if (!searchTerm.trim()) return items;
     const lower = searchTerm.toLowerCase().trim();
-    return items.filter(
-      (d: TarifarioDetalleResponse) =>
-        d.servicioNombre?.toLowerCase().includes(lower) ||
-        String(d.servicioId).includes(lower) ||
+    return items.filter((d: TarifarioDetalleResponse) => {
+      const sNombre = d.servicio?.nombre || d.servicioNombre || "";
+      const sCodigo = d.servicio?.codigo || d.servicioCodigo || "";
+      const sId = String(d.servicio?.id ?? d.servicioId ?? "");
+
+      return (
+        sNombre.toLowerCase().includes(lower) ||
+        sCodigo.toLowerCase().includes(lower) ||
+        sId.includes(lower) ||
         String(d.precio).includes(lower)
-    );
+      );
+    });
   }, [detallesData, searchTerm]);
 
   if (!selectedTarifario) {
@@ -511,12 +518,18 @@ export function TarifarioPreciosPanel({
                 return (
                   <TableRow key={d.id} className="hover:bg-muted/30 h-10">
                     <TableCell className="pl-3 py-1.5 font-mono text-xs text-muted-foreground">
-                      #{d.servicioId}
+                      {d.servicio?.codigo ? (
+                        <span className="font-semibold text-foreground">{d.servicio.codigo}</span>
+                      ) : (
+                        `#${d.servicio?.id ?? d.servicioId}`
+                      )}
                     </TableCell>
                     <TableCell className="py-1.5 font-medium text-xs text-foreground">
                       <div className="flex items-center gap-2">
                         <Activity className="size-3.5 text-primary/80 shrink-0" />
-                        <span className="truncate">{d.servicioNombre || `Servicio ID #${d.servicioId}`}</span>
+                        <span className="truncate">
+                          {d.servicio?.nombre || d.servicioNombre || `Servicio ID #${d.servicio?.id ?? d.servicioId}`}
+                        </span>
                       </div>
                     </TableCell>
                     <TableCell className="text-right py-1.5 font-mono text-xs">

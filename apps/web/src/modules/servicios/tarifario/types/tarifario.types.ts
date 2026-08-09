@@ -41,13 +41,20 @@ export interface PagedResult<T> {
   hasNextPage?: boolean;
 }
 
+export interface ServicioNested {
+  id: number;
+  codigo?: string;
+  nombre?: string;
+}
+
 export interface TarifarioDetalleResponse {
   id: number;
   tarifarioId: number;
-  servicioId: number;
   precio: number;
+  servicioId?: number;
   servicioNombre?: string;
   servicioCodigo?: string;
+  servicio?: ServicioNested;
 }
 
 export interface CreateTarifarioDetalleRequest {
