@@ -17,6 +17,9 @@ import {
   Search,
   Tag,
   RefreshCw,
+  Edit2,
+  Check,
+  X,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -50,6 +53,7 @@ import {
   useCreateTarifarioDetalleCatalogo,
   useDeleteTarifarioDetalle,
   useTarifarioDetalles,
+  useUpdateTarifarioDetalle,
 } from "../hooks/use-tarifario";
 import { useCategoriasServicio, type CategoriaServicioResponse } from "../../categoria-servicio";
 import { useServicios, type ServicioResponse } from "../../servicio";
@@ -69,10 +73,15 @@ export function TarifarioPreciosPanel({
 
   const createDetalleMutation = useCreateTarifarioDetalle();
   const createCatalogoMutation = useCreateTarifarioDetalleCatalogo();
+  const updateDetalleMutation = useUpdateTarifarioDetalle();
   const deleteDetalleMutation = useDeleteTarifarioDetalle();
 
   // Mode: "catalogo" (assign all services in category) vs "individual" (assign single service)
   const [assignmentMode, setAssignmentMode] = React.useState<"catalogo" | "individual">("catalogo");
+
+  // Inline table price editing state
+  const [editingDetalleId, setEditingDetalleId] = React.useState<number | null>(null);
+  const [editingPrecio, setEditingPrecio] = React.useState<string>("");
 
   // Categories & Services selection
   const { data: categoriesData } = useCategoriasServicio({ pageSize: 100 });
@@ -169,6 +178,44 @@ export function TarifarioPreciosPanel({
         error?.response?.data?.detail ||
         error?.message ||
         "No se pudo guardar la asignación de precio.";
+      toast.error(errorMsg);
+    }
+  };
+
+  const handleStartEdit = (d: TarifarioDetalleResponse) => {
+    setEditingDetalleId(d.id);
+    setEditingPrecio(String(d.precio));
+  };
+
+  const handleCancelEdit = () => {
+    setEditingDetalleId(null);
+    setEditingPrecio("");
+  };
+
+  const handleSaveEdit = async (d: TarifarioDetalleResponse) => {
+    const parsed = parseFloat(editingPrecio);
+    if (isNaN(parsed) || parsed < 0) {
+      toast.error("Ingrese un precio válido.");
+      return;
+    }
+    try {
+      await updateDetalleMutation.mutateAsync({
+        tarifarioId,
+        detalleId: d.id,
+        data: {
+          servicioId: d.servicioId,
+          precio: parsed,
+        },
+      });
+      toast.success("Precio actualizado correctamente.");
+      setEditingDetalleId(null);
+      refetch();
+    } catch (error: any) {
+      const errorMsg =
+        error?.response?.data?.message ||
+        error?.response?.data?.detail ||
+        error?.message ||
+        "No se pudo actualizar el precio.";
       toast.error(errorMsg);
     }
   };
@@ -458,35 +505,101 @@ export function TarifarioPreciosPanel({
                 </TableCell>
               </TableRow>
             ) : (
-              detalles.map((d: TarifarioDetalleResponse) => (
-                <TableRow key={d.id} className="hover:bg-muted/30 h-9.5">
-                  <TableCell className="pl-3 py-2 font-mono text-xs text-muted-foreground">
-                    #{d.servicioId}
-                  </TableCell>
-                  <TableCell className="py-2 font-medium text-xs text-foreground">
-                    <div className="flex items-center gap-2">
-                      <Activity className="size-3.5 text-primary/80 shrink-0" />
-                      <span>{d.servicioNombre || `Servicio ID #${d.servicioId}`}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right py-2 font-mono font-bold text-xs text-foreground">
-                    <span className="text-muted-foreground font-normal text-[11px] mr-1">{currencySymbol}</span>
-                    {d.precio.toFixed(2)}
-                  </TableCell>
-                  <TableCell className="text-right pr-3 py-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteDetalle(d.id)}
-                      disabled={deleteDetalleMutation.isPending}
-                      className="size-7 text-destructive hover:bg-destructive/10 cursor-pointer"
-                      title="Eliminar precio"
-                    >
-                      <Trash2 className="size-3.5" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
+              detalles.map((d: TarifarioDetalleResponse) => {
+                const isEditingThisRow = editingDetalleId === d.id;
+
+                return (
+                  <TableRow key={d.id} className="hover:bg-muted/30 h-10">
+                    <TableCell className="pl-3 py-1.5 font-mono text-xs text-muted-foreground">
+                      #{d.servicioId}
+                    </TableCell>
+                    <TableCell className="py-1.5 font-medium text-xs text-foreground">
+                      <div className="flex items-center gap-2">
+                        <Activity className="size-3.5 text-primary/80 shrink-0" />
+                        <span className="truncate">{d.servicioNombre || `Servicio ID #${d.servicioId}`}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right py-1.5 font-mono text-xs">
+                      {isEditingThisRow ? (
+                        <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                          <span className="text-muted-foreground text-[11px] font-bold">{currencySymbol}</span>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={editingPrecio}
+                            onChange={(e) => setEditingPrecio(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handleSaveEdit(d);
+                              if (e.key === "Escape") handleCancelEdit();
+                            }}
+                            autoFocus
+                            className="h-7 w-24 text-right font-mono text-xs px-1.5 bg-background border-primary/50 focus-visible:ring-1"
+                          />
+                        </div>
+                      ) : (
+                        <div
+                          onClick={() => handleStartEdit(d)}
+                          className="inline-flex items-center justify-end gap-1 cursor-pointer hover:bg-muted/60 px-2 py-0.5 rounded transition-colors group/edit"
+                          title="Haga clic para editar el precio"
+                        >
+                          <span className="text-muted-foreground font-normal text-[11px]">{currencySymbol}</span>
+                          <span className="font-bold text-foreground">{d.precio.toFixed(2)}</span>
+                          <Edit2 className="size-3 text-muted-foreground opacity-0 group-hover/edit:opacity-100 transition-opacity ml-0.5" />
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right pr-3 py-1.5">
+                      <div className="flex items-center justify-end gap-0.5">
+                        {isEditingThisRow ? (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleSaveEdit(d)}
+                              disabled={updateDetalleMutation.isPending}
+                              className="size-7 text-emerald-600 hover:bg-emerald-500/10 cursor-pointer"
+                              title="Guardar precio"
+                            >
+                              <Check className="size-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={handleCancelEdit}
+                              className="size-7 text-muted-foreground hover:bg-muted cursor-pointer"
+                              title="Cancelar edición"
+                            >
+                              <X className="size-3.5" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleStartEdit(d)}
+                              className="size-7 text-muted-foreground hover:text-foreground cursor-pointer"
+                              title="Editar precio"
+                            >
+                              <Edit2 className="size-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteDetalle(d.id)}
+                              disabled={deleteDetalleMutation.isPending}
+                              className="size-7 text-destructive hover:bg-destructive/10 cursor-pointer"
+                              title="Eliminar precio"
+                            >
+                              <Trash2 className="size-3.5" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
