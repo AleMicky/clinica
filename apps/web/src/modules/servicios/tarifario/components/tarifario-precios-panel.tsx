@@ -47,6 +47,7 @@ import {
 } from "../schemas/tarifario.schema";
 import {
   useCreateTarifarioDetalle,
+  useCreateTarifarioDetalleCatalogo,
   useDeleteTarifarioDetalle,
   useTarifarioDetalles,
 } from "../hooks/use-tarifario";
@@ -67,7 +68,11 @@ export function TarifarioPreciosPanel({
     useTarifarioDetalles(tarifarioId, Boolean(selectedTarifario && tarifarioId > 0));
 
   const createDetalleMutation = useCreateTarifarioDetalle();
+  const createCatalogoMutation = useCreateTarifarioDetalleCatalogo();
   const deleteDetalleMutation = useDeleteTarifarioDetalle();
+
+  // Mode: "catalogo" (assign all services in category) vs "individual" (assign single service)
+  const [assignmentMode, setAssignmentMode] = React.useState<"catalogo" | "individual">("catalogo");
 
   // Categories & Services selection
   const { data: categoriesData } = useCategoriasServicio({ pageSize: 100 });
@@ -101,7 +106,8 @@ export function TarifarioPreciosPanel({
     },
   });
 
-  const selectedServicioId = watch("servicioId");
+  const [selectedServicioId, setSelectedServicioId] = React.useState<number>(0);
+  const [precioInput, setPrecioInput] = React.useState<string>("");
 
   const selectedCat = React.useMemo(
     () => categorias.find((c) => Number(c.id) === Number(selectedCatId)),
@@ -113,25 +119,56 @@ export function TarifarioPreciosPanel({
     [servicios, selectedServicioId]
   );
 
-  const onSubmitAddPrice = async (values: TarifarioDetalleFormValues) => {
+  const isPendingSubmit = createDetalleMutation.isPending || createCatalogoMutation.isPending;
+
+  const handleCustomSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!tarifarioId) return;
+
+    const parsedPrecio = parseFloat(precioInput);
+    const precioValue = isNaN(parsedPrecio) ? 0 : parsedPrecio;
+
     try {
-      await createDetalleMutation.mutateAsync({
-        tarifarioId,
-        data: {
-          servicioId: values.servicioId,
-          precio: values.precio,
-        },
-      });
-      toast.success("Precio asignado correctamente al servicio.");
-      reset({ servicioId: 0, precio: 0 });
+      if (assignmentMode === "catalogo") {
+        if (!selectedCatId) {
+          toast.error("Seleccione una categoría.");
+          return;
+        }
+        await createCatalogoMutation.mutateAsync({
+          tarifarioId,
+          data: {
+            categoriaId: selectedCatId,
+            categoriaServicioId: selectedCatId,
+            ...(precioValue > 0 ? { precio: precioValue } : {}),
+          },
+        });
+        toast.success(`Servicios de "${selectedCat?.nombre}" registrados en el tarifario.`);
+      } else {
+        if (!selectedServicioId) {
+          toast.error("Seleccione un servicio.");
+          return;
+        }
+        if (precioValue < 0) {
+          toast.error("El precio no puede ser negativo.");
+          return;
+        }
+        await createDetalleMutation.mutateAsync({
+          tarifarioId,
+          data: {
+            servicioId: selectedServicioId,
+            precio: precioValue,
+          },
+        });
+        toast.success("Precio asignado correctamente al servicio.");
+      }
+      setPrecioInput("");
       refetch();
     } catch (error: any) {
       const errorMsg =
         error?.response?.data?.message ||
         error?.response?.data?.detail ||
         error?.message ||
-        "No se pudo guardar el precio.";
+        "No se pudo guardar la asignación de precio.";
       toast.error(errorMsg);
     }
   };
@@ -221,30 +258,59 @@ export function TarifarioPreciosPanel({
 
       {/* Inline Form to Add Price */}
       <form
-        onSubmit={handleSubmit(onSubmitAddPrice)}
+        onSubmit={handleCustomSubmit}
         className="p-3 bg-muted/20 border border-border/50 rounded-lg space-y-3"
       >
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
-          <Plus className="size-3.5 text-primary" />
-          <span>Agregar / Asignar Precio a Servicio</span>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1 border-b border-border/30">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+            <Plus className="size-3.5 text-primary" />
+            <span>Asignación de Precios</span>
+          </div>
+
+          <div className="flex items-center gap-1 bg-muted/60 p-0.5 rounded-lg border border-border/40 text-[11px]">
+            <button
+              type="button"
+              onClick={() => setAssignmentMode("catalogo")}
+              className={cn(
+                "px-2.5 py-1 rounded-md transition-all font-medium cursor-pointer",
+                assignmentMode === "catalogo"
+                  ? "bg-background text-foreground shadow-2xs font-semibold"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              Por Categoría (Catálogo)
+            </button>
+            <button
+              type="button"
+              onClick={() => setAssignmentMode("individual")}
+              className={cn(
+                "px-2.5 py-1 rounded-md transition-all font-medium cursor-pointer",
+                assignmentMode === "individual"
+                  ? "bg-background text-foreground shadow-2xs font-semibold"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              Por Servicio Individual
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
           {/* Category Select */}
-          <div className="sm:col-span-5 space-y-1">
+          <div className={cn("space-y-1", assignmentMode === "catalogo" ? "sm:col-span-12" : "sm:col-span-5")}>
             <Label className="text-[11px] text-muted-foreground font-medium">Categoría</Label>
             <Select
               value={selectedCatId ? String(selectedCatId) : ""}
               onValueChange={(val) => {
                 setSelectedCatId(Number(val));
-                setValue("servicioId", 0);
+                setSelectedServicioId(0);
               }}
             >
               <SelectTrigger
                 className="h-9 w-full text-xs"
                 title={selectedCat?.nombre}
               >
-                <SelectValue placeholder="Categoría">
+                <SelectValue placeholder="Seleccionar Categoría">
                   <span className="truncate">{selectedCat?.nombre}</span>
                 </SelectValue>
               </SelectTrigger>
@@ -258,70 +324,77 @@ export function TarifarioPreciosPanel({
             </Select>
           </div>
 
-          {/* Service Select */}
-          <div className="sm:col-span-7 space-y-1">
-            <Label className="text-[11px] text-muted-foreground font-medium">Servicio</Label>
-            <Select
-              value={selectedServicioId ? String(selectedServicioId) : ""}
-              onValueChange={(val) => setValue("servicioId", Number(val), { shouldValidate: true })}
-            >
-              <SelectTrigger
-                className="h-9 w-full text-xs"
-                title={selectedServicio ? `${selectedServicio.nombre} (${selectedServicio.codigo})` : undefined}
+          {/* Service Select (only for individual mode) */}
+          {assignmentMode === "individual" && (
+            <div className="sm:col-span-7 space-y-1">
+              <Label className="text-[11px] text-muted-foreground font-medium">Servicio</Label>
+              <Select
+                value={selectedServicioId ? String(selectedServicioId) : ""}
+                onValueChange={(val) => setSelectedServicioId(Number(val))}
               >
-                <SelectValue placeholder="Seleccionar Servicio">
-                  <span className="truncate">
-                    {selectedServicio ? `${selectedServicio.nombre} (${selectedServicio.codigo})` : undefined}
-                  </span>
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent className="min-w-[340px] max-w-[500px]">
-                {servicios.map((s: ServicioResponse) => (
-                  <SelectItem key={s.id} value={String(s.id)} title={`${s.nombre} (${s.codigo})`}>
-                    <span className="truncate font-medium">{s.nombre}</span>
-                    <span className="text-[10px] font-mono text-muted-foreground ml-1">({s.codigo})</span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.servicioId && (
-              <p className="text-[10px] text-destructive font-medium">{errors.servicioId.message}</p>
-            )}
-          </div>
-
-          {/* Price Input & Add Button Row */}
-          <div className="sm:col-span-12 flex items-end justify-between gap-3 pt-1 border-t border-border/30">
-            <div className="space-y-1 max-w-[220px] w-full">
-              <Label className="text-[11px] text-muted-foreground font-medium">Precio</Label>
-              <div className="relative flex items-center">
-                <span className="absolute left-2.5 text-xs font-mono font-bold text-muted-foreground/80 select-none pointer-events-none">
-                  {currencySymbol}
-                </span>
-                <Input
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  className="h-8.5 pl-9 text-xs font-mono w-full"
-                  {...register("precio", { valueAsNumber: true })}
-                />
-              </div>
-              {errors.precio && (
-                <p className="text-[10px] text-destructive font-medium">{errors.precio.message}</p>
-              )}
+                <SelectTrigger
+                  className="h-9 w-full text-xs"
+                  title={selectedServicio ? `${selectedServicio.nombre} (${selectedServicio.codigo})` : undefined}
+                >
+                  <SelectValue placeholder="Seleccionar Servicio">
+                    <span className="truncate">
+                      {selectedServicio ? `${selectedServicio.nombre} (${selectedServicio.codigo})` : undefined}
+                    </span>
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent className="min-w-[340px] max-w-[500px]">
+                  {servicios.map((s: ServicioResponse) => (
+                    <SelectItem key={s.id} value={String(s.id)} title={`${s.nombre} (${s.codigo})`}>
+                      <span className="truncate font-medium">{s.nombre}</span>
+                      <span className="text-[10px] font-mono text-muted-foreground ml-1">({s.codigo})</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+          )}
+
+          {/* Action Row */}
+          <div className="sm:col-span-12 flex items-end justify-between gap-3 pt-1 border-t border-border/30">
+            {assignmentMode === "individual" ? (
+              <div className="space-y-1 max-w-[220px] w-full">
+                <Label className="text-[11px] text-muted-foreground font-medium">Precio</Label>
+                <div className="relative flex items-center">
+                  <span className="absolute left-2.5 text-xs font-mono font-bold text-muted-foreground/80 select-none pointer-events-none">
+                    {currencySymbol}
+                  </span>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={precioInput}
+                    onChange={(e) => setPrecioInput(e.target.value)}
+                    className="h-8.5 pl-9 text-xs font-mono w-full"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="text-[11px] text-muted-foreground flex items-center gap-1.5 py-1">
+                <span>Registra automáticamente todas las prestaciones de la categoría seleccionada.</span>
+              </div>
+            )}
 
             <Button
               type="submit"
               size="sm"
-              disabled={createDetalleMutation.isPending}
-              className="h-8.5 px-4 text-xs gap-1.5 cursor-pointer font-medium"
+              disabled={isPendingSubmit}
+              className="h-8.5 px-4 text-xs gap-1.5 cursor-pointer font-medium shrink-0 ml-auto"
             >
-              {createDetalleMutation.isPending ? (
+              {isPendingSubmit ? (
                 <Loader2 className="size-3.5 animate-spin" />
               ) : (
                 <Plus className="size-3.5" />
               )}
-              <span>Asignar Precio</span>
+              <span>
+                {assignmentMode === "catalogo"
+                  ? "Asignar Categoría Completa"
+                  : "Asignar Precio a Servicio"}
+              </span>
             </Button>
           </div>
         </div>

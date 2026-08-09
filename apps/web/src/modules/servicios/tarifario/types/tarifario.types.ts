@@ -55,6 +55,12 @@ export interface CreateTarifarioDetalleRequest {
   precio: number;
 }
 
+export interface CreateTarifarioDetalleCatalogoRequest {
+  categoriaId: number;
+  categoriaServicioId?: number;
+  precio?: number;
+}
+
 export interface UpdateTarifarioDetalleRequest extends CreateTarifarioDetalleRequest {}
 
 export interface TarifarioItem extends TarifarioResponse {

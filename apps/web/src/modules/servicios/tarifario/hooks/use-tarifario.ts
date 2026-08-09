@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createTarifario,
   createTarifarioDetalle,
+  createTarifarioDetalleCatalogo,
   deleteTarifario,
   deleteTarifarioDetalle,
   getTarifarioById,
@@ -14,6 +15,7 @@ import {
 } from "../api/tarifario.api";
 import { tarifarioKeys } from "../api/tarifario.key";
 import type {
+  CreateTarifarioDetalleCatalogoRequest,
   CreateTarifarioDetalleRequest,
   CreateTarifarioRequest,
   TarifarioQueryParams,
@@ -91,6 +93,23 @@ export function useCreateTarifarioDetalle() {
       tarifarioId: number;
       data: CreateTarifarioDetalleRequest;
     }) => createTarifarioDetalle(tarifarioId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: tarifarioKeys.detalles(variables.tarifarioId) });
+    },
+  });
+}
+
+export function useCreateTarifarioDetalleCatalogo() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      tarifarioId,
+      data,
+    }: {
+      tarifarioId: number;
+      data: CreateTarifarioDetalleCatalogoRequest;
+    }) => createTarifarioDetalleCatalogo(tarifarioId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: tarifarioKeys.detalles(variables.tarifarioId) });
     },

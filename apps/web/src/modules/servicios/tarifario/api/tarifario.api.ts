@@ -1,5 +1,6 @@
 import { apiClient } from "@/lib/api/api-client";
 import type {
+  CreateTarifarioDetalleCatalogoRequest,
   CreateTarifarioDetalleRequest,
   CreateTarifarioRequest,
   PagedResult,
@@ -61,6 +62,17 @@ export async function createTarifarioDetalle(
 ): Promise<TarifarioDetalleResponse> {
   const response = await apiClient.post<TarifarioDetalleResponse>(
     `/tarifarios/${tarifarioId}/detalles`,
+    request
+  );
+  return response.data;
+}
+
+export async function createTarifarioDetalleCatalogo(
+  tarifarioId: number,
+  request: CreateTarifarioDetalleCatalogoRequest
+): Promise<any> {
+  const response = await apiClient.post(
+    `/tarifarios/${tarifarioId}/detalles/catalogo`,
     request
   );
   return response.data;
