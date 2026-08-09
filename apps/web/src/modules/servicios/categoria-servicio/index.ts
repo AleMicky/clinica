@@ -4,8 +4,8 @@ export * from "./api/categoria-servicio.api";
 export * from "./api/categoria-servicio.key";
 export * from "./hooks/use-categoria-servicio";
 export * from "./components/categoria-servicio-header";
-export * from "./components/categoria-servicio-metrics";
 export * from "./components/categoria-servicio-table";
 export * from "./components/categoria-servicio-form-dialog";
 export * from "./components/categoria-servicio-delete-dialog";
 export * from "./components/categoria-servicio-module-view";
+

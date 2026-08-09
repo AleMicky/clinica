@@ -3,15 +3,11 @@
 import * as React from "react";
 import { toast } from "sonner";
 import { CategoriaServicioHeader } from "./categoria-servicio-header";
-import { CategoriaServicioMetricsCards } from "./categoria-servicio-metrics";
 import { CategoriaServicioList } from "./categoria-servicio-list";
 import { CategoriaServicioFormDialog } from "./categoria-servicio-form-dialog";
 import { CategoriaServicioDeleteDialog } from "./categoria-servicio-delete-dialog";
 import { useCategoriasServicio } from "../hooks/use-categoria-servicio";
-import type {
-  CategoriaServicioMetrics,
-  CategoriaServicioResponse,
-} from "../types/categoria-servicio.types";
+import type { CategoriaServicioResponse } from "../types/categoria-servicio.types";
 
 import {
   ServicioList,
@@ -25,8 +21,7 @@ import {
 export function CategoriaServicioModuleView() {
   // Category state & query
   const [categoriaSearchTerm, setCategoriaSearchTerm] = React.useState("");
-  const [selectedCategoria, setSelectedCategoria] =
-    React.useState<CategoriaServicioResponse | null>(null);
+  const [selectedCategoriaId, setSelectedCategoriaId] = React.useState<number | null>(null);
 
   const {
     data: categoriasData,
@@ -37,17 +32,11 @@ export function CategoriaServicioModuleView() {
     pageSize: 100,
   });
 
-  const categorias = React.useMemo(() => {
-    return categoriasData?.items ?? [];
-  }, [categoriasData]);
+  const categorias = categoriasData?.items ?? [];
 
-  // Sync selected category if the categories list updates
-  React.useEffect(() => {
-    if (selectedCategoria && categorias.length > 0) {
-      const updated = categorias.find((c) => c.id === selectedCategoria.id);
-      if (updated) setSelectedCategoria(updated);
-    }
-  }, [categorias, selectedCategoria]);
+  // Derived selected category from ID state (no useEffect sync needed)
+  const selectedCategoria =
+    categorias.find((c) => c.id === selectedCategoriaId) ?? null;
 
   // Services state & query for selected category
   const [servicioSearchTerm, setServicioSearchTerm] = React.useState("");
@@ -69,7 +58,7 @@ export function CategoriaServicioModuleView() {
   );
 
   const handleCategoriaSelect = (cat: CategoriaServicioResponse) => {
-    setSelectedCategoria(cat);
+    setSelectedCategoriaId(cat.id);
     setServicioSearchTerm("");
     setServicioPage(1);
   };
@@ -136,32 +125,16 @@ export function CategoriaServicioModuleView() {
     }));
   }, [serviciosData, selectedCategoria]);
 
-  // Calculate Metrics
-  const metrics: CategoriaServicioMetrics = React.useMemo(() => {
-    const conDesc = categorias.filter((c) => Boolean(c.descripcion?.trim())).length;
-    return {
-      totalCategorias: categorias.length,
-      conServiciosCount: serviciosData?.totalItems ?? servicios.length,
-      conDescripcionCount: conDesc,
-    };
-  }, [categorias, serviciosData, servicios]);
-
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <div className="flex flex-col gap-3.5 w-full">
       <CategoriaServicioHeader />
 
-      <CategoriaServicioMetricsCards
-        metrics={metrics}
-        selectedCategoriaNombre={selectedCategoria?.nombre}
-        totalServiciosEnCategoria={serviciosData?.totalItems ?? 0}
-      />
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-        {/* Left Column (Master): Categorías List */}
-        <div className="lg:col-span-4 xl:col-span-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[360px_minmax(0,1fr)] items-start">
+        {/* Left Panel (Master): Categorías List */}
+        <div>
           <CategoriaServicioList
             categorias={categorias}
-            selectedCategoriaId={selectedCategoria?.id ?? null}
+            selectedCategoriaId={selectedCategoriaId}
             isLoading={isLoadingCategorias}
             searchTerm={categoriaSearchTerm}
             onSearchChange={setCategoriaSearchTerm}
@@ -169,11 +142,12 @@ export function CategoriaServicioModuleView() {
             onEditCategoria={handleOpenEditCat}
             onDeleteCategoria={handleOpenDeleteCat}
             onAddCategoria={handleOpenAddCat}
+            onRefresh={() => refetchCategorias()}
           />
         </div>
 
-        {/* Right Column (Detail): Servicios List */}
-        <div className="lg:col-span-8 xl:col-span-9">
+        {/* Right Panel (Detail): Servicios List */}
+        <div>
           <ServicioList
             selectedCategoriaNombre={selectedCategoria?.nombre}
             servicios={servicios}
@@ -211,8 +185,8 @@ export function CategoriaServicioModuleView() {
         onOpenChange={setCatDeleteOpen}
         categoriaToDelete={catToDelete}
         onSuccessCallback={() => {
-          if (selectedCategoria?.id === catToDelete?.id) {
-            setSelectedCategoria(null);
+          if (selectedCategoriaId === catToDelete?.id) {
+            setSelectedCategoriaId(null);
           }
           refetchCategorias();
         }}

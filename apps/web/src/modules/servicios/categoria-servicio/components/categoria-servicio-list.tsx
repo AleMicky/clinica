@@ -8,14 +8,15 @@ import {
   Edit,
   Trash2,
   Plus,
-  Tag,
   Clock,
   UserCheck,
   History,
+  RefreshCw,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,17 +42,20 @@ interface CategoriaServicioListProps {
   onEditCategoria: (categoria: CategoriaServicioResponse) => void;
   onDeleteCategoria: (categoria: CategoriaServicioResponse) => void;
   onAddCategoria: () => void;
+  onRefresh?: () => void;
 }
 
 function formatDate(dateStr?: string | null) {
   if (!dateStr) return null;
   try {
     const d = new Date(dateStr);
-    return isNaN(d.getTime()) ? dateStr : d.toLocaleDateString("es-ES", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
+    return isNaN(d.getTime())
+      ? dateStr
+      : d.toLocaleDateString("es-ES", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        });
   } catch {
     return dateStr;
   }
@@ -67,13 +71,14 @@ export function CategoriaServicioList({
   onEditCategoria,
   onDeleteCategoria,
   onAddCategoria,
+  onRefresh,
 }: CategoriaServicioListProps) {
   return (
     <div className="flex flex-col gap-2.5 bg-card border border-border/60 rounded-xl p-3 shadow-2xs">
       {/* Header with Title & Add button */}
-      <div className="flex items-center justify-between px-1 pt-0.5 border-b border-border/40 pb-2.5">
+      <div className="flex items-center justify-between px-0.5 pt-0.5 border-b border-border/40 pb-2.5">
         <div className="flex items-center gap-1.5">
-          <Layers className="size-3.5 text-primary" />
+          <Layers className="size-4 text-primary" />
           <h2 className="text-xs font-semibold text-foreground uppercase tracking-wider">
             Categorías
           </h2>
@@ -81,15 +86,30 @@ export function CategoriaServicioList({
             {categorias.length}
           </Badge>
         </div>
-        <Button
-          onClick={onAddCategoria}
-          size="sm"
-          className="h-7 px-2.5 text-xs font-medium gap-1 cursor-pointer shadow-2xs"
-          title="Agregar Categoría"
-        >
-          <Plus className="size-3.5" />
-          <span className="text-[11px]">Nueva</span>
-        </Button>
+        <div className="flex items-center gap-1">
+          {onRefresh && (
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={onRefresh}
+              disabled={isLoading}
+              className="size-7 cursor-pointer border-border/60"
+              title="Recargar categorías"
+              aria-label="Recargar categorías"
+            >
+              <RefreshCw className={cn("size-3.5", isLoading && "animate-spin")} />
+            </Button>
+          )}
+          <Button
+            onClick={onAddCategoria}
+            size="sm"
+            className="h-7 px-2.5 text-xs font-medium gap-1 cursor-pointer shadow-2xs"
+            title="Agregar Categoría"
+          >
+            <Plus className="size-3.5" />
+            <span className="text-[11px]">Nueva categoría</span>
+          </Button>
+        </div>
       </div>
 
       {/* Search Bar */}
@@ -104,16 +124,16 @@ export function CategoriaServicioList({
       </div>
 
       {/* Categories Items List */}
-      <div className="flex flex-col gap-1.5 overflow-y-auto max-h-[calc(100vh-280px)] min-h-[250px] pr-1">
+      <div className="flex flex-col gap-1 overflow-y-auto max-h-[calc(100vh-220px)] min-h-0 pr-0.5">
         {isLoading ? (
           Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="p-2.5 rounded-lg border border-border/40 space-y-1.5">
+            <div key={i} className="p-2 rounded-md border border-border/40 space-y-1.5">
               <Skeleton className="h-3.5 w-3/4" />
               <Skeleton className="h-2.5 w-1/2" />
             </div>
           ))
         ) : categorias.length === 0 ? (
-          <div className="p-5 text-center border border-dashed rounded-lg bg-muted/20">
+          <div className="p-4 text-center border border-dashed rounded-lg bg-muted/20">
             <p className="text-xs text-muted-foreground">
               {searchTerm ? "No hay resultados." : "Sin categorías registradas."}
             </p>
@@ -121,6 +141,8 @@ export function CategoriaServicioList({
         ) : (
           categorias.map((cat) => {
             const isSelected = selectedCategoriaId === cat.id;
+            const serviciosCount = cat.cantidadServicios ?? cat.totalServicios ?? cat.serviciosCount;
+
             const rawCreated = cat.fechaCreacion || cat.createdAt || (cat as any).created_at || (cat as any).creadoEn;
             const rawUpdated = cat.fechaModificacion || cat.updatedAt || (cat as any).updated_at || (cat as any).actualizadoEn;
             const createdUser = cat.creadoPor || cat.createdBy || (cat as any).created_by || (cat as any).usuarioCreacion;
@@ -133,38 +155,43 @@ export function CategoriaServicioList({
               <div
                 key={cat.id}
                 onClick={() => onSelectCategoria(cat)}
-                className={`group cursor-pointer rounded-lg p-2.5 transition-all duration-150 border flex items-center justify-between relative ${
+                className={`group cursor-pointer rounded-lg px-2.5 py-2 transition-colors border flex items-center justify-between gap-2 relative ${
                   isSelected
-                    ? "border-primary/50 bg-primary/5 dark:bg-primary/10 border-l-3 border-l-primary shadow-2xs"
-                    : "border-border/40 hover:border-border hover:bg-muted/40 bg-background/50"
+                    ? "border-primary/50 bg-accent text-accent-foreground border-l-3 border-l-primary font-medium shadow-2xs"
+                    : "border-border/40 hover:border-border hover:bg-muted/50 bg-background/40 text-foreground"
                 }`}
               >
-                <div className="flex flex-col gap-1 min-w-0 pr-1 flex-1">
-                  <div className="flex items-center gap-1.5">
-                    <Tag className={`size-3 shrink-0 ${isSelected ? "text-primary" : "text-muted-foreground"}`} />
-                    <span className="font-semibold text-xs tracking-tight text-foreground truncate">
+                <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-medium text-xs tracking-tight truncate">
                       {cat.nombre}
                     </span>
+                    {typeof serviciosCount === "number" && (
+                      <span className="text-[10px] font-mono font-semibold text-muted-foreground bg-muted/60 px-1.5 py-0.2 rounded shrink-0">
+                        {serviciosCount}
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.2 rounded shrink-0">
+                    <span className="text-[10px] font-mono text-muted-foreground shrink-0">
                       {cat.codigo}
                     </span>
                     {cat.descripcion && (
-                      <span className="text-[10px] text-muted-foreground truncate max-w-[130px]">
-                        {cat.descripcion}
+                      <span className="text-[10px] text-muted-foreground/80 truncate">
+                        • {cat.descripcion}
                       </span>
                     )}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1 shrink-0">
-                  {/* Audit Popover Badge */}
+                <div className="flex items-center gap-0.5 shrink-0">
+                  {/* Audit Popover */}
                   <Popover>
                     <PopoverTrigger
                       onClick={(e: React.MouseEvent) => e.stopPropagation()}
                       className="inline-flex items-center justify-center size-6 rounded hover:bg-muted text-muted-foreground/60 hover:text-foreground transition-colors cursor-pointer"
                       title="Ver Auditoría"
+                      aria-label={`Auditoría de ${cat.nombre}`}
                     >
                       <Clock className="size-3" />
                     </PopoverTrigger>
@@ -203,14 +230,14 @@ export function CategoriaServicioList({
                     </PopoverContent>
                   </Popover>
 
-                  {/* Dropdown Menu */}
+                  {/* Action Dropdown */}
                   <DropdownMenu>
                     <DropdownMenuTrigger
                       onClick={(e: React.MouseEvent) => e.stopPropagation()}
                       className="inline-flex size-6 items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground text-muted-foreground/70 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                      aria-label={`Acciones de ${cat.nombre}`}
                     >
                       <MoreVertical className="size-3.5" />
-                      <span className="sr-only">Acciones</span>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-36">
                       <DropdownMenuItem

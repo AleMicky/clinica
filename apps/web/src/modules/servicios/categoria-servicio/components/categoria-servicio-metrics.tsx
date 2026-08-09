@@ -2,7 +2,11 @@
 
 import * as React from "react";
 import { Layers, Activity, FileText } from "lucide-react";
-import type { CategoriaServicioMetrics } from "../types/categoria-servicio.types";
+export interface CategoriaServicioMetrics {
+  totalCategorias: number;
+  conServiciosCount: number;
+  conDescripcionCount: number;
+}
 
 interface CategoriaServicioMetricsProps {
   metrics: CategoriaServicioMetrics;

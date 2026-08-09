@@ -12,11 +12,12 @@ export function CategoriaServicioHeader() {
           Categorías y Servicios
         </h1>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Gestión maestro-detalle de categorías de servicios médicos y prestaciones clínicas.
+          Catálogo de servicios · Administra las categorías y prestaciones disponibles en la clínica.
         </p>
       </div>
     </div>
   );
 }
+
 
 

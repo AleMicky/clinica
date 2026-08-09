@@ -3,6 +3,9 @@ export interface CategoriaServicioResponse {
   codigo: string;
   nombre: string;
   descripcion?: string | null;
+  cantidadServicios?: number;
+  totalServicios?: number;
+  serviciosCount?: number;
   createdAt?: string;
   updatedAt?: string;
   createdBy?: string;
@@ -37,8 +40,3 @@ export interface PagedResult<T> {
   hasNextPage?: boolean;
 }
 
-export interface CategoriaServicioMetrics {
-  totalCategorias: number;
-  conServiciosCount: number;
-  conDescripcionCount: number;
-}
