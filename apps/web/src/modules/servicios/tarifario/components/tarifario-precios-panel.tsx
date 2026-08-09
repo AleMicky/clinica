@@ -9,7 +9,6 @@ import {
   Loader2,
   Plus,
   Trash2,
-  DollarSign,
   Inbox,
   Activity,
   Coins,
