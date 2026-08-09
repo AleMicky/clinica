@@ -66,11 +66,9 @@
     <Folder Include="Modules\Servicios\Servicios\Endpoints\" />
     <Folder Include="Modules\Servicios\Servicios\Mappers\" />
     <Folder Include="Modules\Servicios\Servicios\Services\" />
-    <Folder Include="Modules\Servicios\Tarifas\Dtos\" />
     <Folder Include="Modules\Servicios\Tarifas\Endpoints\" />
     <Folder Include="Modules\Servicios\Tarifas\Mappers\" />
     <Folder Include="Modules\Servicios\Tarifas\Services\" />
-    <Folder Include="Modules\Servicios\Tarifas\Validators\" />
     <Folder Include="Modules\Ventas\Venta\Dtos\" />
     <Folder Include="Modules\Ventas\Venta\Endpoints\" />
     <Folder Include="Modules\Ventas\Venta\Mappers\" />

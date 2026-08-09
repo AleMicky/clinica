@@ -52,6 +52,12 @@ public static class TarifarioEndpoints
         group.MapPost("/{tarifarioId:int}/detalles", CrearDetalleAsync)
             .WithName("CrearTarifarioDetalle")
             .Validate<CreateTarifarioDetalleRequest>();
+        
+        group.MapPost(
+                "/{tarifarioId:int}/detalles/catalogo",
+                CrearDetallesCatalogoAsync)
+            .WithName("CrearTarifarioDetallesCatalogo")
+            .Validate<TarifarioDetalleCategoriaRequest>();
 
         group.MapPut("/{tarifarioId:int}/detalles/{detalleId:int}", ActualizarDetalleAsync)
             .WithName("ActualizarTarifarioDetalle")
@@ -195,5 +201,19 @@ public static class TarifarioEndpoints
             cancellationToken);
 
         return Results.NoContent();
+    }
+    
+    private static async Task<IResult> CrearDetallesCatalogoAsync(
+        int tarifarioId,
+        TarifarioDetalleCategoriaRequest request,
+        TarifarioDetalleService service,
+        CancellationToken cancellationToken)
+    {
+        var result = await service.CrearCatalogoAsync(
+            tarifarioId,
+            request,
+            cancellationToken);
+
+        return Results.Ok(result);
     }
 }
