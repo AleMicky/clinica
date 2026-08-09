@@ -59,6 +59,8 @@ export interface UpdateTarifarioDetalleRequest extends CreateTarifarioDetalleReq
 
 export interface TarifarioItem extends TarifarioResponse {
   monedaNombre?: string;
+  monedaSimbolo?: string;
+  monedaCodigo?: string;
 }
 
 export interface TarifarioMetrics {

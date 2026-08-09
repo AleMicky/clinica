@@ -14,7 +14,7 @@ export function TarifarioHeader({ onAddClick }: TarifarioHeaderProps) {
       title="Tarifarios y Precios"
       description="Listas de precios por servicios clínicos, asignación de divisas y periodos de vigencia."
       icon={Tag}
-      actionLabel="Nuevo Tarifario"
+      actionLabel={onAddClick ? "Nuevo Tarifario" : undefined}
       onActionClick={onAddClick}
     />
   );
