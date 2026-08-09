@@ -80,16 +80,10 @@ export const serviciosNav: NavGroup = {
   description: "Categorías, servicios clínicos, tarifarios y convenios",
   items: [
     {
-      title: "Categorías de Servicio",
-      href: "/servicios/categorias",
-      icon: Layers,
-      description: "Clasificación general de prestaciones y servicios",
-    },
-    {
-      title: "Servicios / Prestaciones",
+      title: "Categorías y Servicios",
       href: "/servicios/servicios",
-      icon: Activity,
-      description: "Catálogo de prestaciones y procedimientos médicos",
+      icon: Layers,
+      description: "Gestión de categorías y catálogo de prestaciones médicas",
     },
     {
       title: "Tarifarios",

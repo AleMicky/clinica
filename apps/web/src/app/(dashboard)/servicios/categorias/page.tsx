@@ -1,5 +1,6 @@
-import { CategoriaServicioModuleView } from "@/modules/servicios/categoria-servicio";
+import { redirect } from "next/navigation";
 
 export default function CategoriasServicioPage() {
-  return <CategoriaServicioModuleView />;
+  redirect("/servicios/servicios");
 }
+

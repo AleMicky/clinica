@@ -1,5 +1,7 @@
-import { ServicioModuleView } from "@/modules/servicios/servicio";
+import { CategoriaServicioModuleView } from "@/modules/servicios/categoria-servicio";
 
 export default function ServiciosPage() {
-  return <ServicioModuleView />;
+  return <CategoriaServicioModuleView />;
 }
+
+

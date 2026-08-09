@@ -9,4 +9,4 @@ export * from "./components/servicio-table";
 export * from "./components/servicio-list";
 export * from "./components/servicio-form-dialog";
 export * from "./components/servicio-delete-dialog";
-export * from "./components/servicio-module-view";
+
