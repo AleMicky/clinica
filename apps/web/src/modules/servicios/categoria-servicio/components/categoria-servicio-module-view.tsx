@@ -17,6 +17,7 @@ import {
   type ServicioItem,
   type ServicioResponse,
 } from "../../servicio";
+import { AuditDialog, type AuditInfo } from "@/components/shared";
 
 export function CategoriaServicioModuleView() {
   // Category state & query
@@ -116,6 +117,55 @@ export function CategoriaServicioModuleView() {
     setSrvDeleteOpen(true);
   };
 
+  // Audit state & handlers
+  const [auditDialogOpen, setAuditDialogOpen] = React.useState(false);
+  const [auditInfo, setAuditInfo] = React.useState<AuditInfo | null>(null);
+
+  const handleViewCatAudit = (cat: CategoriaServicioResponse) => {
+    const rawCreated = cat.fechaCreacion || cat.createdAt || (cat as any).created_at || (cat as any).creadoEn;
+    const rawUpdated = cat.fechaModificacion || cat.updatedAt || (cat as any).updated_at || (cat as any).actualizadoEn;
+    const createdUser = cat.creadoPor || cat.createdBy || (cat as any).created_by || (cat as any).usuarioCreacion;
+    const updatedUser = cat.modificadoPor || cat.updatedBy || (cat as any).updated_by || (cat as any).usuarioModificacion;
+
+    setAuditInfo({
+      title: "Auditoría de Categoría",
+      entityName: cat.nombre,
+      entityCode: cat.codigo,
+      id: cat.id,
+      createdAt: rawCreated,
+      createdBy: createdUser,
+      updatedAt: rawUpdated,
+      updatedBy: updatedUser,
+      extraDetails: cat.descripcion
+        ? [{ label: "Descripción", value: cat.descripcion }]
+        : undefined,
+    });
+    setAuditDialogOpen(true);
+  };
+
+  const handleViewSrvAudit = (srv: ServicioItem) => {
+    const rawCreated = (srv as any).fechaCreacion || srv.createdAt || (srv as any).created_at;
+    const rawUpdated = (srv as any).fechaModificacion || srv.updatedAt || (srv as any).updated_at;
+    const createdUser = (srv as any).creadoPor || srv.createdBy || (srv as any).created_by;
+    const updatedUser = (srv as any).modificadoPor || srv.updatedBy || (srv as any).updated_by;
+
+    setAuditInfo({
+      title: "Auditoría de Servicio",
+      entityName: srv.nombre,
+      entityCode: srv.codigo,
+      id: srv.id,
+      createdAt: rawCreated,
+      createdBy: createdUser,
+      updatedAt: rawUpdated,
+      updatedBy: updatedUser,
+      extraDetails: [
+        { label: "Categoría", value: srv.categoriaNombre || "Sin Categoría" },
+        ...((srv as any).precioBase !== undefined ? [{ label: "Precio Base", value: `$${(srv as any).precioBase}` }] : []),
+      ],
+    });
+    setAuditDialogOpen(true);
+  };
+
   // Map servicios response to ServicioItem
   const servicios: ServicioItem[] = React.useMemo(() => {
     if (!serviciosData?.items) return [];
@@ -143,6 +193,7 @@ export function CategoriaServicioModuleView() {
             onDeleteCategoria={handleOpenDeleteCat}
             onAddCategoria={handleOpenAddCat}
             onRefresh={() => refetchCategorias()}
+            onViewAudit={handleViewCatAudit}
           />
         </div>
 
@@ -166,6 +217,7 @@ export function CategoriaServicioModuleView() {
             onEdit={handleOpenEditSrv}
             onDelete={handleOpenDeleteSrv}
             onRefresh={selectedCategoria ? () => refetchServicios() : undefined}
+            onViewAudit={handleViewSrvAudit}
           />
         </div>
       </div>
@@ -207,6 +259,13 @@ export function CategoriaServicioModuleView() {
         onOpenChange={setSrvDeleteOpen}
         servicioToDelete={srvToDelete}
         onSuccessCallback={() => refetchServicios()}
+      />
+
+      {/* Shared Audit Dialog */}
+      <AuditDialog
+        open={auditDialogOpen}
+        onOpenChange={setAuditDialogOpen}
+        auditInfo={auditInfo}
       />
     </div>
   );

@@ -81,7 +81,7 @@ export const serviciosNav: NavGroup = {
   items: [
     {
       title: "Categorías y Servicios",
-      href: "/servicios/servicios",
+      href: "/servicios/categorias",
       icon: Layers,
       description: "Gestión de categorías y catálogo de prestaciones médicas",
     },

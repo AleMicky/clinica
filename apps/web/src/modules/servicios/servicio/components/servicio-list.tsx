@@ -50,6 +50,7 @@ interface ServicioListProps {
   onEdit?: (servicio: ServicioItem) => void;
   onDelete?: (servicio: ServicioItem) => void;
   onRefresh?: () => void;
+  onViewAudit?: (servicio: ServicioItem) => void;
 }
 
 function formatDate(dateStr?: string | null) {
@@ -83,6 +84,7 @@ export function ServicioList({
   onEdit,
   onDelete,
   onRefresh,
+  onViewAudit,
 }: ServicioListProps) {
   const hasCategory = Boolean(selectedCategoriaNombre);
 
@@ -253,49 +255,62 @@ export function ServicioList({
 
                 {/* Audit & Action buttons */}
                 <div className="flex items-center gap-1.5 shrink-0">
-                  {/* Audit Popover */}
-                  <Popover>
-                    <PopoverTrigger
-                      className="inline-flex items-center gap-1 text-[10px] text-muted-foreground/80 hover:text-foreground bg-muted/40 hover:bg-muted border border-border/40 px-2 py-0.5 rounded transition-colors cursor-pointer"
-                      aria-label={`Auditoría de ${srv.nombre}`}
+                  {/* Audit Button / Popover */}
+                  {onViewAudit ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onViewAudit(srv)}
+                      className="h-6 px-2 text-[10px] text-muted-foreground/80 hover:text-foreground bg-muted/40 hover:bg-muted border border-border/40 gap-1 cursor-pointer"
+                      title="Ver Auditoría Completa"
                     >
                       <Clock className="size-3 text-muted-foreground" />
                       <span className="hidden sm:inline">{formattedCreated || "Auditoría"}</span>
-                    </PopoverTrigger>
-                    <PopoverContent align="end" className="w-56 p-3 text-xs space-y-2">
-                      <div className="flex items-center gap-1.5 font-semibold border-b pb-1.5 text-foreground">
-                        <History className="size-3.5 text-primary" />
-                        <span>Detalles de Auditoría</span>
-                      </div>
-                      <div className="space-y-1 text-[11px]">
-                        <div className="flex justify-between items-center">
-                          <span className="text-muted-foreground">Creado:</span>
-                          <span className="font-medium">{formattedCreated || "N/A"}</span>
+                    </Button>
+                  ) : (
+                    <Popover>
+                      <PopoverTrigger
+                        className="inline-flex items-center gap-1 text-[10px] text-muted-foreground/80 hover:text-foreground bg-muted/40 hover:bg-muted border border-border/40 px-2 py-0.5 rounded transition-colors cursor-pointer"
+                        aria-label={`Auditoría de ${srv.nombre}`}
+                      >
+                        <Clock className="size-3 text-muted-foreground" />
+                        <span className="hidden sm:inline">{formattedCreated || "Auditoría"}</span>
+                      </PopoverTrigger>
+                      <PopoverContent align="end" className="w-56 p-3 text-xs space-y-2">
+                        <div className="flex items-center gap-1.5 font-semibold border-b pb-1.5 text-foreground">
+                          <History className="size-3.5 text-primary" />
+                          <span>Detalles de Auditoría</span>
                         </div>
-                        {createdUser && (
+                        <div className="space-y-1 text-[11px]">
                           <div className="flex justify-between items-center">
-                            <span className="text-muted-foreground">Por:</span>
-                            <span className="font-medium flex items-center gap-1">
-                              <UserCheck className="size-3 text-muted-foreground" />
-                              {createdUser}
-                            </span>
+                            <span className="text-muted-foreground">Creado:</span>
+                            <span className="font-medium">{formattedCreated || "N/A"}</span>
                           </div>
-                        )}
-                        {rawUpdated && (
-                          <div className="flex justify-between items-center pt-1 border-t border-border/30">
-                            <span className="text-muted-foreground">Actualizado:</span>
-                            <span className="font-medium">{formattedUpdated || "N/A"}</span>
-                          </div>
-                        )}
-                        {updatedUser && (
-                          <div className="flex justify-between items-center">
-                            <span className="text-muted-foreground">Modificado por:</span>
-                            <span className="font-medium">{updatedUser}</span>
-                          </div>
-                        )}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+                          {createdUser && (
+                            <div className="flex justify-between items-center">
+                              <span className="text-muted-foreground">Por:</span>
+                              <span className="font-medium flex items-center gap-1">
+                                <UserCheck className="size-3 text-muted-foreground" />
+                                {createdUser}
+                              </span>
+                            </div>
+                          )}
+                          {rawUpdated && (
+                            <div className="flex justify-between items-center pt-1 border-t border-border/30">
+                              <span className="text-muted-foreground">Actualizado:</span>
+                              <span className="font-medium">{formattedUpdated || "N/A"}</span>
+                            </div>
+                          )}
+                          {updatedUser && (
+                            <div className="flex justify-between items-center">
+                              <span className="text-muted-foreground">Modificado por:</span>
+                              <span className="font-medium">{updatedUser}</span>
+                            </div>
+                          )}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  )}
 
                   {/* Action Dropdown Menu */}
                   <DropdownMenu>
@@ -305,7 +320,15 @@ export function ServicioList({
                     >
                       <MoreVertical className="size-3.5" />
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-36">
+                    <DropdownMenuContent align="end" className="w-40">
+                      {onViewAudit && (
+                        <DropdownMenuItem
+                          onClick={() => onViewAudit(srv)}
+                          className="gap-2 text-xs cursor-pointer"
+                        >
+                          <History className="size-3.5" /> Ver Auditoría
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem
                         onClick={() => onEdit?.(srv)}
                         className="gap-2 text-xs cursor-pointer"

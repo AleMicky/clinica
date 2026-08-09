@@ -14,6 +14,8 @@ import {
   Handshake,
   RefreshCw,
   Info,
+  History,
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,11 +55,13 @@ import type { ConvenioItem, ConvenioTarifarioResponse } from "../types/convenio.
 interface ConvenioTarifarioListProps {
   selectedConvenio: ConvenioItem | null;
   onRefreshConvenio?: () => void;
+  onViewAudit?: (convenio: ConvenioItem) => void;
 }
 
 export function ConvenioTarifarioList({
   selectedConvenio,
   onRefreshConvenio,
+  onViewAudit,
 }: ConvenioTarifarioListProps) {
   const convenioId = selectedConvenio?.id ?? 0;
 
@@ -200,6 +204,18 @@ export function ConvenioTarifarioList({
         </div>
 
         <div className="flex items-center gap-2 self-end sm:self-center">
+          {onViewAudit && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onViewAudit(selectedConvenio)}
+              className="h-8 text-xs gap-1.5 cursor-pointer border-border/60"
+              title="Ver Auditoría del Convenio"
+            >
+              <History className="size-3.5 text-primary" />
+              <span className="hidden sm:inline">Auditoría</span>
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"

@@ -8,6 +8,7 @@ import { ConvenioFormDialog } from "./convenio-form-dialog";
 import { ConvenioDeleteDialog } from "./convenio-delete-dialog";
 import { useConvenios } from "../hooks/use-convenio";
 import type { ConvenioItem } from "../types/convenio.types";
+import { AuditDialog, type AuditInfo } from "@/components/shared";
 
 export function ConvenioModuleView() {
   // Convenios state & query
@@ -39,6 +40,33 @@ export function ConvenioModuleView() {
 
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [convenioToDelete, setConvenioToDelete] = React.useState<ConvenioItem | null>(null);
+
+  // Audit State
+  const [auditDialogOpen, setAuditDialogOpen] = React.useState(false);
+  const [auditInfo, setAuditInfo] = React.useState<AuditInfo | null>(null);
+
+  const handleViewConvenioAudit = (c: ConvenioItem) => {
+    const rawCreated = c.createdAt || (c as any).fechaCreacion || (c as any).created_at;
+    const rawUpdated = c.updatedAt || (c as any).fechaModificacion || (c as any).updated_at;
+    const createdUser = c.createdBy || (c as any).creadoPor || (c as any).created_by;
+    const updatedUser = c.updatedBy || (c as any).modificadoPor || (c as any).updated_by;
+
+    setAuditInfo({
+      title: "Auditoría de Convenio",
+      entityName: c.nombre,
+      entityCode: c.codigo,
+      id: c.id,
+      createdAt: rawCreated,
+      createdBy: createdUser,
+      updatedAt: rawUpdated,
+      updatedBy: updatedUser,
+      extraDetails: [
+        { label: "Vigencia Inicio", value: c.fechaInicio },
+        { label: "Vigencia Fin", value: c.fechaFin || "Indefinido" },
+      ],
+    });
+    setAuditDialogOpen(true);
+  };
 
   const handleOpenAdd = () => {
     setConvenioToEdit(null);
@@ -73,6 +101,7 @@ export function ConvenioModuleView() {
             onDeleteConvenio={handleOpenDelete}
             onAddConvenio={handleOpenAdd}
             onRefresh={() => refetchConvenios()}
+            onViewAudit={handleViewConvenioAudit}
           />
         </div>
 
@@ -81,6 +110,7 @@ export function ConvenioModuleView() {
           <ConvenioTarifarioList
             selectedConvenio={selectedConvenio}
             onRefreshConvenio={() => refetchConvenios()}
+            onViewAudit={handleViewConvenioAudit}
           />
         </div>
       </div>
@@ -103,6 +133,13 @@ export function ConvenioModuleView() {
           }
           refetchConvenios();
         }}
+      />
+
+      {/* Shared Audit Dialog */}
+      <AuditDialog
+        open={auditDialogOpen}
+        onOpenChange={setAuditDialogOpen}
+        auditInfo={auditInfo}
       />
     </div>
   );

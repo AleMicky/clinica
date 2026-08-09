@@ -43,6 +43,7 @@ interface CategoriaServicioListProps {
   onDeleteCategoria: (categoria: CategoriaServicioResponse) => void;
   onAddCategoria: () => void;
   onRefresh?: () => void;
+  onViewAudit?: (categoria: CategoriaServicioResponse) => void;
 }
 
 function formatDate(dateStr?: string | null) {
@@ -72,6 +73,7 @@ export function CategoriaServicioList({
   onDeleteCategoria,
   onAddCategoria,
   onRefresh,
+  onViewAudit,
 }: CategoriaServicioListProps) {
   return (
     <div className="flex flex-col gap-2.5 bg-card border border-border/60 rounded-xl p-3 shadow-2xs">
@@ -185,50 +187,66 @@ export function CategoriaServicioList({
                 </div>
 
                 <div className="flex items-center gap-0.5 shrink-0">
-                  {/* Audit Popover */}
-                  <Popover>
-                    <PopoverTrigger
-                      onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                      className="inline-flex items-center justify-center size-6 rounded hover:bg-muted text-muted-foreground/60 hover:text-foreground transition-colors cursor-pointer"
-                      title="Ver Auditoría"
+                  {/* Audit Popover or Dialog Button */}
+                  {onViewAudit ? (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        onViewAudit(cat);
+                      }}
+                      className="size-6 rounded hover:bg-muted text-muted-foreground/60 hover:text-foreground transition-colors cursor-pointer"
+                      title="Ver Auditoría Completa"
                       aria-label={`Auditoría de ${cat.nombre}`}
                     >
                       <Clock className="size-3" />
-                    </PopoverTrigger>
-                    <PopoverContent align="end" className="w-52 p-3 text-xs space-y-2">
-                      <div className="flex items-center gap-1.5 font-semibold border-b pb-1 text-foreground">
-                        <History className="size-3.5 text-primary" />
-                        <span>Auditoría de Categoría</span>
-                      </div>
-                      <div className="space-y-1 text-[11px]">
-                        <div className="flex justify-between items-center">
-                          <span className="text-muted-foreground">Creado:</span>
-                          <span className="font-medium">{formattedCreated || "N/A"}</span>
+                    </Button>
+                  ) : (
+                    <Popover>
+                      <PopoverTrigger
+                        onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                        className="inline-flex items-center justify-center size-6 rounded hover:bg-muted text-muted-foreground/60 hover:text-foreground transition-colors cursor-pointer"
+                        title="Ver Auditoría"
+                        aria-label={`Auditoría de ${cat.nombre}`}
+                      >
+                        <Clock className="size-3" />
+                      </PopoverTrigger>
+                      <PopoverContent align="end" className="w-52 p-3 text-xs space-y-2">
+                        <div className="flex items-center gap-1.5 font-semibold border-b pb-1 text-foreground">
+                          <History className="size-3.5 text-primary" />
+                          <span>Auditoría de Categoría</span>
                         </div>
-                        {createdUser && (
+                        <div className="space-y-1 text-[11px]">
                           <div className="flex justify-between items-center">
-                            <span className="text-muted-foreground">Por:</span>
-                            <span className="font-medium flex items-center gap-1">
-                              <UserCheck className="size-3 text-muted-foreground" />
-                              {createdUser}
-                            </span>
+                            <span className="text-muted-foreground">Creado:</span>
+                            <span className="font-medium">{formattedCreated || "N/A"}</span>
                           </div>
-                        )}
-                        {rawUpdated && (
-                          <div className="flex justify-between items-center pt-1 border-t border-border/30">
-                            <span className="text-muted-foreground">Actualizado:</span>
-                            <span className="font-medium">{formattedUpdated || "N/A"}</span>
-                          </div>
-                        )}
-                        {updatedUser && (
-                          <div className="flex justify-between items-center">
-                            <span className="text-muted-foreground">Modificado por:</span>
-                            <span className="font-medium">{updatedUser}</span>
-                          </div>
-                        )}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+                          {createdUser && (
+                            <div className="flex justify-between items-center">
+                              <span className="text-muted-foreground">Por:</span>
+                              <span className="font-medium flex items-center gap-1">
+                                <UserCheck className="size-3 text-muted-foreground" />
+                                {createdUser}
+                              </span>
+                            </div>
+                          )}
+                          {rawUpdated && (
+                            <div className="flex justify-between items-center pt-1 border-t border-border/30">
+                              <span className="text-muted-foreground">Actualizado:</span>
+                              <span className="font-medium">{formattedUpdated || "N/A"}</span>
+                            </div>
+                          )}
+                          {updatedUser && (
+                            <div className="flex justify-between items-center">
+                              <span className="text-muted-foreground">Modificado por:</span>
+                              <span className="font-medium">{updatedUser}</span>
+                            </div>
+                          )}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  )}
 
                   {/* Action Dropdown */}
                   <DropdownMenu>
@@ -239,7 +257,18 @@ export function CategoriaServicioList({
                     >
                       <MoreVertical className="size-3.5" />
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-36">
+                    <DropdownMenuContent align="end" className="w-40">
+                      {onViewAudit && (
+                        <DropdownMenuItem
+                          onClick={(e: React.MouseEvent) => {
+                            e.stopPropagation();
+                            onViewAudit(cat);
+                          }}
+                          className="gap-2 text-xs cursor-pointer"
+                        >
+                          <History className="size-3.5" /> Ver Auditoría
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem
                         onClick={(e: React.MouseEvent) => {
                           e.stopPropagation();

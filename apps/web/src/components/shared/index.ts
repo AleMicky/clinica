@@ -6,3 +6,4 @@ export * from "./data-table-pagination";
 export * from "./search-input";
 export * from "./metric-card";
 export * from "./currency-converter-card";
+export * from "./audit-dialog";
