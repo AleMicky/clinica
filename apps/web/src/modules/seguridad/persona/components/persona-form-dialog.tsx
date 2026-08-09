@@ -17,13 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { CatalogoAutocomplete } from "@/components/ui/catalogo-autocomplete";
 import { cn } from "@/lib/utils";
 
 import { personaSchema, type PersonaFormValues } from "../schemas/persona.schema";
@@ -66,23 +60,23 @@ export function PersonaFormDialog({
       nombres: "",
       apellidoPaterno: "",
       apellidoMaterno: "",
-      fechaNacimiento: new Date().toISOString().split("T")[0],
+      fechaNacimiento: "",
       telefono: "",
       direccion: "",
-      tipoDocumento: "CI",
+      tipoDocumento: "",
       numeroDocumento: "",
       extensionDocumento: "",
       complementoDocumento: "",
-      genero: "Masculino",
-      estadoCivil: "Soltero/a",
+      genero: "",
+      estadoCivil: "",
       activo: true,
     },
   });
 
-  const tipoDocumentoValue: string = watch("tipoDocumento") || "CI";
+  const tipoDocumentoValue: string = watch("tipoDocumento") || "";
   const extensionDocumentoValue: string = watch("extensionDocumento") || "";
-  const generoValue: string = watch("genero") || "Masculino";
-  const estadoCivilValue: string = watch("estadoCivil") || "Soltero/a";
+  const generoValue: string = watch("genero") || "";
+  const estadoCivilValue: string = watch("estadoCivil") || "";
 
   // Reset form state when drawer opens or editing item changes
   React.useEffect(() => {
@@ -94,15 +88,15 @@ export function PersonaFormDialog({
           apellidoMaterno: personaToEdit.apellidoMaterno || "",
           fechaNacimiento: personaToEdit.fechaNacimiento
             ? personaToEdit.fechaNacimiento.split("T")[0]
-            : new Date().toISOString().split("T")[0],
+            : "",
           telefono: personaToEdit.telefono || "",
           direccion: personaToEdit.direccion || "",
-          tipoDocumento: personaToEdit.tipoDocumento || "CI",
+          tipoDocumento: personaToEdit.tipoDocumento || "",
           numeroDocumento: personaToEdit.numeroDocumento || "",
           extensionDocumento: personaToEdit.extensionDocumento || "",
           complementoDocumento: personaToEdit.complementoDocumento || "",
-          genero: personaToEdit.genero || "Masculino",
-          estadoCivil: personaToEdit.estadoCivil || "Soltero/a",
+          genero: personaToEdit.genero || "",
+          estadoCivil: personaToEdit.estadoCivil || "",
           activo: personaToEdit.activo ?? true,
         });
       } else {
@@ -110,15 +104,15 @@ export function PersonaFormDialog({
           nombres: "",
           apellidoPaterno: "",
           apellidoMaterno: "",
-          fechaNacimiento: new Date().toISOString().split("T")[0],
+          fechaNacimiento: "",
           telefono: "",
           direccion: "",
-          tipoDocumento: "CI",
+          tipoDocumento: "",
           numeroDocumento: "",
           extensionDocumento: "",
           complementoDocumento: "",
-          genero: "Masculino",
-          estadoCivil: "Soltero/a",
+          genero: "",
+          estadoCivil: "",
           activo: true,
         });
       }
@@ -262,21 +256,19 @@ export function PersonaFormDialog({
                 <Label htmlFor="tipoDocumento" className="text-sm font-medium flex items-center gap-1">
                   Tipo Doc. <span className="text-destructive">*</span>
                 </Label>
-                <Select
+                <CatalogoAutocomplete
+                  id="tipoDocumento"
+                  codigo="TIPOS_DOCUMENTO"
                   value={tipoDocumentoValue}
-                  onValueChange={(val) => setValue("tipoDocumento", val || "CI")}
-                >
-                  <SelectTrigger id="tipoDocumento" className="w-full h-9 text-sm">
-                    <SelectValue placeholder="Tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TIPOS_DOCUMENTO.map((tipo) => (
-                      <SelectItem key={tipo} value={tipo}>
-                        {tipo}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  onValueChange={(val) => setValue("tipoDocumento", val || "CI", { shouldValidate: true })}
+                  fallbackOptions={TIPOS_DOCUMENTO}
+                  placeholder="Tipo"
+                  emptyText="Sin tipos"
+                  error={Boolean(errors.tipoDocumento)}
+                />
+                {errors.tipoDocumento && (
+                  <p className="text-xs text-destructive font-medium">{errors.tipoDocumento.message}</p>
+                )}
               </div>
 
               {/* Número Documento */}
@@ -300,22 +292,15 @@ export function PersonaFormDialog({
                 <Label htmlFor="extensionDocumento" className="text-sm font-medium">
                   Extensión (Dpto.)
                 </Label>
-                <Select
-                  value={extensionDocumentoValue || "none"}
-                  onValueChange={(val) => setValue("extensionDocumento", !val || val === "none" ? "" : val)}
-                >
-                  <SelectTrigger id="extensionDocumento" className="w-full h-9 text-sm">
-                    <SelectValue placeholder="Sin ext." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Sin Extensión</SelectItem>
-                    {EXTENSIONES.map((ext) => (
-                      <SelectItem key={ext} value={ext}>
-                        {ext}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <CatalogoAutocomplete
+                  id="extensionDocumento"
+                  codigo="EXTENSIONES"
+                  value={extensionDocumentoValue}
+                  onValueChange={(val) => setValue("extensionDocumento", val || "", { shouldValidate: true })}
+                  fallbackOptions={EXTENSIONES}
+                  placeholder="Sin ext."
+                  emptyText="Sin extensiones"
+                />
               </div>
 
               {/* Complemento */}
@@ -362,21 +347,15 @@ export function PersonaFormDialog({
                 <Label htmlFor="genero" className="text-sm font-medium">
                   Género
                 </Label>
-                <Select
+                <CatalogoAutocomplete
+                  id="genero"
+                  codigo="GENEROS"
                   value={generoValue}
-                  onValueChange={(val) => setValue("genero", val || "")}
-                >
-                  <SelectTrigger id="genero" className="w-full h-9 text-sm">
-                    <SelectValue placeholder="Seleccione género" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {GENEROS.map((gen) => (
-                      <SelectItem key={gen} value={gen}>
-                        {gen}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  onValueChange={(val) => setValue("genero", val || "", { shouldValidate: true })}
+                  fallbackOptions={GENEROS}
+                  placeholder="Seleccione género"
+                  emptyText="Sin géneros"
+                />
               </div>
 
               {/* Estado Civil */}
@@ -384,21 +363,15 @@ export function PersonaFormDialog({
                 <Label htmlFor="estadoCivil" className="text-sm font-medium">
                   Estado Civil
                 </Label>
-                <Select
+                <CatalogoAutocomplete
+                  id="estadoCivil"
+                  codigo="ESTADOS_CIVILES"
                   value={estadoCivilValue}
-                  onValueChange={(val) => setValue("estadoCivil", val || "")}
-                >
-                  <SelectTrigger id="estadoCivil" className="w-full h-9 text-sm">
-                    <SelectValue placeholder="Seleccione estado civil" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ESTADOS_CIVILES.map((est) => (
-                      <SelectItem key={est} value={est}>
-                        {est}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  onValueChange={(val) => setValue("estadoCivil", val || "", { shouldValidate: true })}
+                  fallbackOptions={ESTADOS_CIVILES}
+                  placeholder="Seleccione estado civil"
+                  emptyText="Sin estados civiles"
+                />
               </div>
             </div>
           </div>
