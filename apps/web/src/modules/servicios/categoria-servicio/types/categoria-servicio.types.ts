@@ -7,6 +7,10 @@ export interface CategoriaServicioResponse {
   updatedAt?: string;
   createdBy?: string;
   updatedBy?: string;
+  fechaCreacion?: string;
+  fechaModificacion?: string;
+  creadoPor?: string;
+  modificadoPor?: string;
 }
 
 export interface CreateCategoriaServicioRequest {

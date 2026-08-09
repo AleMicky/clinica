@@ -41,11 +41,9 @@ export function CategoriaServicioModuleView() {
     return categoriasData?.items ?? [];
   }, [categoriasData]);
 
-  // Auto-select first category when list loads if none selected
+  // Sync selected category if the categories list updates
   React.useEffect(() => {
-    if (categorias.length > 0 && !selectedCategoria) {
-      setSelectedCategoria(categorias[0]);
-    } else if (selectedCategoria && categorias.length > 0) {
+    if (selectedCategoria && categorias.length > 0) {
       const updated = categorias.find((c) => c.id === selectedCategoria.id);
       if (updated) setSelectedCategoria(updated);
     }
@@ -158,9 +156,9 @@ export function CategoriaServicioModuleView() {
         totalServiciosEnCategoria={serviciosData?.totalItems ?? 0}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
         {/* Left Column (Master): Categorías List */}
-        <div className="lg:col-span-4 xl:col-span-3 h-full">
+        <div className="lg:col-span-4 xl:col-span-3">
           <CategoriaServicioList
             categorias={categorias}
             selectedCategoriaId={selectedCategoria?.id ?? null}
@@ -175,7 +173,7 @@ export function CategoriaServicioModuleView() {
         </div>
 
         {/* Right Column (Detail): Servicios List */}
-        <div className="lg:col-span-8 xl:col-span-9 h-full">
+        <div className="lg:col-span-8 xl:col-span-9">
           <ServicioList
             selectedCategoriaNombre={selectedCategoria?.nombre}
             servicios={servicios}
@@ -190,10 +188,10 @@ export function CategoriaServicioModuleView() {
               setServicioPageSize(size);
               setServicioPage(1);
             }}
-            onAddServicio={handleOpenAddSrv}
+            onAddServicio={selectedCategoria ? handleOpenAddSrv : undefined}
             onEdit={handleOpenEditSrv}
             onDelete={handleOpenDeleteSrv}
-            onRefresh={() => refetchServicios()}
+            onRefresh={selectedCategoria ? () => refetchServicios() : undefined}
           />
         </div>
       </div>

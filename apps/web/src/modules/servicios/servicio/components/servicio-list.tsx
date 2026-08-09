@@ -83,7 +83,7 @@ export function ServicioList({
   onRefresh,
 }: ServicioListProps) {
   return (
-    <div className="flex flex-col gap-3 bg-card border border-border/60 rounded-xl p-3.5 shadow-2xs h-full">
+    <div className="flex flex-col gap-3 bg-card border border-border/60 rounded-xl p-3.5 shadow-2xs">
       {/* Detail Header with Section Add Button */}
       <div className="flex items-center justify-between px-0.5 pt-0.5 border-b border-border/40 pb-2.5">
         <div className="flex items-center gap-2">
@@ -128,15 +128,16 @@ export function ServicioList({
       <div className="relative w-full">
         <Search className="absolute left-2.5 top-2 size-3.5 text-muted-foreground" />
         <Input
-          placeholder="Buscar servicios por código o nombre..."
+          placeholder={selectedCategoriaNombre ? "Buscar servicios por código o nombre..." : "Seleccione una categoría para buscar..."}
           value={searchTerm}
           onChange={(e) => onSearchChange?.(e.target.value)}
-          className="pl-8 text-xs h-8 bg-muted/30 border-border/60 focus:bg-background w-full"
+          disabled={!selectedCategoriaNombre}
+          className="pl-8 text-xs h-8 bg-muted/30 border-border/60 focus:bg-background w-full disabled:opacity-50 disabled:cursor-not-allowed"
         />
       </div>
 
       {/* Services Compact List Items */}
-      <div className="flex flex-col gap-2 flex-1 overflow-y-auto max-h-[520px] pr-0.5 min-h-[220px]">
+      <div className="flex flex-col gap-2 overflow-y-auto max-h-[calc(100vh-280px)] min-h-[250px] pr-1">
         {isLoading ? (
           Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="p-3 rounded-lg border border-border/40 space-y-2">
@@ -156,7 +157,9 @@ export function ServicioList({
             <p className="text-[11px] text-muted-foreground max-w-xs">
               {searchTerm
                 ? "No se encontraron servicios que coincidan con la búsqueda."
-                : "No hay servicios asociados a esta categoría. Haz clic en 'Nuevo Servicio' para agregar uno."}
+                : selectedCategoriaNombre
+                ? "No hay servicios asociados a esta categoría. Haz clic en 'Nuevo Servicio' para agregar uno."
+                : "Seleccione una categoría en el panel izquierdo para gestionar sus servicios."}
             </p>
             {onAddServicio && !searchTerm && (
               <Button onClick={onAddServicio} size="sm" variant="outline" className="mt-1 h-7 text-xs gap-1 cursor-pointer">
@@ -167,8 +170,13 @@ export function ServicioList({
           </div>
         ) : (
           servicios.map((srv) => {
-            const formattedCreated = formatDate(srv.createdAt);
-            const formattedUpdated = formatDate(srv.updatedAt);
+            const rawCreated = srv.fechaCreacion || srv.createdAt || (srv as any).created_at || (srv as any).creadoEn;
+            const rawUpdated = srv.fechaModificacion || srv.updatedAt || (srv as any).updated_at || (srv as any).actualizadoEn;
+            const createdUser = srv.creadoPor || srv.createdBy || (srv as any).created_by || (srv as any).usuarioCreacion;
+            const updatedUser = srv.modificadoPor || srv.updatedBy || (srv as any).updated_by || (srv as any).usuarioModificacion;
+
+            const formattedCreated = formatDate(rawCreated);
+            const formattedUpdated = formatDate(rawUpdated);
 
             return (
               <div
@@ -218,25 +226,25 @@ export function ServicioList({
                           <span className="text-muted-foreground">Creado:</span>
                           <span className="font-medium">{formattedCreated || "N/A"}</span>
                         </div>
-                        {srv.createdBy && (
+                        {createdUser && (
                           <div className="flex justify-between items-center">
                             <span className="text-muted-foreground">Por:</span>
                             <span className="font-medium flex items-center gap-1">
                               <UserCheck className="size-3 text-muted-foreground" />
-                              {srv.createdBy}
+                              {createdUser}
                             </span>
                           </div>
                         )}
-                        {srv.updatedAt && (
+                        {rawUpdated && (
                           <div className="flex justify-between items-center pt-1 border-t border-border/30">
                             <span className="text-muted-foreground">Actualizado:</span>
                             <span className="font-medium">{formattedUpdated || "N/A"}</span>
                           </div>
                         )}
-                        {srv.updatedBy && (
+                        {updatedUser && (
                           <div className="flex justify-between items-center">
                             <span className="text-muted-foreground">Modificado por:</span>
-                            <span className="font-medium">{srv.updatedBy}</span>
+                            <span className="font-medium">{updatedUser}</span>
                           </div>
                         )}
                       </div>

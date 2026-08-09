@@ -8,6 +8,10 @@ export interface ServicioResponse {
   updatedAt?: string;
   createdBy?: string;
   updatedBy?: string;
+  fechaCreacion?: string;
+  fechaModificacion?: string;
+  creadoPor?: string;
+  modificadoPor?: string;
 }
 
 export interface CreateServicioRequest {

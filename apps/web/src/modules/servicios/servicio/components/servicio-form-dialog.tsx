@@ -164,36 +164,25 @@ export function ServicioFormDialog({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {/* Categoría Selector */}
+              {/* Categoría */}
               <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="categoriaServicioId" className="text-xs flex items-center gap-1">
+                <Label htmlFor="categoriaServicioNombre" className="text-xs flex items-center gap-1">
                   Categoría de Servicio <span className="text-destructive">*</span>
                 </Label>
-                <Select
-                  value={selectedCategoriaId ? String(selectedCategoriaId) : ""}
-                  onValueChange={(val) => setValue("categoriaServicioId", Number(val), { shouldValidate: true })}
-                >
-                  <SelectTrigger className="h-9 text-sm">
-                    <SelectValue placeholder="Seleccione una categoría" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categorias.map((cat) => (
-                      <SelectItem key={cat.id} value={String(cat.id)}>
-                        <div className="flex items-center gap-2">
-                          <Layers className="size-3.5 text-muted-foreground" />
-                          <span>{cat.nombre} ({cat.codigo})</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Input
+                  id="categoriaServicioNombre"
+                  value={categorias.find((c) => c.id === selectedCategoriaId)?.nombre || "Sin categoría"}
+                  disabled
+                  readOnly
+                  className="text-sm h-9 bg-muted/50 border-border/60 font-medium text-foreground disabled:opacity-90 cursor-not-allowed"
+                />
                 {errors.categoriaServicioId && (
                   <p className="text-[11px] text-destructive font-medium">{errors.categoriaServicioId.message}</p>
                 )}
               </div>
 
               {/* Código */}
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 sm:col-span-2">
                 <Label htmlFor="codigo" className="text-xs flex items-center gap-1">
                   Código <span className="text-destructive">*</span>
                 </Label>

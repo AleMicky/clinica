@@ -69,7 +69,7 @@ export function CategoriaServicioList({
   onAddCategoria,
 }: CategoriaServicioListProps) {
   return (
-    <div className="flex flex-col gap-2.5 bg-card border border-border/60 rounded-xl p-3 shadow-2xs h-full">
+    <div className="flex flex-col gap-2.5 bg-card border border-border/60 rounded-xl p-3 shadow-2xs">
       {/* Header with Title & Add button */}
       <div className="flex items-center justify-between px-1 pt-0.5 border-b border-border/40 pb-2.5">
         <div className="flex items-center gap-1.5">
@@ -104,7 +104,7 @@ export function CategoriaServicioList({
       </div>
 
       {/* Categories Items List */}
-      <div className="flex flex-col gap-1.5 overflow-y-auto max-h-[560px] pr-0.5">
+      <div className="flex flex-col gap-1.5 overflow-y-auto max-h-[calc(100vh-280px)] min-h-[250px] pr-1">
         {isLoading ? (
           Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="p-2.5 rounded-lg border border-border/40 space-y-1.5">
@@ -121,8 +121,13 @@ export function CategoriaServicioList({
         ) : (
           categorias.map((cat) => {
             const isSelected = selectedCategoriaId === cat.id;
-            const formattedCreated = formatDate(cat.createdAt);
-            const formattedUpdated = formatDate(cat.updatedAt);
+            const rawCreated = cat.fechaCreacion || cat.createdAt || (cat as any).created_at || (cat as any).creadoEn;
+            const rawUpdated = cat.fechaModificacion || cat.updatedAt || (cat as any).updated_at || (cat as any).actualizadoEn;
+            const createdUser = cat.creadoPor || cat.createdBy || (cat as any).created_by || (cat as any).usuarioCreacion;
+            const updatedUser = cat.modificadoPor || cat.updatedBy || (cat as any).updated_by || (cat as any).usuarioModificacion;
+
+            const formattedCreated = formatDate(rawCreated);
+            const formattedUpdated = formatDate(rawUpdated);
 
             return (
               <div
@@ -173,19 +178,25 @@ export function CategoriaServicioList({
                           <span className="text-muted-foreground">Creado:</span>
                           <span className="font-medium">{formattedCreated || "N/A"}</span>
                         </div>
-                        {cat.createdBy && (
+                        {createdUser && (
                           <div className="flex justify-between items-center">
                             <span className="text-muted-foreground">Por:</span>
                             <span className="font-medium flex items-center gap-1">
                               <UserCheck className="size-3 text-muted-foreground" />
-                              {cat.createdBy}
+                              {createdUser}
                             </span>
                           </div>
                         )}
-                        {cat.updatedAt && (
+                        {rawUpdated && (
                           <div className="flex justify-between items-center pt-1 border-t border-border/30">
                             <span className="text-muted-foreground">Actualizado:</span>
                             <span className="font-medium">{formattedUpdated || "N/A"}</span>
+                          </div>
+                        )}
+                        {updatedUser && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Modificado por:</span>
+                            <span className="font-medium">{updatedUser}</span>
                           </div>
                         )}
                       </div>
