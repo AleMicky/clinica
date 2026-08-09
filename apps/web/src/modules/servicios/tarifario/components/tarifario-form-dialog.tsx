@@ -79,6 +79,11 @@ export function TarifarioFormDialog({
   const selectedMonedaId = watch("monedaId");
   const esPrincipal = watch("esPrincipal");
 
+  const selectedMoneda = React.useMemo(
+    () => monedas.find((m) => Number(m.id) === Number(selectedMonedaId)),
+    [monedas, selectedMonedaId]
+  );
+
   React.useEffect(() => {
     if (open) {
       if (tarifarioToEdit) {
@@ -180,7 +185,7 @@ export function TarifarioFormDialog({
                   id="codigo"
                   placeholder="ej: TAR-2026, TAR-INST"
                   className={cn(
-                    "uppercase font-mono text-sm h-9",
+                    "uppercase font-mono text-sm h-9 w-full",
                     errors.codigo && "border-destructive focus-visible:ring-destructive"
                   )}
                   aria-invalid={Boolean(errors.codigo)}
@@ -200,8 +205,15 @@ export function TarifarioFormDialog({
                   value={selectedMonedaId ? String(selectedMonedaId) : ""}
                   onValueChange={(val) => setValue("monedaId", Number(val), { shouldValidate: true })}
                 >
-                  <SelectTrigger className="h-9 text-sm">
-                    <SelectValue placeholder="Seleccionar moneda" />
+                  <SelectTrigger className="h-9 w-full text-sm">
+                    <SelectValue placeholder="Seleccionar moneda">
+                      {selectedMoneda && (
+                        <div className="flex items-center gap-2 truncate">
+                          <Coins className="size-3.5 text-muted-foreground shrink-0" />
+                          <span className="truncate">{selectedMoneda.nombre} ({selectedMoneda.simbolo})</span>
+                        </div>
+                      )}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {monedas.map((m) => (
@@ -228,7 +240,7 @@ export function TarifarioFormDialog({
                   id="nombre"
                   placeholder="ej: Tarifario General de Prestaciones 2026"
                   className={cn(
-                    "text-sm h-9",
+                    "text-sm h-9 w-full",
                     errors.nombre && "border-destructive focus-visible:ring-destructive"
                   )}
                   aria-invalid={Boolean(errors.nombre)}
@@ -248,7 +260,7 @@ export function TarifarioFormDialog({
                   id="fechaInicio"
                   type="date"
                   className={cn(
-                    "text-sm h-9 font-mono",
+                    "text-sm h-9 w-full font-mono",
                     errors.fechaInicio && "border-destructive focus-visible:ring-destructive"
                   )}
                   {...register("fechaInicio")}
@@ -266,7 +278,7 @@ export function TarifarioFormDialog({
                 <Input
                   id="fechaFin"
                   type="date"
-                  className="text-sm h-9 font-mono"
+                  className="text-sm h-9 w-full font-mono"
                   {...register("fechaFin")}
                 />
               </div>

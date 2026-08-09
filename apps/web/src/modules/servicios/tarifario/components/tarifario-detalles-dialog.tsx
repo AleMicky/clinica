@@ -178,7 +178,7 @@ export function TarifarioDetallesDialog({
                   value={selectedCatId ? String(selectedCatId) : ""}
                   onValueChange={(val) => setSelectedCatId(Number(val))}
                 >
-                  <SelectTrigger className="h-8 text-xs">
+                  <SelectTrigger className="h-8 w-full text-xs">
                     <SelectValue placeholder="Categoría" />
                   </SelectTrigger>
                   <SelectContent>
@@ -198,7 +198,7 @@ export function TarifarioDetallesDialog({
                   value={selectedServicioId ? String(selectedServicioId) : ""}
                   onValueChange={(val) => setValue("servicioId", Number(val), { shouldValidate: true })}
                 >
-                  <SelectTrigger className="h-8 text-xs">
+                  <SelectTrigger className="h-8 w-full text-xs">
                     <SelectValue placeholder="Seleccionar Servicio" />
                   </SelectTrigger>
                   <SelectContent>

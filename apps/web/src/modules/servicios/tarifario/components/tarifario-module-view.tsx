@@ -2,14 +2,13 @@
 
 import * as React from "react";
 import { TarifarioHeader } from "./tarifario-header";
-import { TarifarioMetricsCards } from "./tarifario-metrics";
 import { TarifarioTable } from "./tarifario-table";
 import { TarifarioFormDialog } from "./tarifario-form-dialog";
 import { TarifarioDetallesDialog } from "./tarifario-detalles-dialog";
 import { TarifarioDeleteDialog } from "./tarifario-delete-dialog";
 import { useTarifarios } from "../hooks/use-tarifario";
 import { useMonedas, type MonedaResponse } from "@/modules/parametros/moneda";
-import type { TarifarioItem, TarifarioMetrics, TarifarioResponse } from "../types/tarifario.types";
+import type { TarifarioItem, TarifarioResponse } from "../types/tarifario.types";
 
 export function TarifarioModuleView() {
   const [formDialogOpen, setFormDialogOpen] = React.useState(false);
@@ -52,21 +51,6 @@ export function TarifarioModuleView() {
     }));
   }, [apiData, monedasMap]);
 
-  const metrics: TarifarioMetrics = React.useMemo(() => {
-    const rawItems = apiData?.items ?? [];
-    const principales = rawItems.filter((t: TarifarioResponse) => t.esPrincipal).length;
-    const vigentes = rawItems.filter((t: TarifarioResponse) => {
-      if (!t.fechaFin) return true;
-      return new Date(t.fechaFin) >= new Date();
-    }).length;
-
-    return {
-      totalTarifarios: apiData?.totalItems ?? rawItems.length,
-      principalesCount: principales,
-      vigentesCount: vigentes,
-    };
-  }, [apiData]);
-
   const handleSearchChange = (term: string) => {
     setSearchTerm(term);
     setCurrentPage(1);
@@ -100,7 +84,6 @@ export function TarifarioModuleView() {
   return (
     <div className="flex flex-col gap-4 w-full">
       <TarifarioHeader onAddClick={handleOpenAdd} />
-      <TarifarioMetricsCards metrics={metrics} />
       <TarifarioTable
         tarifarios={tarifarios}
         isLoading={isLoading}
