@@ -68,7 +68,11 @@ export function TarifarioPreciosPanel({
   const tarifarioId = selectedTarifario?.id ?? 0;
 
   const { data: detallesData, isLoading: isLoadingDetalles, refetch } =
-    useTarifarioDetalles(tarifarioId, Boolean(selectedTarifario && tarifarioId > 0));
+    useTarifarioDetalles(
+      tarifarioId,
+      { pageSize: 1000 },
+      Boolean(selectedTarifario && tarifarioId > 0)
+    );
 
   const createDetalleMutation = useCreateTarifarioDetalle();
   const createCatalogoMutation = useCreateTarifarioDetalleCatalogo();
@@ -470,9 +474,9 @@ export function TarifarioPreciosPanel({
       </div>
 
       {/* Details Table */}
-      <div className="rounded-lg border border-border/60 bg-card overflow-hidden">
+      <div className="rounded-lg border border-border/60 bg-card overflow-hidden max-h-[550px] overflow-y-auto">
         <Table>
-          <TableHeader className="bg-muted/40">
+          <TableHeader className="bg-muted/40 sticky top-0 z-10 backdrop-blur-xs">
             <TableRow className="hover:bg-transparent h-8 border-b border-border/50">
               <TableHead className="pl-3 text-[11px] font-semibold text-muted-foreground w-24">ID Servicio</TableHead>
               <TableHead className="text-[11px] font-semibold text-muted-foreground">Prestación / Servicio</TableHead>

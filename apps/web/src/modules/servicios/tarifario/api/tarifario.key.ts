@@ -4,5 +4,7 @@ export const tarifarioKeys = {
   list: (filters?: Record<string, unknown>) => [...tarifarioKeys.lists(), filters] as const,
   details: () => [...tarifarioKeys.all, "detail"] as const,
   detail: (id: number) => [...tarifarioKeys.details(), id] as const,
-  detalles: (tarifarioId: number) => [...tarifarioKeys.detail(tarifarioId), "detalles"] as const,
+  detalles: (tarifarioId: number, params?: Record<string, unknown>) =>
+    [...tarifarioKeys.detail(tarifarioId), "detalles", params] as const,
 };
+

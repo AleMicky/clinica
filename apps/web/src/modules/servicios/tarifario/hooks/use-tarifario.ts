@@ -74,10 +74,17 @@ export function useDeleteTarifario() {
 }
 
 // Detalles
-export function useTarifarioDetalles(tarifarioId: number, enabled = true) {
+export function useTarifarioDetalles(
+  tarifarioId: number,
+  paramsOrEnabled?: TarifarioQueryParams | boolean,
+  enabledParam: boolean = true
+) {
+  const params = typeof paramsOrEnabled === "object" ? paramsOrEnabled : undefined;
+  const enabled = typeof paramsOrEnabled === "boolean" ? paramsOrEnabled : enabledParam;
+
   return useQuery({
-    queryKey: tarifarioKeys.detalles(tarifarioId),
-    queryFn: () => getTarifarioDetalles(tarifarioId),
+    queryKey: tarifarioKeys.detalles(tarifarioId, params as Record<string, unknown>),
+    queryFn: () => getTarifarioDetalles(tarifarioId, params),
     enabled: enabled && tarifarioId > 0,
   });
 }

@@ -68,7 +68,7 @@ export function TarifarioDetallesDialog({
   const tarifarioId = tarifario?.id ?? 0;
 
   const { data: detallesData, isLoading: isLoadingDetalles, refetch } =
-    useTarifarioDetalles(tarifarioId, open && tarifarioId > 0);
+    useTarifarioDetalles(tarifarioId, { pageSize: 1000 }, open && tarifarioId > 0);
 
   const createDetalleMutation = useCreateTarifarioDetalle();
   const deleteDetalleMutation = useDeleteTarifarioDetalle();
