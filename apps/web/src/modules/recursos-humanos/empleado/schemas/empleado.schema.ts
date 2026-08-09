@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const empleadoSchema = z.object({
     personaId: z
-        .number({ invalid_type_error: "Seleccione una persona." })
+        .number({ message: "Seleccione una persona." })
         .int()
         .gt(0, "Seleccione una persona."),
 

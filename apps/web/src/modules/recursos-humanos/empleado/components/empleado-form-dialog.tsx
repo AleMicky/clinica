@@ -63,10 +63,10 @@ interface EmpleadoFormDialogProps {
     onSuccessCallback?: () => void;
 }
 
-function toISODate(value?: string | null): string {
+function toISODate(value?: string | Date | null): string {
     if (!value) return "";
-    const d = new Date(value);
-    if (isNaN(d.getTime())) return value;
+    const d = value instanceof Date ? value : new Date(value);
+    if (isNaN(d.getTime())) return typeof value === "string" ? value : "";
     const tz = d.getTimezoneOffset() * 60000;
     const local = new Date(d.getTime() - tz);
     return local.toISOString().slice(0, 10);

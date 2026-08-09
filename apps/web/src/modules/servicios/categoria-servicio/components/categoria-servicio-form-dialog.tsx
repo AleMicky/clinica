@@ -145,7 +145,7 @@ export function CategoriaServicioFormDialog({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Código */}
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 sm:col-span-2">
                 <Label htmlFor="codigo" className="text-xs flex items-center gap-1">
                   Código <span className="text-destructive">*</span>
                 </Label>
