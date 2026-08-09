@@ -252,12 +252,13 @@ export function TipoAreaFormDialog({
                             variant="outline"
                             onClick={() => onOpenChange(false)}
                             disabled={isLoading}
+                            className="text-xs"
                         >
                             Cancelar
                         </Button>
 
-                        <Button type="submit" disabled={isLoading} className="gap-2">
-                            {isLoading && <Loader2 className="size-4 animate-spin" />}
+                        <Button type="submit" disabled={isLoading} className="text-xs gap-1.5">
+                            {isLoading && <Loader2 className="size-3.5 animate-spin" />}
                             {isEditing ? "Guardar Cambios" : "Crear Tipo de Área"}
                         </Button>
                     </DialogFooter>

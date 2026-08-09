@@ -210,7 +210,7 @@ export function PersonaFormDialog({
                 <Input
                   id="nombres"
                   placeholder="ej. María Elena"
-                  className={cn("w-full h-8 text-sm", errors.nombres && "border-destructive focus-visible:ring-destructive")}
+                  className={cn("w-full h-9 text-sm", errors.nombres && "border-destructive focus-visible:ring-destructive")}
                   {...register("nombres")}
                 />
                 {errors.nombres && (
@@ -226,7 +226,7 @@ export function PersonaFormDialog({
                 <Input
                   id="apellidoPaterno"
                   placeholder="ej. Gómez"
-                  className={cn("w-full h-8 text-sm", errors.apellidoPaterno && "border-destructive focus-visible:ring-destructive")}
+                  className={cn("w-full h-9 text-sm", errors.apellidoPaterno && "border-destructive focus-visible:ring-destructive")}
                   {...register("apellidoPaterno")}
                 />
                 {errors.apellidoPaterno && (
@@ -242,7 +242,7 @@ export function PersonaFormDialog({
                 <Input
                   id="apellidoMaterno"
                   placeholder="ej. Pérez"
-                  className="w-full h-8 text-sm"
+                  className="w-full h-9 text-sm"
                   {...register("apellidoMaterno")}
                 />
               </div>
@@ -266,7 +266,7 @@ export function PersonaFormDialog({
                   value={tipoDocumentoValue}
                   onValueChange={(val) => setValue("tipoDocumento", val || "CI")}
                 >
-                  <SelectTrigger id="tipoDocumento" className="w-full h-8 text-sm">
+                  <SelectTrigger id="tipoDocumento" className="w-full h-9 text-sm">
                     <SelectValue placeholder="Tipo" />
                   </SelectTrigger>
                   <SelectContent>
@@ -287,7 +287,7 @@ export function PersonaFormDialog({
                 <Input
                   id="numeroDocumento"
                   placeholder="12345678"
-                  className={cn("w-full font-mono h-8 text-sm", errors.numeroDocumento && "border-destructive focus-visible:ring-destructive")}
+                  className={cn("w-full font-mono h-9 text-sm", errors.numeroDocumento && "border-destructive focus-visible:ring-destructive")}
                   {...register("numeroDocumento")}
                 />
                 {errors.numeroDocumento && (
@@ -304,7 +304,7 @@ export function PersonaFormDialog({
                   value={extensionDocumentoValue || "none"}
                   onValueChange={(val) => setValue("extensionDocumento", !val || val === "none" ? "" : val)}
                 >
-                  <SelectTrigger id="extensionDocumento" className="w-full h-8 text-sm">
+                  <SelectTrigger id="extensionDocumento" className="w-full h-9 text-sm">
                     <SelectValue placeholder="Sin ext." />
                   </SelectTrigger>
                   <SelectContent>
@@ -326,7 +326,7 @@ export function PersonaFormDialog({
                 <Input
                   id="complementoDocumento"
                   placeholder="1A"
-                  className="w-full font-mono h-8 text-sm uppercase"
+                  className="w-full font-mono h-9 text-sm uppercase"
                   {...register("complementoDocumento")}
                 />
               </div>
@@ -349,7 +349,7 @@ export function PersonaFormDialog({
                 <Input
                   id="fechaNacimiento"
                   type="date"
-                  className={cn("w-full h-8 text-sm", errors.fechaNacimiento && "border-destructive focus-visible:ring-destructive")}
+                  className={cn("w-full h-9 text-sm", errors.fechaNacimiento && "border-destructive focus-visible:ring-destructive")}
                   {...register("fechaNacimiento")}
                 />
                 {errors.fechaNacimiento && (
@@ -366,7 +366,7 @@ export function PersonaFormDialog({
                   value={generoValue}
                   onValueChange={(val) => setValue("genero", val || "")}
                 >
-                  <SelectTrigger id="genero" className="w-full h-8 text-sm">
+                  <SelectTrigger id="genero" className="w-full h-9 text-sm">
                     <SelectValue placeholder="Seleccione género" />
                   </SelectTrigger>
                   <SelectContent>
@@ -388,7 +388,7 @@ export function PersonaFormDialog({
                   value={estadoCivilValue}
                   onValueChange={(val) => setValue("estadoCivil", val || "")}
                 >
-                  <SelectTrigger id="estadoCivil" className="w-full h-8 text-sm">
+                  <SelectTrigger id="estadoCivil" className="w-full h-9 text-sm">
                     <SelectValue placeholder="Seleccione estado civil" />
                   </SelectTrigger>
                   <SelectContent>
@@ -419,7 +419,7 @@ export function PersonaFormDialog({
                 <Input
                   id="telefono"
                   placeholder="+593 99 123 4567"
-                  className="w-full h-8 text-sm"
+                  className="w-full h-9 text-sm"
                   {...register("telefono")}
                 />
               </div>
@@ -432,7 +432,7 @@ export function PersonaFormDialog({
                 <Input
                   id="direccion"
                   placeholder="Av. Principal #123"
-                  className="w-full h-8 text-sm"
+                  className="w-full h-9 text-sm"
                   {...register("direccion")}
                 />
               </div>

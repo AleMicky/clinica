@@ -1,62 +1,67 @@
 "use client";
 
+import * as React from "react";
 import {
-    Users,
-    CheckCircle2,
-    XCircle,
-    CalendarX,
+  Users,
+  CheckCircle2,
+  XCircle,
+  Layers,
 } from "lucide-react";
-import { MetricCard } from "@/components/shared";
 
 export interface EmpleadoMetrics {
-    total: number;
-    activos: number;
-    inactivos: number;
-    retirados: number;
+  total: number;
+  activos: number;
+  inactivos: number;
 }
 
 interface EmpleadoMetricsProps {
-    metrics: EmpleadoMetrics;
+  metrics: EmpleadoMetrics;
 }
 
 export function EmpleadoMetricsCards({ metrics }: EmpleadoMetricsProps) {
-    return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <MetricCard
-                title="Total de Empleados"
-                value={metrics.total}
-                description="Empleados registrados"
-                icon={Users}
-                iconClassName="text-primary"
-                isMono={false}
-            />
-
-            <MetricCard
-                title="Empleados Activos"
-                value={metrics.activos}
-                description="Sin fecha de retiro"
-                icon={CheckCircle2}
-                iconClassName="text-green-500"
-                isMono={false}
-            />
-
-            <MetricCard
-                title="Empleados Inactivos"
-                value={metrics.inactivos}
-                description="Deshabilitados del sistema"
-                icon={XCircle}
-                iconClassName="text-destructive"
-                isMono={false}
-            />
-
-            <MetricCard
-                title="Empleados Retirados"
-                value={metrics.retirados}
-                description="Con fecha de retiro registrada"
-                icon={CalendarX}
-                iconClassName="text-amber-500"
-                isMono={false}
-            />
+  return (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 bg-muted/20 p-2.5 rounded-lg border">
+      <div className="flex items-center gap-2.5 px-2 py-1">
+        <div className="p-2 rounded-md bg-primary/10 text-primary shrink-0">
+          <Users className="size-4" />
         </div>
-    );
+        <div className="min-w-0">
+          <p className="text-[11px] font-medium text-muted-foreground truncate">Total Empleados</p>
+          <p className="text-base font-bold text-foreground leading-tight">{metrics.total}</p>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2.5 px-2 py-1 sm:border-l sm:border-border/60">
+        <div className="p-2 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+          <CheckCircle2 className="size-4" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-[11px] font-medium text-muted-foreground truncate">Empleados Activos</p>
+          <p className="text-base font-bold text-foreground leading-tight">{metrics.activos}</p>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2.5 px-2 py-1 lg:border-l lg:border-border/60">
+        <div className="p-2 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 shrink-0">
+          <XCircle className="size-4" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-[11px] font-medium text-muted-foreground truncate">Empleados Inactivos</p>
+          <p className="text-base font-bold text-foreground leading-tight">{metrics.inactivos}</p>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2.5 px-2 py-1 lg:border-l lg:border-border/60">
+        <div className="p-2 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 shrink-0">
+          <Layers className="size-4" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-[11px] font-medium text-muted-foreground truncate">Estado del Catálogo</p>
+          <p className="text-base font-bold text-foreground leading-tight">
+            {metrics.total > 0 ? "Configurado" : "Vacío"}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 }

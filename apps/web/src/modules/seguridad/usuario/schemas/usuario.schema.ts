@@ -18,6 +18,7 @@ export const usuarioSchema = z.object({
 
   activo: z.boolean(),
 
+  // Persona fields
   nombres: z
     .string()
     .trim()
@@ -33,6 +34,10 @@ export const usuarioSchema = z.object({
     .trim()
     .optional(),
 
+  fechaNacimiento: z
+    .string()
+    .optional(),
+
   tipoDocumento: z
     .string()
     .trim()
@@ -42,6 +47,26 @@ export const usuarioSchema = z.object({
     .string()
     .trim()
     .min(1, "El número de documento es obligatorio."),
+
+  extensionDocumento: z
+    .string()
+    .trim()
+    .optional(),
+
+  complementoDocumento: z
+    .string()
+    .trim()
+    .optional(),
+
+  genero: z
+    .string()
+    .trim()
+    .optional(),
+
+  estadoCivil: z
+    .string()
+    .trim()
+    .optional(),
 
   rol: z
     .string()

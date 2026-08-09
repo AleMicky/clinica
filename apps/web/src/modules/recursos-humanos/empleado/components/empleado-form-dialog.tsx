@@ -257,13 +257,13 @@ export function EmpleadoFormDialog({
                             </Label>
 
                             {selectedPersona ? (
-                                <div className="flex items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 py-2">
-                                    <div className="flex flex-col min-w-0">
-                                        <span className="text-sm font-medium truncate">
+                                <div className="flex h-9 items-center justify-between gap-2 rounded-md border border-input bg-muted/20 px-3 text-xs">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                        <span className="font-semibold text-foreground truncate">
                                             {nombreCompleto(selectedPersona)}
                                         </span>
-                                        <span className="text-[11px] text-muted-foreground font-mono">
-                                            {documentoCompleto(selectedPersona)}
+                                        <span className="text-[11px] text-muted-foreground font-mono truncate">
+                                            ({documentoCompleto(selectedPersona)})
                                         </span>
                                     </div>
                                     <button
@@ -273,9 +273,9 @@ export function EmpleadoFormDialog({
                                             setBusquedaPersona("");
                                         }}
                                         title="Quitar selección"
-                                        className="inline-flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-accent-foreground cursor-pointer shrink-0"
+                                        className="inline-flex size-5 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-accent-foreground cursor-pointer shrink-0"
                                     >
-                                        <X className="size-4" />
+                                        <X className="size-3.5" />
                                     </button>
                                 </div>
                             ) : (
@@ -284,12 +284,12 @@ export function EmpleadoFormDialog({
                                     onOpenChange={setComboOpen}
                                 >
                                     <DropdownMenuTrigger
-                                        className="flex w-full h-9 items-center justify-between rounded-lg border border-input bg-transparent px-3 text-sm text-muted-foreground transition-colors hover:bg-accent/40 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 cursor-pointer"
+                                        className="flex w-full h-9 items-center justify-between rounded-md border border-input bg-transparent px-3 text-xs text-muted-foreground transition-colors hover:bg-accent/40 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 cursor-pointer"
                                     >
-                                        <span className="text-sm">
+                                        <span className="text-xs">
                                             Buscar y seleccionar persona...
                                         </span>
-                                        <Search className="size-4 text-muted-foreground" />
+                                        <Search className="size-3.5 text-muted-foreground" />
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent
                                         align="start"
@@ -408,7 +408,7 @@ export function EmpleadoFormDialog({
                                     id="codigoEmpleado"
                                     placeholder="ej: EMP001"
                                     className={cn(
-                                        "uppercase font-mono text-sm h-9",
+                                        "uppercase font-mono text-xs h-9",
                                         errors.codigoEmpleado &&
                                             "border-destructive focus-visible:ring-destructive",
                                     )}
@@ -436,7 +436,7 @@ export function EmpleadoFormDialog({
                                     id="fechaIngreso"
                                     type="date"
                                     className={cn(
-                                        "text-sm h-9",
+                                        "text-xs h-9",
                                         errors.fechaIngreso &&
                                             "border-destructive focus-visible:ring-destructive",
                                     )}
@@ -457,14 +457,13 @@ export function EmpleadoFormDialog({
                                     htmlFor="fechaRetiro"
                                     className="text-xs flex items-center gap-1"
                                 >
-                                    <CalendarDays className="size-3.5" /> Fecha
-                                    Retiro
+                                    Fecha Retiro
                                 </Label>
                                 <Input
                                     id="fechaRetiro"
                                     type="date"
                                     className={cn(
-                                        "text-sm h-9",
+                                        "text-xs h-9",
                                         errors.fechaRetiro &&
                                             "border-destructive focus-visible:ring-destructive",
                                     )}
@@ -488,6 +487,7 @@ export function EmpleadoFormDialog({
                             variant="outline"
                             onClick={() => onOpenChange(false)}
                             disabled={isLoading}
+                            className="text-xs"
                         >
                             Cancelar
                         </Button>
@@ -495,10 +495,10 @@ export function EmpleadoFormDialog({
                         <Button
                             type="submit"
                             disabled={isLoading}
-                            className="gap-2"
+                            className="text-xs gap-1.5"
                         >
                             {isLoading && (
-                                <Loader2 className="size-4 animate-spin" />
+                                <Loader2 className="size-3.5 animate-spin" />
                             )}
                             {isEditing ? "Guardar Cambios" : "Crear Empleado"}
                         </Button>
