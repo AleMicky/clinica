@@ -6,6 +6,8 @@ export * from "./hooks/use-convenio";
 export * from "./components/convenio-header";
 export * from "./components/convenio-metrics";
 export * from "./components/convenio-table";
+export * from "./components/convenio-list";
+export * from "./components/convenio-tarifario-list";
 export * from "./components/convenio-form-dialog";
 export * from "./components/convenio-tarifarios-dialog";
 export * from "./components/convenio-delete-dialog";

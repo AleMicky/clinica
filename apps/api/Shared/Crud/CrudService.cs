@@ -61,6 +61,7 @@ public abstract class CrudService<
             pagination.ValidPageSize,
             totalItems);
     }
+
     public virtual async Task<TResponse> ObtenerAsync(
         int id,
         CancellationToken cancellationToken = default)
@@ -126,17 +127,66 @@ public abstract class CrudService<
     {
         var entity = await Entities
             .FirstOrDefaultAsync(
-                x => x.Id == id && x.Activo,
+                x => x.Id == id,
                 cancellationToken);
 
         if (entity is null)
             throw CreateNotFoundException(id);
 
-        await ValidateDeleteAsync(entity, cancellationToken);
+        await ValidateDeleteAsync(
+            entity,
+            cancellationToken);
+
+        Entities.Remove(entity);
+
+        await DbContext.SaveChangesAsync(
+            cancellationToken);
+    }
+
+    public virtual async Task ActivarAsync(
+        int id,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await Entities
+            .FirstOrDefaultAsync(
+                x => x.Id == id,
+                cancellationToken);
+
+        if (entity is null)
+            throw CreateNotFoundException(id);
+
+        if (entity.Activo)
+            return;
+
+        entity.Activo = true;
+
+        await DbContext.SaveChangesAsync(
+            cancellationToken);
+    }
+
+    public virtual async Task InactivarAsync(
+        int id,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await Entities
+            .FirstOrDefaultAsync(
+                x => x.Id == id,
+                cancellationToken);
+
+        if (entity is null)
+            throw CreateNotFoundException(id);
+
+        if (!entity.Activo)
+            return;
+
+        await ValidateDeactivateAsync(
+            entity,
+            cancellationToken);
 
         entity.Activo = false;
 
-        await DbContext.SaveChangesAsync(cancellationToken);
+        await DbContext.SaveChangesAsync(
+            cancellationToken);
     }
 
     protected virtual Task ValidateCreateAsync(
@@ -166,11 +216,19 @@ public abstract class CrudService<
     {
         return new NotFoundException(typeof(TEntity).Name, id);
     }
+
     protected virtual IQueryable<TEntity> ApplySearch(
         IQueryable<TEntity> query,
         string? search)
     {
         return query;
+    }
+
+    protected virtual Task ValidateDeactivateAsync(
+        TEntity entity,
+        CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
     }
 
     protected abstract TEntity MapToNewEntity(TCreateRequest request);

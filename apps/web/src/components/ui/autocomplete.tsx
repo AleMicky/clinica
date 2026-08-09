@@ -44,8 +44,11 @@ export function Autocomplete({
 
   // Synchronize input query with external value prop change
   React.useEffect(() => {
-    setQuery(value ?? "");
-  }, [value]);
+    const selectedOpt = options.find(
+      (opt) => opt.value.toLowerCase() === (value || "").toLowerCase()
+    );
+    setQuery(selectedOpt ? selectedOpt.label : value ?? "");
+  }, [value, options]);
 
   // Handle clicking outside the popover container
   React.useEffect(() => {
@@ -54,11 +57,19 @@ export function Autocomplete({
         setIsOpen(false);
         if (allowCustomValue && query !== value) {
           onValueChange(query);
-        } else if (!allowCustomValue && query !== value) {
+        } else if (!allowCustomValue) {
           const selectedOption = options.find(
-            (opt) => opt.value.toLowerCase() === (value || "").toLowerCase()
+            (opt) =>
+              opt.value.toLowerCase() === (value || "").toLowerCase() ||
+              opt.label.toLowerCase() === (query || "").toLowerCase()
           );
-          setQuery(selectedOption ? selectedOption.label : "");
+          if (selectedOption) {
+            setQuery(selectedOption.label);
+            onValueChange(selectedOption.value);
+          } else {
+            setQuery("");
+            onValueChange("");
+          }
         }
       }
     }
@@ -160,7 +171,7 @@ export function Autocomplete({
       </div>
 
       {isOpen && (
-        <div className="absolute z-50 mt-1 max-h-56 w-full overflow-auto rounded-md border border-border bg-popover text-popover-foreground shadow-md animate-in fade-in-80">
+        <div className="absolute z-50 mt-1 max-h-56 min-w-full w-max max-w-lg overflow-auto rounded-md border border-border bg-popover text-popover-foreground shadow-md animate-in fade-in-80">
           {isLoading && filteredOptions.length === 0 ? (
             <div className="flex items-center justify-center gap-2 px-3 py-3 text-xs text-muted-foreground">
               <Loader2 className="size-3.5 animate-spin text-primary" />

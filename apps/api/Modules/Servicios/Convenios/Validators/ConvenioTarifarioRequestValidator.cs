@@ -12,15 +12,6 @@ public abstract class ConvenioTarifarioRequestValidator<TRequest>
         RuleFor(x => x.TarifarioId)
             .GreaterThan(0)
             .WithMessage("El tarifario es obligatorio.");
-
-        RuleFor(x => x.FechaInicio)
-            .NotEmpty()
-            .WithMessage("La fecha de inicio es obligatoria.");
-
-        RuleFor(x => x.FechaFin)
-            .GreaterThanOrEqualTo(x => x.FechaInicio)
-            .WithMessage("La fecha de fin debe ser mayor o igual a la fecha de inicio.")
-            .When(x => x.FechaFin.HasValue);
     }
 }
 

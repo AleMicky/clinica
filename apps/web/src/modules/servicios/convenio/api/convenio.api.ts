@@ -68,11 +68,11 @@ export async function createConvenioTarifario(
 
 export async function updateConvenioTarifario(
   convenioId: number,
-  tarifarioId: number,
+  id: number,
   request: UpdateConvenioTarifarioRequest
 ): Promise<ConvenioTarifarioResponse> {
   const response = await apiClient.put<ConvenioTarifarioResponse>(
-    `/convenios/${convenioId}/tarifarios/${tarifarioId}`,
+    `/convenios/${convenioId}/tarifarios/${id}`,
     request
   );
   return response.data;
@@ -80,7 +80,7 @@ export async function updateConvenioTarifario(
 
 export async function deleteConvenioTarifario(
   convenioId: number,
-  tarifarioId: number
+  id: number
 ): Promise<void> {
-  await apiClient.delete(`/convenios/${convenioId}/tarifarios/${tarifarioId}`);
+  await apiClient.delete(`/convenios/${convenioId}/tarifarios/${id}`);
 }

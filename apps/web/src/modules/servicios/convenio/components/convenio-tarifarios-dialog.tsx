@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 
+import { Autocomplete } from "@/components/ui/autocomplete";
 import {
   convenioTarifarioSchema,
   type ConvenioTarifarioFormValues,
@@ -72,8 +73,16 @@ export function ConvenioTarifariosDialog({
   const deleteTarifarioMutation = useDeleteConvenioTarifario();
 
   // All available tarifarios list
-  const { data: allTarifariosData } = useTarifarios({ pageSize: 100 });
+  const { data: allTarifariosData, isLoading: isLoadingAllTarifarios } = useTarifarios({ pageSize: 100 });
   const allTarifarios = React.useMemo(() => allTarifariosData?.items ?? [], [allTarifariosData]);
+
+  const tarifarioOptions = React.useMemo(() => {
+    return allTarifarios.map((t: TarifarioResponse) => ({
+      value: String(t.id),
+      label: `${t.nombre} (${t.codigo})`,
+      description: `Código: ${t.codigo}`,
+    }));
+  }, [allTarifarios]);
 
   const {
     register,
@@ -96,18 +105,19 @@ export function ConvenioTarifariosDialog({
   const onSubmitAddTarifario = async (values: ConvenioTarifarioFormValues) => {
     if (!convenioId) return;
     try {
+      const todayStr = new Date().toISOString().split("T")[0];
       await createTarifarioMutation.mutateAsync({
         convenioId,
         data: {
           tarifarioId: values.tarifarioId,
-          fechaInicio: values.fechaInicio,
-          fechaFin: values.fechaFin || null,
+          fechaInicio: convenio?.fechaInicio || todayStr,
+          fechaFin: null,
         },
       });
       toast.success("Tarifario asociado correctamente al convenio.");
       reset({
         tarifarioId: 0,
-        fechaInicio: new Date().toISOString().split("T")[0],
+        fechaInicio: todayStr,
         fechaFin: "",
       });
       refetch();
@@ -121,12 +131,12 @@ export function ConvenioTarifariosDialog({
     }
   };
 
-  const handleDeleteTarifario = async (tarifarioId: number) => {
+  const handleDeleteTarifario = async (id: number) => {
     if (!convenioId) return;
     try {
       await deleteTarifarioMutation.mutateAsync({
         convenioId,
-        tarifarioId,
+        id,
       });
       toast.success("Tarifario desvinculado del convenio.");
       refetch();
@@ -159,71 +169,47 @@ export function ConvenioTarifariosDialog({
           {/* Add Tarifario Form */}
           <form
             onSubmit={handleSubmit(onSubmitAddTarifario)}
-            className="p-3 bg-muted/30 border rounded-lg space-y-3"
+            className="p-3 bg-muted/30 border rounded-lg space-y-2.5"
           >
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground border-b border-border/40 pb-2">
               <Plus className="size-3.5 text-primary" />
               <span>Vincular Nuevo Tarifario</span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
-              {/* Select Tarifario */}
-              <div className="sm:col-span-5 space-y-1">
-                <Label className="text-[11px] text-muted-foreground">Tarifario</Label>
-                <Select
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-2.5">
+              <div className="flex-1 space-y-1">
+                <Label className="text-[11px] font-medium text-muted-foreground">Tarifario</Label>
+                <Autocomplete
                   value={selectedTarifarioId ? String(selectedTarifarioId) : ""}
                   onValueChange={(val) => setValue("tarifarioId", Number(val), { shouldValidate: true })}
-                >
-                  <SelectTrigger className="h-8 text-xs">
-                    <SelectValue placeholder="Seleccionar Tarifario" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {allTarifarios.map((t: TarifarioResponse) => (
-                      <SelectItem key={t.id} value={String(t.id)}>
-                        {t.nombre} ({t.codigo})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.tarifarioId && (
-                  <p className="text-[10px] text-destructive font-medium">{errors.tarifarioId.message}</p>
-                )}
-              </div>
-
-              {/* Fecha Inicio */}
-              <div className="sm:col-span-3 space-y-1">
-                <Label className="text-[11px] text-muted-foreground">Fecha Inicio</Label>
-                <Input
-                  type="date"
-                  className="h-8 text-xs font-mono"
-                  {...register("fechaInicio")}
+                  options={tarifarioOptions}
+                  isLoading={isLoadingAllTarifarios}
+                  placeholder="Buscar o seleccionar tarifario por nombre o código..."
+                  emptyText="No se encontraron tarifarios"
+                  allowCustomValue={false}
+                  error={Boolean(errors.tarifarioId)}
+                  className="h-8 text-xs bg-background"
                 />
               </div>
 
-              {/* Fecha Fin */}
-              <div className="sm:col-span-4 space-y-1">
-                <Label className="text-[11px] text-muted-foreground">Fecha Fin (Opcional)</Label>
-                <div className="flex items-center gap-1">
-                  <Input
-                    type="date"
-                    className="h-8 text-xs font-mono flex-1"
-                    {...register("fechaFin")}
-                  />
-                  <Button
-                    type="submit"
-                    size="sm"
-                    disabled={createTarifarioMutation.isPending}
-                    className="h-8 px-2.5 text-xs gap-1 shrink-0"
-                  >
-                    {createTarifarioMutation.isPending ? (
-                      <Loader2 className="size-3.5 animate-spin" />
-                    ) : (
-                      <Plus className="size-3.5" />
-                    )}
-                  </Button>
-                </div>
-              </div>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={createTarifarioMutation.isPending}
+                className="h-8 px-4 text-xs gap-1.5 shrink-0 cursor-pointer shadow-2xs self-end"
+              >
+                {createTarifarioMutation.isPending ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <Plus className="size-3.5" />
+                )}
+                <span>Vincular Tarifario</span>
+              </Button>
             </div>
+
+            {errors.tarifarioId && (
+              <p className="text-[10px] text-destructive font-medium">{errors.tarifarioId.message}</p>
+            )}
           </form>
 
           {/* Tarifarios Table */}
@@ -264,35 +250,45 @@ export function ConvenioTarifariosDialog({
                     </TableCell>
                   </TableRow>
                 ) : (
-                  tarifariosAsignados.map((t: ConvenioTarifarioResponse) => (
-                    <TableRow key={t.id} className="hover:bg-muted/30 h-9">
-                      <TableCell className="pl-3 py-1.5 font-medium text-xs text-foreground">
-                        <div className="flex items-center gap-1.5">
-                          <Tag className="size-3 text-primary/80" />
-                          <span>{t.tarifarioNombre || `Tarifario #${t.tarifarioId}`}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-1.5 font-mono text-xs text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="size-3 text-muted-foreground" />
-                          <span>{t.fechaInicio}</span>
-                          <span>-</span>
-                          <span>{t.fechaFin || "Indefinido"}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right pr-3 py-1.5">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteTarifario(t.tarifarioId)}
-                          disabled={deleteTarifarioMutation.isPending}
-                          className="h-6 w-6 text-destructive hover:bg-destructive/10 cursor-pointer"
-                        >
-                          <Trash2 className="size-3.5" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  tarifariosAsignados.map((t: ConvenioTarifarioResponse) => {
+                    const nombre = t.tarifario?.nombre || t.tarifarioNombre || `Tarifario #${t.tarifarioId || t.id}`;
+                    const codigo = t.tarifario?.codigo || t.tarifarioCodigo;
+
+                    return (
+                      <TableRow key={t.id} className="hover:bg-muted/30 h-9">
+                        <TableCell className="pl-3 py-1.5 font-medium text-xs text-foreground">
+                          <div className="flex items-center gap-2">
+                            <Tag className="size-3.5 text-primary/80" />
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-xs">{nombre}</span>
+                              {codigo && (
+                                <span className="text-[10px] font-mono text-muted-foreground">{codigo}</span>
+                              )}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-1.5 font-mono text-xs text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="size-3 text-muted-foreground" />
+                            <span>{t.fechaInicio}</span>
+                            <span>-</span>
+                            <span>{t.fechaFin || "Indefinido"}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right pr-3 py-1.5">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteTarifario(t.id)}
+                            disabled={deleteTarifarioMutation.isPending}
+                            className="h-6 w-6 text-destructive hover:bg-destructive/10 cursor-pointer"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>

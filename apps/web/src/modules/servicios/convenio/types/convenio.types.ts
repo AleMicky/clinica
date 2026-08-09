@@ -40,7 +40,12 @@ export interface PagedResult<T> {
 export interface ConvenioTarifarioResponse {
   id: number;
   convenioId: number;
-  tarifarioId: number;
+  tarifarioId?: number;
+  tarifario?: {
+    id: number;
+    codigo: string;
+    nombre: string;
+  } | null;
   fechaInicio: string;
   fechaFin?: string | null;
   tarifarioNombre?: string;

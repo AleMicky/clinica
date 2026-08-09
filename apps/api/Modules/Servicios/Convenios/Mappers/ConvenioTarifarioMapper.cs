@@ -1,6 +1,9 @@
 using Clinica.Api.Modules.Servicios.Convenios.Dtos;
 using Riok.Mapperly.Abstractions;
-using ConvenioTarifarioEntity = Clinica.Api.Modules.Servicios.Convenios.Entity.ConvenioTarifario;
+using ConvenioTarifarioEntity =
+    Clinica.Api.Modules.Servicios.Convenios.Entity.ConvenioTarifario;
+using TarifarioEntity =
+    Clinica.Api.Modules.Servicios.Tarifas.Entity.Tarifario;
 
 namespace Clinica.Api.Modules.Servicios.Convenios.Mappers;
 
@@ -8,7 +11,7 @@ namespace Clinica.Api.Modules.Servicios.Convenios.Mappers;
 public static partial class ConvenioTarifarioMapper
 {
     [MapperIgnoreSource(nameof(ConvenioTarifarioEntity.Convenio))]
-    [MapperIgnoreSource(nameof(ConvenioTarifarioEntity.Tarifario))]
+    [MapperIgnoreSource(nameof(ConvenioTarifarioEntity.TarifarioId))]
     public static partial ConvenioTarifarioResponse ToResponse(
         ConvenioTarifarioEntity entity
     );
@@ -17,11 +20,29 @@ public static partial class ConvenioTarifarioMapper
         IEnumerable<ConvenioTarifarioEntity> entities
     );
 
+    [MapperIgnoreSource(nameof(TarifarioEntity.Descripcion))]
+    [MapperIgnoreSource(nameof(TarifarioEntity.MonedaId))]
+    [MapperIgnoreSource(nameof(TarifarioEntity.Moneda))]
+    [MapperIgnoreSource(nameof(TarifarioEntity.Detalles))]
+    [MapperIgnoreSource(nameof(TarifarioEntity.Convenios))]
+    [MapperIgnoreSource(nameof(TarifarioEntity.FechaInicio))]
+    [MapperIgnoreSource(nameof(TarifarioEntity.FechaFin))]
+    [MapperIgnoreSource(nameof(TarifarioEntity.EsPrincipal))]
+    [MapperIgnoreSource(nameof(TarifarioEntity.FechaCreacion))]
+    [MapperIgnoreSource(nameof(TarifarioEntity.FechaModificacion))]
+    [MapperIgnoreSource(nameof(TarifarioEntity.CreadoPor))]
+    [MapperIgnoreSource(nameof(TarifarioEntity.ModificadoPor))]
+    [MapperIgnoreSource(nameof(TarifarioEntity.Activo))]
+    private static partial TarifarioResponse ToTarifarioResponse(
+        TarifarioEntity entity
+    );
+
     [MapperIgnoreTarget(nameof(ConvenioTarifarioEntity.Id))]
     [MapperIgnoreTarget(nameof(ConvenioTarifarioEntity.Convenio))]
     [MapperIgnoreTarget(nameof(ConvenioTarifarioEntity.ConvenioId))]
     [MapperIgnoreTarget(nameof(ConvenioTarifarioEntity.Tarifario))]
-    [MapperIgnoreTarget(nameof(ConvenioTarifarioEntity.TarifarioId))]
+    [MapperIgnoreTarget(nameof(ConvenioTarifarioEntity.FechaInicio))]
+    [MapperIgnoreTarget(nameof(ConvenioTarifarioEntity.FechaFin))]
     [MapperIgnoreTarget(nameof(ConvenioTarifarioEntity.Activo))]
     [MapperIgnoreTarget(nameof(ConvenioTarifarioEntity.FechaCreacion))]
     [MapperIgnoreTarget(nameof(ConvenioTarifarioEntity.FechaModificacion))]
@@ -35,7 +56,8 @@ public static partial class ConvenioTarifarioMapper
     [MapperIgnoreTarget(nameof(ConvenioTarifarioEntity.Convenio))]
     [MapperIgnoreTarget(nameof(ConvenioTarifarioEntity.ConvenioId))]
     [MapperIgnoreTarget(nameof(ConvenioTarifarioEntity.Tarifario))]
-    [MapperIgnoreTarget(nameof(ConvenioTarifarioEntity.TarifarioId))]
+    [MapperIgnoreTarget(nameof(ConvenioTarifarioEntity.FechaInicio))]
+    [MapperIgnoreTarget(nameof(ConvenioTarifarioEntity.FechaFin))]
     [MapperIgnoreTarget(nameof(ConvenioTarifarioEntity.Activo))]
     [MapperIgnoreTarget(nameof(ConvenioTarifarioEntity.FechaCreacion))]
     [MapperIgnoreTarget(nameof(ConvenioTarifarioEntity.FechaModificacion))]

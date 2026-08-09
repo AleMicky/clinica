@@ -14,7 +14,7 @@ public abstract class TarifarioDetalleRequestValidator<TRequest>
             .WithMessage("El servicio es obligatorio.");
 
         RuleFor(x => x.Precio)
-            .GreaterThan(0)
+            .GreaterThanOrEqualTo(0)
             .WithMessage("El precio debe ser mayor a cero.");
     }
 }

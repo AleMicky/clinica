@@ -1,16 +1,20 @@
 using Clinica.Api.Data;
 using Clinica.Api.Modules.Servicios.Convenios.Dtos;
 using Clinica.Api.Modules.Servicios.Convenios.Mappers;
-using Clinica.Api.Modules.Servicios.Tarifas.Entity;
 using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
-using ConvenioEntity = Clinica.Api.Modules.Servicios.Convenios.Entity.Convenio;
-using ConvenioTarifarioEntity = Clinica.Api.Modules.Servicios.Convenios.Entity.ConvenioTarifario;
+using ConvenioEntity =
+    Clinica.Api.Modules.Servicios.Convenios.Entity.Convenio;
+using ConvenioTarifarioEntity =
+    Clinica.Api.Modules.Servicios.Convenios.Entity.ConvenioTarifario;
+using TarifarioEntity =
+    Clinica.Api.Modules.Servicios.Tarifas.Entity.Tarifario;
 
 namespace Clinica.Api.Modules.Servicios.Convenios.Services;
 
-public sealed class ConvenioTarifarioService(AppDbContext dbContext)
+public sealed class ConvenioTarifarioService(
+    AppDbContext dbContext)
 {
     public async Task<PagedResult<ConvenioTarifarioResponse>> ListarAsync(
         int convenioId,
@@ -18,12 +22,16 @@ public sealed class ConvenioTarifarioService(AppDbContext dbContext)
         string? search,
         CancellationToken cancellationToken = default)
     {
-        await EnsureConvenioExistsAsync(convenioId, cancellationToken);
+        await EnsureConvenioExistsAsync(
+            convenioId,
+            cancellationToken);
 
         var query = dbContext.ConveniosTarifarios
             .AsNoTracking()
             .Include(x => x.Tarifario)
-            .Where(x => x.ConvenioId == convenioId && x.Activo);
+            .Where(x =>
+                x.ConvenioId == convenioId &&
+                x.Activo);
 
         var normalizedSearch = string.IsNullOrWhiteSpace(search)
             ? null
@@ -36,9 +44,12 @@ public sealed class ConvenioTarifarioService(AppDbContext dbContext)
                 x.Tarifario.Nombre.Contains(normalizedSearch));
         }
 
-        var totalItems = await query.CountAsync(cancellationToken);
+        var totalItems = await query.CountAsync(
+            cancellationToken);
 
-        var offset = (pagination.ValidPage - 1) * pagination.ValidPageSize;
+        var offset =
+            (pagination.ValidPage - 1) *
+            pagination.ValidPageSize;
 
         var entities = await query
             .OrderBy(x => x.Tarifario.Nombre)
@@ -56,21 +67,28 @@ public sealed class ConvenioTarifarioService(AppDbContext dbContext)
 
     public async Task<ConvenioTarifarioResponse> ObtenerAsync(
         int convenioId,
-        int tarifarioId,
+        int convenioTarifarioId,
         CancellationToken cancellationToken = default)
     {
-        await EnsureConvenioExistsAsync(convenioId, cancellationToken);
+        await EnsureConvenioExistsAsync(
+            convenioId,
+            cancellationToken);
 
         var entity = await dbContext.ConveniosTarifarios
             .AsNoTracking()
+            .Include(x => x.Tarifario)
             .FirstOrDefaultAsync(
                 x => x.ConvenioId == convenioId
-                     && x.Id == tarifarioId
+                     && x.Id == convenioTarifarioId
                      && x.Activo,
                 cancellationToken);
 
         if (entity is null)
-            throw new NotFoundException("ConvenioTarifario", tarifarioId);
+        {
+            throw new NotFoundException(
+                nameof(ConvenioTarifarioEntity),
+                convenioTarifarioId);
+        }
 
         return ConvenioTarifarioMapper.ToResponse(entity);
     }
@@ -80,95 +98,161 @@ public sealed class ConvenioTarifarioService(AppDbContext dbContext)
         CreateConvenioTarifarioRequest request,
         CancellationToken cancellationToken = default)
     {
-        await EnsureConvenioExistsAsync(convenioId, cancellationToken);
-        await EnsureTarifarioExistsAsync(request.TarifarioId, cancellationToken);
-
-        var existe = await dbContext.ConveniosTarifarios.AnyAsync(
-            x => x.ConvenioId == convenioId
-                 && x.TarifarioId == request.TarifarioId,
+        await EnsureConvenioExistsAsync(
+            convenioId,
             cancellationToken);
 
-        if (existe)
-        {
-            throw new ConflictException(
-                $"El tarifario '{request.TarifarioId}' ya está asignado a este convenio.");
-        }
+        var tarifario = await GetTarifarioAsync(
+            request.TarifarioId,
+            cancellationToken);
 
-        var entity = ConvenioTarifarioMapper.ToEntity(request);
+        await EnsureTarifarioNotAssignedAsync(
+            convenioId,
+            request.TarifarioId,
+            excludeConvenioTarifarioId: null,
+            cancellationToken);
+
+        var entity =
+            ConvenioTarifarioMapper.ToEntity(request);
+
         entity.ConvenioId = convenioId;
-        entity.TarifarioId = request.TarifarioId;
-        entity.FechaInicio = request.FechaInicio;
-        entity.FechaFin = request.FechaFin;
+        entity.TarifarioId = tarifario.Id;
+        entity.FechaInicio = tarifario.FechaInicio;
+        entity.FechaFin = tarifario.FechaFin;
         entity.Activo = true;
 
-        await dbContext.ConveniosTarifarios.AddAsync(entity, cancellationToken);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await dbContext.ConveniosTarifarios.AddAsync(
+            entity,
+            cancellationToken);
 
-        return ConvenioTarifarioMapper.ToResponse(entity);
+        await dbContext.SaveChangesAsync(
+            cancellationToken);
+
+        return await ObtenerAsync(
+            convenioId,
+            entity.Id,
+            cancellationToken);
     }
 
     public async Task<ConvenioTarifarioResponse> ActualizarAsync(
         int convenioId,
-        int tarifarioId,
+        int convenioTarifarioId,
         UpdateConvenioTarifarioRequest request,
         CancellationToken cancellationToken = default)
     {
-        await EnsureConvenioExistsAsync(convenioId, cancellationToken);
+        await EnsureConvenioExistsAsync(
+            convenioId,
+            cancellationToken);
 
         var entity = await dbContext.ConveniosTarifarios
             .FirstOrDefaultAsync(
                 x => x.ConvenioId == convenioId
-                     && x.Id == tarifarioId
+                     && x.Id == convenioTarifarioId
                      && x.Activo,
                 cancellationToken);
 
         if (entity is null)
-            throw new NotFoundException("ConvenioTarifario", tarifarioId);
-
-        await EnsureTarifarioExistsAsync(request.TarifarioId, cancellationToken);
-
-        var existe = await dbContext.ConveniosTarifarios.AnyAsync(
-            x => x.ConvenioId == convenioId
-                 && x.Id != tarifarioId
-                 && x.TarifarioId == request.TarifarioId,
-            cancellationToken);
-
-        if (existe)
         {
-            throw new ConflictException(
-                $"El tarifario '{request.TarifarioId}' ya está asignado a este convenio.");
+            throw new NotFoundException(
+                nameof(ConvenioTarifarioEntity),
+                convenioTarifarioId);
         }
 
-        ConvenioTarifarioMapper.UpdateEntity(request, entity);
-        entity.TarifarioId = request.TarifarioId;
-        entity.FechaInicio = request.FechaInicio;
-        entity.FechaFin = request.FechaFin;
+        var tarifario = await GetTarifarioAsync(
+            request.TarifarioId,
+            cancellationToken);
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await EnsureTarifarioNotAssignedAsync(
+            convenioId,
+            request.TarifarioId,
+            convenioTarifarioId,
+            cancellationToken);
 
-        return ConvenioTarifarioMapper.ToResponse(entity);
+        ConvenioTarifarioMapper.UpdateEntity(
+            request,
+            entity);
+
+        entity.TarifarioId = tarifario.Id;
+        entity.FechaInicio = tarifario.FechaInicio;
+        entity.FechaFin = tarifario.FechaFin;
+
+        await dbContext.SaveChangesAsync(
+            cancellationToken);
+
+        return await ObtenerAsync(
+            convenioId,
+            convenioTarifarioId,
+            cancellationToken);
     }
 
     public async Task EliminarAsync(
         int convenioId,
-        int tarifarioId,
+        int convenioTarifarioId,
         CancellationToken cancellationToken = default)
     {
-        await EnsureConvenioExistsAsync(convenioId, cancellationToken);
+        await EnsureConvenioExistsAsync(
+            convenioId,
+            cancellationToken);
 
         var entity = await dbContext.ConveniosTarifarios
             .FirstOrDefaultAsync(
-                x => x.ConvenioId == convenioId
-                     && x.Id == tarifarioId
-                     && x.Activo,
+                x => x.Id == convenioTarifarioId
+                     && x.ConvenioId == convenioId,
                 cancellationToken);
 
         if (entity is null)
-            throw new NotFoundException("ConvenioTarifario", tarifarioId);
+        {
+            throw new NotFoundException(
+                nameof(ConvenioTarifarioEntity),
+                convenioTarifarioId);
+        }
 
-        entity.Activo = false;
+        dbContext.ConveniosTarifarios.Remove(entity);
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await dbContext.SaveChangesAsync(
+            cancellationToken);
+    }
+
+    private async Task EnsureTarifarioNotAssignedAsync(
+        int convenioId,
+        int tarifarioId,
+        int? excludeConvenioTarifarioId,
+        CancellationToken cancellationToken)
+    {
+        var existe = await dbContext.ConveniosTarifarios
+            .AnyAsync(
+                x => x.ConvenioId == convenioId
+                     && x.TarifarioId == tarifarioId
+                     && (!excludeConvenioTarifarioId.HasValue ||
+                         x.Id != excludeConvenioTarifarioId.Value),
+                cancellationToken);
+
+        if (existe)
+        {
+            throw new ConflictException(
+                $"El tarifario '{tarifarioId}' ya está asignado a este convenio.");
+        }
+    }
+
+    private async Task<TarifarioEntity> GetTarifarioAsync(
+        int tarifarioId,
+        CancellationToken cancellationToken)
+    {
+        var tarifario = await dbContext.Tarifarios
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                x => x.Id == tarifarioId &&
+                     x.Activo,
+                cancellationToken);
+
+        if (tarifario is null)
+        {
+            throw new NotFoundException(
+                nameof(TarifarioEntity),
+                tarifarioId);
+        }
+
+        return tarifario;
     }
 
     private async Task EnsureConvenioExistsAsync(
@@ -176,20 +260,16 @@ public sealed class ConvenioTarifarioService(AppDbContext dbContext)
         CancellationToken cancellationToken)
     {
         var existe = await dbContext.Convenios
-            .AnyAsync(x => x.Id == convenioId && x.Activo, cancellationToken);
+            .AnyAsync(
+                x => x.Id == convenioId &&
+                     x.Activo,
+                cancellationToken);
 
         if (!existe)
-            throw new NotFoundException(nameof(ConvenioEntity), convenioId);
-    }
-
-    private async Task EnsureTarifarioExistsAsync(
-        int tarifarioId,
-        CancellationToken cancellationToken)
-    {
-        var existe = await dbContext.Tarifarios
-            .AnyAsync(x => x.Id == tarifarioId && x.Activo, cancellationToken);
-
-        if (!existe)
-            throw new NotFoundException(nameof(Tarifario), tarifarioId);
+        {
+            throw new NotFoundException(
+                nameof(ConvenioEntity),
+                convenioId);
+        }
     }
 }

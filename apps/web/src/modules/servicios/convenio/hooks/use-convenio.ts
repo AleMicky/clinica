@@ -103,13 +103,13 @@ export function useUpdateConvenioTarifario() {
   return useMutation({
     mutationFn: ({
       convenioId,
-      tarifarioId,
+      id,
       data,
     }: {
       convenioId: number;
-      tarifarioId: number;
+      id: number;
       data: UpdateConvenioTarifarioRequest;
-    }) => updateConvenioTarifario(convenioId, tarifarioId, data),
+    }) => updateConvenioTarifario(convenioId, id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: convenioKeys.tarifarios(variables.convenioId) });
     },
@@ -122,11 +122,11 @@ export function useDeleteConvenioTarifario() {
   return useMutation({
     mutationFn: ({
       convenioId,
-      tarifarioId,
+      id,
     }: {
       convenioId: number;
-      tarifarioId: number;
-    }) => deleteConvenioTarifario(convenioId, tarifarioId),
+      id: number;
+    }) => deleteConvenioTarifario(convenioId, id),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: convenioKeys.tarifarios(variables.convenioId) });
     },

@@ -2,66 +2,43 @@
 
 import * as React from "react";
 import { ConvenioHeader } from "./convenio-header";
-import { ConvenioMetricsCards } from "./convenio-metrics";
-import { ConvenioTable } from "./convenio-table";
+import { ConvenioList } from "./convenio-list";
+import { ConvenioTarifarioList } from "./convenio-tarifario-list";
 import { ConvenioFormDialog } from "./convenio-form-dialog";
-import { ConvenioTarifariosDialog } from "./convenio-tarifarios-dialog";
 import { ConvenioDeleteDialog } from "./convenio-delete-dialog";
 import { useConvenios } from "../hooks/use-convenio";
-import type { ConvenioItem, ConvenioMetrics, ConvenioResponse } from "../types/convenio.types";
+import type { ConvenioItem } from "../types/convenio.types";
 
 export function ConvenioModuleView() {
+  // Convenios state & query
+  const [convenioSearchTerm, setConvenioSearchTerm] = React.useState("");
+  const [selectedConvenioId, setSelectedConvenioId] = React.useState<number | null>(null);
+
+  const {
+    data: conveniosData,
+    isLoading: isLoadingConvenios,
+    refetch: refetchConvenios,
+  } = useConvenios({
+    search: convenioSearchTerm.trim() || undefined,
+    pageSize: 100,
+  });
+
+  const convenios = conveniosData?.items ?? [];
+
+  // Derived selected convenio from ID state
+  const selectedConvenio =
+    convenios.find((c) => c.id === selectedConvenioId) ?? null;
+
+  const handleConvenioSelect = (c: ConvenioItem) => {
+    setSelectedConvenioId(c.id);
+  };
+
+  // Dialogs
   const [formDialogOpen, setFormDialogOpen] = React.useState(false);
   const [convenioToEdit, setConvenioToEdit] = React.useState<ConvenioItem | null>(null);
 
-  const [tarifariosDialogOpen, setTarifariosDialogOpen] = React.useState(false);
-  const [convenioForTarifarios, setConvenioForTarifarios] = React.useState<ConvenioItem | null>(null);
-
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [convenioToDelete, setConvenioToDelete] = React.useState<ConvenioItem | null>(null);
-
-  const [currentPage, setCurrentPage] = React.useState(1);
-  const [pageSize, setPageSize] = React.useState(10);
-  const [searchTerm, setSearchTerm] = React.useState("");
-
-  const {
-    data: apiData,
-    isLoading,
-    refetch,
-  } = useConvenios({
-    page: currentPage,
-    pageSize: pageSize,
-    search: searchTerm.trim() || undefined,
-  });
-
-  const convenios: ConvenioItem[] = React.useMemo(() => {
-    return apiData?.items ?? [];
-  }, [apiData]);
-
-  const metrics: ConvenioMetrics = React.useMemo(() => {
-    const rawItems = apiData?.items ?? [];
-    const conDesc = rawItems.filter((c: ConvenioResponse) => Boolean(c.descripcion?.trim())).length;
-    const vigentes = rawItems.filter((c: ConvenioResponse) => {
-      if (!c.fechaFin) return true;
-      return new Date(c.fechaFin) >= new Date();
-    }).length;
-
-    return {
-      totalConvenios: apiData?.totalItems ?? rawItems.length,
-      vigentesCount: vigentes,
-      conDescripcionCount: conDesc,
-    };
-  }, [apiData]);
-
-  const handleSearchChange = (term: string) => {
-    setSearchTerm(term);
-    setCurrentPage(1);
-  };
-
-  const handlePageSizeChange = (size: number) => {
-    setPageSize(size);
-    setCurrentPage(1);
-  };
 
   const handleOpenAdd = () => {
     setConvenioToEdit(null);
@@ -73,51 +50,59 @@ export function ConvenioModuleView() {
     setFormDialogOpen(true);
   };
 
-  const handleOpenManageTarifarios = (c: ConvenioItem) => {
-    setConvenioForTarifarios(c);
-    setTarifariosDialogOpen(true);
-  };
-
   const handleOpenDelete = (c: ConvenioItem) => {
     setConvenioToDelete(c);
     setDeleteDialogOpen(true);
   };
 
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <div className="flex flex-col gap-3.5 w-full">
       <ConvenioHeader onAddClick={handleOpenAdd} />
-      <ConvenioMetricsCards metrics={metrics} />
-      <ConvenioTable
-        convenios={convenios}
-        isLoading={isLoading}
-        totalItems={apiData?.totalItems ?? 0}
-        currentPage={currentPage}
-        pageSize={pageSize}
-        searchTerm={searchTerm}
-        onSearchChange={handleSearchChange}
-        onPageChange={setCurrentPage}
-        onPageSizeChange={handlePageSizeChange}
-        onEdit={handleOpenEdit}
-        onManageTarifarios={handleOpenManageTarifarios}
-        onDelete={handleOpenDelete}
-        onRefresh={() => refetch()}
-      />
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[360px_minmax(0,1fr)] items-start">
+        {/* Left Panel (Master): Convenios List */}
+        <div>
+          <ConvenioList
+            convenios={convenios}
+            selectedConvenioId={selectedConvenioId}
+            isLoading={isLoadingConvenios}
+            searchTerm={convenioSearchTerm}
+            onSearchChange={setConvenioSearchTerm}
+            onSelectConvenio={handleConvenioSelect}
+            onEditConvenio={handleOpenEdit}
+            onDeleteConvenio={handleOpenDelete}
+            onAddConvenio={handleOpenAdd}
+            onRefresh={() => refetchConvenios()}
+          />
+        </div>
+
+        {/* Right Panel (Detail): Tarifarios vinculados del convenio seleccionado */}
+        <div>
+          <ConvenioTarifarioList
+            selectedConvenio={selectedConvenio}
+            onRefreshConvenio={() => refetchConvenios()}
+          />
+        </div>
+      </div>
+
+      {/* Dialogs */}
       <ConvenioFormDialog
         open={formDialogOpen}
         onOpenChange={setFormDialogOpen}
         convenioToEdit={convenioToEdit}
-        onSuccessCallback={() => refetch()}
+        onSuccessCallback={() => refetchConvenios()}
       />
-      <ConvenioTarifariosDialog
-        open={tarifariosDialogOpen}
-        onOpenChange={setTarifariosDialogOpen}
-        convenio={convenioForTarifarios}
-      />
+
       <ConvenioDeleteDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         convenioToDelete={convenioToDelete}
-        onSuccessCallback={() => refetch()}
+        onSuccessCallback={() => {
+          if (selectedConvenioId === convenioToDelete?.id) {
+            setSelectedConvenioId(null);
+          }
+          refetchConvenios();
+        }}
       />
     </div>
   );
