@@ -4,7 +4,17 @@ import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Users, Loader2, KeyRound, UserCheck, Shield, CreditCard, User } from "lucide-react";
+import {
+  Users,
+  Loader2,
+  KeyRound,
+  UserCheck,
+  Shield,
+  CreditCard,
+  User,
+  ArrowRight,
+  ArrowLeft,
+} from "lucide-react";
 
 import {
   Sheet,
@@ -24,6 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Stepper, type StepItem } from "@/components/ui/stepper";
 import { cn } from "@/lib/utils";
 
 import { usuarioSchema, type UsuarioFormValues } from "../schemas/usuario.schema";
@@ -53,6 +64,21 @@ const EXTENSIONES = ["SC", "LP", "CB", "OR", "PT", "TJ", "CH", "BE", "PA"];
 const GENEROS = ["Masculino", "Femenino", "Otro"];
 const ESTADOS_CIVILES = ["Soltero/a", "Casado/a", "Divorciado/a", "Viudo/a"];
 
+const STEPS: StepItem[] = [
+  {
+    id: 1,
+    title: "Paso 1: Persona",
+    description: "Datos filiatorios e identificación",
+    icon: User,
+  },
+  {
+    id: 2,
+    title: "Paso 2: Cuenta",
+    description: "Credenciales y rol asignado",
+    icon: KeyRound,
+  },
+];
+
 export function UsuarioFormDialog({
   open,
   onOpenChange,
@@ -60,6 +86,7 @@ export function UsuarioFormDialog({
   onSuccessCallback,
 }: UsuarioFormDialogProps) {
   const isEditing = Boolean(usuarioToEdit);
+  const [currentStep, setCurrentStep] = React.useState<1 | 2>(1);
 
   const createMutation = useCreateUsuario();
   const updateMutation = useUpdateUsuario();
@@ -70,6 +97,7 @@ export function UsuarioFormDialog({
     reset,
     setValue,
     watch,
+    trigger,
     formState: { errors, isSubmitting },
   } = useForm<UsuarioFormValues>({
     resolver: zodResolver(usuarioSchema),
@@ -101,6 +129,7 @@ export function UsuarioFormDialog({
   // Reset form state when drawer opens or editing item changes
   React.useEffect(() => {
     if (open) {
+      setCurrentStep(1);
       if (usuarioToEdit) {
         reset({
           userName: usuarioToEdit.userName || "",
@@ -142,6 +171,30 @@ export function UsuarioFormDialog({
       }
     }
   }, [open, usuarioToEdit, reset]);
+
+  const handleNextStep = async () => {
+    const isValid = await trigger([
+      "nombres",
+      "apellidoPaterno",
+      "tipoDocumento",
+      "numeroDocumento",
+      "fechaNacimiento",
+    ]);
+
+    if (isValid) {
+      setCurrentStep(2);
+    } else {
+      toast.error("Por favor complete todos los campos obligatorios de la persona.");
+    }
+  };
+
+  const handleStepClick = (stepId: number) => {
+    if (stepId === 1) {
+      setCurrentStep(1);
+    } else if (stepId === 2) {
+      handleNextStep();
+    }
+  };
 
   const onSubmit = async (values: UsuarioFormValues) => {
     try {
@@ -198,7 +251,7 @@ export function UsuarioFormDialog({
         side="right"
         className="sm:!max-w-2xl md:!max-w-3xl lg:!max-w-4xl w-full p-5 flex flex-col h-full overflow-y-auto"
       >
-        <SheetHeader className="p-0 space-y-1.5 pb-4 border-b">
+        <SheetHeader className="p-0 space-y-1.5 pb-3 border-b">
           <SheetTitle className="flex items-center gap-2.5 text-xl font-bold">
             <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <Users className="size-5" />
@@ -208,333 +261,392 @@ export function UsuarioFormDialog({
           <SheetDescription className="text-xs sm:text-sm text-muted-foreground">
             {isEditing
               ? "Modifique los parámetros de la cuenta, roles asignados y credenciales de acceso."
-              : "Ingrese la información personal y credenciales requeridas para el nuevo usuario."}
+              : "Complete el registro por pasos: primero la información personal y luego las credenciales de usuario."}
           </SheetDescription>
         </SheetHeader>
+
+        {/* Componente Global de Stepper */}
+        <Stepper
+          steps={STEPS}
+          currentStep={currentStep}
+          onStepClick={handleStepClick}
+        />
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 space-y-6 pt-4 overflow-y-auto pr-1">
           {/* Indicador de campos requeridos */}
           <div className="flex items-center justify-between text-xs text-muted-foreground bg-muted/40 px-3.5 py-2 rounded-lg border border-border/50">
-            <span>Formulario de persona y credenciales de usuario</span>
+            <span>
+              {currentStep === 1
+                ? "Paso 1 de 2: Información filiatoria de la persona"
+                : "Paso 2 de 2: Credenciales y permisos de usuario"}
+            </span>
             <span className="text-destructive font-semibold">* Requeridos</span>
           </div>
 
-          {/* Bloque 1: Nombres y Apellidos */}
-          <div className="space-y-2.5">
-            <div className="flex items-center gap-2 text-xs font-bold text-foreground uppercase tracking-wider">
-              <UserCheck className="size-4 text-primary" />
-              <span>Nombres y Apellidos</span>
-            </div>
+          {currentStep === 1 && (
+            <div className="space-y-6">
+              {/* Bloque 1: Nombres y Apellidos */}
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-2 text-xs font-bold text-foreground uppercase tracking-wider">
+                  <UserCheck className="size-4 text-primary" />
+                  <span>Nombres y Apellidos</span>
+                </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {/* Nombres */}
-              <div className="space-y-1">
-                <Label htmlFor="nombres" className="text-sm font-medium flex items-center gap-1">
-                  Nombres <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="nombres"
-                  placeholder="ej. María Elena"
-                  className={cn("w-full h-9 text-sm", errors.nombres && "border-destructive focus-visible:ring-destructive")}
-                  {...register("nombres")}
-                />
-                {errors.nombres && (
-                  <p className="text-xs text-destructive font-medium">{errors.nombres.message}</p>
-                )}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Nombres */}
+                  <div className="space-y-1">
+                    <Label htmlFor="nombres" className="text-sm font-medium flex items-center gap-1">
+                      Nombres <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="nombres"
+                      placeholder="ej. María Elena"
+                      className={cn("w-full h-9 text-sm", errors.nombres && "border-destructive focus-visible:ring-destructive")}
+                      {...register("nombres")}
+                    />
+                    {errors.nombres && (
+                      <p className="text-xs text-destructive font-medium">{errors.nombres.message}</p>
+                    )}
+                  </div>
+
+                  {/* Apellido Paterno */}
+                  <div className="space-y-1">
+                    <Label htmlFor="apellidoPaterno" className="text-sm font-medium flex items-center gap-1">
+                      Apellido Paterno <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="apellidoPaterno"
+                      placeholder="ej. Gómez"
+                      className={cn("w-full h-9 text-sm", errors.apellidoPaterno && "border-destructive focus-visible:ring-destructive")}
+                      {...register("apellidoPaterno")}
+                    />
+                    {errors.apellidoPaterno && (
+                      <p className="text-xs text-destructive font-medium">{errors.apellidoPaterno.message}</p>
+                    )}
+                  </div>
+
+                  {/* Apellido Materno */}
+                  <div className="space-y-1">
+                    <Label htmlFor="apellidoMaterno" className="text-sm font-medium">
+                      Apellido Materno
+                    </Label>
+                    <Input
+                      id="apellidoMaterno"
+                      placeholder="ej. Pérez"
+                      className="w-full h-9 text-sm"
+                      {...register("apellidoMaterno")}
+                    />
+                  </div>
+                </div>
               </div>
 
-              {/* Apellido Paterno */}
-              <div className="space-y-1">
-                <Label htmlFor="apellidoPaterno" className="text-sm font-medium flex items-center gap-1">
-                  Apellido Paterno <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="apellidoPaterno"
-                  placeholder="ej. Gómez"
-                  className={cn("w-full h-9 text-sm", errors.apellidoPaterno && "border-destructive focus-visible:ring-destructive")}
-                  {...register("apellidoPaterno")}
-                />
-                {errors.apellidoPaterno && (
-                  <p className="text-xs text-destructive font-medium">{errors.apellidoPaterno.message}</p>
-                )}
+              {/* Bloque 2: Documento de Identidad */}
+              <div className="space-y-2.5 pt-4 border-t border-border/50">
+                <div className="flex items-center gap-2 text-xs font-bold text-foreground uppercase tracking-wider">
+                  <CreditCard className="size-4 text-primary" />
+                  <span>Documento de Identidad</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                  {/* Tipo Documento */}
+                  <div className="space-y-1 sm:col-span-1">
+                    <Label htmlFor="tipoDocumento" className="text-sm font-medium flex items-center gap-1">
+                      Tipo Doc. <span className="text-destructive">*</span>
+                    </Label>
+                    <Select
+                      value={tipoDocumentoValue}
+                      onValueChange={(val) => setValue("tipoDocumento", val || "CI")}
+                    >
+                      <SelectTrigger id="tipoDocumento" className="w-full h-9 text-sm">
+                        <SelectValue placeholder="Tipo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {TIPOS_DOCUMENTO.map((tipo) => (
+                          <SelectItem key={tipo} value={tipo}>
+                            {tipo}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Número Documento */}
+                  <div className="space-y-1 sm:col-span-1">
+                    <Label htmlFor="numeroDocumento" className="text-sm font-medium flex items-center gap-1">
+                      Número <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="numeroDocumento"
+                      placeholder="12345678"
+                      className={cn("w-full font-mono h-9 text-sm", errors.numeroDocumento && "border-destructive focus-visible:ring-destructive")}
+                      {...register("numeroDocumento")}
+                    />
+                    {errors.numeroDocumento && (
+                      <p className="text-xs text-destructive font-medium">{errors.numeroDocumento.message}</p>
+                    )}
+                  </div>
+
+                  {/* Extensión */}
+                  <div className="space-y-1 sm:col-span-1">
+                    <Label htmlFor="extensionDocumento" className="text-sm font-medium">
+                      Extensión (Dpto.)
+                    </Label>
+                    <Select
+                      value={extensionDocumentoValue || "none"}
+                      onValueChange={(val) => setValue("extensionDocumento", !val || val === "none" ? "" : val)}
+                    >
+                      <SelectTrigger id="extensionDocumento" className="w-full h-9 text-sm">
+                        <SelectValue placeholder="Sin ext." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Sin Extensión</SelectItem>
+                        {EXTENSIONES.map((ext) => (
+                          <SelectItem key={ext} value={ext}>
+                            {ext}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Complemento */}
+                  <div className="space-y-1 sm:col-span-1">
+                    <Label htmlFor="complementoDocumento" className="text-sm font-medium">
+                      Complemento
+                    </Label>
+                    <Input
+                      id="complementoDocumento"
+                      placeholder="1A"
+                      className="w-full font-mono h-9 text-sm uppercase"
+                      {...register("complementoDocumento")}
+                    />
+                  </div>
+                </div>
               </div>
 
-              {/* Apellido Materno */}
-              <div className="space-y-1">
-                <Label htmlFor="apellidoMaterno" className="text-sm font-medium">
-                  Apellido Materno
-                </Label>
-                <Input
-                  id="apellidoMaterno"
-                  placeholder="ej. Pérez"
-                  className="w-full h-9 text-sm"
-                  {...register("apellidoMaterno")}
-                />
+              {/* Bloque 3: Información Personal y Filiatoria */}
+              <div className="space-y-2.5 pt-4 border-t border-border/50">
+                <div className="flex items-center gap-2 text-xs font-bold text-foreground uppercase tracking-wider">
+                  <User className="size-4 text-primary" />
+                  <span>Información Personal y Filiatoria</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Fecha Nacimiento */}
+                  <div className="space-y-1">
+                    <Label htmlFor="fechaNacimiento" className="text-sm font-medium flex items-center gap-1">
+                      Fecha de Nacimiento <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="fechaNacimiento"
+                      type="date"
+                      className={cn("w-full h-9 text-sm", errors.fechaNacimiento && "border-destructive focus-visible:ring-destructive")}
+                      {...register("fechaNacimiento")}
+                    />
+                    {errors.fechaNacimiento && (
+                      <p className="text-xs text-destructive font-medium">{errors.fechaNacimiento.message}</p>
+                    )}
+                  </div>
+
+                  {/* Género */}
+                  <div className="space-y-1">
+                    <Label htmlFor="genero" className="text-sm font-medium">
+                      Género
+                    </Label>
+                    <Select
+                      value={generoValue}
+                      onValueChange={(val) => setValue("genero", val || "")}
+                    >
+                      <SelectTrigger id="genero" className="w-full h-9 text-sm">
+                        <SelectValue placeholder="Seleccione género" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {GENEROS.map((gen) => (
+                          <SelectItem key={gen} value={gen}>
+                            {gen}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Estado Civil */}
+                  <div className="space-y-1">
+                    <Label htmlFor="estadoCivil" className="text-sm font-medium">
+                      Estado Civil
+                    </Label>
+                    <Select
+                      value={estadoCivilValue}
+                      onValueChange={(val) => setValue("estadoCivil", val || "")}
+                    >
+                      <SelectTrigger id="estadoCivil" className="w-full h-9 text-sm">
+                        <SelectValue placeholder="Seleccione estado civil" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ESTADOS_CIVILES.map((est) => (
+                          <SelectItem key={est} value={est}>
+                            {est}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Bloque 2: Documento de Identidad */}
-          <div className="space-y-2.5 pt-4 border-t border-border/50">
-            <div className="flex items-center gap-2 text-xs font-bold text-foreground uppercase tracking-wider">
-              <CreditCard className="size-4 text-primary" />
-              <span>Documento de Identidad</span>
+          {currentStep === 2 && (
+            <div className="space-y-6">
+              {/* Bloque 1: Credenciales de Acceso */}
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-2 text-xs font-bold text-foreground uppercase tracking-wider">
+                  <KeyRound className="size-4 text-primary" />
+                  <span>Credenciales de Acceso</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Username */}
+                  <div className="space-y-1">
+                    <Label htmlFor="userName" className="text-sm font-medium flex items-center gap-1">
+                      Nombre de Usuario <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="userName"
+                      placeholder="ej. crodriguez"
+                      className={cn("w-full font-mono h-9 text-sm", errors.userName && "border-destructive focus-visible:ring-destructive")}
+                      {...register("userName")}
+                    />
+                    {errors.userName && (
+                      <p className="text-xs text-destructive font-medium">{errors.userName.message}</p>
+                    )}
+                  </div>
+
+                  {/* Email */}
+                  <div className="space-y-1">
+                    <Label htmlFor="email" className="text-sm font-medium flex items-center gap-1">
+                      Correo Electrónico <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="carlos@clinica.com"
+                      className={cn("w-full h-9 text-sm", errors.email && "border-destructive focus-visible:ring-destructive")}
+                      {...register("email")}
+                    />
+                    {errors.email && (
+                      <p className="text-xs text-destructive font-medium">{errors.email.message}</p>
+                    )}
+                  </div>
+
+                  {/* Password */}
+                  <div className="space-y-1">
+                    <Label htmlFor="password" className="text-sm font-medium">
+                      {isEditing ? "Nueva Contraseña (Opcional)" : "Contraseña"}
+                    </Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder={isEditing ? "Dejar en blanco para mantener" : "••••••••"}
+                      className="w-full h-9 text-sm"
+                      {...register("password")}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Bloque 2: Asignación de Roles */}
+              <div className="space-y-2.5 pt-4 border-t border-border/50">
+                <div className="flex items-center gap-2 text-xs font-bold text-foreground uppercase tracking-wider">
+                  <Shield className="size-4 text-primary" />
+                  <span>Rol y Permisos del Sistema</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Rol */}
+                  <div className="space-y-1">
+                    <Label htmlFor="rol" className="text-sm font-medium flex items-center gap-1">
+                      Rol Principal <span className="text-destructive">*</span>
+                    </Label>
+                    <Select
+                      value={rolValue}
+                      onValueChange={(val) => setValue("rol", val || ROL_DEFECTO)}
+                    >
+                      <SelectTrigger id="rol" className="w-full h-9 text-sm">
+                        <SelectValue placeholder="Seleccione un rol" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ROLES_DISPONIBLES.map((r) => (
+                          <SelectItem key={r.value} value={r.value}>
+                            {r.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.rol && (
+                      <p className="text-xs text-destructive font-medium">{errors.rol.message}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
+          )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-              {/* Tipo Documento */}
-              <div className="space-y-1 sm:col-span-1">
-                <Label htmlFor="tipoDocumento" className="text-sm font-medium flex items-center gap-1">
-                  Tipo Doc. <span className="text-destructive">*</span>
-                </Label>
-                <Select
-                  value={tipoDocumentoValue}
-                  onValueChange={(val) => setValue("tipoDocumento", val || "CI")}
+          <SheetFooter className="p-0 pt-5 border-t flex flex-row justify-between items-center gap-2">
+            <div>
+              {currentStep === 2 ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setCurrentStep(1)}
+                  disabled={isLoading}
+                  className="gap-1.5 cursor-pointer"
                 >
-                  <SelectTrigger id="tipoDocumento" className="w-full h-9 text-sm">
-                    <SelectValue placeholder="Tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TIPOS_DOCUMENTO.map((tipo) => (
-                      <SelectItem key={tipo} value={tipo}>
-                        {tipo}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Número Documento */}
-              <div className="space-y-1 sm:col-span-1">
-                <Label htmlFor="numeroDocumento" className="text-sm font-medium flex items-center gap-1">
-                  Número <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="numeroDocumento"
-                  placeholder="12345678"
-                  className={cn("w-full font-mono h-9 text-sm", errors.numeroDocumento && "border-destructive focus-visible:ring-destructive")}
-                  {...register("numeroDocumento")}
-                />
-                {errors.numeroDocumento && (
-                  <p className="text-xs text-destructive font-medium">{errors.numeroDocumento.message}</p>
-                )}
-              </div>
-
-              {/* Extensión */}
-              <div className="space-y-1 sm:col-span-1">
-                <Label htmlFor="extensionDocumento" className="text-sm font-medium">
-                  Extensión (Dpto.)
-                </Label>
-                <Select
-                  value={extensionDocumentoValue || "none"}
-                  onValueChange={(val) => setValue("extensionDocumento", !val || val === "none" ? "" : val)}
+                  <ArrowLeft className="size-4" />
+                  Anterior
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  disabled={isLoading}
+                  className="cursor-pointer"
                 >
-                  <SelectTrigger id="extensionDocumento" className="w-full h-9 text-sm">
-                    <SelectValue placeholder="Sin ext." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Sin Extensión</SelectItem>
-                    {EXTENSIONES.map((ext) => (
-                      <SelectItem key={ext} value={ext}>
-                        {ext}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Complemento */}
-              <div className="space-y-1 sm:col-span-1">
-                <Label htmlFor="complementoDocumento" className="text-sm font-medium">
-                  Complemento
-                </Label>
-                <Input
-                  id="complementoDocumento"
-                  placeholder="1A"
-                  className="w-full font-mono h-9 text-sm uppercase"
-                  {...register("complementoDocumento")}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Bloque 3: Información Personal y Filiatoria */}
-          <div className="space-y-2.5 pt-4 border-t border-border/50">
-            <div className="flex items-center gap-2 text-xs font-bold text-foreground uppercase tracking-wider">
-              <User className="size-4 text-primary" />
-              <span>Información Personal y Filiatoria</span>
+                  Cancelar
+                </Button>
+              )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {/* Fecha Nacimiento */}
-              <div className="space-y-1">
-                <Label htmlFor="fechaNacimiento" className="text-sm font-medium flex items-center gap-1">
-                  Fecha de Nacimiento <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="fechaNacimiento"
-                  type="date"
-                  className={cn("w-full h-9 text-sm", errors.fechaNacimiento && "border-destructive focus-visible:ring-destructive")}
-                  {...register("fechaNacimiento")}
-                />
-                {errors.fechaNacimiento && (
-                  <p className="text-xs text-destructive font-medium">{errors.fechaNacimiento.message}</p>
-                )}
-              </div>
-
-              {/* Género */}
-              <div className="space-y-1">
-                <Label htmlFor="genero" className="text-sm font-medium">
-                  Género
-                </Label>
-                <Select
-                  value={generoValue}
-                  onValueChange={(val) => setValue("genero", val || "")}
+            <div className="flex items-center gap-2">
+              {currentStep === 1 ? (
+                <Button
+                  type="button"
+                  onClick={handleNextStep}
+                  disabled={isLoading}
+                  className="gap-1.5 cursor-pointer"
                 >
-                  <SelectTrigger id="genero" className="w-full h-9 text-sm">
-                    <SelectValue placeholder="Seleccione género" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {GENEROS.map((gen) => (
-                      <SelectItem key={gen} value={gen}>
-                        {gen}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Estado Civil */}
-              <div className="space-y-1">
-                <Label htmlFor="estadoCivil" className="text-sm font-medium">
-                  Estado Civil
-                </Label>
-                <Select
-                  value={estadoCivilValue}
-                  onValueChange={(val) => setValue("estadoCivil", val || "")}
-                >
-                  <SelectTrigger id="estadoCivil" className="w-full h-9 text-sm">
-                    <SelectValue placeholder="Seleccione estado civil" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ESTADOS_CIVILES.map((est) => (
-                      <SelectItem key={est} value={est}>
-                        {est}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  Siguiente
+                  <ArrowRight className="size-4" />
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => onOpenChange(false)}
+                    disabled={isLoading}
+                    className="cursor-pointer"
+                  >
+                    Cancelar
+                  </Button>
+                  <Button type="submit" disabled={isLoading} className="gap-2 cursor-pointer">
+                    {isLoading && <Loader2 className="size-4 animate-spin" />}
+                    {isEditing ? "Guardar Cambios" : "Crear Usuario"}
+                  </Button>
+                </>
+              )}
             </div>
-          </div>
-
-          {/* Bloque 4: Credenciales de Acceso */}
-          <div className="space-y-2.5 pt-4 border-t border-border/50">
-            <div className="flex items-center gap-2 text-xs font-bold text-foreground uppercase tracking-wider">
-              <KeyRound className="size-4 text-primary" />
-              <span>Credenciales de Acceso</span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {/* Username */}
-              <div className="space-y-1">
-                <Label htmlFor="userName" className="text-sm font-medium flex items-center gap-1">
-                  Nombre de Usuario <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="userName"
-                  placeholder="ej. crodriguez"
-                  className={cn("w-full font-mono h-9 text-sm", errors.userName && "border-destructive focus-visible:ring-destructive")}
-                  {...register("userName")}
-                />
-                {errors.userName && (
-                  <p className="text-xs text-destructive font-medium">{errors.userName.message}</p>
-                )}
-              </div>
-
-              {/* Email */}
-              <div className="space-y-1">
-                <Label htmlFor="email" className="text-sm font-medium flex items-center gap-1">
-                  Correo Electrónico <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="carlos@clinica.com"
-                  className={cn("w-full h-9 text-sm", errors.email && "border-destructive focus-visible:ring-destructive")}
-                  {...register("email")}
-                />
-                {errors.email && (
-                  <p className="text-xs text-destructive font-medium">{errors.email.message}</p>
-                )}
-              </div>
-
-              {/* Password */}
-              <div className="space-y-1">
-                <Label htmlFor="password" className="text-sm font-medium">
-                  {isEditing ? "Nueva Contraseña (Opcional)" : "Contraseña"}
-                </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder={isEditing ? "Dejar en blanco para mantener" : "••••••••"}
-                  className="w-full h-9 text-sm"
-                  {...register("password")}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Bloque 5: Asignación de Roles */}
-          <div className="space-y-2.5 pt-4 border-t border-border/50">
-            <div className="flex items-center gap-2 text-xs font-bold text-foreground uppercase tracking-wider">
-              <Shield className="size-4 text-primary" />
-              <span>Rol y Permisos del Sistema</span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {/* Rol */}
-              <div className="space-y-1">
-                <Label htmlFor="rol" className="text-sm font-medium flex items-center gap-1">
-                  Rol Principal <span className="text-destructive">*</span>
-                </Label>
-                <Select
-                  value={rolValue}
-                  onValueChange={(val) => setValue("rol", val || ROL_DEFECTO)}
-                >
-                  <SelectTrigger id="rol" className="w-full h-9 text-sm">
-                    <SelectValue placeholder="Seleccione un rol" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ROLES_DISPONIBLES.map((r) => (
-                      <SelectItem key={r.value} value={r.value}>
-                        {r.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.rol && (
-                  <p className="text-xs text-destructive font-medium">{errors.rol.message}</p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <SheetFooter className="p-0 pt-5 border-t gap-2 flex-row justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isLoading}
-              className="cursor-pointer"
-            >
-              Cancelar
-            </Button>
-
-            <Button type="submit" disabled={isLoading} className="gap-2 cursor-pointer">
-              {isLoading && <Loader2 className="size-4 animate-spin" />}
-              {isEditing ? "Guardar Cambios" : "Crear Usuario"}
-            </Button>
           </SheetFooter>
         </form>
       </SheetContent>
