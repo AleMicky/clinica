@@ -1,12 +1,28 @@
 import type { PersonaResponse } from "../../persona/types/persona.types";
 
+export interface UsuarioPersonaResponse {
+  id: number;
+  nombres: string;
+  apellidoPaterno: string;
+  apellidoMaterno?: string | null;
+  fechaNacimiento?: string | null;
+  telefono?: string | null;
+  direccion?: string | null;
+  tipoDocumento: string;
+  numeroDocumento: string;
+  extensionDocumento?: string | null;
+  complementoDocumento?: string | null;
+  genero?: string | null;
+  estadoCivil?: string | null;
+}
+
 export interface UsuarioResponse {
   id: number;
   userName: string;
   email: string;
   activo: boolean;
   debeCambiarPassword?: boolean;
-  persona?: PersonaResponse | null;
+  persona?: UsuarioPersonaResponse | PersonaResponse | null;
   roles: string[];
   fechaCreacion?: string;
   fechaModificacion?: string | null;
