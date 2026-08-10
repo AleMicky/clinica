@@ -1,18 +1,11 @@
-using System.ComponentModel.DataAnnotations;
+using Clinica.Api.Shared.Abstractions;
 
 namespace Clinica.Api.Modules.RecursosHumanos.Cargo.Dtos;
 
 public abstract record CargoRequest
 {
-    [Required]
-    [StringLength(10, MinimumLength = 1)]
     public required string Codigo { get; init; }
-
-    [Required]
-    [StringLength(100, MinimumLength = 1)]
     public required string Nombre { get; init; }
-
-    [StringLength(250)]
     public string? Descripcion { get; init; }
 }
 
@@ -20,15 +13,10 @@ public sealed record CreateCargoRequest : CargoRequest;
 
 public sealed record UpdateCargoRequest : CargoRequest;
 
-public sealed record CargoResponse
+public sealed record CargoResponse : AuditableResponse
 {
     public int Id { get; init; }
     public string Codigo { get; init; } = string.Empty;
     public string Nombre { get; init; } = string.Empty;
     public string? Descripcion { get; init; }
-    public bool Activo { get; init; }
-    public DateTime FechaCreacion { get; init; }
-    public DateTime? FechaModificacion { get; init; }
-    public string? CreadoPor { get; init; }
-    public string? ModificadoPor { get; init; }
 }

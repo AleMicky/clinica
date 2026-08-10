@@ -47,6 +47,7 @@
     <Folder Include="Modules\Recepcion\Directorio\Mappers\" />
     <Folder Include="Modules\Recepcion\Directorio\Services\" />
     <Folder Include="Modules\Recepcion\Directorio\Validators\" />
+    <Folder Include="Modules\RecursosHumanos\AsignacionEmpleado\Validators\" />
     <Folder Include="Modules\RecursosHumanos\Especialidad\Dtos\" />
     <Folder Include="Modules\RecursosHumanos\Especialidad\Endpoints\" />
     <Folder Include="Modules\RecursosHumanos\Especialidad\Mappers\" />

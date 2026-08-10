@@ -1,6 +1,7 @@
 using Clinica.Api.Modules.RecursosHumanos.Cargo.Dtos;
 using Clinica.Api.Modules.RecursosHumanos.Cargo.Services;
 using Clinica.Api.Shared.Pagination;
+using Clinica.Api.Shared.Validation;
 
 namespace Clinica.Api.Modules.RecursosHumanos.Cargo.Endpoints;
 
@@ -16,8 +17,12 @@ public static class CargoEndpoints
 
         group.MapGet("/", ListarAsync).WithName("ListarCargos");
         group.MapGet("/{id:int}", ObtenerAsync).WithName("ObtenerCargo");
-        group.MapPost("/", CrearAsync).WithName("CrearCargo");
-        group.MapPut("/{id:int}", ActualizarAsync).WithName("ActualizarCargo");
+        group.MapPost("/", CrearAsync)
+            .WithName("CrearCargo")
+            .Validate<CreateCargoRequest>();
+        group.MapPut("/{id:int}", ActualizarAsync)
+            .WithName("ActualizarCargo")
+            .Validate<UpdateCargoRequest>();
         group.MapDelete("/{id:int}", EliminarAsync).WithName("EliminarCargo");
 
         return app;

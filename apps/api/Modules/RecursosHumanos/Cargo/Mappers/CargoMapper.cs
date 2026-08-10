@@ -7,6 +7,7 @@ namespace Clinica.Api.Modules.RecursosHumanos.Cargo.Mappers;
 [Mapper]
 public static partial class CargoMapper
 {
+    [MapperIgnoreSource(nameof(CargoEntity.Asignaciones))]
     public static partial CargoResponse ToResponse(
         CargoEntity entity
     );

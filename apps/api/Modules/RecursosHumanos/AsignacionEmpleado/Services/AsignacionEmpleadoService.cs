@@ -56,11 +56,8 @@ public sealed class AsignacionEmpleadoService(AppDbContext dbContext)
         return new AsignacionEmpleadoResponse
         {
             Id = entity.Id,
-            EmpleadoId = entity.EmpleadoId,
             Empleado = MapEmpleadoInfo(entity.Empleado),
-            AreaId = entity.AreaId,
             Area = MapAreaInfo(entity.Area),
-            CargoId = entity.CargoId,
             Cargo = MapCargoInfo(entity.Cargo),
             FechaInicio = entity.FechaInicio,
             FechaFin = entity.FechaFin,
