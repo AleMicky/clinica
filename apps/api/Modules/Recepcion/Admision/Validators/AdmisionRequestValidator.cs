@@ -34,7 +34,12 @@ public abstract class AdmisionRequestValidator<TRequest>
 
         RuleFor(x => x.Detalles)
             .NotEmpty()
-            .WithMessage("Debe incluir al menos un detalle de admisión.");
+            .WithMessage("Debe incluir al menos un detalle de admisión.")
+            .Must(detalles => detalles
+                .Select(d => d.ServicioId)
+                .Distinct()
+                .Count() == detalles.Count)
+            .WithMessage("No puede duplicar servicios dentro de la misma admisión.");
 
         RuleForEach(x => x.Detalles)
             .SetValidator(new AdmisionDetalleRequestValidator<AdmisionDetalleRequest>());

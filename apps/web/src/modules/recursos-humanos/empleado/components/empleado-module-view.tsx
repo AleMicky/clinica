@@ -10,6 +10,7 @@ import {
 import { EmpleadoTable, type EmpleadoItem } from "./empleado-table";
 import { EmpleadoFormDialog } from "./empleado-form-dialog";
 import { EmpleadoDeleteDialog } from "./empleado-delete-dialog";
+import { EmpleadoAsignacionesDrawer } from "./empleado-asignaciones-drawer";
 import {
   useDeleteEmpleado,
   useEmpleados,
@@ -25,6 +26,11 @@ export function EmpleadoModuleView() {
 
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [empleadoToDelete, setEmpleadoToDelete] =
+    React.useState<EmpleadoItem | null>(null);
+
+  const [asignacionesDrawerOpen, setAsignacionesDrawerOpen] =
+    React.useState(false);
+  const [selectedEmpleadoForAsignaciones, setSelectedEmpleadoForAsignaciones] =
     React.useState<EmpleadoItem | null>(null);
 
   const [currentPage, setCurrentPage] = React.useState(1);
@@ -143,6 +149,11 @@ export function EmpleadoModuleView() {
     }
   };
 
+  const handleOpenAsignaciones = (emp: EmpleadoItem) => {
+    setSelectedEmpleadoForAsignaciones(emp);
+    setAsignacionesDrawerOpen(true);
+  };
+
   const handleConfirmDelete = async () => {
     if (!empleadoToDelete) return;
     const numId = Number(empleadoToDelete.id);
@@ -177,6 +188,7 @@ export function EmpleadoModuleView() {
         onPageSizeChange={handlePageSizeChange}
         onEdit={handleOpenEdit}
         onDelete={handleOpenDelete}
+        onManageAsignaciones={handleOpenAsignaciones}
         onRefresh={() => refetch()}
       />
       <EmpleadoFormDialog
@@ -191,6 +203,11 @@ export function EmpleadoModuleView() {
         empleado={empleadoToDelete}
         onConfirm={handleConfirmDelete}
         isLoading={deleteMutation.isPending}
+      />
+      <EmpleadoAsignacionesDrawer
+        open={asignacionesDrawerOpen}
+        onOpenChange={setAsignacionesDrawerOpen}
+        empleado={selectedEmpleadoForAsignaciones}
       />
     </div>
   );

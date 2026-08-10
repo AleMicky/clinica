@@ -100,7 +100,7 @@ public sealed class AdmisionDetalleService(AppDbContext dbContext)
 
         var entity = AdmisionDetalleMapper.ToEntity(request);
         entity.AdmisionId = admisionId;
-        entity.Total = CalcularTotal(request);
+        entity.Total = request.CalcularTotal();
         entity.Activo = true;
 
         await dbContext.AdmisionesDetalles.AddAsync(entity, cancellationToken);
@@ -146,7 +146,7 @@ public sealed class AdmisionDetalleService(AppDbContext dbContext)
         AdmisionDetalleMapper.UpdateEntity(request, entity);
         entity.ServicioId = request.ServicioId;
         entity.MedicoId = request.MedicoId;
-        entity.Total = CalcularTotal(request);
+        entity.Total = request.CalcularTotal();
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
@@ -209,12 +209,5 @@ public sealed class AdmisionDetalleService(AppDbContext dbContext)
 
         if (!existe)
             throw new NotFoundException(nameof(Medico), medicoId.Value);
-    }
-
-    private static decimal CalcularTotal(
-        AdmisionDetalleRequest request)
-    {
-        return (request.Cantidad * request.PrecioUnitario)
-               - request.Descuento;
     }
 }

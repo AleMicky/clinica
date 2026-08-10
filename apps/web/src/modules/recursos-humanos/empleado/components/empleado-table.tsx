@@ -17,6 +17,7 @@ import {
   CalendarX,
   ChevronDown,
   ChevronUp,
+  UserCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -74,6 +75,7 @@ interface EmpleadoTableProps {
   onPageSizeChange?: (size: number) => void;
   onEdit?: (empleado: EmpleadoItem) => void;
   onDelete?: (id: number | string) => void;
+  onManageAsignaciones?: (empleado: EmpleadoItem) => void;
   onRefresh?: () => void;
 }
 
@@ -146,6 +148,7 @@ export function EmpleadoTable({
   onPageSizeChange,
   onEdit,
   onDelete,
+  onManageAsignaciones,
   onRefresh,
 }: EmpleadoTableProps) {
   const [expandedIds, setExpandedIds] = React.useState<Set<number | string>>(new Set());
@@ -278,9 +281,15 @@ export function EmpleadoTable({
                       <MoreHorizontal className="size-4" />
                       <span className="sr-only">Acciones</span>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-40 text-xs">
+                    <DropdownMenuContent align="end" className="w-48 text-xs">
                       <DropdownMenuGroup>
                         <DropdownMenuLabel className="text-[11px] text-muted-foreground font-normal">Acciones</DropdownMenuLabel>
+                        <DropdownMenuItem
+                          onClick={() => onManageAsignaciones?.(emp)}
+                          className="gap-2 cursor-pointer text-xs font-medium text-primary"
+                        >
+                          <UserCheck className="size-3.5" /> Asignar Área / Cargo
+                        </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => onEdit?.(emp)}
                           className="gap-2 cursor-pointer text-xs"
@@ -319,6 +328,17 @@ export function EmpleadoTable({
                       <CalendarDays className="size-3 shrink-0" />
                       <span>Ingreso: <strong className="text-foreground">{formatDate(emp.fechaIngreso)}</strong></span>
                     </div>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onManageAsignaciones?.(emp)}
+                      className="h-7 text-[11px] gap-1 px-2.5 text-primary border-primary/30 bg-primary/5 hover:bg-primary/10 cursor-pointer font-semibold shadow-2xs"
+                      title="Gestionar área y cargo asignados"
+                    >
+                      <UserCheck className="size-3.5" />
+                      <span>Asignación</span>
+                    </Button>
                   </div>
                 </div>
 

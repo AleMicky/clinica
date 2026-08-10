@@ -11,7 +11,7 @@ public static class MedicoEndpoints
         this IEndpointRouteBuilder app)
     {
         var group = app
-            .MapGroup("/empleados/{empleadoId:int}/medicos")
+            .MapGroup("/medicos")
             .WithTags("Médicos")
             .RequireAuthorization();
 
@@ -36,7 +36,7 @@ public static class MedicoEndpoints
     }
 
     private static async Task<IResult> ListarAsync(
-        int empleadoId,
+        int? empleadoId,
         [AsParameters] PaginationRequest pagination,
         string? search,
         MedicoService service,
@@ -51,36 +51,31 @@ public static class MedicoEndpoints
     }
 
     private static async Task<IResult> ObtenerAsync(
-        int empleadoId,
         int medicoId,
         MedicoService service,
         CancellationToken cancellationToken)
     {
         return Results.Ok(
             await service.ObtenerAsync(
-                empleadoId,
                 medicoId,
                 cancellationToken));
     }
 
     private static async Task<IResult> CrearAsync(
-        int empleadoId,
         CreateMedicoRequest request,
         MedicoService service,
         CancellationToken cancellationToken)
     {
         var result = await service.CrearAsync(
-            empleadoId,
             request,
             cancellationToken);
 
         return Results.Created(
-            $"/empleados/{empleadoId}/medicos/{result.Id}",
+            $"/medicos/{result.Id}",
             result);
     }
 
     private static async Task<IResult> ActualizarAsync(
-        int empleadoId,
         int medicoId,
         UpdateMedicoRequest request,
         MedicoService service,
@@ -88,20 +83,17 @@ public static class MedicoEndpoints
     {
         return Results.Ok(
             await service.ActualizarAsync(
-                empleadoId,
                 medicoId,
                 request,
                 cancellationToken));
     }
 
     private static async Task<IResult> EliminarAsync(
-        int empleadoId,
         int medicoId,
         MedicoService service,
         CancellationToken cancellationToken)
     {
         await service.EliminarAsync(
-            empleadoId,
             medicoId,
             cancellationToken);
 

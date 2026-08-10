@@ -14,6 +14,9 @@ export const ROUTES = {
   RECURSOS_HUMANOS: {
     ROOT: "/recursos-humanos",
     EMPLEADOS: "/recursos-humanos/empleados",
+    MEDICOS: "/recursos-humanos/medicos",
+    MEDICO_DETALLE: (id: number | string) => `/recursos-humanos/medicos/${id}`,
+    ASIGNACIONES_EMPLEADO: "/recursos-humanos/asignaciones-empleado",
     CARGOS: "/recursos-humanos/cargos",
     ESPECIALIDADES: "/recursos-humanos/especialidades",
     TIPOS_AREA: "/recursos-humanos/tipos-area",

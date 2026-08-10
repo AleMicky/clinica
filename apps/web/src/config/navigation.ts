@@ -51,26 +51,34 @@ export const directNavItems: NavItem[] = [
     description: "Panel principal del sistema",
   },
   {
-    title: "Pacientes",
-    href: "/pacientes",
-    icon: HeartPulse,
-    description: "Gestión de expedientes y registros de pacientes",
-  },
-  {
-    title: "Citas Médicas",
-    href: "/citas",
-    icon: Calendar,
-    description: "Agenda y programación de consultas",
-  },
-  {
-    title: "Reportes",
-    href: "/reportes",
-    icon: FileBarChart,
-    description: "Informes y estadísticas operativas",
+    title: "Admisiones",
+    href: "/recepcion/admisiones",
+    icon: FileText,
+    description: "Registro de ingresos, atención y detalle de servicios",
   },
 ]
 
 // 2. Módulos Agrupados (Núcleos desplegables con sub-menú)
+export const recepcionNav: NavGroup = {
+  title: "Recepción",
+  icon: HeartPulse,
+  description: "Expedientes de pacientes, admisiones y atención médica",
+  items: [
+    {
+      title: "Pacientes",
+      href: "/recepcion/pacientes",
+      icon: User,
+      description: "Registro de expedientes e historias clínicas",
+    },
+    {
+      title: "Admisiones",
+      href: "/recepcion/admisiones",
+      icon: FileText,
+      description: "Gestión de ingresos, atención y detalle de servicios",
+    },
+  ],
+}
+
 export const serviciosNav: NavGroup = {
   title: "Servicios",
   icon: Stethoscope,
@@ -147,6 +155,12 @@ export const recursosHumanosNav: NavGroup = {
       description: "Expediente del personal médico y administrativo",
     },
     {
+      title: "Médicos",
+      href: "/recursos-humanos/medicos",
+      icon: HeartPulse,
+      description: "Gestión de cuerpo médico, especialidades y acuerdos",
+    },
+    {
       title: "Cargos",
       href: "/recursos-humanos/cargos",
       icon: Briefcase,
@@ -213,6 +227,7 @@ export const parametrosNav: NavGroup = {
 
 // Módulos agrupados
 export const moduleGroups: NavGroup[] = [
+  recepcionNav,
   serviciosNav,
   seguridadNav,
   recursosHumanosNav,
@@ -223,6 +238,7 @@ export const moduleGroups: NavGroup[] = [
 export const navigationConfig = {
   directNavItems,
   moduleGroups,
+  recepcion: recepcionNav,
   servicios: serviciosNav,
   seguridad: seguridadNav,
   recursosHumanos: recursosHumanosNav,
@@ -230,4 +246,5 @@ export const navigationConfig = {
 }
 
 export default navigationConfig
+
 

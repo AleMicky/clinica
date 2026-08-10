@@ -36,6 +36,9 @@ public abstract record AdmisionDetalleRequest
     public decimal Cantidad { get; init; } = 1;
     public decimal PrecioUnitario { get; init; }
     public decimal Descuento { get; init; }
+
+    public decimal CalcularTotal() =>
+        (Cantidad * PrecioUnitario) - Descuento;
 }
 
 public sealed record CreateAdmisionDetalleRequest : AdmisionDetalleRequest;

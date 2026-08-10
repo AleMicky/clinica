@@ -94,6 +94,10 @@ public sealed class PacienteService(AppDbContext dbContext)
         paciente.NumeroHistoriaClinica =
             GenerarNumeroHistoriaClinica(request);
 
+        await ValidarNumeroHistoriaClinicaUnicoAsync(
+            paciente.NumeroHistoriaClinica,
+            cancellationToken);
+
         await Pacientes.AddAsync(
             paciente,
             cancellationToken);
@@ -151,6 +155,23 @@ public sealed class PacienteService(AppDbContext dbContext)
 
         paciente.Activo = false;
         await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task ValidarNumeroHistoriaClinicaUnicoAsync(
+        string numeroHistoriaClinica,
+        CancellationToken cancellationToken)
+    {
+        var existe = await Pacientes
+            .AsNoTracking()
+            .AnyAsync(
+                x => x.NumeroHistoriaClinica == numeroHistoriaClinica,
+                cancellationToken);
+
+        if (existe)
+        {
+            throw new ConflictException(
+                $"Ya existe un paciente con el número de historia clínica '{numeroHistoriaClinica}'.");
+        }
     }
 
     private async Task ValidarDocumentoDuplicadoAsync(

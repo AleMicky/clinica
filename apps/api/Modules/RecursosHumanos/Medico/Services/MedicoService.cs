@@ -12,16 +12,17 @@ namespace Clinica.Api.Modules.RecursosHumanos.Medico.Services;
 public sealed class MedicoService(AppDbContext dbContext)
 {
     public async Task<PagedResult<MedicoResponse>> ListarAsync(
-        int empleadoId,
+        int? empleadoId,
         PaginationRequest pagination,
         string? search,
         CancellationToken cancellationToken = default)
     {
-        await EnsureEmpleadoExistsAsync(empleadoId, cancellationToken);
-
         var query = BuildQuery()
             .AsNoTracking()
-            .Where(x => x.EmpleadoId == empleadoId && x.Activo);
+            .Where(x => x.Activo);
+
+        if (empleadoId.HasValue)
+            query = query.Where(x => x.EmpleadoId == empleadoId.Value);
 
         var normalizedSearch = string.IsNullOrWhiteSpace(search)
             ? null
@@ -54,18 +55,13 @@ public sealed class MedicoService(AppDbContext dbContext)
     }
 
     public async Task<MedicoResponse> ObtenerAsync(
-        int empleadoId,
         int medicoId,
         CancellationToken cancellationToken = default)
     {
-        await EnsureEmpleadoExistsAsync(empleadoId, cancellationToken);
-
         var entity = await BuildQuery()
             .AsNoTracking()
             .FirstOrDefaultAsync(
-                x => x.EmpleadoId == empleadoId
-                     && x.Id == medicoId
-                     && x.Activo,
+                x => x.Id == medicoId && x.Activo,
                 cancellationToken);
 
         if (entity is null)
@@ -75,11 +71,10 @@ public sealed class MedicoService(AppDbContext dbContext)
     }
 
     public async Task<MedicoResponse> CrearAsync(
-        int empleadoId,
         CreateMedicoRequest request,
         CancellationToken cancellationToken = default)
     {
-        await EnsureEmpleadoExistsAsync(empleadoId, cancellationToken);
+        await EnsureEmpleadoExistsAsync(request.EmpleadoId, cancellationToken);
 
         var matricula = NormalizarMatricula(request.MatriculaProfesional);
 
@@ -94,7 +89,7 @@ public sealed class MedicoService(AppDbContext dbContext)
         }
 
         var entity = MedicoMapper.ToEntity(request);
-        entity.EmpleadoId = empleadoId;
+        entity.EmpleadoId = request.EmpleadoId;
         entity.MatriculaProfesional = matricula;
         entity.RegistroMinisterioSalud = Limpiar(request.RegistroMinisterioSalud);
         entity.Activo = true;
@@ -108,18 +103,15 @@ public sealed class MedicoService(AppDbContext dbContext)
     }
 
     public async Task<MedicoResponse> ActualizarAsync(
-        int empleadoId,
         int medicoId,
         UpdateMedicoRequest request,
         CancellationToken cancellationToken = default)
     {
-        await EnsureEmpleadoExistsAsync(empleadoId, cancellationToken);
+        await EnsureEmpleadoExistsAsync(request.EmpleadoId, cancellationToken);
 
         var entity = await BuildQuery()
             .FirstOrDefaultAsync(
-                x => x.EmpleadoId == empleadoId
-                     && x.Id == medicoId
-                     && x.Activo,
+                x => x.Id == medicoId && x.Activo,
                 cancellationToken);
 
         if (entity is null)
@@ -138,6 +130,7 @@ public sealed class MedicoService(AppDbContext dbContext)
                 $"Ya existe otro médico con la matrícula profesional '{matricula}'.");
         }
 
+        entity.EmpleadoId = request.EmpleadoId;
         entity.MatriculaProfesional = matricula;
         entity.RegistroMinisterioSalud = Limpiar(request.RegistroMinisterioSalud);
 
@@ -149,17 +142,12 @@ public sealed class MedicoService(AppDbContext dbContext)
     }
 
     public async Task EliminarAsync(
-        int empleadoId,
         int medicoId,
         CancellationToken cancellationToken = default)
     {
-        await EnsureEmpleadoExistsAsync(empleadoId, cancellationToken);
-
         var entity = await dbContext.Set<MedicoEntity>()
             .FirstOrDefaultAsync(
-                x => x.EmpleadoId == empleadoId
-                     && x.Id == medicoId
-                     && x.Activo,
+                x => x.Id == medicoId && x.Activo,
                 cancellationToken);
 
         if (entity is null)
@@ -243,7 +231,23 @@ public sealed class MedicoService(AppDbContext dbContext)
         {
             Id = empleado.Id,
             CodigoEmpleado = empleado.CodigoEmpleado,
-            NombreCompleto = nombreCompleto
+            NombreCompleto = nombreCompleto,
+            Persona = MapPersonaInfo(empleado.Persona)
+        };
+    }
+
+    private static PersonaInfo? MapPersonaInfo(
+        Clinica.Api.Modules.Seguridad.Personas.Entity.Persona? persona)
+    {
+        if (persona is null)
+            return null;
+
+        return new PersonaInfo
+        {
+            Id = persona.Id,
+            Nombres = persona.Nombres,
+            ApellidoPaterno = persona.ApellidoPaterno,
+            ApellidoMaterno = persona.ApellidoMaterno
         };
     }
 

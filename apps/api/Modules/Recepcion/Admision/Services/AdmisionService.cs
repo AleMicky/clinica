@@ -268,7 +268,7 @@ public sealed class AdmisionService(AppDbContext dbContext)
             Cantidad = request.Cantidad,
             PrecioUnitario = request.PrecioUnitario,
             Descuento = request.Descuento,
-            Total = CalcularTotal(request)
+            Total = request.CalcularTotal()
         };
     }
 
@@ -276,22 +276,37 @@ public sealed class AdmisionService(AppDbContext dbContext)
         AdmisionEntity entity,
         IReadOnlyCollection<AdmisionDetalleRequest> detalles)
     {
-        foreach (var detalle in entity.Detalles.ToList())
+        var existingByServicio = entity.Detalles
+            .ToDictionary(x => x.ServicioId);
+
+        var incomingServicioIds = detalles
+            .Select(x => x.ServicioId)
+            .ToHashSet();
+
+        foreach (var existing in entity.Detalles
+                     .Where(x => !incomingServicioIds.Contains(x.ServicioId))
+                     .ToList())
         {
-            entity.Detalles.Remove(detalle);
+            entity.Detalles.Remove(existing);
         }
 
         foreach (var request in detalles)
         {
-            entity.Detalles.Add(CrearDetalle(request));
+            if (existingByServicio.TryGetValue(
+                    request.ServicioId,
+                    out var detalle))
+            {
+                detalle.MedicoId = request.MedicoId;
+                detalle.Cantidad = request.Cantidad;
+                detalle.PrecioUnitario = request.PrecioUnitario;
+                detalle.Descuento = request.Descuento;
+                detalle.Total = request.CalcularTotal();
+            }
+            else
+            {
+                entity.Detalles.Add(CrearDetalle(request));
+            }
         }
-    }
-
-    private static decimal CalcularTotal(
-        AdmisionDetalleRequest request)
-    {
-        return (request.Cantidad * request.PrecioUnitario)
-               - request.Descuento;
     }
 
     private static void Normalizar(
