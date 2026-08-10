@@ -211,7 +211,7 @@ export function PacienteFormDialog({
                     Tipo Documento <span className="text-destructive">*</span>
                   </Label>
                   <CatalogoAutocomplete
-                    codigo="TIPO_DOCUMENTO"
+                    codigo="TIPOS_DOCUMENTO"
                     value={tipoDocumentoValue}
                     onValueChange={(val: string) =>
                       setValue("tipoDocumento", val, {
