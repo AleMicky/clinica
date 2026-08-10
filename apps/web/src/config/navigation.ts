@@ -156,6 +156,12 @@ export const recursosHumanosNav: NavGroup = {
       description: "Administración de cargos y puestos del personal",
     },
     {
+      title: "Especialidades",
+      href: "/recursos-humanos/especialidades",
+      icon: Stethoscope,
+      description: "Catálogo de especialidades médicas del personal",
+    },
+    {
       title: "Tipos de Área",
       href: "/recursos-humanos/tipos-area",
       icon: Building2,

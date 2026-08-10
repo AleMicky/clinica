@@ -14,8 +14,7 @@ public sealed class MedicoConfiguration
         builder.ToTable("Medicos");
 
         builder.Property(x => x.MatriculaProfesional)
-            .HasMaxLength(30)
-            .IsRequired();
+            .HasMaxLength(30);
 
         builder.Property(x => x.RegistroMinisterioSalud)
             .HasMaxLength(30);

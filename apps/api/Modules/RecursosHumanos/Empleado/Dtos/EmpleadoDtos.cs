@@ -23,6 +23,7 @@ public sealed record EmpleadoResponse : AuditableResponse
     public DateOnly FechaIngreso { get; init; }
     public DateOnly? FechaRetiro { get; init; }
 }
+
 public sealed record PersonaInfoResponse
 {
     public int Id { get; init; }

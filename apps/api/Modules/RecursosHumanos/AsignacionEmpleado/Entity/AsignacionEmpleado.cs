@@ -6,7 +6,7 @@ public sealed class AsignacionEmpleado : AuditableEntity
 {
     public int EmpleadoId { get; set; }
     public Empleado.Entity.Empleado Empleado { get; set; } = null!;
-
+    
     public int AreaId { get; set; }
     public Area.Entity.Area Area { get; set; } = null!;
 

@@ -15,6 +15,7 @@ export const ROUTES = {
     ROOT: "/recursos-humanos",
     EMPLEADOS: "/recursos-humanos/empleados",
     CARGOS: "/recursos-humanos/cargos",
+    ESPECIALIDADES: "/recursos-humanos/especialidades",
     TIPOS_AREA: "/recursos-humanos/tipos-area",
     AREAS: "/recursos-humanos/areas",
   },
