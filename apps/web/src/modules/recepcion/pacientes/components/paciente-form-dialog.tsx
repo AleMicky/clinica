@@ -158,7 +158,10 @@ export function PacienteFormDialog({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-xl p-0 flex flex-col justify-between overflow-y-auto">
+      <SheetContent
+        side="right"
+        className="sm:!max-w-2xl md:!max-w-3xl lg:!max-w-4xl w-full p-0 flex flex-col justify-between overflow-y-auto"
+      >
         <div className="space-y-6">
           {/* Header */}
           <SheetHeader className="p-5 border-b border-border/60 bg-muted/20">
@@ -180,9 +183,9 @@ export function PacienteFormDialog({
           </SheetHeader>
 
           {/* Form Content */}
-          <form id="paciente-form" onSubmit={handleSubmit(onSubmit)} className="px-5 space-y-5">
+          <form id="paciente-form" onSubmit={handleSubmit(onSubmit)} className="px-7 space-y-6">
             {/* Auto HC Preview Badge */}
-            <div className="flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/20">
+            <div className="flex items-center justify-between p-3.5 rounded-lg bg-primary/5 border border-primary/20">
               <div className="flex items-center gap-2">
                 <HeartPulse className="size-4 text-primary" />
                 <span className="text-xs font-semibold text-foreground">Formato HC Sugerido:</span>
@@ -201,7 +204,7 @@ export function PacienteFormDialog({
                 </h4>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                 {/* Tipo de Documento */}
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold">
@@ -285,7 +288,7 @@ export function PacienteFormDialog({
                 </h4>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                 {/* Nombres */}
                 <div className="space-y-1.5 sm:col-span-2">
                   <Label htmlFor="nombres" className="text-xs font-semibold">
@@ -396,7 +399,7 @@ export function PacienteFormDialog({
                 </h4>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                 {/* Teléfono */}
                 <div className="space-y-1.5">
                   <Label htmlFor="telefono" className="text-xs font-semibold">
