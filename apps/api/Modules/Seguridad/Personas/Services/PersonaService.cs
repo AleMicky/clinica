@@ -1,61 +1,74 @@
 using Clinica.Api.Data;
 using Clinica.Api.Modules.Seguridad.Personas.Dtos;
 using Clinica.Api.Modules.Seguridad.Personas.Mappers;
-using Clinica.Api.Shared.Crud;
 using Clinica.Api.Shared.Exceptions;
+using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
 using PersonaEntity = Clinica.Api.Modules.Seguridad.Personas.Entity.Persona;
 
 namespace Clinica.Api.Modules.Seguridad.Personas.Services;
 
 public sealed class PersonaService(AppDbContext dbContext)
-    : CrudService<
-        PersonaEntity,
-        CreatePersonaRequest,
-        UpdatePersonaRequest,
-        PersonaResponse
-    >(dbContext)
 {
-    protected override IQueryable<PersonaEntity> ApplyOrder(
-        IQueryable<PersonaEntity> query)
+    public async Task<PagedResult<PersonaResponse>> ListarAsync(
+        PaginationRequest pagination,
+        string? search,
+        CancellationToken cancellationToken = default)
     {
-        return query
+        var query = dbContext.Personas
+            .AsNoTracking()
+            .Where(x => x.Activo);
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+
+            query = query.Where(x =>
+                x.Nombres.Contains(term) ||
+                x.ApellidoPaterno.Contains(term) ||
+                (x.ApellidoMaterno != null &&
+                 x.ApellidoMaterno.Contains(term)) ||
+                x.NumeroDocumento.Contains(term));
+        }
+
+        var totalItems = await query.CountAsync(cancellationToken);
+
+        var items = await query
             .OrderBy(x => x.ApellidoPaterno)
             .ThenBy(x => x.ApellidoMaterno)
-            .ThenBy(x => x.Nombres);
+            .ThenBy(x => x.Nombres)
+            .Skip(
+                (pagination.ValidPage - 1) *
+                pagination.ValidPageSize)
+            .Take(pagination.ValidPageSize)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<PersonaResponse>(
+            PersonaMapper.ToResponse(items),
+            pagination.ValidPage,
+            pagination.ValidPageSize,
+            totalItems);
     }
 
-    protected override PersonaEntity MapToNewEntity(
-        CreatePersonaRequest request)
+    public async Task<PersonaResponse> ObtenerAsync(
+        int id,
+        CancellationToken cancellationToken = default)
     {
-        var entity = PersonaMapper.ToEntity(request);
-        Normalizar(entity, request);
-        return entity;
-    }
+        var entity = await dbContext.Personas
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                x => x.Id == id && x.Activo,
+                cancellationToken);
 
-    protected override void MapToExistingEntity(
-        UpdatePersonaRequest request,
-        PersonaEntity entity)
-    {
-        PersonaMapper.UpdateEntity(request, entity);
-        Normalizar(entity, request);
-    }
+        if (entity is null)
+            throw new NotFoundException(nameof(PersonaEntity), id);
 
-    protected override PersonaResponse MapToResponse(
-        PersonaEntity entity)
-    {
         return PersonaMapper.ToResponse(entity);
     }
 
-    protected override IReadOnlyCollection<PersonaResponse>
-        MapToResponseList(IEnumerable<PersonaEntity> entities)
-    {
-        return PersonaMapper.ToResponse(entities);
-    }
-
-    protected override async Task ValidateCreateAsync(
+    public async Task<PersonaResponse> CrearAsync(
         CreatePersonaRequest request,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken = default)
     {
         await ValidarDocumentoAsync(
             request.TipoDocumento,
@@ -63,34 +76,121 @@ public sealed class PersonaService(AppDbContext dbContext)
             request.ComplementoDocumento,
             null,
             cancellationToken);
+
+        var entity = PersonaMapper.ToEntity(request);
+
+        Normalizar(entity, request);
+        entity.Activo = true;
+        dbContext.Personas.Add(entity);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return PersonaMapper.ToResponse(entity);
     }
 
-    protected override async Task ValidateUpdateAsync(
+    public async Task<PersonaResponse> ActualizarAsync(
         int id,
         UpdatePersonaRequest request,
-        PersonaEntity entity,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken = default)
     {
+        var entity = await dbContext.Personas
+            .FirstOrDefaultAsync(
+                x => x.Id == id && x.Activo,
+                cancellationToken);
+
+        if (entity is null)
+            throw new NotFoundException(nameof(PersonaEntity), id);
+
         await ValidarDocumentoAsync(
             request.TipoDocumento,
             request.NumeroDocumento,
             request.ComplementoDocumento,
             id,
             cancellationToken);
+
+        PersonaMapper.UpdateEntity(request, entity);
+
+        Normalizar(entity, request);
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return PersonaMapper.ToResponse(entity);
     }
 
-    protected override IQueryable<PersonaEntity> ApplySearch(
-        IQueryable<PersonaEntity> query,
-        string? search)
+    public async Task EliminarAsync(
+        int id,
+        CancellationToken cancellationToken = default)
     {
-        if (search is null)
-            return query;
+        var entity = await dbContext.Personas
+            .FirstOrDefaultAsync(
+                x => x.Id == id,
+                cancellationToken);
 
-        return query.Where(x =>
-            x.Nombres.Contains(search) ||
-            x.ApellidoPaterno.Contains(search) ||
-            x.ApellidoMaterno != null && x.ApellidoMaterno.Contains(search) ||
-            x.NumeroDocumento.Contains(search));
+        if (entity is null)
+            throw new NotFoundException(nameof(PersonaEntity), id);
+
+        await ValidarEliminacionAsync(
+            entity.Id,
+            cancellationToken);
+
+        dbContext.Personas.Remove(entity);
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task InactivarAsync(
+        int id,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await dbContext.Personas
+            .FirstOrDefaultAsync(
+                x => x.Id == id,
+                cancellationToken);
+
+        if (entity is null)
+            throw new NotFoundException(nameof(PersonaEntity), id);
+
+        if (!entity.Activo)
+            return;
+
+        entity.Activo = false;
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task ActivarAsync(
+        int id,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await dbContext.Personas
+            .FirstOrDefaultAsync(
+                x => x.Id == id,
+                cancellationToken);
+
+        if (entity is null)
+            throw new NotFoundException(nameof(PersonaEntity), id);
+
+        if (entity.Activo)
+            return;
+
+        entity.Activo = true;
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task ValidarEliminacionAsync(
+        int personaId,
+        CancellationToken cancellationToken)
+    {
+        var tieneUsuario = await dbContext.Users
+            .AnyAsync(
+                x => x.PersonaId == personaId,
+                cancellationToken);
+
+        if (tieneUsuario)
+        {
+            throw new ConflictException(
+                "No se puede eliminar la persona porque está asociada a un usuario.");
+        }
     }
 
     private async Task ValidarDocumentoAsync(
@@ -104,28 +204,29 @@ public sealed class PersonaService(AppDbContext dbContext)
         var numero = NormalizarTexto(numeroDocumento);
         var complemento = NormalizarOpcional(complementoDocumento);
 
-        var existe = excludeId is null
-            ? await Entities.AnyAsync(
-                x => x.TipoDocumento == tipo
-                     && x.NumeroDocumento == numero
-                     && x.ComplementoDocumento == complemento,
-                cancellationToken)
-            : await Entities.AnyAsync(
-                x => x.Id != excludeId
-                     && x.TipoDocumento == tipo
-                     && x.NumeroDocumento == numero
-                     && x.ComplementoDocumento == complemento,
-                cancellationToken);
+        var query = dbContext.Personas
+            .AsNoTracking()
+            .Where(x =>
+                x.TipoDocumento == tipo &&
+                x.NumeroDocumento == numero &&
+                x.ComplementoDocumento == complemento);
 
-        if (existe)
+        if (excludeId.HasValue)
         {
-            var descripcion = complemento is null
-                ? $"{tipo} {numero}"
-                : $"{tipo} {numero}-{complemento}";
-
-            throw new ConflictException(
-                $"Ya existe una persona con el documento '{descripcion}'.");
+            query = query.Where(x => x.Id != excludeId.Value);
         }
+
+        var existe = await query.AnyAsync(cancellationToken);
+
+        if (!existe)
+            return;
+
+        var descripcion = complemento is null
+            ? $"{tipo} {numero}"
+            : $"{tipo} {numero}-{complemento}";
+
+        throw new ConflictException(
+            $"Ya existe una persona con el documento '{descripcion}'.");
     }
 
     private static void Normalizar(
@@ -136,11 +237,9 @@ public sealed class PersonaService(AppDbContext dbContext)
         entity.ApellidoPaterno = NormalizarTexto(request.ApellidoPaterno);
         entity.ApellidoMaterno = NormalizarOpcional(request.ApellidoMaterno);
         entity.TipoDocumento = NormalizarTexto(request.TipoDocumento);
-        entity.NumeroDocumento = request.NumeroDocumento.Trim();
-        entity.ComplementoDocumento =
-            NormalizarOpcional(request.ComplementoDocumento);
-        entity.ExtensionDocumento =
-            NormalizarOpcional(request.ExtensionDocumento);
+        entity.NumeroDocumento = NormalizarTexto(request.NumeroDocumento);
+        entity.ComplementoDocumento = NormalizarOpcional(request.ComplementoDocumento);
+        entity.ExtensionDocumento = NormalizarOpcional(request.ExtensionDocumento);
         entity.Telefono = NormalizarOpcional(request.Telefono);
         entity.Direccion = NormalizarOpcional(request.Direccion);
         entity.Genero = NormalizarOpcional(request.Genero);
@@ -154,6 +253,8 @@ public sealed class PersonaService(AppDbContext dbContext)
 
     private static string? NormalizarOpcional(string? value)
     {
-        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+        return string.IsNullOrWhiteSpace(value)
+            ? null
+            : value.Trim();
     }
 }

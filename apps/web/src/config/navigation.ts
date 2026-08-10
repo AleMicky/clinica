@@ -141,7 +141,7 @@ export const recursosHumanosNav: NavGroup = {
   description: "Empleados, turnos, contratos y asistencia",
   items: [
     {
-      title: "Personal / Empleados",
+      title: "Empleados",
       href: "/recursos-humanos/empleados",
       icon: UserCheck,
       description: "Expediente del personal médico y administrativo",
