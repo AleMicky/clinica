@@ -6,11 +6,9 @@ public abstract record MedicoEspecialidadRequest
     public bool EsPrincipal { get; init; }
 }
 
-public sealed record CreateMedicoEspecialidadRequest
-    : MedicoEspecialidadRequest;
+public sealed record CreateMedicoEspecialidadRequest : MedicoEspecialidadRequest;
 
-public sealed record UpdateMedicoEspecialidadRequest
-    : MedicoEspecialidadRequest;
+public sealed record UpdateMedicoEspecialidadRequest : MedicoEspecialidadRequest;
 
 public sealed record MedicoEspecialidadResponse
 {
