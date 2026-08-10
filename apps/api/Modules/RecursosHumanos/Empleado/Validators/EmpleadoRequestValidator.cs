@@ -14,8 +14,9 @@ public abstract class EmpleadoRequestValidator<TRequest>
             .WithMessage("La persona es obligatoria.");
 
         RuleFor(x => x.FechaIngreso)
-            .NotEqual(default(DateOnly))
-            .WithMessage("La fecha de ingreso es obligatoria.");
+            .LessThanOrEqualTo(DateOnly.FromDateTime(DateTime.Today))
+            .WithMessage("La fecha de ingreso no puede ser futura.")
+            .When(x => x.FechaIngreso.HasValue);
 
         RuleFor(x => x.FechaIngreso)
             .LessThanOrEqualTo(DateOnly.FromDateTime(DateTime.Today))

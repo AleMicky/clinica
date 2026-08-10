@@ -15,6 +15,7 @@ public static partial class EmpleadoMapper
         EmpleadoEntity entity);
 
     [MapperIgnoreTarget(nameof(EmpleadoEntity.Id))]
+    [MapperIgnoreTarget(nameof(EmpleadoEntity.CodigoEmpleado))]
     [MapperIgnoreTarget(nameof(EmpleadoEntity.Activo))]
     [MapperIgnoreTarget(nameof(EmpleadoEntity.FechaCreacion))]
     [MapperIgnoreTarget(nameof(EmpleadoEntity.FechaModificacion))]
@@ -26,6 +27,7 @@ public static partial class EmpleadoMapper
         CreateEmpleadoRequest request);
 
     [MapperIgnoreTarget(nameof(EmpleadoEntity.Id))]
+    [MapperIgnoreTarget(nameof(EmpleadoEntity.CodigoEmpleado))]
     [MapperIgnoreTarget(nameof(EmpleadoEntity.Activo))]
     [MapperIgnoreTarget(nameof(EmpleadoEntity.FechaCreacion))]
     [MapperIgnoreTarget(nameof(EmpleadoEntity.FechaModificacion))]

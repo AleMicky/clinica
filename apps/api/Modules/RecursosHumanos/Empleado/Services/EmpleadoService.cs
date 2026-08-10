@@ -76,16 +76,31 @@ public sealed class EmpleadoService(AppDbContext dbContext)
         return MapToResponse(empleado);
     }
 
-    public async Task<EmpleadoResponse> CrearAsync(CreateEmpleadoRequest request,
+    public async Task<EmpleadoResponse> CrearAsync(
+        CreateEmpleadoRequest request,
         CancellationToken cancellationToken = default)
     {
-        await ValidarPersonaAsync(request.PersonaId, excludeId: null, cancellationToken);
+        await ValidarPersonaAsync(
+            request.PersonaId,
+            excludeId: null,
+            cancellationToken);
+
         var empleado = EmpleadoMapper.ToEntity(request);
-        empleado.CodigoEmpleado = $"TEMP-{Guid.NewGuid():N}";
+
         empleado.Activo = true;
-        await dbContext.Empleados.AddAsync(empleado, cancellationToken);
+
+        await dbContext.Empleados.AddAsync(
+            empleado,
+            cancellationToken);
+
+        // Primer guardado para obtener el Id
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        // Generar código definitivo
         empleado.CodigoEmpleado = GenerarCodigoEmpleado(empleado.Id);
+
+        // Guardar el código generado
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         await dbContext.Entry(empleado)
             .Reference(x => x.Persona)
@@ -93,6 +108,8 @@ public sealed class EmpleadoService(AppDbContext dbContext)
 
         return MapToResponse(empleado);
     }
+
+ 
 
     public async Task<EmpleadoResponse> ActualizarAsync(
         int id,

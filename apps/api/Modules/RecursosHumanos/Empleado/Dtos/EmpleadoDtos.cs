@@ -5,7 +5,7 @@ namespace Clinica.Api.Modules.RecursosHumanos.Empleado.Dtos;
 public abstract record EmpleadoRequest
 {
     public int PersonaId { get; init; }
-    public DateOnly FechaIngreso { get; init; }
+    public DateOnly? FechaIngreso { get; init; }
     public DateOnly? FechaRetiro { get; init; }
 }
 
@@ -19,7 +19,8 @@ public sealed record EmpleadoResponse : AuditableResponse
     public int PersonaId { get; init; }
     public PersonaInfoResponse? Persona { get; init; }
     public string? CodigoEmpleado { get; init; }
-    public DateOnly FechaIngreso { get; init; }
+
+    public DateOnly? FechaIngreso { get; init; }
     public DateOnly? FechaRetiro { get; init; }
 }
 

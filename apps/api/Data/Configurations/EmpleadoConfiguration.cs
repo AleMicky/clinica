@@ -20,9 +20,10 @@ public sealed class EmpleadoConfiguration
             .HasMaxLength(30);
 
         builder.Property(x => x.FechaIngreso)
-            .IsRequired();
+            .IsRequired(false);
 
-        builder.Property(x => x.FechaRetiro);
+        builder.Property(x => x.FechaRetiro)
+            .IsRequired(false);
 
         builder.HasIndex(x => x.PersonaId)
             .IsUnique();

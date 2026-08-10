@@ -9,9 +9,10 @@ export const empleadoSchema = z.object({
     codigoEmpleado: z
         .string()
         .trim()
-        .min(1, "El código de empleado es obligatorio.")
         .max(30, "El código no puede superar los 30 caracteres.")
-        .toUpperCase(),
+        .toUpperCase()
+        .optional()
+        .or(z.literal("")),
 
     fechaIngreso: z
         .string()

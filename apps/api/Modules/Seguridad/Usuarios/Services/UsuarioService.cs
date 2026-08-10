@@ -1,5 +1,7 @@
 using Clinica.Api.Data;
+using Clinica.Api.Modules.RecursosHumanos.Empleado.Dtos;
 using Clinica.Api.Modules.RecursosHumanos.Empleado.Entity;
+using Clinica.Api.Modules.RecursosHumanos.Empleado.Services;
 using Clinica.Api.Modules.Seguridad.Roles.Entity;
 using Clinica.Api.Modules.Seguridad.Usuarios.Dtos;
 using Clinica.Api.Modules.Seguridad.Usuarios.Entity;
@@ -15,6 +17,7 @@ namespace Clinica.Api.Modules.Seguridad.Usuarios.Services;
 public sealed class UsuarioService(
     UserManager<Usuario> userManager,
     RoleManager<Rol> roleManager,
+    EmpleadoService empleadoService,
     AppDbContext dbContext)
 {
     public async Task<PagedResult<UsuarioResponse>> ListarAsync(
@@ -111,25 +114,13 @@ public sealed class UsuarioService(
 
     public async Task<UsuarioResponse> CrearAsync(
         CreateUsuarioRequest request,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken = default)
     {
-        var userName =
-            request.UserName.TrimRequired();
-
-        var email =
-            request.Email.TrimRequired();
-
-        var tipoDocumento =
-            request.Persona.TipoDocumento
-                .TrimUpperRequired();
-
-        var numeroDocumento =
-            request.Persona.NumeroDocumento
-                .TrimUpperRequired();
-
-        var complementoDocumento =
-            request.Persona.ComplementoDocumento
-                .TrimUpperOrNull();
+        var userName = request.UserName.TrimRequired();
+        var email = request.Email.TrimRequired();
+        var tipoDocumento = request.Persona.TipoDocumento.TrimUpperRequired();
+        var numeroDocumento = request.Persona.NumeroDocumento.TrimUpperRequired();
+        var complementoDocumento = request.Persona.ComplementoDocumento.TrimUpperOrNull();
 
         await ValidarUsuarioUnicoAsync(
             userName,
@@ -154,68 +145,42 @@ public sealed class UsuarioService(
 
         try
         {
+            // 1. Crear persona
             var persona = new Persona
             {
-                Nombres = request.Persona.Nombres
-                    .TrimRequired(),
-
-                ApellidoPaterno =
-                    request.Persona.ApellidoPaterno
-                        .TrimRequired(),
-
-                ApellidoMaterno =
-                    request.Persona.ApellidoMaterno
-                        .TrimOrNull(),
-
-                FechaNacimiento =
-                    request.Persona.FechaNacimiento,
-
-                Telefono =
-                    request.Persona.Telefono
-                        .TrimOrNull(),
-
-                Direccion =
-                    request.Persona.Direccion
-                        .TrimOrNull(),
-
-                TipoDocumento =
-                    tipoDocumento,
-
-                NumeroDocumento =
-                    numeroDocumento,
-
-                ExtensionDocumento =
-                    request.Persona.ExtensionDocumento
-                        .TrimUpperOrNull(),
-
-                ComplementoDocumento =
-                    complementoDocumento,
-
-                Genero =
-                    request.Persona.Genero
-                        .TrimUpperOrNull(),
-
-                EstadoCivil =
-                    request.Persona.EstadoCivil
-                        .TrimUpperOrNull()
+                Nombres = request.Persona.Nombres.TrimRequired(),
+                ApellidoPaterno = request.Persona.ApellidoPaterno.TrimRequired(),
+                ApellidoMaterno = request.Persona.ApellidoMaterno.TrimOrNull(),
+                FechaNacimiento = request.Persona.FechaNacimiento,
+                Telefono = request.Persona.Telefono.TrimOrNull(),
+                Direccion = request.Persona.Direccion.TrimOrNull(),
+                TipoDocumento = tipoDocumento,
+                NumeroDocumento = numeroDocumento,
+                ExtensionDocumento = request.Persona.ExtensionDocumento.TrimUpperOrNull(),
+                ComplementoDocumento = complementoDocumento,
+                Genero = request.Persona.Genero.TrimUpperOrNull(),
+                EstadoCivil = request.Persona.EstadoCivil.TrimUpperOrNull()
             };
 
             await dbContext.Personas.AddAsync(
                 persona,
                 cancellationToken);
 
-            var empleado = new Empleado
-            {
-                Persona = persona
-            };
-
-            await dbContext.Empleados.AddAsync(
-                empleado,
-                cancellationToken);
-
+            // Necesitamos el Id de Persona.
             await dbContext.SaveChangesAsync(
                 cancellationToken);
 
+            // 2. Crear empleado
+            var requestEmpleado = new CreateEmpleadoRequest
+            {
+                PersonaId = persona.Id
+            };
+
+            await empleadoService.CrearAsync(
+                requestEmpleado,
+                cancellationToken);
+
+            // 3. Crear usuario
             var usuario = new Usuario
             {
                 UserName = userName,
@@ -231,13 +196,13 @@ public sealed class UsuarioService(
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            var createResult =
-                await userManager.CreateAsync(
-                    usuario,
-                    request.Password);
+            var createResult = await userManager.CreateAsync(
+                usuario,
+                request.Password);
 
             createResult.EnsureSuccess();
 
+            // 4. Asignar roles
             if (nombresRoles.Count != 0)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -542,8 +507,8 @@ public sealed class UsuarioService(
     }
 
     private async Task<Dictionary<int, List<string>>> ObtenerRolesPorUsuariosAsync(
-            List<int> usuarioIds,
-            CancellationToken cancellationToken)
+        List<int> usuarioIds,
+        CancellationToken cancellationToken)
     {
         if (usuarioIds.Count == 0)
         {

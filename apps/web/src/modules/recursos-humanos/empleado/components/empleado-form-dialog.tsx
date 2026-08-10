@@ -13,6 +13,7 @@ import {
     Search,
     X,
     Check,
+    Lock,
 } from "lucide-react";
 
 import {
@@ -130,6 +131,25 @@ export function EmpleadoFormDialog({
         [personas, personaIdWatch],
     );
 
+    const personaNombreText = React.useMemo(() => {
+        if (selectedPersona) return nombreCompleto(selectedPersona);
+        if (
+            empleadoToEdit &&
+            Number(empleadoToEdit.personaId) === personaIdWatch
+        ) {
+            if ("persona" in empleadoToEdit && empleadoToEdit.persona) {
+                return nombreCompleto(empleadoToEdit.persona);
+            }
+            if (
+                "nombreCompleto" in empleadoToEdit &&
+                empleadoToEdit.nombreCompleto
+            ) {
+                return empleadoToEdit.nombreCompleto;
+            }
+        }
+        return null;
+    }, [selectedPersona, empleadoToEdit, personaIdWatch]);
+
     const personasFiltradas = React.useMemo(() => {
         const t = busquedaPersona.trim().toLowerCase();
         return personas.filter((p) => {
@@ -179,7 +199,7 @@ export function EmpleadoFormDialog({
         try {
             const payload = {
                 personaId: values.personaId,
-                codigoEmpleado: values.codigoEmpleado,
+                codigoEmpleado: values.codigoEmpleado || (isEditing ? empleadoToEdit?.codigoEmpleado : undefined),
                 fechaIngreso: values.fechaIngreso,
                 fechaRetiro: values.fechaRetiro || null,
             };
@@ -191,12 +211,12 @@ export function EmpleadoFormDialog({
                     data: payload,
                 });
                 toast.success(
-                    `Empleado ${values.codigoEmpleado} actualizado correctamente.`,
+                    `Empleado ${payload.codigoEmpleado || empleadoToEdit.codigoEmpleado} actualizado correctamente.`,
                 );
             } else {
                 await createMutation.mutateAsync(payload);
                 toast.success(
-                    `Empleado ${values.codigoEmpleado} creado correctamente.`,
+                    `Empleado registrado correctamente.`,
                 );
             }
             onSuccessCallback?.();
@@ -256,16 +276,21 @@ export function EmpleadoFormDialog({
                                 Persona <span className="text-destructive">*</span>
                             </Label>
 
-                            {selectedPersona ? (
-                                <div className="flex h-9 items-center justify-between gap-2 rounded-md border border-input bg-muted/20 px-3 text-xs">
-                                    <div className="flex items-center gap-2 min-w-0">
-                                        <span className="font-semibold text-foreground truncate">
-                                            {nombreCompleto(selectedPersona)}
-                                        </span>
-                                        <span className="text-[11px] text-muted-foreground font-mono truncate">
-                                            ({documentoCompleto(selectedPersona)})
-                                        </span>
+                            {isEditing ? (
+                                <div className="flex h-9 items-center justify-between gap-2 rounded-md border border-input bg-muted/40 px-3 text-xs cursor-not-allowed opacity-90">
+                                    <span className="font-semibold text-foreground truncate min-w-0">
+                                        {personaNombreText ?? `Persona #${empleadoToEdit?.personaId}`}
+                                    </span>
+                                    <div className="flex items-center gap-1 text-[11px] text-muted-foreground shrink-0 select-none">
+                                        <Lock className="size-3.5 text-muted-foreground/70" />
+                                        <span className="hidden sm:inline">Bloqueado</span>
                                     </div>
+                                </div>
+                            ) : selectedPersona ? (
+                                <div className="flex h-9 items-center justify-between gap-2 rounded-md border border-input bg-muted/20 px-3 text-xs">
+                                    <span className="font-semibold text-foreground truncate min-w-0">
+                                        {personaNombreText}
+                                    </span>
                                     <button
                                         type="button"
                                         onClick={() => {
@@ -382,9 +407,9 @@ export function EmpleadoFormDialog({
                                 </p>
                             )}
                             <p className="text-[11px] text-muted-foreground">
-                                Busque por nombre o documento. Las personas ya
-                                registradas como empleado se ocultan
-                                automáticamente.
+                                {isEditing
+                                    ? "La persona asociada al registro del empleado no se puede modificar."
+                                    : "Busque por nombre o documento. Las personas ya registradas como empleado se ocultan automáticamente."}
                             </p>
                         </div>
                     </div>
@@ -395,34 +420,26 @@ export function EmpleadoFormDialog({
                             <span>Datos del Empleado</span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <div className="space-y-1.5 sm:col-span-1">
-                                <Label
-                                    htmlFor="codigoEmpleado"
-                                    className="text-xs flex items-center gap-1"
-                                >
-                                    Código Empleado{" "}
-                                    <span className="text-destructive">*</span>
-                                </Label>
-                                <Input
-                                    id="codigoEmpleado"
-                                    placeholder="ej: EMP001"
-                                    className={cn(
-                                        "uppercase font-mono text-xs h-9",
-                                        errors.codigoEmpleado &&
-                                            "border-destructive focus-visible:ring-destructive",
-                                    )}
-                                    aria-invalid={Boolean(
-                                        errors.codigoEmpleado,
-                                    )}
-                                    {...register("codigoEmpleado")}
-                                />
-                                {errors.codigoEmpleado && (
-                                    <p className="text-[11px] text-destructive font-medium">
-                                        {errors.codigoEmpleado.message}
-                                    </p>
-                                )}
-                            </div>
+                        <div className={cn("grid gap-3", isEditing ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-1 sm:grid-cols-2")}>
+                            {isEditing && (
+                                <div className="space-y-1.5 sm:col-span-1">
+                                    <Label
+                                        htmlFor="codigoEmpleado"
+                                        className="text-xs flex items-center gap-1"
+                                    >
+                                        Código Empleado
+                                    </Label>
+                                    <div className="flex h-9 items-center justify-between gap-2 rounded-md border border-input bg-muted/40 px-3 text-xs font-mono cursor-not-allowed opacity-90">
+                                        <span className="font-semibold text-foreground truncate">
+                                            {empleadoToEdit?.codigoEmpleado || watch("codigoEmpleado") || "—"}
+                                        </span>
+                                        <div className="flex items-center gap-1 text-[11px] text-muted-foreground shrink-0 select-none">
+                                            <Lock className="size-3.5 text-muted-foreground/70" />
+                                            <span className="hidden sm:inline">Bloqueado</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="space-y-1.5 sm:col-span-1">
                                 <Label

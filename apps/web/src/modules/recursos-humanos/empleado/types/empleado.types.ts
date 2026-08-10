@@ -34,7 +34,7 @@ export interface EmpleadoResponse {
 
 export interface CreateEmpleadoRequest {
     personaId: number;
-    codigoEmpleado: string;
+    codigoEmpleado?: string | null;
     fechaIngreso: string;
     fechaRetiro?: string | null;
 }
