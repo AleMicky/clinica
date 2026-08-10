@@ -13,11 +13,6 @@ public abstract class EmpleadoRequestValidator<TRequest>
             .GreaterThan(0)
             .WithMessage("La persona es obligatoria.");
 
-        RuleFor(x => x.CodigoEmpleado)
-            .MaximumLength(20)
-            .WithMessage("El código de empleado no puede superar los 20 caracteres.")
-            .When(x => !string.IsNullOrWhiteSpace(x.CodigoEmpleado));
-
         RuleFor(x => x.FechaIngreso)
             .NotEqual(default(DateOnly))
             .WithMessage("La fecha de ingreso es obligatoria.");

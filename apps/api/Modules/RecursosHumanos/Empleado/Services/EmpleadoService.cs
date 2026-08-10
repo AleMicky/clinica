@@ -13,10 +13,7 @@ using PersonaEntity =
 
 namespace Clinica.Api.Modules.RecursosHumanos.Empleado.Services;
 
-public sealed class EmpleadoService(
-    AppDbContext dbContext,
-    AsignacionEmpleadoService asignacionEmpleadoService
-)
+public sealed class EmpleadoService(AppDbContext dbContext)
 {
     public async Task<PagedResult<EmpleadoResponse>> ListarAsync(
         PaginationRequest pagination,
@@ -79,30 +76,16 @@ public sealed class EmpleadoService(
         return MapToResponse(empleado);
     }
 
-    public async Task<EmpleadoResponse> CrearAsync(
-        CreateEmpleadoRequest request,
+    public async Task<EmpleadoResponse> CrearAsync(CreateEmpleadoRequest request,
         CancellationToken cancellationToken = default)
     {
-        await ValidarPersonaAsync(
-            request.PersonaId,
-            excludeId: null,
-            cancellationToken);
-
-        await ValidarCodigoAsync(
-            request.CodigoEmpleado,
-            excludeId: null,
-            cancellationToken);
-
+        await ValidarPersonaAsync(request.PersonaId, excludeId: null, cancellationToken);
         var empleado = EmpleadoMapper.ToEntity(request);
-        empleado.CodigoEmpleado = request.CodigoEmpleado.TrimUpperOrNull();
+        empleado.CodigoEmpleado = $"TEMP-{Guid.NewGuid():N}";
         empleado.Activo = true;
-
-        await dbContext.Empleados.AddAsync(
-            empleado,
-            cancellationToken);
-
-        await dbContext.SaveChangesAsync(
-            cancellationToken);
+        await dbContext.Empleados.AddAsync(empleado, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        empleado.CodigoEmpleado = GenerarCodigoEmpleado(empleado.Id);
 
         await dbContext.Entry(empleado)
             .Reference(x => x.Persona)
@@ -122,12 +105,8 @@ public sealed class EmpleadoService(
                        ?? throw new NotFoundException("Empleado", id);
 
         await ValidarPersonaAsync(request.PersonaId, id, cancellationToken);
-        await ValidarCodigoAsync(request.CodigoEmpleado, id, cancellationToken);
         EmpleadoMapper.UpdateEntity(request, empleado);
-
-        empleado.CodigoEmpleado = request.CodigoEmpleado.TrimUpperOrNull();
         await dbContext.SaveChangesAsync(cancellationToken);
-
         return MapToResponse(empleado);
     }
 
@@ -188,9 +167,7 @@ public sealed class EmpleadoService(
         }
 
         empleado.Activo = true;
-
-        await dbContext.SaveChangesAsync(
-            cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     private async Task ValidarPersonaAsync(
@@ -233,35 +210,9 @@ public sealed class EmpleadoService(
         }
     }
 
-    private async Task ValidarCodigoAsync(
-        string? codigo,
-        int? excludeId,
-        CancellationToken cancellationToken)
+    private static string GenerarCodigoEmpleado(int empleadoId)
     {
-        var codigoNormalizado = codigo.TrimUpperOrNull();
-
-        if (codigoNormalizado is null)
-        {
-            return;
-        }
-
-        var query = dbContext.Empleados
-            .AsNoTracking()
-            .Where(x =>
-                x.CodigoEmpleado == codigoNormalizado);
-
-        if (excludeId.HasValue)
-        {
-            query = query.Where(x => x.Id != excludeId.Value);
-        }
-
-        var existe = await query.AnyAsync(cancellationToken);
-
-        if (existe)
-        {
-            throw new ConflictException(
-                $"Ya existe un empleado con el código '{codigoNormalizado}'.");
-        }
+        return $"EMP-{empleadoId:D5}";
     }
 
     private static EmpleadoResponse MapToResponse(
