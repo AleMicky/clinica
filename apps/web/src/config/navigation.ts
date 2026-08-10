@@ -62,19 +62,13 @@ export const directNavItems: NavItem[] = [
 export const recepcionNav: NavGroup = {
   title: "Recepción",
   icon: HeartPulse,
-  description: "Expedientes de pacientes, admisiones y atención médica",
+  description: "Expedientes de pacientes y atención médica",
   items: [
     {
       title: "Pacientes",
       href: "/recepcion/pacientes",
       icon: User,
       description: "Registro de expedientes e historias clínicas",
-    },
-    {
-      title: "Admisiones",
-      href: "/recepcion/admisiones",
-      icon: FileText,
-      description: "Gestión de ingresos, atención y detalle de servicios",
     },
   ],
 }
