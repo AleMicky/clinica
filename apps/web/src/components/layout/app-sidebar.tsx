@@ -7,6 +7,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Activity,
+  Receipt,
 } from "lucide-react"
 
 import {
@@ -71,9 +72,9 @@ export function AppSidebar({ variant = "inset", ...props }: React.ComponentProps
           <SidebarMenuItem>
             <SidebarMenuButton size="default" className="data-[slot=sidebar-menu-button]:p-1.5! h-8">
               <div className="flex size-5 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
-                <Activity className="size-3.5" />
+                <Receipt className="size-3.5" />
               </div>
-              <span className="text-base font-semibold">Sistema Médico</span>
+              <span className="text-base font-semibold">MediServ</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
