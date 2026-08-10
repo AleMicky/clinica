@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using Clinica.Api.Shared.Abstractions;
 
 namespace Clinica.Api.Modules.RecursosHumanos.AsignacionEmpleado.Dtos;

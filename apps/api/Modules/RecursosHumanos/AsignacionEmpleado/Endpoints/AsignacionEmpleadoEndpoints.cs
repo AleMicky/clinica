@@ -1,6 +1,7 @@
 using Clinica.Api.Modules.RecursosHumanos.AsignacionEmpleado.Dtos;
 using Clinica.Api.Modules.RecursosHumanos.AsignacionEmpleado.Services;
 using Clinica.Api.Shared.Pagination;
+using Clinica.Api.Shared.Validation;
 
 namespace Clinica.Api.Modules.RecursosHumanos.AsignacionEmpleado.Endpoints;
 
@@ -14,16 +15,15 @@ public static class AsignacionEmpleadoEndpoints
             .WithTags("Asignaciones de Empleado")
             .RequireAuthorization();
 
-        group.MapGet("/", ListarAsync)
-            .WithName("ListarAsignacionesEmpleado");
-        group.MapGet("/{id:int}", ObtenerAsync)
-            .WithName("ObtenerAsignacionEmpleado");
+        group.MapGet("/", ListarAsync).WithName("ListarAsignacionesEmpleado");
+        group.MapGet("/{id:int}", ObtenerAsync).WithName("ObtenerAsignacionEmpleado");
         group.MapPost("/", CrearAsync)
-            .WithName("CrearAsignacionEmpleado");
+            .WithName("CrearAsignacionEmpleado")
+            .Validate<CreateAsignacionEmpleadoRequest>();
         group.MapPut("/{id:int}", ActualizarAsync)
-            .WithName("ActualizarAsignacionEmpleado");
-        group.MapDelete("/{id:int}", EliminarAsync)
-            .WithName("EliminarAsignacionEmpleado");
+            .WithName("ActualizarAsignacionEmpleado")
+            .Validate<UpdateAsignacionEmpleadoRequest>();
+        group.MapDelete("/{id:int}", EliminarAsync).WithName("EliminarAsignacionEmpleado");
 
         return app;
     }
