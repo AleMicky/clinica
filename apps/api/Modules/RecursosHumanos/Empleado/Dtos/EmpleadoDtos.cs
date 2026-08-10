@@ -1,20 +1,12 @@
-using System.ComponentModel.DataAnnotations;
-using Clinica.Api.Modules.Seguridad.Personas.Dtos;
+using Clinica.Api.Shared.Abstractions;
 
 namespace Clinica.Api.Modules.RecursosHumanos.Empleado.Dtos;
 
 public abstract record EmpleadoRequest
 {
-    [Required]
-    [Range(1, int.MaxValue)]
-    public required int PersonaId { get; init; }
-
-    [Required]
-    [StringLength(30, MinimumLength = 1)]
-    public required string CodigoEmpleado { get; init; }
-
+    public int PersonaId { get; init; }
+    public string? CodigoEmpleado { get; init; }
     public DateOnly FechaIngreso { get; init; }
-
     public DateOnly? FechaRetiro { get; init; }
 }
 
@@ -22,17 +14,28 @@ public sealed record CreateEmpleadoRequest : EmpleadoRequest;
 
 public sealed record UpdateEmpleadoRequest : EmpleadoRequest;
 
-public sealed record EmpleadoResponse
+public sealed record EmpleadoResponse : AuditableResponse
 {
     public int Id { get; init; }
     public int PersonaId { get; init; }
-    public PersonaResponse? Persona { get; init; }
-    public string CodigoEmpleado { get; init; } = string.Empty;
+    public PersonaInfoResponse? Persona { get; init; }
+    public string? CodigoEmpleado { get; init; }
     public DateOnly FechaIngreso { get; init; }
     public DateOnly? FechaRetiro { get; init; }
-    public bool Activo { get; init; }
-    public DateTime FechaCreacion { get; init; }
-    public DateTime? FechaModificacion { get; init; }
-    public string? CreadoPor { get; init; }
-    public string? ModificadoPor { get; init; }
+}
+public sealed record PersonaInfoResponse
+{
+    public int Id { get; init; }
+    public string Nombres { get; init; } = string.Empty;
+    public string ApellidoPaterno { get; init; } = string.Empty;
+    public string? ApellidoMaterno { get; init; }
+    public DateOnly FechaNacimiento { get; init; }
+    public string? Telefono { get; init; }
+    public string? Direccion { get; init; }
+    public string TipoDocumento { get; init; } = string.Empty;
+    public string NumeroDocumento { get; init; } = string.Empty;
+    public string? ExtensionDocumento { get; init; }
+    public string? ComplementoDocumento { get; init; }
+    public string? Genero { get; init; }
+    public string? EstadoCivil { get; init; }
 }

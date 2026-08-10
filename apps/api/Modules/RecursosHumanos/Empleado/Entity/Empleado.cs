@@ -7,12 +7,8 @@ public class Empleado : AuditableEntity
 {
     public int PersonaId { get; set; }
     public Persona Persona { get; set; } = null!;
-
-    public string CodigoEmpleado { get; set; } = string.Empty;
+    public string? CodigoEmpleado { get; set; }
     public DateOnly FechaIngreso { get; set; }
-
     public DateOnly? FechaRetiro { get; set; }
-
-    public ICollection<AsignacionEmpleado.Entity.AsignacionEmpleado>
-        Asignaciones { get; set; } = [];
+    public ICollection<AsignacionEmpleado.Entity.AsignacionEmpleado> Asignaciones { get; set; } = [];
 }

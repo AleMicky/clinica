@@ -1,16 +1,18 @@
 using Clinica.Api.Modules.RecursosHumanos.Empleado.Dtos;
 using Riok.Mapperly.Abstractions;
-using EmpleadoEntity = Clinica.Api.Modules.RecursosHumanos.Empleado.Entity.Empleado;
+using EmpleadoEntity =
+    Clinica.Api.Modules.RecursosHumanos.Empleado.Entity.Empleado;
 
 namespace Clinica.Api.Modules.RecursosHumanos.Empleado.Mappers;
 
 [Mapper]
 public static partial class EmpleadoMapper
 {
+    [MapperIgnoreSource(nameof(EmpleadoEntity.Persona))]
+    [MapperIgnoreSource(nameof(EmpleadoEntity.Asignaciones))]
     [MapperIgnoreTarget(nameof(EmpleadoResponse.Persona))]
     public static partial EmpleadoResponse ToResponse(
-        EmpleadoEntity entity
-    );
+        EmpleadoEntity entity);
 
     [MapperIgnoreTarget(nameof(EmpleadoEntity.Id))]
     [MapperIgnoreTarget(nameof(EmpleadoEntity.Activo))]
@@ -21,8 +23,7 @@ public static partial class EmpleadoMapper
     [MapperIgnoreTarget(nameof(EmpleadoEntity.Persona))]
     [MapperIgnoreTarget(nameof(EmpleadoEntity.Asignaciones))]
     public static partial EmpleadoEntity ToEntity(
-        CreateEmpleadoRequest request
-    );
+        CreateEmpleadoRequest request);
 
     [MapperIgnoreTarget(nameof(EmpleadoEntity.Id))]
     [MapperIgnoreTarget(nameof(EmpleadoEntity.Activo))]
@@ -34,6 +35,5 @@ public static partial class EmpleadoMapper
     [MapperIgnoreTarget(nameof(EmpleadoEntity.Asignaciones))]
     public static partial void UpdateEntity(
         UpdateEmpleadoRequest request,
-        EmpleadoEntity entity
-    );
+        EmpleadoEntity entity);
 }

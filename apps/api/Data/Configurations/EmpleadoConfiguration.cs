@@ -17,8 +17,7 @@ public sealed class EmpleadoConfiguration
             .IsRequired();
 
         builder.Property(x => x.CodigoEmpleado)
-            .HasMaxLength(30)
-            .IsRequired();
+            .HasMaxLength(30);
 
         builder.Property(x => x.FechaIngreso)
             .IsRequired();

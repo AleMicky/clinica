@@ -24,11 +24,9 @@ public abstract record AsignacionEmpleadoRequest
     public string? Observacion { get; init; }
 }
 
-public sealed record CreateAsignacionEmpleadoRequest
-    : AsignacionEmpleadoRequest;
+public sealed record CreateAsignacionEmpleadoRequest : AsignacionEmpleadoRequest;
 
-public sealed record UpdateAsignacionEmpleadoRequest
-    : AsignacionEmpleadoRequest;
+public sealed record UpdateAsignacionEmpleadoRequest : AsignacionEmpleadoRequest;
 
 public sealed record AsignacionEmpleadoResponse
 {

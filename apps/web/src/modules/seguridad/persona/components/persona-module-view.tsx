@@ -49,6 +49,18 @@ export function PersonaModuleView() {
 
   const personas: PersonaResponse[] = apiData?.items ?? [];
 
+  // Compute Metrics
+  const total = apiData?.totalItems ?? personas.length;
+  const activas = personas.filter((p) => p.activo).length;
+  const inactivas = personas.filter((p) => !p.activo).length;
+  const conTelefono = personas.filter((p) => Boolean(p.telefono)).length;
+
+  const metrics: PersonaMetrics = {
+    totalPersonas: total,
+    personasActivas: activas,
+    conTelefono: conTelefono,
+    personasInactivas: inactivas,
+  };
 
   const handleOpenAdd = () => {
     setPersonaToEdit(null);
@@ -84,8 +96,9 @@ export function PersonaModuleView() {
   };
 
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <div className="flex flex-col gap-3.5 w-full max-w-7xl mx-auto">
       <PersonaHeader onAddClick={handleOpenAdd} />
+      <PersonaMetricsCards metrics={metrics} />
       <PersonaTable
         personas={personas}
         isLoading={isLoading}

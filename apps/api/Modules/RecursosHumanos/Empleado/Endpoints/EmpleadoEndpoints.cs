@@ -1,6 +1,7 @@
 using Clinica.Api.Modules.RecursosHumanos.Empleado.Dtos;
 using Clinica.Api.Modules.RecursosHumanos.Empleado.Services;
 using Clinica.Api.Shared.Pagination;
+using Clinica.Api.Shared.Validation;
 
 namespace Clinica.Api.Modules.RecursosHumanos.Empleado.Endpoints;
 
@@ -16,8 +17,12 @@ public static class EmpleadoEndpoints
 
         group.MapGet("/", ListarAsync).WithName("ListarEmpleados");
         group.MapGet("/{id:int}", ObtenerAsync).WithName("ObtenerEmpleado");
-        group.MapPost("/", CrearAsync).WithName("CrearEmpleado");
-        group.MapPut("/{id:int}", ActualizarAsync).WithName("ActualizarEmpleado");
+        group.MapPost("/", CrearAsync)
+            .WithName("CrearEmpleado")
+            .Validate<CreateEmpleadoRequest>();
+        group.MapPut("/{id:int}", ActualizarAsync)
+            .WithName("ActualizarEmpleado")
+            .Validate<UpdateEmpleadoRequest>();
         group.MapDelete("/{id:int}", EliminarAsync).WithName("EliminarEmpleado");
 
         return app;

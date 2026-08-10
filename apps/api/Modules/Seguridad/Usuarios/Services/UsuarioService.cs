@@ -1,4 +1,5 @@
 using Clinica.Api.Data;
+using Clinica.Api.Modules.RecursosHumanos.Empleado.Entity;
 using Clinica.Api.Modules.Seguridad.Roles;
 using Clinica.Api.Modules.Seguridad.Usuarios.Dtos;
 using Clinica.Api.Modules.Seguridad.Usuarios.Entity;
@@ -137,6 +138,15 @@ public sealed class UsuarioService(
 
             await dbContext.Personas.AddAsync(
                 persona,
+                cancellationToken);
+
+            var empleado = new Empleado
+            {
+                Persona = persona
+            };
+
+            await dbContext.Empleados.AddAsync(
+                empleado,
                 cancellationToken);
 
             await dbContext.SaveChangesAsync(cancellationToken);
