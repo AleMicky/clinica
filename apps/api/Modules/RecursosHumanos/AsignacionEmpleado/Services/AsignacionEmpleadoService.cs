@@ -3,6 +3,7 @@ using Clinica.Api.Modules.RecursosHumanos.AsignacionEmpleado.Dtos;
 using Clinica.Api.Modules.RecursosHumanos.AsignacionEmpleado.Mappers;
 using Clinica.Api.Shared.Crud;
 using Clinica.Api.Shared.Exceptions;
+using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
 using AsignacionEmpleadoEntity =
     Clinica.Api.Modules.RecursosHumanos.AsignacionEmpleado.Entity.AsignacionEmpleado;
@@ -20,6 +21,42 @@ public sealed class AsignacionEmpleadoService(AppDbContext dbContext)
         AsignacionEmpleadoResponse
     >(dbContext)
 {
+    public async Task<PagedResult<AsignacionEmpleadoResponse>> ListarAsync(
+        int? empleadoId,
+        PaginationRequest pagination,
+        string? search,
+        CancellationToken cancellationToken = default)
+    {
+        var query = BuildQuery()
+            .AsNoTracking()
+            .Where(x => x.Activo);
+
+        if (empleadoId.HasValue)
+            query = query.Where(x => x.EmpleadoId == empleadoId.Value);
+
+        var normalizedSearch = string.IsNullOrWhiteSpace(search)
+            ? null
+            : search.Trim();
+
+        query = ApplySearch(query, normalizedSearch);
+
+        var totalItems = await query.CountAsync(cancellationToken);
+
+        var offset = (pagination.ValidPage - 1)
+                     * pagination.ValidPageSize;
+
+        var entities = await ApplyOrder(query)
+            .Skip(offset)
+            .Take(pagination.ValidPageSize)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<AsignacionEmpleadoResponse>(
+            MapToResponseList(entities),
+            pagination.ValidPage,
+            pagination.ValidPageSize,
+            totalItems);
+    }
+
     protected override IQueryable<AsignacionEmpleadoEntity> BuildQuery()
     {
         return Entities

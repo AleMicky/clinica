@@ -29,6 +29,7 @@ public static class AsignacionEmpleadoEndpoints
     }
 
     private static async Task<IResult> ListarAsync(
+        int? empleadoId,
         [AsParameters] PaginationRequest pagination,
         string? search,
         AsignacionEmpleadoService service,
@@ -36,6 +37,7 @@ public static class AsignacionEmpleadoEndpoints
     {
         return Results.Ok(
             await service.ListarAsync(
+                empleadoId,
                 pagination,
                 search,
                 cancellationToken));
