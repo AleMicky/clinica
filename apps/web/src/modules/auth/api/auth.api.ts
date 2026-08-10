@@ -53,5 +53,5 @@ export async function changePassword(
             request,
         );
 
-    return response.data;
+    return response.data ?? { message: "Contraseña actualizada exitosamente." };
 }

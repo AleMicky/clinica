@@ -25,7 +25,7 @@ public static class AuthEndpoints
             .RequireAuthorization();
 
         group.MapPost("/refresh", Refresh)
-            .AllowAnonymous();
+            .RequireAuthorization();
 
         return app;
     }
@@ -61,16 +61,16 @@ public static class AuthEndpoints
     private static async Task<IResult> Logout(
         AuthService service)
     {
-        await service.LogoutAsync();
-
-        return Results.NoContent();
+        return Results.Ok(
+            await service.LogoutAsync());
     }
 
     private static async Task<IResult> Refresh(
+        ClaimsPrincipal user,
         RefreshTokenRequest request,
         AuthService service)
     {
         return Results.Ok(
-            await service.RefreshAsync(request));
+            await service.RefreshAsync(user, request));
     }
 }

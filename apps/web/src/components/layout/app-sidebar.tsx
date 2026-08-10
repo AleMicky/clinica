@@ -6,14 +6,12 @@ import { usePathname } from "next/navigation"
 import {
   ChevronLeft,
   ChevronRight,
-  MoreVertical,
   Activity,
 } from "lucide-react"
 
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -21,7 +19,6 @@ import {
   SidebarGroup,
   SidebarGroupContent,
 } from "@/components/ui/sidebar"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { directNavItems, moduleGroups, NavGroup } from "@/config/navigation"
 
@@ -197,28 +194,8 @@ export function AppSidebar({ variant = "inset", ...props }: React.ComponentProps
           </div>
         )}
       </SidebarContent>
-
-      {/* User Footer */}
-      <SidebarFooter className="p-2 border-t border-sidebar-border">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              size="lg"
-              className="h-12 text-sm data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-            >
-              <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src="/avatars/shadcn.jpg" alt="Usuario" />
-                <AvatarFallback className="rounded-lg bg-muted text-xs text-muted-foreground">AD</AvatarFallback>
-              </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">Administrador</span>
-                <span className="truncate text-xs text-muted-foreground">admin@clinica.com</span>
-              </div>
-              <MoreVertical className="ml-auto size-4 text-sidebar-foreground/70" />
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
     </Sidebar>
   )
 }
+
+

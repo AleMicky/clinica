@@ -66,13 +66,36 @@ public sealed class AuthService(
 
         var roles = await userManager.GetRolesAsync(usuario);
 
+        var personaDto = usuario.Persona is null ? null : new PersonaPerfilDto
+        {
+            Id = usuario.Persona.Id,
+            Nombres = usuario.Persona.Nombres,
+            ApellidoPaterno = usuario.Persona.ApellidoPaterno,
+            ApellidoMaterno = usuario.Persona.ApellidoMaterno,
+            TipoDocumento = usuario.Persona.TipoDocumento,
+            NumeroDocumento = usuario.Persona.NumeroDocumento,
+            ExtensionDocumento = usuario.Persona.ExtensionDocumento,
+            ComplementoDocumento = usuario.Persona.ComplementoDocumento,
+            Telefono = usuario.Persona.Telefono,
+            Direccion = usuario.Persona.Direccion,
+            FechaNacimiento = usuario.Persona.FechaNacimiento,
+            Genero = usuario.Persona.Genero,
+            EstadoCivil = usuario.Persona.EstadoCivil
+        };
+
         return new MeResponse
         {
             Id = usuario.Id,
             UserName = usuario.UserName ?? string.Empty,
             Email = usuario.Email ?? string.Empty,
+            Nombres = usuario.Persona?.Nombres ?? string.Empty,
+            ApellidoPaterno = usuario.Persona?.ApellidoPaterno ?? string.Empty,
+            ApellidoMaterno = usuario.Persona?.ApellidoMaterno,
             NombreCompleto = ConstruirNombreCompleto(usuario.Persona),
-            Roles = roles.ToList()
+            Activo = usuario.Activo,
+            DebeCambiarPassword = usuario.DebeCambiarPassword,
+            Roles = roles.ToList(),
+            Persona = personaDto
         };
     }
 
@@ -80,7 +103,13 @@ public sealed class AuthService(
         ClaimsPrincipal principal,
         ChangePasswordRequest request)
     {
-        var usuario = await userManager.GetUserAsync(principal)
+        var userIdStr = principal.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? principal.FindFirstValue("sub");
+
+        var usuario = (userIdStr != null
+                ? await userManager.FindByIdAsync(userIdStr)
+                : null)
+            ?? await userManager.GetUserAsync(principal)
             ?? throw new UnauthorizedAccessException();
 
         (await userManager.ChangePasswordAsync(
@@ -97,15 +126,35 @@ public sealed class AuthService(
         }
     }
 
-    public Task LogoutAsync()
+    public async Task<LogoutResponse> LogoutAsync()
     {
-        return Task.CompletedTask;
+        await signInManager.SignOutAsync();
+        return new LogoutResponse("Sesión cerrada exitosamente.");
     }
 
-    public Task<RefreshTokenResponse> RefreshAsync(
+    public async Task<RefreshTokenResponse> RefreshAsync(
+        ClaimsPrincipal principal,
         RefreshTokenRequest request)
     {
-        throw new NotImplementedException();
+        var userIdStr = principal.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? principal.FindFirstValue("sub");
+
+        var usuario = (userIdStr != null
+                ? await userManager.FindByIdAsync(userIdStr)
+                : null)
+            ?? await userManager.GetUserAsync(principal)
+            ?? throw new UnauthorizedAccessException();
+
+        if (!usuario.Activo)
+        {
+            throw new BusinessException("El usuario se encuentra inactivo.");
+        }
+
+        var token = await jwtService.GenerateTokenAsync(usuario);
+
+        return new RefreshTokenResponse(
+            token,
+            DateTime.UtcNow.AddMinutes(480));
     }
 
     private static string ConstruirNombreCompleto(Persona? persona)

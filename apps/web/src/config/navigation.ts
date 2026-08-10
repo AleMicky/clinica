@@ -105,6 +105,12 @@ export const seguridadNav: NavGroup = {
   description: "Personas, usuarios, roles, accesos y auditoría",
   items: [
     {
+      title: "Mi Perfil",
+      href: "/dashboard/perfil",
+      icon: User,
+      description: "Información personal y cambio de contraseña",
+    },
+    {
       title: "Usuarios",
       href: "/seguridad/usuarios",
       icon: Users,
