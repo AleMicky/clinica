@@ -1,14 +1,15 @@
 using Clinica.Api.Data;
-using Clinica.Api.Modules.Seguridad.Personas.Dtos;
-using Clinica.Api.Modules.Seguridad.Personas.Entity;
 using Clinica.Api.Modules.Seguridad.Roles;
+using Clinica.Api.Modules.Seguridad.Usuarios.Dtos;
+using Clinica.Api.Modules.Seguridad.Usuarios.Entity;
 using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Extensions;
 using Clinica.Api.Shared.Pagination;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Persona = Clinica.Api.Modules.Seguridad.Personas.Entity.Persona;
 
-namespace Clinica.Api.Modules.Seguridad.Usuarios;
+namespace Clinica.Api.Modules.Seguridad.Usuarios.Services;
 
 public sealed class UsuarioService(
     UserManager<Usuario> userManager,
@@ -18,19 +19,20 @@ public sealed class UsuarioService(
     public async Task<PagedResult<UsuarioResponse>> ListarAsync(
         PaginationRequest pagination,
         string? search,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken = default)
     {
         var query = userManager.Users
             .Include(x => x.Persona)
-            .AsNoTracking();
+            .AsNoTracking()
+            .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(search))
         {
             var term = search.Trim();
 
             query = query.Where(x =>
-                x.UserName!.Contains(term) ||
-                x.Email!.Contains(term) ||
+                (x.UserName != null && x.UserName.Contains(term)) ||
+                (x.Email != null && x.Email.Contains(term)) ||
                 x.Persona.Nombres.Contains(term) ||
                 x.Persona.ApellidoPaterno.Contains(term) ||
                 x.Persona.NumeroDocumento.Contains(term));
@@ -46,13 +48,16 @@ public sealed class UsuarioService(
             .Take(pagination.ValidPageSize)
             .ToListAsync(cancellationToken);
 
-        var items = new List<UsuarioResponse>();
+        var items = new List<UsuarioResponse>(usuarios.Count);
 
         foreach (var usuario in usuarios)
         {
             var roles = await userManager.GetRolesAsync(usuario);
 
-            items.Add(MapToResponse(usuario, roles.ToList()));
+            items.Add(
+                MapToResponse(
+                    usuario,
+                    roles.ToList()));
         }
 
         return new PagedResult<UsuarioResponse>(
@@ -64,179 +69,329 @@ public sealed class UsuarioService(
 
     public async Task<UsuarioResponse> ObtenerAsync(
         int id,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken = default)
     {
         var usuario = await userManager.Users
                           .Include(x => x.Persona)
                           .AsNoTracking()
-                          .FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
+                          .FirstOrDefaultAsync(
+                              x => x.Id == id,
+                              cancellationToken)
                       ?? throw new NotFoundException("Usuario", id);
 
         var roles = await userManager.GetRolesAsync(usuario);
 
-        return MapToResponse(usuario, roles.ToList());
+        return MapToResponse(
+            usuario,
+            roles.ToList());
     }
 
     public async Task<UsuarioResponse> CrearAsync(
-        CreateUsuarioRequest request)
+        CreateUsuarioRequest request,
+        CancellationToken cancellationToken = default)
     {
-        if (await userManager.FindByNameAsync(request.UserName) is not null)
-        {
-            throw new BusinessException("El nombre de usuario ya existe.");
-        }
+        var userName = request.UserName.TrimRequired();
+        var email = request.Email.TrimRequired();
 
-        if (await userManager.FindByEmailAsync(request.Email) is not null)
-        {
-            throw new BusinessException("El correo electrónico ya existe.");
-        }
+        var tipoDocumento = request.Persona.TipoDocumento.TrimUpperRequired();
+        var numeroDocumento = request.Persona.NumeroDocumento.TrimUpperRequired();
+        var complementoDocumento = request.Persona.ComplementoDocumento.TrimUpperOrNull();
+
+        await ValidarUsuarioUnicoAsync(
+            userName,
+            email);
+
+        await ValidarDocumentoUnicoAsync(
+            tipoDocumento,
+            numeroDocumento,
+            complementoDocumento,
+            personaIdExcluir: null,
+            cancellationToken);
+
+        var nombresRoles = await ValidarRolesAsync(request.Roles);
 
         await using var transaction =
-            await dbContext.Database.BeginTransactionAsync();
+            await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
         try
         {
-            var persona = MapToPersona(request.Persona);
+            var persona = new Persona
+            {
+                Nombres = request.Persona.Nombres.TrimRequired(),
+                ApellidoPaterno = request.Persona.ApellidoPaterno.TrimRequired(),
+                ApellidoMaterno = request.Persona.ApellidoMaterno.TrimOrNull(),
 
-            await ValidarDocumentoUnicoAsync(
-                persona.TipoDocumento,
-                persona.NumeroDocumento,
-                persona.ComplementoDocumento);
+                FechaNacimiento = request.Persona.FechaNacimiento,
 
-            await dbContext.Personas.AddAsync(persona);
-            await dbContext.SaveChangesAsync();
+                Telefono = request.Persona.Telefono.TrimOrNull(),
+                Direccion = request.Persona.Direccion.TrimOrNull(),
+
+                TipoDocumento = tipoDocumento,
+                NumeroDocumento = numeroDocumento,
+                ExtensionDocumento = request.Persona.ExtensionDocumento.TrimUpperOrNull(),
+                ComplementoDocumento = complementoDocumento,
+
+                Genero = request.Persona.Genero.TrimUpperOrNull(),
+                EstadoCivil = request.Persona.EstadoCivil.TrimUpperOrNull()
+            };
+
+            await dbContext.Personas.AddAsync(
+                persona,
+                cancellationToken);
+
+            await dbContext.SaveChangesAsync(cancellationToken);
 
             var usuario = new Usuario
             {
-                UserName = request.UserName.Trim(),
-                Email = request.Email.Trim(),
+                UserName = userName,
+                Email = email,
                 EmailConfirmed = true,
-                Activo = true,
+
+                Activo = request.Activo,
                 DebeCambiarPassword = true,
+
                 PersonaId = persona.Id,
                 Persona = persona
             };
 
-            (await userManager.CreateAsync(usuario, request.Password))
-                .EnsureSuccess();
+            var createResult = await userManager.CreateAsync(
+                usuario,
+                request.Password);
 
-            if (request.Roles.Count > 0)
+            createResult.EnsureSuccess();
+
+            if (nombresRoles.Count > 0)
             {
-                var nombresRoles = await ValidarRolesAsync(request.Roles);
+                var rolesResult = await userManager.AddToRolesAsync(
+                    usuario,
+                    nombresRoles);
 
-                (await userManager.AddToRolesAsync(usuario, nombresRoles))
-                    .EnsureSuccess();
+                rolesResult.EnsureSuccess();
             }
 
-            await transaction.CommitAsync();
+            await transaction.CommitAsync(cancellationToken);
 
             var roles = await userManager.GetRolesAsync(usuario);
 
-            return MapToResponse(usuario, roles.ToList());
+            return MapToResponse(
+                usuario,
+                roles.ToList());
         }
         catch
         {
-            await transaction.RollbackAsync();
+            await transaction.RollbackAsync(cancellationToken);
             throw;
         }
     }
 
     public async Task<UsuarioResponse> ActualizarAsync(
         int id,
-        UpdateUsuarioRequest request)
+        UpdateUsuarioRequest request,
+        CancellationToken cancellationToken = default)
     {
-        var usuario = await userManager.FindByIdAsync(id.ToString())
+        var usuario = await userManager.Users
+                          .Include(x => x.Persona)
+                          .FirstOrDefaultAsync(
+                              x => x.Id == id,
+                              cancellationToken)
                       ?? throw new NotFoundException("Usuario", id);
 
-        if (await userManager.Users.AnyAsync(
-                x => x.Id != id && x.NormalizedEmail == request.Email.Trim().ToUpperInvariant()))
+        var userName = request.UserName.TrimRequired();
+        var email = request.Email.TrimRequired();
+
+        var tipoDocumento = request.Persona.TipoDocumento.TrimUpperRequired();
+        var numeroDocumento = request.Persona.NumeroDocumento.TrimUpperRequired();
+        var complementoDocumento = request.Persona.ComplementoDocumento.TrimUpperOrNull();
+
+        await ValidarUsuarioUnicoAsync(
+            userName,
+            email,
+            id);
+
+        await ValidarDocumentoUnicoAsync(
+            tipoDocumento,
+            numeroDocumento,
+            complementoDocumento,
+            usuario.PersonaId,
+            cancellationToken);
+
+        var nombresRoles = await ValidarRolesAsync(request.Roles);
+
+        await using var transaction =
+            await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+        try
         {
-            throw new BusinessException("El correo electrónico ya existe.");
-        }
+            usuario.UserName = userName;
+            usuario.Email = email;
+            usuario.Activo = request.Activo;
+            usuario.Persona.Nombres = request.Persona.Nombres.TrimRequired();
+            usuario.Persona.ApellidoPaterno = request.Persona.ApellidoPaterno.TrimRequired();
+            usuario.Persona.ApellidoMaterno = request.Persona.ApellidoMaterno.TrimOrNull();
+            usuario.Persona.FechaNacimiento = request.Persona.FechaNacimiento;
+            usuario.Persona.Telefono = request.Persona.Telefono.TrimOrNull();
+            usuario.Persona.Direccion = request.Persona.Direccion.TrimOrNull();
+            usuario.Persona.TipoDocumento = tipoDocumento;
+            usuario.Persona.NumeroDocumento = numeroDocumento;
+            usuario.Persona.ExtensionDocumento = request.Persona.ExtensionDocumento.TrimUpperOrNull();
+            usuario.Persona.ComplementoDocumento = complementoDocumento;
+            usuario.Persona.Genero = request.Persona.Genero.TrimUpperOrNull();
+            usuario.Persona.EstadoCivil = request.Persona.EstadoCivil.TrimUpperOrNull();
 
-        if (await userManager.Users.AnyAsync(
-                x => x.Id != id && x.NormalizedUserName == request.UserName.Trim().ToUpperInvariant()))
+            var updateResult = await userManager.UpdateAsync(usuario);
+
+            updateResult.EnsureSuccess();
+
+            await ActualizarRolesAsync(
+                usuario,
+                nombresRoles);
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            await transaction.CommitAsync(cancellationToken);
+
+            var roles = await userManager.GetRolesAsync(usuario);
+
+            return MapToResponse(
+                usuario,
+                roles.ToList());
+        }
+        catch
         {
-            throw new BusinessException("El nombre de usuario ya existe.");
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
         }
-
-        usuario.Email = request.Email.Trim();
-        usuario.UserName = request.UserName.Trim();
-        usuario.Activo = request.Activo;
-
-        (await userManager.UpdateAsync(usuario))
-            .EnsureSuccess();
-
-        var rolesActuales = await userManager.GetRolesAsync(usuario);
-
-        if (rolesActuales.Count > 0)
-        {
-            (await userManager.RemoveFromRolesAsync(usuario, rolesActuales))
-                .EnsureSuccess();
-        }
-
-        if (request.Roles.Count > 0)
-        {
-            var nombresRoles = await ValidarRolesAsync(request.Roles);
-
-            (await userManager.AddToRolesAsync(usuario, nombresRoles))
-                .EnsureSuccess();
-        }
-
-        var roles = await userManager.GetRolesAsync(usuario);
-
-        await dbContext.Entry(usuario).Reference(x => x.Persona).LoadAsync();
-
-        return MapToResponse(usuario, roles.ToList());
     }
 
-    public async Task EliminarAsync(int id)
+    public async Task EliminarAsync(
+        int id,
+        CancellationToken cancellationToken = default)
     {
-        var usuario = await userManager.FindByIdAsync(id.ToString())
+        var usuario = await userManager.Users
+                          .FirstOrDefaultAsync(
+                              x => x.Id == id,
+                              cancellationToken)
                       ?? throw new NotFoundException("Usuario", id);
 
-        (await userManager.DeleteAsync(usuario))
-            .EnsureSuccess();
+        var result = await userManager.DeleteAsync(usuario);
+
+        result.EnsureSuccess();
+    }
+
+    private async Task ValidarUsuarioUnicoAsync(
+        string userName,
+        string email,
+        int? usuarioIdExcluir = null)
+    {
+        var usuarioPorNombre =
+            await userManager.FindByNameAsync(userName);
+
+        if (usuarioPorNombre is not null &&
+            usuarioPorNombre.Id != usuarioIdExcluir)
+        {
+            throw new ConflictException(
+                $"El nombre de usuario '{userName}' ya existe.");
+        }
+
+        var usuarioPorEmail =
+            await userManager.FindByEmailAsync(email);
+
+        if (usuarioPorEmail is not null &&
+            usuarioPorEmail.Id != usuarioIdExcluir)
+        {
+            throw new ConflictException(
+                $"El correo electrónico '{email}' ya existe.");
+        }
     }
 
     private async Task ValidarDocumentoUnicoAsync(
         string tipoDocumento,
         string numeroDocumento,
-        string? complementoDocumento)
+        string? complementoDocumento,
+        int? personaIdExcluir,
+        CancellationToken cancellationToken)
     {
-        var existe = await dbContext.Personas.AnyAsync(x =>
-            x.TipoDocumento == tipoDocumento &&
-            x.NumeroDocumento == numeroDocumento &&
-            x.ComplementoDocumento == complementoDocumento);
+        var existe = await dbContext.Personas
+            .AsNoTracking()
+            .AnyAsync(
+                x =>
+                    (!personaIdExcluir.HasValue ||
+                     x.Id != personaIdExcluir.Value) &&
+                    x.TipoDocumento == tipoDocumento &&
+                    x.NumeroDocumento == numeroDocumento &&
+                    x.ComplementoDocumento == complementoDocumento,
+                cancellationToken);
 
-        if (existe)
+        if (!existe)
         {
-            var descripcion = complementoDocumento is null
-                ? $"{tipoDocumento} {numeroDocumento}"
-                : $"{tipoDocumento} {numeroDocumento}-{complementoDocumento}";
-
-            throw new ConflictException(
-                $"Ya existe una persona con el documento '{descripcion}'.");
+            return;
         }
+
+        var documento = complementoDocumento is null
+            ? $"{tipoDocumento} {numeroDocumento}"
+            : $"{tipoDocumento} {numeroDocumento}-{complementoDocumento}";
+
+        throw new ConflictException(
+            $"Ya existe una persona con el documento '{documento}'.");
     }
 
-    private static Persona MapToPersona(PersonaUsuarioRequest request)
+    private async Task<List<string>> ValidarRolesAsync(
+        IEnumerable<string> nombres)
     {
-        return new Persona
+        var roles = nombres
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        foreach (var rol in roles)
         {
-            Nombres = request.Nombres.Trim(),
-            ApellidoPaterno = request.ApellidoPaterno.Trim(),
-            ApellidoMaterno = NormalizarOpcional(request.ApellidoMaterno),
-            FechaNacimiento = request.FechaNacimiento,
-            Telefono = NormalizarOpcional(request.Telefono),
-            Direccion = NormalizarOpcional(request.Direccion),
-            TipoDocumento = request.TipoDocumento.Trim(),
-            NumeroDocumento = request.NumeroDocumento.Trim(),
-            ExtensionDocumento = NormalizarOpcional(request.ExtensionDocumento),
-            ComplementoDocumento = NormalizarOpcional(request.ComplementoDocumento),
-            Genero = NormalizarOpcional(request.Genero),
-            EstadoCivil = NormalizarOpcional(request.EstadoCivil),
-            Activo = true
-        };
+            if (!await roleManager.RoleExistsAsync(rol))
+            {
+                throw new BusinessException(
+                    $"El rol '{rol}' no existe.");
+            }
+        }
+
+        return roles;
+    }
+
+    private async Task ActualizarRolesAsync(
+        Usuario usuario,
+        List<string> nuevosRoles)
+    {
+        var rolesActuales =
+            await userManager.GetRolesAsync(usuario);
+
+        var rolesEliminar = rolesActuales
+            .Except(
+                nuevosRoles,
+                StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var rolesAgregar = nuevosRoles
+            .Except(
+                rolesActuales,
+                StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (rolesEliminar.Count > 0)
+        {
+            var result = await userManager.RemoveFromRolesAsync(
+                usuario,
+                rolesEliminar);
+
+            result.EnsureSuccess();
+        }
+
+        if (rolesAgregar.Count > 0)
+        {
+            var result = await userManager.AddToRolesAsync(
+                usuario,
+                rolesAgregar);
+
+            result.EnsureSuccess();
+        }
     }
 
     private static UsuarioResponse MapToResponse(
@@ -255,12 +410,10 @@ public sealed class UsuarioService(
         };
     }
 
-    private static PersonaResponse? MapToPersonaResponse(Persona? persona)
+    private static UsuarioPersonaResponse MapToPersonaResponse(
+        Persona persona)
     {
-        if (persona is null)
-            return null;
-
-        return new PersonaResponse
+        return new UsuarioPersonaResponse
         {
             Id = persona.Id,
             Nombres = persona.Nombres,
@@ -274,37 +427,7 @@ public sealed class UsuarioService(
             ExtensionDocumento = persona.ExtensionDocumento,
             ComplementoDocumento = persona.ComplementoDocumento,
             Genero = persona.Genero,
-            EstadoCivil = persona.EstadoCivil,
-            Activo = persona.Activo,
-            FechaCreacion = persona.FechaCreacion,
-            FechaModificacion = persona.FechaModificacion,
-            CreadoPor = persona.CreadoPor,
-            ModificadoPor = persona.ModificadoPor
+            EstadoCivil = persona.EstadoCivil
         };
-    }
-
-    private static string? NormalizarOpcional(string? value)
-    {
-        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
-    }
-
-    private async Task<List<string>> ValidarRolesAsync(
-        IEnumerable<string> nombres)
-    {
-        var lista = nombres
-            .Where(n => !string.IsNullOrWhiteSpace(n))
-            .Select(n => n.Trim())
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToList();
-
-        foreach (var nombre in lista)
-        {
-            if (!await roleManager.RoleExistsAsync(nombre))
-            {
-                throw new BusinessException($"El rol '{nombre}' no existe.");
-            }
-        }
-
-        return lista;
     }
 }

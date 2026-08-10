@@ -14,6 +14,8 @@ import {
   User,
   ArrowRight,
   ArrowLeft,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 import {
@@ -60,11 +62,6 @@ const ROLES_DISPONIBLES = [
   { value: "RECURSOS_HUMANOS", label: "Recursos Humanos" },
 ];
 
-const TIPOS_DOCUMENTO = ["CI", "DNI", "PASAPORTE", "NIT", "OTRO"];
-const EXTENSIONES = ["SC", "LP", "CB", "OR", "PT", "TJ", "CH", "BE", "PA"];
-const GENEROS = ["Masculino", "Femenino", "Otro"];
-const ESTADOS_CIVILES = ["Soltero/a", "Casado/a", "Divorciado/a", "Viudo/a"];
-
 const STEPS: StepItem[] = [
   {
     id: 1,
@@ -88,6 +85,7 @@ export function UsuarioFormDialog({
 }: UsuarioFormDialogProps) {
   const isEditing = Boolean(usuarioToEdit);
   const [currentStep, setCurrentStep] = React.useState<1 | 2>(1);
+  const [showPassword, setShowPassword] = React.useState(false);
 
   const createMutation = useCreateUsuario();
   const updateMutation = useUpdateUsuario();
@@ -131,6 +129,7 @@ export function UsuarioFormDialog({
   React.useEffect(() => {
     if (open) {
       setCurrentStep(1);
+      setShowPassword(false);
       if (usuarioToEdit) {
         reset({
           userName: usuarioToEdit.userName || "",
@@ -358,8 +357,7 @@ export function UsuarioFormDialog({
                       id="tipoDocumento"
                       codigo="TIPOS_DOCUMENTO"
                       value={tipoDocumentoValue}
-                      onValueChange={(val) => setValue("tipoDocumento", val || "CI", { shouldValidate: true })}
-                      fallbackOptions={TIPOS_DOCUMENTO}
+                      onValueChange={(val) => setValue("tipoDocumento", val || "", { shouldValidate: true })}
                       placeholder="Tipo"
                       emptyText="Sin tipos"
                       error={Boolean(errors.tipoDocumento)}
@@ -395,7 +393,6 @@ export function UsuarioFormDialog({
                       codigo="EXTENSIONES"
                       value={extensionDocumentoValue}
                       onValueChange={(val) => setValue("extensionDocumento", val || "", { shouldValidate: true })}
-                      fallbackOptions={EXTENSIONES}
                       placeholder="Sin ext."
                       emptyText="Sin extensiones"
                     />
@@ -450,7 +447,6 @@ export function UsuarioFormDialog({
                       codigo="GENEROS"
                       value={generoValue}
                       onValueChange={(val) => setValue("genero", val || "", { shouldValidate: true })}
-                      fallbackOptions={GENEROS}
                       placeholder="Seleccione género"
                       emptyText="Sin géneros"
                     />
@@ -466,7 +462,6 @@ export function UsuarioFormDialog({
                       codigo="ESTADOS_CIVILES"
                       value={estadoCivilValue}
                       onValueChange={(val) => setValue("estadoCivil", val || "", { shouldValidate: true })}
-                      fallbackOptions={ESTADOS_CIVILES}
                       placeholder="Seleccione estado civil"
                       emptyText="Sin estados civiles"
                     />
@@ -524,13 +519,32 @@ export function UsuarioFormDialog({
                     <Label htmlFor="password" className="text-sm font-medium">
                       {isEditing ? "Nueva Contraseña (Opcional)" : "Contraseña"}
                     </Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder={isEditing ? "Dejar en blanco para mantener" : "••••••••"}
-                      className="w-full h-9 text-sm"
-                      {...register("password")}
-                    />
+                    <div className="relative">
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder={isEditing ? "Dejar en blanco para mantener" : "••••••••"}
+                        className="w-full h-9 text-sm pr-9"
+                        {...register("password")}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        className="absolute right-0 top-0 h-9 w-9 px-0 text-muted-foreground hover:text-foreground cursor-pointer"
+                        title={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="size-4" />
+                        ) : (
+                          <Eye className="size-4" />
+                        )}
+                        <span className="sr-only">
+                          {showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                        </span>
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Clinica.Api.Modules.Seguridad.Personas.Entity;
 using Clinica.Api.Modules.Seguridad.Usuarios;
+using Clinica.Api.Modules.Seguridad.Usuarios.Entity;
 using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Extensions;
 using Clinica.Api.Shared.Jwt;

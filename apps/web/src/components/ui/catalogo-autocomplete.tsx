@@ -39,7 +39,7 @@ export function CatalogoAutocomplete({
     const apiItems = (catalogosData?.items || [])
       .filter((item: CatalogoItemResponse) => item.activo !== false)
       .map((item: CatalogoItemResponse) => {
-        const val = item.nombre || item.valor || "";
+        const val = item.valor || item.nombre || "";
         const label = item.nombre || item.valor || "";
         return { value: val, label: label };
       });

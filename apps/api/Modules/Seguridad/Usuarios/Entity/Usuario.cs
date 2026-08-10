@@ -1,7 +1,7 @@
 using Clinica.Api.Modules.Seguridad.Personas.Entity;
 using Microsoft.AspNetCore.Identity;
 
-namespace Clinica.Api.Modules.Seguridad.Usuarios;
+namespace Clinica.Api.Modules.Seguridad.Usuarios.Entity;
 
 public class Usuario : IdentityUser<int>
 {

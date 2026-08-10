@@ -30,12 +30,6 @@ interface PersonaFormDialogProps {
   personaToEdit?: PersonaResponse | null;
   onSuccessCallback?: () => void;
 }
-
-const TIPOS_DOCUMENTO = ["CI", "DNI", "PASAPORTE", "NIT", "OTRO"];
-const EXTENSIONES = ["SC", "LP", "CB", "OR", "PT", "TJ", "CH", "BE", "PA"];
-const GENEROS = ["Masculino", "Femenino", "Otro"];
-const ESTADOS_CIVILES = ["Soltero/a", "Casado/a", "Divorciado/a", "Viudo/a"];
-
 export function PersonaFormDialog({
   open,
   onOpenChange,
@@ -260,8 +254,7 @@ export function PersonaFormDialog({
                   id="tipoDocumento"
                   codigo="TIPOS_DOCUMENTO"
                   value={tipoDocumentoValue}
-                  onValueChange={(val) => setValue("tipoDocumento", val || "CI", { shouldValidate: true })}
-                  fallbackOptions={TIPOS_DOCUMENTO}
+                  onValueChange={(val) => setValue("tipoDocumento", val || "", { shouldValidate: true })}
                   placeholder="Tipo"
                   emptyText="Sin tipos"
                   error={Boolean(errors.tipoDocumento)}
@@ -297,7 +290,6 @@ export function PersonaFormDialog({
                   codigo="EXTENSIONES"
                   value={extensionDocumentoValue}
                   onValueChange={(val) => setValue("extensionDocumento", val || "", { shouldValidate: true })}
-                  fallbackOptions={EXTENSIONES}
                   placeholder="Sin ext."
                   emptyText="Sin extensiones"
                 />
@@ -352,7 +344,6 @@ export function PersonaFormDialog({
                   codigo="GENEROS"
                   value={generoValue}
                   onValueChange={(val) => setValue("genero", val || "", { shouldValidate: true })}
-                  fallbackOptions={GENEROS}
                   placeholder="Seleccione género"
                   emptyText="Sin géneros"
                 />
@@ -368,7 +359,6 @@ export function PersonaFormDialog({
                   codigo="ESTADOS_CIVILES"
                   value={estadoCivilValue}
                   onValueChange={(val) => setValue("estadoCivil", val || "", { shouldValidate: true })}
-                  fallbackOptions={ESTADOS_CIVILES}
                   placeholder="Seleccione estado civil"
                   emptyText="Sin estados civiles"
                 />

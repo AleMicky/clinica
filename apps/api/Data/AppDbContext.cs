@@ -16,6 +16,7 @@ using Clinica.Api.Modules.RecursosHumanos.TipoArea.Entity;
 using Clinica.Api.Modules.Seguridad.Personas.Entity;
 using Clinica.Api.Modules.Seguridad.Roles;
 using Clinica.Api.Modules.Seguridad.Usuarios;
+using Clinica.Api.Modules.Seguridad.Usuarios.Entity;
 using Clinica.Api.Modules.Servicios.CategoriaServicio.Entity;
 using Clinica.Api.Modules.Servicios.Convenios.Entity;
 using Clinica.Api.Modules.Servicios.Servicios.Entity;

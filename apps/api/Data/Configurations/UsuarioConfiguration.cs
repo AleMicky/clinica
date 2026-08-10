@@ -1,4 +1,5 @@
 using Clinica.Api.Modules.Seguridad.Usuarios;
+using Clinica.Api.Modules.Seguridad.Usuarios.Entity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

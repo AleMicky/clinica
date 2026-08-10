@@ -4,6 +4,7 @@ using Clinica.Api.Data.Seed;
 using Clinica.Api.Modules;
 using Clinica.Api.Modules.Seguridad.Roles;
 using Clinica.Api.Modules.Seguridad.Usuarios;
+using Clinica.Api.Modules.Seguridad.Usuarios.Entity;
 using Clinica.Api.Shared.Extensions;
 using Clinica.Api.Shared.Jwt;
 using Clinica.Api.Shared.Persistence;

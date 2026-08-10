@@ -1,6 +1,9 @@
+using Clinica.Api.Modules.Seguridad.Usuarios.Dtos;
+using Clinica.Api.Modules.Seguridad.Usuarios.Services;
 using Clinica.Api.Shared.Pagination;
+using Clinica.Api.Shared.Validation;
 
-namespace Clinica.Api.Modules.Seguridad.Usuarios;
+namespace Clinica.Api.Modules.Seguridad.Usuarios.Endpoints;
 
 public static class UsuarioEndpoints
 {
@@ -12,15 +15,22 @@ public static class UsuarioEndpoints
             .WithTags("Usuarios")
             .RequireAuthorization();
 
-        group.MapGet("/", Listar);
+        group.MapGet("/", Listar)
+            .WithName("ListarUsuarios");
 
-        group.MapGet("/{id:int}", Obtener);
+        group.MapGet("/{id:int}", Obtener)
+            .WithName("ObtenerUsuario");
 
-        group.MapPost("/", Crear);
+        group.MapPost("/", Crear)
+            .WithName("CrearUsuario")
+            .Validate<CreateUsuarioRequest>();
 
-        group.MapPut("/{id:int}", Actualizar);
+        group.MapPut("/{id:int}", Actualizar)
+            .WithName("ActualizarUsuario")
+            .Validate<UpdateUsuarioRequest>();
 
-        group.MapDelete("/{id:int}", Eliminar);
+        group.MapDelete("/{id:int}", Eliminar)
+            .WithName("EliminarUsuario");
 
         return app;
     }
@@ -31,11 +41,12 @@ public static class UsuarioEndpoints
         UsuarioService service,
         CancellationToken cancellationToken)
     {
-        return Results.Ok(
-            await service.ListarAsync(
-                pagination,
-                search,
-                cancellationToken));
+        var result = await service.ListarAsync(
+            pagination,
+            search,
+            cancellationToken);
+
+        return Results.Ok(result);
     }
 
     private static async Task<IResult> Obtener(
@@ -43,17 +54,21 @@ public static class UsuarioEndpoints
         UsuarioService service,
         CancellationToken cancellationToken)
     {
-        return Results.Ok(
-            await service.ObtenerAsync(
-                id,
-                cancellationToken));
+        var result = await service.ObtenerAsync(
+            id,
+            cancellationToken);
+
+        return Results.Ok(result);
     }
 
     private static async Task<IResult> Crear(
         CreateUsuarioRequest request,
-        UsuarioService service)
+        UsuarioService service,
+        CancellationToken cancellationToken)
     {
-        var result = await service.CrearAsync(request);
+        var result = await service.CrearAsync(
+            request,
+            cancellationToken);
 
         return Results.Created(
             $"/usuarios/{result.Id}",
@@ -63,19 +78,25 @@ public static class UsuarioEndpoints
     private static async Task<IResult> Actualizar(
         int id,
         UpdateUsuarioRequest request,
-        UsuarioService service)
+        UsuarioService service,
+        CancellationToken cancellationToken)
     {
-        return Results.Ok(
-            await service.ActualizarAsync(
-                id,
-                request));
+        var result = await service.ActualizarAsync(
+            id,
+            request,
+            cancellationToken);
+
+        return Results.Ok(result);
     }
 
     private static async Task<IResult> Eliminar(
         int id,
-        UsuarioService service)
+        UsuarioService service,
+        CancellationToken cancellationToken)
     {
-        await service.EliminarAsync(id);
+        await service.EliminarAsync(
+            id,
+            cancellationToken);
 
         return Results.NoContent();
     }

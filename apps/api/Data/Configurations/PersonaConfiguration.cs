@@ -42,7 +42,7 @@ public sealed class PersonaConfiguration
             .IsRequired();
 
         builder.Property(x => x.ExtensionDocumento)
-            .HasMaxLength(5);
+            .HasMaxLength(50);
 
         builder.Property(x => x.ComplementoDocumento)
             .HasMaxLength(10);
