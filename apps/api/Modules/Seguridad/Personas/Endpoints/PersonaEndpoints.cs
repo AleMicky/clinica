@@ -1,6 +1,7 @@
 using Clinica.Api.Modules.Seguridad.Personas.Dtos;
 using Clinica.Api.Modules.Seguridad.Personas.Services;
 using Clinica.Api.Shared.Pagination;
+using Clinica.Api.Shared.Validation;
 
 namespace Clinica.Api.Modules.Seguridad.Personas.Endpoints;
 
@@ -16,8 +17,12 @@ public static class PersonaEndpoints
 
         group.MapGet("/", ListarAsync).WithName("ListarPersonas");
         group.MapGet("/{id:int}", ObtenerAsync).WithName("ObtenerPersona");
-        group.MapPost("/", CrearAsync).WithName("CrearPersona");
-        group.MapPut("/{id:int}", ActualizarAsync).WithName("ActualizarPersona");
+        group.MapPost("/", CrearAsync)
+            .WithName("CrearPersona")
+            .Validate<CreatePersonaRequest>();
+        group.MapPut("/{id:int}", ActualizarAsync)
+            .WithName("ActualizarPersona")
+            .Validate<UpdatePersonaRequest>();
         group.MapDelete("/{id:int}", EliminarAsync).WithName("EliminarPersona");
 
         return app;

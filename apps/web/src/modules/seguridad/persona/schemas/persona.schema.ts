@@ -17,7 +17,8 @@ export const personaSchema = z.object({
     .string()
     .trim()
     .max(50, "El apellido materno no puede superar los 50 caracteres.")
-    .optional(),
+    .optional()
+    .or(z.literal("")),
 
   fechaNacimiento: z
     .string()
@@ -27,13 +28,15 @@ export const personaSchema = z.object({
     .string()
     .trim()
     .max(30, "El teléfono no puede superar los 30 caracteres.")
-    .optional(),
+    .optional()
+    .or(z.literal("")),
 
   direccion: z
     .string()
     .trim()
     .max(200, "La dirección no puede superar los 200 caracteres.")
-    .optional(),
+    .optional()
+    .or(z.literal("")),
 
   tipoDocumento: z
     .string()
@@ -50,28 +53,30 @@ export const personaSchema = z.object({
   extensionDocumento: z
     .string()
     .trim()
-    .max(5, "La extensión no puede superar los 5 caracteres.")
-    .optional(),
+    .max(20, "La extensión no puede superar los 20 caracteres.")
+    .optional()
+    .or(z.literal("")),
 
   complementoDocumento: z
     .string()
     .trim()
     .max(10, "El complemento no puede superar los 10 caracteres.")
-    .optional(),
+    .optional()
+    .or(z.literal("")),
 
   genero: z
     .string()
     .trim()
     .max(20)
-    .optional(),
+    .optional()
+    .or(z.literal("")),
 
   estadoCivil: z
     .string()
     .trim()
     .max(20)
-    .optional(),
-
-  activo: z.boolean(),
+    .optional()
+    .or(z.literal("")),
 });
 
 export type PersonaFormValues = z.infer<typeof personaSchema>;

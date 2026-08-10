@@ -121,6 +121,3 @@ public sealed class CreateUsuarioRequestValidator
             .WithMessage("La contraseña no puede superar los 100 caracteres.");
     }
 }
-
-public sealed class UpdateUsuarioRequestValidator
-    : UsuarioRequestValidator<UpdateUsuarioRequest>;

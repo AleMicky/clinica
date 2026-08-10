@@ -14,7 +14,13 @@ public sealed record CreateUsuarioRequest : UsuarioRequest
     public required string Password { get; init; }
 }
 
-public sealed record UpdateUsuarioRequest : UsuarioRequest;
+public sealed record UpdateUsuarioRequest
+{
+    public required string UserName { get; init; }
+    public required string Email { get; init; }
+    public List<string> Roles { get; init; } = [];
+    public bool Activo { get; init; } = true;
+};
 
 public sealed record UsuarioPersonaRequest
 {

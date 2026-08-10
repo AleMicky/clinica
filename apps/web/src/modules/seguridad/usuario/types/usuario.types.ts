@@ -52,10 +52,10 @@ export interface CreateUsuarioRequest {
 }
 
 export interface UpdateUsuarioRequest {
-  email: string;
   userName: string;
+  email: string;
+  roles: string[];
   activo: boolean;
-  roles?: string[];
 }
 
 export interface UsuarioQueryParams {

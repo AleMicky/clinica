@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { User, Loader2, CreditCard, UserCheck, Phone } from "lucide-react";
@@ -63,7 +63,6 @@ export function PersonaFormDialog({
       complementoDocumento: "",
       genero: "",
       estadoCivil: "",
-      activo: true,
     },
   });
 
@@ -71,6 +70,14 @@ export function PersonaFormDialog({
   const extensionDocumentoValue: string = watch("extensionDocumento") || "";
   const generoValue: string = watch("genero") || "";
   const estadoCivilValue: string = watch("estadoCivil") || "";
+
+  // Register custom catalog autocomplete fields
+  React.useEffect(() => {
+    register("tipoDocumento");
+    register("extensionDocumento");
+    register("genero");
+    register("estadoCivil");
+  }, [register]);
 
   // Reset form state when drawer opens or editing item changes
   React.useEffect(() => {
@@ -91,7 +98,6 @@ export function PersonaFormDialog({
           complementoDocumento: personaToEdit.complementoDocumento || "",
           genero: personaToEdit.genero || "",
           estadoCivil: personaToEdit.estadoCivil || "",
-          activo: personaToEdit.activo ?? true,
         });
       } else {
         reset({
@@ -107,7 +113,6 @@ export function PersonaFormDialog({
           complementoDocumento: "",
           genero: "",
           estadoCivil: "",
-          activo: true,
         });
       }
     }
@@ -119,7 +124,7 @@ export function PersonaFormDialog({
         nombres: values.nombres.trim(),
         apellidoPaterno: values.apellidoPaterno.trim(),
         apellidoMaterno: values.apellidoMaterno?.trim() || undefined,
-        fechaNacimiento: values.fechaNacimiento,
+        fechaNacimiento: values.fechaNacimiento ? values.fechaNacimiento.split("T")[0] : "",
         telefono: values.telefono?.trim() || undefined,
         direccion: values.direccion?.trim() || undefined,
         tipoDocumento: values.tipoDocumento.trim(),
@@ -143,12 +148,31 @@ export function PersonaFormDialog({
       onSuccessCallback?.();
       onOpenChange(false);
     } catch (error: any) {
+      const apiErrors = error?.response?.data?.errors;
+      const formattedApiError = apiErrors && typeof apiErrors === "object"
+        ? Object.values(apiErrors).flat().join(" ")
+        : undefined;
+
       const errorMsg =
+        formattedApiError ||
         error?.response?.data?.message ||
         error?.response?.data?.detail ||
+        error?.response?.data?.title ||
         error?.message ||
         "Ocurrió un error al procesar la solicitud.";
+
       toast.error(errorMsg);
+    }
+  };
+
+  const onInvalid = (fieldErrors: FieldErrors<PersonaFormValues>) => {
+    const keys = Object.keys(fieldErrors) as (keyof PersonaFormValues)[];
+    if (keys.length > 0) {
+      const firstKey = keys[0];
+      const errorMsg = fieldErrors[firstKey]?.message || `El campo '${String(firstKey)}' es obligatorio.`;
+      toast.error(`Error de validación: ${errorMsg}`);
+    } else {
+      toast.error("Por favor complete los campos obligatorios del formulario (*).");
     }
   };
 
@@ -175,7 +199,7 @@ export function PersonaFormDialog({
           </SheetDescription>
         </SheetHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 space-y-6 pt-4 overflow-y-auto pr-1">
+        <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="flex-1 space-y-6 pt-4 overflow-y-auto pr-1">
           {/* Indicador de campos requeridos */}
           <div className="flex items-center justify-between text-xs text-muted-foreground bg-muted/40 px-3.5 py-2 rounded-lg border border-border/50">
             <span>Formulario filiatorio de persona</span>
@@ -381,7 +405,7 @@ export function PersonaFormDialog({
                 </Label>
                 <Input
                   id="telefono"
-                  placeholder="+593 99 123 4567"
+                  placeholder="6075946"
                   className="w-full h-9 text-sm"
                   {...register("telefono")}
                 />
@@ -413,7 +437,11 @@ export function PersonaFormDialog({
               Cancelar
             </Button>
 
-            <Button type="submit" disabled={isLoading} className="gap-2 cursor-pointer">
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="gap-2 cursor-pointer"
+            >
               {isLoading && <Loader2 className="size-4 animate-spin" />}
               {isEditing ? "Guardar Cambios" : "Registrar Persona"}
             </Button>

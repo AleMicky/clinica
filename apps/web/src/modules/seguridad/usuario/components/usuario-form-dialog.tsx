@@ -36,6 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Stepper, type StepItem } from "@/components/ui/stepper";
 import { CatalogoAutocomplete } from "@/components/ui/catalogo-autocomplete";
 import { cn } from "@/lib/utils";
@@ -125,10 +126,20 @@ export function UsuarioFormDialog({
   const generoValue: string = watch("genero") || "";
   const estadoCivilValue: string = watch("estadoCivil") || "";
 
+  // Register custom autocomplete and select fields
+  React.useEffect(() => {
+    register("tipoDocumento");
+    register("extensionDocumento");
+    register("genero");
+    register("estadoCivil");
+    register("rol");
+    register("activo");
+  }, [register]);
+
   // Reset form state when drawer opens or editing item changes
   React.useEffect(() => {
     if (open) {
-      setCurrentStep(1);
+      setCurrentStep(usuarioToEdit ? 2 : 1);
       setShowPassword(false);
       if (usuarioToEdit) {
         reset({
@@ -173,12 +184,16 @@ export function UsuarioFormDialog({
   }, [open, usuarioToEdit, reset]);
 
   const handleNextStep = async () => {
+    if (isEditing) {
+      setCurrentStep(2);
+      return;
+    }
+
     const isValid = await trigger([
       "nombres",
       "apellidoPaterno",
       "tipoDocumento",
       "numeroDocumento",
-      "fechaNacimiento",
     ]);
 
     if (isValid) {
@@ -204,17 +219,28 @@ export function UsuarioFormDialog({
           data: {
             userName: values.userName.trim(),
             email: values.email.trim(),
+            roles: values.rol ? [values.rol] : [],
             activo: values.activo,
-            roles: [values.rol],
           },
         });
         toast.success(`Cuenta @${values.userName} actualizada correctamente.`);
       } else {
+        if (
+          !values.nombres?.trim() ||
+          !values.apellidoPaterno?.trim() ||
+          !values.tipoDocumento?.trim() ||
+          !values.numeroDocumento?.trim()
+        ) {
+          setCurrentStep(1);
+          toast.error("Por favor complete los campos obligatorios de la persona.");
+          return;
+        }
+
         await createMutation.mutateAsync({
           userName: values.userName.trim(),
           email: values.email.trim(),
           password: values.password || "Clinica123*",
-          roles: [values.rol],
+          roles: values.rol ? [values.rol] : [],
           persona: {
             nombres: values.nombres.trim(),
             apellidoPaterno: values.apellidoPaterno.trim(),
@@ -265,25 +291,29 @@ export function UsuarioFormDialog({
           </SheetDescription>
         </SheetHeader>
 
-        {/* Componente Global de Stepper */}
-        <Stepper
-          steps={STEPS}
-          currentStep={currentStep}
-          onStepClick={handleStepClick}
-        />
+        {/* Componente Global de Stepper (solo al crear) */}
+        {!isEditing && (
+          <Stepper
+            steps={STEPS}
+            currentStep={currentStep}
+            onStepClick={handleStepClick}
+          />
+        )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 space-y-6 pt-4 overflow-y-auto pr-1">
-          {/* Indicador de campos requeridos */}
-          <div className="flex items-center justify-between text-xs text-muted-foreground bg-muted/40 px-3.5 py-2 rounded-lg border border-border/50">
-            <span>
-              {currentStep === 1
-                ? "Paso 1 de 2: Información filiatoria de la persona"
-                : "Paso 2 de 2: Credenciales y permisos de usuario"}
-            </span>
-            <span className="text-destructive font-semibold">* Requeridos</span>
-          </div>
+          {/* Indicador de campos requeridos (solo al crear) */}
+          {!isEditing && (
+            <div className="flex items-center justify-between text-xs text-muted-foreground bg-muted/40 px-3.5 py-2 rounded-lg border border-border/50">
+              <span>
+                {currentStep === 1
+                  ? "Paso 1 de 2: Información filiatoria de la persona"
+                  : "Paso 2 de 2: Credenciales y permisos de usuario"}
+              </span>
+              <span className="text-destructive font-semibold">* Requeridos</span>
+            </div>
+          )}
 
-          {currentStep === 1 && (
+          {!isEditing && currentStep === 1 && (
             <div className="space-y-6">
               {/* Bloque 1: Nombres y Apellidos */}
               <div className="space-y-2.5">
@@ -471,16 +501,16 @@ export function UsuarioFormDialog({
             </div>
           )}
 
-          {currentStep === 2 && (
+          {(isEditing || currentStep === 2) && (
             <div className="space-y-6">
-              {/* Bloque 1: Credenciales de Acceso */}
+              {/* Bloque 1: Credenciales y Estado */}
               <div className="space-y-2.5">
                 <div className="flex items-center gap-2 text-xs font-bold text-foreground uppercase tracking-wider">
                   <KeyRound className="size-4 text-primary" />
-                  <span>Credenciales de Acceso</span>
+                  <span>Credenciales y Estado de la Cuenta</span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {/* Username */}
                   <div className="space-y-1">
                     <Label htmlFor="userName" className="text-sm font-medium flex items-center gap-1">
@@ -514,36 +544,65 @@ export function UsuarioFormDialog({
                     )}
                   </div>
 
-                  {/* Password */}
+                  {/* Password (only on creation) */}
+                  {!isEditing && (
+                    <div className="space-y-1">
+                      <Label htmlFor="password" className="text-sm font-medium">
+                        Contraseña
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          id="password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          className="w-full h-9 text-sm pr-9"
+                          {...register("password")}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setShowPassword((prev) => !prev)}
+                          className="absolute right-0 top-0 h-9 w-9 px-0 text-muted-foreground hover:text-foreground cursor-pointer"
+                          title={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="size-4" />
+                          ) : (
+                            <Eye className="size-4" />
+                          )}
+                          <span className="sr-only">
+                            {showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                          </span>
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Estado Activo */}
                   <div className="space-y-1">
-                    <Label htmlFor="password" className="text-sm font-medium">
-                      {isEditing ? "Nueva Contraseña (Opcional)" : "Contraseña"}
+                    <Label htmlFor="activo" className="text-sm font-medium">
+                      Estado de la Cuenta
                     </Label>
-                    <div className="relative">
-                      <Input
-                        id="password"
-                        type={showPassword ? "text" : "password"}
-                        placeholder={isEditing ? "Dejar en blanco para mantener" : "••••••••"}
-                        className="w-full h-9 text-sm pr-9"
-                        {...register("password")}
+                    <div className="flex items-center gap-3 h-9 px-3 rounded-md border border-input bg-background/50">
+                      <Checkbox
+                        id="activo"
+                        checked={watch("activo")}
+                        onCheckedChange={(checked) => setValue("activo", Boolean(checked))}
                       />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setShowPassword((prev) => !prev)}
-                        className="absolute right-0 top-0 h-9 w-9 px-0 text-muted-foreground hover:text-foreground cursor-pointer"
-                        title={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-                      >
-                        {showPassword ? (
-                          <EyeOff className="size-4" />
-                        ) : (
-                          <Eye className="size-4" />
-                        )}
-                        <span className="sr-only">
-                          {showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                      <Label htmlFor="activo" className="text-sm font-medium cursor-pointer flex items-center gap-2">
+                        <span>{watch("activo") ? "Cuenta Activa" : "Cuenta Inactiva (Bloqueada)"}</span>
+                        <span
+                          className={cn(
+                            "text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider",
+                            watch("activo")
+                              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                              : "bg-destructive/10 text-destructive border border-destructive/20"
+                          )}
+                        >
+                          {watch("activo") ? "Activo" : "Inactivo"}
                         </span>
-                      </Button>
+                      </Label>
                     </div>
                   </div>
                 </div>
@@ -588,7 +647,7 @@ export function UsuarioFormDialog({
 
           <SheetFooter className="p-0 pt-5 border-t flex flex-row justify-between items-center gap-2">
             <div>
-              {currentStep === 2 ? (
+              {!isEditing && currentStep === 2 ? (
                 <Button
                   type="button"
                   variant="outline"
@@ -613,7 +672,7 @@ export function UsuarioFormDialog({
             </div>
 
             <div className="flex items-center gap-2">
-              {currentStep === 1 ? (
+              {!isEditing && currentStep === 1 ? (
                 <Button
                   type="button"
                   onClick={handleNextStep}

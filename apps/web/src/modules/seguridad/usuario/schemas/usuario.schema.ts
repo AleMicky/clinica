@@ -18,55 +18,17 @@ export const usuarioSchema = z.object({
 
   activo: z.boolean(),
 
-  // Persona fields
-  nombres: z
-    .string()
-    .trim()
-    .min(1, "El nombre de la persona es obligatorio."),
-
-  apellidoPaterno: z
-    .string()
-    .trim()
-    .min(1, "El apellido paterno es obligatorio."),
-
-  apellidoMaterno: z
-    .string()
-    .trim()
-    .optional(),
-
-  fechaNacimiento: z
-    .string()
-    .optional(),
-
-  tipoDocumento: z
-    .string()
-    .trim()
-    .min(1, "El tipo de documento es obligatorio."),
-
-  numeroDocumento: z
-    .string()
-    .trim()
-    .min(1, "El número de documento es obligatorio."),
-
-  extensionDocumento: z
-    .string()
-    .trim()
-    .optional(),
-
-  complementoDocumento: z
-    .string()
-    .trim()
-    .optional(),
-
-  genero: z
-    .string()
-    .trim()
-    .optional(),
-
-  estadoCivil: z
-    .string()
-    .trim()
-    .optional(),
+  // Persona fields (required when creating new user, optional when editing)
+  nombres: z.string().trim().optional(),
+  apellidoPaterno: z.string().trim().optional(),
+  apellidoMaterno: z.string().trim().optional(),
+  fechaNacimiento: z.string().optional(),
+  tipoDocumento: z.string().trim().optional(),
+  numeroDocumento: z.string().trim().optional(),
+  extensionDocumento: z.string().trim().optional(),
+  complementoDocumento: z.string().trim().optional(),
+  genero: z.string().trim().optional(),
+  estadoCivil: z.string().trim().optional(),
 
   rol: z
     .string()

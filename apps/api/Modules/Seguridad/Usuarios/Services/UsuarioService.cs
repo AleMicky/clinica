@@ -1,6 +1,5 @@
 using Clinica.Api.Data;
 using Clinica.Api.Modules.RecursosHumanos.Empleado.Entity;
-using Clinica.Api.Modules.Seguridad.Roles;
 using Clinica.Api.Modules.Seguridad.Roles.Entity;
 using Clinica.Api.Modules.Seguridad.Usuarios.Dtos;
 using Clinica.Api.Modules.Seguridad.Usuarios.Entity;
@@ -21,46 +20,59 @@ public sealed class UsuarioService(
     public async Task<PagedResult<UsuarioResponse>> ListarAsync(
         PaginationRequest pagination,
         string? search,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         var query = userManager.Users
             .Include(x => x.Persona)
-            .AsNoTracking()
-            .AsQueryable();
+            .AsNoTracking();
 
         if (!string.IsNullOrWhiteSpace(search))
         {
             var term = search.Trim();
 
             query = query.Where(x =>
-                (x.UserName != null && x.UserName.Contains(term)) ||
-                (x.Email != null && x.Email.Contains(term)) ||
+                (x.UserName != null &&
+                 x.UserName.Contains(term)) ||
+                (x.Email != null &&
+                 x.Email.Contains(term)) ||
                 x.Persona.Nombres.Contains(term) ||
                 x.Persona.ApellidoPaterno.Contains(term) ||
                 x.Persona.NumeroDocumento.Contains(term));
         }
 
-        var totalItems = await query.CountAsync(cancellationToken);
+        var totalItems = await query
+            .CountAsync(cancellationToken);
 
         var usuarios = await query
             .OrderBy(x => x.Persona.ApellidoPaterno)
             .ThenBy(x => x.Persona.ApellidoMaterno)
             .ThenBy(x => x.Persona.Nombres)
-            .Skip((pagination.ValidPage - 1) * pagination.ValidPageSize)
+            .Skip(
+                (pagination.ValidPage - 1) *
+                pagination.ValidPageSize)
             .Take(pagination.ValidPageSize)
             .ToListAsync(cancellationToken);
 
-        var items = new List<UsuarioResponse>(usuarios.Count);
+        var usuarioIds = usuarios
+            .Select(x => x.Id)
+            .ToList();
 
-        foreach (var usuario in usuarios)
-        {
-            var roles = await userManager.GetRolesAsync(usuario);
+        var rolesPorUsuario = await ObtenerRolesPorUsuariosAsync(
+            usuarioIds,
+            cancellationToken);
 
-            items.Add(
-                MapToResponse(
+        var items = usuarios
+            .Select(usuario =>
+            {
+                rolesPorUsuario.TryGetValue(
+                    usuario.Id,
+                    out var roles);
+
+                return MapToResponse(
                     usuario,
-                    roles.ToList()));
-        }
+                    roles ?? []);
+            })
+            .ToList();
 
         return new PagedResult<UsuarioResponse>(
             items,
@@ -71,17 +83,26 @@ public sealed class UsuarioService(
 
     public async Task<UsuarioResponse> ObtenerAsync(
         int id,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         var usuario = await userManager.Users
-                          .Include(x => x.Persona)
-                          .AsNoTracking()
-                          .FirstOrDefaultAsync(
-                              x => x.Id == id,
-                              cancellationToken)
-                      ?? throw new NotFoundException("Usuario", id);
+            .Include(x => x.Persona)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                x => x.Id == id,
+                cancellationToken);
 
-        var roles = await userManager.GetRolesAsync(usuario);
+        if (usuario is null)
+        {
+            throw new NotFoundException(
+                "Usuario",
+                id);
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var roles = await userManager
+            .GetRolesAsync(usuario);
 
         return MapToResponse(
             usuario,
@@ -90,51 +111,93 @@ public sealed class UsuarioService(
 
     public async Task<UsuarioResponse> CrearAsync(
         CreateUsuarioRequest request,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
-        var userName = request.UserName.TrimRequired();
-        var email = request.Email.TrimRequired();
+        var userName =
+            request.UserName.TrimRequired();
 
-        var tipoDocumento = request.Persona.TipoDocumento.TrimUpperRequired();
-        var numeroDocumento = request.Persona.NumeroDocumento.TrimUpperRequired();
-        var complementoDocumento = request.Persona.ComplementoDocumento.TrimUpperOrNull();
+        var email =
+            request.Email.TrimRequired();
+
+        var tipoDocumento =
+            request.Persona.TipoDocumento
+                .TrimUpperRequired();
+
+        var numeroDocumento =
+            request.Persona.NumeroDocumento
+                .TrimUpperRequired();
+
+        var complementoDocumento =
+            request.Persona.ComplementoDocumento
+                .TrimUpperOrNull();
 
         await ValidarUsuarioUnicoAsync(
             userName,
-            email);
+            email,
+            null,
+            cancellationToken);
 
         await ValidarDocumentoUnicoAsync(
             tipoDocumento,
             numeroDocumento,
             complementoDocumento,
-            personaIdExcluir: null,
+            null,
             cancellationToken);
 
-        var nombresRoles = await ValidarRolesAsync(request.Roles);
+        var nombresRoles = await ValidarRolesAsync(
+            request.Roles,
+            cancellationToken);
 
         await using var transaction =
-            await dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await dbContext.Database.BeginTransactionAsync(
+                cancellationToken);
 
         try
         {
             var persona = new Persona
             {
-                Nombres = request.Persona.Nombres.TrimRequired(),
-                ApellidoPaterno = request.Persona.ApellidoPaterno.TrimRequired(),
-                ApellidoMaterno = request.Persona.ApellidoMaterno.TrimOrNull(),
+                Nombres = request.Persona.Nombres
+                    .TrimRequired(),
 
-                FechaNacimiento = request.Persona.FechaNacimiento,
+                ApellidoPaterno =
+                    request.Persona.ApellidoPaterno
+                        .TrimRequired(),
 
-                Telefono = request.Persona.Telefono.TrimOrNull(),
-                Direccion = request.Persona.Direccion.TrimOrNull(),
+                ApellidoMaterno =
+                    request.Persona.ApellidoMaterno
+                        .TrimOrNull(),
 
-                TipoDocumento = tipoDocumento,
-                NumeroDocumento = numeroDocumento,
-                ExtensionDocumento = request.Persona.ExtensionDocumento.TrimUpperOrNull(),
-                ComplementoDocumento = complementoDocumento,
+                FechaNacimiento =
+                    request.Persona.FechaNacimiento,
 
-                Genero = request.Persona.Genero.TrimUpperOrNull(),
-                EstadoCivil = request.Persona.EstadoCivil.TrimUpperOrNull()
+                Telefono =
+                    request.Persona.Telefono
+                        .TrimOrNull(),
+
+                Direccion =
+                    request.Persona.Direccion
+                        .TrimOrNull(),
+
+                TipoDocumento =
+                    tipoDocumento,
+
+                NumeroDocumento =
+                    numeroDocumento,
+
+                ExtensionDocumento =
+                    request.Persona.ExtensionDocumento
+                        .TrimUpperOrNull(),
+
+                ComplementoDocumento =
+                    complementoDocumento,
+
+                Genero =
+                    request.Persona.Genero
+                        .TrimUpperOrNull(),
+
+                EstadoCivil =
+                    request.Persona.EstadoCivil
+                        .TrimUpperOrNull()
             };
 
             await dbContext.Personas.AddAsync(
@@ -150,7 +213,8 @@ public sealed class UsuarioService(
                 empleado,
                 cancellationToken);
 
-            await dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.SaveChangesAsync(
+                cancellationToken);
 
             var usuario = new Usuario
             {
@@ -165,32 +229,39 @@ public sealed class UsuarioService(
                 Persona = persona
             };
 
-            var createResult = await userManager.CreateAsync(
-                usuario,
-                request.Password);
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var createResult =
+                await userManager.CreateAsync(
+                    usuario,
+                    request.Password);
 
             createResult.EnsureSuccess();
 
-            if (nombresRoles.Count > 0)
+            if (nombresRoles.Count != 0)
             {
-                var rolesResult = await userManager.AddToRolesAsync(
-                    usuario,
-                    nombresRoles);
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var rolesResult =
+                    await userManager.AddToRolesAsync(
+                        usuario,
+                        nombresRoles);
 
                 rolesResult.EnsureSuccess();
             }
 
-            await transaction.CommitAsync(cancellationToken);
+            await transaction.CommitAsync(
+                cancellationToken);
 
-            var roles = await userManager.GetRolesAsync(usuario);
-
-            return MapToResponse(
-                usuario,
-                roles.ToList());
+            return await ObtenerAsync(
+                usuario.Id,
+                cancellationToken);
         }
         catch
         {
-            await transaction.RollbackAsync(cancellationToken);
+            await transaction.RollbackAsync(
+                CancellationToken.None);
+
             throw;
         }
     }
@@ -198,93 +269,94 @@ public sealed class UsuarioService(
     public async Task<UsuarioResponse> ActualizarAsync(
         int id,
         UpdateUsuarioRequest request,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         var usuario = await userManager.Users
-                          .Include(x => x.Persona)
-                          .FirstOrDefaultAsync(
-                              x => x.Id == id,
-                              cancellationToken)
-                      ?? throw new NotFoundException("Usuario", id);
+            .FirstOrDefaultAsync(
+                x => x.Id == id,
+                cancellationToken);
 
-        var userName = request.UserName.TrimRequired();
-        var email = request.Email.TrimRequired();
+        if (usuario is null)
+        {
+            throw new NotFoundException(
+                "Usuario",
+                id);
+        }
 
-        var tipoDocumento = request.Persona.TipoDocumento.TrimUpperRequired();
-        var numeroDocumento = request.Persona.NumeroDocumento.TrimUpperRequired();
-        var complementoDocumento = request.Persona.ComplementoDocumento.TrimUpperOrNull();
+        var userName =
+            request.UserName.TrimRequired();
+
+        var email =
+            request.Email.TrimRequired();
 
         await ValidarUsuarioUnicoAsync(
             userName,
             email,
-            id);
-
-        await ValidarDocumentoUnicoAsync(
-            tipoDocumento,
-            numeroDocumento,
-            complementoDocumento,
-            usuario.PersonaId,
+            id,
             cancellationToken);
 
-        var nombresRoles = await ValidarRolesAsync(request.Roles);
+        var nombresRoles = await ValidarRolesAsync(
+            request.Roles,
+            cancellationToken);
 
         await using var transaction =
-            await dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await dbContext.Database.BeginTransactionAsync(
+                cancellationToken);
 
         try
         {
             usuario.UserName = userName;
             usuario.Email = email;
             usuario.Activo = request.Activo;
-            usuario.Persona.Nombres = request.Persona.Nombres.TrimRequired();
-            usuario.Persona.ApellidoPaterno = request.Persona.ApellidoPaterno.TrimRequired();
-            usuario.Persona.ApellidoMaterno = request.Persona.ApellidoMaterno.TrimOrNull();
-            usuario.Persona.FechaNacimiento = request.Persona.FechaNacimiento;
-            usuario.Persona.Telefono = request.Persona.Telefono.TrimOrNull();
-            usuario.Persona.Direccion = request.Persona.Direccion.TrimOrNull();
-            usuario.Persona.TipoDocumento = tipoDocumento;
-            usuario.Persona.NumeroDocumento = numeroDocumento;
-            usuario.Persona.ExtensionDocumento = request.Persona.ExtensionDocumento.TrimUpperOrNull();
-            usuario.Persona.ComplementoDocumento = complementoDocumento;
-            usuario.Persona.Genero = request.Persona.Genero.TrimUpperOrNull();
-            usuario.Persona.EstadoCivil = request.Persona.EstadoCivil.TrimUpperOrNull();
 
-            var updateResult = await userManager.UpdateAsync(usuario);
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var updateResult =
+                await userManager.UpdateAsync(usuario);
 
             updateResult.EnsureSuccess();
 
             await ActualizarRolesAsync(
                 usuario,
-                nombresRoles);
+                nombresRoles,
+                cancellationToken);
 
-            await dbContext.SaveChangesAsync(cancellationToken);
-
-            await transaction.CommitAsync(cancellationToken);
-
-            var roles = await userManager.GetRolesAsync(usuario);
-
-            return MapToResponse(
-                usuario,
-                roles.ToList());
+            await transaction.CommitAsync(
+                cancellationToken);
         }
         catch
         {
-            await transaction.RollbackAsync(cancellationToken);
+            await transaction.RollbackAsync(
+                CancellationToken.None);
+
             throw;
         }
+
+        return await ObtenerAsync(
+            usuario.Id,
+            cancellationToken);
     }
 
     public async Task EliminarAsync(
         int id,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         var usuario = await userManager.Users
-                          .FirstOrDefaultAsync(
-                              x => x.Id == id,
-                              cancellationToken)
-                      ?? throw new NotFoundException("Usuario", id);
+            .FirstOrDefaultAsync(
+                x => x.Id == id,
+                cancellationToken);
 
-        var result = await userManager.DeleteAsync(usuario);
+        if (usuario is null)
+        {
+            throw new NotFoundException(
+                "Usuario",
+                id);
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var result =
+            await userManager.DeleteAsync(usuario);
 
         result.EnsureSuccess();
     }
@@ -292,23 +364,44 @@ public sealed class UsuarioService(
     private async Task ValidarUsuarioUnicoAsync(
         string userName,
         string email,
-        int? usuarioIdExcluir = null)
+        int? usuarioIdExcluir,
+        CancellationToken cancellationToken)
     {
-        var usuarioPorNombre =
-            await userManager.FindByNameAsync(userName);
+        var normalizedUserName =
+            userManager.NormalizeName(userName);
 
-        if (usuarioPorNombre is not null &&
-            usuarioPorNombre.Id != usuarioIdExcluir)
+        var normalizedEmail =
+            userManager.NormalizeEmail(email);
+
+        var existeUserName =
+            await userManager.Users
+                .AsNoTracking()
+                .AnyAsync(
+                    x =>
+                        x.NormalizedUserName ==
+                        normalizedUserName &&
+                        (!usuarioIdExcluir.HasValue ||
+                         x.Id != usuarioIdExcluir.Value),
+                    cancellationToken);
+
+        if (existeUserName)
         {
             throw new ConflictException(
                 $"El nombre de usuario '{userName}' ya existe.");
         }
 
-        var usuarioPorEmail =
-            await userManager.FindByEmailAsync(email);
+        var existeEmail =
+            await userManager.Users
+                .AsNoTracking()
+                .AnyAsync(
+                    x =>
+                        x.NormalizedEmail ==
+                        normalizedEmail &&
+                        (!usuarioIdExcluir.HasValue ||
+                         x.Id != usuarioIdExcluir.Value),
+                    cancellationToken);
 
-        if (usuarioPorEmail is not null &&
-            usuarioPorEmail.Id != usuarioIdExcluir)
+        if (existeEmail)
         {
             throw new ConflictException(
                 $"El correo electrónico '{email}' ya existe.");
@@ -328,9 +421,12 @@ public sealed class UsuarioService(
                 x =>
                     (!personaIdExcluir.HasValue ||
                      x.Id != personaIdExcluir.Value) &&
-                    x.TipoDocumento == tipoDocumento &&
-                    x.NumeroDocumento == numeroDocumento &&
-                    x.ComplementoDocumento == complementoDocumento,
+                    x.TipoDocumento ==
+                    tipoDocumento &&
+                    x.NumeroDocumento ==
+                    numeroDocumento &&
+                    x.ComplementoDocumento ==
+                    complementoDocumento,
                 cancellationToken);
 
         if (!existe)
@@ -338,30 +434,61 @@ public sealed class UsuarioService(
             return;
         }
 
-        var documento = complementoDocumento is null
-            ? $"{tipoDocumento} {numeroDocumento}"
-            : $"{tipoDocumento} {numeroDocumento}-{complementoDocumento}";
+        var documento =
+            complementoDocumento is null
+                ? $"{tipoDocumento} {numeroDocumento}"
+                : $"{tipoDocumento} {numeroDocumento}-{complementoDocumento}";
 
         throw new ConflictException(
             $"Ya existe una persona con el documento '{documento}'.");
     }
 
     private async Task<List<string>> ValidarRolesAsync(
-        IEnumerable<string> nombres)
+        IEnumerable<string> nombres,
+        CancellationToken cancellationToken)
     {
         var roles = nombres
-            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Where(x =>
+                !string.IsNullOrWhiteSpace(x))
             .Select(x => x.Trim())
-            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Distinct(
+                StringComparer.OrdinalIgnoreCase)
             .ToList();
 
-        foreach (var rol in roles)
+        if (roles.Count == 0)
         {
-            if (!await roleManager.RoleExistsAsync(rol))
-            {
-                throw new BusinessException(
-                    $"El rol '{rol}' no existe.");
-            }
+            return roles;
+        }
+
+        var rolesNormalizados = roles
+            .Select(roleManager.NormalizeKey)
+            .ToList();
+
+        var rolesExistentes =
+            await roleManager.Roles
+                .AsNoTracking()
+                .Where(x =>
+                    x.NormalizedName != null &&
+                    rolesNormalizados.Contains(
+                        x.NormalizedName))
+                .Select(x => x.NormalizedName!)
+                .ToListAsync(
+                    cancellationToken);
+
+        var existentes = rolesExistentes
+            .ToHashSet(
+                StringComparer.OrdinalIgnoreCase);
+
+        var rolesNoExistentes = roles
+            .Where(x =>
+                !existentes.Contains(
+                    roleManager.NormalizeKey(x)))
+            .ToList();
+
+        if (rolesNoExistentes.Count != 0)
+        {
+            throw new BusinessException(
+                $"Los siguientes roles no existen: {string.Join(", ", rolesNoExistentes)}.");
         }
 
         return roles;
@@ -369,8 +496,11 @@ public sealed class UsuarioService(
 
     private async Task ActualizarRolesAsync(
         Usuario usuario,
-        List<string> nuevosRoles)
+        List<string> nuevosRoles,
+        CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         var rolesActuales =
             await userManager.GetRolesAsync(usuario);
 
@@ -386,28 +516,68 @@ public sealed class UsuarioService(
                 StringComparer.OrdinalIgnoreCase)
             .ToList();
 
-        if (rolesEliminar.Count > 0)
+        if (rolesEliminar.Count != 0)
         {
-            var result = await userManager.RemoveFromRolesAsync(
-                usuario,
-                rolesEliminar);
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var result =
+                await userManager.RemoveFromRolesAsync(
+                    usuario,
+                    rolesEliminar);
 
             result.EnsureSuccess();
         }
 
-        if (rolesAgregar.Count > 0)
+        if (rolesAgregar.Count != 0)
         {
-            var result = await userManager.AddToRolesAsync(
-                usuario,
-                rolesAgregar);
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var result =
+                await userManager.AddToRolesAsync(
+                    usuario,
+                    rolesAgregar);
 
             result.EnsureSuccess();
         }
     }
 
-    private static UsuarioResponse MapToResponse(
-        Usuario usuario,
-        List<string> roles)
+    private async Task<Dictionary<int, List<string>>> ObtenerRolesPorUsuariosAsync(
+            List<int> usuarioIds,
+            CancellationToken cancellationToken)
+    {
+        if (usuarioIds.Count == 0)
+        {
+            return [];
+        }
+
+        var roles = await (
+                from usuarioRol in dbContext.UserRoles
+                join rol in dbContext.Roles
+                    on usuarioRol.RoleId equals rol.Id
+                where usuarioIds.Contains(
+                    usuarioRol.UserId)
+                select new
+                {
+                    usuarioRol.UserId,
+                    Nombre = rol.Name
+                })
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        return roles
+            .Where(x =>
+                !string.IsNullOrWhiteSpace(
+                    x.Nombre))
+            .GroupBy(x => x.UserId)
+            .ToDictionary(
+                x => x.Key,
+                x => x
+                    .Select(r => r.Nombre!)
+                    .OrderBy(r => r)
+                    .ToList());
+    }
+
+    private static UsuarioResponse MapToResponse(Usuario usuario, List<string> roles)
     {
         return new UsuarioResponse
         {
@@ -421,8 +591,7 @@ public sealed class UsuarioService(
         };
     }
 
-    private static UsuarioPersonaResponse MapToPersonaResponse(
-        Persona persona)
+    private static UsuarioPersonaResponse MapToPersonaResponse(Persona persona)
     {
         return new UsuarioPersonaResponse
         {
