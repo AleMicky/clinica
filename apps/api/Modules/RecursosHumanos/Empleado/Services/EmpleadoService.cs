@@ -212,7 +212,7 @@ public sealed class EmpleadoService(AppDbContext dbContext)
 
     private static string GenerarCodigoEmpleado(int empleadoId)
     {
-        return $"EMP-{empleadoId:D5}";
+        return $"CQ-{empleadoId:D5}";
     }
 
     private static EmpleadoResponse MapToResponse(

@@ -1,13 +1,18 @@
+using Clinica.Api.Modules.Seguridad.Roles.Dtos;
+using Clinica.Api.Modules.Seguridad.Roles.Entity;
+using Clinica.Api.Modules.Seguridad.Roles.Mappers;
 using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Extensions;
 using Clinica.Api.Shared.Pagination;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
-namespace Clinica.Api.Modules.Seguridad.Roles;
+namespace Clinica.Api.Modules.Seguridad.Roles.Services;
 
 public sealed class RolService(RoleManager<Rol> roleManager)
 {
+    private const string RolAdministrador = "ADMINISTRADOR";
+
     public async Task<PagedResult<RolResponse>> ListarAsync(
         PaginationRequest pagination,
         string? search,
@@ -17,115 +22,134 @@ public sealed class RolService(RoleManager<Rol> roleManager)
 
         if (!string.IsNullOrWhiteSpace(search))
         {
-            query = query.Where(x =>
-                x.Name != null &&
-                x.Name.Contains(search.Trim()));
+            var term = search.Trim();
+            query = query.Where(x => x.Name != null && x.Name.Contains(term));
         }
 
         var totalItems = await query.CountAsync(cancellationToken);
 
-        var items = await query
+        var roles = await query
             .OrderBy(x => x.Name)
-            .Skip((pagination.ValidPage - 1) * pagination.ValidPageSize)
+            .Skip(
+                (pagination.ValidPage - 1) *
+                pagination.ValidPageSize)
             .Take(pagination.ValidPageSize)
             .ToListAsync(cancellationToken);
 
         return new PagedResult<RolResponse>(
-            RolMapper.ToResponse(items),
+            RolMapper.ToResponse(roles),
             pagination.ValidPage,
             pagination.ValidPageSize,
             totalItems);
     }
 
-    public async Task<RolResponse> ObtenerAsync(
+    public async Task<RolResponse> ObtenerAsync(int id, CancellationToken cancellationToken)
+    {
+        var rol = await roleManager.Roles
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                x => x.Id == id,
+                cancellationToken);
+
+        if (rol is null)
+        {
+            throw new NotFoundException("Rol", id);
+        }
+
+        return RolMapper.ToResponse(rol);
+    }
+
+    public async Task<RolResponse> CrearAsync(CreateRolRequest request, CancellationToken cancellationToken)
+    {
+        await ValidarNombreUnicoAsync(request.Name, cancellationToken);
+
+        var rol = new Rol
+        {
+            Name = request.Name.TrimUpper(),
+            Descripcion = request.Descripcion.TrimOrNull()
+        };
+
+        cancellationToken.ThrowIfCancellationRequested();
+        var result = await roleManager.CreateAsync(rol);
+        result.EnsureSuccess();
+        return RolMapper.ToResponse(rol);
+    }
+
+    public async Task<RolResponse> ActualizarAsync(int id, UpdateRolRequest request,
+        CancellationToken cancellationToken)
+    {
+        var rol = await roleManager.Roles.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+
+        if (rol is null)
+        {
+            throw new NotFoundException("Rol", id);
+        }
+
+        await ValidarNombreUnicoAsync(request.Name, cancellationToken, id);
+        rol.Name = request.Name.TrimUpper();
+        rol.Descripcion = request.Descripcion.TrimOrNull();
+
+        cancellationToken.ThrowIfCancellationRequested();
+        var result = await roleManager.UpdateAsync(rol);
+
+        result.EnsureSuccess();
+
+        return RolMapper.ToResponse(rol);
+    }
+
+    public async Task EliminarAsync(
         int id,
         CancellationToken cancellationToken)
     {
         var rol = await roleManager.Roles
-                      .AsNoTracking()
-                      .FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
-                  ?? throw new NotFoundException("Rol", id);
+            .FirstOrDefaultAsync(
+                x => x.Id == id,
+                cancellationToken);
 
-        return RolMapper.ToResponse(rol);
+        if (rol is null)
+        {
+            throw new NotFoundException("Rol", id);
+        }
+
+        ValidarRolProtegido(rol);
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var result = await roleManager.DeleteAsync(rol);
+
+        result.EnsureSuccess();
     }
 
-    public async Task<RolResponse> CrearAsync(
-        CreateRolRequest request)
+    private async Task ValidarNombreUnicoAsync(
+        string nombre,
+        CancellationToken cancellationToken,
+        int? excluirId = null)
     {
-        var nombre = NormalizarNombre(request.Nombre);
+        var nombreNormalizado = nombre.TrimUpper();
 
-        if (await roleManager.FindByNameAsync(nombre) is not null)
+        var existe = await roleManager.Roles
+            .AsNoTracking()
+            .AnyAsync(
+                x => x.NormalizedName == nombreNormalizado &&
+                     (!excluirId.HasValue || x.Id != excluirId.Value),
+                cancellationToken);
+
+        if (existe)
         {
             throw new BusinessException(
                 "Ya existe un rol con ese nombre.");
         }
-
-        var rol = new Rol
-        {
-            Name = nombre,
-            Descripcion = LimpiarDescripcion(request.Descripcion)
-        };
-
-        (await roleManager.CreateAsync(rol)).EnsureSuccess();
-
-        return RolMapper.ToResponse(rol);
     }
 
-    public async Task<RolResponse> ActualizarAsync(
-        int id,
-        UpdateRolRequest request)
+    private static void ValidarRolProtegido(Rol rol)
     {
-        var rol = await roleManager.FindByIdAsync(id.ToString())
-                  ?? throw new NotFoundException("Rol", id);
-
-        var nombre = NormalizarNombre(request.Nombre);
-
-        var existente = await roleManager.FindByNameAsync(nombre);
-
-        if (existente is not null && existente.Id != id)
+        if (string.Equals(
+                rol.Name,
+                RolAdministrador,
+                StringComparison.OrdinalIgnoreCase))
         {
             throw new BusinessException(
-                "Ya existe otro rol con ese nombre.");
+                $"El rol {RolAdministrador} no puede eliminarse.");
         }
-
-        rol.Name = nombre;
-        rol.Descripcion = LimpiarDescripcion(request.Descripcion);
-
-        (await roleManager.UpdateAsync(rol)).EnsureSuccess();
-
-        return RolMapper.ToResponse(rol);
-    }
-
-    public async Task EliminarAsync(int id)
-    {
-        var rol = await roleManager.FindByIdAsync(id.ToString())
-                  ?? throw new NotFoundException("Rol", id);
-
-        if (rol.Name == "ADMINISTRADOR")
-        {
-            throw new BusinessException(
-                "El rol ADMINISTRADOR no puede eliminarse.");
-        }
-
-        (await roleManager.DeleteAsync(rol)).EnsureSuccess();
-    }
-
-    private static string NormalizarNombre(string nombre)
-    {
-        if (string.IsNullOrWhiteSpace(nombre))
-        {
-            throw new ValidationException(
-                "nombre",
-                "El nombre del rol es obligatorio.");
-        }
-
-        return nombre.Trim().ToUpperInvariant();
-    }
-
-    private static string? LimpiarDescripcion(string? descripcion)
-    {
-        return string.IsNullOrWhiteSpace(descripcion)
-            ? null
-            : descripcion.Trim();
     }
 }

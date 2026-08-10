@@ -1,8 +1,6 @@
-using Clinica.Api.Modules.Parametros.Catalogo;
 using Clinica.Api.Modules.Parametros.Catalogo.Entity;
 using Clinica.Api.Modules.Parametros.MetodoPago.Entity;
 using Clinica.Api.Modules.Parametros.Moneda.Entity;
-using Clinica.Api.Modules.Parametros.UnidadesMedida;
 using Clinica.Api.Modules.Parametros.UnidadesMedida.Entity;
 using Clinica.Api.Modules.Recepcion.Admision.Entity;
 using Clinica.Api.Modules.Recepcion.Pacientes.Entity;
@@ -14,8 +12,7 @@ using Clinica.Api.Modules.RecursosHumanos.Especialidad.Entity;
 using Clinica.Api.Modules.RecursosHumanos.Medico.Entity;
 using Clinica.Api.Modules.RecursosHumanos.TipoArea.Entity;
 using Clinica.Api.Modules.Seguridad.Personas.Entity;
-using Clinica.Api.Modules.Seguridad.Roles;
-using Clinica.Api.Modules.Seguridad.Usuarios;
+using Clinica.Api.Modules.Seguridad.Roles.Entity;
 using Clinica.Api.Modules.Seguridad.Usuarios.Entity;
 using Clinica.Api.Modules.Servicios.CategoriaServicio.Entity;
 using Clinica.Api.Modules.Servicios.Convenios.Entity;

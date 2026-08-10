@@ -1,6 +1,7 @@
 using Clinica.Api.Data;
 using Clinica.Api.Modules.Seguridad.Personas.Entity;
 using Clinica.Api.Modules.Seguridad.Roles;
+using Clinica.Api.Modules.Seguridad.Roles.Entity;
 using Clinica.Api.Modules.Seguridad.Usuarios;
 using Clinica.Api.Modules.Seguridad.Usuarios.Entity;
 using Microsoft.AspNetCore.Identity;

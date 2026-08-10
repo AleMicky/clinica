@@ -7,8 +7,6 @@ import {
   Lock,
   Users,
   Calendar,
-  Clock,
-  FileSpreadsheet,
   Briefcase,
   Sliders,
   Settings,
@@ -25,7 +23,6 @@ import {
   Layers,
   Tag,
   Handshake,
-  Activity,
   type LucideIcon,
 } from "lucide-react"
 
@@ -106,16 +103,16 @@ export const seguridadNav: NavGroup = {
   description: "Personas, usuarios, roles, accesos y auditoría",
   items: [
     {
-      title: "Personas",
-      href: "/seguridad/personas",
-      icon: User,
-      description: "Directorio general de personas y datos personales",
-    },
-    {
       title: "Usuarios",
       href: "/seguridad/usuarios",
       icon: Users,
       description: "Gestión de usuarios y cuentas de acceso",
+    },
+    {
+      title: "Personas",
+      href: "/seguridad/personas",
+      icon: User,
+      description: "Directorio general de personas y datos personales",
     },
     {
       title: "Roles y Permisos",

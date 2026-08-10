@@ -1,4 +1,5 @@
 using Clinica.Api.Modules.Seguridad.Roles;
+using Clinica.Api.Modules.Seguridad.Roles.Entity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

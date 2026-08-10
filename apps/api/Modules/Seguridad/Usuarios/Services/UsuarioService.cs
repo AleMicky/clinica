@@ -1,6 +1,7 @@
 using Clinica.Api.Data;
 using Clinica.Api.Modules.RecursosHumanos.Empleado.Entity;
 using Clinica.Api.Modules.Seguridad.Roles;
+using Clinica.Api.Modules.Seguridad.Roles.Entity;
 using Clinica.Api.Modules.Seguridad.Usuarios.Dtos;
 using Clinica.Api.Modules.Seguridad.Usuarios.Entity;
 using Clinica.Api.Shared.Exceptions;

@@ -29,4 +29,11 @@ public static class StringExtensions
             .Trim()
             .ToUpperInvariant();
     }
+
+    public static string TrimUpper(this string value)
+    {
+        return value
+            .Trim()
+            .ToUpperInvariant();
+    }
 }

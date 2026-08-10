@@ -1,14 +1,18 @@
-namespace Clinica.Api.Modules.Seguridad.Roles;
+namespace Clinica.Api.Modules.Seguridad.Roles.Dtos;
 
-public record CreateRolRequest(
-    string Nombre,
-    string? Descripcion);
+public abstract record RolRequest
+{
+    public required string Name { get; init; }
+    public string? Descripcion { get; init; }
+}
 
-public record UpdateRolRequest(
-    string Nombre,
-    string? Descripcion);
+public record CreateRolRequest : RolRequest;
 
-public record RolResponse(
-    int Id,
-    string Name,
-    string? Descripcion);
+public record UpdateRolRequest : RolRequest;
+
+public record RolResponse
+{
+    public int Id { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public string? Descripcion { get; init; }
+}   

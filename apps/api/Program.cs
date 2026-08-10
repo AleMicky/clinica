@@ -3,6 +3,7 @@ using Clinica.Api.Data;
 using Clinica.Api.Data.Seed;
 using Clinica.Api.Modules;
 using Clinica.Api.Modules.Seguridad.Roles;
+using Clinica.Api.Modules.Seguridad.Roles.Entity;
 using Clinica.Api.Modules.Seguridad.Usuarios;
 using Clinica.Api.Modules.Seguridad.Usuarios.Entity;
 using Clinica.Api.Shared.Extensions;
