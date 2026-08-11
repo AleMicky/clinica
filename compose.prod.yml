@@ -5,21 +5,17 @@ services:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
-
     container_name: clinica-api
     restart: unless-stopped
 
     expose:
-      - "8080"
+      - "8080" # Expuesto a Nginx en infraestructura-network
 
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=${CONNECTION_STRING:-Server=host.docker.internal,1433;Database=ClinicaDb;User Id=sa;Password=YourSecurePasswordHere!;TrustServerCertificate=True;}
       - Cors__AllowedOrigins__0=http://157.173.99.216:8084
       - Cors__AllowedOrigins__1=http://157.173.99.216:5011
-      - Cors__AllowedOrigins__2=http://157.173.99.216:5012
-      - Cors__AllowedOrigins__3=http://157.173.99.216:3000
-      - Cors__AllowedOrigins__4=http://157.173.99.216
 
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -33,12 +29,11 @@ services:
       dockerfile: apps/web/Dockerfile
       args:
         - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://157.173.99.216:5011}
-
     container_name: clinica-web
     restart: unless-stopped
 
     expose:
-      - "3000"
+      - "3000" # Expuesto a Nginx en infraestructura-network
 
     environment:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://157.173.99.216:5011}
