@@ -1,0 +1,9373 @@
+[
+  {
+    "Codigo": "CLINICA-INSTITUCIONAL",
+    "Nombre": "CLÍNICA - INSTITUCIONAL",
+    "Descripcion": "Tarifario institucional de la clínica, actualizado al 12/06/2026",
+    "FechaInicio": "2026-06-12",
+    "FechaFin": null,
+    "MonedaCodigo": "BOB",
+    "EsPrincipal": true,
+    "Detalles": [
+      {
+        "ServicioCodigo": "CON-100",
+        "Precio": 50
+      },
+      {
+        "ServicioCodigo": "CON-101",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "CON-102",
+        "Precio": 200
+      },
+      {
+        "ServicioCodigo": "CON-103",
+        "Precio": 200
+      },
+      {
+        "ServicioCodigo": "CON-104",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "CON-105",
+        "Precio": 200
+      },
+      {
+        "ServicioCodigo": "CON-106",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "CON-107",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "CON-108",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "CON-109",
+        "Precio": 200
+      },
+      {
+        "ServicioCodigo": "EME-110",
+        "Precio": 40
+      },
+      {
+        "ServicioCodigo": "EME-111",
+        "Precio": 50
+      },
+      {
+        "ServicioCodigo": "EME-113",
+        "Precio": 30
+      },
+      {
+        "ServicioCodigo": "EME-114",
+        "Precio": 30
+      },
+      {
+        "ServicioCodigo": "EME-115",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "EME-116",
+        "Precio": 5
+      },
+      {
+        "ServicioCodigo": "EME-119",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "EME-120",
+        "Precio": 30
+      },
+      {
+        "ServicioCodigo": "EME-121",
+        "Precio": 25
+      },
+      {
+        "ServicioCodigo": "EME-122",
+        "Precio": 15
+      },
+      {
+        "ServicioCodigo": "EME-123",
+        "Precio": 30
+      },
+      {
+        "ServicioCodigo": "EME-124",
+        "Precio": 35
+      },
+      {
+        "ServicioCodigo": "EME-125",
+        "Precio": 80
+      },
+      {
+        "ServicioCodigo": "EME-126",
+        "Precio": 15
+      },
+      {
+        "ServicioCodigo": "EME-132",
+        "Precio": 80
+      },
+      {
+        "ServicioCodigo": "EME-133",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "EME-134",
+        "Precio": 30
+      },
+      {
+        "ServicioCodigo": "EME-135",
+        "Precio": 40
+      },
+      {
+        "ServicioCodigo": "EME-136",
+        "Precio": 70
+      },
+      {
+        "ServicioCodigo": "EME-137",
+        "Precio": 50
+      },
+      {
+        "ServicioCodigo": "EME-138",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "EME-141",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "EME-142",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "EME-144",
+        "Precio": 50
+      },
+      {
+        "ServicioCodigo": "HON-145",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HON-146",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HON-147",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HON-149",
+        "Precio": 350
+      },
+      {
+        "ServicioCodigo": "HON-150",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "HON-151",
+        "Precio": 200
+      },
+      {
+        "ServicioCodigo": "HOS-160",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "HOS-161",
+        "Precio": 180
+      },
+      {
+        "ServicioCodigo": "HOS-163",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "HOS-164",
+        "Precio": 290
+      },
+      {
+        "ServicioCodigo": "HOS-165",
+        "Precio": 220
+      },
+      {
+        "ServicioCodigo": "HOS-166",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "HOS-167",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "HOS-168",
+        "Precio": 50
+      },
+      {
+        "ServicioCodigo": "HOS-169",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "HOS-170",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "HOS-172",
+        "Precio": 35
+      },
+      {
+        "ServicioCodigo": "HOS-173",
+        "Precio": 35
+      },
+      {
+        "ServicioCodigo": "HOS-174",
+        "Precio": 160
+      },
+      {
+        "ServicioCodigo": "HOS-175",
+        "Precio": 35
+      },
+      {
+        "ServicioCodigo": "HOS-176",
+        "Precio": 200
+      },
+      {
+        "ServicioCodigo": "HOS-177",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "QUI-178",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "QUI-179",
+        "Precio": 180
+      },
+      {
+        "ServicioCodigo": "QUI-181",
+        "Precio": 300
+      },
+      {
+        "ServicioCodigo": "QUI-182",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "QUI-183",
+        "Precio": 25
+      },
+      {
+        "ServicioCodigo": "QUI-184",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "QUI-185",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "QUI-186",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "QUI-187",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "QUI-188",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "QUI-189",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "QUI-190",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "QUI-191",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "QUI-192",
+        "Precio": 75
+      },
+      {
+        "ServicioCodigo": "QUI-193",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "QUI-194",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "QUI-195",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "QUI-196",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "QUI-197",
+        "Precio": 200
+      },
+      {
+        "ServicioCodigo": "QUI-198",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "QUI-199",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "QUI-200",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "QUI-201",
+        "Precio": 170
+      },
+      {
+        "ServicioCodigo": "QUI-202",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "QUI-203",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "QUI-204",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "QUI-205",
+        "Precio": 180
+      },
+      {
+        "ServicioCodigo": "QUI-206",
+        "Precio": 30
+      },
+      {
+        "ServicioCodigo": "QUI-207",
+        "Precio": 40
+      },
+      {
+        "ServicioCodigo": "QUI-208",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "SER-210",
+        "Precio": 300
+      },
+      {
+        "ServicioCodigo": "SER-211",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-212",
+        "Precio": 300
+      },
+      {
+        "ServicioCodigo": "SER-213",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-214",
+        "Precio": 200
+      },
+      {
+        "ServicioCodigo": "SER-215",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-216",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-217",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-218",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-219",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-220",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-221",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-222",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-223",
+        "Precio": 300
+      },
+      {
+        "ServicioCodigo": "UTI-224",
+        "Precio": 350
+      },
+      {
+        "ServicioCodigo": "UTI-225",
+        "Precio": 600
+      },
+      {
+        "ServicioCodigo": "UTI-229",
+        "Precio": 300
+      },
+      {
+        "ServicioCodigo": "UTI-230",
+        "Precio": 500
+      },
+      {
+        "ServicioCodigo": "UTI-233",
+        "Precio": 240
+      },
+      {
+        "ServicioCodigo": "UTI-234",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "UTI-235",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "UTI-236",
+        "Precio": 200
+      },
+      {
+        "ServicioCodigo": "UTI-237",
+        "Precio": 200
+      },
+      {
+        "ServicioCodigo": "UTI-238",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "UTI-239",
+        "Precio": 350
+      },
+      {
+        "ServicioCodigo": "UTI-240",
+        "Precio": 400
+      },
+      {
+        "ServicioCodigo": "UTI-241",
+        "Precio": 500
+      },
+      {
+        "ServicioCodigo": "UTI-242",
+        "Precio": 450
+      },
+      {
+        "ServicioCodigo": "UTI-243",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "LAB-244",
+        "Precio": 35
+      },
+      {
+        "ServicioCodigo": "LAB-245",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-246",
+        "Precio": 25
+      },
+      {
+        "ServicioCodigo": "LAB-247",
+        "Precio": 25
+      },
+      {
+        "ServicioCodigo": "LAB-248",
+        "Precio": 40
+      },
+      {
+        "ServicioCodigo": "LAB-249",
+        "Precio": 45
+      },
+      {
+        "ServicioCodigo": "LAB-250",
+        "Precio": 25
+      },
+      {
+        "ServicioCodigo": "LAB-251",
+        "Precio": 25
+      },
+      {
+        "ServicioCodigo": "LAB-252",
+        "Precio": 25
+      },
+      {
+        "ServicioCodigo": "LAB-253",
+        "Precio": 40
+      },
+      {
+        "ServicioCodigo": "LAB-254",
+        "Precio": 40
+      },
+      {
+        "ServicioCodigo": "LAB-255",
+        "Precio": 75
+      },
+      {
+        "ServicioCodigo": "LAB-256",
+        "Precio": 65
+      },
+      {
+        "ServicioCodigo": "LAB-257",
+        "Precio": 270
+      },
+      {
+        "ServicioCodigo": "LAB-258",
+        "Precio": 160
+      },
+      {
+        "ServicioCodigo": "LAB-259",
+        "Precio": 125
+      },
+      {
+        "ServicioCodigo": "LAB-260",
+        "Precio": 110
+      },
+      {
+        "ServicioCodigo": "LAB-261",
+        "Precio": 125
+      },
+      {
+        "ServicioCodigo": "LAB-262",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "LAB-263",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-264",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-265",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-266",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "LAB-267",
+        "Precio": 25
+      },
+      {
+        "ServicioCodigo": "LAB-268",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-269",
+        "Precio": 80
+      },
+      {
+        "ServicioCodigo": "LAB-270",
+        "Precio": 25
+      },
+      {
+        "ServicioCodigo": "LAB-271",
+        "Precio": 25
+      },
+      {
+        "ServicioCodigo": "LAB-272",
+        "Precio": 25
+      },
+      {
+        "ServicioCodigo": "LAB-273",
+        "Precio": 25
+      },
+      {
+        "ServicioCodigo": "LAB-274",
+        "Precio": 25
+      },
+      {
+        "ServicioCodigo": "LAB-275",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "LAB-276",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "LAB-277",
+        "Precio": 175
+      },
+      {
+        "ServicioCodigo": "LAB-278",
+        "Precio": 70
+      },
+      {
+        "ServicioCodigo": "LAB-279",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-280",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-281",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-282",
+        "Precio": 70
+      },
+      {
+        "ServicioCodigo": "LAB-283",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "LAB-284",
+        "Precio": 115
+      },
+      {
+        "ServicioCodigo": "LAB-285",
+        "Precio": 50
+      },
+      {
+        "ServicioCodigo": "LAB-286",
+        "Precio": 50
+      },
+      {
+        "ServicioCodigo": "LAB-287",
+        "Precio": 30
+      },
+      {
+        "ServicioCodigo": "LAB-288",
+        "Precio": 30
+      },
+      {
+        "ServicioCodigo": "LAB-289",
+        "Precio": 40
+      },
+      {
+        "ServicioCodigo": "LAB-290",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-291",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-292",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-293",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-294",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-295",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-296",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "LAB-297",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "LAB-298",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "LAB-299",
+        "Precio": 125
+      },
+      {
+        "ServicioCodigo": "LAB-300",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "LAB-301",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "LAB-302",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "LAB-303",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "LAB-304",
+        "Precio": 210
+      },
+      {
+        "ServicioCodigo": "LAB-305",
+        "Precio": 140
+      },
+      {
+        "ServicioCodigo": "LAB-306",
+        "Precio": 140
+      },
+      {
+        "ServicioCodigo": "LAB-307",
+        "Precio": 130
+      },
+      {
+        "ServicioCodigo": "LAB-308",
+        "Precio": 140
+      },
+      {
+        "ServicioCodigo": "LAB-309",
+        "Precio": 140
+      },
+      {
+        "ServicioCodigo": "LAB-310",
+        "Precio": 355
+      },
+      {
+        "ServicioCodigo": "LAB-311",
+        "Precio": 180
+      },
+      {
+        "ServicioCodigo": "LAB-312",
+        "Precio": 180
+      },
+      {
+        "ServicioCodigo": "LAB-313",
+        "Precio": 140
+      },
+      {
+        "ServicioCodigo": "LAB-314",
+        "Precio": 170
+      },
+      {
+        "ServicioCodigo": "LAB-315",
+        "Precio": 170
+      },
+      {
+        "ServicioCodigo": "LAB-316",
+        "Precio": 170
+      },
+      {
+        "ServicioCodigo": "LAB-317",
+        "Precio": 140
+      },
+      {
+        "ServicioCodigo": "LAB-318",
+        "Precio": 105
+      },
+      {
+        "ServicioCodigo": "LAB-319",
+        "Precio": 155
+      },
+      {
+        "ServicioCodigo": "LAB-320",
+        "Precio": 155
+      },
+      {
+        "ServicioCodigo": "LAB-321",
+        "Precio": 110
+      },
+      {
+        "ServicioCodigo": "LAB-322",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "LAB-323",
+        "Precio": 145
+      },
+      {
+        "ServicioCodigo": "LAB-324",
+        "Precio": 145
+      },
+      {
+        "ServicioCodigo": "LAB-325",
+        "Precio": 165
+      },
+      {
+        "ServicioCodigo": "LAB-326",
+        "Precio": 165
+      },
+      {
+        "ServicioCodigo": "LAB-327",
+        "Precio": 170
+      },
+      {
+        "ServicioCodigo": "LAB-328",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "LAB-329",
+        "Precio": 160
+      },
+      {
+        "ServicioCodigo": "LAB-330",
+        "Precio": 160
+      },
+      {
+        "ServicioCodigo": "LAB-331",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "LAB-332",
+        "Precio": 135
+      },
+      {
+        "ServicioCodigo": "LAB-333",
+        "Precio": 160
+      },
+      {
+        "ServicioCodigo": "LAB-334",
+        "Precio": 260
+      },
+      {
+        "ServicioCodigo": "LAB-335",
+        "Precio": 210
+      },
+      {
+        "ServicioCodigo": "LAB-336",
+        "Precio": 155
+      },
+      {
+        "ServicioCodigo": "LAB-337",
+        "Precio": 550
+      },
+      {
+        "ServicioCodigo": "LAB-338",
+        "Precio": 175
+      },
+      {
+        "ServicioCodigo": "LAB-339",
+        "Precio": 190
+      },
+      {
+        "ServicioCodigo": "LAB-340",
+        "Precio": 295
+      },
+      {
+        "ServicioCodigo": "LAB-341",
+        "Precio": 155
+      },
+      {
+        "ServicioCodigo": "LAB-342",
+        "Precio": 190
+      },
+      {
+        "ServicioCodigo": "LAB-343",
+        "Precio": 170
+      },
+      {
+        "ServicioCodigo": "LAB-344",
+        "Precio": 305
+      },
+      {
+        "ServicioCodigo": "LAB-345",
+        "Precio": 320
+      },
+      {
+        "ServicioCodigo": "LAB-346",
+        "Precio": 260
+      },
+      {
+        "ServicioCodigo": "LAB-347",
+        "Precio": 240
+      },
+      {
+        "ServicioCodigo": "LAB-348",
+        "Precio": 130
+      },
+      {
+        "ServicioCodigo": "LAB-349",
+        "Precio": 130
+      },
+      {
+        "ServicioCodigo": "LAB-350",
+        "Precio": 130
+      },
+      {
+        "ServicioCodigo": "LAB-351",
+        "Precio": 130
+      },
+      {
+        "ServicioCodigo": "LAB-352",
+        "Precio": 130
+      },
+      {
+        "ServicioCodigo": "LAB-353",
+        "Precio": 30
+      },
+      {
+        "ServicioCodigo": "LAB-354",
+        "Precio": 50
+      },
+      {
+        "ServicioCodigo": "LAB-355",
+        "Precio": 30
+      },
+      {
+        "ServicioCodigo": "LAB-356",
+        "Precio": 70
+      },
+      {
+        "ServicioCodigo": "LAB-357",
+        "Precio": 75
+      },
+      {
+        "ServicioCodigo": "LAB-358",
+        "Precio": 130
+      },
+      {
+        "ServicioCodigo": "LAB-359",
+        "Precio": 160
+      },
+      {
+        "ServicioCodigo": "LAB-360",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "LAB-361",
+        "Precio": 50
+      },
+      {
+        "ServicioCodigo": "LAB-362",
+        "Precio": 130
+      },
+      {
+        "ServicioCodigo": "LAB-363",
+        "Precio": 130
+      },
+      {
+        "ServicioCodigo": "LAB-364",
+        "Precio": 165
+      },
+      {
+        "ServicioCodigo": "LAB-365",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "LAB-366",
+        "Precio": 50
+      },
+      {
+        "ServicioCodigo": "LAB-367",
+        "Precio": 140
+      },
+      {
+        "ServicioCodigo": "LAB-368",
+        "Precio": 140
+      },
+      {
+        "ServicioCodigo": "LAB-369",
+        "Precio": 270
+      },
+      {
+        "ServicioCodigo": "LAB-370",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "ECO-559",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "ECO-560",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "ECO-561",
+        "Precio": 270
+      },
+      {
+        "ServicioCodigo": "ECO-562",
+        "Precio": 230
+      },
+      {
+        "ServicioCodigo": "ECO-563",
+        "Precio": 230
+      },
+      {
+        "ServicioCodigo": "ECO-564",
+        "Precio": 230
+      },
+      {
+        "ServicioCodigo": "ECO-565",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "ECO-566",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "ECO-567",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "ECO-568",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "ECO-570",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "ECO-571",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "ECO-572",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "ECO-573",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "ECO-574",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "ECO-575",
+        "Precio": 450
+      },
+      {
+        "ServicioCodigo": "ECO-576",
+        "Precio": 850
+      },
+      {
+        "ServicioCodigo": "ECO-577",
+        "Precio": 450
+      },
+      {
+        "ServicioCodigo": "ECO-578",
+        "Precio": 850
+      },
+      {
+        "ServicioCodigo": "ECO-579",
+        "Precio": 850
+      },
+      {
+        "ServicioCodigo": "ECO-580",
+        "Precio": 1650
+      },
+      {
+        "ServicioCodigo": "ECO-581",
+        "Precio": 350
+      },
+      {
+        "ServicioCodigo": "ECO-582",
+        "Precio": 450
+      },
+      {
+        "ServicioCodigo": "ECO-583",
+        "Precio": 450
+      },
+      {
+        "ServicioCodigo": "ECO-584",
+        "Precio": 450
+      },
+      {
+        "ServicioCodigo": "ECO-585",
+        "Precio": 450
+      },
+      {
+        "ServicioCodigo": "ECO-586",
+        "Precio": 850
+      },
+      {
+        "ServicioCodigo": "ECO-587",
+        "Precio": 1650
+      },
+      {
+        "ServicioCodigo": "ECO-588",
+        "Precio": 450
+      },
+      {
+        "ServicioCodigo": "ECO-589",
+        "Precio": 350
+      },
+      {
+        "ServicioCodigo": "ECO-590",
+        "Precio": 350
+      },
+      {
+        "ServicioCodigo": "ECO-591",
+        "Precio": 350
+      },
+      {
+        "ServicioCodigo": "RAY-592",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-593",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-594",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-595",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-596",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-597",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-598",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-599",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-600",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-601",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-602",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-603",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-604",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-605",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-606",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-607",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-608",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-609",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-610",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-611",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-612",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-613",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-614",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-615",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-616",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-617",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-618",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-619",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-620",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-621",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-622",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-623",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-624",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-625",
+        "Precio": 250
+      }
+    ]
+  },
+  {
+    "Codigo": "CLINICA-SERVICIOS-ALQUILER",
+    "Nombre": "CLÍNICA - SERVICIOS ALQUILER",
+    "Descripcion": "Tarifario CLÍNICA - SERVICIOS ALQUILER, actualizado al 12/06/2026",
+    "FechaInicio": "2026-06-12",
+    "FechaFin": null,
+    "MonedaCodigo": "BOB",
+    "EsPrincipal": false,
+    "Detalles": [
+      {
+        "ServicioCodigo": "CON-100",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "CON-101",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "CON-102",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "CON-103",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "CON-104",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "CON-105",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "CON-106",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "CON-107",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "CON-108",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "CON-109",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-110",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-111",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-112",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-113",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-114",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-115",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-116",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-117",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-118",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-119",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-120",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-121",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-122",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-123",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-124",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-125",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-126",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-127",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-128",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-129",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-130",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-131",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-132",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-133",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-134",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-135",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-136",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-137",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-138",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-139",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-140",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-141",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-142",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-143",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-144",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HON-145",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HON-146",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HON-147",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HON-148",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HON-149",
+        "Precio": 200
+      },
+      {
+        "ServicioCodigo": "HON-150",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "HON-151",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "HOS-160",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "HOS-161",
+        "Precio": 180
+      },
+      {
+        "ServicioCodigo": "HOS-162",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HOS-163",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "HOS-164",
+        "Precio": 290
+      },
+      {
+        "ServicioCodigo": "HOS-165",
+        "Precio": 220
+      },
+      {
+        "ServicioCodigo": "HOS-166",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "HOS-167",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "HOS-168",
+        "Precio": 50
+      },
+      {
+        "ServicioCodigo": "HOS-169",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "HOS-170",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "HOS-171",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HOS-172",
+        "Precio": 35
+      },
+      {
+        "ServicioCodigo": "HOS-173",
+        "Precio": 35
+      },
+      {
+        "ServicioCodigo": "HOS-174",
+        "Precio": 160
+      },
+      {
+        "ServicioCodigo": "HOS-175",
+        "Precio": 35
+      },
+      {
+        "ServicioCodigo": "HOS-176",
+        "Precio": 200
+      },
+      {
+        "ServicioCodigo": "HOS-177",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "QUI-178",
+        "Precio": 80
+      },
+      {
+        "ServicioCodigo": "QUI-179",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "QUI-181",
+        "Precio": 200
+      },
+      {
+        "ServicioCodigo": "QUI-182",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "QUI-184",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "QUI-185",
+        "Precio": 50
+      },
+      {
+        "ServicioCodigo": "QUI-186",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "QUI-187",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "QUI-188",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "QUI-189",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "QUI-190",
+        "Precio": 80
+      },
+      {
+        "ServicioCodigo": "QUI-191",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "QUI-193",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "QUI-194",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "QUI-195",
+        "Precio": 200
+      },
+      {
+        "ServicioCodigo": "QUI-196",
+        "Precio": 200
+      },
+      {
+        "ServicioCodigo": "QUI-197",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "QUI-198",
+        "Precio": 200
+      },
+      {
+        "ServicioCodigo": "QUI-199",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "QUI-200",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "QUI-201",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "QUI-202",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "QUI-203",
+        "Precio": 80
+      },
+      {
+        "ServicioCodigo": "QUI-204",
+        "Precio": 200
+      },
+      {
+        "ServicioCodigo": "QUI-205",
+        "Precio": 170
+      },
+      {
+        "ServicioCodigo": "QUI-206",
+        "Precio": 20
+      },
+      {
+        "ServicioCodigo": "QUI-207",
+        "Precio": 20
+      },
+      {
+        "ServicioCodigo": "QUI-208",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "SER-210",
+        "Precio": 300
+      },
+      {
+        "ServicioCodigo": "SER-211",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-212",
+        "Precio": 300
+      },
+      {
+        "ServicioCodigo": "SER-213",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-214",
+        "Precio": 200
+      },
+      {
+        "ServicioCodigo": "SER-215",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-216",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-217",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-218",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-219",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-220",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-221",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-222",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-223",
+        "Precio": 300
+      },
+      {
+        "ServicioCodigo": "UTI-224",
+        "Precio": 350
+      },
+      {
+        "ServicioCodigo": "UTI-225",
+        "Precio": 600
+      },
+      {
+        "ServicioCodigo": "UTI-229",
+        "Precio": 300
+      },
+      {
+        "ServicioCodigo": "UTI-230",
+        "Precio": 500
+      },
+      {
+        "ServicioCodigo": "UTI-233",
+        "Precio": 240
+      },
+      {
+        "ServicioCodigo": "UTI-234",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "UTI-235",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "UTI-236",
+        "Precio": 200
+      },
+      {
+        "ServicioCodigo": "UTI-237",
+        "Precio": 200
+      },
+      {
+        "ServicioCodigo": "UTI-238",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "UTI-239",
+        "Precio": 350
+      },
+      {
+        "ServicioCodigo": "UTI-240",
+        "Precio": 400
+      },
+      {
+        "ServicioCodigo": "UTI-241",
+        "Precio": 500
+      },
+      {
+        "ServicioCodigo": "UTI-242",
+        "Precio": 450
+      },
+      {
+        "ServicioCodigo": "UTI-243",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "LAB-244",
+        "Precio": 35
+      },
+      {
+        "ServicioCodigo": "LAB-245",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-246",
+        "Precio": 25
+      },
+      {
+        "ServicioCodigo": "LAB-247",
+        "Precio": 25
+      },
+      {
+        "ServicioCodigo": "LAB-248",
+        "Precio": 40
+      },
+      {
+        "ServicioCodigo": "LAB-249",
+        "Precio": 45
+      },
+      {
+        "ServicioCodigo": "LAB-250",
+        "Precio": 25
+      },
+      {
+        "ServicioCodigo": "LAB-251",
+        "Precio": 25
+      },
+      {
+        "ServicioCodigo": "LAB-252",
+        "Precio": 25
+      },
+      {
+        "ServicioCodigo": "LAB-253",
+        "Precio": 40
+      },
+      {
+        "ServicioCodigo": "LAB-254",
+        "Precio": 40
+      },
+      {
+        "ServicioCodigo": "LAB-255",
+        "Precio": 75
+      },
+      {
+        "ServicioCodigo": "LAB-256",
+        "Precio": 65
+      },
+      {
+        "ServicioCodigo": "LAB-257",
+        "Precio": 270
+      },
+      {
+        "ServicioCodigo": "LAB-258",
+        "Precio": 160
+      },
+      {
+        "ServicioCodigo": "LAB-259",
+        "Precio": 125
+      },
+      {
+        "ServicioCodigo": "LAB-260",
+        "Precio": 110
+      },
+      {
+        "ServicioCodigo": "LAB-261",
+        "Precio": 125
+      },
+      {
+        "ServicioCodigo": "LAB-262",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "LAB-263",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-264",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-265",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-266",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "LAB-267",
+        "Precio": 25
+      },
+      {
+        "ServicioCodigo": "LAB-268",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-269",
+        "Precio": 80
+      },
+      {
+        "ServicioCodigo": "LAB-270",
+        "Precio": 25
+      },
+      {
+        "ServicioCodigo": "LAB-271",
+        "Precio": 25
+      },
+      {
+        "ServicioCodigo": "LAB-272",
+        "Precio": 25
+      },
+      {
+        "ServicioCodigo": "LAB-273",
+        "Precio": 25
+      },
+      {
+        "ServicioCodigo": "LAB-274",
+        "Precio": 25
+      },
+      {
+        "ServicioCodigo": "LAB-275",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "LAB-276",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "LAB-277",
+        "Precio": 175
+      },
+      {
+        "ServicioCodigo": "LAB-278",
+        "Precio": 70
+      },
+      {
+        "ServicioCodigo": "LAB-279",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-280",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-281",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-282",
+        "Precio": 70
+      },
+      {
+        "ServicioCodigo": "LAB-283",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "LAB-284",
+        "Precio": 115
+      },
+      {
+        "ServicioCodigo": "LAB-285",
+        "Precio": 50
+      },
+      {
+        "ServicioCodigo": "LAB-286",
+        "Precio": 50
+      },
+      {
+        "ServicioCodigo": "LAB-287",
+        "Precio": 30
+      },
+      {
+        "ServicioCodigo": "LAB-288",
+        "Precio": 30
+      },
+      {
+        "ServicioCodigo": "LAB-289",
+        "Precio": 40
+      },
+      {
+        "ServicioCodigo": "LAB-290",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-291",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-292",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-293",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-294",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-295",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-296",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "LAB-297",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "LAB-298",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "LAB-299",
+        "Precio": 125
+      },
+      {
+        "ServicioCodigo": "LAB-300",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "LAB-301",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "LAB-302",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "LAB-303",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "LAB-304",
+        "Precio": 210
+      },
+      {
+        "ServicioCodigo": "LAB-305",
+        "Precio": 140
+      },
+      {
+        "ServicioCodigo": "LAB-306",
+        "Precio": 140
+      },
+      {
+        "ServicioCodigo": "LAB-307",
+        "Precio": 130
+      },
+      {
+        "ServicioCodigo": "LAB-308",
+        "Precio": 140
+      },
+      {
+        "ServicioCodigo": "LAB-309",
+        "Precio": 140
+      },
+      {
+        "ServicioCodigo": "LAB-310",
+        "Precio": 355
+      },
+      {
+        "ServicioCodigo": "LAB-311",
+        "Precio": 180
+      },
+      {
+        "ServicioCodigo": "LAB-312",
+        "Precio": 180
+      },
+      {
+        "ServicioCodigo": "LAB-313",
+        "Precio": 140
+      },
+      {
+        "ServicioCodigo": "LAB-314",
+        "Precio": 170
+      },
+      {
+        "ServicioCodigo": "LAB-315",
+        "Precio": 170
+      },
+      {
+        "ServicioCodigo": "LAB-316",
+        "Precio": 170
+      },
+      {
+        "ServicioCodigo": "LAB-317",
+        "Precio": 140
+      },
+      {
+        "ServicioCodigo": "LAB-318",
+        "Precio": 105
+      },
+      {
+        "ServicioCodigo": "LAB-319",
+        "Precio": 155
+      },
+      {
+        "ServicioCodigo": "LAB-320",
+        "Precio": 155
+      },
+      {
+        "ServicioCodigo": "LAB-321",
+        "Precio": 110
+      },
+      {
+        "ServicioCodigo": "LAB-322",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "LAB-323",
+        "Precio": 145
+      },
+      {
+        "ServicioCodigo": "LAB-324",
+        "Precio": 145
+      },
+      {
+        "ServicioCodigo": "LAB-325",
+        "Precio": 165
+      },
+      {
+        "ServicioCodigo": "LAB-326",
+        "Precio": 165
+      },
+      {
+        "ServicioCodigo": "LAB-327",
+        "Precio": 170
+      },
+      {
+        "ServicioCodigo": "LAB-328",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "LAB-329",
+        "Precio": 160
+      },
+      {
+        "ServicioCodigo": "LAB-330",
+        "Precio": 160
+      },
+      {
+        "ServicioCodigo": "LAB-331",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "LAB-332",
+        "Precio": 135
+      },
+      {
+        "ServicioCodigo": "LAB-333",
+        "Precio": 160
+      },
+      {
+        "ServicioCodigo": "LAB-334",
+        "Precio": 260
+      },
+      {
+        "ServicioCodigo": "LAB-335",
+        "Precio": 210
+      },
+      {
+        "ServicioCodigo": "LAB-336",
+        "Precio": 155
+      },
+      {
+        "ServicioCodigo": "LAB-337",
+        "Precio": 550
+      },
+      {
+        "ServicioCodigo": "LAB-338",
+        "Precio": 175
+      },
+      {
+        "ServicioCodigo": "LAB-339",
+        "Precio": 190
+      },
+      {
+        "ServicioCodigo": "LAB-340",
+        "Precio": 295
+      },
+      {
+        "ServicioCodigo": "LAB-341",
+        "Precio": 155
+      },
+      {
+        "ServicioCodigo": "LAB-342",
+        "Precio": 190
+      },
+      {
+        "ServicioCodigo": "LAB-343",
+        "Precio": 170
+      },
+      {
+        "ServicioCodigo": "LAB-344",
+        "Precio": 305
+      },
+      {
+        "ServicioCodigo": "LAB-345",
+        "Precio": 320
+      },
+      {
+        "ServicioCodigo": "LAB-346",
+        "Precio": 260
+      },
+      {
+        "ServicioCodigo": "LAB-347",
+        "Precio": 240
+      },
+      {
+        "ServicioCodigo": "LAB-348",
+        "Precio": 130
+      },
+      {
+        "ServicioCodigo": "LAB-349",
+        "Precio": 130
+      },
+      {
+        "ServicioCodigo": "LAB-350",
+        "Precio": 130
+      },
+      {
+        "ServicioCodigo": "LAB-351",
+        "Precio": 130
+      },
+      {
+        "ServicioCodigo": "LAB-352",
+        "Precio": 130
+      },
+      {
+        "ServicioCodigo": "LAB-353",
+        "Precio": 30
+      },
+      {
+        "ServicioCodigo": "LAB-354",
+        "Precio": 50
+      },
+      {
+        "ServicioCodigo": "LAB-355",
+        "Precio": 30
+      },
+      {
+        "ServicioCodigo": "LAB-356",
+        "Precio": 70
+      },
+      {
+        "ServicioCodigo": "LAB-357",
+        "Precio": 75
+      },
+      {
+        "ServicioCodigo": "LAB-358",
+        "Precio": 130
+      },
+      {
+        "ServicioCodigo": "LAB-359",
+        "Precio": 160
+      },
+      {
+        "ServicioCodigo": "LAB-360",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "LAB-361",
+        "Precio": 50
+      },
+      {
+        "ServicioCodigo": "LAB-362",
+        "Precio": 130
+      },
+      {
+        "ServicioCodigo": "LAB-363",
+        "Precio": 130
+      },
+      {
+        "ServicioCodigo": "LAB-364",
+        "Precio": 165
+      },
+      {
+        "ServicioCodigo": "LAB-365",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "LAB-366",
+        "Precio": 50
+      },
+      {
+        "ServicioCodigo": "LAB-367",
+        "Precio": 140
+      },
+      {
+        "ServicioCodigo": "LAB-368",
+        "Precio": 140
+      },
+      {
+        "ServicioCodigo": "LAB-369",
+        "Precio": 270
+      },
+      {
+        "ServicioCodigo": "LAB-370",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "LAB-371",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-372",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-373",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-374",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-375",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-376",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-377",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-378",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-379",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-380",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-381",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-382",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-383",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-384",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-385",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-386",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-387",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-388",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-389",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-390",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-391",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-392",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-393",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-394",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-395",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-396",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-397",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-398",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-399",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-400",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-401",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-402",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-403",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-404",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-405",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-406",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-407",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-408",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-409",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-410",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-411",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-412",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-413",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-414",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-415",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-416",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-417",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-418",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-419",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-420",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-421",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-422",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-423",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-424",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-425",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-426",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-427",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-428",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-429",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-430",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-431",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-432",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-433",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-434",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-435",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-436",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-437",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-438",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-439",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-440",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-441",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-442",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-443",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-444",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-445",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-446",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-447",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-448",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-449",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-450",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-451",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-452",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-453",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-454",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-455",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-456",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-457",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-458",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-459",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-460",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-461",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-462",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-463",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-464",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-465",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-466",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-467",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-468",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-469",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-470",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-471",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-472",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-473",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-474",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-475",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-476",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-477",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-478",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-479",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-480",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-481",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-482",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-483",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-484",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-485",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-486",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-487",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-488",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-489",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-490",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-491",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-492",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-493",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-494",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-495",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-496",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-497",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-498",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-499",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-500",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-501",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-502",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-503",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-504",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-505",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-506",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-507",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-508",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-509",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-510",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-511",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-512",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-513",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-514",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-515",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-516",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-517",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-518",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-519",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-520",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-521",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-522",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-523",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-524",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-525",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-526",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-527",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-528",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-529",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-530",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-531",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-532",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-533",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-534",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-535",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-536",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-537",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-538",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-539",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-540",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-541",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-542",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-543",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-544",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-545",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-546",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-547",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-548",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-549",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-550",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-551",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-552",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-553",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-554",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-555",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-556",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-557",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-558",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-559",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "ECO-560",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "ECO-561",
+        "Precio": 270
+      },
+      {
+        "ServicioCodigo": "ECO-562",
+        "Precio": 230
+      },
+      {
+        "ServicioCodigo": "ECO-563",
+        "Precio": 230
+      },
+      {
+        "ServicioCodigo": "ECO-564",
+        "Precio": 230
+      },
+      {
+        "ServicioCodigo": "ECO-565",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "ECO-566",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "ECO-567",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "ECO-568",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "ECO-569",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-570",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "ECO-571",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "ECO-572",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "ECO-573",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "ECO-574",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "ECO-575",
+        "Precio": 450
+      },
+      {
+        "ServicioCodigo": "ECO-576",
+        "Precio": 850
+      },
+      {
+        "ServicioCodigo": "ECO-577",
+        "Precio": 450
+      },
+      {
+        "ServicioCodigo": "ECO-578",
+        "Precio": 850
+      },
+      {
+        "ServicioCodigo": "ECO-579",
+        "Precio": 850
+      },
+      {
+        "ServicioCodigo": "ECO-580",
+        "Precio": 1650
+      },
+      {
+        "ServicioCodigo": "ECO-581",
+        "Precio": 350
+      },
+      {
+        "ServicioCodigo": "ECO-582",
+        "Precio": 450
+      },
+      {
+        "ServicioCodigo": "ECO-583",
+        "Precio": 450
+      },
+      {
+        "ServicioCodigo": "ECO-584",
+        "Precio": 450
+      },
+      {
+        "ServicioCodigo": "ECO-585",
+        "Precio": 450
+      },
+      {
+        "ServicioCodigo": "ECO-586",
+        "Precio": 850
+      },
+      {
+        "ServicioCodigo": "ECO-587",
+        "Precio": 1650
+      },
+      {
+        "ServicioCodigo": "ECO-588",
+        "Precio": 450
+      },
+      {
+        "ServicioCodigo": "ECO-589",
+        "Precio": 350
+      },
+      {
+        "ServicioCodigo": "ECO-590",
+        "Precio": 350
+      },
+      {
+        "ServicioCodigo": "ECO-591",
+        "Precio": 350
+      },
+      {
+        "ServicioCodigo": "RAY-592",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-593",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-594",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-595",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-596",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-597",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-598",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-599",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-600",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-601",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-602",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-603",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-604",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-605",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-606",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-607",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-608",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-609",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-610",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-611",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-612",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-613",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-614",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-615",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-616",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-617",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-618",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-619",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-620",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-621",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-622",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-623",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-624",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-625",
+        "Precio": 250
+      }
+    ]
+  },
+  {
+    "Codigo": "ENDE",
+    "Nombre": "ENDE",
+    "Descripcion": "Tarifario ENDE, actualizado al 12/06/2026",
+    "FechaInicio": "2026-06-12",
+    "FechaFin": null,
+    "MonedaCodigo": "BOB",
+    "EsPrincipal": false,
+    "Detalles": [
+      {
+        "ServicioCodigo": "CON-100",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "CON-101",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "CON-102",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "CON-103",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "CON-104",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "CON-105",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "CON-106",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "CON-107",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "CON-108",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "CON-109",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-110",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-111",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-112",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-113",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-114",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "EME-115",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "EME-116",
+        "Precio": 6
+      },
+      {
+        "ServicioCodigo": "EME-117",
+        "Precio": 48
+      },
+      {
+        "ServicioCodigo": "EME-118",
+        "Precio": 36
+      },
+      {
+        "ServicioCodigo": "EME-119",
+        "Precio": 179
+      },
+      {
+        "ServicioCodigo": "EME-120",
+        "Precio": 36
+      },
+      {
+        "ServicioCodigo": "EME-121",
+        "Precio": 30
+      },
+      {
+        "ServicioCodigo": "EME-122",
+        "Precio": 18
+      },
+      {
+        "ServicioCodigo": "EME-123",
+        "Precio": 36
+      },
+      {
+        "ServicioCodigo": "EME-124",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "EME-125",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "EME-126",
+        "Precio": 6
+      },
+      {
+        "ServicioCodigo": "EME-127",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-128",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-129",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-130",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-131",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-132",
+        "Precio": 96
+      },
+      {
+        "ServicioCodigo": "EME-133",
+        "Precio": 84
+      },
+      {
+        "ServicioCodigo": "EME-134",
+        "Precio": 36
+      },
+      {
+        "ServicioCodigo": "EME-135",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-136",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-137",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "EME-138",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "EME-139",
+        "Precio": 24
+      },
+      {
+        "ServicioCodigo": "EME-140",
+        "Precio": 1.5
+      },
+      {
+        "ServicioCodigo": "EME-141",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "EME-142",
+        "Precio": 239
+      },
+      {
+        "ServicioCodigo": "EME-143",
+        "Precio": 24
+      },
+      {
+        "ServicioCodigo": "EME-144",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "HON-145",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HON-146",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HON-147",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HON-148",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HON-149",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HON-150",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HON-151",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HOS-160",
+        "Precio": 96
+      },
+      {
+        "ServicioCodigo": "HOS-161",
+        "Precio": 131
+      },
+      {
+        "ServicioCodigo": "HOS-162",
+        "Precio": 1.5
+      },
+      {
+        "ServicioCodigo": "HOS-163",
+        "Precio": 179
+      },
+      {
+        "ServicioCodigo": "HOS-164",
+        "Precio": 536
+      },
+      {
+        "ServicioCodigo": "HOS-165",
+        "Precio": 417
+      },
+      {
+        "ServicioCodigo": "HOS-166",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "HOS-167",
+        "Precio": 358
+      },
+      {
+        "ServicioCodigo": "HOS-168",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "HOS-169",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "HOS-170",
+        "Precio": 96
+      },
+      {
+        "ServicioCodigo": "HOS-171",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HOS-172",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "HOS-173",
+        "Precio": 36
+      },
+      {
+        "ServicioCodigo": "HOS-174",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "HOS-175",
+        "Precio": 36
+      },
+      {
+        "ServicioCodigo": "HOS-176",
+        "Precio": 179
+      },
+      {
+        "ServicioCodigo": "HOS-177",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "QUI-178",
+        "Precio": 96
+      },
+      {
+        "ServicioCodigo": "QUI-179",
+        "Precio": 179
+      },
+      {
+        "ServicioCodigo": "QUI-180",
+        "Precio": 1191
+      },
+      {
+        "ServicioCodigo": "QUI-183",
+        "Precio": 24
+      },
+      {
+        "ServicioCodigo": "QUI-184",
+        "Precio": 239
+      },
+      {
+        "ServicioCodigo": "QUI-185",
+        "Precio": 239
+      },
+      {
+        "ServicioCodigo": "QUI-186",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "QUI-187",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "QUI-188",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "QUI-189",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "QUI-190",
+        "Precio": 298
+      },
+      {
+        "ServicioCodigo": "QUI-191",
+        "Precio": 143
+      },
+      {
+        "ServicioCodigo": "QUI-192",
+        "Precio": 90
+      },
+      {
+        "ServicioCodigo": "QUI-193",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "QUI-194",
+        "Precio": 179
+      },
+      {
+        "ServicioCodigo": "QUI-195",
+        "Precio": 1786
+      },
+      {
+        "ServicioCodigo": "QUI-196",
+        "Precio": 179
+      },
+      {
+        "ServicioCodigo": "QUI-197",
+        "Precio": 143
+      },
+      {
+        "ServicioCodigo": "QUI-198",
+        "Precio": 239
+      },
+      {
+        "ServicioCodigo": "QUI-199",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "QUI-200",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "QUI-201",
+        "Precio": 155
+      },
+      {
+        "ServicioCodigo": "QUI-202",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "QUI-203",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "QUI-204",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "QUI-205",
+        "Precio": 215
+      },
+      {
+        "ServicioCodigo": "QUI-206",
+        "Precio": 30
+      },
+      {
+        "ServicioCodigo": "QUI-207",
+        "Precio": 36
+      },
+      {
+        "ServicioCodigo": "QUI-208",
+        "Precio": 179
+      },
+      {
+        "ServicioCodigo": "UTI-224",
+        "Precio": 179
+      },
+      {
+        "ServicioCodigo": "UTI-226",
+        "Precio": 179
+      },
+      {
+        "ServicioCodigo": "UTI-227",
+        "Precio": 239
+      },
+      {
+        "ServicioCodigo": "UTI-228",
+        "Precio": 239
+      },
+      {
+        "ServicioCodigo": "UTI-229",
+        "Precio": 179
+      },
+      {
+        "ServicioCodigo": "UTI-230",
+        "Precio": 298
+      },
+      {
+        "ServicioCodigo": "UTI-231",
+        "Precio": 96
+      },
+      {
+        "ServicioCodigo": "UTI-232",
+        "Precio": 1.5
+      },
+      {
+        "ServicioCodigo": "UTI-236",
+        "Precio": 286
+      },
+      {
+        "ServicioCodigo": "UTI-237",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "UTI-238",
+        "Precio": 298
+      },
+      {
+        "ServicioCodigo": "UTI-239",
+        "Precio": 179
+      },
+      {
+        "ServicioCodigo": "UTI-240",
+        "Precio": 596
+      },
+      {
+        "ServicioCodigo": "UTI-241",
+        "Precio": 203
+      },
+      {
+        "ServicioCodigo": "UTI-242",
+        "Precio": 417
+      },
+      {
+        "ServicioCodigo": "LAB-244",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-245",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-246",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-247",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-248",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-249",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-250",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-251",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-252",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-253",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-254",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-255",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-256",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-257",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-258",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-259",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-260",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-261",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-262",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-263",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-264",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-265",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-266",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-267",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-268",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-269",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-270",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-271",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-272",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-273",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-274",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-275",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-276",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-277",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-278",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-279",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-280",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-281",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-282",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-283",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-284",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-285",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-286",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-287",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-288",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-289",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-290",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-291",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-292",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-293",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-294",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-295",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-296",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-297",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-298",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-299",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-300",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-301",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-302",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-303",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-304",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-305",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-306",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-307",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-308",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-309",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-310",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-311",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-312",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-313",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-314",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-315",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-316",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-317",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-318",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-319",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-320",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-321",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-322",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-323",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-324",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-325",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-326",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-327",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-328",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-329",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-330",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-331",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-332",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-333",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-334",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-335",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-336",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-337",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-338",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-339",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-340",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-341",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-342",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-343",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-344",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-345",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-346",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-347",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-348",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-349",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-350",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-351",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-352",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-353",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-354",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-355",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-356",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-357",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-358",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-359",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-360",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-361",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-362",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-363",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-364",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-365",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-366",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-367",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-368",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-369",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-370",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-371",
+        "Precio": 20
+      },
+      {
+        "ServicioCodigo": "LAB-372",
+        "Precio": 18
+      },
+      {
+        "ServicioCodigo": "LAB-373",
+        "Precio": 18
+      },
+      {
+        "ServicioCodigo": "LAB-374",
+        "Precio": 18
+      },
+      {
+        "ServicioCodigo": "LAB-375",
+        "Precio": 18
+      },
+      {
+        "ServicioCodigo": "LAB-376",
+        "Precio": 18
+      },
+      {
+        "ServicioCodigo": "LAB-377",
+        "Precio": 18
+      },
+      {
+        "ServicioCodigo": "LAB-378",
+        "Precio": 96
+      },
+      {
+        "ServicioCodigo": "LAB-379",
+        "Precio": 15
+      },
+      {
+        "ServicioCodigo": "LAB-380",
+        "Precio": 96
+      },
+      {
+        "ServicioCodigo": "LAB-381",
+        "Precio": 30
+      },
+      {
+        "ServicioCodigo": "LAB-382",
+        "Precio": 36
+      },
+      {
+        "ServicioCodigo": "LAB-383",
+        "Precio": 24
+      },
+      {
+        "ServicioCodigo": "LAB-384",
+        "Precio": 18
+      },
+      {
+        "ServicioCodigo": "LAB-385",
+        "Precio": 18
+      },
+      {
+        "ServicioCodigo": "LAB-386",
+        "Precio": 239
+      },
+      {
+        "ServicioCodigo": "LAB-387",
+        "Precio": 48
+      },
+      {
+        "ServicioCodigo": "LAB-388",
+        "Precio": 48
+      },
+      {
+        "ServicioCodigo": "LAB-389",
+        "Precio": 72
+      },
+      {
+        "ServicioCodigo": "LAB-390",
+        "Precio": 18
+      },
+      {
+        "ServicioCodigo": "LAB-391",
+        "Precio": 18
+      },
+      {
+        "ServicioCodigo": "LAB-392",
+        "Precio": 15
+      },
+      {
+        "ServicioCodigo": "LAB-393",
+        "Precio": 48
+      },
+      {
+        "ServicioCodigo": "LAB-394",
+        "Precio": 36
+      },
+      {
+        "ServicioCodigo": "LAB-395",
+        "Precio": 48
+      },
+      {
+        "ServicioCodigo": "LAB-396",
+        "Precio": 36
+      },
+      {
+        "ServicioCodigo": "LAB-397",
+        "Precio": 24
+      },
+      {
+        "ServicioCodigo": "LAB-398",
+        "Precio": 36
+      },
+      {
+        "ServicioCodigo": "LAB-399",
+        "Precio": 96
+      },
+      {
+        "ServicioCodigo": "LAB-400",
+        "Precio": 114
+      },
+      {
+        "ServicioCodigo": "LAB-401",
+        "Precio": 18
+      },
+      {
+        "ServicioCodigo": "LAB-402",
+        "Precio": 54
+      },
+      {
+        "ServicioCodigo": "LAB-403",
+        "Precio": 18
+      },
+      {
+        "ServicioCodigo": "LAB-404",
+        "Precio": 30
+      },
+      {
+        "ServicioCodigo": "LAB-405",
+        "Precio": 30
+      },
+      {
+        "ServicioCodigo": "LAB-406",
+        "Precio": 96
+      },
+      {
+        "ServicioCodigo": "LAB-407",
+        "Precio": 96
+      },
+      {
+        "ServicioCodigo": "LAB-408",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "LAB-409",
+        "Precio": 36
+      },
+      {
+        "ServicioCodigo": "LAB-410",
+        "Precio": 48
+      },
+      {
+        "ServicioCodigo": "LAB-411",
+        "Precio": 54
+      },
+      {
+        "ServicioCodigo": "LAB-412",
+        "Precio": 131
+      },
+      {
+        "ServicioCodigo": "LAB-413",
+        "Precio": 48
+      },
+      {
+        "ServicioCodigo": "LAB-414",
+        "Precio": 48
+      },
+      {
+        "ServicioCodigo": "LAB-415",
+        "Precio": 131
+      },
+      {
+        "ServicioCodigo": "LAB-416",
+        "Precio": 96
+      },
+      {
+        "ServicioCodigo": "LAB-417",
+        "Precio": 96
+      },
+      {
+        "ServicioCodigo": "LAB-418",
+        "Precio": 48
+      },
+      {
+        "ServicioCodigo": "LAB-419",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "LAB-420",
+        "Precio": 453
+      },
+      {
+        "ServicioCodigo": "LAB-421",
+        "Precio": 18
+      },
+      {
+        "ServicioCodigo": "LAB-422",
+        "Precio": 143
+      },
+      {
+        "ServicioCodigo": "LAB-423",
+        "Precio": 18
+      },
+      {
+        "ServicioCodigo": "LAB-424",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "LAB-425",
+        "Precio": 18
+      },
+      {
+        "ServicioCodigo": "LAB-426",
+        "Precio": 18
+      },
+      {
+        "ServicioCodigo": "LAB-427",
+        "Precio": 18
+      },
+      {
+        "ServicioCodigo": "LAB-428",
+        "Precio": 18
+      },
+      {
+        "ServicioCodigo": "LAB-429",
+        "Precio": 36
+      },
+      {
+        "ServicioCodigo": "LAB-430",
+        "Precio": 54
+      },
+      {
+        "ServicioCodigo": "LAB-431",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "LAB-432",
+        "Precio": 72
+      },
+      {
+        "ServicioCodigo": "LAB-433",
+        "Precio": 36
+      },
+      {
+        "ServicioCodigo": "LAB-434",
+        "Precio": 72
+      },
+      {
+        "ServicioCodigo": "LAB-435",
+        "Precio": 48
+      },
+      {
+        "ServicioCodigo": "LAB-436",
+        "Precio": 48
+      },
+      {
+        "ServicioCodigo": "LAB-437",
+        "Precio": 48
+      },
+      {
+        "ServicioCodigo": "LAB-438",
+        "Precio": 18
+      },
+      {
+        "ServicioCodigo": "LAB-439",
+        "Precio": 18
+      },
+      {
+        "ServicioCodigo": "LAB-440",
+        "Precio": 18
+      },
+      {
+        "ServicioCodigo": "LAB-441",
+        "Precio": 18
+      },
+      {
+        "ServicioCodigo": "LAB-442",
+        "Precio": 18
+      },
+      {
+        "ServicioCodigo": "LAB-443",
+        "Precio": 18
+      },
+      {
+        "ServicioCodigo": "LAB-444",
+        "Precio": 143
+      },
+      {
+        "ServicioCodigo": "LAB-445",
+        "Precio": 143
+      },
+      {
+        "ServicioCodigo": "LAB-446",
+        "Precio": 30
+      },
+      {
+        "ServicioCodigo": "LAB-447",
+        "Precio": 18
+      },
+      {
+        "ServicioCodigo": "LAB-448",
+        "Precio": 18
+      },
+      {
+        "ServicioCodigo": "LAB-449",
+        "Precio": 18
+      },
+      {
+        "ServicioCodigo": "LAB-450",
+        "Precio": 18
+      },
+      {
+        "ServicioCodigo": "LAB-451",
+        "Precio": 18
+      },
+      {
+        "ServicioCodigo": "LAB-452",
+        "Precio": 84
+      },
+      {
+        "ServicioCodigo": "LAB-453",
+        "Precio": 84
+      },
+      {
+        "ServicioCodigo": "LAB-454",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "LAB-455",
+        "Precio": 233
+      },
+      {
+        "ServicioCodigo": "LAB-456",
+        "Precio": 108
+      },
+      {
+        "ServicioCodigo": "LAB-457",
+        "Precio": 48
+      },
+      {
+        "ServicioCodigo": "LAB-458",
+        "Precio": 48
+      },
+      {
+        "ServicioCodigo": "LAB-459",
+        "Precio": 125
+      },
+      {
+        "ServicioCodigo": "LAB-460",
+        "Precio": 191
+      },
+      {
+        "ServicioCodigo": "LAB-461",
+        "Precio": 381
+      },
+      {
+        "ServicioCodigo": "LAB-462",
+        "Precio": 108
+      },
+      {
+        "ServicioCodigo": "LAB-463",
+        "Precio": 72
+      },
+      {
+        "ServicioCodigo": "LAB-464",
+        "Precio": 48
+      },
+      {
+        "ServicioCodigo": "LAB-465",
+        "Precio": 48
+      },
+      {
+        "ServicioCodigo": "LAB-466",
+        "Precio": 179
+      },
+      {
+        "ServicioCodigo": "LAB-467",
+        "Precio": 42
+      },
+      {
+        "ServicioCodigo": "LAB-468",
+        "Precio": 90
+      },
+      {
+        "ServicioCodigo": "LAB-469",
+        "Precio": 24
+      },
+      {
+        "ServicioCodigo": "LAB-470",
+        "Precio": 24
+      },
+      {
+        "ServicioCodigo": "LAB-471",
+        "Precio": 24
+      },
+      {
+        "ServicioCodigo": "LAB-472",
+        "Precio": 173
+      },
+      {
+        "ServicioCodigo": "LAB-473",
+        "Precio": 36
+      },
+      {
+        "ServicioCodigo": "LAB-474",
+        "Precio": 24
+      },
+      {
+        "ServicioCodigo": "LAB-475",
+        "Precio": 96
+      },
+      {
+        "ServicioCodigo": "LAB-476",
+        "Precio": 96
+      },
+      {
+        "ServicioCodigo": "LAB-477",
+        "Precio": 96
+      },
+      {
+        "ServicioCodigo": "LAB-478",
+        "Precio": 143
+      },
+      {
+        "ServicioCodigo": "LAB-479",
+        "Precio": 143
+      },
+      {
+        "ServicioCodigo": "LAB-480",
+        "Precio": 102
+      },
+      {
+        "ServicioCodigo": "LAB-481",
+        "Precio": 108
+      },
+      {
+        "ServicioCodigo": "LAB-482",
+        "Precio": 108
+      },
+      {
+        "ServicioCodigo": "LAB-483",
+        "Precio": 114
+      },
+      {
+        "ServicioCodigo": "LAB-484",
+        "Precio": 155
+      },
+      {
+        "ServicioCodigo": "LAB-485",
+        "Precio": 108
+      },
+      {
+        "ServicioCodigo": "LAB-486",
+        "Precio": 215
+      },
+      {
+        "ServicioCodigo": "LAB-487",
+        "Precio": 102
+      },
+      {
+        "ServicioCodigo": "LAB-488",
+        "Precio": 102
+      },
+      {
+        "ServicioCodigo": "LAB-489",
+        "Precio": 102
+      },
+      {
+        "ServicioCodigo": "LAB-490",
+        "Precio": 310
+      },
+      {
+        "ServicioCodigo": "LAB-491",
+        "Precio": 96
+      },
+      {
+        "ServicioCodigo": "LAB-492",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "LAB-493",
+        "Precio": 179
+      },
+      {
+        "ServicioCodigo": "LAB-494",
+        "Precio": 179
+      },
+      {
+        "ServicioCodigo": "LAB-495",
+        "Precio": 108
+      },
+      {
+        "ServicioCodigo": "LAB-496",
+        "Precio": 108
+      },
+      {
+        "ServicioCodigo": "LAB-497",
+        "Precio": 143
+      },
+      {
+        "ServicioCodigo": "LAB-498",
+        "Precio": 143
+      },
+      {
+        "ServicioCodigo": "LAB-499",
+        "Precio": 143
+      },
+      {
+        "ServicioCodigo": "LAB-500",
+        "Precio": 143
+      },
+      {
+        "ServicioCodigo": "LAB-501",
+        "Precio": 143
+      },
+      {
+        "ServicioCodigo": "LAB-502",
+        "Precio": 143
+      },
+      {
+        "ServicioCodigo": "LAB-503",
+        "Precio": 143
+      },
+      {
+        "ServicioCodigo": "LAB-504",
+        "Precio": 143
+      },
+      {
+        "ServicioCodigo": "LAB-505",
+        "Precio": 143
+      },
+      {
+        "ServicioCodigo": "LAB-506",
+        "Precio": 143
+      },
+      {
+        "ServicioCodigo": "LAB-507",
+        "Precio": 143
+      },
+      {
+        "ServicioCodigo": "LAB-508",
+        "Precio": 172
+      },
+      {
+        "ServicioCodigo": "LAB-509",
+        "Precio": 262
+      },
+      {
+        "ServicioCodigo": "LAB-510",
+        "Precio": 179
+      },
+      {
+        "ServicioCodigo": "LAB-511",
+        "Precio": 572
+      },
+      {
+        "ServicioCodigo": "LAB-512",
+        "Precio": 108
+      },
+      {
+        "ServicioCodigo": "LAB-513",
+        "Precio": 155
+      },
+      {
+        "ServicioCodigo": "LAB-514",
+        "Precio": 48
+      },
+      {
+        "ServicioCodigo": "LAB-515",
+        "Precio": 96
+      },
+      {
+        "ServicioCodigo": "LAB-516",
+        "Precio": 179
+      },
+      {
+        "ServicioCodigo": "LAB-517",
+        "Precio": 179
+      },
+      {
+        "ServicioCodigo": "LAB-518",
+        "Precio": 179
+      },
+      {
+        "ServicioCodigo": "LAB-519",
+        "Precio": 179
+      },
+      {
+        "ServicioCodigo": "LAB-520",
+        "Precio": 179
+      },
+      {
+        "ServicioCodigo": "LAB-521",
+        "Precio": 143
+      },
+      {
+        "ServicioCodigo": "LAB-522",
+        "Precio": 108
+      },
+      {
+        "ServicioCodigo": "LAB-523",
+        "Precio": 108
+      },
+      {
+        "ServicioCodigo": "LAB-524",
+        "Precio": 36
+      },
+      {
+        "ServicioCodigo": "LAB-525",
+        "Precio": 34
+      },
+      {
+        "ServicioCodigo": "LAB-526",
+        "Precio": 48
+      },
+      {
+        "ServicioCodigo": "LAB-527",
+        "Precio": 48
+      },
+      {
+        "ServicioCodigo": "LAB-528",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "LAB-529",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "LAB-530",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "LAB-531",
+        "Precio": 453
+      },
+      {
+        "ServicioCodigo": "LAB-532",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "LAB-533",
+        "Precio": 18
+      },
+      {
+        "ServicioCodigo": "LAB-534",
+        "Precio": 143
+      },
+      {
+        "ServicioCodigo": "LAB-535",
+        "Precio": 173
+      },
+      {
+        "ServicioCodigo": "LAB-536",
+        "Precio": 96
+      },
+      {
+        "ServicioCodigo": "LAB-537",
+        "Precio": 96
+      },
+      {
+        "ServicioCodigo": "LAB-538",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "LAB-539",
+        "Precio": 179
+      },
+      {
+        "ServicioCodigo": "LAB-540",
+        "Precio": 96
+      },
+      {
+        "ServicioCodigo": "LAB-541",
+        "Precio": 96
+      },
+      {
+        "ServicioCodigo": "LAB-542",
+        "Precio": 96
+      },
+      {
+        "ServicioCodigo": "LAB-543",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "LAB-544",
+        "Precio": 96
+      },
+      {
+        "ServicioCodigo": "LAB-545",
+        "Precio": 96
+      },
+      {
+        "ServicioCodigo": "LAB-546",
+        "Precio": 96
+      },
+      {
+        "ServicioCodigo": "LAB-547",
+        "Precio": 96
+      },
+      {
+        "ServicioCodigo": "LAB-548",
+        "Precio": 96
+      },
+      {
+        "ServicioCodigo": "LAB-549",
+        "Precio": 96
+      },
+      {
+        "ServicioCodigo": "LAB-550",
+        "Precio": 96
+      },
+      {
+        "ServicioCodigo": "LAB-551",
+        "Precio": 96
+      },
+      {
+        "ServicioCodigo": "LAB-552",
+        "Precio": 143
+      },
+      {
+        "ServicioCodigo": "LAB-553",
+        "Precio": 143
+      },
+      {
+        "ServicioCodigo": "LAB-554",
+        "Precio": 310
+      },
+      {
+        "ServicioCodigo": "LAB-555",
+        "Precio": 161
+      },
+      {
+        "ServicioCodigo": "LAB-556",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "LAB-557",
+        "Precio": 102
+      },
+      {
+        "ServicioCodigo": "LAB-558",
+        "Precio": 102
+      },
+      {
+        "ServicioCodigo": "ECO-559",
+        "Precio": 210
+      },
+      {
+        "ServicioCodigo": "ECO-560",
+        "Precio": 95
+      },
+      {
+        "ServicioCodigo": "ECO-561",
+        "Precio": 180
+      },
+      {
+        "ServicioCodigo": "ECO-562",
+        "Precio": 95
+      },
+      {
+        "ServicioCodigo": "ECO-563",
+        "Precio": 95
+      },
+      {
+        "ServicioCodigo": "ECO-564",
+        "Precio": 95
+      },
+      {
+        "ServicioCodigo": "ECO-565",
+        "Precio": 300
+      },
+      {
+        "ServicioCodigo": "ECO-566",
+        "Precio": 160
+      },
+      {
+        "ServicioCodigo": "ECO-567",
+        "Precio": 95
+      },
+      {
+        "ServicioCodigo": "ECO-568",
+        "Precio": 95
+      },
+      {
+        "ServicioCodigo": "ECO-569",
+        "Precio": 260
+      },
+      {
+        "ServicioCodigo": "ECO-570",
+        "Precio": 95
+      },
+      {
+        "ServicioCodigo": "ECO-571",
+        "Precio": 160
+      },
+      {
+        "ServicioCodigo": "ECO-572",
+        "Precio": 160
+      },
+      {
+        "ServicioCodigo": "ECO-573",
+        "Precio": 160
+      },
+      {
+        "ServicioCodigo": "ECO-574",
+        "Precio": 160
+      },
+      {
+        "ServicioCodigo": "ECO-575",
+        "Precio": 400
+      },
+      {
+        "ServicioCodigo": "ECO-576",
+        "Precio": 800
+      },
+      {
+        "ServicioCodigo": "ECO-577",
+        "Precio": 400
+      },
+      {
+        "ServicioCodigo": "ECO-578",
+        "Precio": 800
+      },
+      {
+        "ServicioCodigo": "ECO-579",
+        "Precio": 800
+      },
+      {
+        "ServicioCodigo": "ECO-580",
+        "Precio": 1500
+      },
+      {
+        "ServicioCodigo": "ECO-581",
+        "Precio": 350
+      },
+      {
+        "ServicioCodigo": "ECO-582",
+        "Precio": 400
+      },
+      {
+        "ServicioCodigo": "ECO-583",
+        "Precio": 500
+      },
+      {
+        "ServicioCodigo": "ECO-584",
+        "Precio": 400
+      },
+      {
+        "ServicioCodigo": "ECO-585",
+        "Precio": 400
+      },
+      {
+        "ServicioCodigo": "ECO-586",
+        "Precio": 400
+      },
+      {
+        "ServicioCodigo": "ECO-587",
+        "Precio": 800
+      },
+      {
+        "ServicioCodigo": "ECO-588",
+        "Precio": 400
+      },
+      {
+        "ServicioCodigo": "ECO-589",
+        "Precio": 350
+      },
+      {
+        "ServicioCodigo": "ECO-590",
+        "Precio": 350
+      },
+      {
+        "ServicioCodigo": "ECO-591",
+        "Precio": 350
+      },
+      {
+        "ServicioCodigo": "RAY-592",
+        "Precio": 191
+      },
+      {
+        "ServicioCodigo": "RAY-593",
+        "Precio": 191
+      },
+      {
+        "ServicioCodigo": "RAY-594",
+        "Precio": 191
+      },
+      {
+        "ServicioCodigo": "RAY-595",
+        "Precio": 191
+      },
+      {
+        "ServicioCodigo": "RAY-596",
+        "Precio": 108
+      },
+      {
+        "ServicioCodigo": "RAY-597",
+        "Precio": 191
+      },
+      {
+        "ServicioCodigo": "RAY-598",
+        "Precio": 108
+      },
+      {
+        "ServicioCodigo": "RAY-599",
+        "Precio": 191
+      },
+      {
+        "ServicioCodigo": "RAY-600",
+        "Precio": 191
+      },
+      {
+        "ServicioCodigo": "RAY-601",
+        "Precio": 203
+      },
+      {
+        "ServicioCodigo": "RAY-602",
+        "Precio": 203
+      },
+      {
+        "ServicioCodigo": "RAY-603",
+        "Precio": 203
+      },
+      {
+        "ServicioCodigo": "RAY-604",
+        "Precio": 167
+      },
+      {
+        "ServicioCodigo": "RAY-605",
+        "Precio": 108
+      },
+      {
+        "ServicioCodigo": "RAY-606",
+        "Precio": 108
+      },
+      {
+        "ServicioCodigo": "RAY-607",
+        "Precio": 96
+      },
+      {
+        "ServicioCodigo": "RAY-608",
+        "Precio": 108
+      },
+      {
+        "ServicioCodigo": "RAY-609",
+        "Precio": 108
+      },
+      {
+        "ServicioCodigo": "RAY-610",
+        "Precio": 108
+      },
+      {
+        "ServicioCodigo": "RAY-611",
+        "Precio": 108
+      },
+      {
+        "ServicioCodigo": "RAY-612",
+        "Precio": 108
+      },
+      {
+        "ServicioCodigo": "RAY-613",
+        "Precio": 108
+      },
+      {
+        "ServicioCodigo": "RAY-614",
+        "Precio": 108
+      },
+      {
+        "ServicioCodigo": "RAY-615",
+        "Precio": 108
+      },
+      {
+        "ServicioCodigo": "RAY-616",
+        "Precio": 108
+      },
+      {
+        "ServicioCodigo": "RAY-617",
+        "Precio": 167
+      },
+      {
+        "ServicioCodigo": "RAY-618",
+        "Precio": 191
+      },
+      {
+        "ServicioCodigo": "RAY-619",
+        "Precio": 108
+      },
+      {
+        "ServicioCodigo": "RAY-620",
+        "Precio": 167
+      },
+      {
+        "ServicioCodigo": "RAY-621",
+        "Precio": 108
+      },
+      {
+        "ServicioCodigo": "RAY-622",
+        "Precio": 108
+      },
+      {
+        "ServicioCodigo": "RAY-623",
+        "Precio": 262
+      },
+      {
+        "ServicioCodigo": "RAY-624",
+        "Precio": 500
+      },
+      {
+        "ServicioCodigo": "RAY-625",
+        "Precio": 500
+      }
+    ]
+  },
+  {
+    "Codigo": "MEDICAR",
+    "Nombre": "MEDICAR",
+    "Descripcion": "Tarifario MEDICAR, actualizado al 12/06/2026",
+    "FechaInicio": "2026-06-12",
+    "FechaFin": null,
+    "MonedaCodigo": "BOB",
+    "EsPrincipal": false,
+    "Detalles": [
+      {
+        "ServicioCodigo": "CON-100",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "CON-101",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "CON-102",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "CON-103",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "CON-104",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "CON-105",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "CON-106",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "CON-107",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "CON-108",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "CON-109",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-110",
+        "Precio": 37
+      },
+      {
+        "ServicioCodigo": "EME-111",
+        "Precio": 37
+      },
+      {
+        "ServicioCodigo": "EME-112",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-113",
+        "Precio": 37
+      },
+      {
+        "ServicioCodigo": "EME-114",
+        "Precio": 61
+      },
+      {
+        "ServicioCodigo": "EME-115",
+        "Precio": 122
+      },
+      {
+        "ServicioCodigo": "EME-116",
+        "Precio": 6
+      },
+      {
+        "ServicioCodigo": "EME-117",
+        "Precio": 61
+      },
+      {
+        "ServicioCodigo": "EME-118",
+        "Precio": 37
+      },
+      {
+        "ServicioCodigo": "EME-119",
+        "Precio": 183
+      },
+      {
+        "ServicioCodigo": "EME-120",
+        "Precio": 37
+      },
+      {
+        "ServicioCodigo": "EME-121",
+        "Precio": 28
+      },
+      {
+        "ServicioCodigo": "EME-122",
+        "Precio": 12
+      },
+      {
+        "ServicioCodigo": "EME-123",
+        "Precio": 37
+      },
+      {
+        "ServicioCodigo": "EME-124",
+        "Precio": 41
+      },
+      {
+        "ServicioCodigo": "EME-125",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-126",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-127",
+        "Precio": 6
+      },
+      {
+        "ServicioCodigo": "EME-128",
+        "Precio": 6
+      },
+      {
+        "ServicioCodigo": "EME-129",
+        "Precio": 6
+      },
+      {
+        "ServicioCodigo": "EME-130",
+        "Precio": 6
+      },
+      {
+        "ServicioCodigo": "EME-131",
+        "Precio": 6
+      },
+      {
+        "ServicioCodigo": "EME-132",
+        "Precio": 97
+      },
+      {
+        "ServicioCodigo": "EME-133",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-134",
+        "Precio": 37
+      },
+      {
+        "ServicioCodigo": "EME-135",
+        "Precio": 37
+      },
+      {
+        "ServicioCodigo": "EME-136",
+        "Precio": 85
+      },
+      {
+        "ServicioCodigo": "EME-137",
+        "Precio": 61
+      },
+      {
+        "ServicioCodigo": "EME-138",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-139",
+        "Precio": 24
+      },
+      {
+        "ServicioCodigo": "EME-140",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-141",
+        "Precio": 122
+      },
+      {
+        "ServicioCodigo": "EME-142",
+        "Precio": 61
+      },
+      {
+        "ServicioCodigo": "EME-143",
+        "Precio": 24
+      },
+      {
+        "ServicioCodigo": "EME-144",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HON-145",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HON-146",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HON-147",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HON-148",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HON-149",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HON-150",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HON-151",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HOS-160",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HOS-161",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HOS-162",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HOS-163",
+        "Precio": 156
+      },
+      {
+        "ServicioCodigo": "HOS-164",
+        "Precio": 412
+      },
+      {
+        "ServicioCodigo": "HOS-165",
+        "Precio": 313
+      },
+      {
+        "ServicioCodigo": "HOS-166",
+        "Precio": 213
+      },
+      {
+        "ServicioCodigo": "HOS-167",
+        "Precio": 213
+      },
+      {
+        "ServicioCodigo": "HOS-168",
+        "Precio": 57
+      },
+      {
+        "ServicioCodigo": "HOS-169",
+        "Precio": 142
+      },
+      {
+        "ServicioCodigo": "HOS-170",
+        "Precio": 142
+      },
+      {
+        "ServicioCodigo": "HOS-171",
+        "Precio": 71
+      },
+      {
+        "ServicioCodigo": "HOS-172",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HOS-173",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HOS-174",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HOS-175",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HOS-176",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HOS-177",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "QUI-178",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "QUI-179",
+        "Precio": 180
+      },
+      {
+        "ServicioCodigo": "QUI-181",
+        "Precio": 300
+      },
+      {
+        "ServicioCodigo": "QUI-182",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "QUI-183",
+        "Precio": 25
+      },
+      {
+        "ServicioCodigo": "QUI-184",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "QUI-185",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "QUI-186",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "QUI-187",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "QUI-188",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "QUI-189",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "QUI-190",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "QUI-191",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "QUI-192",
+        "Precio": 75
+      },
+      {
+        "ServicioCodigo": "QUI-193",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "QUI-194",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "QUI-195",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "QUI-196",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "QUI-197",
+        "Precio": 200
+      },
+      {
+        "ServicioCodigo": "QUI-198",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "QUI-199",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "QUI-200",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "QUI-201",
+        "Precio": 170
+      },
+      {
+        "ServicioCodigo": "QUI-202",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "QUI-203",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "QUI-204",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "QUI-205",
+        "Precio": 180
+      },
+      {
+        "ServicioCodigo": "QUI-206",
+        "Precio": 30
+      },
+      {
+        "ServicioCodigo": "QUI-207",
+        "Precio": 40
+      },
+      {
+        "ServicioCodigo": "QUI-208",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "SER-210",
+        "Precio": 305
+      },
+      {
+        "ServicioCodigo": "SER-211",
+        "Precio": 305
+      },
+      {
+        "ServicioCodigo": "SER-212",
+        "Precio": 300
+      },
+      {
+        "ServicioCodigo": "SER-213",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-214",
+        "Precio": 200
+      },
+      {
+        "ServicioCodigo": "SER-215",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-216",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-217",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-218",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-219",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-220",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-221",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-222",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-223",
+        "Precio": 300
+      },
+      {
+        "ServicioCodigo": "UTI-224",
+        "Precio": 114
+      },
+      {
+        "ServicioCodigo": "UTI-225",
+        "Precio": 600
+      },
+      {
+        "ServicioCodigo": "UTI-231",
+        "Precio": 114
+      },
+      {
+        "ServicioCodigo": "UTI-236",
+        "Precio": 369
+      },
+      {
+        "ServicioCodigo": "UTI-237",
+        "Precio": 142
+      },
+      {
+        "ServicioCodigo": "UTI-238",
+        "Precio": 71
+      },
+      {
+        "ServicioCodigo": "UTI-239",
+        "Precio": 284
+      },
+      {
+        "ServicioCodigo": "UTI-240",
+        "Precio": 711
+      },
+      {
+        "ServicioCodigo": "UTI-241",
+        "Precio": 242
+      },
+      {
+        "ServicioCodigo": "UTI-243",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "LAB-244",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-245",
+        "Precio": 68
+      },
+      {
+        "ServicioCodigo": "LAB-246",
+        "Precio": 28
+      },
+      {
+        "ServicioCodigo": "LAB-247",
+        "Precio": 28
+      },
+      {
+        "ServicioCodigo": "LAB-248",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-249",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-250",
+        "Precio": 28
+      },
+      {
+        "ServicioCodigo": "LAB-251",
+        "Precio": 28
+      },
+      {
+        "ServicioCodigo": "LAB-252",
+        "Precio": 28
+      },
+      {
+        "ServicioCodigo": "LAB-253",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-254",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-255",
+        "Precio": 80
+      },
+      {
+        "ServicioCodigo": "LAB-256",
+        "Precio": 82
+      },
+      {
+        "ServicioCodigo": "LAB-257",
+        "Precio": 317
+      },
+      {
+        "ServicioCodigo": "LAB-258",
+        "Precio": 223
+      },
+      {
+        "ServicioCodigo": "LAB-259",
+        "Precio": 136
+      },
+      {
+        "ServicioCodigo": "LAB-260",
+        "Precio": 128
+      },
+      {
+        "ServicioCodigo": "LAB-261",
+        "Precio": 167
+      },
+      {
+        "ServicioCodigo": "LAB-262",
+        "Precio": 128
+      },
+      {
+        "ServicioCodigo": "LAB-263",
+        "Precio": 68
+      },
+      {
+        "ServicioCodigo": "LAB-264",
+        "Precio": 68
+      },
+      {
+        "ServicioCodigo": "LAB-265",
+        "Precio": 68
+      },
+      {
+        "ServicioCodigo": "LAB-266",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "LAB-267",
+        "Precio": 41
+      },
+      {
+        "ServicioCodigo": "LAB-268",
+        "Precio": 68
+      },
+      {
+        "ServicioCodigo": "LAB-269",
+        "Precio": 128
+      },
+      {
+        "ServicioCodigo": "LAB-270",
+        "Precio": 41
+      },
+      {
+        "ServicioCodigo": "LAB-271",
+        "Precio": 41
+      },
+      {
+        "ServicioCodigo": "LAB-272",
+        "Precio": 41
+      },
+      {
+        "ServicioCodigo": "LAB-273",
+        "Precio": 41
+      },
+      {
+        "ServicioCodigo": "LAB-274",
+        "Precio": 41
+      },
+      {
+        "ServicioCodigo": "LAB-275",
+        "Precio": 83
+      },
+      {
+        "ServicioCodigo": "LAB-276",
+        "Precio": 83
+      },
+      {
+        "ServicioCodigo": "LAB-277",
+        "Precio": 232
+      },
+      {
+        "ServicioCodigo": "LAB-278",
+        "Precio": 97
+      },
+      {
+        "ServicioCodigo": "LAB-279",
+        "Precio": 68
+      },
+      {
+        "ServicioCodigo": "LAB-280",
+        "Precio": 68
+      },
+      {
+        "ServicioCodigo": "LAB-281",
+        "Precio": 68
+      },
+      {
+        "ServicioCodigo": "LAB-282",
+        "Precio": 97
+      },
+      {
+        "ServicioCodigo": "LAB-283",
+        "Precio": 82
+      },
+      {
+        "ServicioCodigo": "LAB-284",
+        "Precio": 163
+      },
+      {
+        "ServicioCodigo": "LAB-285",
+        "Precio": 68
+      },
+      {
+        "ServicioCodigo": "LAB-286",
+        "Precio": 68
+      },
+      {
+        "ServicioCodigo": "LAB-287",
+        "Precio": 34
+      },
+      {
+        "ServicioCodigo": "LAB-288",
+        "Precio": 34
+      },
+      {
+        "ServicioCodigo": "LAB-289",
+        "Precio": 40
+      },
+      {
+        "ServicioCodigo": "LAB-290",
+        "Precio": 70
+      },
+      {
+        "ServicioCodigo": "LAB-291",
+        "Precio": 70
+      },
+      {
+        "ServicioCodigo": "LAB-292",
+        "Precio": 70
+      },
+      {
+        "ServicioCodigo": "LAB-293",
+        "Precio": 70
+      },
+      {
+        "ServicioCodigo": "LAB-294",
+        "Precio": 70
+      },
+      {
+        "ServicioCodigo": "LAB-295",
+        "Precio": 70
+      },
+      {
+        "ServicioCodigo": "LAB-296",
+        "Precio": 167
+      },
+      {
+        "ServicioCodigo": "LAB-297",
+        "Precio": 169
+      },
+      {
+        "ServicioCodigo": "LAB-298",
+        "Precio": 172
+      },
+      {
+        "ServicioCodigo": "LAB-299",
+        "Precio": 169
+      },
+      {
+        "ServicioCodigo": "LAB-300",
+        "Precio": 171
+      },
+      {
+        "ServicioCodigo": "LAB-301",
+        "Precio": 173
+      },
+      {
+        "ServicioCodigo": "LAB-302",
+        "Precio": 173
+      },
+      {
+        "ServicioCodigo": "LAB-303",
+        "Precio": 173
+      },
+      {
+        "ServicioCodigo": "LAB-304",
+        "Precio": 278
+      },
+      {
+        "ServicioCodigo": "LAB-305",
+        "Precio": 178
+      },
+      {
+        "ServicioCodigo": "LAB-306",
+        "Precio": 178
+      },
+      {
+        "ServicioCodigo": "LAB-307",
+        "Precio": 173
+      },
+      {
+        "ServicioCodigo": "LAB-308",
+        "Precio": 187
+      },
+      {
+        "ServicioCodigo": "LAB-309",
+        "Precio": 187
+      },
+      {
+        "ServicioCodigo": "LAB-310",
+        "Precio": 459
+      },
+      {
+        "ServicioCodigo": "LAB-311",
+        "Precio": 221
+      },
+      {
+        "ServicioCodigo": "LAB-312",
+        "Precio": 221
+      },
+      {
+        "ServicioCodigo": "LAB-313",
+        "Precio": 213
+      },
+      {
+        "ServicioCodigo": "LAB-314",
+        "Precio": 232
+      },
+      {
+        "ServicioCodigo": "LAB-315",
+        "Precio": 232
+      },
+      {
+        "ServicioCodigo": "LAB-316",
+        "Precio": 232
+      },
+      {
+        "ServicioCodigo": "LAB-317",
+        "Precio": 185
+      },
+      {
+        "ServicioCodigo": "LAB-318",
+        "Precio": 142
+      },
+      {
+        "ServicioCodigo": "LAB-319",
+        "Precio": 209
+      },
+      {
+        "ServicioCodigo": "LAB-320",
+        "Precio": 209
+      },
+      {
+        "ServicioCodigo": "LAB-321",
+        "Precio": 148
+      },
+      {
+        "ServicioCodigo": "LAB-322",
+        "Precio": 148
+      },
+      {
+        "ServicioCodigo": "LAB-323",
+        "Precio": 210
+      },
+      {
+        "ServicioCodigo": "LAB-324",
+        "Precio": 210
+      },
+      {
+        "ServicioCodigo": "LAB-325",
+        "Precio": 221
+      },
+      {
+        "ServicioCodigo": "LAB-326",
+        "Precio": 221
+      },
+      {
+        "ServicioCodigo": "LAB-327",
+        "Precio": 223
+      },
+      {
+        "ServicioCodigo": "LAB-328",
+        "Precio": 82
+      },
+      {
+        "ServicioCodigo": "LAB-329",
+        "Precio": 216
+      },
+      {
+        "ServicioCodigo": "LAB-330",
+        "Precio": 216
+      },
+      {
+        "ServicioCodigo": "LAB-331",
+        "Precio": 209
+      },
+      {
+        "ServicioCodigo": "LAB-332",
+        "Precio": 178
+      },
+      {
+        "ServicioCodigo": "LAB-333",
+        "Precio": 223
+      },
+      {
+        "ServicioCodigo": "LAB-334",
+        "Precio": 362
+      },
+      {
+        "ServicioCodigo": "LAB-335",
+        "Precio": 302
+      },
+      {
+        "ServicioCodigo": "LAB-336",
+        "Precio": 207
+      },
+      {
+        "ServicioCodigo": "LAB-337",
+        "Precio": 764
+      },
+      {
+        "ServicioCodigo": "LAB-338",
+        "Precio": 234
+      },
+      {
+        "ServicioCodigo": "LAB-339",
+        "Precio": 234
+      },
+      {
+        "ServicioCodigo": "LAB-340",
+        "Precio": 398
+      },
+      {
+        "ServicioCodigo": "LAB-341",
+        "Precio": 207
+      },
+      {
+        "ServicioCodigo": "LAB-342",
+        "Precio": 266
+      },
+      {
+        "ServicioCodigo": "LAB-343",
+        "Precio": 245
+      },
+      {
+        "ServicioCodigo": "LAB-344",
+        "Precio": 364
+      },
+      {
+        "ServicioCodigo": "LAB-345",
+        "Precio": 412
+      },
+      {
+        "ServicioCodigo": "LAB-346",
+        "Precio": 377
+      },
+      {
+        "ServicioCodigo": "LAB-347",
+        "Precio": 386
+      },
+      {
+        "ServicioCodigo": "LAB-348",
+        "Precio": 178
+      },
+      {
+        "ServicioCodigo": "LAB-349",
+        "Precio": 185
+      },
+      {
+        "ServicioCodigo": "LAB-350",
+        "Precio": 178
+      },
+      {
+        "ServicioCodigo": "LAB-351",
+        "Precio": 178
+      },
+      {
+        "ServicioCodigo": "LAB-352",
+        "Precio": 178
+      },
+      {
+        "ServicioCodigo": "LAB-353",
+        "Precio": 41
+      },
+      {
+        "ServicioCodigo": "LAB-354",
+        "Precio": 68
+      },
+      {
+        "ServicioCodigo": "LAB-355",
+        "Precio": 41
+      },
+      {
+        "ServicioCodigo": "LAB-356",
+        "Precio": 95
+      },
+      {
+        "ServicioCodigo": "LAB-357",
+        "Precio": 90
+      },
+      {
+        "ServicioCodigo": "LAB-358",
+        "Precio": 178
+      },
+      {
+        "ServicioCodigo": "LAB-359",
+        "Precio": 178
+      },
+      {
+        "ServicioCodigo": "LAB-360",
+        "Precio": 64
+      },
+      {
+        "ServicioCodigo": "LAB-361",
+        "Precio": 67
+      },
+      {
+        "ServicioCodigo": "LAB-362",
+        "Precio": 185
+      },
+      {
+        "ServicioCodigo": "LAB-363",
+        "Precio": 187
+      },
+      {
+        "ServicioCodigo": "LAB-364",
+        "Precio": 172
+      },
+      {
+        "ServicioCodigo": "LAB-365",
+        "Precio": 95
+      },
+      {
+        "ServicioCodigo": "LAB-366",
+        "Precio": 66
+      },
+      {
+        "ServicioCodigo": "LAB-367",
+        "Precio": 213
+      },
+      {
+        "ServicioCodigo": "LAB-368",
+        "Precio": 210
+      },
+      {
+        "ServicioCodigo": "LAB-369",
+        "Precio": 369
+      },
+      {
+        "ServicioCodigo": "LAB-370",
+        "Precio": 128
+      },
+      {
+        "ServicioCodigo": "LAB-371",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-372",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-373",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-374",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-375",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-376",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-377",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-378",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-379",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-380",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-381",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-382",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-383",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-384",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-385",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-386",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-387",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-388",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-389",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-390",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-391",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-392",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-393",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-394",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-395",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-396",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-397",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-398",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-399",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-400",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-401",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-402",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-403",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-404",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-405",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-406",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-407",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-408",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-409",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-410",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-411",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-412",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-413",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-414",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-415",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-416",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-417",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-418",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-419",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-420",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-421",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-422",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-423",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-424",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-425",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-426",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-427",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-428",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-429",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-430",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-431",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-432",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-433",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-434",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-435",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-436",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-437",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-438",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-439",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-440",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-441",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-442",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-443",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-444",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-445",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-446",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-447",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-448",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-449",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-450",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-451",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-452",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-453",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-454",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-455",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-456",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-457",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-458",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-459",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-460",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-461",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-462",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-463",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-464",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-465",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-466",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-467",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-468",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-469",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-470",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-471",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-472",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-473",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-474",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-475",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-476",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-477",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-478",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-479",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-480",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-481",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-482",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-483",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-484",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-485",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-486",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-487",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-488",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-489",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-490",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-491",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-492",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-493",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-494",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-495",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-496",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-497",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-498",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-499",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-500",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-501",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-502",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-503",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-504",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-505",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-506",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-507",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-508",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-509",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-510",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-511",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-512",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-513",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-514",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-515",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-516",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-517",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-518",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-519",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-520",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-521",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-522",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-523",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-524",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-525",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-526",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-527",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-528",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-529",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-530",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-531",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-532",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-533",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-534",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-535",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-536",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-537",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-538",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-539",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-540",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-541",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-542",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-543",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-544",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-545",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-546",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-547",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-548",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-549",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-550",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-551",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-552",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-553",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-554",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-555",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-556",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-557",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-558",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-559",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-560",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-561",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-562",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-563",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-564",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-565",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-566",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-567",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-568",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-569",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-570",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-571",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-572",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-573",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-574",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-575",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-576",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-577",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-578",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-579",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-580",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-581",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-582",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-583",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-584",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-585",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-586",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-587",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-588",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-589",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-590",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-591",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "RAY-592",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "RAY-593",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "RAY-594",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "RAY-595",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "RAY-596",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "RAY-597",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "RAY-598",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "RAY-599",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "RAY-600",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "RAY-601",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "RAY-602",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "RAY-603",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "RAY-604",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "RAY-605",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "RAY-606",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "RAY-607",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "RAY-608",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "RAY-609",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "RAY-610",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "RAY-611",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "RAY-612",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "RAY-613",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "RAY-614",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "RAY-615",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "RAY-616",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "RAY-617",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "RAY-618",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "RAY-619",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "RAY-620",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "RAY-621",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "RAY-622",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "RAY-623",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "RAY-624",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "RAY-625",
+        "Precio": 0
+      }
+    ]
+  },
+  {
+    "Codigo": "SOAT",
+    "Nombre": "SOAT",
+    "Descripcion": "Tarifario SOAT, actualizado al 12/06/2026",
+    "FechaInicio": "2026-06-12",
+    "FechaFin": null,
+    "MonedaCodigo": "BOB",
+    "EsPrincipal": false,
+    "Detalles": [
+      {
+        "ServicioCodigo": "CON-100",
+        "Precio": 50
+      },
+      {
+        "ServicioCodigo": "CON-101",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "CON-102",
+        "Precio": 200
+      },
+      {
+        "ServicioCodigo": "CON-103",
+        "Precio": 200
+      },
+      {
+        "ServicioCodigo": "CON-104",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "CON-105",
+        "Precio": 200
+      },
+      {
+        "ServicioCodigo": "CON-106",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "CON-107",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "CON-108",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "CON-109",
+        "Precio": 200
+      },
+      {
+        "ServicioCodigo": "EME-110",
+        "Precio": 40
+      },
+      {
+        "ServicioCodigo": "EME-111",
+        "Precio": 35
+      },
+      {
+        "ServicioCodigo": "EME-112",
+        "Precio": 35
+      },
+      {
+        "ServicioCodigo": "EME-113",
+        "Precio": 30
+      },
+      {
+        "ServicioCodigo": "EME-114",
+        "Precio": 50
+      },
+      {
+        "ServicioCodigo": "EME-115",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "EME-116",
+        "Precio": 5
+      },
+      {
+        "ServicioCodigo": "EME-117",
+        "Precio": 50
+      },
+      {
+        "ServicioCodigo": "EME-118",
+        "Precio": 30
+      },
+      {
+        "ServicioCodigo": "EME-119",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "EME-120",
+        "Precio": 40
+      },
+      {
+        "ServicioCodigo": "EME-121",
+        "Precio": 25
+      },
+      {
+        "ServicioCodigo": "EME-122",
+        "Precio": 15
+      },
+      {
+        "ServicioCodigo": "EME-123",
+        "Precio": 30
+      },
+      {
+        "ServicioCodigo": "EME-124",
+        "Precio": 35
+      },
+      {
+        "ServicioCodigo": "EME-125",
+        "Precio": 80
+      },
+      {
+        "ServicioCodigo": "EME-126",
+        "Precio": 15
+      },
+      {
+        "ServicioCodigo": "EME-127",
+        "Precio": 30
+      },
+      {
+        "ServicioCodigo": "EME-128",
+        "Precio": 25
+      },
+      {
+        "ServicioCodigo": "EME-129",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "EME-130",
+        "Precio": 160
+      },
+      {
+        "ServicioCodigo": "EME-131",
+        "Precio": 180
+      },
+      {
+        "ServicioCodigo": "EME-132",
+        "Precio": 80
+      },
+      {
+        "ServicioCodigo": "EME-133",
+        "Precio": 70
+      },
+      {
+        "ServicioCodigo": "EME-134",
+        "Precio": 30
+      },
+      {
+        "ServicioCodigo": "EME-135",
+        "Precio": 40
+      },
+      {
+        "ServicioCodigo": "EME-136",
+        "Precio": 70
+      },
+      {
+        "ServicioCodigo": "EME-137",
+        "Precio": 50
+      },
+      {
+        "ServicioCodigo": "EME-138",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "EME-139",
+        "Precio": 20
+      },
+      {
+        "ServicioCodigo": "EME-140",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "EME-141",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "EME-142",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "EME-143",
+        "Precio": 20
+      },
+      {
+        "ServicioCodigo": "EME-144",
+        "Precio": 50
+      },
+      {
+        "ServicioCodigo": "HON-145",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HON-146",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HON-147",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HON-148",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HON-149",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HON-150",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HON-151",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HOS-160",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "HOS-161",
+        "Precio": 180
+      },
+      {
+        "ServicioCodigo": "HOS-162",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HOS-163",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "HOS-164",
+        "Precio": 290
+      },
+      {
+        "ServicioCodigo": "HOS-165",
+        "Precio": 220
+      },
+      {
+        "ServicioCodigo": "HOS-166",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "HOS-167",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "HOS-168",
+        "Precio": 50
+      },
+      {
+        "ServicioCodigo": "HOS-169",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "HOS-170",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "HOS-171",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "HOS-172",
+        "Precio": 35
+      },
+      {
+        "ServicioCodigo": "HOS-173",
+        "Precio": 35
+      },
+      {
+        "ServicioCodigo": "HOS-174",
+        "Precio": 160
+      },
+      {
+        "ServicioCodigo": "HOS-175",
+        "Precio": 35
+      },
+      {
+        "ServicioCodigo": "HOS-176",
+        "Precio": 200
+      },
+      {
+        "ServicioCodigo": "HOS-177",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "QUI-178",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "QUI-179",
+        "Precio": 180
+      },
+      {
+        "ServicioCodigo": "QUI-181",
+        "Precio": 300
+      },
+      {
+        "ServicioCodigo": "QUI-182",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "QUI-183",
+        "Precio": 25
+      },
+      {
+        "ServicioCodigo": "QUI-184",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "QUI-185",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "QUI-186",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "QUI-187",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "QUI-188",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "QUI-189",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "QUI-190",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "QUI-191",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "QUI-192",
+        "Precio": 75
+      },
+      {
+        "ServicioCodigo": "QUI-193",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "QUI-194",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "QUI-195",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "QUI-196",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "QUI-197",
+        "Precio": 200
+      },
+      {
+        "ServicioCodigo": "QUI-198",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "QUI-199",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "QUI-200",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "QUI-201",
+        "Precio": 170
+      },
+      {
+        "ServicioCodigo": "QUI-202",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "QUI-203",
+        "Precio": 100
+      },
+      {
+        "ServicioCodigo": "QUI-204",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "QUI-205",
+        "Precio": 180
+      },
+      {
+        "ServicioCodigo": "QUI-206",
+        "Precio": 30
+      },
+      {
+        "ServicioCodigo": "QUI-207",
+        "Precio": 40
+      },
+      {
+        "ServicioCodigo": "QUI-208",
+        "Precio": 150
+      },
+      {
+        "ServicioCodigo": "SER-210",
+        "Precio": 300
+      },
+      {
+        "ServicioCodigo": "SER-211",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-212",
+        "Precio": 300
+      },
+      {
+        "ServicioCodigo": "SER-213",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-214",
+        "Precio": 200
+      },
+      {
+        "ServicioCodigo": "SER-215",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-216",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-217",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-218",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-219",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-220",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-221",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-222",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "SER-223",
+        "Precio": 300
+      },
+      {
+        "ServicioCodigo": "UTI-225",
+        "Precio": 600
+      },
+      {
+        "ServicioCodigo": "UTI-229",
+        "Precio": 300
+      },
+      {
+        "ServicioCodigo": "UTI-230",
+        "Precio": 500
+      },
+      {
+        "ServicioCodigo": "UTI-233",
+        "Precio": 240
+      },
+      {
+        "ServicioCodigo": "UTI-234",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "UTI-235",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "UTI-236",
+        "Precio": 200
+      },
+      {
+        "ServicioCodigo": "UTI-237",
+        "Precio": 200
+      },
+      {
+        "ServicioCodigo": "UTI-238",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "UTI-239",
+        "Precio": 350
+      },
+      {
+        "ServicioCodigo": "UTI-240",
+        "Precio": 400
+      },
+      {
+        "ServicioCodigo": "UTI-241",
+        "Precio": 500
+      },
+      {
+        "ServicioCodigo": "UTI-242",
+        "Precio": 450
+      },
+      {
+        "ServicioCodigo": "UTI-243",
+        "Precio": 60
+      },
+      {
+        "ServicioCodigo": "LAB-244",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-245",
+        "Precio": 68
+      },
+      {
+        "ServicioCodigo": "LAB-246",
+        "Precio": 28
+      },
+      {
+        "ServicioCodigo": "LAB-247",
+        "Precio": 28
+      },
+      {
+        "ServicioCodigo": "LAB-248",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-249",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-250",
+        "Precio": 28
+      },
+      {
+        "ServicioCodigo": "LAB-251",
+        "Precio": 28
+      },
+      {
+        "ServicioCodigo": "LAB-252",
+        "Precio": 28
+      },
+      {
+        "ServicioCodigo": "LAB-253",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-254",
+        "Precio": 55
+      },
+      {
+        "ServicioCodigo": "LAB-255",
+        "Precio": 80
+      },
+      {
+        "ServicioCodigo": "LAB-256",
+        "Precio": 82
+      },
+      {
+        "ServicioCodigo": "LAB-257",
+        "Precio": 317
+      },
+      {
+        "ServicioCodigo": "LAB-258",
+        "Precio": 223
+      },
+      {
+        "ServicioCodigo": "LAB-259",
+        "Precio": 136
+      },
+      {
+        "ServicioCodigo": "LAB-260",
+        "Precio": 128
+      },
+      {
+        "ServicioCodigo": "LAB-261",
+        "Precio": 167
+      },
+      {
+        "ServicioCodigo": "LAB-262",
+        "Precio": 128
+      },
+      {
+        "ServicioCodigo": "LAB-263",
+        "Precio": 68
+      },
+      {
+        "ServicioCodigo": "LAB-264",
+        "Precio": 68
+      },
+      {
+        "ServicioCodigo": "LAB-265",
+        "Precio": 68
+      },
+      {
+        "ServicioCodigo": "LAB-266",
+        "Precio": 120
+      },
+      {
+        "ServicioCodigo": "LAB-267",
+        "Precio": 41
+      },
+      {
+        "ServicioCodigo": "LAB-268",
+        "Precio": 68
+      },
+      {
+        "ServicioCodigo": "LAB-269",
+        "Precio": 128
+      },
+      {
+        "ServicioCodigo": "LAB-270",
+        "Precio": 41
+      },
+      {
+        "ServicioCodigo": "LAB-271",
+        "Precio": 41
+      },
+      {
+        "ServicioCodigo": "LAB-272",
+        "Precio": 41
+      },
+      {
+        "ServicioCodigo": "LAB-273",
+        "Precio": 41
+      },
+      {
+        "ServicioCodigo": "LAB-274",
+        "Precio": 41
+      },
+      {
+        "ServicioCodigo": "LAB-275",
+        "Precio": 83
+      },
+      {
+        "ServicioCodigo": "LAB-276",
+        "Precio": 83
+      },
+      {
+        "ServicioCodigo": "LAB-277",
+        "Precio": 232
+      },
+      {
+        "ServicioCodigo": "LAB-278",
+        "Precio": 97
+      },
+      {
+        "ServicioCodigo": "LAB-279",
+        "Precio": 68
+      },
+      {
+        "ServicioCodigo": "LAB-280",
+        "Precio": 68
+      },
+      {
+        "ServicioCodigo": "LAB-281",
+        "Precio": 68
+      },
+      {
+        "ServicioCodigo": "LAB-282",
+        "Precio": 97
+      },
+      {
+        "ServicioCodigo": "LAB-283",
+        "Precio": 82
+      },
+      {
+        "ServicioCodigo": "LAB-284",
+        "Precio": 163
+      },
+      {
+        "ServicioCodigo": "LAB-285",
+        "Precio": 68
+      },
+      {
+        "ServicioCodigo": "LAB-286",
+        "Precio": 68
+      },
+      {
+        "ServicioCodigo": "LAB-287",
+        "Precio": 34
+      },
+      {
+        "ServicioCodigo": "LAB-288",
+        "Precio": 34
+      },
+      {
+        "ServicioCodigo": "LAB-289",
+        "Precio": 40
+      },
+      {
+        "ServicioCodigo": "LAB-290",
+        "Precio": 70
+      },
+      {
+        "ServicioCodigo": "LAB-291",
+        "Precio": 70
+      },
+      {
+        "ServicioCodigo": "LAB-292",
+        "Precio": 70
+      },
+      {
+        "ServicioCodigo": "LAB-293",
+        "Precio": 70
+      },
+      {
+        "ServicioCodigo": "LAB-294",
+        "Precio": 70
+      },
+      {
+        "ServicioCodigo": "LAB-295",
+        "Precio": 70
+      },
+      {
+        "ServicioCodigo": "LAB-296",
+        "Precio": 167
+      },
+      {
+        "ServicioCodigo": "LAB-297",
+        "Precio": 169
+      },
+      {
+        "ServicioCodigo": "LAB-298",
+        "Precio": 172
+      },
+      {
+        "ServicioCodigo": "LAB-299",
+        "Precio": 169
+      },
+      {
+        "ServicioCodigo": "LAB-300",
+        "Precio": 171
+      },
+      {
+        "ServicioCodigo": "LAB-301",
+        "Precio": 173
+      },
+      {
+        "ServicioCodigo": "LAB-302",
+        "Precio": 173
+      },
+      {
+        "ServicioCodigo": "LAB-303",
+        "Precio": 173
+      },
+      {
+        "ServicioCodigo": "LAB-304",
+        "Precio": 278
+      },
+      {
+        "ServicioCodigo": "LAB-305",
+        "Precio": 178
+      },
+      {
+        "ServicioCodigo": "LAB-306",
+        "Precio": 178
+      },
+      {
+        "ServicioCodigo": "LAB-307",
+        "Precio": 173
+      },
+      {
+        "ServicioCodigo": "LAB-308",
+        "Precio": 187
+      },
+      {
+        "ServicioCodigo": "LAB-309",
+        "Precio": 187
+      },
+      {
+        "ServicioCodigo": "LAB-310",
+        "Precio": 459
+      },
+      {
+        "ServicioCodigo": "LAB-311",
+        "Precio": 221
+      },
+      {
+        "ServicioCodigo": "LAB-312",
+        "Precio": 221
+      },
+      {
+        "ServicioCodigo": "LAB-313",
+        "Precio": 213
+      },
+      {
+        "ServicioCodigo": "LAB-314",
+        "Precio": 232
+      },
+      {
+        "ServicioCodigo": "LAB-315",
+        "Precio": 232
+      },
+      {
+        "ServicioCodigo": "LAB-316",
+        "Precio": 232
+      },
+      {
+        "ServicioCodigo": "LAB-317",
+        "Precio": 185
+      },
+      {
+        "ServicioCodigo": "LAB-318",
+        "Precio": 142
+      },
+      {
+        "ServicioCodigo": "LAB-319",
+        "Precio": 209
+      },
+      {
+        "ServicioCodigo": "LAB-320",
+        "Precio": 209
+      },
+      {
+        "ServicioCodigo": "LAB-321",
+        "Precio": 148
+      },
+      {
+        "ServicioCodigo": "LAB-322",
+        "Precio": 148
+      },
+      {
+        "ServicioCodigo": "LAB-323",
+        "Precio": 210
+      },
+      {
+        "ServicioCodigo": "LAB-324",
+        "Precio": 210
+      },
+      {
+        "ServicioCodigo": "LAB-325",
+        "Precio": 221
+      },
+      {
+        "ServicioCodigo": "LAB-326",
+        "Precio": 221
+      },
+      {
+        "ServicioCodigo": "LAB-327",
+        "Precio": 223
+      },
+      {
+        "ServicioCodigo": "LAB-328",
+        "Precio": 82
+      },
+      {
+        "ServicioCodigo": "LAB-329",
+        "Precio": 216
+      },
+      {
+        "ServicioCodigo": "LAB-330",
+        "Precio": 216
+      },
+      {
+        "ServicioCodigo": "LAB-331",
+        "Precio": 209
+      },
+      {
+        "ServicioCodigo": "LAB-332",
+        "Precio": 178
+      },
+      {
+        "ServicioCodigo": "LAB-333",
+        "Precio": 223
+      },
+      {
+        "ServicioCodigo": "LAB-334",
+        "Precio": 362
+      },
+      {
+        "ServicioCodigo": "LAB-335",
+        "Precio": 302
+      },
+      {
+        "ServicioCodigo": "LAB-336",
+        "Precio": 207
+      },
+      {
+        "ServicioCodigo": "LAB-337",
+        "Precio": 764
+      },
+      {
+        "ServicioCodigo": "LAB-338",
+        "Precio": 234
+      },
+      {
+        "ServicioCodigo": "LAB-339",
+        "Precio": 234
+      },
+      {
+        "ServicioCodigo": "LAB-340",
+        "Precio": 398
+      },
+      {
+        "ServicioCodigo": "LAB-341",
+        "Precio": 207
+      },
+      {
+        "ServicioCodigo": "LAB-342",
+        "Precio": 266
+      },
+      {
+        "ServicioCodigo": "LAB-343",
+        "Precio": 245
+      },
+      {
+        "ServicioCodigo": "LAB-344",
+        "Precio": 364
+      },
+      {
+        "ServicioCodigo": "LAB-345",
+        "Precio": 412
+      },
+      {
+        "ServicioCodigo": "LAB-346",
+        "Precio": 377
+      },
+      {
+        "ServicioCodigo": "LAB-347",
+        "Precio": 386
+      },
+      {
+        "ServicioCodigo": "LAB-348",
+        "Precio": 178
+      },
+      {
+        "ServicioCodigo": "LAB-349",
+        "Precio": 185
+      },
+      {
+        "ServicioCodigo": "LAB-350",
+        "Precio": 178
+      },
+      {
+        "ServicioCodigo": "LAB-351",
+        "Precio": 178
+      },
+      {
+        "ServicioCodigo": "LAB-352",
+        "Precio": 178
+      },
+      {
+        "ServicioCodigo": "LAB-353",
+        "Precio": 41
+      },
+      {
+        "ServicioCodigo": "LAB-354",
+        "Precio": 68
+      },
+      {
+        "ServicioCodigo": "LAB-355",
+        "Precio": 41
+      },
+      {
+        "ServicioCodigo": "LAB-356",
+        "Precio": 95
+      },
+      {
+        "ServicioCodigo": "LAB-357",
+        "Precio": 90
+      },
+      {
+        "ServicioCodigo": "LAB-358",
+        "Precio": 178
+      },
+      {
+        "ServicioCodigo": "LAB-359",
+        "Precio": 178
+      },
+      {
+        "ServicioCodigo": "LAB-360",
+        "Precio": 64
+      },
+      {
+        "ServicioCodigo": "LAB-361",
+        "Precio": 67
+      },
+      {
+        "ServicioCodigo": "LAB-362",
+        "Precio": 185
+      },
+      {
+        "ServicioCodigo": "LAB-363",
+        "Precio": 187
+      },
+      {
+        "ServicioCodigo": "LAB-364",
+        "Precio": 172
+      },
+      {
+        "ServicioCodigo": "LAB-365",
+        "Precio": 95
+      },
+      {
+        "ServicioCodigo": "LAB-366",
+        "Precio": 66
+      },
+      {
+        "ServicioCodigo": "LAB-367",
+        "Precio": 213
+      },
+      {
+        "ServicioCodigo": "LAB-368",
+        "Precio": 210
+      },
+      {
+        "ServicioCodigo": "LAB-369",
+        "Precio": 369
+      },
+      {
+        "ServicioCodigo": "LAB-370",
+        "Precio": 128
+      },
+      {
+        "ServicioCodigo": "LAB-371",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-372",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-373",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-374",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-375",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-376",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-377",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-378",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-379",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-380",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-381",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-382",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-383",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-384",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-385",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-386",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-387",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-388",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-389",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-390",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-391",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-392",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-393",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-394",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-395",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-396",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-397",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-398",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-399",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-400",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-401",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-402",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-403",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-404",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-405",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-406",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-407",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-408",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-409",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-410",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-411",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-412",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-413",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-414",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-415",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-416",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-417",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-418",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-419",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-420",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-421",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-422",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-423",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-424",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-425",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-426",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-427",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-428",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-429",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-430",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-431",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-432",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-433",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-434",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-435",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-436",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-437",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-438",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-439",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-440",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-441",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-442",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-443",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-444",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-445",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-446",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-447",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-448",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-449",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-450",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-451",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-452",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-453",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-454",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-455",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-456",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-457",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-458",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-459",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-460",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-461",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-462",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-463",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-464",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-465",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-466",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-467",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-468",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-469",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-470",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-471",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-472",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-473",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-474",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-475",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-476",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-477",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-478",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-479",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-480",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-481",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-482",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-483",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-484",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-485",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-486",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-487",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-488",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-489",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-490",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-491",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-492",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-493",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-494",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-495",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-496",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-497",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-498",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-499",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-500",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-501",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-502",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-503",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-504",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-505",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-506",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-507",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-508",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-509",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-510",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-511",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-512",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-513",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-514",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-515",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-516",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-517",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-518",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-519",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-520",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-521",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-522",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-523",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-524",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-525",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-526",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-527",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-528",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-529",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-530",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-531",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-532",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-533",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-534",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-535",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-536",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-537",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-538",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-539",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-540",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-541",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-542",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-543",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-544",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-545",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-546",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-547",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-548",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-549",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-550",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-551",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-552",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-553",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-554",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-555",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-556",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-557",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "LAB-558",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-559",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "ECO-560",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "ECO-561",
+        "Precio": 270
+      },
+      {
+        "ServicioCodigo": "ECO-562",
+        "Precio": 230
+      },
+      {
+        "ServicioCodigo": "ECO-563",
+        "Precio": 230
+      },
+      {
+        "ServicioCodigo": "ECO-564",
+        "Precio": 230
+      },
+      {
+        "ServicioCodigo": "ECO-565",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "ECO-566",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "ECO-567",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "ECO-568",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "ECO-569",
+        "Precio": 0
+      },
+      {
+        "ServicioCodigo": "ECO-570",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "ECO-571",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "ECO-572",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "ECO-573",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "ECO-574",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "ECO-575",
+        "Precio": 450
+      },
+      {
+        "ServicioCodigo": "ECO-576",
+        "Precio": 850
+      },
+      {
+        "ServicioCodigo": "ECO-577",
+        "Precio": 450
+      },
+      {
+        "ServicioCodigo": "ECO-578",
+        "Precio": 850
+      },
+      {
+        "ServicioCodigo": "ECO-579",
+        "Precio": 850
+      },
+      {
+        "ServicioCodigo": "ECO-580",
+        "Precio": 1650
+      },
+      {
+        "ServicioCodigo": "ECO-581",
+        "Precio": 350
+      },
+      {
+        "ServicioCodigo": "ECO-582",
+        "Precio": 450
+      },
+      {
+        "ServicioCodigo": "ECO-583",
+        "Precio": 450
+      },
+      {
+        "ServicioCodigo": "ECO-584",
+        "Precio": 450
+      },
+      {
+        "ServicioCodigo": "ECO-585",
+        "Precio": 450
+      },
+      {
+        "ServicioCodigo": "ECO-586",
+        "Precio": 850
+      },
+      {
+        "ServicioCodigo": "ECO-587",
+        "Precio": 1650
+      },
+      {
+        "ServicioCodigo": "ECO-588",
+        "Precio": 450
+      },
+      {
+        "ServicioCodigo": "ECO-589",
+        "Precio": 350
+      },
+      {
+        "ServicioCodigo": "ECO-590",
+        "Precio": 350
+      },
+      {
+        "ServicioCodigo": "ECO-591",
+        "Precio": 350
+      },
+      {
+        "ServicioCodigo": "RAY-592",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-593",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-594",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-595",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-596",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-597",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-598",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-599",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-600",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-601",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-602",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-603",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-604",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-605",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-606",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-607",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-608",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-609",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-610",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-611",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-612",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-613",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-614",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-615",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-616",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-617",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-618",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-619",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-620",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-621",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-622",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-623",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-624",
+        "Precio": 250
+      },
+      {
+        "ServicioCodigo": "RAY-625",
+        "Precio": 250
+      }
+    ]
+  }
+]

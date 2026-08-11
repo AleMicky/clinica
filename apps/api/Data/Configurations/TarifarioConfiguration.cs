@@ -15,7 +15,7 @@ public sealed class TarifarioConfiguration
         builder.ToTable("Tarifarios");
 
         builder.Property(x => x.Codigo)
-            .HasMaxLength(10)
+            .HasMaxLength(50)
             .IsRequired();
 
         builder.Property(x => x.Nombre)
