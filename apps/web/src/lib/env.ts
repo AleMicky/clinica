@@ -29,7 +29,14 @@ function getApiUrl(): string {
         }
     }
 
-    return rawUrl || "http://localhost:5011/api/v1";
+    const baseUrl = rawUrl || "http://localhost:5011/api/v1";
+
+    // Asegurar que siempre termine con /api/v1
+    if (!baseUrl.endsWith("/api/v1")) {
+        return `${baseUrl.replace(/\/+$/, "")}/api/v1`;
+    }
+
+    return baseUrl;
 }
 
 export const env: Environment = {
