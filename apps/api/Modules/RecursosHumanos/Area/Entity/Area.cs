@@ -7,6 +7,7 @@ public sealed class Area : AuditableEntity
     public string Codigo { get; set; } = string.Empty;
     public string Nombre { get; set; } = string.Empty;
     public string? Descripcion { get; set; }
+    public int Orden { get; set; }
 
     public int TipoAreaId { get; set; }
     public TipoArea.Entity.TipoArea TipoArea { get; set; } = null!;

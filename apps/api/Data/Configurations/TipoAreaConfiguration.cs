@@ -14,7 +14,7 @@ public sealed class TipoAreaConfiguration
         builder.ToTable("TiposArea");
 
         builder.Property(x => x.Codigo)
-            .HasMaxLength(10)
+            .HasMaxLength(20)
             .IsRequired();
 
         builder.Property(x => x.Nombre)

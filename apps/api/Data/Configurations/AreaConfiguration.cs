@@ -14,7 +14,7 @@ public sealed class AreaConfiguration
         builder.ToTable("Areas");
 
         builder.Property(x => x.Codigo)
-            .HasMaxLength(10)
+            .HasMaxLength(50)
             .IsRequired();
 
         builder.Property(x => x.Nombre)
@@ -23,6 +23,9 @@ public sealed class AreaConfiguration
 
         builder.Property(x => x.Descripcion)
             .HasMaxLength(250);
+
+        builder.Property(x => x.Orden)
+            .HasDefaultValue(0);
 
         builder.Property(x => x.TipoAreaId)
             .IsRequired();
