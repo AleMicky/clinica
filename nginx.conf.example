@@ -1,9 +1,10 @@
-# Ejemplo de configuración para Nginx en tu VPS (/etc/nginx/sites-available/clinica)
+# Configuración para Nginx en VPS usando puertos libres (Ejemplo: Web en 8082, API en 5011)
+# El puerto 80 queda reservado para tu Keycloak.
 
-# Frontend (Next.js)
+# Frontend Web (Puerto 8082)
 server {
-    listen 80;
-    server_name tu-clinica.com www.tu-clinica.com;
+    listen 8082;
+    server_name 157.173.99.216;
 
     location / {
         proxy_pass http://localhost:3000;
@@ -18,10 +19,10 @@ server {
     }
 }
 
-# Backend API (.NET 10)
+# API Backend (Puerto 5011)
 server {
-    listen 80;
-    server_name api.tu-clinica.com;
+    listen 5011;
+    server_name 157.173.99.216;
 
     location / {
         proxy_pass http://localhost:5011;
