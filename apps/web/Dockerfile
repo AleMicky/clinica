@@ -20,6 +20,10 @@ ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 RUN npm run build
 
+# Debug: show standalone output structure
+RUN echo "=== STANDALONE DIR ===" && \
+    find /app/.next/standalone -maxdepth 3 2>/dev/null || echo "standalone dir NOT found"
+
 # Stage 3: Runner
 FROM node:20-alpine AS runner
 WORKDIR /app
