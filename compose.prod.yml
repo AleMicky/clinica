@@ -12,6 +12,9 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=${CONNECTION_STRING:-Server=host.docker.internal,1433;Database=ClinicaDb;User Id=sa;Password=YourSecurePasswordHere!;TrustServerCertificate=True;}
+      - Cors__AllowedOrigins__0=http://localhost:3000
+      - Cors__AllowedOrigins__1=http://157.173.99.216:3000
+      - Cors__AllowedOrigins__2=http://157.173.99.216
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -20,12 +23,12 @@ services:
       context: .
       dockerfile: apps/web/Dockerfile
       args:
-        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:5011}
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://157.173.99.216:5011}
     container_name: clinica-web
     restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:5011}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://157.173.99.216:5011}
     depends_on:
       - api
