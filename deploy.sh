@@ -12,7 +12,11 @@ if [ ! -f .env ]; then
     echo "📌 POR FAVOR EDITA EL ARCHIVO .env CON TUS CREDENCIALES ANTES DE CONTINUAR."
 fi
 
-# 2. Construir y levantar servicios con Compose de producción
+# 2. Remover contenedores previos con conflicto de nombres si existen
+echo "🧹 Limpiando contenedores antiguos..."
+docker rm -f clinica-api clinica-web 2>/dev/null || true
+
+# 3. Construir y levantar servicios con Compose de producción
 echo "📦 Construyendo y levantando contenedores en segundo plano..."
 docker compose -f compose.prod.yml up -d --build
 
