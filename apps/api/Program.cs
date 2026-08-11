@@ -98,11 +98,22 @@ builder.Services.AddCors(options =>
             .GetSection("Cors:AllowedOrigins")
             .Get<string[]>() ?? [];
 
-        policy
-            .WithOrigins(origins)
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
+        if (origins.Length > 0 && !origins.Contains("*"))
+        {
+            policy
+                .WithOrigins(origins)
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+        }
+        else
+        {
+            policy
+                .SetIsOriginAllowed(_ => true)
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+        }
     });
 });
 
