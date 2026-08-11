@@ -25,11 +25,11 @@ function getApiUrl(): string {
         const protocol = window.location.protocol;
 
         if (!rawUrl || rawUrl.includes("localhost") || rawUrl.includes("127.0.0.1")) {
-            return `${protocol}//${hostname}:5011`;
+            return `${protocol}//${hostname}:5011/api/v1`;
         }
     }
 
-    return rawUrl || "http://localhost:5011";
+    return rawUrl || "http://localhost:5011/api/v1";
 }
 
 export const env: Environment = {
