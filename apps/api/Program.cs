@@ -145,6 +145,12 @@ app.MapGet("/", () =>
 
 app.MapModules();
 
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await dbContext.Database.MigrateAsync();
+}
+
 await IdentitySeed.SeedAsync(app.Services);
 await CatalogoSeed.SeedAsync(app.Services);
 await RecursosHumanosSeed.SeedAsync(app.Services);

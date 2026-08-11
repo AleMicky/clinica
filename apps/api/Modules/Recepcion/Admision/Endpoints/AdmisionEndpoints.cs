@@ -39,6 +39,10 @@ public static class AdmisionEndpoints
 
         group.MapDelete("/{id:int}", EliminarAsync)
             .WithName("EliminarAdmision");
+
+        group.MapPatch("/{id:int}/estado", CambiarEstadoAsync)
+            .WithName("CambiarEstadoAdmision")
+            .Validate<CambiarEstadoRequest>();
     }
 
     private static void MapDetalles(RouteGroupBuilder group)
@@ -122,6 +126,19 @@ public static class AdmisionEndpoints
             cancellationToken);
 
         return Results.NoContent();
+    }
+
+    private static async Task<IResult> CambiarEstadoAsync(
+        int id,
+        CambiarEstadoRequest request,
+        AdmisionService service,
+        CancellationToken cancellationToken)
+    {
+        return Results.Ok(
+            await service.CambiarEstadoAsync(
+                id,
+                request,
+                cancellationToken));
     }
 
     private static async Task<IResult> ListarDetallesAsync(

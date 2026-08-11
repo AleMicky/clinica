@@ -1,5 +1,6 @@
 using Clinica.Api.Data;
 using Clinica.Api.Modules.Recepcion.Admision.Dtos;
+using Clinica.Api.Modules.Recepcion.Admision.Entity;
 using Clinica.Api.Modules.Recepcion.Admision.Mappers;
 using Clinica.Api.Modules.Recepcion.Pacientes.Entity;
 using Clinica.Api.Modules.RecursosHumanos.Medico.Entity;
@@ -7,6 +8,7 @@ using Clinica.Api.Modules.Servicios.Convenios.Entity;
 using Clinica.Api.Modules.Servicios.Servicios.Entity;
 using Clinica.Api.Shared.Crud;
 using Clinica.Api.Shared.Exceptions;
+using Clinica.Api.Shared.Extensions;
 using Microsoft.EntityFrameworkCore;
 using AdmisionEntity = Clinica.Api.Modules.Recepcion.Admision.Entity.Admision;
 using AdmisionDetalleEntity = Clinica.Api.Modules.Recepcion.Admision.Entity.AdmisionDetalle;
@@ -21,6 +23,27 @@ public sealed class AdmisionService(AppDbContext dbContext)
         AdmisionResponse
     >(dbContext)
 {
+    public override async Task<AdmisionResponse> ObtenerAsync(
+        int id,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await Entities
+            .AsNoTracking()
+            .Include(x => x.Detalles)
+            .Where(x => x.Activo)
+            .FirstOrDefaultAsync(
+                x => x.Id == id,
+                cancellationToken);
+
+        if (entity is null)
+            throw CreateNotFoundException(id);
+
+        return MapToResponse(entity) with
+        {
+            Detalles = AdmisionDetalleMapper.ToResponse(entity.Detalles)
+        };
+    }
+
     public override async Task<AdmisionResponse> ActualizarAsync(
         int id,
         UpdateAdmisionRequest request,
@@ -45,7 +68,64 @@ public sealed class AdmisionService(AppDbContext dbContext)
 
         await DbContext.SaveChangesAsync(cancellationToken);
 
-        return MapToResponse(entity);
+        return MapToResponse(entity) with
+        {
+            Detalles = AdmisionDetalleMapper.ToResponse(entity.Detalles)
+        };
+    }
+
+    public override async Task EliminarAsync(
+        int id,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await Entities
+            .FirstOrDefaultAsync(
+                x => x.Id == id && x.Activo,
+                cancellationToken);
+
+        if (entity is null)
+            throw CreateNotFoundException(id);
+
+        entity.Activo = false;
+
+        await DbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<AdmisionResponse> CambiarEstadoAsync(
+        int id,
+        CambiarEstadoRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await Entities
+            .Include(x => x.Detalles)
+            .FirstOrDefaultAsync(
+                x => x.Id == id && x.Activo,
+                cancellationToken);
+
+        if (entity is null)
+            throw CreateNotFoundException(id);
+
+        if (!AdmisionTransiciones.EsValida(entity.Estado, request.EstadoDestino))
+        {
+            throw new ConflictException(
+                $"No se puede transitar de {entity.Estado} a {request.EstadoDestino}.");
+        }
+
+        entity.Estado = request.EstadoDestino;
+
+        if (!string.IsNullOrWhiteSpace(request.Motivo))
+        {
+            entity.Observacion = string.IsNullOrWhiteSpace(entity.Observacion)
+                ? request.Motivo.Trim()
+                : $"{entity.Observacion.Trim()} | {request.Motivo.Trim()}";
+        }
+
+        await DbContext.SaveChangesAsync(cancellationToken);
+
+        return MapToResponse(entity) with
+        {
+            Detalles = AdmisionDetalleMapper.ToResponse(entity.Detalles)
+        };
     }
 
     protected override IQueryable<AdmisionEntity> ApplyOrder(
@@ -61,10 +141,9 @@ public sealed class AdmisionService(AppDbContext dbContext)
     {
         var entity = AdmisionMapper.ToEntity(request);
 
-        Normalizar(
-            entity,
-            request.Numero,
-            request.Observacion);
+        Normalizar(entity, request.Numero, request.Observacion);
+
+        entity.Estado = EstadoAdmision.Registrada;
 
         entity.Detalles = request.Detalles
             .Select(CrearDetalle)
@@ -79,10 +158,7 @@ public sealed class AdmisionService(AppDbContext dbContext)
     {
         AdmisionMapper.UpdateEntity(request, entity);
 
-        Normalizar(
-            entity,
-            request.Numero,
-            request.Observacion);
+        Normalizar(entity, request.Numero, request.Observacion);
 
         ReemplazarDetalles(entity, request.Detalles);
     }
@@ -160,7 +236,7 @@ public sealed class AdmisionService(AppDbContext dbContext)
         string numero,
         CancellationToken cancellationToken)
     {
-        var normalized = NormalizarNumero(numero);
+        var normalized = numero.TrimUpperRequired();
 
         var existe = await Entities.AnyAsync(
             x => x.Numero == normalized,
@@ -178,7 +254,7 @@ public sealed class AdmisionService(AppDbContext dbContext)
         int excludeId,
         CancellationToken cancellationToken)
     {
-        var normalized = NormalizarNumero(numero);
+        var normalized = numero.TrimUpperRequired();
 
         var existe = await Entities.AnyAsync(
             x => x.Id != excludeId &&
@@ -314,19 +390,7 @@ public sealed class AdmisionService(AppDbContext dbContext)
         string numero,
         string? observacion)
     {
-        entity.Numero = NormalizarNumero(numero);
-        entity.Observacion = Limpiar(observacion);
-    }
-
-    private static string NormalizarNumero(string value)
-    {
-        return value.Trim().ToUpperInvariant();
-    }
-
-    private static string? Limpiar(string? value)
-    {
-        return string.IsNullOrWhiteSpace(value)
-            ? null
-            : value.Trim();
+        entity.Numero = numero.TrimUpperRequired();
+        entity.Observacion = observacion.TrimOrNull();
     }
 }

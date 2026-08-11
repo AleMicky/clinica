@@ -1,0 +1,27 @@
+# Git
+.git
+.gitignore
+
+# Dependencies
+**/node_modules
+**/.bun
+
+# Next.js
+**/apps/web/.next
+**/apps/web/out
+
+# .NET build artifacts
+**/bin
+**/obj
+
+# IDE & OS
+.idea
+.vscode
+.DS_Store
+*.user
+*.suo
+
+# Environment & local files
+.env
+.env.local
+*.log

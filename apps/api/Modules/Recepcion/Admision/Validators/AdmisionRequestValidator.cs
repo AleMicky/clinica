@@ -23,10 +23,6 @@ public abstract class AdmisionRequestValidator<TRequest>
             .NotEmpty()
             .WithMessage("La fecha y hora son obligatorias.");
 
-        RuleFor(x => x.Estado)
-            .IsInEnum()
-            .WithMessage("El estado de admisión no es válido.");
-
         RuleFor(x => x.Observacion)
             .MaximumLength(500)
             .WithMessage("La observación no puede superar los 500 caracteres.")
