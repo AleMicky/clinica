@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { AdmisionHeader } from "./admision-header";
 import { AdmisionMetricsCards } from "./admision-metrics";
@@ -105,9 +106,11 @@ export function AdmisionModuleView() {
     montoTotalHoy,
   };
 
-  // Handlers de modales
+  const router = useRouter();
+
+  // Handlers de navegación y modales
   const handleOpenAdd = () => {
-    setFormDialogOpen(true);
+    router.push("/recepcion/admisiones/nueva");
   };
 
   const handleViewDetail = (admision: AdmisionResponse) => {
