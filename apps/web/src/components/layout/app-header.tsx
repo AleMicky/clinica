@@ -38,7 +38,7 @@ export function AppHeader() {
   const displayName = user?.nombreCompleto || user?.userName || "Usuario";
   const displayEmail = user?.email || "usuario@clinica.com";
   const initials = getInitials(displayName);
-  const primaryRole = user?.roles?.[0] || "Usuario";
+  const primaryRole = user?.roles?.[0] || "Personal Médico";
 
   async function handleLogout() {
     try {
@@ -49,58 +49,83 @@ export function AppHeader() {
   }
 
   return (
-    <header className="flex h-12 shrink-0 items-center justify-between gap-2 border-b px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 bg-background">
-      <div className="flex items-center gap-2 min-w-0">
-        <SidebarTrigger className="-ml-1" />
+    <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border/50 bg-background/80 px-4 sm:px-6 backdrop-blur-md transition-all duration-200">
+      {/* SECCIÓN IZQUIERDA: TRIGGER SIDEBAR + BREADCRUMBS */}
+      <div className="flex items-center gap-2.5 min-w-0">
+        <SidebarTrigger className="-ml-1 text-muted-foreground hover:text-foreground hover:bg-muted/80 rounded-lg transition-colors" />
         <Separator
           orientation="vertical"
-          className="mr-2 data-[orientation=vertical]:h-4"
+          className="h-4 bg-border/60"
         />
         <AppBreadcrumbs />
       </div>
-      <div className="flex items-center gap-1.5 shrink-0">
+
+      {/* SECCIÓN DERECHA: HERRAMIENTAS Y MENÚ DE USUARIO */}
+      <div className="flex items-center gap-2 shrink-0">
+        {/* Notificaciones */}
         <NotificationsPopover />
+
+        {/* Alternador de Tema */}
         <ThemeToggle />
-        <Separator orientation="vertical" className="h-4 mx-1" />
+
+        <Separator orientation="vertical" className="h-4 mx-0.5 bg-border/60" />
+
+        {/* Menú de Perfil de Usuario */}
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              <Button variant="ghost" size="icon-sm" className="relative h-8 w-8 rounded-full p-0">
-                <Avatar className="h-8 w-8">
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className="relative h-9 w-9 rounded-full p-0 ring-1 ring-border/50 hover:ring-primary/40 hover:bg-accent transition-all"
+              >
+                <Avatar className="h-9 w-9">
                   <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
+                {/* Punto verde de conexión activa */}
+                <span className="absolute bottom-0 right-0 size-2.5 rounded-full bg-emerald-500 ring-2 ring-background" />
               </Button>
             }
           />
-          <DropdownMenuContent className="w-56" align="end">
-            <DropdownMenuLabel className="font-normal">
-              <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">{displayName}</p>
-                <p className="text-xs leading-none text-muted-foreground">{displayEmail}</p>
-                <div className="pt-1 flex items-center gap-1">
-                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                    <Shield className="size-2.5 mr-1" />
+          <DropdownMenuContent className="w-60 p-1.5" align="end">
+            <DropdownMenuLabel className="font-normal p-2">
+              <div className="flex flex-col space-y-1.5">
+                <p className="text-sm font-semibold leading-none text-foreground">{displayName}</p>
+                <p className="text-xs leading-none text-muted-foreground truncate">{displayEmail}</p>
+                <div className="pt-1 flex items-center gap-1.5">
+                  <Badge variant="secondary" className="text-[10px] px-2 py-0.5 bg-primary/10 text-primary font-medium border-primary/20">
+                    <Shield className="size-3 mr-1 text-primary" />
                     {primaryRole}
                   </Badge>
                 </div>
               </div>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator />
+
+            <DropdownMenuSeparator className="my-1" />
+
             <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => router.push("/dashboard/perfil")}>
-                <User className="mr-2 h-4 w-4" />
+              <DropdownMenuItem
+                onClick={() => router.push("/dashboard/perfil")}
+                className="cursor-pointer text-xs font-medium py-2 rounded-md"
+              >
+                <User className="mr-2 h-4 w-4 text-muted-foreground" />
                 <span>Mi Perfil</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push("/dashboard/perfil?tab=password")}>
-                <KeyRound className="mr-2 h-4 w-4" />
+              <DropdownMenuItem
+                onClick={() => router.push("/dashboard/perfil?tab=password")}
+                className="cursor-pointer text-xs font-medium py-2 rounded-md"
+              >
+                <KeyRound className="mr-2 h-4 w-4 text-muted-foreground" />
                 <span>Cambiar Contraseña</span>
               </DropdownMenuItem>
             </DropdownMenuGroup>
-            <DropdownMenuSeparator />
+
+            <DropdownMenuSeparator className="my-1" />
+
             <DropdownMenuItem
-              className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
+              className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer text-xs font-medium py-2 rounded-md"
               disabled={logoutMutation.isPending}
               onClick={handleLogout}
             >
@@ -117,4 +142,3 @@ export function AppHeader() {
     </header>
   );
 }
-

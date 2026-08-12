@@ -10,7 +10,6 @@ import {
   User,
   HeartPulse,
   Info,
-  AlertCircle,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -105,15 +104,14 @@ export function NotificationsPopover() {
   const getIcon = (type: NotificationItem["type"]) => {
     switch (type) {
       case "cita":
-        return <Calendar className="h-4 w-4 text-blue-500 shrink-0" />;
+        return <Calendar className="h-3.5 w-3.5 text-blue-500" />;
       case "paciente":
-        return <User className="h-4 w-4 text-emerald-500 shrink-0" />;
+        return <User className="h-3.5 w-3.5 text-emerald-500" />;
       case "laboratorio":
-        return <HeartPulse className="h-4 w-4 text-purple-500 shrink-0" />;
+        return <HeartPulse className="h-3.5 w-3.5 text-rose-500" />;
       case "sistema":
-        return <Info className="h-4 w-4 text-amber-500 shrink-0" />;
       default:
-        return <AlertCircle className="h-4 w-4 text-gray-500 shrink-0" />;
+        return <Info className="h-3.5 w-3.5 text-amber-500" />;
     }
   };
 
@@ -124,13 +122,13 @@ export function NotificationsPopover() {
           <Button
             variant="ghost"
             size="icon-sm"
-            className="relative text-muted-foreground hover:text-foreground"
+            className="relative h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-all"
           >
             <Bell className="h-4 w-4" />
             {unreadCount > 0 && (
-              <span className="absolute top-1 right-1 flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+              <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
               </span>
             )}
             <span className="sr-only">Notificaciones</span>
@@ -139,136 +137,120 @@ export function NotificationsPopover() {
       />
       <DropdownMenuContent
         align="end"
-        className="w-80 sm:w-96 p-0 overflow-hidden shadow-lg border border-border"
+        className="w-80 sm:w-96 p-0 shadow-lg border border-border/60 rounded-xl overflow-hidden"
       >
-        {/* Encabezado */}
-        <div className="flex items-center justify-between px-4 py-3 bg-muted/30 border-b border-border">
+        {/* CABECERA */}
+        <div className="flex items-center justify-between px-4 py-3 bg-muted/30 border-b border-border/50">
           <div className="flex items-center gap-2">
-            <h2 className="text-sm font-semibold text-foreground">
-              Notificaciones
-            </h2>
+            <span className="font-semibold text-sm">Notificaciones</span>
             {unreadCount > 0 && (
-              <Badge variant="default" className="h-5 px-1.5 text-[10px] font-bold">
-                {unreadCount} nuevas
+              <Badge variant="default" className="text-[10px] px-1.5 py-0 h-4 font-bold rounded-full">
+                {unreadCount}
               </Badge>
             )}
           </div>
           {unreadCount > 0 && (
             <button
               onClick={markAllAsRead}
-              className="text-xs text-primary hover:underline font-medium inline-flex items-center gap-1"
+              className="text-[11px] font-medium text-primary hover:underline flex items-center gap-1"
             >
-              <CheckCheck className="h-3.5 w-3.5" />
-              Leídas
+              <CheckCheck className="h-3 w-3" />
+              <span>Marcar todas leídas</span>
             </button>
           )}
         </div>
 
-        {/* Filtros rápidos */}
-        <div className="flex items-center justify-between px-3 py-1.5 bg-muted/10 border-b border-border text-xs">
-          <div className="flex gap-1">
-            <button
-              onClick={() => setFilter("all")}
-              className={`px-2 py-0.5 rounded-md font-medium transition-colors ${
-                filter === "all"
-                  ? "bg-background text-foreground shadow-xs"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Todas ({notifications.length})
-            </button>
-            <button
-              onClick={() => setFilter("unread")}
-              className={`px-2 py-0.5 rounded-md font-medium transition-colors ${
-                filter === "unread"
-                  ? "bg-background text-foreground shadow-xs"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Sin leer ({unreadCount})
-            </button>
-          </div>
-          {notifications.length > 0 && (
-            <button
-              onClick={clearAll}
-              className="text-muted-foreground hover:text-destructive text-xs px-1 py-0.5 rounded transition-colors"
-              title="Limpiar todas"
-            >
-              Limpiar
-            </button>
-          )}
+        {/* FILTROS (TODAS / SIN LEER) */}
+        <div className="flex items-center gap-1 p-1 bg-muted/20 border-b border-border/40 text-xs">
+          <button
+            onClick={() => setFilter("all")}
+            className={`flex-1 py-1 px-2 rounded-md font-medium text-center transition-all ${
+              filter === "all"
+                ? "bg-background text-foreground shadow-xs"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Todas ({notifications.length})
+          </button>
+          <button
+            onClick={() => setFilter("unread")}
+            className={`flex-1 py-1 px-2 rounded-md font-medium text-center transition-all ${
+              filter === "unread"
+                ? "bg-background text-foreground shadow-xs"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Sin leer ({unreadCount})
+          </button>
         </div>
 
-        {/* Lista de notificaciones */}
-        <div className="max-h-80 overflow-y-auto divide-y divide-border/50">
+        {/* LISTA DE NOTIFICACIONES */}
+        <div className="max-h-72 overflow-y-auto divide-y divide-border/30">
           {filteredNotifications.length === 0 ? (
-            <div className="py-8 text-center px-4">
-              <Bell className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
-              <p className="text-sm font-medium text-foreground">
-                Sin notificaciones
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {filter === "unread"
-                  ? "No tienes notificaciones pendientes por leer"
-                  : "Tu bandeja de entrada está limpia"}
-              </p>
+            <div className="p-8 text-center text-xs text-muted-foreground flex flex-col items-center gap-2">
+              <Bell className="h-8 w-8 text-muted-foreground/30" />
+              <p>No tienes notificaciones en este momento</p>
             </div>
           ) : (
-            filteredNotifications.map((notification) => (
+            filteredNotifications.map((n) => (
               <div
-                key={notification.id}
-                className={`flex gap-3 p-3 transition-colors text-left hover:bg-muted/40 relative group ${
-                  !notification.read ? "bg-primary/5" : ""
+                key={n.id}
+                className={`p-3 text-xs flex gap-3 transition-colors hover:bg-muted/40 relative group ${
+                  !n.read ? "bg-primary/5" : ""
                 }`}
               >
-                <div className="mt-0.5">{getIcon(notification.type)}</div>
+                <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-background border border-border/50 shadow-xs">
+                  {getIcon(n.type)}
+                </div>
+
                 <div className="flex-1 min-w-0 pr-6">
                   <div className="flex items-center justify-between gap-1 mb-0.5">
-                    <p
-                      className={`text-xs font-semibold truncate ${
-                        !notification.read
-                          ? "text-foreground font-bold"
-                          : "text-foreground/80"
-                      }`}
-                    >
-                      {notification.title}
+                    <p className={`font-semibold truncate ${!n.read ? "text-foreground" : "text-muted-foreground"}`}>
+                      {n.title}
                     </p>
-                    <span className="text-[10px] text-muted-foreground shrink-0">
-                      {notification.time}
-                    </span>
+                    <span className="text-[10px] text-muted-foreground shrink-0">{n.time}</span>
                   </div>
-                  <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                    {notification.description}
+                  <p className="text-muted-foreground text-[11px] line-clamp-2 leading-relaxed">
+                    {n.description}
                   </p>
                 </div>
 
-                {/* Acciones de item */}
+                {/* BOTONES DE ACCIÓN */}
                 <div className="absolute right-2 top-2.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {!notification.read && (
+                  {!n.read && (
                     <button
-                      onClick={(e) => markAsRead(notification.id, e)}
-                      className="p-1 rounded-md hover:bg-background text-muted-foreground hover:text-primary transition-colors"
+                      onClick={(e) => markAsRead(n.id, e)}
                       title="Marcar como leída"
+                      className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground"
                     >
-                      <Check className="h-3.5 w-3.5" />
+                      <Check className="h-3 w-3" />
                     </button>
                   )}
                   <button
-                    onClick={(e) => removeNotification(notification.id, e)}
-                    className="p-1 rounded-md hover:bg-background text-muted-foreground hover:text-destructive transition-colors"
+                    onClick={(e) => removeNotification(n.id, e)}
                     title="Eliminar"
+                    className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
                   >
-                    <X className="h-3.5 w-3.5" />
+                    <X className="h-3 w-3" />
                   </button>
                 </div>
-
-                {!notification.read && (
-                  <span className="absolute left-1.5 top-3.5 h-1.5 w-1.5 rounded-full bg-primary" />
-                )}
               </div>
             ))
           )}
         </div>
+
+        {/* FOOTER POPOVER */}
+        {notifications.length > 0 && (
+          <div className="p-2 border-t border-border/50 bg-muted/20 text-center">
+            <button
+              onClick={clearAll}
+              className="text-[11px] text-muted-foreground hover:text-destructive flex items-center justify-center gap-1 mx-auto transition-colors"
+            >
+              <Trash2 className="h-3 w-3" />
+              <span>Limpiar todas las notificaciones</span>
+            </button>
+          </div>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
