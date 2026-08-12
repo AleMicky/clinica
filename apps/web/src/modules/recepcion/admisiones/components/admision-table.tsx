@@ -166,6 +166,18 @@ export function AdmisionTable({
                     adm.totalAdmision ??
                     adm.detalles.reduce((acc, d) => acc + (d.total || 0), 0);
 
+                  const nombreCompleto = adm.paciente?.persona
+                    ? `${adm.paciente.persona.nombres} ${adm.paciente.persona.apellidoPaterno} ${adm.paciente.persona.apellidoMaterno || ""}`.trim()
+                    : adm.pacienteNombre || `Paciente #${adm.pacienteId}`;
+
+                  const documento =
+                    adm.paciente?.persona?.numeroDocumento ||
+                    adm.pacienteDocumento ||
+                    "Sin Documento";
+
+                  const convenio =
+                    adm.convenioNombre || (adm.convenioId ? `Convenio #${adm.convenioId}` : "Particular");
+
                   return (
                     <TableRow key={adm.id} className="hover:bg-muted/30 transition-colors group">
                       {/* N° Admisión */}
@@ -180,10 +192,10 @@ export function AdmisionTable({
                       <TableCell>
                         <div className="flex flex-col">
                           <span className="font-bold text-xs text-foreground group-hover:text-primary transition-colors">
-                            {adm.pacienteNombre || `Paciente #${adm.pacienteId}`}
+                            {nombreCompleto}
                           </span>
                           <span className="text-[11px] text-muted-foreground">
-                            Doc: {adm.pacienteDocumento || "Sin Documento"}
+                            Doc: {documento}
                           </span>
                         </div>
                       </TableCell>
@@ -193,7 +205,7 @@ export function AdmisionTable({
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                           <Building2 className="size-3.5 text-primary/70 shrink-0" />
                           <span className="truncate max-w-[150px] font-medium text-foreground">
-                            {adm.convenioNombre || "Particular"}
+                            {convenio}
                           </span>
                         </div>
                       </TableCell>

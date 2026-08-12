@@ -142,50 +142,67 @@ export function AdmisionDetailSheet({
           </div>
 
           {/* INFORMACIÓN DEL PACIENTE */}
-          <div className="space-y-2.5">
-            <h4 className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
-              <User className="size-3.5 text-primary" />
-              Datos del Paciente
-            </h4>
-            <div className="p-3.5 rounded-xl border border-border/70 bg-card space-y-2 text-xs">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="font-bold text-sm text-foreground">
-                    {admision.pacienteNombre || `Paciente #${admision.pacienteId}`}
-                  </p>
-                  <p className="text-muted-foreground text-[11px]">
-                    DNI / Documento: {admision.pacienteDocumento || "Sin Documento"}
-                  </p>
-                </div>
-                <Badge variant="secondary" className="text-[10px]">
-                  HC #{admision.pacienteId.toString().padStart(5, "0")}
-                </Badge>
-              </div>
+          {(() => {
+            const nombreCompleto = admision.paciente?.persona
+              ? `${admision.paciente.persona.nombres} ${admision.paciente.persona.apellidoPaterno} ${admision.paciente.persona.apellidoMaterno || ""}`.trim()
+              : admision.pacienteNombre || `Paciente #${admision.pacienteId}`;
 
-              <Separator className="my-1.5" />
+            const documento =
+              admision.paciente?.persona?.numeroDocumento ||
+              admision.pacienteDocumento ||
+              "Sin Documento";
 
-              <div className="grid grid-cols-2 gap-2 text-[11px] text-muted-foreground">
-                <div className="flex items-center gap-1.5">
-                  <Building2 className="size-3.5 text-primary/70 shrink-0" />
-                  <span>
-                    Convenio:{" "}
-                    <strong className="text-foreground">
-                      {admision.convenioNombre || "Particular"}
-                    </strong>
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Calendar className="size-3.5 text-primary/70 shrink-0" />
-                  <span>
-                    Fecha:{" "}
-                    <strong className="text-foreground">
-                      {new Date(admision.fechaHora).toLocaleDateString("es-ES")}
-                    </strong>
-                  </span>
+            const hcNumero =
+              admision.paciente?.numeroHistoriaClinica ||
+              admision.pacienteId.toString().padStart(5, "0");
+
+            return (
+              <div className="space-y-2.5">
+                <h4 className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
+                  <User className="size-3.5 text-primary" />
+                  Datos del Paciente
+                </h4>
+                <div className="p-3.5 rounded-xl border border-border/70 bg-card space-y-2 text-xs">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-bold text-sm text-foreground">
+                        {nombreCompleto}
+                      </p>
+                      <p className="text-muted-foreground text-[11px]">
+                        DNI / Documento: {documento}
+                      </p>
+                    </div>
+                    <Badge variant="secondary" className="text-[10px]">
+                      HC #{hcNumero}
+                    </Badge>
+                  </div>
+
+                  <Separator className="my-1.5" />
+
+                  <div className="grid grid-cols-2 gap-2 text-[11px] text-muted-foreground">
+                    <div className="flex items-center gap-1.5">
+                      <Building2 className="size-3.5 text-primary/70 shrink-0" />
+                      <span>
+                        Convenio:{" "}
+                        <strong className="text-foreground">
+                          {admision.convenioNombre || "Particular"}
+                        </strong>
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Calendar className="size-3.5 text-primary/70 shrink-0" />
+                      <span>
+                        Fecha:{" "}
+                        <strong className="text-foreground">
+                          {new Date(admision.fechaHora).toLocaleDateString("es-ES")}
+                        </strong>
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
+            );
+          })()}
 
           {/* PRESTACIONES MÉDICAS REGISTRADAS */}
           <div className="space-y-2.5">

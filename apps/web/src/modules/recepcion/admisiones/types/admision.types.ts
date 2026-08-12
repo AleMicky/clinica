@@ -1,4 +1,4 @@
-import type { PacienteResponse, PagedResult } from "../../pacientes/types/paciente.types";
+import type { CreatePacienteRequest, PacienteResponse, PagedResult } from "../../pacientes/types/paciente.types";
 
 export type { PagedResult };
 
@@ -68,6 +68,15 @@ export interface UpdateAdmisionDetalleRequest extends CreateAdmisionDetalleReque
 export interface CreateAdmisionRequest {
   numero?: string;
   pacienteId: number;
+  convenioId?: number | null;
+  fechaHora: string;
+  observacion?: string | null;
+  detalles: CreateAdmisionDetalleRequest[];
+}
+
+export interface CreateAdmisionConPacienteRequest {
+  paciente: CreatePacienteRequest;
+  numero?: string;
   convenioId?: number | null;
   fechaHora: string;
   observacion?: string | null;

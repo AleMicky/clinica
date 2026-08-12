@@ -6,6 +6,7 @@ import type {
   CambiarEstadoRequest,
   CreateAdmisionDetalleRequest,
   CreateAdmisionRequest,
+  CreateAdmisionConPacienteRequest,
   PagedResult,
   UpdateAdmisionDetalleRequest,
   UpdateAdmisionRequest,
@@ -31,6 +32,14 @@ export async function createAdmision(
   const response = await apiClient.post<AdmisionResponse>("/admisiones", request);
   return response.data;
 }
+
+export async function createAdmisionConPaciente(
+  request: CreateAdmisionConPacienteRequest
+): Promise<AdmisionResponse> {
+  const response = await apiClient.post<AdmisionResponse>("/admisiones/con-paciente", request);
+  return response.data;
+}
+
 
 export async function updateAdmision(
   id: number,

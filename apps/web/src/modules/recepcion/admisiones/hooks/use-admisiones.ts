@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   cambiarEstadoAdmision,
   createAdmision,
+  createAdmisionConPaciente,
   createAdmisionDetalle,
   deleteAdmision,
   deleteAdmisionDetalle,
@@ -18,6 +19,7 @@ import type {
   CambiarEstadoRequest,
   CreateAdmisionDetalleRequest,
   CreateAdmisionRequest,
+  CreateAdmisionConPacienteRequest,
   UpdateAdmisionRequest,
 } from "../types/admision.types";
 
@@ -46,6 +48,18 @@ export function useCreateAdmision() {
     },
   });
 }
+
+export function useCreateAdmisionConPaciente() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateAdmisionConPacienteRequest) => createAdmisionConPaciente(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: admisionKeys.all });
+    },
+  });
+}
+
 
 export function useUpdateAdmision() {
   const queryClient = useQueryClient();

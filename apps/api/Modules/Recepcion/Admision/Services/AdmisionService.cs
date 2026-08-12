@@ -3,6 +3,7 @@ using Clinica.Api.Modules.Recepcion.Admision.Dtos;
 using Clinica.Api.Modules.Recepcion.Admision.Entity;
 using Clinica.Api.Modules.Recepcion.Admision.Mappers;
 using Clinica.Api.Modules.Recepcion.Pacientes.Entity;
+using Clinica.Api.Modules.Recepcion.Pacientes.Services;
 using Clinica.Api.Modules.RecursosHumanos.Medico.Entity;
 using Clinica.Api.Modules.Servicios.Convenios.Entity;
 using Clinica.Api.Modules.Servicios.Servicios.Entity;
@@ -15,7 +16,9 @@ using AdmisionDetalleEntity = Clinica.Api.Modules.Recepcion.Admision.Entity.Admi
 
 namespace Clinica.Api.Modules.Recepcion.Admision.Services;
 
-public sealed class AdmisionService(AppDbContext dbContext)
+public sealed class AdmisionService(
+    AppDbContext dbContext,
+    PacienteService pacienteService)
     : CrudService<
         AdmisionEntity,
         CreateAdmisionRequest,
@@ -126,6 +129,33 @@ public sealed class AdmisionService(AppDbContext dbContext)
         {
             Detalles = AdmisionDetalleMapper.ToResponse(entity.Detalles)
         };
+    }
+
+    public async Task<AdmisionResponse> CrearConPacienteAsync(
+        CreateAdmisionConPacienteRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        await using var transaction = await dbContext.Database
+            .BeginTransactionAsync(cancellationToken);
+
+        var paciente = await pacienteService.CrearAsync(
+            request.Paciente, cancellationToken);
+
+        var admisionRequest = new CreateAdmisionRequest
+        {
+            Numero = request.Numero,
+            PacienteId = paciente.Id,
+            ConvenioId = request.ConvenioId,
+            FechaHora = request.FechaHora,
+            Observacion = request.Observacion,
+            Detalles = request.Detalles
+        };
+
+        var admision = await CrearAsync(admisionRequest, cancellationToken);
+
+        await transaction.CommitAsync(cancellationToken);
+
+        return admision;
     }
 
     protected override IQueryable<AdmisionEntity> ApplyOrder(

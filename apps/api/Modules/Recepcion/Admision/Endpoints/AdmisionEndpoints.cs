@@ -1,5 +1,6 @@
 using Clinica.Api.Modules.Recepcion.Admision.Dtos;
 using Clinica.Api.Modules.Recepcion.Admision.Services;
+using Clinica.Api.Modules.Recepcion.Pacientes.Dtos;
 using Clinica.Api.Shared.Pagination;
 using Clinica.Api.Shared.Validation;
 
@@ -32,6 +33,10 @@ public static class AdmisionEndpoints
         group.MapPost("/", CrearAsync)
             .WithName("CrearAdmision")
             .Validate<CreateAdmisionRequest>();
+
+        group.MapPost("/con-paciente", CrearConPacienteAsync)
+            .WithName("CrearAdmisionConPaciente")
+            .Validate<CreateAdmisionConPacienteRequest>();
 
         group.MapPut("/{id:int}", ActualizarAsync)
             .WithName("ActualizarAdmision")
@@ -95,6 +100,20 @@ public static class AdmisionEndpoints
         CancellationToken cancellationToken)
     {
         var result = await service.CrearAsync(
+            request,
+            cancellationToken);
+
+        return Results.Created(
+            $"/admisiones/{result.Id}",
+            result);
+    }
+
+    private static async Task<IResult> CrearConPacienteAsync(
+        CreateAdmisionConPacienteRequest request,
+        AdmisionService service,
+        CancellationToken cancellationToken)
+    {
+        var result = await service.CrearConPacienteAsync(
             request,
             cancellationToken);
 
