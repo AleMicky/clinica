@@ -4,16 +4,15 @@ import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { HeartPulse, Loader2, CreditCard, User, Phone } from "lucide-react";
+import { HeartPulse, Loader2, CreditCard, User, Phone, X } from "lucide-react";
 
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -164,301 +163,307 @@ export function PacienteFormDialog({
   const isPending = createMutation.isPending || updateMutation.isPending || isSubmitting;
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="right"
-        className="sm:!max-w-2xl md:!max-w-3xl lg:!max-w-4xl w-full p-0 flex flex-col justify-between overflow-y-auto"
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        showCloseButton={false}
+        className="sm:max-w-3xl md:max-w-4xl w-[92vw] max-h-[88vh] flex flex-col p-0 gap-0 overflow-hidden bg-card border-border/80 shadow-2xl"
       >
-        <div className="space-y-6">
-          {/* Header */}
-          <SheetHeader className="p-5 border-b border-border/60 bg-muted/20">
-            <div className="flex items-center gap-2.5">
-              <div className="size-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                <HeartPulse className="size-5" />
-              </div>
-              <div>
-                <SheetTitle className="text-base font-bold">
-                  {isEditing ? "Editar Expediente de Paciente" : "Nuevo Registro de Paciente"}
-                </SheetTitle>
-                <SheetDescription className="text-xs">
-                  {isEditing
-                    ? `Modificando datos clínicos e identificación de ${pacienteToEdit?.persona?.nombres || ""}`
-                    : "Complete la filiación personal y datos de identidad del paciente."}
-                </SheetDescription>
-              </div>
+        {/* Header Modal Amplio */}
+        <DialogHeader className="shrink-0 p-4 bg-muted/40 border-b border-border/70 flex flex-row items-center justify-between space-y-0">
+          <div className="flex items-center gap-3">
+            <div className="size-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+              <HeartPulse className="size-5" />
             </div>
-          </SheetHeader>
-
-          {/* Form Content */}
-          <form id="paciente-form" onSubmit={handleSubmit(onSubmit)} className="px-7 space-y-6">
-            {/* Auto HC Preview Badge */}
-            <div className="flex items-center justify-between p-3.5 rounded-lg bg-primary/5 border border-primary/20">
-              <div className="flex items-center gap-2">
-                <HeartPulse className="size-4 text-primary" />
-                <span className="text-xs font-semibold text-foreground">Formato HC Sugerido:</span>
-              </div>
-              <Badge variant="outline" className="bg-background font-mono font-bold text-primary text-xs">
-                {isEditing ? pacienteToEdit?.numeroHistoriaClinica : hcPreview}
-              </Badge>
+            <div>
+              <DialogTitle className="text-base font-bold text-foreground">
+                {isEditing ? "Editar Expediente de Paciente" : "Nuevo Registro de Paciente"}
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+                {isEditing
+                  ? `Modificando datos clínicos e identificación de ${pacienteToEdit?.persona?.nombres || ""}`
+                  : "Complete la filiación personal y datos de identidad del paciente."}
+              </DialogDescription>
             </div>
+          </div>
 
-            {/* Section 1: Identificación y Documento */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 border-b border-border/40 pb-1.5">
-                <CreditCard className="size-4 text-primary" />
-                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  Documento de Identidad
-                </h4>
-              </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => onOpenChange(false)}
+            className="size-8 text-muted-foreground hover:text-foreground rounded-lg"
+          >
+            <X className="size-4" />
+          </Button>
+        </DialogHeader>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                {/* Tipo de Documento */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold">
-                    Tipo Documento <span className="text-destructive">*</span>
-                  </Label>
-                  <CatalogoAutocomplete
-                    codigo="TIPOS_DOCUMENTO"
-                    value={tipoDocumentoValue}
-                    onValueChange={(val: string) =>
-                      setValue("tipoDocumento", val, {
-                        shouldValidate: true,
-                        shouldDirty: true,
-                      })
-                    }
-                    placeholder="Seleccionar tipo..."
-                    error={Boolean(errors.tipoDocumento)}
-                  />
-                  {errors.tipoDocumento && (
-                    <p className="text-[11px] text-destructive font-medium">
-                      {errors.tipoDocumento.message}
-                    </p>
-                  )}
-                </div>
+        {/* Form Content - Amplio y Scrolleable */}
+        <form
+          id="paciente-form"
+          onSubmit={handleSubmit(onSubmit)}
+          className="p-5 space-y-5 overflow-y-auto min-h-0 flex-1 bg-background"
+        >
+          {/* Auto HC Preview Badge Banner */}
+          <div className="flex items-center justify-between p-3 rounded-xl bg-primary/5 border border-primary/20 text-xs">
+            <div className="flex items-center gap-2">
+              <HeartPulse className="size-4 text-primary" />
+              <span className="font-semibold text-foreground text-xs">Formato N° Historia Clínica Sugerido:</span>
+            </div>
+            <Badge variant="outline" className="bg-background font-mono font-bold text-primary text-xs py-0.5 px-2.5">
+              {isEditing ? pacienteToEdit?.numeroHistoriaClinica : hcPreview}
+            </Badge>
+          </div>
 
-                {/* Número de Documento */}
-                <div className="space-y-1.5">
-                  <Label htmlFor="numeroDocumento" className="text-xs font-semibold">
-                    Número de Documento <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="numeroDocumento"
-                    placeholder="Ej. 8492042"
-                    {...register("numeroDocumento")}
-                    className={cn("h-9 text-xs", errors.numeroDocumento && "border-destructive")}
-                  />
-                  {errors.numeroDocumento && (
-                    <p className="text-[11px] text-destructive font-medium">
-                      {errors.numeroDocumento.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Extensión de Documento */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold">Extensión (Lugar Expedición)</Label>
-                  <CatalogoAutocomplete
-                    codigo="EXTENSIONES"
-                    value={extensionDocumentoValue}
-                    onValueChange={(val: string) =>
-                      setValue("extensionDocumento", val, {
-                        shouldValidate: true,
-                        shouldDirty: true,
-                      })
-                    }
-                    placeholder="Ej. LP, CB, SC..."
-                    error={Boolean(errors.extensionDocumento)}
-                  />
-                </div>
-
-                {/* Complemento */}
-                <div className="space-y-1.5">
-                  <Label htmlFor="complementoDocumento" className="text-xs font-semibold">
-                    Complemento
-                  </Label>
-                  <Input
-                    id="complementoDocumento"
-                    placeholder="Ej. 1A"
-                    {...register("complementoDocumento")}
-                    className="h-9 text-xs"
-                  />
-                </div>
-              </div>
+          {/* Section 1: Identificación y Documento (4 Cols Amplias) */}
+          <div className="space-y-2.5">
+            <div className="flex items-center gap-2 border-b border-border/40 pb-1.5">
+              <CreditCard className="size-4 text-primary" />
+              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                1. Documento de Identidad
+              </h4>
             </div>
 
-            {/* Section 2: Datos Filiatorios */}
-            <div className="space-y-3 pt-2">
-              <div className="flex items-center gap-2 border-b border-border/40 pb-1.5">
-                <User className="size-4 text-primary" />
-                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  Datos Personales
-                </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3.5">
+              <div className="space-y-1">
+                <Label className="text-xs font-semibold">
+                  Tipo Doc. <span className="text-destructive">*</span>
+                </Label>
+                <CatalogoAutocomplete
+                  codigo="TIPOS_DOCUMENTO"
+                  value={tipoDocumentoValue}
+                  onValueChange={(val: string) =>
+                    setValue("tipoDocumento", val, {
+                      shouldValidate: true,
+                      shouldDirty: true,
+                    })
+                  }
+                  placeholder="Seleccionar tipo..."
+                  error={Boolean(errors.tipoDocumento)}
+                  className="h-9 text-xs"
+                />
+                {errors.tipoDocumento && (
+                  <p className="text-[11px] text-destructive font-medium mt-0.5">
+                    {errors.tipoDocumento.message}
+                  </p>
+                )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                {/* Nombres */}
-                <div className="space-y-1.5 sm:col-span-2">
-                  <Label htmlFor="nombres" className="text-xs font-semibold">
-                    Nombres <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="nombres"
-                    placeholder="Ej. Juan Carlos"
-                    {...register("nombres")}
-                    className={cn("h-9 text-xs", errors.nombres && "border-destructive")}
-                  />
-                  {errors.nombres && (
-                    <p className="text-[11px] text-destructive font-medium">
-                      {errors.nombres.message}
-                    </p>
-                  )}
-                </div>
+              <div className="space-y-1">
+                <Label htmlFor="numeroDocumento" className="text-xs font-semibold">
+                  N° Documento <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="numeroDocumento"
+                  placeholder="Ej. 8492042"
+                  {...register("numeroDocumento")}
+                  className={cn("h-9 text-xs font-mono bg-background", errors.numeroDocumento && "border-destructive")}
+                />
+                {errors.numeroDocumento && (
+                  <p className="text-[11px] text-destructive font-medium mt-0.5">
+                    {errors.numeroDocumento.message}
+                  </p>
+                )}
+              </div>
 
-                {/* Apellido Paterno */}
-                <div className="space-y-1.5">
-                  <Label htmlFor="apellidoPaterno" className="text-xs font-semibold">
-                    Apellido Paterno <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="apellidoPaterno"
-                    placeholder="Ej. Pérez"
-                    {...register("apellidoPaterno")}
-                    className={cn("h-9 text-xs", errors.apellidoPaterno && "border-destructive")}
-                  />
-                  {errors.apellidoPaterno && (
-                    <p className="text-[11px] text-destructive font-medium">
-                      {errors.apellidoPaterno.message}
-                    </p>
-                  )}
-                </div>
+              <div className="space-y-1">
+                <Label className="text-xs font-semibold">Extensión (Expedición)</Label>
+                <CatalogoAutocomplete
+                  codigo="EXTENSIONES"
+                  value={extensionDocumentoValue}
+                  onValueChange={(val: string) =>
+                    setValue("extensionDocumento", val, {
+                      shouldValidate: true,
+                      shouldDirty: true,
+                    })
+                  }
+                  placeholder="Ej. LP, CB, SC..."
+                  error={Boolean(errors.extensionDocumento)}
+                  className="h-9 text-xs"
+                />
+              </div>
 
-                {/* Apellido Materno */}
-                <div className="space-y-1.5">
-                  <Label htmlFor="apellidoMaterno" className="text-xs font-semibold">
-                    Apellido Materno
-                  </Label>
-                  <Input
-                    id="apellidoMaterno"
-                    placeholder="Ej. Gómez"
-                    {...register("apellidoMaterno")}
-                    className="h-9 text-xs"
-                  />
-                </div>
-
-                {/* Fecha Nacimiento */}
-                <div className="space-y-1.5">
-                  <Label htmlFor="fechaNacimiento" className="text-xs font-semibold">
-                    Fecha de Nacimiento <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="fechaNacimiento"
-                    type="date"
-                    {...register("fechaNacimiento")}
-                    className={cn("h-9 text-xs", errors.fechaNacimiento && "border-destructive")}
-                  />
-                  {errors.fechaNacimiento && (
-                    <p className="text-[11px] text-destructive font-medium">
-                      {errors.fechaNacimiento.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Género */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold">Género</Label>
-                  <CatalogoAutocomplete
-                    codigo="GENERO"
-                    value={generoValue}
-                    onValueChange={(val: string) =>
-                      setValue("genero", val, {
-                        shouldValidate: true,
-                        shouldDirty: true,
-                      })
-                    }
-                    placeholder="Seleccionar género..."
-                  />
-                </div>
-
-                {/* Estado Civil */}
-                <div className="space-y-1.5 sm:col-span-2">
-                  <Label className="text-xs font-semibold">Estado Civil</Label>
-                  <CatalogoAutocomplete
-                    codigo="ESTADO_CIVIL"
-                    value={estadoCivilValue}
-                    onValueChange={(val: string) =>
-                      setValue("estadoCivil", val, {
-                        shouldValidate: true,
-                        shouldDirty: true,
-                      })
-                    }
-                    placeholder="Seleccionar estado civil..."
-                  />
-                </div>
+              <div className="space-y-1">
+                <Label htmlFor="complementoDocumento" className="text-xs font-semibold">
+                  Complemento
+                </Label>
+                <Input
+                  id="complementoDocumento"
+                  placeholder="Ej. 1A"
+                  {...register("complementoDocumento")}
+                  className="h-9 text-xs bg-background"
+                />
               </div>
             </div>
+          </div>
 
-            {/* Section 3: Contacto y Ubicación */}
-            <div className="space-y-3 pt-2">
-              <div className="flex items-center gap-2 border-b border-border/40 pb-1.5">
-                <Phone className="size-4 text-primary" />
-                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  Contacto y Dirección
-                </h4>
+          {/* Section 2: Datos Personales (3 Cols Amplias) */}
+          <div className="space-y-2.5 pt-1">
+            <div className="flex items-center gap-2 border-b border-border/40 pb-1.5">
+              <User className="size-4 text-primary" />
+              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                2. Datos Personales / Filiación
+              </h4>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+              <div className="space-y-1">
+                <Label htmlFor="nombres" className="text-xs font-semibold">
+                  Nombres <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="nombres"
+                  placeholder="Ej. Juan Carlos"
+                  {...register("nombres")}
+                  className={cn("h-9 text-xs bg-background", errors.nombres && "border-destructive")}
+                />
+                {errors.nombres && (
+                  <p className="text-[11px] text-destructive font-medium mt-0.5">
+                    {errors.nombres.message}
+                  </p>
+                )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                {/* Teléfono */}
-                <div className="space-y-1.5">
-                  <Label htmlFor="telefono" className="text-xs font-semibold">
-                    Teléfono / Celular
-                  </Label>
-                  <Input
-                    id="telefono"
-                    placeholder="Ej. 76543210"
-                    {...register("telefono")}
-                    className="h-9 text-xs"
-                  />
-                </div>
+              <div className="space-y-1">
+                <Label htmlFor="apellidoPaterno" className="text-xs font-semibold">
+                  Apellido Paterno <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="apellidoPaterno"
+                  placeholder="Ej. Pérez"
+                  {...register("apellidoPaterno")}
+                  className={cn("h-9 text-xs bg-background", errors.apellidoPaterno && "border-destructive")}
+                />
+                {errors.apellidoPaterno && (
+                  <p className="text-[11px] text-destructive font-medium mt-0.5">
+                    {errors.apellidoPaterno.message}
+                  </p>
+                )}
+              </div>
 
-                {/* Dirección */}
-                <div className="space-y-1.5 sm:col-span-2">
-                  <Label htmlFor="direccion" className="text-xs font-semibold">
-                    Dirección Domiciliaria
-                  </Label>
-                  <Input
-                    id="direccion"
-                    placeholder="Ej. Av. 6 de Agosto #245"
-                    {...register("direccion")}
-                    className="h-9 text-xs"
-                  />
-                </div>
+              <div className="space-y-1">
+                <Label htmlFor="apellidoMaterno" className="text-xs font-semibold">
+                  Apellido Materno
+                </Label>
+                <Input
+                  id="apellidoMaterno"
+                  placeholder="Ej. Gómez"
+                  {...register("apellidoMaterno")}
+                  className="h-9 text-xs bg-background"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="fechaNacimiento" className="text-xs font-semibold">
+                  Fecha de Nacimiento <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="fechaNacimiento"
+                  type="date"
+                  {...register("fechaNacimiento")}
+                  className={cn("h-9 text-xs bg-background", errors.fechaNacimiento && "border-destructive")}
+                />
+                {errors.fechaNacimiento && (
+                  <p className="text-[11px] text-destructive font-medium mt-0.5">
+                    {errors.fechaNacimiento.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs font-semibold">Género</Label>
+                <CatalogoAutocomplete
+                  codigo="GENERO"
+                  value={generoValue}
+                  onValueChange={(val: string) =>
+                    setValue("genero", val, {
+                      shouldValidate: true,
+                      shouldDirty: true,
+                    })
+                  }
+                  placeholder="Seleccionar género..."
+                  className="h-9 text-xs"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs font-semibold">Estado Civil</Label>
+                <CatalogoAutocomplete
+                  codigo="ESTADO_CIVIL"
+                  value={estadoCivilValue}
+                  onValueChange={(val: string) =>
+                    setValue("estadoCivil", val, {
+                      shouldValidate: true,
+                      shouldDirty: true,
+                    })
+                  }
+                  placeholder="Seleccionar estado civil..."
+                  className="h-9 text-xs"
+                />
               </div>
             </div>
-          </form>
+          </div>
 
-          {/* Footer Actions */}
-          <SheetFooter className="p-5 border-t border-border/60 bg-muted/20 gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isPending}
-              className="h-9 text-xs font-semibold"
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              form="paciente-form"
-              disabled={isPending}
-              className="h-9 text-xs font-semibold gap-2"
-            >
-              {isPending && <Loader2 className="size-3.5 animate-spin" />}
-              {isEditing ? "Guardar Cambios" : "Registrar Paciente"}
-            </Button>
-          </SheetFooter>
+          {/* Section 3: Contacto y Ubicación (3 Cols Amplias) */}
+          <div className="space-y-2.5 pt-1">
+            <div className="flex items-center gap-2 border-b border-border/40 pb-1.5">
+              <Phone className="size-4 text-primary" />
+              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                3. Contacto y Dirección
+              </h4>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+              <div className="space-y-1 sm:col-span-1">
+                <Label htmlFor="telefono" className="text-xs font-semibold">
+                  Teléfono / Celular
+                </Label>
+                <Input
+                  id="telefono"
+                  placeholder="Ej. 76543210"
+                  {...register("telefono")}
+                  className="h-9 text-xs bg-background"
+                />
+              </div>
+
+              <div className="space-y-1 sm:col-span-2">
+                <Label htmlFor="direccion" className="text-xs font-semibold">
+                  Dirección Domiciliaria
+                </Label>
+                <Input
+                  id="direccion"
+                  placeholder="Ej. Av. 6 de Agosto #245"
+                  {...register("direccion")}
+                  className="h-9 text-xs bg-background"
+                />
+              </div>
+            </div>
+          </div>
+        </form>
+
+        {/* Footer Modal Amplio */}
+        <div className="shrink-0 p-4 bg-muted/40 border-t border-border/70 flex items-center justify-end gap-2.5">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => onOpenChange(false)}
+            disabled={isPending}
+            className="h-9 px-4 text-xs font-medium"
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            form="paciente-form"
+            size="sm"
+            disabled={isPending}
+            className="h-9 px-5 text-xs font-semibold gap-2 bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-700 text-primary-foreground shadow-md shadow-primary/20"
+          >
+            {isPending && <Loader2 className="size-3.5 animate-spin" />}
+            {isEditing ? "Guardar Cambios" : "Registrar Paciente"}
+          </Button>
         </div>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }
