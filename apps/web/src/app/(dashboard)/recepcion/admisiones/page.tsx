@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 
 export default function AdmisionesPage() {
   return (
-    <div className="flex flex-col gap-3.5 w-full max-w-7xl mx-auto">
+    <div className="flex flex-col gap-4 w-full">
       <PageHeader
         title="Gestión de Admisiones"
         description="Registro de atenciones, orden de servicios y estados de ingreso."

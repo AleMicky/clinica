@@ -77,7 +77,7 @@ export function MedicoModuleView() {
   };
 
   return (
-    <div className="flex flex-col gap-3.5 w-full max-w-7xl mx-auto p-4 sm:p-6">
+    <div className="flex flex-col gap-4 w-full">
       {/* 1. Header with "+ Nuevo Médico" action */}
       <MedicoHeader onAddClick={handleAddClick} />
 

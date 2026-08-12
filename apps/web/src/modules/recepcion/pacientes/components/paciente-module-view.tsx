@@ -109,7 +109,7 @@ export function PacienteModuleView() {
   };
 
   return (
-    <div className="flex flex-col gap-4 sm:gap-5 w-full max-w-7xl mx-auto animate-in fade-in-50 duration-300">
+    <div className="flex flex-col gap-4 w-full animate-in fade-in-50 duration-300">
       <PacienteHeader onAddClick={handleOpenAdd} />
       <PacienteMetricsCards metrics={metrics} />
       <PacienteTable
