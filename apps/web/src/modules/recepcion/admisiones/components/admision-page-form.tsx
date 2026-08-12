@@ -16,6 +16,16 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   ArrowLeft,
   Plus,
   Minus,
@@ -37,7 +47,7 @@ import {
   Lock,
   Edit,
 } from "lucide-react";
-import { usePacientes } from "../../pacientes/hooks/use-pacientes";
+import { usePacientes, usePacienteConvenios } from "../../pacientes/hooks/use-pacientes";
 import { PacienteFormDialog } from "../../pacientes/components/paciente-form-dialog";
 import { getPacienteFullName, getPacienteDocument } from "../../pacientes/components/paciente-card";
 import type { PacienteResponse } from "../../pacientes/types/paciente.types";
@@ -399,24 +409,28 @@ function ServicioRowItem({
       <div className="grid grid-cols-12 gap-3 items-end pt-1">
         <div className="col-span-12 sm:col-span-5 space-y-1">
           <Label className="text-[11px] text-muted-foreground font-semibold">Médico Tratante</Label>
-          <select
+          <Select
             value={row.medicoId ? row.medicoId.toString() : "sin-medico"}
-            onChange={(e) =>
+            onValueChange={(val: string | null) =>
               onUpdate(
                 row.id,
                 "medicoId",
-                e.target.value === "sin-medico" || !e.target.value ? undefined : Number(e.target.value)
+                !val || val === "sin-medico" ? undefined : Number(val)
               )
             }
-            className="h-9 w-full rounded-md border border-border/80 bg-background px-3 text-xs font-medium focus:outline-hidden focus:ring-2 focus:ring-primary/20"
           >
-            <option value="sin-medico">Sin Médico / Guardia</option>
-            {medicos.map((m) => (
-              <option key={m.id} value={m.id.toString()}>
-                {m.empleado?.nombreCompleto || `Médico #${m.id}`}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="h-9 w-full bg-background text-xs font-medium border-border/80">
+              <SelectValue placeholder="Seleccionar médico..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="sin-medico">Sin Médico / Guardia</SelectItem>
+              {medicos.map((m) => (
+                <SelectItem key={m.id} value={m.id.toString()}>
+                  {m.empleado?.nombreCompleto || `Médico #${m.id}`}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="col-span-4 sm:col-span-2 space-y-1">
@@ -487,12 +501,32 @@ export function AdmisionPageForm() {
   const [patientSearch, setPatientSearch] = React.useState("");
   const [selectedPacienteId, setSelectedPacienteId] = React.useState<string>("");
 
+  // Consulta de Convenios específicos del Paciente Seleccionado (GET /api/v1/pacientes/{pacienteId}/convenios)
+  const numericPacienteId = selectedPacienteId ? Number(selectedPacienteId) : 0;
+  const { data: pacienteConveniosData, isLoading: isLoadingPacienteConvenios } = usePacienteConvenios(
+    numericPacienteId,
+    Boolean(numericPacienteId)
+  );
+  const pacienteConveniosList = pacienteConveniosData?.items ?? [];
+
   // Datos Generales de Admisión
   const [convenioId, setConvenioId] = React.useState<string>("particular");
   const [fechaHora, setFechaHora] = React.useState<string>(
     new Date().toISOString().slice(0, 16)
   );
   const [observacion, setObservacion] = React.useState<string>("");
+
+  // Pre-selección automática del convenio principal del paciente
+  React.useEffect(() => {
+    if (numericPacienteId && pacienteConveniosList.length > 0) {
+      const principal = pacienteConveniosList.find((pc) => pc.esPrincipal && pc.activo) || pacienteConveniosList[0];
+      if (principal && principal.convenioId) {
+        setConvenioId(principal.convenioId.toString());
+        return;
+      }
+    }
+    setConvenioId("particular");
+  }, [numericPacienteId, pacienteConveniosList]);
 
   // Limpiar el carrito al cargar la página
   React.useEffect(() => {
@@ -805,19 +839,67 @@ export function AdmisionPageForm() {
               <CardContent className="p-4 space-y-3.5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                   <div className="space-y-1">
-                    <Label className="text-xs font-semibold">Convenio / Seguro Cobertura</Label>
-                    <select
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-semibold">Convenio / Cobertura</Label>
+                      {isLoadingPacienteConvenios && (
+                        <span className="text-[10px] text-muted-foreground animate-pulse">Cargando...</span>
+                      )}
+                    </div>
+                    <Select
                       value={convenioId}
-                      onChange={(e) => setConvenioId(e.target.value || "particular")}
-                      className="h-9 w-full rounded-md border border-border/80 bg-background px-3 text-xs font-medium focus:outline-hidden focus:ring-2 focus:ring-primary/20"
+                      onValueChange={(val: string | null) => setConvenioId(val || "particular")}
                     >
-                      <option value="particular">Particular (Sin Convenio)</option>
-                      {conveniosList.map((c) => (
-                        <option key={c.id} value={c.id.toString()}>
-                          {c.nombre} ({c.codigo})
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger className="h-9 w-full bg-background text-xs font-medium border-border/80">
+                        <SelectValue placeholder="Seleccionar convenio..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="particular">Particular (Sin Convenio / Cobertura Directa)</SelectItem>
+
+                        {pacienteConveniosList.length > 0 && (
+                          <SelectGroup>
+                            <SelectLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                              Convenios Afiliados al Paciente
+                            </SelectLabel>
+                            {pacienteConveniosList.map((pc) => {
+                              const cNombre = pc.convenio?.nombre || `Convenio #${pc.convenioId}`;
+                              const cCodigo = pc.convenio?.codigo || "";
+                              const afil = pc.numeroAfiliado ? ` - Afil: ${pc.numeroAfiliado}` : "";
+                              const star = pc.esPrincipal ? " ★ [Principal]" : "";
+                              return (
+                                <SelectItem key={`pc-${pc.id}`} value={pc.convenioId.toString()}>
+                                  {cNombre} ({cCodigo}){afil}{star}
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectGroup>
+                        )}
+
+                        <SelectSeparator />
+
+                        <SelectGroup>
+                          <SelectLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                            Todos los Convenios del Sistema
+                          </SelectLabel>
+                          {conveniosList.map((c) => (
+                            <SelectItem key={`c-${c.id}`} value={c.id.toString()}>
+                              {c.nombre} ({c.codigo})
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+
+                    {convenioId !== "particular" ? (
+                      <div className="flex items-center justify-between text-[11px] text-emerald-600 font-medium pt-0.5 px-0.5">
+                        <span>✓ Cobertura por Convenio</span>
+                        <span className="font-mono font-bold text-[10px]">convenioId: {convenioId}</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between text-[11px] text-muted-foreground font-medium pt-0.5 px-0.5">
+                        <span>Atención Particular</span>
+                        <span className="font-mono text-[10px]">convenioId: null</span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-1">

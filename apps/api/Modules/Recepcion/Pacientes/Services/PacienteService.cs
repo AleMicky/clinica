@@ -68,12 +68,7 @@ public sealed class PacienteService(AppDbContext dbContext)
                 x => x.Id == id && x.Activo,
                 cancellationToken);
 
-        if (paciente is null)
-        {
-            throw new NotFoundException(nameof(Paciente), id);
-        }
-
-        return PacienteMapper.ToResponse(paciente);
+        return paciente is null ? throw new NotFoundException(nameof(Paciente), id) : PacienteMapper.ToResponse(paciente);
     }
 
     public async Task<PacienteResponse> CrearAsync(

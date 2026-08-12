@@ -73,6 +73,54 @@ public sealed class ServicioService(AppDbContext dbContext)
         return ServicioMapper.ToResponse(entity);
     }
 
+
+    public async Task<List<ServicioTarifarioResponse>> ServicioTarifarioAsync(
+        int categoriaId,
+        int? tarifarioId = null,
+        CancellationToken cancellationToken = default)
+    {
+        await EnsureCategoriaExistsAsync(categoriaId, cancellationToken);
+
+        var hoy = DateOnly.FromDateTime(DateTime.Today);
+
+        var tarifario = await dbContext.Tarifarios
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                x =>
+                    (tarifarioId.HasValue
+                        ? x.Id == tarifarioId.Value
+                        : x.EsPrincipal)
+                    && x.FechaInicio <= hoy
+                    && (x.FechaFin == null || x.FechaFin >= hoy),
+                cancellationToken);
+
+        if (tarifario is null)
+        {
+            throw new BusinessException(
+                tarifarioId.HasValue
+                    ? "El tarifario seleccionado no existe o no está vigente."
+                    : "No existe un tarifario principal vigente.");
+        }
+
+        return await dbContext.TarifarioDetalles
+            .AsNoTracking()
+            .Where(x =>
+                x.TarifarioId == tarifario.Id &&
+                x.Servicio.CategoriaServicioId == categoriaId &&
+                x.Servicio.Activo)
+            .OrderBy(x => x.Servicio.Nombre)
+            .Select(x => new ServicioTarifarioResponse
+            {
+                Id = x.Servicio.Id,
+                CategoriaServicioId = x.Servicio.CategoriaServicioId,
+                Codigo = x.Servicio.Codigo,
+                Nombre = x.Servicio.Nombre,
+                Precio = x.Precio
+            })
+            .ToListAsync(cancellationToken);
+    }
+
+
     public async Task<ServicioResponse> CrearAsync(
         int categoriaId,
         CreateServicioRequest request,

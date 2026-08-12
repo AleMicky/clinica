@@ -21,3 +21,12 @@ public sealed record ServicioResponse : AuditableResponse
     public string Nombre { get; init; }
     public string? Descripcion { get; init; }
 }
+
+public sealed record ServicioTarifarioResponse
+{
+    public int Id { get; init; }
+    public int CategoriaServicioId { get; init; }
+    public string Codigo { get; init; }
+    public string Nombre { get; init; }
+    public decimal Precio { get; set; }
+}
