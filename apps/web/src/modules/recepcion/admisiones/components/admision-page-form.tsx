@@ -15,13 +15,13 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { CatalogoAutocomplete } from "@/components/ui/catalogo-autocomplete";
 import {
   ArrowLeft,
   Plus,
   Minus,
   Trash2,
   User,
+  UserPlus,
   Building2,
   Stethoscope,
   Sparkles,
@@ -34,28 +34,29 @@ import {
   Receipt,
   ShoppingCart,
   ChevronRight,
+  Lock,
+  Edit,
 } from "lucide-react";
 import { usePacientes } from "../../pacientes/hooks/use-pacientes";
+import { PacienteFormDialog } from "../../pacientes/components/paciente-form-dialog";
+import { getPacienteFullName, getPacienteDocument } from "../../pacientes/components/paciente-card";
+import type { PacienteResponse } from "../../pacientes/types/paciente.types";
 import { useMedicos } from "@/modules/recursos-humanos/medico/hooks/use-medicos";
 import { useConvenios } from "@/modules/servicios/convenio/hooks/use-convenio";
 import { useCategoriasServicio } from "@/modules/servicios/categoria-servicio/hooks/use-categoria-servicio";
 import { useServicios } from "@/modules/servicios/servicio/hooks/use-servicio";
-import {
-  useCreateAdmision,
-  useCreateAdmisionConPaciente,
-} from "../hooks/use-admisiones";
+import { useCreateAdmision } from "../hooks/use-admisiones";
 import {
   useAdmisionStore,
   type ServiceItemState,
   type SelectedServiceCartItem,
 } from "../store/use-admision-store";
-import type { CreatePacienteRequest } from "../../pacientes/types/paciente.types";
 import type { CategoriaServicioResponse } from "@/modules/servicios/categoria-servicio/types/categoria-servicio.types";
 import type { MedicoResponse } from "@/modules/recursos-humanos/medico/types/medico.types";
 import type { ServicioResponse } from "@/modules/servicios/servicio/types/servicio.types";
 import { toast } from "sonner";
 
-// MODAL PICKER MULTI-SELECCIÓN (SIN BOTÓN X REPETIDO EN EL INPUT DE BÚSQUEDA Y CONTROL ANTI-DUPLICADOS ZUSTAND)
+// MODAL PICKER MULTI-SELECCIÓN DE PRESTACIONES
 function MultiServicePickerModal({
   isOpen,
   onClose,
@@ -68,15 +69,12 @@ function MultiServicePickerModal({
   const [activeCatId, setActiveCatId] = React.useState<number>(categorias[0]?.id ?? 1);
   const [searchQuery, setSearchQuery] = React.useState<string>("");
 
-  // Zustand Store
   const { addServicesFromPicker, isServiceInCart } = useAdmisionStore();
 
-  // Mapa de prestaciones seleccionadas dentro del modal: servicioId -> SelectedServiceCartItem
   const [selectedMap, setSelectedMap] = React.useState<Map<number, SelectedServiceCartItem>>(
     new Map()
   );
 
-  // Al abrir el modal, resetear la selección previa
   React.useEffect(() => {
     if (isOpen) {
       setSelectedMap(new Map());
@@ -84,7 +82,6 @@ function MultiServicePickerModal({
     }
   }, [isOpen]);
 
-  // Query de los servicios de la categoría activa
   const { data: serviciosData, isLoading } = useServicios(activeCatId, undefined, Boolean(activeCatId));
   const serviciosList = serviciosData?.items ?? [];
 
@@ -154,7 +151,6 @@ function MultiServicePickerModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent showCloseButton={false} className="sm:max-w-5xl md:max-w-6xl w-[94vw] h-[85vh] max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden bg-card border-border/80 shadow-2xl">
-        {/* CABECERA CON SHRINK-0 PARA QUE NUNCA SE APLASTE NI SE OCULTE */}
         <DialogHeader className="shrink-0 p-4 bg-muted/40 border-b border-border/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3 space-y-0">
           <div>
             <DialogTitle className="text-base font-bold flex items-center gap-2 text-foreground">
@@ -179,10 +175,8 @@ function MultiServicePickerModal({
           </div>
         </DialogHeader>
 
-        {/* CUERPO DEL DIÁLOGO (CATÁLOGOS 3 COLS / SERVICIOS 9 COLS) */}
-        <div className="grid grid-cols-1 md:grid-cols-12 flex-1 overflow-hidden min-h-[440px]">
-          {/* LISTA DE CATÁLOGOS / CATEGORÍAS */}
-          <div className="md:col-span-4 lg:col-span-3 border-r border-border/60 bg-muted/20 p-3.5 space-y-2 overflow-y-auto">
+        <div className="grid grid-cols-1 md:grid-cols-12 flex-1 min-h-0 overflow-hidden">
+          <div className="md:col-span-4 lg:col-span-3 border-r border-border/60 bg-muted/20 p-3.5 space-y-2 overflow-y-auto h-full min-h-0">
             <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-2 pb-1 block">
               Catálogos Disponibles ({categorias.length})
             </Label>
@@ -194,10 +188,11 @@ function MultiServicePickerModal({
                   key={cat.id}
                   type="button"
                   onClick={() => setActiveCatId(cat.id)}
-                  className={`w-full p-3 rounded-xl text-left transition-all flex items-center justify-between text-xs font-semibold ${isActive
+                  className={`w-full p-3 rounded-xl text-left transition-all flex items-center justify-between text-xs font-semibold ${
+                    isActive
                       ? "bg-primary text-primary-foreground shadow-xs font-bold"
                       : "bg-background hover:bg-muted text-foreground border border-border/50"
-                    }`}
+                  }`}
                 >
                   <div className="flex items-center gap-2.5">
                     <FolderTree className={`size-4 shrink-0 ${isActive ? "text-primary-foreground" : "text-primary"}`} />
@@ -209,8 +204,7 @@ function MultiServicePickerModal({
             })}
           </div>
 
-          {/* GRILLA PANORÁMICA DE TARJETAS MULTI-SELECCIÓN */}
-          <div className="md:col-span-8 lg:col-span-9 p-5 space-y-4 overflow-y-auto bg-background">
+          <div className="md:col-span-8 lg:col-span-9 p-5 space-y-4 overflow-y-auto h-full min-h-0 bg-background">
             <div className="flex items-center justify-between pb-3 border-b border-border/60">
               <span className="text-xs font-bold text-foreground flex items-center gap-2">
                 <Stethoscope className="size-4 text-primary" />
@@ -231,7 +225,7 @@ function MultiServicePickerModal({
                 No se encontraron prestaciones en esta categoría.
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5 pb-4">
                 {filteredServicios.map((s) => {
                   const isSelectedInModal = selectedMap.has(s.id);
                   const isAlreadyInCart = isServiceInCart(s.id);
@@ -242,12 +236,13 @@ function MultiServicePickerModal({
                     <div
                       key={s.id}
                       onClick={() => handleToggleSelect(s)}
-                      className={`p-4 rounded-xl border transition-all text-left flex flex-col justify-between cursor-pointer space-y-3 shadow-2xs ${isSelectedInModal
+                      className={`p-4 rounded-xl border transition-all text-left flex flex-col justify-between cursor-pointer space-y-3 shadow-2xs ${
+                        isSelectedInModal
                           ? "border-primary bg-primary/10 ring-2 ring-primary/30 shadow-md"
                           : isAlreadyInCart
-                            ? "border-emerald-500/50 bg-emerald-500/10 shadow-xs"
-                            : "border-border/70 bg-card hover:border-primary/50 hover:bg-primary/5"
-                        }`}
+                          ? "border-emerald-500/50 bg-emerald-500/10 shadow-xs"
+                          : "border-border/70 bg-card hover:border-primary/50 hover:bg-primary/5"
+                      }`}
                     >
                       <div className="space-y-1">
                         <div className="flex items-start justify-between gap-1">
@@ -277,7 +272,6 @@ function MultiServicePickerModal({
                           S/. {price.toFixed(2)}
                         </span>
 
-                        {/* CONTROLES DE CANTIDAD EN CADA TARJETA DEL MODAL */}
                         {isSelectedInModal ? (
                           <div
                             onClick={(e) => e.stopPropagation()}
@@ -319,8 +313,7 @@ function MultiServicePickerModal({
           </div>
         </div>
 
-        {/* BARRA INFERIOR DE ACCIÓN MULTI-SELECCIÓN */}
-        <div className="p-4 bg-muted/40 border-t border-border/70 flex items-center justify-between gap-4">
+        <div className="shrink-0 p-4 bg-muted/40 border-t border-border/70 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 text-xs">
             <span className="font-semibold text-muted-foreground">
               Prestaciones Elegidas: <strong className="text-foreground text-sm font-bold">{totalSelectedCount}</strong>
@@ -358,27 +351,25 @@ function MultiServicePickerModal({
   );
 }
 
-// COMPONENTE ITEM DE PRESTACIÓN CLÍNICA (TARJETA EN EL CARRITO CON ZUSTAND)
+// COMPONENTE ITEM DE PRESTACIÓN CLÍNICA EN EL CARRITO
 function ServicioRowItem({
   row,
   index,
   medicos,
   onUpdate,
   onRemove,
-  isOnlyRow,
 }: {
   row: ServiceItemState;
   index: number;
   medicos: MedicoResponse[];
   onUpdate: (id: string, field: keyof ServiceItemState, value: unknown) => void;
   onRemove: (id: string) => void;
-  isOnlyRow: boolean;
+  isOnlyRow?: boolean;
 }) {
   const subtotalFila = (row.cantidad || 1) * (row.precioUnitario || 0) - (row.descuento || 0);
 
   return (
     <div className="p-4 bg-card rounded-xl border border-border/80 shadow-2xs space-y-3 hover:border-primary/40 transition-colors w-full">
-      {/* CABECERA DE LA TARJETA EN LA ADMISIÓN */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2.5 border-b border-border/50">
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20 font-bold px-2 py-0.5">
@@ -405,9 +396,7 @@ function ServicioRowItem({
         </Button>
       </div>
 
-      {/* FILA DE CONTROLES: MÉDICO TRATANTE, CANTIDAD, PRECIO Y SUBTOTAL */}
       <div className="grid grid-cols-12 gap-3 items-end pt-1">
-        {/* Médico Tratante */}
         <div className="col-span-12 sm:col-span-5 space-y-1">
           <Label className="text-[11px] text-muted-foreground font-semibold">Médico Tratante</Label>
           <select
@@ -430,7 +419,6 @@ function ServicioRowItem({
           </select>
         </div>
 
-        {/* Cantidad */}
         <div className="col-span-4 sm:col-span-2 space-y-1">
           <Label className="text-[11px] text-muted-foreground font-semibold text-center block">Cantidad</Label>
           <Input
@@ -442,7 +430,6 @@ function ServicioRowItem({
           />
         </div>
 
-        {/* Precio Unitario */}
         <div className="col-span-4 sm:col-span-2 space-y-1">
           <Label className="text-[11px] text-muted-foreground font-semibold text-right block">Precio (S/.)</Label>
           <Input
@@ -455,7 +442,6 @@ function ServicioRowItem({
           />
         </div>
 
-        {/* Subtotal */}
         <div className="col-span-4 sm:col-span-3 text-right">
           <span className="text-[10px] text-muted-foreground uppercase block font-bold">Subtotal</span>
           <span className="text-base font-extrabold text-primary">
@@ -470,13 +456,10 @@ function ServicioRowItem({
 export function AdmisionPageForm() {
   const router = useRouter();
 
-  // Mode: "EXISTENTE" (Seleccionar de DB) vs "NUEVO" (Crear con POST /admisiones/con-paciente)
-  const [patientMode, setPatientMode] = React.useState<"EXISTENTE" | "NUEVO">("EXISTENTE");
-
   // Zustand Store
   const { detalles, removeDetalle, updateDetalle, clearDetalles } = useAdmisionStore();
 
-  // Consumo 100% de la API mediante React Query
+  // API Queries & Mutations
   const { data: pacientesData, isLoading: isLoadingPacientes } = usePacientes({
     pageSize: 100,
   });
@@ -492,32 +475,17 @@ export function AdmisionPageForm() {
   const medicosList = medicosData?.items ?? [];
   const conveniosList = conveniosData?.items ?? [];
 
-  // Estado del Picker Modal Multi-Selección
+  // Modales
   const [multiPickerOpen, setMultiPickerOpen] = React.useState<boolean>(false);
+  const [registerPacienteOpen, setRegisterPacienteOpen] = React.useState<boolean>(false);
+  const [pacienteToEdit, setPacienteToEdit] = React.useState<PacienteResponse | null>(null);
 
-  // Mutations para la creación
+  // Mutation estándar de Admisión (POST /admisiones)
   const createAdmisionMutation = useCreateAdmision();
-  const createConPacienteMutation = useCreateAdmisionConPaciente();
 
-  // Buscador de paciente existente
+  // Estado del Paciente Seleccionado
   const [patientSearch, setPatientSearch] = React.useState("");
   const [selectedPacienteId, setSelectedPacienteId] = React.useState<string>("");
-
-  // Formulario completo de Nuevo Paciente
-  const [nuevoPaciente, setNuevoPaciente] = React.useState<CreatePacienteRequest>({
-    nombres: "",
-    apellidoPaterno: "",
-    apellidoMaterno: "",
-    fechaNacimiento: "",
-    telefono: "",
-    direccion: "",
-    tipoDocumento: "",
-    numeroDocumento: "",
-    extensionDocumento: "",
-    complementoDocumento: "",
-    genero: "",
-    estadoCivil: "",
-  });
 
   // Datos Generales de Admisión
   const [convenioId, setConvenioId] = React.useState<string>("particular");
@@ -526,12 +494,12 @@ export function AdmisionPageForm() {
   );
   const [observacion, setObservacion] = React.useState<string>("");
 
-  // Al cargar el formulario, asegurar que el carrito inicie vacio (desde 0 prestaciones)
+  // Limpiar el carrito al cargar la página
   React.useEffect(() => {
     clearDetalles();
   }, [clearDetalles]);
 
-  // Filtrado dinámico de Pacientes
+  // Filtrado de Pacientes por DNI, Nombre o N° Historia Clínica
   const pacientesList = pacientesData?.items ?? [];
   const filteredPacientes = React.useMemo(() => {
     const q = patientSearch.trim().toLowerCase();
@@ -546,38 +514,8 @@ export function AdmisionPageForm() {
 
   const selectedPaciente = pacientesList.find((p) => p.id.toString() === selectedPacienteId);
 
-  // Vista previa dinámica de N° Historia Clínica
-  const hcPreview = React.useMemo(() => {
-    const i1 = (nuevoPaciente.nombres?.[0] || "").toUpperCase();
-    const i2 = (nuevoPaciente.apellidoPaterno?.[0] || "").toUpperCase();
-    const i3 = (nuevoPaciente.apellidoMaterno?.[0] || "").toUpperCase();
-    const docClean = (nuevoPaciente.numeroDocumento || "").trim().toUpperCase();
-    return `${i1}${i2}${i3}-${docClean || "DOC"}`;
-  }, [nuevoPaciente.nombres, nuevoPaciente.apellidoPaterno, nuevoPaciente.apellidoMaterno, nuevoPaciente.numeroDocumento]);
-
-  const handleSwitchToRegisterNew = () => {
-    const query = patientSearch.trim();
-    const isDigitsOnly = /^\d+$/.test(query);
-
-    if (isDigitsOnly) {
-      setNuevoPaciente((prev) => ({
-        ...prev,
-        numeroDocumento: query,
-        tipoDocumento: prev.tipoDocumento || "DNI",
-      }));
-    } else if (query.length > 0) {
-      const parts = query.split(" ");
-      setNuevoPaciente((prev) => ({
-        ...prev,
-        nombres: parts[0] || "",
-        apellidoPaterno: parts.slice(1).join(" ") || "",
-        tipoDocumento: prev.tipoDocumento || "DNI",
-      }));
-    }
-
-    setPatientMode("NUEVO");
-    toast.info("Modo de registro activado para nuevo paciente.");
-  };
+  // Paso 3 (Carrito) HABILITADO SOLO SI EXISTE UN PACIENTE SELECCIONADO
+  const isPatientValid = Boolean(selectedPacienteId && selectedPaciente);
 
   // Totales
   const totalSubtotal = detalles.reduce(
@@ -587,13 +525,18 @@ export function AdmisionPageForm() {
   const totalDescuentos = detalles.reduce((acc, d) => acc + Number(d.descuento || 0), 0);
   const grandTotal = Math.max(0, totalSubtotal - totalDescuentos);
 
-  const isSubmitting = createAdmisionMutation.isPending || createConPacienteMutation.isPending;
+  const isSubmitting = createAdmisionMutation.isPending;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!isPatientValid || !selectedPacienteId) {
+      toast.error("Debe buscar y seleccionar un paciente antes de guardar la admisión.");
+      return;
+    }
+
     if (detalles.length === 0) {
-      toast.error("Debe agregar al menos un servicio o procedimiento médico.");
+      toast.error("Debe agregar al menos una prestación médica a la admisión.");
       return;
     }
 
@@ -605,91 +548,50 @@ export function AdmisionPageForm() {
       descuento: Number(d.descuento) || 0,
     }));
 
-    if (patientMode === "EXISTENTE") {
-      if (!selectedPacienteId) {
-        toast.error("Por favor busque y seleccione un paciente existente.");
-        return;
-      }
+    const payload = {
+      pacienteId: Number(selectedPacienteId),
+      convenioId: convenioId === "particular" ? null : Number(convenioId),
+      fechaHora: new Date(fechaHora).toISOString(),
+      observacion: observacion.trim() || undefined,
+      detalles: detallesFormatted,
+    };
 
-      const payload = {
-        pacienteId: Number(selectedPacienteId),
-        convenioId: convenioId === "particular" ? null : Number(convenioId),
-        fechaHora: new Date(fechaHora).toISOString(),
-        observacion: observacion.trim() || undefined,
-        detalles: detallesFormatted,
-      };
-
-      try {
-        const res = await createAdmisionMutation.mutateAsync(payload);
-        toast.success(`Admisión #${res.numero || res.id} creada exitosamente (POST /admisiones).`);
-        clearDetalles();
-        router.push("/recepcion/admisiones");
-      } catch {
-        toast.error("Error al crear admisión con paciente existente.");
-      }
-    } else {
-      if (!nuevoPaciente.tipoDocumento.trim()) {
-        toast.error("El Tipo de Documento es obligatorio.");
-        return;
-      }
-      if (!nuevoPaciente.numeroDocumento.trim()) {
-        toast.error("El Número de Documento es obligatorio.");
-        return;
-      }
-      if (!nuevoPaciente.nombres.trim()) {
-        toast.error("El Nombre del paciente es obligatorio.");
-        return;
-      }
-      if (!nuevoPaciente.apellidoPaterno.trim()) {
-        toast.error("El Apellido Paterno es obligatorio.");
-        return;
-      }
-      if (!nuevoPaciente.fechaNacimiento.trim()) {
-        toast.error("La Fecha de Nacimiento es obligatoria.");
-        return;
-      }
-
-      const payload = {
-        paciente: {
-          nombres: nuevoPaciente.nombres.trim(),
-          apellidoPaterno: nuevoPaciente.apellidoPaterno.trim(),
-          apellidoMaterno: nuevoPaciente.apellidoMaterno?.trim() || undefined,
-          fechaNacimiento: nuevoPaciente.fechaNacimiento,
-          telefono: nuevoPaciente.telefono?.trim() || undefined,
-          direccion: nuevoPaciente.direccion?.trim() || undefined,
-          tipoDocumento: nuevoPaciente.tipoDocumento.trim(),
-          numeroDocumento: nuevoPaciente.numeroDocumento.trim(),
-          extensionDocumento: nuevoPaciente.extensionDocumento?.trim() || undefined,
-          complementoDocumento: nuevoPaciente.complementoDocumento?.trim() || undefined,
-          genero: nuevoPaciente.genero?.trim() || undefined,
-          estadoCivil: nuevoPaciente.estadoCivil?.trim() || undefined,
-        },
-        convenioId: convenioId === "particular" ? null : Number(convenioId),
-        fechaHora: new Date(fechaHora).toISOString(),
-        observacion: observacion.trim() || undefined,
-        detalles: detallesFormatted,
-      };
-
-      try {
-        const res = await createConPacienteMutation.mutateAsync(payload);
-        toast.success(
-          `¡Paciente y Admisión #${res.numero || res.id} creados atómicamente en el servidor! (POST /admisiones/con-paciente)`
-        );
-        clearDetalles();
-        router.push("/recepcion/admisiones");
-      } catch {
-        toast.error("Error al registrar admisión con nuevo paciente.");
-      }
+    try {
+      const res = await createAdmisionMutation.mutateAsync(payload);
+      toast.success(`¡Admisión #${res.numero || res.id} registrada exitosamente! (POST /admisiones)`);
+      clearDetalles();
+      router.push("/recepcion/admisiones");
+    } catch {
+      toast.error("Error al registrar la admisión en el servidor.");
     }
   };
 
   return (
     <div className="flex flex-col gap-4 w-full px-4 sm:px-6 pb-12 animate-in fade-in-50 duration-300">
-      {/* DIÁLOGO MULTI-SELECCIÓN */}
+      {/* MODAL MULTI-SELECCIÓN DE SERVICIOS */}
       <MultiServicePickerModal
         isOpen={multiPickerOpen}
         onClose={() => setMultiPickerOpen(false)}
         categorias={categoriasList}
+      />
+
+      {/* DIÁLOGO OFICIAL COMPLETO DE REGISTRO / EDICIÓN DE PACIENTE */}
+      <PacienteFormDialog
+        open={registerPacienteOpen}
+        onOpenChange={(open) => {
+          setRegisterPacienteOpen(open);
+          if (!open) setPacienteToEdit(null);
+        }}
+        pacienteToEdit={pacienteToEdit}
+        initialSearchQuery={patientSearch}
+        onSuccessCallback={(savedPaciente) => {
+          if (savedPaciente) {
+            setSelectedPacienteId(savedPaciente.id.toString());
+            const nom = getPacienteFullName(savedPaciente);
+            setPatientSearch(nom);
+            toast.success(`¡Expediente de "${nom}" actualizado y seleccionado en la admisión!`);
+          }
+        }}
       />
 
       {/* CABECERA PRINCIPAL */}
@@ -710,11 +612,11 @@ export function AdmisionPageForm() {
                 Nueva Admisión de Paciente
               </h1>
               <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/20 h-5 px-2 font-semibold">
-                Control de Estado con Zustand
+                Expediente Paciente 100% Oficial
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground">
-              Multi-selección inteligente de prestaciones sin recortes y prevención automática de duplicados.
+              Filiación completa con PacienteFormDialog oficial. Desbloqueo del Paso 3 al seleccionar.
             </p>
           </div>
         </div>
@@ -734,21 +636,20 @@ export function AdmisionPageForm() {
             type="button"
             size="sm"
             onClick={handleSubmit}
-            disabled={isSubmitting}
-            className="h-9 px-5 text-xs font-semibold gap-2 bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-700 text-primary-foreground shadow-md shadow-primary/20"
+            disabled={isSubmitting || !isPatientValid || detalles.length === 0}
+            className="h-9 px-5 text-xs font-semibold gap-2 bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-700 text-primary-foreground shadow-md shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
               <Loader2 className="size-4 animate-spin" />
             ) : (
               <CheckCircle2 className="size-4" />
             )}
-            {patientMode === "NUEVO" ? "Crear Paciente y Admisión" : "Guardar Admisión"}
+            Guardar Admisión
           </Button>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* LAYOUT DE 2 COLUMNAS (5 COLS IZQUIERDA / 7 COLS DERECHA) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
           {/* COLUMNA IZQUIERDA: PACIENTE Y DATOS DE INGRESO (5 COLS) */}
           <div className="lg:col-span-5 space-y-4">
@@ -757,253 +658,135 @@ export function AdmisionPageForm() {
               <CardHeader className="p-4 pb-2.5 border-b border-border/60 flex flex-row items-center justify-between space-y-0">
                 <CardTitle className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
                   <User className="size-4 text-primary" />
-                  1. Paciente
+                  1. Selección de Paciente
                 </CardTitle>
 
-                {/* Selector de Modo */}
-                <div className="flex items-center gap-1 bg-muted/60 p-0.5 rounded-lg">
-                  <Button
-                    type="button"
-                    variant={patientMode === "EXISTENTE" ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setPatientMode("EXISTENTE")}
-                    className={`h-6.5 text-[11px] font-semibold px-2.5 rounded-md ${patientMode === "EXISTENTE" ? "bg-primary text-primary-foreground shadow-2xs" : "text-muted-foreground"
-                      }`}
-                  >
-                    Buscar
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={patientMode === "NUEVO" ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setPatientMode("NUEVO")}
-                    className={`h-6.5 text-[11px] font-semibold px-2.5 rounded-md ${patientMode === "NUEVO" ? "bg-primary text-primary-foreground shadow-2xs" : "text-muted-foreground"
-                      }`}
-                  >
-                    + Registrar
-                  </Button>
-                </div>
+                {isPatientValid && (
+                  <Badge className="bg-emerald-600 text-white border-0 text-[10px] font-bold px-2 py-0.5">
+                    ✓ Paciente Confirmado
+                  </Badge>
+                )}
               </CardHeader>
 
               <CardContent className="p-4 space-y-3">
-                {/* MODO BUSCAR PACIENTE */}
-                {patientMode === "EXISTENTE" && (
-                  <div className="space-y-3">
-                    {selectedPaciente ? (
-                      <div className="p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-3">
-                          <div className="size-9 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold shrink-0">
-                            <Check className="size-4" />
-                          </div>
-                          <div>
-                            <p className="font-bold text-xs text-foreground">
-                              {selectedPaciente.persona
-                                ? `${selectedPaciente.persona.nombres} ${selectedPaciente.persona.apellidoPaterno} ${selectedPaciente.persona.apellidoMaterno || ""}`.trim()
-                                : `Paciente #${selectedPaciente.id}`}
-                            </p>
-                            <p className="text-[11px] text-muted-foreground">
-                              DNI: <strong>{selectedPaciente.persona?.numeroDocumento || "Sin DNI"}</strong> | HC: <strong>{selectedPaciente.numeroHistoriaClinica || selectedPaciente.id}</strong>
-                            </p>
-                          </div>
-                        </div>
-
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setSelectedPacienteId("")}
-                          className="h-7 text-xs text-rose-600 hover:bg-rose-50 px-2"
-                        >
-                          Cambiar
-                        </Button>
+                {selectedPaciente ? (
+                  <div className="p-3.5 rounded-xl border border-emerald-500/40 bg-emerald-500/10 flex items-center justify-between text-xs shadow-2xs">
+                    <div className="flex items-center gap-3">
+                      <div className="size-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold shrink-0 shadow-xs">
+                        <Check className="size-5" />
                       </div>
-                    ) : (
-                      <div className="space-y-3">
-                        <div className="relative">
-                          <Search className="absolute left-3 top-3 size-4 text-muted-foreground" />
-                          <Input
-                            type="text"
-                            value={patientSearch}
-                            onChange={(e) => setPatientSearch(e.target.value)}
-                            placeholder="Buscar por DNI o Nombre del paciente..."
-                            className="h-9 text-xs pl-9 pr-8 bg-background shadow-2xs"
-                            autoFocus
-                          />
-                        </div>
-
-                        {/* Alerta si no se encuentra */}
-                        {patientSearch.trim().length > 0 && filteredPacientes.length === 0 && (
-                          <div className="p-3 rounded-xl border border-amber-500/30 bg-amber-500/10 flex items-center justify-between gap-2 text-xs">
-                            <div className="flex items-center gap-2">
-                              <AlertCircle className="size-4 text-amber-600 shrink-0" />
-                              <span className="text-[11px]">No existe paciente "{patientSearch}"</span>
-                            </div>
-                            <Button
-                              type="button"
-                              size="sm"
-                              onClick={handleSwitchToRegisterNew}
-                              className="h-7 px-3 text-[11px] font-semibold bg-amber-600 hover:bg-amber-700 text-white shrink-0"
-                            >
-                              + Registrar
-                            </Button>
-                          </div>
-                        )}
-
-                        {/* Lista de Resultados */}
-                        <div className="max-h-52 overflow-y-auto space-y-1.5 pr-0.5">
-                          {isLoadingPacientes ? (
-                            <p className="text-xs text-center text-muted-foreground py-3">Cargando pacientes...</p>
-                          ) : filteredPacientes.length === 0 && !patientSearch ? (
-                            <p className="text-xs text-center text-muted-foreground py-3 border border-dashed rounded-lg">
-                              Escriba DNI o Nombre para filtrar pacientes.
-                            </p>
-                          ) : (
-                            filteredPacientes.map((p) => {
-                              const nom = p.persona
-                                ? `${p.persona.nombres} ${p.persona.apellidoPaterno} ${p.persona.apellidoMaterno || ""}`.trim()
-                                : `Paciente #${p.id}`;
-                              const doc = p.persona?.numeroDocumento || "Sin DNI";
-
-                              return (
-                                <button
-                                  key={p.id}
-                                  type="button"
-                                  onClick={() => setSelectedPacienteId(p.id.toString())}
-                                  className="w-full p-2.5 rounded-xl border border-border/60 bg-background hover:bg-primary/5 hover:border-primary/40 transition-all text-left flex items-center justify-between text-xs group"
-                                >
-                                  <div>
-                                    <p className="font-bold text-xs text-foreground group-hover:text-primary transition-colors">{nom}</p>
-                                    <p className="text-[11px] text-muted-foreground">DNI: {doc} | HC: {p.numeroHistoriaClinica || p.id}</p>
-                                  </div>
-                                  <span className="text-[11px] font-semibold text-primary">Elegir →</span>
-                                </button>
-                              );
-                            })
-                          )}
-                        </div>
+                      <div>
+                        <p className="font-bold text-xs text-foreground">
+                          {getPacienteFullName(selectedPaciente)}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          {getPacienteDocument(selectedPaciente)} | N° HC: <strong>{selectedPaciente.numeroHistoriaClinica || selectedPaciente.id}</strong>
+                        </p>
                       </div>
-                    )}
-                  </div>
-                )}
+                    </div>
 
-                {/* MODO REGISTRAR NUEVO PACIENTE */}
-                {patientMode === "NUEVO" && (
-                  <div className="space-y-3 p-3.5 rounded-xl border border-primary/20 bg-primary/5 text-xs">
-                    <div className="flex items-center justify-between pb-1 border-b border-primary/20">
-                      <Badge variant="outline" className="bg-background text-[11px] font-mono text-primary border-primary/20">
-                        HC Sugerida: {hcPreview}
-                      </Badge>
+                    <div className="flex items-center gap-1.5">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setPacienteToEdit(selectedPaciente);
+                          setRegisterPacienteOpen(true);
+                        }}
+                        className="h-7 text-xs text-primary hover:bg-primary/10 border-primary/30 px-2.5 font-semibold gap-1"
+                        title="Editar expediente de este paciente"
+                      >
+                        <Edit className="size-3.5" />
+                        Editar
+                      </Button>
+
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
-                        onClick={() => setPatientMode("EXISTENTE")}
-                        className="h-6 text-[11px] text-muted-foreground hover:text-foreground"
+                        onClick={() => {
+                          setSelectedPacienteId("");
+                          setPatientSearch("");
+                          setPacienteToEdit(null);
+                        }}
+                        className="h-7 text-xs text-rose-600 hover:bg-rose-50 px-2.5 font-semibold"
                       >
-                        Volver
+                        Cambiar
                       </Button>
                     </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-3 size-4 text-muted-foreground" />
+                      <Input
+                        type="text"
+                        value={patientSearch}
+                        onChange={(e) => setPatientSearch(e.target.value)}
+                        placeholder="Buscar por Documento, Nombre o N° Historia Clínica..."
+                        className="h-9.5 text-xs pl-9 pr-3 bg-background shadow-2xs font-medium"
+                        autoFocus
+                      />
+                    </div>
 
-                    <div className="grid grid-cols-2 gap-2.5">
-                      <div className="space-y-1">
-                        <Label className="text-[11px] font-semibold">Tipo Documento *</Label>
-                        <CatalogoAutocomplete
-                          codigo="TIPOS_DOCUMENTO"
-                          value={nuevoPaciente.tipoDocumento}
-                          onValueChange={(val: string) => setNuevoPaciente((prev) => ({ ...prev, tipoDocumento: val }))}
-                          placeholder="Tipo..."
-                          className="h-8.5 text-xs"
-                        />
+                    {/* SUGERENCIA PARA REGISTRAR SI NO EXISTE */}
+                    {patientSearch.trim().length > 0 && filteredPacientes.length === 0 && (
+                      <div className="p-3.5 rounded-xl border border-amber-500/40 bg-amber-500/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-xs">
+                        <div className="flex items-center gap-2">
+                          <AlertCircle className="size-4 text-amber-600 shrink-0" />
+                          <span className="text-[11px] text-foreground font-medium">
+                            No existe ningún paciente para <strong>"{patientSearch}"</strong>.
+                          </span>
+                        </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => {
+                            setPacienteToEdit(null);
+                            setRegisterPacienteOpen(true);
+                          }}
+                          className="h-7.5 px-3 text-[11px] font-bold bg-amber-600 hover:bg-amber-700 text-white shrink-0 gap-1 shadow-2xs"
+                        >
+                          <UserPlus className="size-3.5" />
+                          + Registrar Paciente
+                        </Button>
                       </div>
-                      <div className="space-y-1">
-                        <Label className="text-[11px] font-semibold">N° Documento *</Label>
-                        <Input
-                          type="text"
-                          value={nuevoPaciente.numeroDocumento}
-                          onChange={(e) => setNuevoPaciente((prev) => ({ ...prev, numeroDocumento: e.target.value }))}
-                          placeholder="Ej. 74581290"
-                          className="h-8.5 text-xs font-mono bg-background"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-[11px] font-semibold">Extensión</Label>
-                        <CatalogoAutocomplete
-                          codigo="EXTENSIONES"
-                          value={nuevoPaciente.extensionDocumento || ""}
-                          onValueChange={(val: string) => setNuevoPaciente((prev) => ({ ...prev, extensionDocumento: val }))}
-                          placeholder="Lugar..."
-                          className="h-8.5 text-xs"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-[11px] font-semibold">Complemento</Label>
-                        <Input
-                          type="text"
-                          value={nuevoPaciente.complementoDocumento || ""}
-                          onChange={(e) => setNuevoPaciente((prev) => ({ ...prev, complementoDocumento: e.target.value }))}
-                          placeholder="Ej. 1A"
-                          className="h-8.5 text-xs bg-background"
-                        />
-                      </div>
-                      <div className="space-y-1 col-span-2">
-                        <Label className="text-[11px] font-semibold">Nombres *</Label>
-                        <Input
-                          type="text"
-                          value={nuevoPaciente.nombres}
-                          onChange={(e) => setNuevoPaciente((prev) => ({ ...prev, nombres: e.target.value }))}
-                          placeholder="Ej. Juan Carlos"
-                          className="h-8.5 text-xs bg-background"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-[11px] font-semibold">Ap. Paterno *</Label>
-                        <Input
-                          type="text"
-                          value={nuevoPaciente.apellidoPaterno}
-                          onChange={(e) => setNuevoPaciente((prev) => ({ ...prev, apellidoPaterno: e.target.value }))}
-                          placeholder="Paterno"
-                          className="h-8.5 text-xs bg-background"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-[11px] font-semibold">Ap. Materno</Label>
-                        <Input
-                          type="text"
-                          value={nuevoPaciente.apellidoMaterno || ""}
-                          onChange={(e) => setNuevoPaciente((prev) => ({ ...prev, apellidoMaterno: e.target.value }))}
-                          placeholder="Materno"
-                          className="h-8.5 text-xs bg-background"
-                        />
-                      </div>
-                      <div className="space-y-1 col-span-2">
-                        <Label className="text-[11px] font-semibold">Fecha Nacimiento *</Label>
-                        <Input
-                          type="date"
-                          value={nuevoPaciente.fechaNacimiento}
-                          onChange={(e) => setNuevoPaciente((prev) => ({ ...prev, fechaNacimiento: e.target.value }))}
-                          className="h-8.5 text-xs bg-background"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-[11px] font-semibold">Género</Label>
-                        <CatalogoAutocomplete
-                          codigo="GENERO"
-                          value={nuevoPaciente.genero || ""}
-                          onValueChange={(val: string) => setNuevoPaciente((prev) => ({ ...prev, genero: val }))}
-                          placeholder="Género..."
-                          className="h-8.5 text-xs"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-[11px] font-semibold">Estado Civil</Label>
-                        <CatalogoAutocomplete
-                          codigo="ESTADO_CIVIL"
-                          value={nuevoPaciente.estadoCivil || ""}
-                          onValueChange={(val: string) => setNuevoPaciente((prev) => ({ ...prev, estadoCivil: val }))}
-                          placeholder="Estado civil..."
-                          className="h-8.5 text-xs"
-                        />
-                      </div>
+                    )}
+
+                    {/* LISTA DE RESULTADOS DE BÚSQUEDA */}
+                    <div className="max-h-56 overflow-y-auto space-y-1.5 pr-0.5">
+                      {isLoadingPacientes ? (
+                        <p className="text-xs text-center text-muted-foreground py-4">Buscando pacientes en la BD...</p>
+                      ) : filteredPacientes.length === 0 && !patientSearch ? (
+                        <p className="text-xs text-center text-muted-foreground py-4 border border-dashed rounded-xl">
+                          Escriba Documento, Nombre o N° Historia Clínica para seleccionar.
+                        </p>
+                      ) : (
+                        filteredPacientes.map((p) => {
+                          const nom = getPacienteFullName(p);
+                          const docInfo = getPacienteDocument(p);
+                          const hc = p.numeroHistoriaClinica || p.id;
+
+                          return (
+                            <button
+                              key={p.id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedPacienteId(p.id.toString());
+                                toast.success(`Paciente "${nom}" seleccionado.`);
+                              }}
+                              className="w-full p-2.5 rounded-xl border border-border/60 bg-background hover:bg-primary/5 hover:border-primary/40 transition-all text-left flex items-center justify-between text-xs group"
+                            >
+                              <div>
+                                <p className="font-bold text-xs text-foreground group-hover:text-primary transition-colors">{nom}</p>
+                                <p className="text-[11px] text-muted-foreground">{docInfo} | N° HC: <strong>{hc}</strong></p>
+                              </div>
+                              <span className="text-[11px] font-bold text-primary opacity-80 group-hover:opacity-100">Elegir →</span>
+                            </button>
+                          );
+                        })
+                      )}
                     </div>
                   </div>
                 )}
@@ -1021,7 +804,6 @@ export function AdmisionPageForm() {
 
               <CardContent className="p-4 space-y-3.5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                  {/* Convenio / Cobertura */}
                   <div className="space-y-1">
                     <Label className="text-xs font-semibold">Convenio / Seguro Cobertura</Label>
                     <select
@@ -1038,7 +820,6 @@ export function AdmisionPageForm() {
                     </select>
                   </div>
 
-                  {/* Fecha y Hora */}
                   <div className="space-y-1">
                     <Label className="text-xs font-semibold">Fecha & Hora de Atención</Label>
                     <Input
@@ -1050,7 +831,6 @@ export function AdmisionPageForm() {
                   </div>
                 </div>
 
-                {/* Observaciones */}
                 <div className="space-y-1">
                   <Label className="text-xs font-semibold">Observaciones Clínicas / Indicaciones de Recepción</Label>
                   <Textarea
@@ -1065,56 +845,85 @@ export function AdmisionPageForm() {
             </Card>
           </div>
 
-          {/* COLUMNA DERECHA: CARRITO CON ZUSTAND STORE (7 COLS) */}
+          {/* COLUMNA DERECHA: CARRITO DE PRESTACIONES (BLOQUEADO HASTA ELEGIR PACIENTE) */}
           <div className="lg:col-span-7 space-y-4">
-            <Card className="border border-border/70 shadow-2xs bg-card">
+            <Card className={`border shadow-2xs bg-card transition-all ${!isPatientValid ? "border-amber-500/30 opacity-90" : "border-border/70"}`}>
               <CardHeader className="p-4 pb-3 border-b border-border/60 flex flex-row items-center justify-between space-y-0">
                 <div className="flex items-center gap-2">
                   <Stethoscope className="size-4 text-primary" />
                   <div>
-                    <CardTitle className="text-xs font-bold uppercase tracking-wider text-foreground">
+                    <CardTitle className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
                       3. Carrito de Prestaciones Médicas ({detalles.length})
+                      {!isPatientValid && (
+                        <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20 font-bold text-[10px] gap-1 py-0 h-5">
+                          <Lock className="size-3" /> Bloqueado (Falta Paciente)
+                        </Badge>
+                      )}
                     </CardTitle>
                   </div>
                 </div>
 
-                {/* BOTÓN ÚNICO PARA ABRIR CATÁLOGO EN MULTI-SELECCIÓN */}
                 <Button
                   type="button"
                   size="sm"
-                  onClick={() => setMultiPickerOpen(true)}
-                  className="h-8.5 text-xs font-bold gap-2 bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-700 text-primary-foreground shadow-xs px-3.5"
+                  onClick={() => {
+                    if (!isPatientValid) {
+                      toast.warning("Debe seleccionar o registrar un paciente en el Paso 1 antes de agregar prestaciones.");
+                      return;
+                    }
+                    setMultiPickerOpen(true);
+                  }}
+                  disabled={!isPatientValid}
+                  className={`h-8.5 text-xs font-bold gap-2 shadow-xs px-3.5 transition-all ${
+                    !isPatientValid
+                      ? "bg-muted text-muted-foreground border-muted cursor-not-allowed opacity-60"
+                      : "bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-700 text-primary-foreground"
+                  }`}
+                  title={!isPatientValid ? "Seleccione un paciente primero" : "Abrir catálogo de prestaciones"}
                 >
-                  <ShoppingCart className="size-3.5" />
+                  {!isPatientValid ? <Lock className="size-3.5" /> : <ShoppingCart className="size-3.5" />}
                   Abrir Catálogo & Seleccionar Prestaciones
                 </Button>
               </CardHeader>
 
               <CardContent className="p-4 space-y-3.5">
-                {/* LISTA DE TARJETAS VISUALES (SIN SCROLLBAR INTERNO, CRECE NATURALMENTE HACIA ABAJO) */}
-                <div className="space-y-3.5 w-full">
-                  {detalles.length === 0 ? (
-                    <div className="p-8 text-center text-xs text-muted-foreground border border-dashed rounded-xl space-y-2">
-                      <ShoppingCart className="size-8 text-muted-foreground/40 mx-auto" />
-                      <p className="font-semibold text-foreground">El carrito está vacío</p>
-                      <p className="text-[11px]">Haga clic en <strong>"Abrir Catálogo"</strong> para elegir varias prestaciones a la vez.</p>
+                {!isPatientValid ? (
+                  <div className="p-8 text-center border-2 border-dashed border-amber-500/30 rounded-xl bg-amber-500/5 space-y-3">
+                    <div className="size-11 rounded-full bg-amber-500/10 text-amber-600 flex items-center justify-center mx-auto font-bold">
+                      <Lock className="size-5" />
                     </div>
-                  ) : (
-                    detalles.map((row, idx) => (
-                      <ServicioRowItem
-                        key={row.id}
-                        row={row}
-                        index={idx}
-                        medicos={medicosList}
-                        onUpdate={updateDetalle}
-                        onRemove={removeDetalle}
-                        isOnlyRow={detalles.length <= 1}
-                      />
-                    ))
-                  )}
-                </div>
+                    <div>
+                      <p className="font-bold text-xs text-foreground uppercase tracking-wider">
+                        Paso 3 Bloqueado: Falta Seleccionar Paciente
+                      </p>
+                      <p className="text-[11px] text-muted-foreground mt-1 max-w-sm mx-auto leading-relaxed">
+                        Por favor busque por <strong>Documento, Nombre o N° Historia Clínica</strong> en el Paso 1 (o regístrelo si no existe) para desbloquear el catálogo de prestaciones.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3.5 w-full">
+                    {detalles.length === 0 ? (
+                      <div className="p-8 text-center text-xs text-muted-foreground border border-dashed rounded-xl space-y-2">
+                        <ShoppingCart className="size-8 text-muted-foreground/40 mx-auto" />
+                        <p className="font-semibold text-foreground">El carrito está vacío</p>
+                        <p className="text-[11px]">Haga clic en <strong>"Abrir Catálogo"</strong> para elegir varias prestaciones a la vez.</p>
+                      </div>
+                    ) : (
+                      detalles.map((row, idx) => (
+                        <ServicioRowItem
+                          key={row.id}
+                          row={row}
+                          index={idx}
+                          medicos={medicosList}
+                          onUpdate={updateDetalle}
+                          onRemove={removeDetalle}
+                        />
+                      ))
+                    )}
+                  </div>
+                )}
 
-                {/* RESUMEN FINANCIERO Y TOTALES SIEMPRE VISIBLES (STICKY PEGAJOSO EN LA PARTE INFERIOR) */}
                 <div className="sticky bottom-4 z-10 backdrop-blur-md bg-card/95 p-4 border border-border/80 rounded-xl shadow-lg flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
                   <div className="flex items-center gap-6 text-muted-foreground text-xs">
                     <span>Subtotal Neto: <strong className="text-foreground">S/.{totalSubtotal.toFixed(2)}</strong></span>
@@ -1133,11 +942,10 @@ export function AdmisionPageForm() {
               </CardContent>
             </Card>
 
-            {/* BOTONES FLOTANTES DE ACCIÓN FINAL */}
             <div className="p-4 bg-card border border-border/70 rounded-xl shadow-2xs flex items-center justify-between">
               <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
                 <Receipt className="size-4 text-blue-600" />
-                <span>Endpoint servidor: <strong className="text-blue-600 font-bold">{patientMode === "NUEVO" ? "POST /admisiones/con-paciente" : "POST /admisiones"}</strong></span>
+                <span>Endpoint de admisión: <strong className="text-blue-600 font-bold">POST /admisiones</strong></span>
               </div>
 
               <div className="flex items-center gap-3">
@@ -1154,15 +962,15 @@ export function AdmisionPageForm() {
                 <Button
                   type="submit"
                   size="sm"
-                  disabled={isSubmitting}
-                  className="h-9 px-5 text-xs font-semibold gap-2 bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-700 text-primary-foreground shadow-sm shadow-primary/20"
+                  disabled={isSubmitting || !isPatientValid || detalles.length === 0}
+                  className="h-9 px-5 text-xs font-semibold gap-2 bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-700 text-primary-foreground shadow-sm shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? (
                     <Loader2 className="size-4 animate-spin" />
                   ) : (
                     <Sparkles className="size-4" />
                   )}
-                  {patientMode === "NUEVO" ? "Crear Paciente & Admisión" : "Guardar Admisión"}
+                  Guardar Admisión
                 </Button>
               </div>
             </div>

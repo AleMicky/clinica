@@ -29,13 +29,15 @@ interface PacienteFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   pacienteToEdit?: PacienteResponse | null;
-  onSuccessCallback?: () => void;
+  initialSearchQuery?: string;
+  onSuccessCallback?: (createdPaciente?: PacienteResponse) => void;
 }
 
 export function PacienteFormDialog({
   open,
   onOpenChange,
   pacienteToEdit,
+  initialSearchQuery,
   onSuccessCallback,
 }: PacienteFormDialogProps) {
   const isEditing = Boolean(pacienteToEdit);
@@ -115,15 +117,19 @@ export function PacienteFormDialog({
           estadoCivil: p.estadoCivil || "",
         });
       } else {
+        const q = (initialSearchQuery || "").trim();
+        const isDigits = /^\d+$/.test(q);
+        const parts = q.split(" ");
+
         reset({
-          nombres: "",
-          apellidoPaterno: "",
+          nombres: !isDigits && parts[0] ? parts[0] : "",
+          apellidoPaterno: !isDigits && parts.length > 1 ? parts.slice(1).join(" ") : "",
           apellidoMaterno: "",
           fechaNacimiento: "",
           telefono: "",
           direccion: "",
           tipoDocumento: "",
-          numeroDocumento: "",
+          numeroDocumento: isDigits ? q : "",
           extensionDocumento: "",
           complementoDocumento: "",
           genero: "",
@@ -131,23 +137,24 @@ export function PacienteFormDialog({
         });
       }
     }
-  }, [open, pacienteToEdit, reset]);
+  }, [open, pacienteToEdit, initialSearchQuery, reset]);
 
   const onSubmit = async (values: PacienteFormValues) => {
     try {
       if (isEditing && pacienteToEdit) {
-        await updateMutation.mutateAsync({
+        const res = await updateMutation.mutateAsync({
           id: pacienteToEdit.id,
           data: values,
         });
         toast.success("Expediente del paciente actualizado correctamente.");
+        onOpenChange(false);
+        onSuccessCallback?.(res);
       } else {
-        await createMutation.mutateAsync(values);
+        const res = await createMutation.mutateAsync(values);
         toast.success("Paciente registrado correctamente.");
+        onOpenChange(false);
+        onSuccessCallback?.(res);
       }
-
-      onOpenChange(false);
-      onSuccessCallback?.();
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : "Error al procesar la solicitud.";
       toast.error(errorMsg);
