@@ -1,0 +1,156 @@
+"use client";
+
+import * as React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Building2 } from "lucide-react";
+import type { PacienteConvenioResponse } from "../../pacientes/types/paciente.types";
+import type { ConvenioResponse } from "@/modules/servicios/convenio/types/convenio.types";
+
+export interface AdmisionCoberturaSectionProps {
+  convenioId: string;
+  setConvenioId: (id: string) => void;
+  fechaHora: string;
+  setFechaHora: (val: string) => void;
+  observacion: string;
+  setObservacion: (val: string) => void;
+  pacienteConveniosList: PacienteConvenioResponse[];
+  conveniosList: ConvenioResponse[];
+  isLoadingPacienteConvenios: boolean;
+  selectedConvenioNombre: string;
+}
+
+export function AdmisionCoberturaSection({
+  convenioId,
+  setConvenioId,
+  fechaHora,
+  setFechaHora,
+  observacion,
+  setObservacion,
+  pacienteConveniosList,
+  conveniosList,
+  isLoadingPacienteConvenios,
+  selectedConvenioNombre,
+}: AdmisionCoberturaSectionProps) {
+  return (
+    <Card className="border border-border/70 shadow-2xs bg-card">
+      <CardHeader className="p-4 pb-2.5 border-b border-border/60">
+        <CardTitle className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
+          <Building2 className="size-4 text-primary" />
+          2. Cobertura & Datos de Ingreso
+        </CardTitle>
+      </CardHeader>
+
+      <CardContent className="p-4 space-y-3.5">
+        <div className="space-y-3.5 text-xs">
+          <div className="space-y-1 w-full">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-semibold">Convenio / Cobertura</Label>
+              {isLoadingPacienteConvenios && (
+                <span className="text-[10px] text-muted-foreground animate-pulse">Cargando...</span>
+              )}
+            </div>
+            <Select
+              value={convenioId}
+              onValueChange={(val: string | null) => setConvenioId(val || "particular")}
+            >
+              <SelectTrigger className="h-9 w-full bg-background text-xs font-medium border-border/80">
+                <SelectValue placeholder="Seleccionar convenio...">
+                  {selectedConvenioNombre}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent className="max-w-xl w-full">
+                <SelectItem value="particular" label="Particular (Sin Convenio / Cobertura Directa)">
+                  Particular (Sin Convenio / Cobertura Directa)
+                </SelectItem>
+
+                {pacienteConveniosList.length > 0 && (
+                  <SelectGroup>
+                    <SelectLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Convenios Afiliados al Paciente
+                    </SelectLabel>
+                    {pacienteConveniosList.map((pc) => {
+                      const cNombre = pc.convenio?.nombre || `Convenio #${pc.convenioId}`;
+                      const cCodigo = pc.convenio?.codigo ? ` (${pc.convenio.codigo})` : "";
+                      const afil = pc.numeroAfiliado ? ` - Afil: ${pc.numeroAfiliado}` : "";
+                      const star = pc.esPrincipal ? " ★ [Principal]" : "";
+                      const labelText = `${cNombre}${cCodigo}${afil}${star}`;
+                      return (
+                        <SelectItem key={`pc-${pc.id}`} value={pc.convenioId.toString()} label={labelText}>
+                          {cNombre}{cCodigo}{afil}{star}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectGroup>
+                )}
+
+                <SelectSeparator />
+
+                <SelectGroup>
+                  <SelectLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Todos los Convenios del Sistema
+                  </SelectLabel>
+                  {conveniosList.map((c) => {
+                    const cLabel = `${c.nombre}${c.codigo ? ` (${c.codigo})` : ""}`;
+                    return (
+                      <SelectItem key={`c-${c.id}`} value={c.id.toString()} label={cLabel}>
+                        {c.nombre} {c.codigo ? `(${c.codigo})` : ""}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+
+            {convenioId !== "particular" ? (
+              <div className="flex items-center justify-between text-[11px] text-emerald-600 font-medium pt-0.5 px-0.5 gap-2">
+                <span className="shrink-0">✓ Cobertura por Convenio</span>
+                <span className="font-semibold text-emerald-700 truncate max-w-[280px] text-right" title={selectedConvenioNombre}>
+                  {selectedConvenioNombre}
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between text-[11px] text-muted-foreground font-medium pt-0.5 px-0.5 gap-2">
+                <span>Atención Particular</span>
+                <span className="font-semibold text-foreground">Particular (Sin Convenio)</span>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-1 w-full">
+            <Label className="text-xs font-semibold">Fecha & Hora de Atención</Label>
+            <Input
+              type="datetime-local"
+              value={fechaHora}
+              onChange={(e) => setFechaHora(e.target.value)}
+              className="h-9 text-xs bg-background font-medium w-full"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-1">
+          <Label className="text-xs font-semibold">Observaciones Clínicas / Indicaciones de Recepción</Label>
+          <Textarea
+            value={observacion}
+            onChange={(e) => setObservacion(e.target.value)}
+            placeholder="Escriba sintomatología de ingreso o notas médicas..."
+            rows={2.5}
+            className="text-xs bg-background resize-none border-border/70"
+          />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

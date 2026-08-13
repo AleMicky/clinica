@@ -5,7 +5,6 @@ namespace Clinica.Api.Modules.Recepcion.Admision.Dtos;
 
 public abstract record AdmisionRequest
 {
-    public required string Numero { get; init; }
     public required int PacienteId { get; init; }
     public int? ConvenioId { get; init; }
     public required DateTime FechaHora { get; init; }

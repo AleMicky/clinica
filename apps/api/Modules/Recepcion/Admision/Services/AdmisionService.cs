@@ -1,4 +1,6 @@
 using Clinica.Api.Data;
+using Clinica.Api.Modules.Parametros.Correlativo.Dtos;
+using Clinica.Api.Modules.Parametros.Correlativo.Services;
 using Clinica.Api.Modules.Recepcion.Admision.Dtos;
 using Clinica.Api.Modules.Recepcion.Admision.Entity;
 using Clinica.Api.Modules.Recepcion.Admision.Mappers;
@@ -15,7 +17,10 @@ using AdmisionDetalleEntity = Clinica.Api.Modules.Recepcion.Admision.Entity.Admi
 
 namespace Clinica.Api.Modules.Recepcion.Admision.Services;
 
-public sealed class AdmisionService(AppDbContext dbContext)
+public sealed class AdmisionService(
+    AppDbContext dbContext,
+    CorrelativoService correlativoService
+)
 {
     private DbSet<AdmisionEntity> Admisiones => dbContext.Set<AdmisionEntity>();
 
@@ -84,15 +89,26 @@ public sealed class AdmisionService(AppDbContext dbContext)
         CreateAdmisionRequest request,
         CancellationToken cancellationToken = default)
     {
-        await ValidarUnicidadNumeroAsync(request.Numero, cancellationToken);
+       // await ValidarUnicidadNumeroAsync(request.Numero, cancellationToken);
         await EnsurePacienteExistsAsync(request.PacienteId, cancellationToken);
         await EnsureConvenioExistsAsync(request.ConvenioId, cancellationToken);
         await ValidarDetallesAsync(request.Detalles, cancellationToken);
 
         var entity = AdmisionMapper.ToEntity(request);
 
-        Normalizar(entity, request.Numero, request.Observacion);
+        Normalizar(entity, request.Observacion);
 
+        var paramCorrelativo = new GenerarCorrelativoRequest
+        {
+            Codigo = "ADM",
+            Gestion = entity.FechaHora.Year,
+            Prefijo = "ADM",
+            Longitud = 6
+        };
+        
+        var correlativo = await correlativoService.GenerarAsync(paramCorrelativo, cancellationToken);
+        
+        entity.Numero = correlativo.Codigo;
         entity.Estado = EstadoAdmision.Registrada;
         entity.Detalles = request.Detalles.Select(CrearDetalle).ToList();
 
@@ -116,14 +132,13 @@ public sealed class AdmisionService(AppDbContext dbContext)
         if (entity is null)
             throw new NotFoundException(nameof(AdmisionEntity), id);
 
-        await ValidarUnicidadNumeroAsync(request.Numero, id, cancellationToken);
         await EnsurePacienteExistsAsync(request.PacienteId, cancellationToken);
         await EnsureConvenioExistsAsync(request.ConvenioId, cancellationToken);
         await ValidarDetallesAsync(request.Detalles, cancellationToken);
 
         AdmisionMapper.UpdateEntity(request, entity);
 
-        Normalizar(entity, request.Numero, request.Observacion);
+        Normalizar(entity, request.Observacion);
 
         ReemplazarDetalles(entity, request.Detalles);
 
@@ -345,10 +360,8 @@ public sealed class AdmisionService(AppDbContext dbContext)
 
     private static void Normalizar(
         AdmisionEntity entity,
-        string numero,
         string? observacion)
     {
-        entity.Numero = numero.TrimUpperRequired();
         entity.Observacion = observacion.TrimOrNull();
     }
 }
