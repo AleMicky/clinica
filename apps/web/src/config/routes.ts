@@ -34,6 +34,9 @@ export const ROUTES = {
   CAJAS: {
     ROOT: "/cajas",
     TURNOS: "/cajas/turnos",
+    MOVIMIENTOS: "/cajas/movimientos",
+    ARQUEOS: "/cajas/arqueos",
+    COBROS: "/cajas/cobros",
   },
 } as const
 

@@ -101,7 +101,11 @@ export function MovimientoCajaFormDialog({
   const tipoVal = watch("tipo");
   const fechaHoraVal = watch("fechaHora");
 
-  const turnosList = turnosData?.items ?? [];
+  const turnosList = Array.isArray(turnosData?.items)
+    ? turnosData.items
+    : Array.isArray(turnosData)
+    ? turnosData
+    : [];
 
   const turnoOptions: AutocompleteOption[] = React.useMemo(() => {
     return turnosList.map((t) => {

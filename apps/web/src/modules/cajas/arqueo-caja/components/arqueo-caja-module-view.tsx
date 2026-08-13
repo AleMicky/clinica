@@ -48,8 +48,12 @@ export function ArqueoCajaModuleView() {
 
   const deleteMutation = useDeleteArqueoCaja();
 
-  const arqueos = apiData?.items ?? [];
-  const totalItems = apiData?.totalItems ?? 0;
+  const arqueos = Array.isArray(apiData?.items)
+    ? apiData.items
+    : Array.isArray(apiData)
+    ? (apiData as unknown as ArqueoCajaResponse[])
+    : [];
+  const totalItems = apiData?.totalItems ?? arqueos.length;
 
   const metrics = React.useMemo(() => {
     let exactos = 0;

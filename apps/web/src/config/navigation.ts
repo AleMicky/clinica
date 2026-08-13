@@ -26,6 +26,9 @@ import {
   Landmark,
   Vault,
   Clock,
+  ArrowLeftRight,
+  Calculator,
+  CreditCard,
   type LucideIcon,
 } from "lucide-react"
 
@@ -257,6 +260,24 @@ export const cajasNav: NavGroup = {
       href: "/cajas/turnos",
       icon: Clock,
       description: "Apertura, operatividad y cierre de turnos de cajero",
+    },
+    {
+      title: "Movimientos",
+      href: "/cajas/movimientos",
+      icon: ArrowLeftRight,
+      description: "Registro de ingresos, egresos, retiros y reposiciones",
+    },
+    {
+      title: "Arqueos y Cierres",
+      href: "/cajas/arqueos",
+      icon: Calculator,
+      description: "Conteo físico y conciliación de saldos por turno",
+    },
+    {
+      title: "Cobros",
+      href: "/cajas/cobros",
+      icon: CreditCard,
+      description: "Gestión de cobros procesados y anulaciones",
     },
   ],
 }

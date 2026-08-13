@@ -36,8 +36,12 @@ export function CobroModuleView() {
     search: debouncedSearch || undefined,
   });
 
-  const cobros = apiData?.items ?? [];
-  const totalItems = apiData?.totalItems ?? 0;
+  const cobros = Array.isArray(apiData?.items)
+    ? apiData.items
+    : Array.isArray(apiData)
+    ? (apiData as unknown as CobroResponse[])
+    : [];
+  const totalItems = apiData?.totalItems ?? cobros.length;
 
   const metrics = React.useMemo(() => {
     let montoTotal = 0;

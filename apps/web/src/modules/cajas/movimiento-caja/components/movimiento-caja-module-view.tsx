@@ -51,8 +51,12 @@ export function MovimientoCajaModuleView() {
 
   const deleteMutation = useDeleteMovimientoCaja();
 
-  const movimientos = apiData?.items ?? [];
-  const totalItems = apiData?.totalItems ?? 0;
+  const movimientos = Array.isArray(apiData?.items)
+    ? apiData.items
+    : Array.isArray(apiData)
+    ? (apiData as unknown as MovimientoCajaResponse[])
+    : [];
+  const totalItems = apiData?.totalItems ?? movimientos.length;
 
   const metrics = React.useMemo(() => {
     let ingresos = 0;

@@ -44,8 +44,12 @@ export function TurnoCajaModuleView() {
 
   const deleteMutation = useDeleteTurnoCaja();
 
-  const turnos = apiData?.items ?? [];
-  const totalItems = apiData?.totalItems ?? 0;
+  const turnos = Array.isArray(apiData?.items)
+    ? apiData.items
+    : Array.isArray(apiData)
+    ? (apiData as unknown as TurnoCajaResponse[])
+    : [];
+  const totalItems = apiData?.totalItems ?? turnos.length;
 
   const metrics = React.useMemo(() => {
     return {

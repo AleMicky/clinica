@@ -108,8 +108,16 @@ export function TurnoCajaFormDialog({
   const fechaCierreVal = watch("fechaHoraCierre");
   const estadoVal = watch("estado");
 
-  const cajasList = cajasData?.items ?? [];
-  const empleadosList = empleadosData?.items ?? [];
+  const cajasList = Array.isArray(cajasData?.items)
+    ? cajasData.items
+    : Array.isArray(cajasData)
+    ? cajasData
+    : [];
+  const empleadosList = Array.isArray(empleadosData?.items)
+    ? empleadosData.items
+    : Array.isArray(empleadosData)
+    ? empleadosData
+    : [];
 
   // Mapeo de opciones Autocomplete para Cajas
   const cajaOptions: AutocompleteOption[] = React.useMemo(() => {

@@ -113,9 +113,21 @@ export function ArqueoCajaFormDialog({
   const fechaHoraVal = watch("fechaHora");
   const detallesWatch = watch("detalles");
 
-  const turnosList = turnosData?.items ?? [];
-  const metodosList = metodosData?.items ?? [];
-  const monedasList = monedasData?.items ?? [];
+  const turnosList = Array.isArray(turnosData?.items)
+    ? turnosData.items
+    : Array.isArray(turnosData)
+    ? turnosData
+    : [];
+  const metodosList = Array.isArray(metodosData?.items)
+    ? metodosData.items
+    : Array.isArray(metodosData)
+    ? metodosData
+    : [];
+  const monedasList = Array.isArray(monedasData?.items)
+    ? monedasData.items
+    : Array.isArray(monedasData)
+    ? monedasData
+    : [];
 
   // Default moneda ID
   const defaultMonedaId = React.useMemo(() => {

@@ -43,8 +43,12 @@ export function CajaModuleView() {
 
   const deleteMutation = useDeleteCaja();
 
-  const cajas = apiData?.items ?? [];
-  const totalItems = apiData?.totalItems ?? 0;
+  const cajas = Array.isArray(apiData?.items)
+    ? apiData.items
+    : Array.isArray(apiData)
+    ? (apiData as unknown as CajaResponse[])
+    : [];
+  const totalItems = apiData?.totalItems ?? cajas.length;
 
   const metrics = React.useMemo(() => {
     return {
