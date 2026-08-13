@@ -5,7 +5,6 @@ namespace Clinica.Api.Modules.Ventas.Venta.Dtos;
 
 public abstract record VentaRequest
 {
-    public required string Numero { get; init; }
     public required int AdmisionId { get; init; }
     public required int PacienteId { get; init; }
     public required int MonedaId { get; init; }

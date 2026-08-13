@@ -26,6 +26,10 @@ public static class VentaEndpoints
             .WithName("CrearVenta")
             .Validate<CreateVentaRequest>();
 
+        group.MapPatch("/{id:int}/estado", CambiarEstadoAsync)
+            .WithName("CambiarEstadoVenta")
+            .Validate<CambiarEstadoVentaRequest>();
+
         group.MapDelete("/{id:int}", AnularAsync)
             .WithName("AnularVenta");
 
@@ -111,6 +115,19 @@ public static class VentaEndpoints
         return Results.Created(
             $"{ApiRoutes.Prefix}/ventas/{result.Id}",
             result);
+    }
+
+    private static async Task<IResult> CambiarEstadoAsync(
+        int id,
+        CambiarEstadoVentaRequest request,
+        VentaService service,
+        CancellationToken cancellationToken)
+    {
+        return Results.Ok(
+            await service.CambiarEstadoAsync(
+                id,
+                request,
+                cancellationToken));
     }
 
     private static async Task<IResult> AnularAsync(

@@ -138,8 +138,6 @@ public sealed class VentaDetalleService(AppDbContext dbContext)
         }
 
         VentaDetalleMapper.UpdateEntity(request, entity);
-        entity.ServicioId = request.ServicioId;
-        entity.MedicoId = request.MedicoId;
         AplicarImportes(entity, request);
 
         await RecalcularTotalesYGuardarAsync(venta, cancellationToken);
@@ -178,10 +176,11 @@ public sealed class VentaDetalleService(AppDbContext dbContext)
         if (venta is null)
             throw new NotFoundException(nameof(VentaEntity), ventaId);
 
-        if (venta.Estado == EstadoVenta.Anulada)
+        if (venta.Estado != EstadoVenta.Pendiente)
         {
             throw new ConflictException(
-                "No se puede modificar una venta anulada.");
+                $"No se puede modificar una venta en estado {venta.Estado}. " +
+                $"Solo las ventas en estado {EstadoVenta.Pendiente} pueden ser modificadas.");
         }
 
         return venta;

@@ -39,7 +39,8 @@ public sealed class VentaDetalleConfiguration
             .HasPrecision(18, 2);
 
         builder.HasIndex(x => new { x.VentaId, x.ServicioId })
-            .IsUnique();
+            .IsUnique()
+            .HasFilter("[Activo] = 1");
 
         builder.HasOne(x => x.Servicio)
             .WithMany()

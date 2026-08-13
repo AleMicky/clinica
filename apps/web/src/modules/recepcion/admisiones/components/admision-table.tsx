@@ -31,6 +31,8 @@ import {
   FileText,
   Building2,
   Calendar,
+  Printer,
+  Download,
 } from "lucide-react";
 import {
   EstadoAdmision,
@@ -39,6 +41,8 @@ import {
   formatPacienteNombre,
   type AdmisionResponse,
 } from "../types/admision.types";
+import { downloadAdmisionPdf, openAdmisionPdfInNewTab } from "../api/admision.api";
+import { toast } from "sonner";
 import { AdmisionStatusBadge } from "./admision-status-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -239,6 +243,33 @@ export function AdmisionTable({
                             <DropdownMenuItem onClick={() => onViewDetail(adm)} className="gap-2 cursor-pointer">
                               <Eye className="size-3.5 text-primary" />
                               Ver Ficha de Admisión
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={async () => {
+                                try {
+                                  await openAdmisionPdfInNewTab(adm.id);
+                                } catch {
+                                  toast.error("Error al generar el PDF de admisión.");
+                                }
+                              }}
+                              className="gap-2 cursor-pointer"
+                            >
+                              <Printer className="size-3.5 text-blue-600" />
+                              Ver Ticket PDF
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={async () => {
+                                try {
+                                  await downloadAdmisionPdf(adm.id, adm.numero);
+                                  toast.success("PDF descargado correctamente.");
+                                } catch {
+                                  toast.error("Error al descargar el PDF.");
+                                }
+                              }}
+                              className="gap-2 cursor-pointer"
+                            >
+                              <Download className="size-3.5 text-emerald-600" />
+                              Descargar PDF
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => onChangeStatus(adm)} className="gap-2 cursor-pointer">
                               <RefreshCw className="size-3.5 text-amber-500" />

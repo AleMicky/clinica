@@ -43,6 +43,9 @@ public static class AdmisionEndpoints
         group.MapPatch("/{id:int}/estado", CambiarEstadoAsync)
             .WithName("CambiarEstadoAdmision")
             .Validate<CambiarEstadoRequest>();
+
+        group.MapGet("/{id:int}/pdf", GenerarPdfAsync)
+            .WithName("GenerarAdmisionPdf");
     }
 
     private static void MapDetalles(RouteGroupBuilder group)
@@ -139,6 +142,21 @@ public static class AdmisionEndpoints
                 id,
                 request,
                 cancellationToken));
+    }
+
+    private static async Task<IResult> GenerarPdfAsync(
+        int id,
+        AdmisionPdfService pdfService,
+        CancellationToken cancellationToken)
+    {
+        var (content, fileName) = await pdfService.GenerarConNombreAsync(
+            id,
+            cancellationToken);
+
+        return Results.File(
+            content,
+            "application/pdf",
+            fileName);
     }
 
     private static async Task<IResult> ListarDetallesAsync(

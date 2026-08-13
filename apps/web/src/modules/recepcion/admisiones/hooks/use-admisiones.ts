@@ -8,9 +8,11 @@ import {
   createAdmisionDetalle,
   deleteAdmision,
   deleteAdmisionDetalle,
+  downloadAdmisionPdf,
   getAdmisionById,
   getAdmisionDetalles,
   getAdmisiones,
+  openAdmisionPdfInNewTab,
   updateAdmision,
 } from "../api/admision.api";
 import { admisionKeys } from "../api/admision.key";
@@ -144,5 +146,18 @@ export function useDeleteAdmisionDetalle() {
       });
       queryClient.invalidateQueries({ queryKey: admisionKeys.all });
     },
+  });
+}
+
+export function useDownloadAdmisionPdf() {
+  return useMutation({
+    mutationFn: ({ id, numero }: { id: number; numero?: string }) =>
+      downloadAdmisionPdf(id, numero),
+  });
+}
+
+export function useOpenAdmisionPdf() {
+  return useMutation({
+    mutationFn: (id: number) => openAdmisionPdfInNewTab(id),
   });
 }

@@ -21,6 +21,8 @@ import {
   Clock,
   Building2,
   CheckCircle2,
+  Download,
+  Loader2,
 } from "lucide-react";
 import {
   EstadoAdmision,
@@ -31,6 +33,8 @@ import {
   formatServicioNombre,
   type AdmisionResponse,
 } from "../types/admision.types";
+import { downloadAdmisionPdf, openAdmisionPdfInNewTab } from "../api/admision.api";
+import { toast } from "sonner";
 import { AdmisionStatusBadge } from "./admision-status-badge";
 
 interface AdmisionDetailSheetProps {
@@ -46,14 +50,38 @@ export function AdmisionDetailSheet({
   admision,
   onChangeStatusClick,
 }: AdmisionDetailSheetProps) {
+  const [isDownloadingPdf, setIsDownloadingPdf] = React.useState(false);
+  const [isOpeningPdf, setIsOpeningPdf] = React.useState(false);
+
   if (!admision) return null;
 
   const totalCalculado =
     admision.totalAdmision ??
     admision.detalles.reduce((acc, d) => acc + (d.total || 0), 0);
 
-  const handlePrint = () => {
-    window.print();
+  const handleOpenPdf = async () => {
+    if (!admision) return;
+    try {
+      setIsOpeningPdf(true);
+      await openAdmisionPdfInNewTab(admision.id);
+    } catch {
+      toast.error("Error al generar vista previa del PDF.");
+    } finally {
+      setIsOpeningPdf(false);
+    }
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!admision) return;
+    try {
+      setIsDownloadingPdf(true);
+      await downloadAdmisionPdf(admision.id, admision.numero);
+      toast.success("PDF descargado correctamente.");
+    } catch {
+      toast.error("Error al descargar el PDF de admisión.");
+    } finally {
+      setIsDownloadingPdf(false);
+    }
   };
 
   return (
@@ -294,13 +322,33 @@ export function AdmisionDetailSheet({
             )}
 
             <Button
+              variant="outline"
+              size="sm"
+              disabled={isOpeningPdf}
+              onClick={handleOpenPdf}
+              className="h-9 px-3 text-xs font-semibold gap-1.5"
+            >
+              {isOpeningPdf ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <Printer className="size-3.5 text-primary" />
+              )}
+              Ver PDF
+            </Button>
+
+            <Button
               variant="secondary"
               size="sm"
-              onClick={handlePrint}
-              className="h-9 px-4 text-xs font-semibold gap-1.5"
+              disabled={isDownloadingPdf}
+              onClick={handleDownloadPdf}
+              className="h-9 px-3 text-xs font-semibold gap-1.5"
             >
-              <Printer className="size-3.5" />
-              Imprimir Ticket
+              {isDownloadingPdf ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <Download className="size-3.5" />
+              )}
+              Descargar PDF
             </Button>
           </div>
         </div>

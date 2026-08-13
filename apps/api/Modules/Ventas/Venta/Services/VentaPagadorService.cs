@@ -83,7 +83,7 @@ public sealed class VentaPagadorService(AppDbContext dbContext)
         CreateVentaPagadorRequest request,
         CancellationToken cancellationToken = default)
     {
-        await ObtenerVentaEditableAsync(ventaId, cancellationToken);
+        var venta = await ObtenerVentaEditableAsync(ventaId, cancellationToken);
         await ValidarYVerificarUnicidadAsync(
             ventaId,
             request.Tipo,
@@ -97,7 +97,7 @@ public sealed class VentaPagadorService(AppDbContext dbContext)
         entity.Estado = EstadoVentaPagador.Pendiente;
 
         await dbContext.VentaPagadores.AddAsync(entity, cancellationToken);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await RecalcularEstadoVentaAsync(venta, cancellationToken);
 
         return VentaPagadorMapper.ToResponse(entity);
     }
@@ -108,7 +108,7 @@ public sealed class VentaPagadorService(AppDbContext dbContext)
         UpdateVentaPagadorRequest request,
         CancellationToken cancellationToken = default)
     {
-        await ObtenerVentaEditableAsync(ventaId, cancellationToken);
+        var venta = await ObtenerVentaEditableAsync(ventaId, cancellationToken);
 
         var entity = await dbContext.VentaPagadores
             .FirstOrDefaultAsync(
@@ -128,9 +128,8 @@ public sealed class VentaPagadorService(AppDbContext dbContext)
             cancellationToken);
 
         VentaPagadorMapper.UpdateEntity(request, entity);
-        entity.ConvenioId = request.ConvenioId;
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await RecalcularEstadoVentaAsync(venta, cancellationToken);
 
         return VentaPagadorMapper.ToResponse(entity);
     }
@@ -140,7 +139,7 @@ public sealed class VentaPagadorService(AppDbContext dbContext)
         int pagadorId,
         CancellationToken cancellationToken = default)
     {
-        await ObtenerVentaEditableAsync(ventaId, cancellationToken);
+        var venta = await ObtenerVentaEditableAsync(ventaId, cancellationToken);
 
         var entity = await dbContext.VentaPagadores
             .FirstOrDefaultAsync(
@@ -154,7 +153,7 @@ public sealed class VentaPagadorService(AppDbContext dbContext)
 
         entity.Activo = false;
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await RecalcularEstadoVentaAsync(venta, cancellationToken);
     }
 
     private async Task<VentaEntity> ObtenerVentaEditableAsync(
@@ -162,6 +161,7 @@ public sealed class VentaPagadorService(AppDbContext dbContext)
         CancellationToken cancellationToken)
     {
         var venta = await dbContext.Ventas
+            .Include(x => x.Pagadores)
             .FirstOrDefaultAsync(
                 x => x.Id == ventaId && x.Activo,
                 cancellationToken);
@@ -169,10 +169,11 @@ public sealed class VentaPagadorService(AppDbContext dbContext)
         if (venta is null)
             throw new NotFoundException(nameof(VentaEntity), ventaId);
 
-        if (venta.Estado == EstadoVenta.Anulada)
+        if (venta.Estado != EstadoVenta.Pendiente)
         {
             throw new ConflictException(
-                "No se puede modificar una venta anulada.");
+                $"No se puede modificar una venta en estado {venta.Estado}. " +
+                $"Solo las ventas en estado {EstadoVenta.Pendiente} pueden ser modificadas.");
         }
 
         return venta;
@@ -239,6 +240,29 @@ public sealed class VentaPagadorService(AppDbContext dbContext)
         {
             throw new ConflictException(
                 "La venta ya tiene un pagador de tipo paciente.");
+        }
+    }
+
+    private async Task RecalcularEstadoVentaAsync(
+        VentaEntity venta,
+        CancellationToken cancellationToken)
+    {
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        var montoPagadores = venta.Pagadores
+            .Where(x => x.Activo)
+            .Sum(x => x.Monto);
+
+        var nuevoEstado = montoPagadores >= venta.Total
+            ? EstadoVenta.Pagada
+            : montoPagadores > 0
+                ? EstadoVenta.ParcialmentePagada
+                : venta.Estado;
+
+        if (nuevoEstado != venta.Estado)
+        {
+            venta.Estado = nuevoEstado;
+            await dbContext.SaveChangesAsync(cancellationToken);
         }
     }
 }

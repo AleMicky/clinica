@@ -61,6 +61,30 @@ export async function cambiarEstadoAdmision(
   return response.data;
 }
 
+export async function downloadAdmisionPdf(id: number, numero?: string): Promise<void> {
+  const response = await apiClient.get(`/admisiones/${id}/pdf`, {
+    responseType: "blob",
+  });
+  const blob = new Blob([response.data], { type: "application/pdf" });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `Ticket_Admision_${numero || id}.pdf`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
+}
+
+export async function openAdmisionPdfInNewTab(id: number): Promise<void> {
+  const response = await apiClient.get(`/admisiones/${id}/pdf`, {
+    responseType: "blob",
+  });
+  const blob = new Blob([response.data], { type: "application/pdf" });
+  const url = window.URL.createObjectURL(blob);
+  window.open(url, "_blank");
+}
+
 // Submódulo de detalles de admisión
 export async function getAdmisionDetalles(
   admisionId: number,

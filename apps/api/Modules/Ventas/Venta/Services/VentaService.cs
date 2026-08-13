@@ -1,4 +1,6 @@
 using Clinica.Api.Data;
+using Clinica.Api.Modules.Parametros.Correlativo.Dtos;
+using Clinica.Api.Modules.Parametros.Correlativo.Services;
 using Clinica.Api.Modules.Parametros.Moneda.Entity;
 using Clinica.Api.Modules.Recepcion.Admision.Entity;
 using Clinica.Api.Modules.Recepcion.Pacientes.Entity;
@@ -17,7 +19,10 @@ using VentaPagadorEntity = Clinica.Api.Modules.Ventas.Venta.Entity.VentaPagador;
 
 namespace Clinica.Api.Modules.Ventas.Venta.Services;
 
-public sealed class VentaService(AppDbContext dbContext)
+public sealed class VentaService(
+    AppDbContext dbContext,
+    CorrelativoService correlativoService
+)
     : CrudService<
         VentaEntity,
         CreateVentaRequest,
@@ -43,9 +48,44 @@ public sealed class VentaService(AppDbContext dbContext)
 
         return MapToResponse(entity) with
         {
-            Detalles = VentaDetalleMapper.ToResponse(entity.Detalles),
-            Pagadores = VentaPagadorMapper.ToResponse(entity.Pagadores)
+            Detalles = VentaDetalleMapper.ToResponse(
+                entity.Detalles.Where(x => x.Activo)),
+            Pagadores = VentaPagadorMapper.ToResponse(
+                entity.Pagadores.Where(x => x.Activo))
         };
+    }
+
+    public override async Task<VentaResponse> CrearAsync(
+        CreateVentaRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        await ValidateCreateAsync(request, cancellationToken);
+
+        var entity = MapToNewEntity(request);
+
+        entity.Activo = true;
+
+        await using var tx = await DbContext.Database
+            .BeginTransactionAsync(cancellationToken);
+
+        var correlativo = await correlativoService.GenerarAsync(
+            new GenerarCorrelativoRequest
+            {
+                Codigo = "VTA",
+                Gestion = entity.Fecha.Year,
+                Prefijo = "VTA",
+                Longitud = 6
+            },
+            cancellationToken);
+
+        entity.Numero = correlativo.NumeroFormateado;
+
+        await Entities.AddAsync(entity, cancellationToken);
+        await DbContext.SaveChangesAsync(cancellationToken);
+
+        await tx.CommitAsync(cancellationToken);
+
+        return await ObtenerAsync(entity.Id, cancellationToken);
     }
 
     public override async Task<VentaResponse> ActualizarAsync(
@@ -63,6 +103,13 @@ public sealed class VentaService(AppDbContext dbContext)
         if (entity is null)
             throw CreateNotFoundException(id);
 
+        if (entity.Estado != EstadoVenta.Pendiente)
+        {
+            throw new ConflictException(
+                $"No se puede editar una venta en estado {entity.Estado}. " +
+                $"Solo las ventas en estado {EstadoVenta.Pendiente} pueden ser editadas.");
+        }
+
         await ValidateUpdateAsync(
             id,
             request,
@@ -73,7 +120,66 @@ public sealed class VentaService(AppDbContext dbContext)
 
         await DbContext.SaveChangesAsync(cancellationToken);
 
-        return MapToResponse(entity);
+        return await ObtenerAsync(entity.Id, cancellationToken);
+    }
+
+    public override async Task EliminarAsync(
+        int id,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await Entities
+            .Include(x => x.Detalles)
+            .Include(x => x.Pagadores)
+            .FirstOrDefaultAsync(
+                x => x.Id == id && x.Activo,
+                cancellationToken);
+
+        if (entity is null)
+            throw CreateNotFoundException(id);
+
+        if (entity.Estado == EstadoVenta.Anulada)
+        {
+            throw new ConflictException(
+                "La venta ya está anulada.");
+        }
+
+        entity.Estado = EstadoVenta.Anulada;
+        entity.Activo = false;
+
+        foreach (var pagador in entity.Pagadores.Where(x => x.Activo))
+        {
+            pagador.Estado = EstadoVentaPagador.Anulado;
+        }
+
+        await DbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<VentaResponse> CambiarEstadoAsync(
+        int id,
+        CambiarEstadoVentaRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await Entities
+            .Include(x => x.Detalles)
+            .Include(x => x.Pagadores)
+            .FirstOrDefaultAsync(
+                x => x.Id == id && x.Activo,
+                cancellationToken);
+
+        if (entity is null)
+            throw CreateNotFoundException(id);
+
+        if (!VentaTransiciones.EsValida(entity.Estado, request.EstadoDestino))
+        {
+            throw new ConflictException(
+                $"No se puede transitar de {entity.Estado} a {request.EstadoDestino}.");
+        }
+
+        entity.Estado = request.EstadoDestino;
+
+        await DbContext.SaveChangesAsync(cancellationToken);
+
+        return await ObtenerAsync(entity.Id, cancellationToken);
     }
 
     protected override IQueryable<VentaEntity> ApplyOrder(
@@ -81,15 +187,13 @@ public sealed class VentaService(AppDbContext dbContext)
     {
         return query
             .OrderByDescending(x => x.Fecha)
-            .ThenBy(x => x.Id);
+            .ThenByDescending(x => x.Id);
     }
 
     protected override VentaEntity MapToNewEntity(
         CreateVentaRequest request)
     {
         var entity = VentaMapper.ToEntity(request);
-
-        Normalizar(entity, request.Numero);
 
         entity.Estado = EstadoVenta.Pendiente;
         entity.Detalles = request.Detalles
@@ -109,8 +213,6 @@ public sealed class VentaService(AppDbContext dbContext)
         VentaEntity entity)
     {
         VentaMapper.UpdateEntity(request, entity);
-
-        Normalizar(entity, request.Numero);
 
         ReemplazarDetalles(entity, request.Detalles);
         ReemplazarPagadores(entity, request.Pagadores);
@@ -134,12 +236,9 @@ public sealed class VentaService(AppDbContext dbContext)
         CreateVentaRequest request,
         CancellationToken cancellationToken)
     {
-        await ValidarUnicidadNumeroAsync(
-            request.Numero,
-            cancellationToken);
-
-        await EnsureAdmisionExistsAsync(
+        await EnsureAdmisionValidaAsync(
             request.AdmisionId,
+            request.PacienteId,
             cancellationToken);
 
         await EnsurePacienteExistsAsync(
@@ -165,13 +264,9 @@ public sealed class VentaService(AppDbContext dbContext)
         VentaEntity entity,
         CancellationToken cancellationToken)
     {
-        await ValidarUnicidadNumeroAsync(
-            request.Numero,
-            id,
-            cancellationToken);
-
-        await EnsureAdmisionExistsAsync(
+        await EnsureAdmisionValidaAsync(
             request.AdmisionId,
+            request.PacienteId,
             cancellationToken);
 
         await EnsurePacienteExistsAsync(
@@ -202,52 +297,30 @@ public sealed class VentaService(AppDbContext dbContext)
             x.Numero.Contains(search));
     }
 
-    private async Task ValidarUnicidadNumeroAsync(
-        string numero,
-        CancellationToken cancellationToken)
-    {
-        var normalized = NormalizarNumero(numero);
-
-        var existe = await Entities.AnyAsync(
-            x => x.Numero == normalized,
-            cancellationToken);
-
-        if (existe)
-        {
-            throw new ConflictException(
-                $"Ya existe una venta con el número '{normalized}'.");
-        }
-    }
-
-    private async Task ValidarUnicidadNumeroAsync(
-        string numero,
-        int excludeId,
-        CancellationToken cancellationToken)
-    {
-        var normalized = NormalizarNumero(numero);
-
-        var existe = await Entities.AnyAsync(
-            x => x.Id != excludeId &&
-                 x.Numero == normalized,
-            cancellationToken);
-
-        if (existe)
-        {
-            throw new ConflictException(
-                $"Ya existe otra venta con el número '{normalized}'.");
-        }
-    }
-
-    private async Task EnsureAdmisionExistsAsync(
+    private async Task EnsureAdmisionValidaAsync(
         int admisionId,
+        int pacienteId,
         CancellationToken cancellationToken)
     {
-        var existe = await DbContext.Admisiones.AnyAsync(
-            x => x.Id == admisionId && x.Activo,
-            cancellationToken);
+        var admision = await DbContext.Admisiones
+            .Include(x => x.Detalles)
+            .Where(x => x.Id == admisionId && x.Activo)
+            .FirstOrDefaultAsync(cancellationToken);
 
-        if (!existe)
+        if (admision is null)
             throw new NotFoundException(nameof(Admision), admisionId);
+
+        if (admision.Estado == EstadoAdmision.Cancelada)
+        {
+            throw new ConflictException(
+                "No se puede crear una venta para una admisión cancelada.");
+        }
+
+        if (admision.PacienteId != pacienteId)
+        {
+            throw new ConflictException(
+                "El paciente de la venta no coincide con el paciente de la admisión.");
+        }
     }
 
     private async Task EnsurePacienteExistsAsync(
@@ -379,14 +452,46 @@ public sealed class VentaService(AppDbContext dbContext)
         VentaEntity entity,
         IReadOnlyCollection<VentaDetalleRequest> detalles)
     {
-        foreach (var detalle in entity.Detalles.ToList())
+        var existingByServicio = entity.Detalles
+            .Where(x => x.Activo)
+            .ToDictionary(x => x.ServicioId);
+
+        var incomingServicioIds = detalles
+            .Select(x => x.ServicioId)
+            .ToHashSet();
+
+        foreach (var existing in entity.Detalles
+                     .Where(x => x.Activo && !incomingServicioIds.Contains(x.ServicioId))
+                     .ToList())
         {
-            entity.Detalles.Remove(detalle);
+            entity.Detalles.Remove(existing);
         }
 
         foreach (var request in detalles)
         {
-            entity.Detalles.Add(CrearDetalle(request));
+            if (existingByServicio.TryGetValue(
+                    request.ServicioId,
+                    out var detalle))
+            {
+                detalle.MedicoId = request.MedicoId;
+                detalle.Cantidad = request.Cantidad;
+                detalle.PrecioUnitario = request.PrecioUnitario;
+                detalle.Descuento = request.Descuento;
+                detalle.PorcentajeMedico = request.PorcentajeMedico;
+
+                var total = VentaCalculos.TotalDetalle(request);
+                var (montoMedico, montoClinica) = VentaCalculos.RepartoMedico(
+                    total,
+                    request.PorcentajeMedico);
+
+                detalle.Total = total;
+                detalle.MontoMedico = montoMedico;
+                detalle.MontoClinica = montoClinica;
+            }
+            else
+            {
+                entity.Detalles.Add(CrearDetalle(request));
+            }
         }
     }
 
@@ -394,34 +499,67 @@ public sealed class VentaService(AppDbContext dbContext)
         VentaEntity entity,
         IReadOnlyCollection<VentaPagadorRequest> pagadores)
     {
-        foreach (var pagador in entity.Pagadores.ToList())
+        var existingActive = entity.Pagadores
+            .Where(x => x.Activo)
+            .ToList();
+
+        var incomingKeys = pagadores
+            .Select(x => new PagadorKey(x.Tipo, x.ConvenioId))
+            .ToHashSet();
+
+        foreach (var existing in existingActive
+                     .Where(x => !incomingKeys.Contains(
+                         new PagadorKey(x.Tipo, x.ConvenioId)))
+                     .ToList())
         {
-            entity.Pagadores.Remove(pagador);
+            entity.Pagadores.Remove(existing);
         }
 
         foreach (var request in pagadores)
         {
-            entity.Pagadores.Add(CrearPagador(request));
+            var match = existingActive.FirstOrDefault(x =>
+                x.Tipo == request.Tipo
+                && x.ConvenioId == request.ConvenioId);
+
+            if (match is not null)
+            {
+                match.Tipo = request.Tipo;
+                match.ConvenioId = request.Tipo == TipoPagador.Convenio
+                    ? request.ConvenioId
+                    : null;
+                match.Monto = request.Monto;
+            }
+            else
+            {
+                entity.Pagadores.Add(CrearPagador(request));
+            }
         }
     }
 
     private static void CalcularTotales(
         VentaEntity entity)
     {
-        entity.Subtotal = entity.Detalles.Sum(x => x.Cantidad * x.PrecioUnitario);
-        entity.Descuento = entity.Detalles.Sum(x => x.Descuento);
-        entity.Total = entity.Detalles.Sum(x => x.Total);
+        var detallesActivos = entity.Detalles
+            .Where(x => x.Activo)
+            .ToList();
+
+        entity.Subtotal = detallesActivos.Sum(x => x.Cantidad * x.PrecioUnitario);
+        entity.Descuento = detallesActivos.Sum(x => x.Descuento);
+        entity.Total = detallesActivos.Sum(x => x.Total);
     }
 
-    private static void Normalizar(
-        VentaEntity entity,
-        string numero)
+    private readonly struct PagadorKey(
+        TipoPagador tipo,
+        int? convenioId)
     {
-        entity.Numero = NormalizarNumero(numero);
-    }
+        private readonly TipoPagador _tipo = tipo;
+        private readonly int? _convenioId = convenioId;
 
-    private static string NormalizarNumero(string value)
-    {
-        return value.Trim().ToUpperInvariant();
+        public bool Equals(PagadorKey other) =>
+            _tipo == other._tipo
+            && _convenioId == other._convenioId;
+
+        public override int GetHashCode() =>
+            HashCode.Combine(_tipo, _convenioId);
     }
 }

@@ -6,6 +6,7 @@ using Clinica.Api.Modules.Seguridad.Roles;
 using Clinica.Api.Modules.Seguridad.Roles.Entity;
 using Clinica.Api.Modules.Seguridad.Usuarios;
 using Clinica.Api.Modules.Seguridad.Usuarios.Entity;
+using Clinica.Api.Shared.Configuration;
 using Clinica.Api.Shared.Extensions;
 using Clinica.Api.Shared.Jwt;
 using Clinica.Api.Shared.Persistence;
@@ -13,6 +14,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using QuestPDF;
+using QuestPDF.Infrastructure;
 using Scalar.AspNetCore;
 
 
@@ -122,8 +125,13 @@ builder.Services.AddScoped<IJwtService, JwtService>();
 
 builder.Services.AddOpenApi();
 
+builder.Services.Configure<ClinicaOptions>(
+    builder.Configuration.GetSection(ClinicaOptions.SectionName));
+
 builder.Services.AddShared();
 builder.Services.AddModules();
+
+QuestPDF.Settings.License = LicenseType.Community;
 
 var app = builder.Build();
 

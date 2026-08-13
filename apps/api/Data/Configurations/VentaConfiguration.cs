@@ -36,7 +36,8 @@ public sealed class VentaConfiguration
             .IsRequired();
 
         builder.HasIndex(x => x.Numero)
-            .IsUnique();
+            .IsUnique()
+            .HasFilter("[Activo] = 1");
 
         builder.HasOne(x => x.Admision)
             .WithMany()

@@ -10,12 +10,6 @@ public abstract class VentaRequestValidator<TRequest>
 {
     protected VentaRequestValidator()
     {
-        RuleFor(x => x.Numero)
-            .NotEmpty()
-            .WithMessage("El número es obligatorio.")
-            .MaximumLength(20)
-            .WithMessage("El número no puede superar los 20 caracteres.");
-
         RuleFor(x => x.AdmisionId)
             .GreaterThan(0)
             .WithMessage("La admisión es obligatoria.");
@@ -34,7 +28,12 @@ public abstract class VentaRequestValidator<TRequest>
 
         RuleFor(x => x.Detalles)
             .NotEmpty()
-            .WithMessage("Debe incluir al menos un detalle de venta.");
+            .WithMessage("Debe incluir al menos un detalle de venta.")
+            .Must(detalles => detalles
+                .Select(d => d.ServicioId)
+                .Distinct()
+                .Count() == detalles.Count)
+            .WithMessage("No pueden haber servicios duplicados en los detalles de venta.");
 
         RuleForEach(x => x.Detalles)
             .SetValidator(new VentaDetalleRequestValidator<VentaDetalleRequest>());
@@ -82,6 +81,16 @@ public class VentaDetalleRequestValidator<TRequest>
             .InclusiveBetween(0, 100)
             .WithMessage("El porcentaje del médico debe estar entre 0 y 100.")
             .When(x => x.PorcentajeMedico.HasValue);
+
+        RuleFor(x => x.MedicoId)
+            .NotNull()
+            .WithMessage("El médico es obligatorio cuando se especifica un porcentaje para el médico.")
+            .When(x => x.PorcentajeMedico.HasValue);
+
+        RuleFor(x => x.MedicoId)
+            .GreaterThan(0)
+            .WithMessage("El médico es obligatorio cuando se especifica un porcentaje para el médico.")
+            .When(x => x.MedicoId.HasValue);
     }
 }
 
