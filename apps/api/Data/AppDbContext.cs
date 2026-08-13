@@ -1,3 +1,4 @@
+using Clinica.Api.Modules.Parametros.Banco.Entity;
 using Clinica.Api.Modules.Parametros.Catalogo.Entity;
 using Clinica.Api.Modules.Parametros.Correlativo.Entity;
 using Clinica.Api.Modules.Parametros.MetodoPago.Entity;
@@ -35,6 +36,8 @@ public class AppDbContext(
     public DbSet<UnidadesMedida> UnidadesMedida => Set<UnidadesMedida>();
     public DbSet<Moneda> Monedas => Set<Moneda>();
     public DbSet<MetodoPago> MetodosPago => Set<MetodoPago>();
+    public DbSet<Banco> Bancos => Set<Banco>();
+    public DbSet<CuentaBancaria> CuentasBancarias => Set<CuentaBancaria>();
     public DbSet<TipoCambio> TiposCambio => Set<TipoCambio>();
     public DbSet<Persona> Personas => Set<Persona>();
     public DbSet<TipoArea> TiposArea => Set<TipoArea>();

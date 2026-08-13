@@ -1,3 +1,5 @@
+using Clinica.Api.Modules.Parametros.Banco.Endpoints;
+using Clinica.Api.Modules.Parametros.Banco.Services;
 using Clinica.Api.Modules.Parametros.Catalogo.Endpoints;
 using Clinica.Api.Modules.Parametros.Catalogo.Services;
 using Clinica.Api.Modules.Parametros.Correlativo.Endpoints;
@@ -23,6 +25,8 @@ public static class ParametrosModule
         services.AddScoped<TipoCambioService>();
         services.AddScoped<MetodoPagoService>();
         services.AddScoped<CorrelativoService>();
+        services.AddScoped<BancoService>();
+        services.AddScoped<CuentaBancariaService>();
 
         return services;
     }
@@ -35,6 +39,7 @@ public static class ParametrosModule
         app.MapTipoCambioEndpoints();
         app.MapMetodoPagoEndpoints();
         app.MapCorrelativoEndpoints();
+        app.MapBancoEndpoints();
 
         return app;
     }

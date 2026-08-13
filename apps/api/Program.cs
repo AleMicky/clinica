@@ -172,6 +172,7 @@ using (var scope = app.Services.CreateScope())
 
 await IdentitySeed.SeedAsync(app.Services);
 await CatalogoSeed.SeedAsync(app.Services);
+await BancoSeed.SeedAsync(app.Services);
 await RecursosHumanosSeed.SeedAsync(app.Services);
 await ServiciosSeed.SeedAsync(app.Services);
 await TarifarioSeed.SeedAsync(app.Services);
