@@ -1,3 +1,5 @@
+using Clinica.Api.Modules.Cajas.Caja.Entity;
+using Clinica.Api.Modules.Cajas.TurnoCaja.Entity;
 using Clinica.Api.Modules.Parametros.Banco.Entity;
 using Clinica.Api.Modules.Parametros.Catalogo.Entity;
 using Clinica.Api.Modules.Parametros.Correlativo.Entity;
@@ -63,6 +65,8 @@ public class AppDbContext(
     public DbSet<VentaDetalle> VentaDetalles => Set<VentaDetalle>();
     public DbSet<VentaPagador> VentaPagadores => Set<VentaPagador>();
     public DbSet<Correlativo>  Correlativo => Set<Correlativo>();
+    public DbSet<Caja> Cajas => Set<Caja>();
+    public DbSet<TurnoCaja> TurnosCaja => Set<TurnoCaja>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

@@ -4,6 +4,7 @@ using Clinica.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Clinica.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260813184132_AddCajas")]
+    partial class AddCajas
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -69,57 +72,6 @@ namespace Clinica.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("Cajas", (string)null);
-                });
-
-            modelBuilder.Entity("Clinica.Api.Modules.Cajas.TurnoCaja.Entity.TurnoCaja", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("Activo")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<int>("CajaId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("CreadoPor")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("EmpleadoId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Estado")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("FechaCreacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("FechaHoraApertura")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("FechaHoraCierre")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("FechaModificacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ModificadoPor")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EmpleadoId");
-
-                    b.HasIndex("CajaId", "Estado");
-
-                    b.ToTable("TurnosCaja", (string)null);
                 });
 
             modelBuilder.Entity("Clinica.Api.Modules.Parametros.Banco.Entity.Banco", b =>
@@ -2119,25 +2071,6 @@ namespace Clinica.Api.Migrations
                     b.ToTable("UsuariosTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Clinica.Api.Modules.Cajas.TurnoCaja.Entity.TurnoCaja", b =>
-                {
-                    b.HasOne("Clinica.Api.Modules.Cajas.Caja.Entity.Caja", "Caja")
-                        .WithMany("Turnos")
-                        .HasForeignKey("CajaId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Clinica.Api.Modules.RecursosHumanos.Empleado.Entity.Empleado", "Empleado")
-                        .WithMany()
-                        .HasForeignKey("EmpleadoId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Caja");
-
-                    b.Navigation("Empleado");
-                });
-
             modelBuilder.Entity("Clinica.Api.Modules.Parametros.Banco.Entity.CuentaBancaria", b =>
                 {
                     b.HasOne("Clinica.Api.Modules.Parametros.Banco.Entity.Banco", "Banco")
@@ -2557,11 +2490,6 @@ namespace Clinica.Api.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("Clinica.Api.Modules.Cajas.Caja.Entity.Caja", b =>
-                {
-                    b.Navigation("Turnos");
                 });
 
             modelBuilder.Entity("Clinica.Api.Modules.Parametros.Banco.Entity.Banco", b =>

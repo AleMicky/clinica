@@ -24,6 +24,8 @@ import {
   Tag,
   Handshake,
   Landmark,
+  Vault,
+  Clock,
   type LucideIcon,
 } from "lucide-react"
 
@@ -239,9 +241,30 @@ export const parametrosNav: NavGroup = {
   ],
 }
 
+export const cajasNav: NavGroup = {
+  title: "Cajas",
+  icon: Vault,
+  description: "Administración de cajas y control de turnos",
+  items: [
+    {
+      title: "Puntos de Caja",
+      href: "/cajas",
+      icon: Vault,
+      description: "Catálogo y administración de terminales de cobro",
+    },
+    {
+      title: "Turnos de Caja",
+      href: "/cajas/turnos",
+      icon: Clock,
+      description: "Apertura, operatividad y cierre de turnos de cajero",
+    },
+  ],
+}
+
 // Módulos agrupados
 export const moduleGroups: NavGroup[] = [
   recepcionNav,
+  cajasNav,
   serviciosNav,
   seguridadNav,
   recursosHumanosNav,
@@ -253,6 +276,7 @@ export const navigationConfig = {
   directNavItems,
   moduleGroups,
   recepcion: recepcionNav,
+  cajas: cajasNav,
   servicios: serviciosNav,
   seguridad: seguridadNav,
   recursosHumanos: recursosHumanosNav,

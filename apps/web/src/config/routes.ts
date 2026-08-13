@@ -31,6 +31,10 @@ export const ROUTES = {
     UNIDADES_MEDIDA: "/parametros/unidades-medida",
     GENERAL: "/parametros/general",
   },
+  CAJAS: {
+    ROOT: "/cajas",
+    TURNOS: "/cajas/turnos",
+  },
 } as const
 
 export type AppRoutes = typeof ROUTES

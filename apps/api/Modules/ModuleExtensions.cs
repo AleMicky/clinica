@@ -1,3 +1,4 @@
+using Clinica.Api.Modules.Cajas;
 using Clinica.Api.Modules.Parametros.Catalogo;
 using Clinica.Api.Modules.Recepcion;
 using Clinica.Api.Modules.RecursosHumanos;
@@ -20,6 +21,7 @@ public static class ModuleExtensions
         services.AddRecepcionModule();
         services.AddServiciosModule();
         services.AddVentasModule();
+        services.AddCajasModule();
         return services;
     }
 
@@ -34,6 +36,7 @@ public static class ModuleExtensions
         api.MapRecepcionModule();
         api.MapServiciosModule();
         api.MapVentasModule();
+        api.MapCajasModule();
         return app;
     }
 }

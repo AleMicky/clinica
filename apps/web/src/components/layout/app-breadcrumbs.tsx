@@ -47,6 +47,8 @@ const titleMap: Record<string, string> = {
   "tipo-cambio": "Tipo de Cambio",
   "unidades-medida": "Unidades de Medida",
   general: "Configuración General",
+  cajas: "Gestión de Cajas",
+  turnos: "Turnos de Caja",
 };
 
 export function AppBreadcrumbs() {
