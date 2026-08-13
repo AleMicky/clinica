@@ -18,8 +18,15 @@ public sealed record CuentaBancariaResponse : AuditableResponse
 {
     public int Id { get; init; }
     public int BancoId { get; init; }
-    public int MonedaId { get; init; }
+    public MonedaInfo Moneda { get; init; }
     public string NumeroCuenta { get; init; }
     public string? NombreCuenta { get; init; }
     public string? TipoCuenta { get; init; }
+}
+
+public sealed record MonedaInfo
+{
+    public int Id { get; init; }
+    public string Codigo { get; init; }
+    public string Nombre { get; init; }
 }

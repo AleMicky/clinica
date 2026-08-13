@@ -22,6 +22,7 @@ public sealed class CuentaBancariaService(AppDbContext dbContext)
 
         var query = dbContext.CuentasBancarias
             .AsNoTracking()
+            .Include(x => x.Moneda)
             .Where(x => x.BancoId == bancoId && x.Activo);
 
         var normalizedSearch = string.IsNullOrWhiteSpace(search)
@@ -68,6 +69,7 @@ public sealed class CuentaBancariaService(AppDbContext dbContext)
 
         var entity = await dbContext.CuentasBancarias
             .AsNoTracking()
+            .Include(x => x.Moneda)
             .FirstOrDefaultAsync(
                 x => x.BancoId == bancoId
                      && x.Id == cuentaId

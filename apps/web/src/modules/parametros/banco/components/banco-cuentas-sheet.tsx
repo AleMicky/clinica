@@ -72,10 +72,20 @@ export function BancoCuentasSheet({
 
   const deleteMutation = useDeleteCuentaBancaria();
 
-  const getMonedaBadge = (monedaId: number) => {
-    const moneda = monedasData?.items?.find((m) => m.id === monedaId);
-    if (!moneda) return "-";
-    return `${moneda.codigo} (${moneda.simbolo})`;
+  const getMonedaLabel = (cuenta: CuentaBancariaResponse) => {
+    if (cuenta.moneda) {
+      return cuenta.moneda.simbolo
+        ? `${cuenta.moneda.nombre} (${cuenta.moneda.simbolo})`
+        : `${cuenta.moneda.nombre} (${cuenta.moneda.codigo})`;
+    }
+    const targetId = cuenta.monedaId;
+    if (targetId) {
+      const moneda = monedasData?.items?.find((m) => m.id === targetId);
+      if (moneda) {
+        return `${moneda.nombre} (${moneda.simbolo})`;
+      }
+    }
+    return "-";
   };
 
   const handleOpenAdd = () => {
@@ -199,7 +209,7 @@ export function BancoCuentasSheet({
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
                       <Badge variant="outline" className="font-mono text-[11px] bg-primary/5 text-primary border-primary/20">
-                        {getMonedaBadge(cuenta.monedaId)}
+                        {getMonedaLabel(cuenta)}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground whitespace-nowrap">

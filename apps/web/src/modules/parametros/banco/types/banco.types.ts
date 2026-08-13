@@ -28,14 +28,22 @@ export interface BancoQueryParams {
   search?: string;
 }
 
+export interface MonedaInfo {
+  id: number;
+  codigo: string;
+  nombre: string;
+  simbolo?: string;
+}
+
 export interface CuentaBancariaResponse {
   id: number;
   bancoId: number;
-  monedaId: number;
+  monedaId?: number;
+  moneda?: MonedaInfo | null;
   numeroCuenta: string;
   nombreCuenta?: string | null;
   tipoCuenta?: string | null;
-  activo: boolean;
+  activo?: boolean;
   fechaCreacion?: string;
   fechaModificacion?: string;
   creadoPor?: string;

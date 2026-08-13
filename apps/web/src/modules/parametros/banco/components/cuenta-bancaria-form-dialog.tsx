@@ -90,8 +90,9 @@ export function CuentaBancariaFormDialog({
   React.useEffect(() => {
     if (open) {
       if (cuentaToEdit) {
+        const mId = cuentaToEdit.moneda?.id || cuentaToEdit.monedaId || 0;
         reset({
-          monedaId: cuentaToEdit.monedaId,
+          monedaId: mId,
           numeroCuenta: cuentaToEdit.numeroCuenta,
           nombreCuenta: cuentaToEdit.nombreCuenta || "",
           tipoCuenta: cuentaToEdit.tipoCuenta || "",
