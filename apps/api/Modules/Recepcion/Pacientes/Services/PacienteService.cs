@@ -68,7 +68,9 @@ public sealed class PacienteService(AppDbContext dbContext)
                 x => x.Id == id && x.Activo,
                 cancellationToken);
 
-        return paciente is null ? throw new NotFoundException(nameof(Paciente), id) : PacienteMapper.ToResponse(paciente);
+        return paciente is null
+            ? throw new NotFoundException(nameof(Paciente), id)
+            : PacienteMapper.ToResponse(paciente);
     }
 
     public async Task<PacienteResponse> CrearAsync(
@@ -86,23 +88,13 @@ public sealed class PacienteService(AppDbContext dbContext)
 
         NormalizarPersona(paciente.Persona);
 
-        paciente.NumeroHistoriaClinica =
-            GenerarNumeroHistoriaClinica(request);
+        paciente.NumeroHistoriaClinica = GenerarNumeroHistoriaClinica(request);
 
-        await ValidarNumeroHistoriaClinicaUnicoAsync(
-            paciente.NumeroHistoriaClinica,
-            cancellationToken);
+        await ValidarNumeroHistoriaClinicaUnicoAsync(paciente.NumeroHistoriaClinica, cancellationToken);
+        await Pacientes.AddAsync(paciente, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
 
-        await Pacientes.AddAsync(
-            paciente,
-            cancellationToken);
-
-        await dbContext.SaveChangesAsync(
-            cancellationToken);
-
-        return await ObtenerAsync(
-            paciente.Id,
-            cancellationToken);
+        return await ObtenerAsync(paciente.Id, cancellationToken);
     }
 
     public async Task<PacienteResponse> ActualizarAsync(
@@ -213,7 +205,7 @@ public sealed class PacienteService(AppDbContext dbContext)
         persona.ExtensionDocumento = persona.ExtensionDocumento.TrimUpperOrNull();
         persona.ComplementoDocumento = persona.ComplementoDocumento.TrimUpperOrNull();
     }
-    
+
     private static string GenerarNumeroHistoriaClinica(
         CreatePacienteRequest request)
     {

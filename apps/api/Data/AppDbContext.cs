@@ -1,4 +1,5 @@
 using Clinica.Api.Modules.Parametros.Catalogo.Entity;
+using Clinica.Api.Modules.Parametros.Correlativo.Entity;
 using Clinica.Api.Modules.Parametros.MetodoPago.Entity;
 using Clinica.Api.Modules.Parametros.Moneda.Entity;
 using Clinica.Api.Modules.Parametros.UnidadesMedida.Entity;
@@ -58,6 +59,7 @@ public class AppDbContext(
     public DbSet<Venta> Ventas => Set<Venta>();
     public DbSet<VentaDetalle> VentaDetalles => Set<VentaDetalle>();
     public DbSet<VentaPagador> VentaPagadores => Set<VentaPagador>();
+    public DbSet<Correlativo>  Correlativo => Set<Correlativo>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

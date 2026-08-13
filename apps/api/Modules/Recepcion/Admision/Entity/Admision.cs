@@ -15,9 +15,7 @@ public sealed class Admision : AuditableEntity
     public Convenio? Convenio { get; set; }
 
     public DateTime FechaHora { get; set; }
-
     public EstadoAdmision Estado { get; set; }
-
     public string? Observacion { get; set; }
 
     public ICollection<AdmisionDetalle> Detalles { get; set; } = [];

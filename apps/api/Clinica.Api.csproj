@@ -31,10 +31,6 @@
     <Folder Include="Modules\Caja\" />
     <Folder Include="Modules\Farmacia\" />
     <Folder Include="Modules\Parametros\Catalogo\Validators\" />
-    <Folder Include="Modules\Parametros\Correlativo\Dtos\" />
-    <Folder Include="Modules\Parametros\Correlativo\Endpoints\" />
-    <Folder Include="Modules\Parametros\Correlativo\Mappers\" />
-    <Folder Include="Modules\Parametros\Correlativo\Services\" />
     <Folder Include="Modules\Parametros\MetodoPago\Dtos\" />
     <Folder Include="Modules\Parametros\MetodoPago\Endpoints\" />
     <Folder Include="Modules\Parametros\MetodoPago\Mappers\" />

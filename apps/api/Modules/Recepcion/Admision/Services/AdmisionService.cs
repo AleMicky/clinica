@@ -3,34 +3,70 @@ using Clinica.Api.Modules.Recepcion.Admision.Dtos;
 using Clinica.Api.Modules.Recepcion.Admision.Entity;
 using Clinica.Api.Modules.Recepcion.Admision.Mappers;
 using Clinica.Api.Modules.Recepcion.Pacientes.Entity;
-using Clinica.Api.Modules.Recepcion.Pacientes.Services;
 using Clinica.Api.Modules.RecursosHumanos.Medico.Entity;
 using Clinica.Api.Modules.Servicios.Convenios.Entity;
 using Clinica.Api.Modules.Servicios.Servicios.Entity;
-using Clinica.Api.Shared.Crud;
 using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Extensions;
+using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
 using AdmisionEntity = Clinica.Api.Modules.Recepcion.Admision.Entity.Admision;
 using AdmisionDetalleEntity = Clinica.Api.Modules.Recepcion.Admision.Entity.AdmisionDetalle;
 
 namespace Clinica.Api.Modules.Recepcion.Admision.Services;
 
-public sealed class AdmisionService(
-    AppDbContext dbContext,
-    PacienteService pacienteService)
-    : CrudService<
-        AdmisionEntity,
-        CreateAdmisionRequest,
-        UpdateAdmisionRequest,
-        AdmisionResponse
-    >(dbContext)
+public sealed class AdmisionService(AppDbContext dbContext)
 {
-    public override async Task<AdmisionResponse> ObtenerAsync(
+    private DbSet<AdmisionEntity> Admisiones => dbContext.Set<AdmisionEntity>();
+
+    public async Task<PagedResult<AdmisionResponse>> ListarAsync(
+        PaginationRequest pagination,
+        string? search,
+        CancellationToken cancellationToken = default)
+    {
+        var query = Admisiones
+            .AsNoTracking()
+            .Include(x => x.Detalles)
+            .Where(x => x.Activo);
+
+        var normalizedSearch = string.IsNullOrWhiteSpace(search)
+            ? null
+            : search.Trim();
+
+        if (normalizedSearch is not null)
+        {
+            query = query.Where(x =>
+                x.Numero.Contains(normalizedSearch) ||
+                (x.Observacion != null && x.Observacion.Contains(normalizedSearch)));
+        }
+
+        var totalItems = await query.CountAsync(cancellationToken);
+
+        var offset = (pagination.ValidPage - 1) * pagination.ValidPageSize;
+
+        var entities = await query
+            .OrderByDescending(x => x.FechaHora)
+            .ThenBy(x => x.Id)
+            .Skip(offset)
+            .Take(pagination.ValidPageSize)
+            .ToListAsync(cancellationToken);
+
+        var items = entities
+            .Select(MapToResponse)
+            .ToList();
+
+        return new PagedResult<AdmisionResponse>(
+            items,
+            pagination.ValidPage,
+            pagination.ValidPageSize,
+            totalItems);
+    }
+
+    public async Task<AdmisionResponse> ObtenerAsync(
         int id,
         CancellationToken cancellationToken = default)
     {
-        var entity = await Entities
+        var entity = await Admisiones
             .AsNoTracking()
             .Include(x => x.Detalles)
             .Where(x => x.Activo)
@@ -39,59 +75,78 @@ public sealed class AdmisionService(
                 cancellationToken);
 
         if (entity is null)
-            throw CreateNotFoundException(id);
+            throw new NotFoundException(nameof(AdmisionEntity), id);
 
-        return MapToResponse(entity) with
-        {
-            Detalles = AdmisionDetalleMapper.ToResponse(entity.Detalles)
-        };
+        return MapToResponse(entity);
     }
 
-    public override async Task<AdmisionResponse> ActualizarAsync(
+    public async Task<AdmisionResponse> CrearAsync(
+        CreateAdmisionRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        await ValidarUnicidadNumeroAsync(request.Numero, cancellationToken);
+        await EnsurePacienteExistsAsync(request.PacienteId, cancellationToken);
+        await EnsureConvenioExistsAsync(request.ConvenioId, cancellationToken);
+        await ValidarDetallesAsync(request.Detalles, cancellationToken);
+
+        var entity = AdmisionMapper.ToEntity(request);
+
+        Normalizar(entity, request.Numero, request.Observacion);
+
+        entity.Estado = EstadoAdmision.Registrada;
+        entity.Detalles = request.Detalles.Select(CrearDetalle).ToList();
+
+        await Admisiones.AddAsync(entity, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return MapToResponse(entity);
+    }
+
+    public async Task<AdmisionResponse> ActualizarAsync(
         int id,
         UpdateAdmisionRequest request,
         CancellationToken cancellationToken = default)
     {
-        var entity = await Entities
+        var entity = await Admisiones
             .Include(x => x.Detalles)
             .FirstOrDefaultAsync(
                 x => x.Id == id && x.Activo,
                 cancellationToken);
 
         if (entity is null)
-            throw CreateNotFoundException(id);
+            throw new NotFoundException(nameof(AdmisionEntity), id);
 
-        await ValidateUpdateAsync(
-            id,
-            request,
-            entity,
-            cancellationToken);
+        await ValidarUnicidadNumeroAsync(request.Numero, id, cancellationToken);
+        await EnsurePacienteExistsAsync(request.PacienteId, cancellationToken);
+        await EnsureConvenioExistsAsync(request.ConvenioId, cancellationToken);
+        await ValidarDetallesAsync(request.Detalles, cancellationToken);
 
-        MapToExistingEntity(request, entity);
+        AdmisionMapper.UpdateEntity(request, entity);
 
-        await DbContext.SaveChangesAsync(cancellationToken);
+        Normalizar(entity, request.Numero, request.Observacion);
 
-        return MapToResponse(entity) with
-        {
-            Detalles = AdmisionDetalleMapper.ToResponse(entity.Detalles)
-        };
+        ReemplazarDetalles(entity, request.Detalles);
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return MapToResponse(entity);
     }
 
-    public override async Task EliminarAsync(
+    public async Task EliminarAsync(
         int id,
         CancellationToken cancellationToken = default)
     {
-        var entity = await Entities
+        var entity = await Admisiones
             .FirstOrDefaultAsync(
                 x => x.Id == id && x.Activo,
                 cancellationToken);
 
         if (entity is null)
-            throw CreateNotFoundException(id);
+            throw new NotFoundException(nameof(AdmisionEntity), id);
 
         entity.Activo = false;
 
-        await DbContext.SaveChangesAsync(cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<AdmisionResponse> CambiarEstadoAsync(
@@ -99,14 +154,14 @@ public sealed class AdmisionService(
         CambiarEstadoRequest request,
         CancellationToken cancellationToken = default)
     {
-        var entity = await Entities
+        var entity = await Admisiones
             .Include(x => x.Detalles)
             .FirstOrDefaultAsync(
                 x => x.Id == id && x.Activo,
                 cancellationToken);
 
         if (entity is null)
-            throw CreateNotFoundException(id);
+            throw new NotFoundException(nameof(AdmisionEntity), id);
 
         if (!AdmisionTransiciones.EsValida(entity.Estado, request.EstadoDestino))
         {
@@ -123,143 +178,17 @@ public sealed class AdmisionService(
                 : $"{entity.Observacion.Trim()} | {request.Motivo.Trim()}";
         }
 
-        await DbContext.SaveChangesAsync(cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
 
-        return MapToResponse(entity) with
+        return MapToResponse(entity);
+    }
+
+    private static AdmisionResponse MapToResponse(AdmisionEntity entity)
+    {
+        return AdmisionMapper.ToResponse(entity) with
         {
             Detalles = AdmisionDetalleMapper.ToResponse(entity.Detalles)
         };
-    }
-
-    public async Task<AdmisionResponse> CrearConPacienteAsync(
-        CreateAdmisionConPacienteRequest request,
-        CancellationToken cancellationToken = default)
-    {
-        await using var transaction = await dbContext.Database
-            .BeginTransactionAsync(cancellationToken);
-
-        var paciente = await pacienteService.CrearAsync(
-            request.Paciente, cancellationToken);
-
-        var admisionRequest = new CreateAdmisionRequest
-        {
-            Numero = request.Numero,
-            PacienteId = paciente.Id,
-            ConvenioId = request.ConvenioId,
-            FechaHora = request.FechaHora,
-            Observacion = request.Observacion,
-            Detalles = request.Detalles
-        };
-
-        var admision = await CrearAsync(admisionRequest, cancellationToken);
-
-        await transaction.CommitAsync(cancellationToken);
-
-        return admision;
-    }
-
-    protected override IQueryable<AdmisionEntity> ApplyOrder(
-        IQueryable<AdmisionEntity> query)
-    {
-        return query
-            .OrderByDescending(x => x.FechaHora)
-            .ThenBy(x => x.Id);
-    }
-
-    protected override AdmisionEntity MapToNewEntity(
-        CreateAdmisionRequest request)
-    {
-        var entity = AdmisionMapper.ToEntity(request);
-
-        Normalizar(entity, request.Numero, request.Observacion);
-
-        entity.Estado = EstadoAdmision.Registrada;
-
-        entity.Detalles = request.Detalles
-            .Select(CrearDetalle)
-            .ToList();
-
-        return entity;
-    }
-
-    protected override void MapToExistingEntity(
-        UpdateAdmisionRequest request,
-        AdmisionEntity entity)
-    {
-        AdmisionMapper.UpdateEntity(request, entity);
-
-        Normalizar(entity, request.Numero, request.Observacion);
-
-        ReemplazarDetalles(entity, request.Detalles);
-    }
-
-    protected override AdmisionResponse MapToResponse(
-        AdmisionEntity entity)
-    {
-        return AdmisionMapper.ToResponse(entity);
-    }
-
-    protected override IReadOnlyCollection<AdmisionResponse> MapToResponseList(
-        IEnumerable<AdmisionEntity> entities)
-    {
-        return AdmisionMapper.ToResponse(entities);
-    }
-
-    protected override async Task ValidateCreateAsync(
-        CreateAdmisionRequest request,
-        CancellationToken cancellationToken)
-    {
-        await ValidarUnicidadNumeroAsync(
-            request.Numero,
-            cancellationToken);
-
-        await EnsurePacienteExistsAsync(
-            request.PacienteId,
-            cancellationToken);
-
-        await EnsureConvenioExistsAsync(
-            request.ConvenioId,
-            cancellationToken);
-
-        await ValidarDetallesAsync(
-            request.Detalles,
-            cancellationToken);
-    }
-
-    protected override async Task ValidateUpdateAsync(
-        int id,
-        UpdateAdmisionRequest request,
-        AdmisionEntity entity,
-        CancellationToken cancellationToken)
-    {
-        await ValidarUnicidadNumeroAsync(
-            request.Numero,
-            id,
-            cancellationToken);
-
-        await EnsurePacienteExistsAsync(
-            request.PacienteId,
-            cancellationToken);
-
-        await EnsureConvenioExistsAsync(
-            request.ConvenioId,
-            cancellationToken);
-
-        await ValidarDetallesAsync(
-            request.Detalles,
-            cancellationToken);
-    }
-
-    protected override IQueryable<AdmisionEntity> ApplySearch(
-        IQueryable<AdmisionEntity> query,
-        string? search)
-    {
-        if (search is null)
-            return query;
-
-        return query.Where(x =>
-            x.Numero.Contains(search) ||
-            (x.Observacion != null && x.Observacion.Contains(search)));
     }
 
     private async Task ValidarUnicidadNumeroAsync(
@@ -268,14 +197,13 @@ public sealed class AdmisionService(
     {
         var normalized = numero.TrimUpperRequired();
 
-        var existe = await Entities.AnyAsync(
+        var existe = await Admisiones.AnyAsync(
             x => x.Numero == normalized,
             cancellationToken);
 
         if (existe)
         {
-            throw new ConflictException(
-                $"Ya existe una admisión con el número '{normalized}'.");
+            throw new ConflictException($"Ya existe una admisión con el número '{normalized}'.");
         }
     }
 
@@ -286,7 +214,7 @@ public sealed class AdmisionService(
     {
         var normalized = numero.TrimUpperRequired();
 
-        var existe = await Entities.AnyAsync(
+        var existe = await Admisiones.AnyAsync(
             x => x.Id != excludeId &&
                  x.Numero == normalized,
             cancellationToken);
@@ -302,7 +230,7 @@ public sealed class AdmisionService(
         int pacienteId,
         CancellationToken cancellationToken)
     {
-        var existe = await DbContext.Pacientes.AnyAsync(
+        var existe = await dbContext.Pacientes.AnyAsync(
             x => x.Id == pacienteId && x.Activo,
             cancellationToken);
 
@@ -317,7 +245,7 @@ public sealed class AdmisionService(
         if (convenioId is null)
             return;
 
-        var existe = await DbContext.Convenios.AnyAsync(
+        var existe = await dbContext.Convenios.AnyAsync(
             x => x.Id == convenioId && x.Activo,
             cancellationToken);
 
@@ -334,7 +262,7 @@ public sealed class AdmisionService(
             .Distinct()
             .ToList();
 
-        var serviciosExistentes = await DbContext.Servicio
+        var serviciosExistentes = await dbContext.Servicio
             .Where(x => servicioIds.Contains(x.Id) && x.Activo)
             .Select(x => x.Id)
             .ToListAsync(cancellationToken);
@@ -353,7 +281,7 @@ public sealed class AdmisionService(
         if (medicoIds.Count == 0)
             return;
 
-        var medicosExistentes = await DbContext.Medicos
+        var medicosExistentes = await dbContext.Medicos
             .Where(x => medicoIds.Contains(x.Id) && x.Activo)
             .Select(x => x.Id)
             .ToListAsync(cancellationToken);

@@ -10,8 +10,7 @@ public abstract record AdmisionDetalleRequest
     public decimal PrecioUnitario { get; init; }
     public decimal Descuento { get; init; }
 
-    public decimal CalcularTotal() =>
-        (Cantidad * PrecioUnitario) - Descuento;
+    public decimal CalcularTotal() => (Cantidad * PrecioUnitario) - Descuento;
 }
 
 public sealed record CreateAdmisionDetalleRequest : AdmisionDetalleRequest;
