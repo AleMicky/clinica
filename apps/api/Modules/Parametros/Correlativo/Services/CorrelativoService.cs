@@ -344,7 +344,20 @@ public sealed class CorrelativoService(AppDbContext dbContext)
             Gestion = entity.Gestion,
             UltimoNumero = entity.UltimoNumero,
             Prefijo = entity.Prefijo,
-            Longitud = entity.Longitud
+            Longitud = entity.Longitud,
+            NumeroFormateado = Formatear(entity)
         };
+    }
+    
+    
+    private static string Formatear(CorrelativoEntity entity)
+    {
+        var numero = entity.UltimoNumero
+            .ToString()
+            .PadLeft(entity.Longitud, '0');
+
+        return string.IsNullOrEmpty(entity.Prefijo)
+            ? $"{entity.Gestion}-{numero}"
+            : $"{entity.Prefijo}-{entity.Gestion}-{numero}";
     }
 }

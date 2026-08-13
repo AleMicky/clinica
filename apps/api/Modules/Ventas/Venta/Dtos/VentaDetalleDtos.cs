@@ -2,7 +2,7 @@ using Clinica.Api.Shared.Abstractions;
 
 namespace Clinica.Api.Modules.Ventas.Venta.Dtos;
 
-public abstract record VentaDetalleRequest
+public record VentaDetalleRequest
 {
     public required int ServicioId { get; init; }
     public int? MedicoId { get; init; }

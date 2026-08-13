@@ -28,4 +28,5 @@ public sealed record CorrelativoResponse
     public int UltimoNumero { get; init; }
     public string? Prefijo { get; init; }
     public int Longitud { get; init; } = 6;
+    public string NumeroFormateado { get; init; }
 }

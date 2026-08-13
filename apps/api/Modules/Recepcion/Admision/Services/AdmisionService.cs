@@ -108,7 +108,7 @@ public sealed class AdmisionService(
         
         var correlativo = await correlativoService.GenerarAsync(paramCorrelativo, cancellationToken);
         
-        entity.Numero = correlativo.Codigo;
+        entity.Numero = correlativo.NumeroFormateado;
         entity.Estado = EstadoAdmision.Registrada;
         entity.Detalles = request.Detalles.Select(CrearDetalle).ToList();
 

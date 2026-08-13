@@ -24,7 +24,7 @@ import {
   Minus,
   Sparkles,
 } from "lucide-react";
-import { useServicios, useServiciosTarifario } from "@/modules/servicios/servicio/hooks/use-servicio";
+import { useServiciosTarifario } from "@/modules/servicios/servicio/hooks/use-servicio";
 import { useConvenioTarifarios } from "@/modules/servicios/convenio/hooks/use-convenio";
 import {
   useAdmisionStore,
@@ -91,42 +91,37 @@ export function MultiServicePickerModal({
     undefined;
 
   const currentCatId = activeCatId ?? categorias[0]?.id ?? 0;
-  const useTarifarioQuery = Boolean(activeTarifarioId && activeTarifarioId > 0);
 
   // Consulta a /api/v1/categorias-servicios/{categoriaId}/servicios/tarifario?tarifarioId={int?}
-  const { data: serviciosTarifarioData, isLoading: isLoadingTarifario } = useServiciosTarifario(
+  const { data: serviciosData, isLoading } = useServiciosTarifario(
     currentCatId,
     activeTarifarioId,
     undefined,
-    Boolean(isOpen && currentCatId > 0 && useTarifarioQuery)
+    Boolean(isOpen && currentCatId > 0)
   );
-
-  // Consulta estándar a /api/v1/categorias-servicios/{categoriaId}/servicios (si no hay tarifario)
-  const { data: serviciosStandardData, isLoading: isLoadingStandard } = useServicios(
-    currentCatId,
-    undefined,
-    Boolean(isOpen && currentCatId > 0 && !useTarifarioQuery)
-  );
-
-  const rawServiciosData = useTarifarioQuery ? serviciosTarifarioData : serviciosStandardData;
-  const isLoading = useTarifarioQuery ? isLoadingTarifario : isLoadingStandard;
 
   const serviciosList: ServicioResponse[] = React.useMemo(() => {
-    if (!rawServiciosData) return [];
-    if (Array.isArray(rawServiciosData)) return rawServiciosData as ServicioResponse[];
-    if (Array.isArray((rawServiciosData as PagedResult<ServicioResponse>).items)) {
-      return (rawServiciosData as PagedResult<ServicioResponse>).items;
+    if (!serviciosData) return [];
+    if (Array.isArray(serviciosData)) return serviciosData as ServicioResponse[];
+    if (Array.isArray((serviciosData as PagedResult<ServicioResponse>).items)) {
+      return (serviciosData as PagedResult<ServicioResponse>).items;
     }
     return [];
-  }, [rawServiciosData]);
+  }, [serviciosData]);
 
   const activeCategory = categorias.find((c) => c.id === activeCatId) || categorias[0];
 
   const getServicePrice = (s: ServicioResponse): number => {
-    const raw = s as unknown as { precio?: number; Precio?: number; precioBase?: number };
-    if (typeof raw.precio === "number") return raw.precio;
-    if (typeof raw.Precio === "number") return raw.Precio;
-    if (typeof raw.precioBase === "number") return raw.precioBase;
+    const raw = s as unknown as Record<string, unknown>;
+    const keys = ["precio", "Precio", "precioBase", "PrecioBase", "monto", "Monto", "price", "Price"];
+    for (const key of keys) {
+      const val = raw[key];
+      if (typeof val === "number" && !isNaN(val)) return val;
+      if (typeof val === "string" && val.trim() !== "") {
+        const num = Number(val);
+        if (!isNaN(num)) return num;
+      }
+    }
     return 0;
   };
 

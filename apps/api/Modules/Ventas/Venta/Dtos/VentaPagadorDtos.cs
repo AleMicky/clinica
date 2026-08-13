@@ -3,7 +3,7 @@ using Clinica.Api.Shared.Abstractions;
 
 namespace Clinica.Api.Modules.Ventas.Venta.Dtos;
 
-public abstract record VentaPagadorRequest
+public record VentaPagadorRequest
 {
     public required TipoPagador Tipo { get; init; }
     public int? ConvenioId { get; init; }

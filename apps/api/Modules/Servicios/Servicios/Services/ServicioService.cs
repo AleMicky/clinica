@@ -94,29 +94,25 @@ public sealed class ServicioService(AppDbContext dbContext)
                     && (x.FechaFin == null || x.FechaFin >= hoy),
                 cancellationToken);
 
-        if (tarifario is null)
-        {
-            throw new BusinessException(
-                tarifarioId.HasValue
-                    ? "El tarifario seleccionado no existe o no está vigente."
-                    : "No existe un tarifario principal vigente.");
-        }
+        var targetTarifarioId = tarifario?.Id ?? 0;
 
-        return await dbContext.TarifarioDetalles
+        return await dbContext.Servicio
             .AsNoTracking()
-            .Where(x =>
-                x.TarifarioId == tarifario.Id &&
-                x.Activo &&
-                x.Servicio.CategoriaServicioId == categoriaId &&
-                x.Servicio.Activo)
-            .OrderBy(x => x.Servicio.Nombre)
-            .Select(x => new ServicioTarifarioResponse
+            .Where(x => x.CategoriaServicioId == categoriaId && x.Activo)
+            .OrderBy(x => x.Nombre)
+            .Select(s => new ServicioTarifarioResponse
             {
-                Id = x.Servicio.Id,
-                CategoriaServicioId = x.Servicio.CategoriaServicioId,
-                Codigo = x.Servicio.Codigo,
-                Nombre = x.Servicio.Nombre,
-                Precio = x.Precio
+                Id = s.Id,
+                CategoriaServicioId = s.CategoriaServicioId,
+                Codigo = s.Codigo,
+                Nombre = s.Nombre,
+                Descripcion = s.Descripcion,
+                Precio = targetTarifarioId > 0
+                    ? dbContext.TarifarioDetalles
+                        .Where(td => td.TarifarioId == targetTarifarioId && td.ServicioId == s.Id && td.Activo)
+                        .Select(td => (decimal?)td.Precio)
+                        .FirstOrDefault() ?? 0m
+                    : 0m
             })
             .ToListAsync(cancellationToken);
     }
