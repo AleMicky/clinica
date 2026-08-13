@@ -26,6 +26,7 @@ export const ROUTES = {
     ROOT: "/parametros",
     CATALOGOS: "/parametros/catalogos",
     MONEDAS: "/parametros/monedas",
+    BANCOS: "/parametros/bancos",
     TIPO_CAMBIO: "/parametros/tipo-cambio",
     UNIDADES_MEDIDA: "/parametros/unidades-medida",
     GENERAL: "/parametros/general",

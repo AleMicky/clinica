@@ -23,6 +23,7 @@ import {
   Layers,
   Tag,
   Handshake,
+  Landmark,
   type LucideIcon,
 } from "lucide-react"
 
@@ -210,6 +211,12 @@ export const parametrosNav: NavGroup = {
       href: "/parametros/monedas",
       icon: Coins,
       description: "Definición de divisas y monedas de facturación",
+    },
+    {
+      title: "Bancos y Cuentas",
+      href: "/parametros/bancos",
+      icon: Landmark,
+      description: "Entidades bancarias y cuentas de recaudo",
     },
     {
       title: "Tipo de Cambio",
