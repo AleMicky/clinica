@@ -24,7 +24,12 @@ public sealed class AdmisionDetalleService(AppDbContext dbContext)
         var query = dbContext.AdmisionesDetalles
             .AsNoTracking()
             .Include(x => x.Servicio)
-            .Where(x => x.AdmisionId == admisionId && x.Activo);
+            .Include(x => x.Medico)
+            .ThenInclude(x => x.Empleado)
+            .ThenInclude(x => x.Persona)
+            .Where(x =>
+                x.AdmisionId == admisionId &&
+                x.Activo);
 
         var normalizedSearch = string.IsNullOrWhiteSpace(search)
             ? null
@@ -34,13 +39,18 @@ public sealed class AdmisionDetalleService(AppDbContext dbContext)
         {
             query = query.Where(x =>
                 x.Servicio.Codigo.Contains(normalizedSearch) ||
-                x.Servicio.Nombre.Contains(normalizedSearch));
+                x.Servicio.Nombre.Contains(normalizedSearch) ||
+                (x.Medico != null &&
+                 x.Medico.Empleado.Persona.Nombres.Contains(normalizedSearch)) ||
+                (x.Medico != null &&
+                 x.Medico.Empleado.Persona.ApellidoPaterno.Contains(normalizedSearch)));
         }
 
         var totalItems = await query.CountAsync(cancellationToken);
 
-        var offset = (pagination.ValidPage - 1)
-                     * pagination.ValidPageSize;
+        var offset =
+            (pagination.ValidPage - 1) *
+            pagination.ValidPageSize;
 
         var entities = await query
             .OrderBy(x => x.Servicio.Nombre)
@@ -49,8 +59,10 @@ public sealed class AdmisionDetalleService(AppDbContext dbContext)
             .Take(pagination.ValidPageSize)
             .ToListAsync(cancellationToken);
 
+        var items = AdmisionDetalleMapper.ToResponse(entities);
+
         return new PagedResult<AdmisionDetalleResponse>(
-            AdmisionDetalleMapper.ToResponse(entities),
+            items,
             pagination.ValidPage,
             pagination.ValidPageSize,
             totalItems);
@@ -61,18 +73,29 @@ public sealed class AdmisionDetalleService(AppDbContext dbContext)
         int detalleId,
         CancellationToken cancellationToken = default)
     {
-        await EnsureAdmisionExistsAsync(admisionId, cancellationToken);
+        await EnsureAdmisionExistsAsync(
+            admisionId,
+            cancellationToken);
 
         var entity = await dbContext.AdmisionesDetalles
             .AsNoTracking()
+            .Include(x => x.Servicio)
+            .Include(x => x.Medico)
+            .ThenInclude(x => x.Empleado)
+            .ThenInclude(x => x.Persona)
             .FirstOrDefaultAsync(
-                x => x.AdmisionId == admisionId
-                     && x.Id == detalleId
-                     && x.Activo,
+                x =>
+                    x.AdmisionId == admisionId &&
+                    x.Id == detalleId &&
+                    x.Activo,
                 cancellationToken);
 
         if (entity is null)
-            throw new NotFoundException(nameof(AdmisionDetalleEntity), detalleId);
+        {
+            throw new NotFoundException(
+                nameof(AdmisionDetalleEntity),
+                detalleId);
+        }
 
         return AdmisionDetalleMapper.ToResponse(entity);
     }
@@ -106,7 +129,7 @@ public sealed class AdmisionDetalleService(AppDbContext dbContext)
         await dbContext.AdmisionesDetalles.AddAsync(entity, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return AdmisionDetalleMapper.ToResponse(entity);
+        return await ObtenerAsync(admisionId, entity.Id, cancellationToken);
     }
 
     public async Task<AdmisionDetalleResponse> ActualizarAsync(
@@ -144,13 +167,11 @@ public sealed class AdmisionDetalleService(AppDbContext dbContext)
         }
 
         AdmisionDetalleMapper.UpdateEntity(request, entity);
-        entity.ServicioId = request.ServicioId;
-        entity.MedicoId = request.MedicoId;
         entity.Total = request.CalcularTotal();
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return AdmisionDetalleMapper.ToResponse(entity);
+        return await ObtenerAsync(admisionId, entity.Id, cancellationToken);
     }
 
     public async Task EliminarAsync(

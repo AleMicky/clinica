@@ -30,7 +30,8 @@ public sealed class AdmisionDetalleConfiguration
             .IsRequired();
 
         builder.HasIndex(x => new { x.AdmisionId, x.ServicioId })
-            .IsUnique();
+            .IsUnique()
+            .HasFilter("[Activo] = 1");
 
         builder.HasOne(x => x.Servicio)
             .WithMany()

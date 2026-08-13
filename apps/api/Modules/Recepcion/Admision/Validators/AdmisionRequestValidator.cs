@@ -53,6 +53,11 @@ public class AdmisionDetalleRequestValidator<TRequest>
             .GreaterThan(0)
             .WithMessage("El servicio es obligatorio.");
 
+        RuleFor(x => x.MedicoId)
+            .GreaterThan(0)
+            .When(x => x.MedicoId.HasValue)
+            .WithMessage("El médico debe ser un identificador válido.");
+
         RuleFor(x => x.Cantidad)
             .GreaterThan(0)
             .WithMessage("La cantidad debe ser mayor a cero.");

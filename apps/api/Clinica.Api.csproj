@@ -38,7 +38,6 @@
     <Folder Include="Modules\Parametros\MetodoPago\Validators\" />
     <Folder Include="Modules\Recepcion\Admision\Dtos\" />
     <Folder Include="Modules\Recepcion\Admision\Endpoints\" />
-    <Folder Include="Modules\Recepcion\Admision\Mappers\" />
     <Folder Include="Modules\Recepcion\Admision\Services\" />
     <Folder Include="Modules\Recepcion\Admision\Validators\" />
     <Folder Include="Modules\Recepcion\Directorio\Dtos\" />

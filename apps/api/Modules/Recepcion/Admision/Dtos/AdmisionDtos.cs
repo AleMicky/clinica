@@ -20,10 +20,36 @@ public sealed record AdmisionResponse : AuditableResponse
 {
     public int Id { get; init; }
     public string Numero { get; init; }
-    public int PacienteId { get; init; }
-    public int? ConvenioId { get; init; }
+    public PacienteInfo Paciente { get; init; }
+    public ConvenioInfo? Convenio { get; init; }
     public DateTime FechaHora { get; init; }
     public EstadoAdmision Estado { get; init; }
     public string? Observacion { get; init; }
     public IReadOnlyCollection<AdmisionDetalleResponse> Detalles { get; init; } = [];
+}
+
+public sealed record PacienteInfo
+{
+    public int Id { get; init; }
+    public string NumeroHistoriaClinica { get; init; } = string.Empty;
+    public PersonaInfoAdmision Persona { get; init; } = null!;
+}
+
+public sealed record PersonaInfoAdmision
+{
+    public int Id { get; init; }
+    public string Nombres { get; init; } = string.Empty;
+    public string ApellidoPaterno { get; init; } = string.Empty;
+    public string? ApellidoMaterno { get; init; }
+    public string TipoDocumento { get; init; } = string.Empty;
+    public string NumeroDocumento { get; init; } = string.Empty;
+    public string? ExtensionDocumento { get; init; }
+    public string? ComplementoDocumento { get; init; }
+}
+
+public sealed record ConvenioInfo
+{
+    public int Id { get; init; }
+    public string Codigo { get; init; } = string.Empty;
+    public string Nombre { get; init; } = string.Empty;
 }

@@ -24,6 +24,11 @@ import {
 } from "lucide-react";
 import {
   EstadoAdmision,
+  formatConvenioNombre,
+  formatMedicoNombre,
+  formatPacienteDocumento,
+  formatPacienteNombre,
+  formatServicioNombre,
   type AdmisionResponse,
 } from "../types/admision.types";
 import { AdmisionStatusBadge } from "./admision-status-badge";
@@ -143,18 +148,15 @@ export function AdmisionDetailSheet({
 
           {/* INFORMACIÓN DEL PACIENTE */}
           {(() => {
-            const nombreCompleto = admision.paciente?.persona
-              ? `${admision.paciente.persona.nombres} ${admision.paciente.persona.apellidoPaterno} ${admision.paciente.persona.apellidoMaterno || ""}`.trim()
-              : admision.pacienteNombre || `Paciente #${admision.pacienteId}`;
-
-            const documento =
-              admision.paciente?.persona?.numeroDocumento ||
-              admision.pacienteDocumento ||
-              "Sin Documento";
-
+            const nombreCompleto = formatPacienteNombre(admision.paciente, admision.pacienteNombre);
+            const documento = formatPacienteDocumento(admision.paciente, admision.pacienteDocumento);
             const hcNumero =
-              admision.paciente?.numeroHistoriaClinica ||
-              admision.pacienteId.toString().padStart(5, "0");
+              (admision.paciente && "numeroHistoriaClinica" in admision.paciente
+                ? admision.paciente.numeroHistoriaClinica
+                : undefined) ||
+              (admision.pacienteId ? admision.pacienteId.toString().padStart(5, "0") : "---");
+
+            const convenio = admision.convenio?.nombre || formatConvenioNombre(admision.convenio, admision.convenioNombre);
 
             return (
               <div className="space-y-2.5">
@@ -169,7 +171,7 @@ export function AdmisionDetailSheet({
                         {nombreCompleto}
                       </p>
                       <p className="text-muted-foreground text-[11px]">
-                        DNI / Documento: {documento}
+                        Documento: {documento}
                       </p>
                     </div>
                     <Badge variant="secondary" className="text-[10px]">
@@ -185,7 +187,7 @@ export function AdmisionDetailSheet({
                       <span>
                         Convenio:{" "}
                         <strong className="text-foreground">
-                          {admision.convenioNombre || "Particular"}
+                          {convenio}
                         </strong>
                       </span>
                     </div>
@@ -230,7 +232,7 @@ export function AdmisionDetailSheet({
                     <div key={item.id} className="p-2.5 grid grid-cols-12 gap-2 items-center">
                       <div className="col-span-5">
                         <p className="font-semibold text-foreground">
-                          {item.servicioNombre || `Servicio #${item.servicioId}`}
+                          {formatServicioNombre(item)}
                         </p>
                         {item.descuento > 0 && (
                           <span className="text-[10px] text-emerald-600">
@@ -239,7 +241,7 @@ export function AdmisionDetailSheet({
                         )}
                       </div>
                       <div className="col-span-3 text-[11px] text-muted-foreground truncate">
-                        {item.medicoNombre || "Médico de Guardia"}
+                        {formatMedicoNombre(item)}
                       </div>
                       <div className="col-span-1 text-center font-medium">
                         {item.cantidad}

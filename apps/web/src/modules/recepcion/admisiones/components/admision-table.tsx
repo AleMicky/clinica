@@ -34,6 +34,9 @@ import {
 } from "lucide-react";
 import {
   EstadoAdmision,
+  formatConvenioNombre,
+  formatPacienteDocumento,
+  formatPacienteNombre,
   type AdmisionResponse,
 } from "../types/admision.types";
 import { AdmisionStatusBadge } from "./admision-status-badge";
@@ -166,17 +169,9 @@ export function AdmisionTable({
                     adm.totalAdmision ??
                     adm.detalles.reduce((acc, d) => acc + (d.total || 0), 0);
 
-                  const nombreCompleto = adm.paciente?.persona
-                    ? `${adm.paciente.persona.nombres} ${adm.paciente.persona.apellidoPaterno} ${adm.paciente.persona.apellidoMaterno || ""}`.trim()
-                    : adm.pacienteNombre || `Paciente #${adm.pacienteId}`;
-
-                  const documento =
-                    adm.paciente?.persona?.numeroDocumento ||
-                    adm.pacienteDocumento ||
-                    "Sin Documento";
-
-                  const convenio =
-                    adm.convenioNombre || (adm.convenioId ? `Convenio #${adm.convenioId}` : "Particular");
+                  const nombreCompleto = formatPacienteNombre(adm.paciente, adm.pacienteNombre);
+                  const documento = formatPacienteDocumento(adm.paciente, adm.pacienteDocumento);
+                  const convenio = adm.convenio?.nombre || formatConvenioNombre(adm.convenio, adm.convenioNombre);
 
                   return (
                     <TableRow key={adm.id} className="hover:bg-muted/30 transition-colors group">
