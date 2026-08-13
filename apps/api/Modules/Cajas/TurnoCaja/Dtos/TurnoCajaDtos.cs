@@ -39,3 +39,13 @@ public sealed record EmpleadoInfo
     public string CodigoEmpleado { get; init; } = string.Empty;
     public string NombreCompleto { get; init; } = string.Empty;
 }
+
+public sealed record TurnoCajaInfo
+{
+    public int Id { get; init; }
+    public CajaInfo? Caja { get; init; }
+    public EmpleadoInfo? Empleado { get; init; }
+    public DateTime FechaHoraApertura { get; init; }
+    public DateTime? FechaHoraCierre { get; init; }
+    public EstadoTurnoCaja Estado { get; init; }
+}

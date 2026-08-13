@@ -1,4 +1,9 @@
+using Clinica.Api.Modules.Cajas.AperturaCaja.Entity;
+using Clinica.Api.Modules.Cajas.ArqueoCaja.Entity;
 using Clinica.Api.Modules.Cajas.Caja.Entity;
+using Clinica.Api.Modules.Cajas.CierreCaja.Entity;
+using Clinica.Api.Modules.Cajas.Cobro.Entity;
+using Clinica.Api.Modules.Cajas.MovimientoCaja.Entity;
 using Clinica.Api.Modules.Cajas.TurnoCaja.Entity;
 using Clinica.Api.Modules.Parametros.Banco.Entity;
 using Clinica.Api.Modules.Parametros.Catalogo.Entity;
@@ -67,6 +72,12 @@ public class AppDbContext(
     public DbSet<Correlativo>  Correlativo => Set<Correlativo>();
     public DbSet<Caja> Cajas => Set<Caja>();
     public DbSet<TurnoCaja> TurnosCaja => Set<TurnoCaja>();
+    public DbSet<AperturaCaja> AperturasCaja => Set<AperturaCaja>();
+    public DbSet<CierreCaja> CierresCaja => Set<CierreCaja>();
+    public DbSet<ArqueoCaja> ArqueosCaja => Set<ArqueoCaja>();
+    public DbSet<MovimientoCaja> MovimientosCaja => Set<MovimientoCaja>();
+    public DbSet<Cobro> Cobros => Set<Cobro>();
+    public DbSet<CobroDetalle> CobroDetalles => Set<CobroDetalle>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

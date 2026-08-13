@@ -7,6 +7,7 @@ namespace Clinica.Api.Modules.Cajas.Cobro.Entity;
 
 public sealed class CobroDetalle : AuditableEntity
 {
+    public int CobroId { get; set; }
     public Cobro Cobro { get; set; } = null!;
 
     public int MetodoPagoId { get; set; }

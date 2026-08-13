@@ -4,6 +4,7 @@ using Clinica.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Clinica.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260813193706_AddMovimientosCaja")]
+    partial class AddMovimientosCaja
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -251,154 +254,6 @@ namespace Clinica.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("CierresCaja", (string)null);
-                });
-
-            modelBuilder.Entity("Clinica.Api.Modules.Cajas.Cobro.Entity.Cobro", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("Activo")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<string>("CreadoPor")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("Estado")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("FechaCreacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("FechaHora")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("FechaHoraAnulacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("FechaModificacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ModificadoPor")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("MotivoAnulacion")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("Numero")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("Observacion")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<decimal>("Total")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("TurnoCajaId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("VentaPagadorId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Numero")
-                        .IsUnique()
-                        .HasFilter("[Activo] = 1");
-
-                    b.HasIndex("TurnoCajaId");
-
-                    b.HasIndex("VentaPagadorId");
-
-                    b.ToTable("Cobros", (string)null);
-                });
-
-            modelBuilder.Entity("Clinica.Api.Modules.Cajas.Cobro.Entity.CobroDetalle", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("Activo")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<int>("CobroId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("CreadoPor")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int?>("CuentaBancariaId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("EntidadFinanciera")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("FechaCreacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("FechaModificacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("MetodoPagoId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ModificadoPor")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("MonedaId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("Monto")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("MontoMonedaBase")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("Observacion")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("Referencia")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<decimal>("TipoCambio")
-                        .HasPrecision(18, 6)
-                        .HasColumnType("decimal(18,6)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CobroId");
-
-                    b.HasIndex("CuentaBancariaId");
-
-                    b.HasIndex("MetodoPagoId");
-
-                    b.HasIndex("MonedaId");
-
-                    b.ToTable("CobroDetalles", (string)null);
                 });
 
             modelBuilder.Entity("Clinica.Api.Modules.Cajas.MovimientoCaja.Entity.MovimientoCaja", b =>
@@ -2550,59 +2405,6 @@ namespace Clinica.Api.Migrations
                     b.Navigation("TurnoCaja");
                 });
 
-            modelBuilder.Entity("Clinica.Api.Modules.Cajas.Cobro.Entity.Cobro", b =>
-                {
-                    b.HasOne("Clinica.Api.Modules.Cajas.TurnoCaja.Entity.TurnoCaja", "TurnoCaja")
-                        .WithMany()
-                        .HasForeignKey("TurnoCajaId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Clinica.Api.Modules.Ventas.Venta.Entity.VentaPagador", "VentaPagador")
-                        .WithMany()
-                        .HasForeignKey("VentaPagadorId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("TurnoCaja");
-
-                    b.Navigation("VentaPagador");
-                });
-
-            modelBuilder.Entity("Clinica.Api.Modules.Cajas.Cobro.Entity.CobroDetalle", b =>
-                {
-                    b.HasOne("Clinica.Api.Modules.Cajas.Cobro.Entity.Cobro", "Cobro")
-                        .WithMany("Detalles")
-                        .HasForeignKey("CobroId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Clinica.Api.Modules.Parametros.Banco.Entity.CuentaBancaria", "CuentaBancaria")
-                        .WithMany()
-                        .HasForeignKey("CuentaBancariaId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Clinica.Api.Modules.Parametros.MetodoPago.Entity.MetodoPago", "MetodoPago")
-                        .WithMany()
-                        .HasForeignKey("MetodoPagoId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Clinica.Api.Modules.Parametros.Moneda.Entity.Moneda", "Moneda")
-                        .WithMany()
-                        .HasForeignKey("MonedaId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Cobro");
-
-                    b.Navigation("CuentaBancaria");
-
-                    b.Navigation("MetodoPago");
-
-                    b.Navigation("Moneda");
-                });
-
             modelBuilder.Entity("Clinica.Api.Modules.Cajas.MovimientoCaja.Entity.MovimientoCaja", b =>
                 {
                     b.HasOne("Clinica.Api.Modules.Cajas.TurnoCaja.Entity.TurnoCaja", "TurnoCaja")
@@ -3057,11 +2859,6 @@ namespace Clinica.Api.Migrations
             modelBuilder.Entity("Clinica.Api.Modules.Cajas.Caja.Entity.Caja", b =>
                 {
                     b.Navigation("Turnos");
-                });
-
-            modelBuilder.Entity("Clinica.Api.Modules.Cajas.Cobro.Entity.Cobro", b =>
-                {
-                    b.Navigation("Detalles");
                 });
 
             modelBuilder.Entity("Clinica.Api.Modules.Parametros.Banco.Entity.Banco", b =>
