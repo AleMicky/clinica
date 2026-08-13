@@ -56,7 +56,14 @@ export const directNavItems: NavItem[] = [
     icon: FileText,
     description: "Registro de ingresos, atención y detalle de servicios",
   },
+  {
+    title: "Ventas",
+    href: "/ventas",
+    icon: Coins,
+    description: "Gestión de ventas, comprobantes y detalle de pagadores",
+  },
 ]
+
 
 // 2. Módulos Agrupados (Núcleos desplegables con sub-menú)
 export const recepcionNav: NavGroup = {
