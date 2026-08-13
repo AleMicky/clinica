@@ -1,11 +1,15 @@
 using Clinica.Api.Modules.Cajas.AperturaCaja.Endpoints;
 using Clinica.Api.Modules.Cajas.AperturaCaja.Services;
+using Clinica.Api.Modules.Cajas.ArqueoCaja.Endpoints;
+using Clinica.Api.Modules.Cajas.ArqueoCaja.Services;
 using Clinica.Api.Modules.Cajas.Caja.Endpoints;
 using Clinica.Api.Modules.Cajas.Caja.Services;
 using Clinica.Api.Modules.Cajas.CierreCaja.Endpoints;
 using Clinica.Api.Modules.Cajas.CierreCaja.Services;
 using Clinica.Api.Modules.Cajas.Cobro.Endpoints;
 using Clinica.Api.Modules.Cajas.Cobro.Services;
+using Clinica.Api.Modules.Cajas.DevolucionCobro.Endpoints;
+using Clinica.Api.Modules.Cajas.DevolucionCobro.Services;
 using Clinica.Api.Modules.Cajas.MovimientoCaja.Endpoints;
 using Clinica.Api.Modules.Cajas.MovimientoCaja.Services;
 using Clinica.Api.Modules.Cajas.TurnoCaja.Endpoints;
@@ -24,6 +28,8 @@ public static class CajasModule
         services.AddScoped<CierreCajaService>();
         services.AddScoped<MovimientoCajaService>();
         services.AddScoped<CobroService>();
+        services.AddScoped<DevolucionCobroService>();
+        services.AddScoped<ArqueoCajaService>();
 
         return services;
     }
@@ -37,6 +43,8 @@ public static class CajasModule
         app.MapCierreCajaEndpoints();
         app.MapMovimientoCajaEndpoints();
         app.MapCobroEndpoints();
+        app.MapDevolucionCobroEndpoints();
+        app.MapArqueoCajaEndpoints();
 
         return app;
     }

@@ -13,8 +13,6 @@ public sealed class ArqueoCajaConfiguration
     {
         builder.ToTable("ArqueosCaja");
 
-        builder.Ignore(x => x.Detalles);
-
         builder.Property(x => x.TurnoCajaId)
             .IsRequired();
 

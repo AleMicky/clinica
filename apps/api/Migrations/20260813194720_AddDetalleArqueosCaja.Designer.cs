@@ -4,6 +4,7 @@ using Clinica.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Clinica.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260813194720_AddDetalleArqueosCaja")]
+    partial class AddDetalleArqueosCaja
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -458,69 +461,6 @@ namespace Clinica.Api.Migrations
                     b.HasIndex("MonedaId");
 
                     b.ToTable("CobroDetalles", (string)null);
-                });
-
-            modelBuilder.Entity("Clinica.Api.Modules.Cajas.DevolucionCobro.Entity.DevolucionCobro", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("Activo")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<int>("CobroId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("CreadoPor")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("FechaCreacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("FechaHora")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("FechaModificacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ModificadoPor")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<decimal>("Monto")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("Motivo")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("Numero")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<int>("TurnoCajaId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CobroId");
-
-                    b.HasIndex("Numero")
-                        .IsUnique()
-                        .HasFilter("[Activo] = 1");
-
-                    b.HasIndex("TurnoCajaId");
-
-                    b.ToTable("DevolucionesCobro", (string)null);
                 });
 
             modelBuilder.Entity("Clinica.Api.Modules.Cajas.MovimientoCaja.Entity.MovimientoCaja", b =>
@@ -2750,25 +2690,6 @@ namespace Clinica.Api.Migrations
                     b.Navigation("MetodoPago");
 
                     b.Navigation("Moneda");
-                });
-
-            modelBuilder.Entity("Clinica.Api.Modules.Cajas.DevolucionCobro.Entity.DevolucionCobro", b =>
-                {
-                    b.HasOne("Clinica.Api.Modules.Cajas.Cobro.Entity.Cobro", "Cobro")
-                        .WithMany()
-                        .HasForeignKey("CobroId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Clinica.Api.Modules.Cajas.TurnoCaja.Entity.TurnoCaja", "TurnoCaja")
-                        .WithMany()
-                        .HasForeignKey("TurnoCajaId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Cobro");
-
-                    b.Navigation("TurnoCaja");
                 });
 
             modelBuilder.Entity("Clinica.Api.Modules.Cajas.MovimientoCaja.Entity.MovimientoCaja", b =>

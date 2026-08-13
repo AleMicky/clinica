@@ -15,6 +15,15 @@ export interface EmpleadoInfo {
   nombreCompleto: string;
 }
 
+export interface TurnoCajaInfo {
+  id: number;
+  caja?: CajaInfo | null;
+  empleado?: EmpleadoInfo | null;
+  fechaHoraApertura?: string;
+  fechaHoraCierre?: string | null;
+  estado?: EstadoTurnoCaja;
+}
+
 export interface TurnoCajaResponse {
   id: number;
   caja?: CajaInfo | null;

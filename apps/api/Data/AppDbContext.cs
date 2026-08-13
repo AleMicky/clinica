@@ -75,6 +75,7 @@ public class AppDbContext(
     public DbSet<AperturaCaja> AperturasCaja => Set<AperturaCaja>();
     public DbSet<CierreCaja> CierresCaja => Set<CierreCaja>();
     public DbSet<ArqueoCaja> ArqueosCaja => Set<ArqueoCaja>();
+    public DbSet<DetalleArqueoCaja> DetalleArqueosCaja => Set<DetalleArqueoCaja>();
     public DbSet<MovimientoCaja> MovimientosCaja => Set<MovimientoCaja>();
     public DbSet<Cobro> Cobros => Set<Cobro>();
     public DbSet<CobroDetalle> CobroDetalles => Set<CobroDetalle>();
