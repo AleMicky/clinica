@@ -4,6 +4,7 @@ using Clinica.Api.Modules.Servicios.CategoriaServicio.Mappers;
 using Clinica.Api.Shared.Crud;
 using Clinica.Api.Shared.Exceptions;
 using Microsoft.EntityFrameworkCore;
+using Clinica.Api.Modules.Servicios.Servicios.Entity;
 using CategoriaServicioEntity = Clinica.Api.Modules.Servicios.CategoriaServicio.Entity.CategoriaServicio;
 
 namespace Clinica.Api.Modules.Servicios.CategoriaServicio.Services;
@@ -104,6 +105,20 @@ public sealed class CategoriaServicioService(AppDbContext dbContext)
             x.Codigo.Contains(search) ||
             x.Nombre.Contains(search) ||
             (x.Descripcion != null && x.Descripcion.Contains(search)));
+    }
+
+    protected override async Task ValidateDeleteAsync(
+        CategoriaServicioEntity entity,
+        CancellationToken cancellationToken)
+    {
+        var tieneServicios = await DbContext.Servicio
+            .AnyAsync(x => x.CategoriaServicioId == entity.Id, cancellationToken);
+
+        if (tieneServicios)
+        {
+            throw new ConflictException(
+                "No se puede eliminar la categoría porque tiene servicios asociados.");
+        }
     }
 
     private static void Normalizar(

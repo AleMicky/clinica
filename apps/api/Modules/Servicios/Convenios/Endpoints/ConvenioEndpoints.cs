@@ -42,18 +42,18 @@ public static class ConvenioEndpoints
         group.MapGet("/{convenioId:int}/tarifarios", ListarTarifariosAsync)
             .WithName("ListarConvenioTarifarios");
 
-        group.MapGet("/{convenioId:int}/tarifarios/{tarifarioId:int}", ObtenerTarifarioAsync)
+        group.MapGet("/{convenioId:int}/tarifarios/{id:int}", ObtenerTarifarioAsync)
             .WithName("ObtenerConvenioTarifario");
 
         group.MapPost("/{convenioId:int}/tarifarios", CrearTarifarioAsync)
             .WithName("CrearConvenioTarifario")
             .Validate<CreateConvenioTarifarioRequest>();
 
-        group.MapPut("/{convenioId:int}/tarifarios/{tarifarioId:int}", ActualizarTarifarioAsync)
+        group.MapPut("/{convenioId:int}/tarifarios/{id:int}", ActualizarTarifarioAsync)
             .WithName("ActualizarConvenioTarifario")
             .Validate<UpdateConvenioTarifarioRequest>();
 
-        group.MapDelete("/{convenioId:int}/tarifarios/{tarifarioId:int}", EliminarTarifarioAsync)
+        group.MapDelete("/{convenioId:int}/tarifarios/{id:int}", EliminarTarifarioAsync)
             .WithName("EliminarConvenioTarifario");
     }
 
@@ -137,14 +137,14 @@ public static class ConvenioEndpoints
 
     private static async Task<IResult> ObtenerTarifarioAsync(
         int convenioId,
-        int tarifarioId,
+        int id,
         ConvenioTarifarioService service,
         CancellationToken cancellationToken)
     {
         return Results.Ok(
             await service.ObtenerAsync(
                 convenioId,
-                tarifarioId,
+                id,
                 cancellationToken));
     }
 
@@ -166,7 +166,7 @@ public static class ConvenioEndpoints
 
     private static async Task<IResult> ActualizarTarifarioAsync(
         int convenioId,
-        int tarifarioId,
+        int id,
         UpdateConvenioTarifarioRequest request,
         ConvenioTarifarioService service,
         CancellationToken cancellationToken)
@@ -174,20 +174,20 @@ public static class ConvenioEndpoints
         return Results.Ok(
             await service.ActualizarAsync(
                 convenioId,
-                tarifarioId,
+                id,
                 request,
                 cancellationToken));
     }
 
     private static async Task<IResult> EliminarTarifarioAsync(
         int convenioId,
-        int tarifarioId,
+        int id,
         ConvenioTarifarioService service,
         CancellationToken cancellationToken)
     {
         await service.EliminarAsync(
             convenioId,
-            tarifarioId,
+            id,
             cancellationToken);
 
         return Results.NoContent();

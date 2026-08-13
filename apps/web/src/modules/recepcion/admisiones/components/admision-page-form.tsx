@@ -174,6 +174,7 @@ export function AdmisionPageForm() {
         isOpen={multiPickerOpen}
         onClose={() => setMultiPickerOpen(false)}
         categorias={categoriasList}
+        convenioId={convenioId}
       />
 
       {/* DIÁLOGO OFICIAL COMPLETO DE REGISTRO / EDICIÓN DE PACIENTE */}

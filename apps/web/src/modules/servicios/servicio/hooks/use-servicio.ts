@@ -6,6 +6,7 @@ import {
   deleteServicio,
   getServicioById,
   getServiciosByCategoria,
+  getServiciosByCategoriaTarifario,
   updateServicio,
 } from "../api/servicio.api";
 import { servicioKeys } from "../api/servicio.key";
@@ -19,6 +20,19 @@ export function useServicios(categoriaId: number, params?: ServicioQueryParams, 
   return useQuery({
     queryKey: servicioKeys.list(categoriaId, params as Record<string, unknown>),
     queryFn: () => getServiciosByCategoria(categoriaId, params),
+    enabled: enabled && categoriaId > 0,
+  });
+}
+
+export function useServiciosTarifario(
+  categoriaId: number,
+  tarifarioId?: number,
+  params?: ServicioQueryParams,
+  enabled = true
+) {
+  return useQuery({
+    queryKey: servicioKeys.tarifario(categoriaId, tarifarioId, params as Record<string, unknown>),
+    queryFn: () => getServiciosByCategoriaTarifario(categoriaId, tarifarioId, params),
     enabled: enabled && categoriaId > 0,
   });
 }

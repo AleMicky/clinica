@@ -18,6 +18,22 @@ export async function getServiciosByCategoria(
   return response.data;
 }
 
+export async function getServiciosByCategoriaTarifario(
+  categoriaId: number,
+  tarifarioId?: number,
+  params?: ServicioQueryParams
+): Promise<PagedResult<ServicioResponse> | ServicioResponse[]> {
+  const queryParams = {
+    ...params,
+    ...(tarifarioId ? { tarifarioId } : {}),
+  };
+  const response = await apiClient.get<PagedResult<ServicioResponse> | ServicioResponse[]>(
+    `/categorias-servicios/${categoriaId}/servicios/tarifario`,
+    { params: queryParams }
+  );
+  return response.data;
+}
+
 export async function getServicioById(
   categoriaId: number,
   servicioId: number

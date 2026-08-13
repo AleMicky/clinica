@@ -180,8 +180,7 @@ public sealed class TarifarioDetalleService(AppDbContext dbContext)
         var existe = await dbContext.TarifarioDetalles.AnyAsync(
             x => x.TarifarioId == tarifarioId
                  && x.Id != detalleId
-                 && x.ServicioId == request.ServicioId
-                 && x.Activo,
+                 && x.ServicioId == request.ServicioId,
             cancellationToken);
 
         if (existe)
@@ -244,59 +243,70 @@ public sealed class TarifarioDetalleService(AppDbContext dbContext)
 
         if (servicios.Count == 0)
         {
-            throw new NotFoundException(
+            throw new BusinessException(
                 "No existen servicios activos en la categoría seleccionada.");
         }
 
-        var serviciosYaAgregados = await dbContext.TarifarioDetalles
-            .AsNoTracking()
+        // No filtrar por Activo: un detalle inactivo puede reactivarse en
+        // vez de insertarse, evitando colisionar con el índice único
+        // (TarifarioId, ServicioId) que no está filtrado por Activo.
+        var existentes = await dbContext.TarifarioDetalles
             .Where(x =>
                 x.TarifarioId == tarifarioId &&
-                x.Activo &&
                 servicios.Contains(x.ServicioId))
-            .Select(x => x.ServicioId)
             .ToListAsync(cancellationToken);
 
-        var nuevosServicios = servicios
-            .Except(serviciosYaAgregados)
-            .ToList();
+        var existentesPorServicio = existentes
+            .ToDictionary(x => x.ServicioId);
 
-        if (nuevosServicios.Count == 0)
+        var afectados = new List<int>();
+
+        foreach (var servicioId in servicios)
+        {
+            if (existentesPorServicio.TryGetValue(
+                    servicioId,
+                    out var detalle))
+            {
+                if (detalle.Activo)
+                    continue;
+
+                detalle.Activo = true;
+                detalle.Precio = 0;
+                afectados.Add(detalle.Id);
+            }
+            else
+            {
+                var nuevo = new TarifarioDetalleEntity
+                {
+                    TarifarioId = tarifarioId,
+                    ServicioId = servicioId,
+                    Precio = 0,
+                    Activo = true
+                };
+
+                await dbContext.TarifarioDetalles
+                    .AddAsync(nuevo, cancellationToken);
+
+                afectados.Add(nuevo.Id);
+            }
+        }
+
+        if (afectados.Count == 0)
         {
             throw new ConflictException(
                 "Todos los servicios de esta categoría ya están agregados al tarifario.");
         }
 
-        var detalles = nuevosServicios
-            .Select(servicioId => new TarifarioDetalleEntity
-            {
-                TarifarioId = tarifarioId,
-                ServicioId = servicioId,
-                Precio = 0,
-                Activo = true
-            })
-            .ToList();
-
-        await dbContext.TarifarioDetalles.AddRangeAsync(
-            detalles,
-            cancellationToken);
-
-        await dbContext.SaveChangesAsync(
-            cancellationToken);
-
-        var ids = detalles
-            .Select(x => x.Id)
-            .ToList();
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         var entities = await dbContext.TarifarioDetalles
             .AsNoTracking()
             .Include(x => x.Servicio)
-            .Where(x => ids.Contains(x.Id))
+            .Where(x => afectados.Contains(x.Id))
             .OrderBy(x => x.Servicio.Nombre)
             .ToListAsync(cancellationToken);
 
-        return TarifarioDetalleMapper.ToResponse(
-            entities);
+        return TarifarioDetalleMapper.ToResponse(entities);
     }
 
     private async Task EnsureTarifarioExistsAsync(

@@ -15,7 +15,7 @@ public abstract class TarifarioDetalleRequestValidator<TRequest>
 
         RuleFor(x => x.Precio)
             .GreaterThanOrEqualTo(0)
-            .WithMessage("El precio debe ser mayor a cero.");
+            .WithMessage("El precio debe ser mayor o igual a cero.");
     }
 }
 

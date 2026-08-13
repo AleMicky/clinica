@@ -24,27 +24,32 @@ import {
   Minus,
   Sparkles,
 } from "lucide-react";
-import { useServicios } from "@/modules/servicios/servicio/hooks/use-servicio";
+import { useServicios, useServiciosTarifario } from "@/modules/servicios/servicio/hooks/use-servicio";
+import { useConvenioTarifarios } from "@/modules/servicios/convenio/hooks/use-convenio";
 import {
   useAdmisionStore,
   type SelectedServiceCartItem,
 } from "../store/use-admision-store";
 import type { CategoriaServicioResponse } from "@/modules/servicios/categoria-servicio/types/categoria-servicio.types";
-import type { ServicioResponse } from "@/modules/servicios/servicio/types/servicio.types";
+import type { ServicioResponse, PagedResult } from "@/modules/servicios/servicio/types/servicio.types";
 import { toast } from "sonner";
 
 export interface MultiServicePickerModalProps {
   isOpen: boolean;
   onClose: () => void;
   categorias: CategoriaServicioResponse[];
+  convenioId?: string;
+  tarifarioId?: number;
 }
 
 export function MultiServicePickerModal({
   isOpen,
   onClose,
   categorias,
+  convenioId,
+  tarifarioId,
 }: MultiServicePickerModalProps) {
-  const [activeCatId, setActiveCatId] = React.useState<number>(categorias[0]?.id ?? 1);
+  const [activeCatId, setActiveCatId] = React.useState<number | undefined>(categorias[0]?.id);
   const [searchQuery, setSearchQuery] = React.useState<string>("");
 
   const { addServicesFromPicker, isServiceInCart } = useAdmisionStore();
@@ -53,17 +58,77 @@ export function MultiServicePickerModal({
     new Map()
   );
 
+  // Actualizar la categoría activa al cargar categorías o al abrir el modal
+  React.useEffect(() => {
+    if (categorias.length > 0) {
+      if (!activeCatId || !categorias.some((c) => c.id === activeCatId)) {
+        setActiveCatId(categorias[0].id);
+      }
+    }
+  }, [categorias, activeCatId]);
+
   React.useEffect(() => {
     if (isOpen) {
       setSelectedMap(new Map());
       setSearchQuery("");
+      if (categorias.length > 0) {
+        setActiveCatId(categorias[0].id);
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, categorias]);
 
-  const { data: serviciosData, isLoading } = useServicios(activeCatId, undefined, Boolean(activeCatId));
-  const serviciosList = serviciosData?.items ?? [];
+  // Si se recibe un convenioId, consultar sus tarifarios para obtener el tarifarioId correspondiente
+  const numericConvenioId = convenioId && convenioId !== "particular" ? Number(convenioId) : 0;
+  const { data: convenioTarifariosData } = useConvenioTarifarios(
+    numericConvenioId,
+    Boolean(isOpen && numericConvenioId)
+  );
+
+  const activeTarifarioId =
+    tarifarioId ||
+    convenioTarifariosData?.items?.[0]?.tarifarioId ||
+    convenioTarifariosData?.items?.[0]?.tarifario?.id ||
+    undefined;
+
+  const currentCatId = activeCatId ?? categorias[0]?.id ?? 0;
+  const useTarifarioQuery = Boolean(activeTarifarioId && activeTarifarioId > 0);
+
+  // Consulta a /api/v1/categorias-servicios/{categoriaId}/servicios/tarifario?tarifarioId={int?}
+  const { data: serviciosTarifarioData, isLoading: isLoadingTarifario } = useServiciosTarifario(
+    currentCatId,
+    activeTarifarioId,
+    undefined,
+    Boolean(isOpen && currentCatId > 0 && useTarifarioQuery)
+  );
+
+  // Consulta estándar a /api/v1/categorias-servicios/{categoriaId}/servicios (si no hay tarifario)
+  const { data: serviciosStandardData, isLoading: isLoadingStandard } = useServicios(
+    currentCatId,
+    undefined,
+    Boolean(isOpen && currentCatId > 0 && !useTarifarioQuery)
+  );
+
+  const rawServiciosData = useTarifarioQuery ? serviciosTarifarioData : serviciosStandardData;
+  const isLoading = useTarifarioQuery ? isLoadingTarifario : isLoadingStandard;
+
+  const serviciosList: ServicioResponse[] = React.useMemo(() => {
+    if (!rawServiciosData) return [];
+    if (Array.isArray(rawServiciosData)) return rawServiciosData as ServicioResponse[];
+    if (Array.isArray((rawServiciosData as PagedResult<ServicioResponse>).items)) {
+      return (rawServiciosData as PagedResult<ServicioResponse>).items;
+    }
+    return [];
+  }, [rawServiciosData]);
 
   const activeCategory = categorias.find((c) => c.id === activeCatId) || categorias[0];
+
+  const getServicePrice = (s: ServicioResponse): number => {
+    const raw = s as unknown as { precio?: number; Precio?: number; precioBase?: number };
+    if (typeof raw.precio === "number") return raw.precio;
+    if (typeof raw.Precio === "number") return raw.Precio;
+    if (typeof raw.precioBase === "number") return raw.precioBase;
+    return 0;
+  };
 
   const filteredServicios = React.useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -76,14 +141,18 @@ export function MultiServicePickerModal({
   }, [serviciosList, searchQuery]);
 
   const handleToggleSelect = (s: ServicioResponse) => {
+    const price = getServicePrice(s);
     setSelectedMap((prev) => {
       const next = new Map(prev);
       if (next.has(s.id)) {
         next.delete(s.id);
       } else {
         next.set(s.id, {
-          servicio: s,
-          catId: activeCatId,
+          servicio: {
+            ...s,
+            precioBase: price,
+          } as unknown as ServicioResponse,
+          catId: currentCatId,
           catNombre: activeCategory?.nombre || "Catálogo",
           cantidad: 1,
         });
@@ -112,7 +181,7 @@ export function MultiServicePickerModal({
   const selectedItemsArray = Array.from(selectedMap.values());
   const totalSelectedCount = selectedItemsArray.reduce((acc, item) => acc + item.cantidad, 0);
   const totalSelectedPrice = selectedItemsArray.reduce((acc, item) => {
-    const price = (item.servicio as unknown as { precioBase?: number }).precioBase || 120;
+    const price = getServicePrice(item.servicio);
     return acc + price * item.cantidad;
   }, 0);
 
@@ -166,11 +235,10 @@ export function MultiServicePickerModal({
                   key={cat.id}
                   type="button"
                   onClick={() => setActiveCatId(cat.id)}
-                  className={`w-full p-3 rounded-xl text-left transition-all flex items-center justify-between text-xs font-semibold ${
-                    isActive
+                  className={`w-full p-3 rounded-xl text-left transition-all flex items-center justify-between text-xs font-semibold ${isActive
                       ? "bg-primary text-primary-foreground shadow-xs font-bold"
                       : "bg-background hover:bg-muted text-foreground border border-border/50"
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-2.5">
                     <FolderTree className={`size-4 shrink-0 ${isActive ? "text-primary-foreground" : "text-primary"}`} />
@@ -208,19 +276,18 @@ export function MultiServicePickerModal({
                   const isSelectedInModal = selectedMap.has(s.id);
                   const isAlreadyInCart = isServiceInCart(s.id);
                   const selectedData = selectedMap.get(s.id);
-                  const price = (s as unknown as { precioBase?: number }).precioBase || 120;
+                  const price = getServicePrice(s);
 
                   return (
                     <div
                       key={s.id}
                       onClick={() => handleToggleSelect(s)}
-                      className={`p-4 rounded-xl border transition-all text-left flex flex-col justify-between cursor-pointer space-y-3 shadow-2xs ${
-                        isSelectedInModal
+                      className={`p-4 rounded-xl border transition-all text-left flex flex-col justify-between cursor-pointer space-y-3 shadow-2xs ${isSelectedInModal
                           ? "border-primary bg-primary/10 ring-2 ring-primary/30 shadow-md"
                           : isAlreadyInCart
-                          ? "border-emerald-500/50 bg-emerald-500/10 shadow-xs"
-                          : "border-border/70 bg-card hover:border-primary/50 hover:bg-primary/5"
-                      }`}
+                            ? "border-emerald-500/50 bg-emerald-500/10 shadow-xs"
+                            : "border-border/70 bg-card hover:border-primary/50 hover:bg-primary/5"
+                        }`}
                     >
                       <div className="space-y-1">
                         <div className="flex items-start justify-between gap-1">

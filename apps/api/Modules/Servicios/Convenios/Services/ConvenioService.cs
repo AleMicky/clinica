@@ -110,6 +110,20 @@ public sealed class ConvenioService(AppDbContext dbContext)
             (x.Descripcion != null && x.Descripcion.Contains(search)));
     }
 
+    protected override async Task ValidateDeleteAsync(
+        ConvenioEntity entity,
+        CancellationToken cancellationToken)
+    {
+        var tieneTarifarios = await DbContext.ConveniosTarifarios
+            .AnyAsync(x => x.ConvenioId == entity.Id, cancellationToken);
+
+        if (tieneTarifarios)
+        {
+            throw new ConflictException(
+                "No se puede eliminar el convenio porque tiene tarifarios asociados.");
+        }
+    }
+
     private static void Normalizar(
         ConvenioEntity entity,
         string codigo,

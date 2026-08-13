@@ -11,7 +11,7 @@ public sealed class CategoriaServicioConfiguration
     protected override void ConfigureEntity(
         EntityTypeBuilder<CategoriaServicio> builder)
     {
-        builder.ToTable("Categorias");
+        builder.ToTable("CategoriasServicio");
 
         builder.Property(x => x.Codigo)
             .HasMaxLength(10)

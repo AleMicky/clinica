@@ -6,7 +6,7 @@ public abstract record CategoriaServicioRequest
 {
     public required string Codigo { get; init; }
     public required string Nombre { get; init; }
-    public string Descripcion { get; init; } = string.Empty;
+    public string? Descripcion { get; init; }
 }
 
 public sealed record CreateCategoriaServicioRequest : CategoriaServicioRequest;

@@ -5,4 +5,6 @@ export const servicioKeys = {
     [...servicioKeys.byCategory(categoriaId), "list", filters] as const,
   detail: (categoriaId: number, id: number) =>
     [...servicioKeys.byCategory(categoriaId), "detail", id] as const,
+  tarifario: (categoriaId: number, tarifarioId?: number, filters?: Record<string, unknown>) =>
+    [...servicioKeys.byCategory(categoriaId), "tarifario", tarifarioId, filters] as const,
 };

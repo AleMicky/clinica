@@ -35,7 +35,8 @@ export const useAdmisionStore = create<AdmisionStoreState>((set, get) => ({
 
       for (const item of items) {
         const existingIdx = current.findIndex((d) => Number(d.servicioId) === item.servicio.id);
-        const price = (item.servicio as unknown as { precioBase?: number }).precioBase || 120;
+        const raw = item.servicio as unknown as { precio?: number; Precio?: number; precioBase?: number };
+        const price = raw.precio ?? raw.Precio ?? raw.precioBase ?? 0;
 
         if (existingIdx >= 0) {
           // Si ya está en el carrito, actualizar la cantidad sin duplicar la fila

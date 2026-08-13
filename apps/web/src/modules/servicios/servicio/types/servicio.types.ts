@@ -4,6 +4,8 @@ export interface ServicioResponse {
   codigo: string;
   nombre: string;
   descripcion?: string | null;
+  precio?: number;
+  Precio?: number;
   createdAt?: string;
   updatedAt?: string;
   createdBy?: string;
@@ -12,6 +14,16 @@ export interface ServicioResponse {
   fechaModificacion?: string;
   creadoPor?: string;
   modificadoPor?: string;
+}
+
+export interface ServicioTarifarioResponse {
+  id: number;
+  categoriaServicioId: number;
+  codigo: string;
+  nombre: string;
+  descripcion?: string | null;
+  precio: number;
+  Precio?: number;
 }
 
 export interface CreateServicioRequest {

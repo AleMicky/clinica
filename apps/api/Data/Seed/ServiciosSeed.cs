@@ -32,13 +32,16 @@ public static class ServiciosSeed
         var existentesPorCodigo = existentes
             .ToDictionary(c => c.Codigo, StringComparer.OrdinalIgnoreCase);
 
-        var ahora = DateTime.UtcNow;
+        var codigosServicioExistentes = (await dbContext.Servicio
+                .Select(s => s.Codigo)
+                .ToListAsync())
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         foreach (var seed in seedCategorias)
         {
             if (existentesPorCodigo.TryGetValue(seed.Codigo, out var categoria))
             {
-                MergeServicios(categoria, seed.Servicios, ahora);
+                MergeServicios(categoria, seed.Servicios, codigosServicioExistentes);
             }
             else
             {
@@ -47,8 +50,7 @@ public static class ServiciosSeed
                     Codigo = seed.Codigo,
                     Nombre = seed.Nombre,
                     Descripcion = seed.Descripcion,
-                    Activo = true,
-                    FechaCreacion = ahora
+                    Activo = true
                 };
 
                 foreach (var seedServicio in seed.Servicios)
@@ -58,9 +60,10 @@ public static class ServiciosSeed
                         Codigo = seedServicio.Codigo,
                         Nombre = seedServicio.Nombre,
                         Descripcion = seedServicio.Descripcion,
-                        Activo = true,
-                        FechaCreacion = ahora
+                        Activo = true
                     });
+
+                    codigosServicioExistentes.Add(seedServicio.Codigo);
                 }
 
                 dbContext.CategoriaServicio.Add(nueva);
@@ -73,12 +76,8 @@ public static class ServiciosSeed
     private static void MergeServicios(
         CategoriaServicioEntity categoria,
         List<SeedServicio> seedServicios,
-        DateTime ahora)
+        HashSet<string> codigosExistentes)
     {
-        var codigosExistentes = categoria.Servicios
-            .Select(s => s.Codigo)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
         foreach (var seedServicio in seedServicios)
         {
             if (codigosExistentes.Contains(seedServicio.Codigo))
@@ -90,9 +89,10 @@ public static class ServiciosSeed
                 Codigo = seedServicio.Codigo,
                 Nombre = seedServicio.Nombre,
                 Descripcion = seedServicio.Descripcion,
-                Activo = true,
-                FechaCreacion = ahora
+                Activo = true
             });
+
+            codigosExistentes.Add(seedServicio.Codigo);
         }
     }
 

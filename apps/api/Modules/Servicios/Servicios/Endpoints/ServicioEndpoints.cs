@@ -18,6 +18,9 @@ public static class ServicioEndpoints
         group.MapGet("/", ListarAsync)
             .WithName("ListarServicios");
 
+        group.MapGet("/tarifario", ServicioTarifarioAsync)
+            .WithName("ServicioTarifario");
+
         group.MapGet("/{servicioId:int}", ObtenerAsync)
             .WithName("ObtenerServicio");
 
@@ -47,6 +50,19 @@ public static class ServicioEndpoints
                 categoriaId,
                 pagination,
                 search,
+                cancellationToken));
+    }
+
+    private static async Task<IResult> ServicioTarifarioAsync(
+        int categoriaId,
+        int? tarifarioId,
+        ServicioService service,
+        CancellationToken cancellationToken)
+    {
+        return Results.Ok(
+            await service.ServicioTarifarioAsync(
+                categoriaId,
+                tarifarioId,
                 cancellationToken));
     }
 

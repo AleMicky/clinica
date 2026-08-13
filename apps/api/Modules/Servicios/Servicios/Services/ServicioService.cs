@@ -106,6 +106,7 @@ public sealed class ServicioService(AppDbContext dbContext)
             .AsNoTracking()
             .Where(x =>
                 x.TarifarioId == tarifario.Id &&
+                x.Activo &&
                 x.Servicio.CategoriaServicioId == categoriaId &&
                 x.Servicio.Activo)
             .OrderBy(x => x.Servicio.Nombre)
@@ -130,14 +131,28 @@ public sealed class ServicioService(AppDbContext dbContext)
 
         var codigo = NormalizarCodigo(request.Codigo);
 
-        var existe = await dbContext.Servicio.AnyAsync(
+        // No filtrar por Activo: el índice único global impide dos filas
+        // con el mismo Codigo. Si existe una inactiva, se reactiva.
+        var existente = await dbContext.Servicio.FirstOrDefaultAsync(
             x => x.Codigo == codigo,
             cancellationToken);
 
-        if (existe)
+        if (existente is not null)
         {
-            throw new ConflictException(
-                $"Ya existe un servicio con el código '{codigo}'.");
+            if (existente.Activo)
+            {
+                throw new ConflictException(
+                    $"Ya existe un servicio con el código '{codigo}'.");
+            }
+
+            existente.CategoriaServicioId = categoriaId;
+            existente.Nombre = request.Nombre.Trim();
+            existente.Descripcion = Limpiar(request.Descripcion);
+            existente.Activo = true;
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            return ServicioMapper.ToResponse(existente);
         }
 
         var entity = ServicioMapper.ToEntity(request);
@@ -183,6 +198,8 @@ public sealed class ServicioService(AppDbContext dbContext)
             throw new ConflictException(
                 $"Ya existe otro servicio con el código '{codigo}'.");
         }
+
+        ServicioMapper.UpdateEntity(request, entity);
 
         entity.Codigo = codigo;
         entity.Nombre = request.Nombre.Trim();

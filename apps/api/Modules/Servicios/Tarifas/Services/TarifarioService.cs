@@ -50,6 +50,8 @@ public sealed class TarifarioService(AppDbContext dbContext)
         if (entity is null)
             throw CreateNotFoundException(id);
 
+        var eraPrincipal = entity.EsPrincipal;
+
         await ValidateUpdateAsync(
             id,
             request,
@@ -57,6 +59,20 @@ public sealed class TarifarioService(AppDbContext dbContext)
             cancellationToken);
 
         MapToExistingEntity(request, entity);
+
+        // Guard: no se puede desmarcar el único tarifario principal.
+        if (eraPrincipal && !entity.EsPrincipal)
+        {
+            var hayOtroPrincipal = await Entities.AnyAsync(
+                x => x.EsPrincipal && x.Id != id,
+                cancellationToken);
+
+            if (!hayOtroPrincipal)
+            {
+                throw new ConflictException(
+                    "No se puede desmarcar el único tarifario principal vigente.");
+            }
+        }
 
         if (entity.EsPrincipal)
         {
@@ -169,25 +185,45 @@ public sealed class TarifarioService(AppDbContext dbContext)
             (x.Descripcion != null && x.Descripcion.Contains(search)));
     }
 
-    private Task DesmarcarOtrosPrincipalesAsync(
+    protected override async Task ValidateDeleteAsync(
+        TarifarioEntity entity,
         CancellationToken cancellationToken)
     {
-        return Entities
-            .Where(x => x.EsPrincipal)
-            .ExecuteUpdateAsync(
-                s => s.SetProperty(x => x.EsPrincipal, false),
-                cancellationToken);
+        var tieneDetalles = await DbContext.TarifarioDetalles
+            .AnyAsync(x => x.TarifarioId == entity.Id, cancellationToken);
+
+        if (tieneDetalles)
+        {
+            throw new ConflictException(
+                "No se puede eliminar el tarifario porque tiene detalles asociados.");
+        }
     }
 
-    private Task DesmarcarOtrosPrincipalesAsync(
+    private async Task DesmarcarOtrosPrincipalesAsync(
+        CancellationToken cancellationToken)
+    {
+        var otros = await Entities
+            .Where(x => x.EsPrincipal)
+            .ToListAsync(cancellationToken);
+
+        foreach (var otro in otros)
+        {
+            otro.EsPrincipal = false;
+        }
+    }
+
+    private async Task DesmarcarOtrosPrincipalesAsync(
         int excludeId,
         CancellationToken cancellationToken)
     {
-        return Entities
+        var otros = await Entities
             .Where(x => x.EsPrincipal && x.Id != excludeId)
-            .ExecuteUpdateAsync(
-                s => s.SetProperty(x => x.EsPrincipal, false),
-                cancellationToken);
+            .ToListAsync(cancellationToken);
+
+        foreach (var otro in otros)
+        {
+            otro.EsPrincipal = false;
+        }
     }
 
     private async Task EnsureMonedaExistsAsync(
