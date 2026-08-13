@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CatalogoAutocomplete } from "@/components/ui/catalogo-autocomplete";
 import {
   Select,
   SelectContent,
@@ -75,11 +76,16 @@ export function CuentaBancariaFormDialog({
       monedaId: 0,
       numeroCuenta: "",
       nombreCuenta: "",
-      tipoCuenta: "Corriente",
+      tipoCuenta: "",
     },
   });
 
   const selectedMonedaId = watch("monedaId");
+
+  const selectedMoneda = React.useMemo(() => {
+    if (!selectedMonedaId || !monedasData?.items) return null;
+    return monedasData.items.find((m) => m.id === Number(selectedMonedaId)) || null;
+  }, [selectedMonedaId, monedasData]);
 
   React.useEffect(() => {
     if (open) {
@@ -88,18 +94,18 @@ export function CuentaBancariaFormDialog({
           monedaId: cuentaToEdit.monedaId,
           numeroCuenta: cuentaToEdit.numeroCuenta,
           nombreCuenta: cuentaToEdit.nombreCuenta || "",
-          tipoCuenta: cuentaToEdit.tipoCuenta || "Corriente",
+          tipoCuenta: cuentaToEdit.tipoCuenta || "",
         });
       } else {
         reset({
-          monedaId: monedasData?.items?.[0]?.id || 0,
+          monedaId: 0,
           numeroCuenta: "",
           nombreCuenta: "",
-          tipoCuenta: "Corriente",
+          tipoCuenta: "",
         });
       }
     }
-  }, [open, cuentaToEdit, reset, monedasData]);
+  }, [open, cuentaToEdit, reset]);
 
   const onSubmit = async (values: CuentaBancariaFormValues) => {
     try {
@@ -160,16 +166,24 @@ export function CuentaBancariaFormDialog({
             </Label>
             <Select
               value={selectedMonedaId ? String(selectedMonedaId) : ""}
-              onValueChange={(val) => setValue("monedaId", Number(val))}
+              onValueChange={(val) => setValue("monedaId", Number(val), { shouldValidate: true })}
               disabled={isSubmitting || isLoadingMonedas}
             >
-              <SelectTrigger id="monedaId">
-                <SelectValue placeholder="Seleccione una moneda..." />
+              <SelectTrigger id="monedaId" className="w-full h-9 text-sm">
+                <SelectValue placeholder="Seleccione una moneda...">
+                  {selectedMoneda ? (
+                    <span className="font-medium text-sm">
+                      {selectedMoneda.nombre} ({selectedMoneda.simbolo})
+                    </span>
+                  ) : null}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {monedasData?.items?.map((moneda) => (
                   <SelectItem key={moneda.id} value={String(moneda.id)}>
-                    {moneda.codigo} - {moneda.nombre} ({moneda.simbolo})
+                    <span className="font-medium text-sm">
+                      {moneda.nombre} ({moneda.simbolo})
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -188,7 +202,7 @@ export function CuentaBancariaFormDialog({
               id="numeroCuenta"
               placeholder="Ej: 191-12345678-0-12"
               {...register("numeroCuenta")}
-              className="font-mono"
+              className="h-9 text-sm font-mono"
               disabled={isSubmitting}
             />
             {errors.numeroCuenta && (
@@ -203,21 +217,17 @@ export function CuentaBancariaFormDialog({
             <Label htmlFor="tipoCuenta" className="font-medium">
               Tipo de Cuenta <span className="text-xs text-muted-foreground">(Opcional)</span>
             </Label>
-            <Select
-              value={watch("tipoCuenta") || "Corriente"}
+            <CatalogoAutocomplete
+              id="tipoCuenta"
+              codigo="TIPO_CUENTA_BANCARIA"
+              value={watch("tipoCuenta") || ""}
               onValueChange={(val) => setValue("tipoCuenta", val)}
+              placeholder="Seleccione o busque tipo de cuenta..."
+              fallbackOptions={["Corriente", "Ahorros", "Recaudadora", "CCI / Interbancaria"]}
               disabled={isSubmitting}
-            >
-              <SelectTrigger id="tipoCuenta">
-                <SelectValue placeholder="Seleccione tipo de cuenta..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Corriente">Cuenta Corriente</SelectItem>
-                <SelectItem value="Ahorros">Cuenta de Ahorros</SelectItem>
-                <SelectItem value="Recaudadora">Cuenta Recaudadora</SelectItem>
-                <SelectItem value="CCI">CCI / Interbancaria</SelectItem>
-              </SelectContent>
-            </Select>
+              error={Boolean(errors.tipoCuenta)}
+              className="h-9 text-sm"
+            />
             {errors.tipoCuenta && (
               <p className="text-xs text-destructive">
                 {errors.tipoCuenta.message}
@@ -234,6 +244,7 @@ export function CuentaBancariaFormDialog({
               id="nombreCuenta"
               placeholder="Ej: Clínica Central S.A.C."
               {...register("nombreCuenta")}
+              className="h-9 text-sm"
               disabled={isSubmitting}
             />
             {errors.nombreCuenta && (

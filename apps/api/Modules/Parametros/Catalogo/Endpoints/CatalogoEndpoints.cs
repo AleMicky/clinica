@@ -24,9 +24,9 @@ public static class CatalogoEndpoints
     private static void MapGrupos(RouteGroupBuilder group)
     {
         group.MapGet("/", ListarGruposAsync).WithName("ListarCatalogos");
-        group.MapPost("/", CrearGrupoAsync).WithName("CrearCatalogo").Validate<CreateCatalogoGrupoRequestValidator>();
+        group.MapPost("/", CrearGrupoAsync).WithName("CrearCatalogo").Validate<CreateCatalogoGrupoRequest>();
         group.MapGet("/{id:int}", ObtenerGrupoAsync).WithName("ObtenerCatalogo");
-        group.MapPut("/{id:int}", ActualizarGrupoAsync).WithName("ActualizarCatalogo").Validate<UpdateCatalogoGrupoRequestValidator>();
+        group.MapPut("/{id:int}", ActualizarGrupoAsync).WithName("ActualizarCatalogo").Validate<UpdateCatalogoGrupoRequest>();
         group.MapDelete("/{id:int}", EliminarGrupoAsync).WithName("EliminarCatalogo");
     }
 
@@ -35,8 +35,8 @@ public static class CatalogoEndpoints
         group.MapGet("/{grupoId:int}/items", ListarItemsAsync).WithName("ListarCatalogoItems");
         group.MapGet("/{codigo}/items", ListarItemsPorCodigoAsync).WithName("ListarCatalogoItemsPorCodigo");
         group.MapGet("/{grupoId:int}/items/{itemId:int}", ObtenerItemAsync).WithName("ObtenerCatalogoItem");
-        group.MapPost("/{grupoId:int}/items", CrearItemAsync).WithName("CrearCatalogoItem").Validate<CreateCatalogoItemRequestValidator>();
-        group.MapPut("/{grupoId:int}/items/{itemId:int}", ActualizarItemAsync).WithName("ActualizarCatalogoItem").Validate<UpdateCatalogoItemRequestValidator>();
+        group.MapPost("/{grupoId:int}/items", CrearItemAsync).WithName("CrearCatalogoItem").Validate<CreateCatalogoItemRequest>();
+        group.MapPut("/{grupoId:int}/items/{itemId:int}", ActualizarItemAsync).WithName("ActualizarCatalogoItem").Validate<UpdateCatalogoItemRequest>();
         group.MapDelete("/{grupoId:int}/items/{itemId:int}", EliminarItemAsync).WithName("EliminarCatalogoItem");
     }
 

@@ -74,7 +74,7 @@ export function BancoCuentasSheet({
 
   const getMonedaBadge = (monedaId: number) => {
     const moneda = monedasData?.items?.find((m) => m.id === monedaId);
-    if (!moneda) return `ID: ${monedaId}`;
+    if (!moneda) return "-";
     return `${moneda.codigo} (${moneda.simbolo})`;
   };
 
