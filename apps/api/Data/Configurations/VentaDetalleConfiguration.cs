@@ -29,16 +29,17 @@ public sealed class VentaDetalleConfiguration
             .HasPrecision(18, 2)
             .IsRequired();
 
-        builder.Property(x => x.PorcentajeMedico)
-            .HasPrecision(18, 2);
-
         builder.Property(x => x.MontoMedico)
             .HasPrecision(18, 2);
 
         builder.Property(x => x.MontoClinica)
             .HasPrecision(18, 2);
 
-        builder.HasIndex(x => new { x.VentaId, x.ServicioId })
+        builder.HasIndex(x => new
+            {
+                x.VentaId,
+                x.ServicioId
+            })
             .IsUnique()
             .HasFilter("[Activo] = 1");
 

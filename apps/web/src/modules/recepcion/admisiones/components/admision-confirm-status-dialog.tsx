@@ -87,14 +87,14 @@ export function AdmisionConfirmStatusDialog({
               : "¿Cambiar Estado de la Admisión?"}
           </AlertDialogTitle>
           <AlertDialogDescription className="text-xs text-muted-foreground space-y-1.5">
-            <p>
+            <span className="block">
               ¿Está seguro de cambiar el estado de la admisión{" "}
               <strong className="font-mono font-bold text-foreground">#{admision.numero}</strong> a{" "}
               <strong className="font-bold text-foreground">"{targetLabel}"</strong>?
-            </p>
-            <p className="text-[11px] text-muted-foreground">
+            </span>
+            <span className="block text-[11px] text-muted-foreground">
               Paciente: <span className="font-medium text-foreground">{pacienteNombre}</span>
-            </p>
+            </span>
           </AlertDialogDescription>
         </AlertDialogHeader>
 

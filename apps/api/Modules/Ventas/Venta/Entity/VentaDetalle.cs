@@ -15,13 +15,10 @@ public sealed class VentaDetalle : AuditableEntity
     public int? MedicoId { get; set; }
     public Medico? Medico { get; set; }
 
-    public decimal Cantidad { get; set; } = 1;
+    public decimal Cantidad { get; set; } = 1m;
     public decimal PrecioUnitario { get; set; }
-
     public decimal Descuento { get; set; }
     public decimal Total { get; set; }
-
-    public decimal? PorcentajeMedico { get; set; }
     public decimal? MontoMedico { get; set; }
     public decimal? MontoClinica { get; set; }
 }

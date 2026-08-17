@@ -8,6 +8,7 @@ using Clinica.Api.Modules.Recepcion.Pacientes.Entity;
 using Clinica.Api.Modules.RecursosHumanos.Medico.Entity;
 using Clinica.Api.Modules.Servicios.Convenios.Entity;
 using Clinica.Api.Modules.Servicios.Servicios.Entity;
+using Clinica.Api.Modules.Ventas.Venta.Services;
 using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Extensions;
 using Clinica.Api.Shared.Pagination;
@@ -19,6 +20,7 @@ namespace Clinica.Api.Modules.Recepcion.Admision.Services;
 
 public sealed class AdmisionService(
     AppDbContext dbContext,
+    VentaService ventaService,
     CorrelativoService correlativoService
 )
 {
@@ -206,32 +208,65 @@ public sealed class AdmisionService(
         CambiarEstadoRequest request,
         CancellationToken cancellationToken = default)
     {
-        var entity = await Admisiones
-            .Include(x => x.Detalles)
-            .FirstOrDefaultAsync(
-                x => x.Id == id && x.Activo,
+        await using var transaction = await dbContext.Database
+            .BeginTransactionAsync(cancellationToken);
+
+        try
+        {
+            var entity = await Admisiones
+                .Include(x => x.Detalles)
+                .FirstOrDefaultAsync(
+                    x => x.Id == id && x.Activo,
+                    cancellationToken);
+
+            if (entity is null)
+                throw new NotFoundException(nameof(AdmisionEntity), id);
+
+            if (!AdmisionTransiciones.EsValida(
+                    entity.Estado,
+                    request.EstadoDestino))
+            {
+                throw new ConflictException(
+                    $"No se puede transitar de {entity.Estado} " +
+                    $"a {request.EstadoDestino}.");
+            }
+
+            // Si la admisión pasa a Ventas,
+            // primero generamos la venta.
+            if (request.EstadoDestino == EstadoAdmision.EnviadaVenta)
+            {
+                await ventaService.GenerarVentaDesdeAdmisionAsync(
+                    entity.Id,
+                    cancellationToken);
+            }
+
+            // La venta ya fue creada correctamente.
+            // Ahora sí cambiamos el estado.
+            entity.Estado = request.EstadoDestino;
+
+            if (!string.IsNullOrWhiteSpace(request.Motivo))
+            {
+                var motivo = request.Motivo.Trim();
+
+                entity.Observacion =
+                    string.IsNullOrWhiteSpace(entity.Observacion)
+                        ? motivo
+                        : $"{entity.Observacion.Trim()} | {motivo}";
+            }
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            await transaction.CommitAsync(cancellationToken);
+
+            return await ObtenerAsync(
+                entity.Id,
                 cancellationToken);
-
-        if (entity is null)
-            throw new NotFoundException(nameof(AdmisionEntity), id);
-
-        if (!AdmisionTransiciones.EsValida(entity.Estado, request.EstadoDestino))
-        {
-            throw new ConflictException($"No se puede transitar de {entity.Estado} a {request.EstadoDestino}.");
         }
-
-        entity.Estado = request.EstadoDestino;
-
-        if (!string.IsNullOrWhiteSpace(request.Motivo))
+        catch
         {
-            entity.Observacion = string.IsNullOrWhiteSpace(entity.Observacion)
-                ? request.Motivo.Trim()
-                : $"{entity.Observacion.Trim()} | {request.Motivo.Trim()}";
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
         }
-
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        return await ObtenerAsync(entity.Id, cancellationToken);
     }
 
     private static AdmisionResponse MapToResponse(AdmisionEntity entity)

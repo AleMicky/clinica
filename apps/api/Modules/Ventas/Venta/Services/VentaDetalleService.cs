@@ -20,12 +20,16 @@ public sealed class VentaDetalleService(AppDbContext dbContext)
         string? search,
         CancellationToken cancellationToken = default)
     {
-        await EnsureVentaExistsAsync(ventaId, cancellationToken);
+        await EnsureVentaExistsAsync(
+            ventaId,
+            cancellationToken);
 
         var query = dbContext.VentaDetalles
             .AsNoTracking()
             .Include(x => x.Servicio)
-            .Where(x => x.VentaId == ventaId && x.Activo);
+            .Where(x =>
+                x.VentaId == ventaId &&
+                x.Activo);
 
         var normalizedSearch = string.IsNullOrWhiteSpace(search)
             ? null
@@ -38,10 +42,12 @@ public sealed class VentaDetalleService(AppDbContext dbContext)
                 x.Servicio.Nombre.Contains(normalizedSearch));
         }
 
-        var totalItems = await query.CountAsync(cancellationToken);
+        var totalItems = await query.CountAsync(
+            cancellationToken);
 
-        var offset = (pagination.ValidPage - 1)
-                     * pagination.ValidPageSize;
+        var offset =
+            (pagination.ValidPage - 1) *
+            pagination.ValidPageSize;
 
         var entities = await query
             .OrderBy(x => x.Servicio.Nombre)
@@ -62,18 +68,27 @@ public sealed class VentaDetalleService(AppDbContext dbContext)
         int detalleId,
         CancellationToken cancellationToken = default)
     {
-        await EnsureVentaExistsAsync(ventaId, cancellationToken);
+        await EnsureVentaExistsAsync(
+            ventaId,
+            cancellationToken);
 
         var entity = await dbContext.VentaDetalles
             .AsNoTracking()
+            .Include(x => x.Servicio)
+            .Include(x => x.Medico)
             .FirstOrDefaultAsync(
-                x => x.VentaId == ventaId
-                     && x.Id == detalleId
-                     && x.Activo,
+                x =>
+                    x.VentaId == ventaId &&
+                    x.Id == detalleId &&
+                    x.Activo,
                 cancellationToken);
 
         if (entity is null)
-            throw new NotFoundException(nameof(VentaDetalleEntity), detalleId);
+        {
+            throw new NotFoundException(
+                nameof(VentaDetalleEntity),
+                detalleId);
+        }
 
         return VentaDetalleMapper.ToResponse(entity);
     }
@@ -83,15 +98,25 @@ public sealed class VentaDetalleService(AppDbContext dbContext)
         CreateVentaDetalleRequest request,
         CancellationToken cancellationToken = default)
     {
-        var venta = await ObtenerVentaEditableAsync(ventaId, cancellationToken);
-        await EnsureServicioExistsAsync(request.ServicioId, cancellationToken);
-        await EnsureMedicoExistsAsync(request.MedicoId, cancellationToken);
-
-        var existe = await dbContext.VentaDetalles.AnyAsync(
-            x => x.VentaId == ventaId
-                 && x.ServicioId == request.ServicioId
-                 && x.Activo,
+        var venta = await ObtenerVentaEditableAsync(
+            ventaId,
             cancellationToken);
+
+        await EnsureServicioExistsAsync(
+            request.ServicioId,
+            cancellationToken);
+
+        await EnsureMedicoExistsAsync(
+            request.MedicoId,
+            cancellationToken);
+
+        var existe = await dbContext.VentaDetalles
+            .AnyAsync(
+                x =>
+                    x.VentaId == ventaId &&
+                    x.ServicioId == request.ServicioId &&
+                    x.Activo,
+                cancellationToken);
 
         if (existe)
         {
@@ -99,13 +124,24 @@ public sealed class VentaDetalleService(AppDbContext dbContext)
                 $"El servicio '{request.ServicioId}' ya está incluido en la venta.");
         }
 
-        var entity = VentaDetalleMapper.ToEntity(request);
+        var entity =
+            VentaDetalleMapper.ToEntity(request);
+
         entity.VentaId = ventaId;
         entity.Activo = true;
-        AplicarImportes(entity, request);
 
-        await dbContext.VentaDetalles.AddAsync(entity, cancellationToken);
-        await RecalcularTotalesYGuardarAsync(venta, cancellationToken);
+        await AplicarImportesAsync(
+            entity,
+            request,
+            cancellationToken);
+
+        await dbContext.VentaDetalles.AddAsync(
+            entity,
+            cancellationToken);
+
+        await RecalcularTotalesYGuardarAsync(
+            venta,
+            cancellationToken);
 
         return VentaDetalleMapper.ToResponse(entity);
     }
@@ -116,20 +152,34 @@ public sealed class VentaDetalleService(AppDbContext dbContext)
         UpdateVentaDetalleRequest request,
         CancellationToken cancellationToken = default)
     {
-        var venta = await ObtenerVentaEditableAsync(ventaId, cancellationToken);
-        await EnsureServicioExistsAsync(request.ServicioId, cancellationToken);
-        await EnsureMedicoExistsAsync(request.MedicoId, cancellationToken);
+        var venta = await ObtenerVentaEditableAsync(
+            ventaId,
+            cancellationToken);
+
+        await EnsureServicioExistsAsync(
+            request.ServicioId,
+            cancellationToken);
+
+        await EnsureMedicoExistsAsync(
+            request.MedicoId,
+            cancellationToken);
 
         var entity = venta.Detalles
-            .FirstOrDefault(x => x.Id == detalleId && x.Activo);
+            .FirstOrDefault(x =>
+                x.Id == detalleId &&
+                x.Activo);
 
         if (entity is null)
-            throw new NotFoundException(nameof(VentaDetalleEntity), detalleId);
+        {
+            throw new NotFoundException(
+                nameof(VentaDetalleEntity),
+                detalleId);
+        }
 
         var existe = venta.Detalles.Any(x =>
-            x.Id != detalleId
-            && x.ServicioId == request.ServicioId
-            && x.Activo);
+            x.Id != detalleId &&
+            x.ServicioId == request.ServicioId &&
+            x.Activo);
 
         if (existe)
         {
@@ -137,10 +187,18 @@ public sealed class VentaDetalleService(AppDbContext dbContext)
                 $"El servicio '{request.ServicioId}' ya está incluido en la venta.");
         }
 
-        VentaDetalleMapper.UpdateEntity(request, entity);
-        AplicarImportes(entity, request);
+        VentaDetalleMapper.UpdateEntity(
+            request,
+            entity);
 
-        await RecalcularTotalesYGuardarAsync(venta, cancellationToken);
+        await AplicarImportesAsync(
+            entity,
+            request,
+            cancellationToken);
+
+        await RecalcularTotalesYGuardarAsync(
+            venta,
+            cancellationToken);
 
         return VentaDetalleMapper.ToResponse(entity);
     }
@@ -150,17 +208,27 @@ public sealed class VentaDetalleService(AppDbContext dbContext)
         int detalleId,
         CancellationToken cancellationToken = default)
     {
-        var venta = await ObtenerVentaEditableAsync(ventaId, cancellationToken);
+        var venta = await ObtenerVentaEditableAsync(
+            ventaId,
+            cancellationToken);
 
         var entity = venta.Detalles
-            .FirstOrDefault(x => x.Id == detalleId && x.Activo);
+            .FirstOrDefault(x =>
+                x.Id == detalleId &&
+                x.Activo);
 
         if (entity is null)
-            throw new NotFoundException(nameof(VentaDetalleEntity), detalleId);
+        {
+            throw new NotFoundException(
+                nameof(VentaDetalleEntity),
+                detalleId);
+        }
 
         entity.Activo = false;
 
-        await RecalcularTotalesYGuardarAsync(venta, cancellationToken);
+        await RecalcularTotalesYGuardarAsync(
+            venta,
+            cancellationToken);
     }
 
     private async Task<VentaEntity> ObtenerVentaEditableAsync(
@@ -170,11 +238,17 @@ public sealed class VentaDetalleService(AppDbContext dbContext)
         var venta = await dbContext.Ventas
             .Include(x => x.Detalles)
             .FirstOrDefaultAsync(
-                x => x.Id == ventaId && x.Activo,
+                x =>
+                    x.Id == ventaId &&
+                    x.Activo,
                 cancellationToken);
 
         if (venta is null)
-            throw new NotFoundException(nameof(VentaEntity), ventaId);
+        {
+            throw new NotFoundException(
+                nameof(VentaEntity),
+                ventaId);
+        }
 
         if (venta.Estado != EstadoVenta.Pendiente)
         {
@@ -191,10 +265,18 @@ public sealed class VentaDetalleService(AppDbContext dbContext)
         CancellationToken cancellationToken)
     {
         var existe = await dbContext.Ventas
-            .AnyAsync(x => x.Id == ventaId && x.Activo, cancellationToken);
+            .AnyAsync(
+                x =>
+                    x.Id == ventaId &&
+                    x.Activo,
+                cancellationToken);
 
         if (!existe)
-            throw new NotFoundException(nameof(VentaEntity), ventaId);
+        {
+            throw new NotFoundException(
+                nameof(VentaEntity),
+                ventaId);
+        }
     }
 
     private async Task EnsureServicioExistsAsync(
@@ -202,38 +284,103 @@ public sealed class VentaDetalleService(AppDbContext dbContext)
         CancellationToken cancellationToken)
     {
         var existe = await dbContext.Servicio
-            .AnyAsync(x => x.Id == servicioId && x.Activo, cancellationToken);
+            .AnyAsync(
+                x =>
+                    x.Id == servicioId &&
+                    x.Activo,
+                cancellationToken);
 
         if (!existe)
-            throw new NotFoundException(nameof(Servicio), servicioId);
+        {
+            throw new NotFoundException(
+                nameof(Servicio),
+                servicioId);
+        }
     }
 
     private async Task EnsureMedicoExistsAsync(
         int? medicoId,
         CancellationToken cancellationToken)
     {
-        if (medicoId is null)
+        if (!medicoId.HasValue)
             return;
 
         var existe = await dbContext.Medicos
-            .AnyAsync(x => x.Id == medicoId && x.Activo, cancellationToken);
+            .AnyAsync(
+                x =>
+                    x.Id == medicoId.Value &&
+                    x.Activo,
+                cancellationToken);
 
         if (!existe)
-            throw new NotFoundException(nameof(Medico), medicoId.Value);
+        {
+            throw new NotFoundException(
+                nameof(Medico),
+                medicoId.Value);
+        }
     }
 
-    private static void AplicarImportes(
+    private async Task AplicarImportesAsync(
         VentaDetalleEntity entity,
-        VentaDetalleRequest request)
+        VentaDetalleRequest request,
+        CancellationToken cancellationToken)
     {
-        var total = VentaCalculos.TotalDetalle(request);
-        var (montoMedico, montoClinica) = VentaCalculos.RepartoMedico(
-            total,
-            request.PorcentajeMedico);
+        entity.Total =
+            VentaCalculos.TotalDetalle(request);
 
-        entity.Total = total;
-        entity.MontoMedico = montoMedico;
-        entity.MontoClinica = montoClinica;
+        entity.MontoMedico = null;
+        entity.MontoClinica = null;
+
+        if (!request.MedicoId.HasValue)
+            return;
+
+        var acuerdo = await ObtenerAcuerdoMedicoAsync(
+            request.MedicoId.Value,
+            request.ServicioId,
+            cancellationToken);
+
+        entity.MontoMedico =
+            acuerdo.ImporteMedico *
+            request.Cantidad;
+
+        entity.MontoClinica =
+            acuerdo.ImporteClinica *
+            request.Cantidad;
+    }
+
+    private async Task<MedicoServicioAcuerdo> ObtenerAcuerdoMedicoAsync(
+        int medicoId,
+        int servicioId,
+        CancellationToken cancellationToken)
+    {
+        var hoy =
+            DateOnly.FromDateTime(
+                DateTime.Today);
+
+        var acuerdo = await dbContext
+            .MedicosServiciosAcuerdos
+            .AsNoTracking()
+            .Where(x =>
+                x.MedicoId == medicoId &&
+                x.ServicioId == servicioId &&
+                x.Activo &&
+                x.FechaInicio <= hoy &&
+                (
+                    x.FechaFin == null ||
+                    x.FechaFin >= hoy
+                ))
+            .OrderByDescending(x => x.FechaInicio)
+            .FirstOrDefaultAsync(
+                cancellationToken);
+
+        if (acuerdo is null)
+        {
+            throw new ConflictException(
+                $"El médico '{medicoId}' no tiene un acuerdo vigente " +
+                $"para el servicio '{servicioId}'.");
+        }
+
+        return acuerdo;
     }
 
     private async Task RecalcularTotalesYGuardarAsync(
@@ -245,9 +392,12 @@ public sealed class VentaDetalleService(AppDbContext dbContext)
             .ToList();
 
         venta.Subtotal = detalles.Sum(x => x.Cantidad * x.PrecioUnitario);
+
         venta.Descuento = detalles.Sum(x => x.Descuento);
+
         venta.Total = detalles.Sum(x => x.Total);
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await dbContext.SaveChangesAsync(
+            cancellationToken);
     }
 }
