@@ -2,8 +2,6 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowLeft,
   Loader2,
@@ -14,27 +12,32 @@ import {
   UserCheck,
   FileBadge,
   CreditCard,
+  Search,
+  CheckCircle2,
+  X,
+  Award,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Autocomplete, type AutocompleteOption } from "@/components/ui/autocomplete";
-import { StatusBadge } from "@/components/shared";
-import { useEspecialidades } from "@/modules/recursos-humanos/especialidad/hooks/use-especialidades";
 import {
-  useCreateMedicoEspecialidad,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { StatusBadge } from "@/components/shared";
+import {
   useDeleteMedicoEspecialidad,
   useMedico,
   useMedicoEspecialidades,
   useUpdateMedicoEspecialidad,
 } from "../hooks/use-medicos";
-import {
-  medicoEspecialidadSchema,
-  type MedicoEspecialidadFormValues,
-} from "../schemas/medico.schema";
+import { MedicoEspecialidadDialog } from "./medico-especialidad-dialog";
 
 interface MedicoEspecialidadesViewProps {
   medicoId: number;
@@ -46,13 +49,15 @@ export function MedicoEspecialidadesView({ medicoId }: MedicoEspecialidadesViewP
   const { data: medico, isLoading: isLoadingMedico } = useMedico(medicoId);
   const empleadoId = medico?.empleadoId ?? 0;
 
+  // Dialog State
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+
+  // Search State
+  const [searchTerm, setSearchTerm] = React.useState("");
+
   const { data: especialidadesMedicoData, isLoading: isLoadingMedicoEspecialidades } =
     useMedicoEspecialidades(empleadoId, medicoId, Boolean(medico));
 
-  const { data: especialidadesCatalogoData, isLoading: isLoadingCatalogo } =
-    useEspecialidades({ pageSize: 200 });
-
-  const createMutation = useCreateMedicoEspecialidad();
   const updateMutation = useUpdateMedicoEspecialidad();
   const deleteMutation = useDeleteMedicoEspecialidad();
 
@@ -61,57 +66,29 @@ export function MedicoEspecialidadesView({ medicoId }: MedicoEspecialidadesViewP
     [especialidadesMedicoData]
   );
 
-  const especialidadesCatalogo = React.useMemo(
-    () => especialidadesCatalogoData?.items ?? [],
-    [especialidadesCatalogoData]
-  );
+  const existingEspecialidadIds = React.useMemo(() => {
+    return especialidadesMedico.map((e) => e.especialidadId);
+  }, [especialidadesMedico]);
 
-  const especialidadOptions: AutocompleteOption[] = React.useMemo(() => {
-    return especialidadesCatalogo.map((esp) => ({
-      value: String(esp.id),
-      label: esp.nombre,
-      description: esp.codigo ? `Cód: ${esp.codigo}` : undefined,
-    }));
-  }, [especialidadesCatalogo]);
+  const filteredEspecialidades = React.useMemo(() => {
+    if (!searchTerm.trim()) return especialidadesMedico;
+    const query = searchTerm.toLowerCase().trim();
+    return especialidadesMedico.filter(
+      (item) =>
+        item.especialidad?.nombre?.toLowerCase().includes(query) ||
+        item.especialidad?.codigo?.toLowerCase().includes(query)
+    );
+  }, [especialidadesMedico, searchTerm]);
 
-  const {
-    handleSubmit,
-    reset,
-    setValue,
-    watch,
-    formState: { errors, isSubmitting },
-  } = useForm<MedicoEspecialidadFormValues>({
-    resolver: zodResolver(medicoEspecialidadSchema),
-    defaultValues: {
-      especialidadId: 0,
-      esPrincipal: false,
-    },
-  });
+  // KPIs
+  const totalEspecialidades = especialidadesMedico.length;
+  const principalEsp = especialidadesMedico.find((e) => e.esPrincipal);
 
-  const selectedEspecialidadId = watch("especialidadId");
-  const esPrincipalVal = watch("esPrincipal");
-
-  const onSubmitAdd = async (values: MedicoEspecialidadFormValues) => {
-    if (!medico) return;
-    try {
-      await createMutation.mutateAsync({
-        empleadoId: medico.empleadoId,
-        medicoId: medico.id,
-        request: {
-          especialidadId: values.especialidadId,
-          esPrincipal: values.esPrincipal,
-        },
-      });
-      reset({
-        especialidadId: 0,
-        esPrincipal: false,
-      });
-    } catch {
-      // Error handled by mutation toast
-    }
-  };
-
-  const handleTogglePrincipal = async (espRelId: number, currentEspId: number, currentEsPrincipal: boolean) => {
+  const handleTogglePrincipal = async (
+    espRelId: number,
+    currentEspId: number,
+    currentEsPrincipal: boolean
+  ) => {
     if (!medico || currentEsPrincipal) return;
     try {
       await updateMutation.mutateAsync({
@@ -143,8 +120,8 @@ export function MedicoEspecialidadesView({ medicoId }: MedicoEspecialidadesViewP
 
   if (isLoadingMedico) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-2">
-        <Loader2 className="size-6 animate-spin text-primary" />
+      <div className="flex flex-col items-center justify-center py-24 text-muted-foreground gap-3">
+        <Loader2 className="size-8 animate-spin text-primary" />
         <span className="text-sm font-medium">Cargando expediente médico...</span>
       </div>
     );
@@ -156,7 +133,7 @@ export function MedicoEspecialidadesView({ medicoId }: MedicoEspecialidadesViewP
         <Button variant="ghost" onClick={() => router.push("/recursos-humanos/medicos")} className="text-xs gap-1.5">
           <ArrowLeft className="size-4" /> Volver a Médicos
         </Button>
-        <div className="text-center py-12 border border-dashed rounded-xl text-muted-foreground text-sm">
+        <div className="text-center py-16 border border-dashed rounded-2xl text-muted-foreground text-sm">
           No se encontró información para el médico solicitado.
         </div>
       </div>
@@ -186,49 +163,52 @@ export function MedicoEspecialidadesView({ medicoId }: MedicoEspecialidadesViewP
 
   return (
     <div className="p-4 sm:p-6 max-w-5xl mx-auto w-full space-y-5">
-      {/* Navigation Top Bar */}
+      {/* Top Breadcrumb / Navigation */}
       <div className="flex items-center justify-between">
         <Button
           variant="outline"
           size="sm"
           onClick={() => router.push("/recursos-humanos/medicos")}
-          className="text-xs gap-1.5 cursor-pointer"
+          className="text-xs gap-1.5 cursor-pointer shadow-2xs hover:bg-muted font-medium"
         >
           <ArrowLeft className="size-4" />
-          <span>Volver a Médicos</span>
+          <span>Volver al Cuerpo Médico</span>
         </Button>
       </div>
 
-      {/* Header Info Card */}
+      {/* Hero Doctor Card */}
       <Card className="shadow-xs border-border/70 overflow-hidden bg-card">
-        <CardContent className="p-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3.5 min-w-0">
-              <Avatar className="size-12 border-2 border-primary/20 bg-primary/10 text-primary shrink-0">
-                <AvatarFallback className="bg-primary/10 text-primary font-bold text-sm">
+        <CardContent className="p-5 sm:p-6">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            {/* Left Doctor Info */}
+            <div className="flex items-center gap-4 min-w-0">
+              <Avatar className="size-14 sm:size-16 border-2 border-primary/20 bg-primary/10 text-primary shrink-0 shadow-2xs">
+                <AvatarFallback className="bg-primary/10 text-primary font-bold text-base sm:text-lg">
                   {initials}
                 </AvatarFallback>
               </Avatar>
-              <div className="min-w-0 space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <h1 className="text-lg font-bold text-foreground truncate">{nombreCompleto}</h1>
+              <div className="min-w-0 space-y-1">
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate leading-tight">
+                    {nombreCompleto}
+                  </h1>
                   <StatusBadge active={medico.activo} activeLabel="Activo" inactiveLabel="Inactivo" />
                 </div>
                 <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
-                  <span className="font-mono flex items-center gap-1">
-                    <UserCheck className="size-3 text-muted-foreground" />
+                  <span className="font-mono flex items-center gap-1 font-medium">
+                    <UserCheck className="size-3.5 text-muted-foreground/80" />
                     {codigoEmpleado}
                   </span>
                   <span>•</span>
                   <span className="font-mono flex items-center gap-1 font-semibold text-foreground">
-                    <CreditCard className="size-3 text-muted-foreground" />
+                    <CreditCard className="size-3.5 text-muted-foreground/80" />
                     Matrícula: {medico.matriculaProfesional}
                   </span>
                   {medico.registroMinisterioSalud && (
                     <>
                       <span>•</span>
                       <span className="font-mono flex items-center gap-1 text-muted-foreground">
-                        <FileBadge className="size-3 text-sky-500" />
+                        <FileBadge className="size-3.5 text-sky-500" />
                         Minsal: {medico.registroMinisterioSalud}
                       </span>
                     </>
@@ -237,165 +217,213 @@ export function MedicoEspecialidadesView({ medicoId }: MedicoEspecialidadesViewP
               </div>
             </div>
 
-            <Badge variant="outline" className="self-start sm:self-center gap-1.5 px-3 py-1 bg-primary/5 text-primary border-primary/20 text-xs font-semibold">
-              <Stethoscope className="size-4" />
-              Gestión de Especialidades
-            </Badge>
+            {/* Right Action Button */}
+            <div className="flex items-center gap-3 self-start lg:self-center">
+              <Button
+                onClick={() => setIsDialogOpen(true)}
+                className="text-xs font-semibold gap-2 cursor-pointer shadow-sm px-4 h-10 rounded-xl"
+              >
+                <Plus className="size-4" />
+                <span>Asignar Especialidad</span>
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Main Grid: Form & List */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-        {/* Form Column */}
-        <Card className="lg:col-span-5 shadow-xs border-border/70">
-          <CardHeader className="p-4 pb-3 border-b bg-muted/20">
-            <CardTitle className="text-sm font-bold flex items-center gap-2">
-              <Plus className="size-4 text-primary" />
-              <span>Asignar Especialidad</span>
-            </CardTitle>
-            <CardDescription className="text-xs">
-              Seleccione la especialidad médica que acredita el profesional.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-4">
-            <form onSubmit={handleSubmit(onSubmitAdd)} className="space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="especialidadId" className="text-xs">
-                  Especialidad Médica <span className="text-destructive">*</span>
-                </Label>
-                <Autocomplete
-                  id="especialidadId"
-                  value={selectedEspecialidadId ? String(selectedEspecialidadId) : ""}
-                  onValueChange={(val) =>
-                    setValue("especialidadId", Number(val), { shouldValidate: true })
-                  }
-                  options={especialidadOptions}
-                  placeholder="Buscar especialidad por nombre..."
-                  emptyText="No se encontraron especialidades"
-                  allowCustomValue={false}
-                  isLoading={isLoadingCatalogo}
-                  error={Boolean(errors.especialidadId)}
-                />
-                {errors.especialidadId && (
-                  <p className="text-xs text-destructive">
-                    {errors.especialidadId.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex items-center gap-2 pt-1">
-                <Checkbox
-                  id="esPrincipal"
-                  checked={esPrincipalVal}
-                  onCheckedChange={(checked) => setValue("esPrincipal", Boolean(checked))}
-                />
-                <Label htmlFor="esPrincipal" className="text-xs cursor-pointer font-medium">
-                  Marcar como Especialidad Principal
-                </Label>
-              </div>
-
-              <Button
-                type="submit"
-                size="sm"
-                className="w-full text-xs gap-1.5 cursor-pointer mt-2"
-                disabled={createMutation.isPending || isSubmitting}
-              >
-                {createMutation.isPending ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <>
-                    <Plus className="size-4" /> Asignar a Expediente
-                  </>
-                )}
-              </Button>
-            </form>
+      {/* KPI Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+        {/* Card 1: Total Especialidades */}
+        <Card className="border-border/60 shadow-2xs bg-card">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div className="space-y-0.5">
+              <p className="text-xs font-medium text-muted-foreground">Especialidades Asignadas</p>
+              <p className="text-2xl font-bold text-foreground">{totalEspecialidades}</p>
+            </div>
+            <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
+              <Stethoscope className="size-5" />
+            </div>
           </CardContent>
         </Card>
 
-        {/* List Column */}
-        <Card className="lg:col-span-7 shadow-xs border-border/70">
-          <CardHeader className="p-4 pb-3 border-b bg-muted/20 flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-sm font-bold flex items-center gap-2">
-                <Stethoscope className="size-4 text-primary" />
-                <span>Especialidades Asignadas</span>
-              </CardTitle>
-              <CardDescription className="text-xs">
-                Listado de especialidades vigentes en la ficha del médico.
-              </CardDescription>
+        {/* Card 2: Especialidad Principal */}
+        <Card className="border-border/60 shadow-2xs bg-card sm:col-span-2">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div className="space-y-0.5 min-w-0">
+              <p className="text-xs font-medium text-muted-foreground">Especialidad Principal</p>
+              <p className="text-lg font-bold text-foreground truncate">
+                {principalEsp?.especialidad?.nombre || "No configurada"}
+              </p>
+              {principalEsp?.especialidad?.codigo && (
+                <p className="font-mono text-xs text-muted-foreground">
+                  Cód: {principalEsp.especialidad.codigo}
+                </p>
+              )}
             </div>
-            <Badge variant="secondary" className="font-bold text-xs">
-              {especialidadesMedico.length}
-            </Badge>
-          </CardHeader>
-
-          <CardContent className="p-4">
-            {isLoadingMedicoEspecialidades ? (
-              <div className="flex items-center justify-center py-10 text-sm text-muted-foreground gap-2">
-                <Loader2 className="size-5 animate-spin text-primary" /> Cargando especialidades...
-              </div>
-            ) : especialidadesMedico.length === 0 ? (
-              <div className="text-center py-12 border border-dashed rounded-xl text-sm text-muted-foreground">
-                El médico aún no tiene especialidades asignadas en su expediente.
-              </div>
-            ) : (
-              <div className="divide-y border rounded-xl overflow-hidden bg-card">
-                {especialidadesMedico.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between p-3.5 hover:bg-muted/10 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                        <Stethoscope className="size-4" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-bold text-foreground">
-                            {item.especialidad?.nombre || `Especialidad #${item.especialidadId}`}
-                          </p>
-                          {item.esPrincipal ? (
-                            <Badge variant="default" className="bg-amber-500 hover:bg-amber-600 gap-1 text-[11px]">
-                              <Star className="size-3 fill-amber-100" /> Principal
-                            </Badge>
-                          ) : (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 text-[11px] text-muted-foreground hover:text-amber-600 px-2 cursor-pointer"
-                              onClick={() => handleTogglePrincipal(item.id, item.especialidadId, item.esPrincipal)}
-                              disabled={updateMutation.isPending}
-                            >
-                              Marcar principal
-                            </Button>
-                          )}
-                        </div>
-                        <p className="text-xs text-muted-foreground font-mono mt-0.5">
-                          Código: {item.especialidad?.codigo || "N/A"}
-                        </p>
-                      </div>
-                    </div>
-
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="size-8 text-muted-foreground hover:text-destructive cursor-pointer rounded-md"
-                      onClick={() => handleDelete(item.id)}
-                      disabled={deleteMutation.isPending}
-                      title="Desasignar especialidad"
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
+            <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-600 shrink-0">
+              <Star className="size-5 fill-amber-500" />
+            </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Main List & Table Card */}
+      <Card className="border-border/70 shadow-xs overflow-hidden bg-card">
+        {/* Toolbar */}
+        <div className="p-4 border-b bg-muted/20 flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="relative flex-1 min-w-[240px] max-w-sm">
+            <Search className="size-4 absolute left-3 top-2.5 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por especialidad o código..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="h-9 pl-9 pr-8 text-xs bg-background"
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => setSearchTerm("")}
+                className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground"
+              >
+                <X className="size-3.5" />
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
+            <span>
+              {filteredEspecialidades.length} de {especialidadesMedico.length} especialidades
+            </span>
+          </div>
+        </div>
+
+        {/* Content Area */}
+        <CardContent className="p-0">
+          {isLoadingMedicoEspecialidades ? (
+            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-2">
+              <Loader2 className="size-6 animate-spin text-primary" />
+              <span className="text-xs font-medium">Cargando especialidades médicas...</span>
+            </div>
+          ) : filteredEspecialidades.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 px-4 text-center space-y-3">
+              <div className="p-4 rounded-2xl bg-muted/60 text-muted-foreground border">
+                <Stethoscope className="size-8" />
+              </div>
+              <div className="space-y-1 max-w-sm">
+                <p className="text-sm font-semibold text-foreground">
+                  {searchTerm
+                    ? "No se encontraron especialidades con el término ingresado"
+                    : "El médico no tiene especialidades asignadas"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {searchTerm
+                    ? "Intente con otra búsqueda."
+                    : "Acredite las especialidades médicas correspondientes en su expediente."}
+                </p>
+              </div>
+              {!searchTerm && (
+                <Button
+                  size="sm"
+                  onClick={() => setIsDialogOpen(true)}
+                  className="text-xs gap-1.5 mt-2 cursor-pointer"
+                >
+                  <Plus className="size-3.5" /> Asignar Primera Especialidad
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader className="bg-muted/40">
+                  <TableRow>
+                    <TableHead className="w-[320px] text-xs font-bold text-foreground">Especialidad Médica</TableHead>
+                    <TableHead className="text-xs font-bold text-foreground">Código</TableHead>
+                    <TableHead className="text-xs font-bold text-foreground">Tipo / Rol</TableHead>
+                    <TableHead className="text-xs font-bold text-foreground text-right pr-4">Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredEspecialidades.map((item) => (
+                    <TableRow key={item.id} className="hover:bg-muted/30 transition-colors">
+                      {/* Name */}
+                      <TableCell className="py-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0">
+                            <Stethoscope className="size-4" />
+                          </div>
+                          <p className="text-xs font-bold text-foreground">
+                            {item.especialidad?.nombre || `Especialidad #${item.especialidadId}`}
+                          </p>
+                        </div>
+                      </TableCell>
+
+                      {/* Code */}
+                      <TableCell className="py-3">
+                        <span className="font-mono text-xs text-muted-foreground">
+                          {item.especialidad?.codigo || "N/A"}
+                        </span>
+                      </TableCell>
+
+                      {/* Role / Principal Status */}
+                      <TableCell className="py-3">
+                        {item.esPrincipal ? (
+                          <Badge
+                            variant="default"
+                            className="bg-amber-500 hover:bg-amber-600 gap-1 text-[11px] font-bold text-white shadow-2xs"
+                          >
+                            <Star className="size-3 fill-amber-100" /> Especialidad Principal
+                          </Badge>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-6 text-[11px] text-muted-foreground hover:text-amber-600 hover:border-amber-500/40 px-2 cursor-pointer"
+                            onClick={() =>
+                              handleTogglePrincipal(
+                                item.id,
+                                item.especialidadId,
+                                item.esPrincipal
+                              )
+                            }
+                            disabled={updateMutation.isPending}
+                          >
+                            Marcar como principal
+                          </Button>
+                        )}
+                      </TableCell>
+
+                      {/* Actions */}
+                      <TableCell className="py-3 text-right pr-4">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          className="size-7 text-muted-foreground hover:text-destructive cursor-pointer"
+                          onClick={() => handleDelete(item.id)}
+                          disabled={deleteMutation.isPending}
+                          title="Desasignar especialidad"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Modal Dialog */}
+      <MedicoEspecialidadDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        empleadoId={empleadoId}
+        medicoId={medicoId}
+        existingEspecialidadIds={existingEspecialidadIds}
+      />
     </div>
   );
 }
