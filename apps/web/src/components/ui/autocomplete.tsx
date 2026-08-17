@@ -54,10 +54,13 @@ export function Autocomplete({
   React.useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        if (!isOpen) return;
         setIsOpen(false);
-        if (allowCustomValue && query !== value) {
-          onValueChange(query);
-        } else if (!allowCustomValue) {
+        if (allowCustomValue) {
+          if (query !== value) {
+            onValueChange(query);
+          }
+        } else {
           const selectedOption = options.find(
             (opt) =>
               opt.value.toLowerCase() === (value || "").toLowerCase() ||
@@ -65,10 +68,21 @@ export function Autocomplete({
           );
           if (selectedOption) {
             setQuery(selectedOption.label);
-            onValueChange(selectedOption.value);
+            if (selectedOption.value !== value) {
+              onValueChange(selectedOption.value);
+            }
           } else {
-            setQuery("");
-            onValueChange("");
+            const currentSelected = options.find(
+              (opt) => opt.value.toLowerCase() === (value || "").toLowerCase()
+            );
+            if (currentSelected) {
+              setQuery(currentSelected.label);
+            } else {
+              setQuery("");
+              if (value !== "") {
+                onValueChange("");
+              }
+            }
           }
         }
       }
@@ -76,7 +90,7 @@ export function Autocomplete({
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [allowCustomValue, query, value, options, onValueChange]);
+  }, [isOpen, allowCustomValue, query, value, options, onValueChange]);
 
   const filteredOptions = React.useMemo(() => {
     if (!query.trim()) return options;

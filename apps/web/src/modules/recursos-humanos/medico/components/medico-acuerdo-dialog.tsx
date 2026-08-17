@@ -27,7 +27,11 @@ import { Label } from "@/components/ui/label";
 import { Autocomplete, type AutocompleteOption } from "@/components/ui/autocomplete";
 import { formatCurrency } from "@/lib/utils";
 import { useCategoriasServicio } from "@/modules/servicios/categoria-servicio";
-import { useServicios } from "@/modules/servicios/servicio";
+import {
+  useServiciosTarifario,
+  type ServicioResponse,
+  type PagedResult,
+} from "@/modules/servicios/servicio";
 import {
   useCreateMedicoServicioAcuerdo,
   useUpdateMedicoServicioAcuerdo,
@@ -52,6 +56,30 @@ function getTodayISO() {
   return new Date(d.getTime() - tz).toISOString().slice(0, 10);
 }
 
+function getServicePrice(srv: unknown): number {
+  if (!srv || typeof srv !== "object") return 0;
+  const raw = srv as Record<string, unknown>;
+  const keys = [
+    "precio",
+    "Precio",
+    "precioBase",
+    "PrecioBase",
+    "monto",
+    "Monto",
+    "price",
+    "Price",
+  ];
+  for (const key of keys) {
+    const val = raw[key];
+    if (typeof val === "number" && !isNaN(val)) return val;
+    if (typeof val === "string" && val.trim() !== "") {
+      const num = Number(val);
+      if (!isNaN(num)) return num;
+    }
+  }
+  return 0;
+}
+
 export function MedicoAcuerdoDialog({
   open,
   onOpenChange,
@@ -70,11 +98,22 @@ export function MedicoAcuerdoDialog({
 
   const categorias = React.useMemo(() => categoriasData?.items ?? [], [categoriasData]);
 
-  // Fetch Servicios filtered by Category
-  const { data: serviciosData, isLoading: isLoadingServicios } =
-    useServicios(selectedCategoriaId, { pageSize: 200 }, open && selectedCategoriaId > 0);
+  // Fetch Servicios with tarifario prices filtered by Category
+  const { data: serviciosData, isLoading: isLoadingServicios } = useServiciosTarifario(
+    selectedCategoriaId,
+    undefined,
+    undefined,
+    open && selectedCategoriaId > 0
+  );
 
-  const servicios = React.useMemo(() => serviciosData?.items ?? [], [serviciosData]);
+  const servicios = React.useMemo(() => {
+    if (!serviciosData) return [];
+    if (Array.isArray(serviciosData)) return serviciosData as ServicioResponse[];
+    if (Array.isArray((serviciosData as PagedResult<ServicioResponse>).items)) {
+      return (serviciosData as PagedResult<ServicioResponse>).items;
+    }
+    return [];
+  }, [serviciosData]);
 
   const createMutation = useCreateMedicoServicioAcuerdo();
   const updateMutation = useUpdateMedicoServicioAcuerdo();
@@ -88,13 +127,16 @@ export function MedicoAcuerdoDialog({
   }, [categorias]);
 
   const servicioOptions: AutocompleteOption[] = React.useMemo(() => {
-    return servicios.map((srv) => ({
-      value: String(srv.id),
-      label: srv.nombre,
-      description: srv.codigo
-        ? `Cód: ${srv.codigo}${srv.precio || srv.Precio ? ` • ${formatCurrency(Number(srv.precio ?? srv.Precio))}` : ""}`
-        : undefined,
-    }));
+    return servicios.map((srv) => {
+      const price = getServicePrice(srv);
+      return {
+        value: String(srv.id),
+        label: srv.nombre,
+        description: srv.codigo
+          ? `Cód: ${srv.codigo}${price > 0 ? ` • ${formatCurrency(price)}` : ""}`
+          : undefined,
+      };
+    });
   }, [servicios]);
 
   const {
@@ -116,8 +158,17 @@ export function MedicoAcuerdoDialog({
   });
 
   const selectedServicioId = watch("servicioId");
-  const watchImporteServicio = watch("importeServicio") || 0;
-  const watchImporteMedico = watch("importeMedico") || 0;
+  const rawImporteServicio = watch("importeServicio");
+  const rawImporteMedico = watch("importeMedico");
+  const watchImporteServicio =
+    typeof rawImporteServicio === "number" && !isNaN(rawImporteServicio)
+      ? rawImporteServicio
+      : Number(rawImporteServicio) || 0;
+  const watchImporteMedico =
+    typeof rawImporteMedico === "number" && !isNaN(rawImporteMedico)
+      ? rawImporteMedico
+      : Number(rawImporteMedico) || 0;
+
   const calculatedClinica = Math.max(0, watchImporteServicio - watchImporteMedico);
   const calculatedMedicoPct =
     watchImporteServicio > 0
@@ -129,6 +180,7 @@ export function MedicoAcuerdoDialog({
       : 0;
 
   // Sync state when opening modal / editing
+  const acuerdoToEditId = acuerdoToEdit?.id;
   React.useEffect(() => {
     if (open) {
       if (acuerdoToEdit) {
@@ -150,15 +202,17 @@ export function MedicoAcuerdoDialog({
         });
       }
     }
-  }, [open, acuerdoToEdit, reset]);
+  }, [open, acuerdoToEditId, reset]);
 
   const handleSelectServicio = (val: string) => {
     const sId = Number(val);
     setValue("servicioId", sId, { shouldValidate: true });
 
+    if (!sId) return;
+
     const srv = servicios.find((s) => s.id === sId);
     if (srv) {
-      const precioBase = Number(srv.precio ?? srv.Precio ?? 0);
+      const precioBase = getServicePrice(srv);
       if (precioBase > 0) {
         setValue("importeServicio", precioBase, { shouldValidate: true });
         setValue("importeMedico", Math.round(precioBase * 0.5 * 100) / 100, {
