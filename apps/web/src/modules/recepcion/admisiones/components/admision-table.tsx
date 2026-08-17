@@ -224,7 +224,7 @@ export function AdmisionTable({
 
                       {/* Total */}
                       <TableCell className="text-right font-bold text-xs text-foreground py-2 font-mono">
-                        S/. {total.toFixed(2)}
+                        Bs. {total.toFixed(2)}
                       </TableCell>
 
                       {/* Estado */}

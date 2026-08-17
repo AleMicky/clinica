@@ -127,8 +127,8 @@ export function AdmisionCarritoSection({
 
           <div className="sticky bottom-4 z-10 backdrop-blur-md bg-card/95 p-4 border border-border/80 rounded-xl shadow-lg flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
             <div className="flex items-center gap-6 text-muted-foreground text-xs">
-              <span>Subtotal Neto: <strong className="text-foreground">S/.{totalSubtotal.toFixed(2)}</strong></span>
-              <span>Descuento Aplicado: <strong className="text-emerald-600">-S/.{totalDescuentos.toFixed(2)}</strong></span>
+              <span>Subtotal Neto: <strong className="text-foreground">Bs. {totalSubtotal.toFixed(2)}</strong></span>
+              <span>Descuento Aplicado: <strong className="text-emerald-600">-Bs. {totalDescuentos.toFixed(2)}</strong></span>
             </div>
 
             <div className="flex items-center gap-2.5">
@@ -136,7 +136,7 @@ export function AdmisionCarritoSection({
                 Total Admisión:
               </span>
               <span className="text-lg font-extrabold text-primary bg-primary/10 px-4 py-1.5 rounded-xl border border-primary/20 shadow-xs">
-                S/. {grandTotal.toFixed(2)}
+                Bs. {grandTotal.toFixed(2)}
               </span>
             </div>
           </div>

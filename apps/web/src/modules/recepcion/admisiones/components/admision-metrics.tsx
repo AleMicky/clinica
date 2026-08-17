@@ -86,7 +86,7 @@ export function AdmisionMetricsCards({ metrics }: AdmisionMetricsCardsProps) {
               Volumen Estimado Día
             </p>
             <div className="flex items-baseline gap-1 mt-0.5">
-              <span className="text-xs font-semibold text-emerald-600">S/.</span>
+              <span className="text-xs font-semibold text-emerald-600">Bs.</span>
               <span className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight">
                 {metrics.montoTotalHoy.toFixed(2)}
               </span>

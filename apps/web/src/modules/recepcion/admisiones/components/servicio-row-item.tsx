@@ -141,7 +141,7 @@ export function ServicioRowItem({
         </div>
 
         <div className="col-span-4 sm:col-span-2 space-y-1">
-          <Label className="text-[11px] text-muted-foreground font-semibold text-right block">Precio (S/.)</Label>
+          <Label className="text-[11px] text-muted-foreground font-semibold text-right block">Precio (Bs.)</Label>
           <Input
             type="number"
             min="0"
@@ -155,7 +155,7 @@ export function ServicioRowItem({
         <div className="col-span-4 sm:col-span-3 text-right">
           <span className="text-[10px] text-muted-foreground uppercase block font-bold">Subtotal</span>
           <span className="text-base font-extrabold text-primary">
-            S/. {Math.max(0, subtotalFila).toFixed(2)}
+            Bs. {Math.max(0, subtotalFila).toFixed(2)}
           </span>
         </div>
       </div>

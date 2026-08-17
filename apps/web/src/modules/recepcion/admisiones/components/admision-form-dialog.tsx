@@ -470,13 +470,13 @@ export function AdmisionFormDialog({
             {/* RESUMEN DE TOTALES EN VIVO */}
             <div className="p-3 bg-muted/40 rounded-lg border border-border/60 flex flex-col sm:flex-row items-center justify-between text-xs gap-2">
               <div className="flex items-center gap-4 text-muted-foreground">
-                <span>Subtotal: <strong>S/. {totalSubtotal.toFixed(2)}</strong></span>
-                <span>Descuento Total: <strong className="text-emerald-600">-S/. {totalDescuentos.toFixed(2)}</strong></span>
+                <span>Subtotal: <strong>Bs. {totalSubtotal.toFixed(2)}</strong></span>
+                <span>Descuento Total: <strong className="text-emerald-600">-Bs. {totalDescuentos.toFixed(2)}</strong></span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="font-bold text-foreground">Importe Total:</span>
                 <span className="text-base font-extrabold text-primary bg-primary/10 px-2.5 py-0.5 rounded-md border border-primary/20">
-                  S/. {grandTotal.toFixed(2)}
+                  Bs. {grandTotal.toFixed(2)}
                 </span>
               </div>
             </div>

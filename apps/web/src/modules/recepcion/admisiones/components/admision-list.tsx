@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -228,27 +229,43 @@ export function AdmisionList({
                   </div>
 
                   {/* Bloque Derecho: Precio, Estado & Acciones */}
-                  <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/30">
-                    <div className="flex flex-col items-start sm:items-end">
+                  <div className="flex items-center justify-between sm:justify-end gap-2.5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/30">
+                    <div className="flex flex-col items-start sm:items-end pr-0.5">
                       <span className="text-xs font-extrabold text-foreground font-mono">
-                        S/. {total.toFixed(2)}
+                        Bs. {total.toFixed(2)}
                       </span>
                       <span className="text-[10px] text-muted-foreground">
                         {numPrestaciones} prestación{numPrestaciones !== 1 ? "es" : ""}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                       <AdmisionStatusBadge estado={adm.estado} />
+
+                      {/* Botón directo para Cambiar Estado */}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onChangeStatus(adm);
+                        }}
+                        className="h-7 px-2 text-[11px] font-semibold gap-1 text-amber-600 hover:text-amber-700 bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 shadow-2xs cursor-pointer"
+                        title="Cambiar estado de la admisión"
+                      >
+                        <RefreshCw className="size-3" />
+                        <span className="hidden sm:inline">Cambiar Estado</span>
+                      </Button>
 
                       {/* Menú de Acciones Rápidas */}
                       <DropdownMenu>
                         <DropdownMenuTrigger
                           onClick={(e) => e.stopPropagation()}
-                          className="size-7 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground inline-flex items-center justify-center transition-colors border border-border/60"
+                          className="size-7 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground inline-flex items-center justify-center transition-colors border border-border/60 cursor-pointer"
                         >
                           <MoreVertical className="size-3.5" />
-                          <span className="sr-only">Acciones</span>
+                          <span className="sr-only">Más opciones</span>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48 text-xs">
                           <DropdownMenuItem

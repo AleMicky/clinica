@@ -384,7 +384,7 @@ export function MultiServicePickerModal({
 
                       <div className="flex items-center justify-between pt-2 border-t border-border/40 w-full">
                         <span className="text-xs font-extrabold text-primary">
-                          S/. {price.toFixed(2)}
+                          Bs. {price.toFixed(2)}
                         </span>
 
                         {isSelectedInModal ? (
@@ -435,7 +435,7 @@ export function MultiServicePickerModal({
             </span>
             <span className="text-muted-foreground">|</span>
             <span className="font-semibold text-muted-foreground">
-              Subtotal: <strong className="text-primary text-base font-extrabold">S/. {totalSelectedPrice.toFixed(2)}</strong>
+              Subtotal: <strong className="text-primary text-base font-extrabold">Bs. {totalSelectedPrice.toFixed(2)}</strong>
             </span>
           </div>
 

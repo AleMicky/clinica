@@ -264,7 +264,7 @@ export function AdmisionDetailSheet({
                         </p>
                         {item.descuento > 0 && (
                           <span className="text-[10px] text-emerald-600">
-                            Desc: -S/.{item.descuento.toFixed(2)}
+                            Desc: -Bs. {item.descuento.toFixed(2)}
                           </span>
                         )}
                       </div>
@@ -275,7 +275,7 @@ export function AdmisionDetailSheet({
                         {item.cantidad}
                       </div>
                       <div className="col-span-3 text-right font-bold text-foreground">
-                        S/. {item.total.toFixed(2)}
+                        Bs. {item.total.toFixed(2)}
                       </div>
                     </div>
                   ))
@@ -285,7 +285,7 @@ export function AdmisionDetailSheet({
               <div className="p-3 bg-muted/30 border-t border-border/70 flex justify-between items-center font-bold">
                 <span className="text-muted-foreground">Total a Cancelar:</span>
                 <span className="text-base text-primary">
-                  S/. {totalCalculado.toFixed(2)}
+                  Bs. {totalCalculado.toFixed(2)}
                 </span>
               </div>
             </div>
