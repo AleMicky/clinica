@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,6 +25,8 @@ import {
   Download,
   Stethoscope,
   User,
+  CheckCircle2,
+  Send,
 } from "lucide-react";
 import {
   EstadoAdmision,
@@ -52,6 +53,7 @@ interface AdmisionListProps {
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
   onViewDetail: (admision: AdmisionResponse) => void;
+  onDirectChangeStatus?: (admision: AdmisionResponse, nuevoEstado: EstadoAdmision) => void;
   onChangeStatus: (admision: AdmisionResponse) => void;
   onDelete: (id: number) => void;
   onRefresh?: () => void;
@@ -70,21 +72,19 @@ export function AdmisionList({
   onPageChange,
   onPageSizeChange,
   onViewDetail,
-  onChangeStatus,
-  onDelete,
+  onDirectChangeStatus,
 }: AdmisionListProps) {
   const tabs: Array<{
     key: EstadoAdmision | "TODOS";
     label: string;
     activeClasses: string;
   }> = [
-    { key: "TODOS", label: "Todas", activeClasses: "bg-primary text-primary-foreground shadow-xs" },
-    { key: EstadoAdmision.Registrada, label: "Registradas", activeClasses: "bg-blue-600 text-white shadow-xs" },
-    { key: EstadoAdmision.PendientePago, label: "Pendientes Cobro", activeClasses: "bg-amber-600 text-white shadow-xs" },
-    { key: EstadoAdmision.Pagada, label: "Pagadas", activeClasses: "bg-emerald-600 text-white shadow-xs" },
-    { key: EstadoAdmision.EnAtencion, label: "En Atención", activeClasses: "bg-purple-600 text-white shadow-xs" },
-    { key: EstadoAdmision.Finalizada, label: "Finalizadas", activeClasses: "bg-zinc-700 text-white shadow-xs" },
-  ];
+      { key: "TODOS", label: "Todas", activeClasses: "bg-primary text-primary-foreground shadow-xs" },
+      { key: EstadoAdmision.Registrada, label: "Registradas", activeClasses: "bg-blue-600 text-white shadow-xs" },
+      { key: EstadoAdmision.Confirmada, label: "Confirmadas", activeClasses: "bg-emerald-600 text-white shadow-xs" },
+      { key: EstadoAdmision.EnviadaVenta, label: "Enviadas a Venta", activeClasses: "bg-purple-600 text-white shadow-xs" },
+      { key: EstadoAdmision.Cancelada, label: "Canceladas", activeClasses: "bg-rose-600 text-white shadow-xs" },
+    ];
 
   return (
     <div className="space-y-2.5 w-full">
@@ -99,11 +99,10 @@ export function AdmisionList({
                 key={t.key.toString()}
                 type="button"
                 onClick={() => onEstadoTabChange?.(t.key)}
-                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer select-none ${
-                  isActive
+                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer select-none ${isActive
                     ? t.activeClasses
                     : "bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`}
+                  }`}
               >
                 <span>{t.label}</span>
               </button>
@@ -242,21 +241,38 @@ export function AdmisionList({
                     <div className="flex items-center gap-1.5">
                       <AdmisionStatusBadge estado={adm.estado} />
 
-                      {/* Botón directo para Cambiar Estado */}
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onChangeStatus(adm);
-                        }}
-                        className="h-7 px-2 text-[11px] font-semibold gap-1 text-amber-600 hover:text-amber-700 bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 shadow-2xs cursor-pointer"
-                        title="Cambiar estado de la admisión"
-                      >
-                        <RefreshCw className="size-3" />
-                        <span className="hidden sm:inline">Cambiar Estado</span>
-                      </Button>
+                      {/* Botón directo de flujo según estado (Sin Modal) */}
+                      {adm.estado === EstadoAdmision.Registrada && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDirectChangeStatus?.(adm, EstadoAdmision.Confirmada);
+                          }}
+                          className="h-7 px-2.5 text-[11px] font-semibold gap-1 bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs cursor-pointer transition-all hover:scale-[1.02]"
+                          title="Confirmar admisión directamente"
+                        >
+                          <CheckCircle2 className="size-3" />
+                          <span>Confirmar</span>
+                        </Button>
+                      )}
+
+                      {adm.estado === EstadoAdmision.Confirmada && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDirectChangeStatus?.(adm, EstadoAdmision.EnviadaVenta);
+                          }}
+                          className="h-7 px-2.5 text-[11px] font-semibold gap-1 bg-purple-600 hover:bg-purple-700 text-white shadow-2xs cursor-pointer transition-all hover:scale-[1.02]"
+                          title="Enviar admisión a Venta/Facturación"
+                        >
+                          <Send className="size-3" />
+                          <span>Enviar a Venta</span>
+                        </Button>
+                      )}
 
                       {/* Menú de Acciones Rápidas */}
                       <DropdownMenu>
@@ -307,27 +323,47 @@ export function AdmisionList({
                             <Download className="size-3.5 text-emerald-600" />
                             Descargar PDF
                           </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onChangeStatus(adm);
-                            }}
-                            className="gap-2 cursor-pointer"
-                          >
-                            <RefreshCw className="size-3.5 text-amber-500" />
-                            Cambiar Estado
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onDelete(adm.id);
-                            }}
-                            className="gap-2 text-rose-600 dark:text-rose-400 focus:text-rose-600 cursor-pointer"
-                          >
-                            <Trash2 className="size-3.5" />
-                            Cancelar Admisión
-                          </DropdownMenuItem>
+
+                          {/* Acciones de Estado directas en menú */}
+                          {adm.estado !== EstadoAdmision.Cancelada && (
+                            <>
+                              <DropdownMenuSeparator />
+                              {adm.estado === EstadoAdmision.Registrada && (
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDirectChangeStatus?.(adm, EstadoAdmision.Confirmada);
+                                  }}
+                                  className="gap-2 text-emerald-600 dark:text-emerald-400 cursor-pointer font-medium"
+                                >
+                                  <CheckCircle2 className="size-3.5" />
+                                  Confirmar Admisión
+                                </DropdownMenuItem>
+                              )}
+                              {adm.estado === EstadoAdmision.Confirmada && (
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDirectChangeStatus?.(adm, EstadoAdmision.EnviadaVenta);
+                                  }}
+                                  className="gap-2 text-purple-600 dark:text-purple-400 cursor-pointer font-medium"
+                                >
+                                  <Send className="size-3.5" />
+                                  Enviar a Venta
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onDirectChangeStatus?.(adm, EstadoAdmision.Cancelada);
+                                }}
+                                className="gap-2 text-rose-600 dark:text-rose-400 focus:text-rose-600 cursor-pointer"
+                              >
+                                <Trash2 className="size-3.5" />
+                                Cancelar Admisión
+                              </DropdownMenuItem>
+                            </>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>

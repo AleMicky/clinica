@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -83,10 +82,9 @@ export function AdmisionTable({
   const tabs = [
     { key: "TODOS", label: "Todas" },
     { key: EstadoAdmision.Registrada, label: "Registradas" },
-    { key: EstadoAdmision.PendientePago, label: "Pendientes Cobro" },
-    { key: EstadoAdmision.Pagada, label: "Pagadas" },
-    { key: EstadoAdmision.EnAtencion, label: "En Atención" },
-    { key: EstadoAdmision.Finalizada, label: "Finalizadas" },
+    { key: EstadoAdmision.Confirmada, label: "Confirmadas" },
+    { key: EstadoAdmision.EnviadaVenta, label: "Enviadas a Venta" },
+    { key: EstadoAdmision.Cancelada, label: "Canceladas" },
   ];
 
   return (
@@ -104,11 +102,10 @@ export function AdmisionTable({
                   variant={isActive ? "default" : "ghost"}
                   size="sm"
                   onClick={() => onEstadoTabChange?.(t.key as EstadoAdmision | "TODOS")}
-                  className={`h-7 text-[11px] font-semibold px-2.5 rounded-lg transition-all ${
-                    isActive
-                      ? "bg-primary text-primary-foreground shadow-2xs"
-                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                  }`}
+                  className={`h-7 text-[11px] font-semibold px-2.5 rounded-lg transition-all ${isActive
+                    ? "bg-primary text-primary-foreground shadow-2xs"
+                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                    }`}
                 >
                   {t.label}
                 </Button>

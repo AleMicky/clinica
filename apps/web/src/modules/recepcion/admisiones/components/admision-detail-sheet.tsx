@@ -15,7 +15,6 @@ import {
   FileText,
   User,
   Calendar,
-  CreditCard,
   Printer,
   Stethoscope,
   Clock,
@@ -119,8 +118,10 @@ export function AdmisionDetailSheet({
               <div className="flex flex-col items-center gap-1 text-[10px]">
                 <div
                   className={`size-6 rounded-full flex items-center justify-center font-bold text-white ${
-                    admision.estado >= EstadoAdmision.Registrada
+                    admision.estado >= EstadoAdmision.Registrada && admision.estado !== EstadoAdmision.Cancelada
                       ? "bg-blue-600 shadow-xs"
+                      : admision.estado === EstadoAdmision.Cancelada
+                      ? "bg-rose-600 shadow-xs"
                       : "bg-muted text-muted-foreground"
                   }`}
                 >
@@ -132,44 +133,27 @@ export function AdmisionDetailSheet({
               <div className="flex flex-col items-center gap-1 text-[10px]">
                 <div
                   className={`size-6 rounded-full flex items-center justify-center font-bold text-white ${
-                    admision.estado >= EstadoAdmision.Pagada
+                    admision.estado >= EstadoAdmision.Confirmada && admision.estado !== EstadoAdmision.Cancelada
                       ? "bg-emerald-600 shadow-xs"
-                      : admision.estado === EstadoAdmision.PendientePago
-                      ? "bg-amber-500 shadow-xs"
                       : "bg-muted text-muted-foreground"
                   }`}
                 >
                   2
                 </div>
-                <span className="text-[10px] text-muted-foreground">Pago</span>
+                <span className="text-[10px] text-muted-foreground">Confirmada</span>
               </div>
               <div className="h-0.5 flex-1 bg-border/80" />
               <div className="flex flex-col items-center gap-1 text-[10px]">
                 <div
                   className={`size-6 rounded-full flex items-center justify-center font-bold text-white ${
-                    admision.estado === EstadoAdmision.EnAtencion
-                      ? "bg-purple-600 animate-pulse shadow-xs"
-                      : admision.estado >= EstadoAdmision.Finalizada
+                    admision.estado === EstadoAdmision.EnviadaVenta
                       ? "bg-purple-600 shadow-xs"
                       : "bg-muted text-muted-foreground"
                   }`}
                 >
                   3
                 </div>
-                <span className="text-[10px] text-muted-foreground">Atención</span>
-              </div>
-              <div className="h-0.5 flex-1 bg-border/80" />
-              <div className="flex flex-col items-center gap-1 text-[10px]">
-                <div
-                  className={`size-6 rounded-full flex items-center justify-center font-bold text-white ${
-                    admision.estado === EstadoAdmision.Finalizada
-                      ? "bg-zinc-700 shadow-xs"
-                      : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  4
-                </div>
-                <span className="text-[10px] text-muted-foreground">Fin</span>
+                <span className="text-[10px] text-muted-foreground">Enviada a Venta</span>
               </div>
             </div>
           </div>

@@ -9,6 +9,7 @@ import { AdmisionList } from "./admision-list";
 import { AdmisionFormDialog } from "./admision-form-dialog";
 import { AdmisionDetailSheet } from "./admision-detail-sheet";
 import { AdmisionStatusDialog } from "./admision-status-dialog";
+import { AdmisionConfirmStatusDialog } from "./admision-confirm-status-dialog";
 import { ConfirmDeleteDialog } from "@/components/shared";
 import {
   useAdmisiones,
@@ -17,6 +18,7 @@ import {
 } from "../hooks/use-admisiones";
 import {
   EstadoAdmision,
+  EstadoAdmisionLabels,
   type AdmisionMetrics,
   type AdmisionResponse,
 } from "../types/admision.types";
@@ -34,6 +36,14 @@ export function AdmisionModuleView() {
   const [statusDialogOpen, setStatusDialogOpen] = React.useState(false);
   const [selectedAdmisionForStatus, setSelectedAdmisionForStatus] =
     React.useState<AdmisionResponse | null>(null);
+
+  // Modal State: Alerta de Confirmación de Estado (Alert Dialog)
+  const [confirmStatusDialogOpen, setConfirmStatusDialogOpen] = React.useState(false);
+  const [statusChangeCandidate, setStatusChangeCandidate] = React.useState<{
+    admision: AdmisionResponse;
+    targetEstado: EstadoAdmision;
+    motivo?: string;
+  } | null>(null);
 
   // Modal State: Eliminar/Cancelar Admisión
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
@@ -81,14 +91,14 @@ export function AdmisionModuleView() {
 
   // Cálculo de Métricas en Vivo
   const totalHoy = apiData?.totalItems ?? admisiones.length;
-  const pendientesPago = admisiones.filter(
-    (a) => a.estado === EstadoAdmision.PendientePago || a.estado === EstadoAdmision.Registrada
+  const registradas = admisiones.filter(
+    (a) => a.estado === EstadoAdmision.Registrada
   ).length;
-  const enAtencion = admisiones.filter(
-    (a) => a.estado === EstadoAdmision.EnAtencion
+  const confirmadas = admisiones.filter(
+    (a) => a.estado === EstadoAdmision.Confirmada
   ).length;
-  const finalizadas = admisiones.filter(
-    (a) => a.estado === EstadoAdmision.Finalizada
+  const enviadasVenta = admisiones.filter(
+    (a) => a.estado === EstadoAdmision.EnviadaVenta
   ).length;
 
   const montoTotalHoy = admisiones.reduce((acc, a) => {
@@ -100,9 +110,9 @@ export function AdmisionModuleView() {
 
   const metrics: AdmisionMetrics = {
     totalHoy,
-    pendientesPago,
-    enAtencion,
-    finalizadas,
+    registradas,
+    confirmadas,
+    enviadasVenta,
     montoTotalHoy,
   };
 
@@ -130,21 +140,60 @@ export function AdmisionModuleView() {
 
   const handleConfirmStatusChange = async (
     targetEstado: EstadoAdmision,
-    observacion?: string
+    motivo?: string
   ) => {
     if (!selectedAdmisionForStatus) return;
 
     try {
       await cambiarEstadoMutation.mutateAsync({
         id: selectedAdmisionForStatus.id,
-        data: { nuevoEstado: targetEstado, observacion },
+        data: {
+          estadoDestino: targetEstado,
+          motivo: motivo || `Cambio de estado a ${EstadoAdmisionLabels[targetEstado]}`,
+        },
       });
       toast.success(
-        `Estado de la admisión #${selectedAdmisionForStatus.numero} actualizado.`
+        `Estado de la admisión #${selectedAdmisionForStatus.numero} actualizado a "${EstadoAdmisionLabels[targetEstado]}".`
       );
       refetch();
     } catch {
       toast.error("No se pudo actualizar el estado de la admisión.");
+    }
+  };
+
+  const handleRequestDirectChangeStatus = (
+    admision: AdmisionResponse,
+    nuevoEstado: EstadoAdmision
+  ) => {
+    setStatusChangeCandidate({
+      admision,
+      targetEstado: nuevoEstado,
+      motivo: `Cambio a ${EstadoAdmisionLabels[nuevoEstado]}`,
+    });
+    setConfirmStatusDialogOpen(true);
+  };
+
+  const handleExecuteStatusChange = async () => {
+    if (!statusChangeCandidate) return;
+    const { admision, targetEstado, motivo } = statusChangeCandidate;
+
+    try {
+      await cambiarEstadoMutation.mutateAsync({
+        id: admision.id,
+        data: {
+          estadoDestino: targetEstado,
+          motivo: motivo || `Cambio de estado a ${EstadoAdmisionLabels[targetEstado]}`,
+        },
+      });
+      toast.success(
+        `Admisión #${admision.numero} marcada como "${EstadoAdmisionLabels[targetEstado]}".`
+      );
+      refetch();
+    } catch {
+      toast.error("No se pudo actualizar el estado de la admisión.");
+    } finally {
+      setStatusChangeCandidate(null);
+      setConfirmStatusDialogOpen(false);
     }
   };
 
@@ -185,6 +234,7 @@ export function AdmisionModuleView() {
         onPageChange={setCurrentPage}
         onPageSizeChange={handlePageSizeChange}
         onViewDetail={handleViewDetail}
+        onDirectChangeStatus={handleRequestDirectChangeStatus}
         onChangeStatus={handleOpenStatusDialog}
         onDelete={handleOpenDelete}
         onRefresh={() => refetch()}
@@ -205,12 +255,22 @@ export function AdmisionModuleView() {
         onChangeStatusClick={handleOpenStatusDialog}
       />
 
-      {/* Modal: Cambio de Estado */}
+      {/* Modal: Cambio de Estado con Formulario */}
       <AdmisionStatusDialog
         open={statusDialogOpen}
         onOpenChange={setStatusDialogOpen}
         admision={selectedAdmisionForStatus}
         onConfirm={handleConfirmStatusChange}
+        isLoading={cambiarEstadoMutation.isPending}
+      />
+
+      {/* Alert Dialog: Confirmación Rápida de Cambio de Estado */}
+      <AdmisionConfirmStatusDialog
+        open={confirmStatusDialogOpen}
+        onOpenChange={setConfirmStatusDialogOpen}
+        admision={statusChangeCandidate?.admision ?? null}
+        targetEstado={statusChangeCandidate?.targetEstado ?? null}
+        onConfirm={handleExecuteStatusChange}
         isLoading={cambiarEstadoMutation.isPending}
       />
 

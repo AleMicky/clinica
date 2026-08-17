@@ -31,7 +31,7 @@ interface AdmisionStatusDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   admision: AdmisionResponse | null;
-  onConfirm: (targetEstado: EstadoAdmision, observacion?: string) => Promise<void>;
+  onConfirm: (targetEstado: EstadoAdmision, motivo?: string) => Promise<void>;
   isLoading?: boolean;
 }
 
@@ -60,12 +60,10 @@ export function AdmisionStatusDialog({
     onOpenChange(false);
   };
 
-  const estadosDisponibles = [
+  const estadosDisponibles: EstadoAdmision[] = [
     EstadoAdmision.Registrada,
-    EstadoAdmision.PendientePago,
-    EstadoAdmision.Pagada,
-    EstadoAdmision.EnAtencion,
-    EstadoAdmision.Finalizada,
+    EstadoAdmision.Confirmada,
+    EstadoAdmision.EnviadaVenta,
     EstadoAdmision.Cancelada,
   ];
 
@@ -106,7 +104,9 @@ export function AdmisionStatusDialog({
               <ArrowRight className="size-3.5 text-muted-foreground shrink-0" />
               <Select
                 value={selectedEstado?.toString()}
-                onValueChange={(val) => setSelectedEstado(Number(val) as EstadoAdmision)}
+                onValueChange={(val: string | null) =>
+                  setSelectedEstado(val ? (Number(val) as EstadoAdmision) : null)
+                }
               >
                 <SelectTrigger className="h-9 text-xs">
                   <SelectValue placeholder="Seleccionar estado..." />

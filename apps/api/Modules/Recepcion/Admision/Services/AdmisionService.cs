@@ -217,8 +217,7 @@ public sealed class AdmisionService(
 
         if (!AdmisionTransiciones.EsValida(entity.Estado, request.EstadoDestino))
         {
-            throw new ConflictException(
-                $"No se puede transitar de {entity.Estado} a {request.EstadoDestino}.");
+            throw new ConflictException($"No se puede transitar de {entity.Estado} a {request.EstadoDestino}.");
         }
 
         entity.Estado = request.EstadoDestino;

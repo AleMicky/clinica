@@ -4,10 +4,8 @@ import * as React from "react";
 import { Badge } from "@/components/ui/badge";
 import {
   Clock,
-  CreditCard,
   CheckCircle2,
-  Stethoscope,
-  CheckCheck,
+  Send,
   XCircle,
 } from "lucide-react";
 import { EstadoAdmision } from "../types/admision.types";
@@ -25,48 +23,28 @@ export function AdmisionStatusBadge({ estado, className }: AdmisionStatusBadgePr
           variant="outline"
           className={`bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 font-medium text-[11px] gap-1 px-2.5 py-0.5 shadow-2xs ${className}`}
         >
-          <Clock className="size-3 text-blue-500 animate-pulse" />
+          <Clock className="size-3 text-blue-500" />
           Registrada
         </Badge>
       );
-    case EstadoAdmision.PendientePago:
-      return (
-        <Badge
-          variant="outline"
-          className={`bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 font-medium text-[11px] gap-1 px-2.5 py-0.5 shadow-2xs ${className}`}
-        >
-          <CreditCard className="size-3 text-amber-500" />
-          Pendiente Pago
-        </Badge>
-      );
-    case EstadoAdmision.Pagada:
+    case EstadoAdmision.Confirmada:
       return (
         <Badge
           variant="outline"
           className={`bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 font-medium text-[11px] gap-1 px-2.5 py-0.5 shadow-2xs ${className}`}
         >
           <CheckCircle2 className="size-3 text-emerald-500" />
-          Pagada
+          Confirmada
         </Badge>
       );
-    case EstadoAdmision.EnAtencion:
+    case EstadoAdmision.EnviadaVenta:
       return (
         <Badge
           variant="outline"
           className={`bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20 font-medium text-[11px] gap-1 px-2.5 py-0.5 shadow-2xs ${className}`}
         >
-          <Stethoscope className="size-3 text-purple-500 animate-bounce" />
-          En Atención
-        </Badge>
-      );
-    case EstadoAdmision.Finalizada:
-      return (
-        <Badge
-          variant="outline"
-          className={`bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border-zinc-500/20 font-medium text-[11px] gap-1 px-2.5 py-0.5 shadow-2xs ${className}`}
-        >
-          <CheckCheck className="size-3 text-zinc-500" />
-          Finalizada
+          <Send className="size-3 text-purple-500" />
+          Enviada a Venta
         </Badge>
       );
     case EstadoAdmision.Cancelada:

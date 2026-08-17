@@ -4,19 +4,15 @@ export type { PagedResult };
 
 export enum EstadoAdmision {
   Registrada = 1,
-  PendientePago = 2,
-  Pagada = 3,
-  EnAtencion = 4,
-  Finalizada = 5,
-  Cancelada = 6,
+  Confirmada = 2,
+  EnviadaVenta = 3,
+  Cancelada = 4,
 }
 
 export const EstadoAdmisionLabels: Record<EstadoAdmision, string> = {
   [EstadoAdmision.Registrada]: "Registrada",
-  [EstadoAdmision.PendientePago]: "Pendiente de Pago",
-  [EstadoAdmision.Pagada]: "Pagada",
-  [EstadoAdmision.EnAtencion]: "En Atención",
-  [EstadoAdmision.Finalizada]: "Finalizada",
+  [EstadoAdmision.Confirmada]: "Confirmada",
+  [EstadoAdmision.EnviadaVenta]: "Enviada a Venta",
   [EstadoAdmision.Cancelada]: "Cancelada",
 };
 
@@ -157,7 +153,7 @@ export interface CreateAdmisionDetalleRequest {
   descuento: number;
 }
 
-export interface UpdateAdmisionDetalleRequest extends CreateAdmisionDetalleRequest {}
+export interface UpdateAdmisionDetalleRequest extends CreateAdmisionDetalleRequest { }
 
 export interface CreateAdmisionRequest {
   numero?: string;
@@ -187,8 +183,8 @@ export interface UpdateAdmisionRequest {
 }
 
 export interface CambiarEstadoRequest {
-  nuevoEstado: EstadoAdmision;
-  observacion?: string;
+  estadoDestino: EstadoAdmision;
+  motivo?: string;
 }
 
 export interface AdmisionQueryParams {
@@ -202,8 +198,8 @@ export interface AdmisionQueryParams {
 
 export interface AdmisionMetrics {
   totalHoy: number;
-  pendientesPago: number;
-  enAtencion: number;
-  finalizadas: number;
+  registradas: number;
+  confirmadas: number;
+  enviadasVenta: number;
   montoTotalHoy: number;
 }

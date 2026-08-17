@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, CreditCard, Stethoscope, DollarSign } from "lucide-react";
+import { Users, CheckCircle2, Send, DollarSign } from "lucide-react";
 import type { AdmisionMetrics } from "../types/admision.types";
 
 interface AdmisionMetricsCardsProps {
@@ -34,46 +34,46 @@ export function AdmisionMetricsCards({ metrics }: AdmisionMetricsCardsProps) {
         </CardContent>
       </Card>
 
-      {/* 2. Pendientes de Pago */}
+      {/* 2. Confirmadas */}
       <Card className="border border-border/70 bg-card hover:shadow-xs transition-all duration-200">
         <CardContent className="p-3 flex items-center justify-between">
           <div>
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-              Pendientes de Cobro
+              Confirmadas
             </p>
             <div className="flex items-baseline gap-1.5 mt-0.5">
-              <span className="text-xl font-extrabold text-amber-600 dark:text-amber-400 tracking-tight">
-                {metrics.pendientesPago}
+              <span className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight">
+                {metrics.confirmadas}
               </span>
-              <span className="text-[10px] text-muted-foreground font-normal">
-                por facturar
+              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                validadas
               </span>
             </div>
           </div>
-          <div className="size-8.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20 shrink-0">
-            <CreditCard className="size-4" />
+          <div className="size-8.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20 shrink-0">
+            <CheckCircle2 className="size-4" />
           </div>
         </CardContent>
       </Card>
 
-      {/* 3. Pacientes en Atención */}
+      {/* 3. Enviadas a Venta */}
       <Card className="border border-border/70 bg-card hover:shadow-xs transition-all duration-200">
         <CardContent className="p-3 flex items-center justify-between">
           <div>
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-              En Atención Médica
+              Enviadas a Venta
             </p>
             <div className="flex items-baseline gap-1.5 mt-0.5">
               <span className="text-xl font-extrabold text-purple-600 dark:text-purple-400 tracking-tight">
-                {metrics.enAtencion}
+                {metrics.enviadasVenta}
               </span>
               <span className="text-[10px] text-purple-600 dark:text-purple-400 font-medium">
-                en consultorio
+                en caja/facturación
               </span>
             </div>
           </div>
           <div className="size-8.5 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-500/20 shrink-0">
-            <Stethoscope className="size-4 animate-pulse" />
+            <Send className="size-4" />
           </div>
         </CardContent>
       </Card>
