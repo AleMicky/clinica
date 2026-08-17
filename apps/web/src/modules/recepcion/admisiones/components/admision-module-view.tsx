@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { AdmisionHeader } from "./admision-header";
 import { AdmisionMetricsCards } from "./admision-metrics";
-import { AdmisionTable } from "./admision-table";
+import { AdmisionList } from "./admision-list";
 import { AdmisionFormDialog } from "./admision-form-dialog";
 import { AdmisionDetailSheet } from "./admision-detail-sheet";
 import { AdmisionStatusDialog } from "./admision-status-dialog";
@@ -171,8 +171,8 @@ export function AdmisionModuleView() {
       {/* Tarjetas de Métricas en Vivo */}
       <AdmisionMetricsCards metrics={metrics} />
 
-      {/* Tabla Principal de Admisiones */}
-      <AdmisionTable
+      {/* Listado Principal de Admisiones (Formato Lista) */}
+      <AdmisionList
         admisiones={admisiones}
         isLoading={isLoading}
         totalItems={apiData?.totalItems ?? admisiones.length}
