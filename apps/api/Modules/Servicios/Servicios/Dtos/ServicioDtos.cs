@@ -29,5 +29,13 @@ public sealed record ServicioTarifarioResponse
     public string Codigo { get; init; }
     public string Nombre { get; init; }
     public string? Descripcion { get; init; }
-    public decimal Precio { get; set; }
+    public decimal Precio { get; init; }
+
+    public List<MedicoServicioResponse> Medicos { get; init; } = [];
+}
+
+public sealed record MedicoServicioResponse
+{
+    public int MedicoId { get; init; }
+    public string NombreMedico { get; init; } = string.Empty;
 }

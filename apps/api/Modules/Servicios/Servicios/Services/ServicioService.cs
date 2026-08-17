@@ -98,8 +98,10 @@ public sealed class ServicioService(AppDbContext dbContext)
 
         return await dbContext.Servicio
             .AsNoTracking()
-            .Where(x => x.CategoriaServicioId == categoriaId && x.Activo)
-            .OrderBy(x => x.Nombre)
+            .Where(s =>
+                s.CategoriaServicioId == categoriaId &&
+                s.Activo)
+            .OrderBy(s => s.Nombre)
             .Select(s => new ServicioTarifarioResponse
             {
                 Id = s.Id,
@@ -107,16 +109,38 @@ public sealed class ServicioService(AppDbContext dbContext)
                 Codigo = s.Codigo,
                 Nombre = s.Nombre,
                 Descripcion = s.Descripcion,
+
                 Precio = targetTarifarioId > 0
                     ? dbContext.TarifarioDetalles
-                        .Where(td => td.TarifarioId == targetTarifarioId && td.ServicioId == s.Id && td.Activo)
+                        .Where(td =>
+                            td.TarifarioId == targetTarifarioId &&
+                            td.ServicioId == s.Id &&
+                            td.Activo)
                         .Select(td => (decimal?)td.Precio)
                         .FirstOrDefault() ?? 0m
-                    : 0m
+                    : 0m,
+
+                Medicos = dbContext.MedicosServiciosAcuerdos
+                    .Where(a =>
+                        a.ServicioId == s.Id &&
+                        a.Activo &&
+                        a.FechaInicio <= hoy &&
+                        (a.FechaFin == null || a.FechaFin >= hoy))
+                    .Select(a => new MedicoServicioResponse
+                    {
+                        MedicoId = a.MedicoId,
+
+                        NombreMedico =
+                            a.Medico.Empleado.Persona.Nombres + " " +
+                            a.Medico.Empleado.Persona.ApellidoPaterno +
+                            (a.Medico.Empleado.Persona.ApellidoMaterno != null
+                                ? " " + a.Medico.Empleado.Persona.ApellidoMaterno
+                                : "")
+                    })
+                    .ToList()
             })
             .ToListAsync(cancellationToken);
     }
-
 
     public async Task<ServicioResponse> CrearAsync(
         int categoriaId,

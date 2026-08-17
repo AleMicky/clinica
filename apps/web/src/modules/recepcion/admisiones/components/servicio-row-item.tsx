@@ -37,8 +37,11 @@ export function ServicioRowItem({
   const selectedMedicoNombre = React.useMemo(() => {
     if (!row.medicoId) return "Sin Médico / Guardia";
     const m = medicos.find((med) => med.id === row.medicoId);
-    return m?.empleado?.nombreCompleto || `Médico #${row.medicoId}`;
-  }, [row.medicoId, medicos]);
+    if (m?.empleado?.nombreCompleto) return m.empleado.nombreCompleto;
+    const md = row.medicosDisponibles?.find((mDis) => mDis.medicoId === row.medicoId);
+    if (md?.nombreMedico) return md.nombreMedico;
+    return `Médico #${row.medicoId}`;
+  }, [row.medicoId, medicos, row.medicosDisponibles]);
 
   return (
     <div className="p-4 bg-card rounded-xl border border-border/80 shadow-2xs space-y-3 hover:border-primary/40 transition-colors w-full">
@@ -51,7 +54,10 @@ export function ServicioRowItem({
           <div className="flex items-center gap-1.5 text-xs">
             <span className="font-semibold text-muted-foreground">📁 {row.categoriaNombre || "Catálogo General"}</span>
             <span className="text-muted-foreground">→</span>
-            <span className="font-extrabold text-foreground text-xs">🩺 {row.servicioNombre || "Consulta Médica General"}</span>
+            <span className="font-extrabold text-foreground text-xs">
+              🩺 {row.servicioNombre || "Consulta Médica General"}
+              {row.servicioCodigo ? ` (${row.servicioCodigo})` : ""}
+            </span>
           </div>
         </div>
 
@@ -70,7 +76,14 @@ export function ServicioRowItem({
 
       <div className="grid grid-cols-12 gap-3 items-end pt-1">
         <div className="col-span-12 sm:col-span-5 space-y-1">
-          <Label className="text-[11px] text-muted-foreground font-semibold">Médico Tratante</Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-[11px] text-muted-foreground font-semibold">Médico Tratante</Label>
+            {row.medicosDisponibles && row.medicosDisponibles.length > 0 && (
+              <span className="text-[10px] text-primary font-medium">
+                {row.medicosDisponibles.length} asignado(s)
+              </span>
+            )}
+          </div>
           <Select
             value={row.medicoId ? row.medicoId.toString() : "sin-medico"}
             onValueChange={(val: string | null) =>
@@ -88,6 +101,22 @@ export function ServicioRowItem({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="sin-medico" label="Sin Médico / Guardia">Sin Médico / Guardia</SelectItem>
+              {row.medicosDisponibles && row.medicosDisponibles.length > 0 && (
+                <div className="border-b border-border/50 pb-1 mb-1">
+                  <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-primary">
+                    Médicos Asignados a la Prestación ({row.medicosDisponibles.length})
+                  </div>
+                  {row.medicosDisponibles.map((md) => (
+                    <SelectItem
+                      key={`md-${md.medicoId}`}
+                      value={md.medicoId.toString()}
+                      label={md.nombreMedico}
+                    >
+                      👨‍⚕️ {md.nombreMedico}
+                    </SelectItem>
+                  ))}
+                </div>
+              )}
               {medicos.map((m) => {
                 const nombre = m.empleado?.nombreCompleto || `Médico #${m.id}`;
                 return (

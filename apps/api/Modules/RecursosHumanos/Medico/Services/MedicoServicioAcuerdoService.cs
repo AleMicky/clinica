@@ -123,23 +123,14 @@ public sealed class MedicoServicioAcuerdoService(AppDbContext dbContext)
             request.ServicioId,
             null,
             cancellationToken);
+        
+        
 
-        var entity =
-            MedicoServicioAcuerdoMapper.ToEntity(request);
-
+        var entity = MedicoServicioAcuerdoMapper.ToEntity(request);
         entity.MedicoId = medicoId;
-
-        entity.ImporteServicio =
-            request.ImporteServicio;
-
-        entity.ImporteMedico =
-            request.ImporteMedico;
-
-        entity.ImporteClinica =
-            CalcularImporteClinica(
-                request.ImporteServicio,
-                request.ImporteMedico);
-
+        entity.ImporteServicio = request.ImporteServicio;
+        entity.ImporteMedico = request.ImporteMedico;
+        entity.ImporteClinica = CalcularImporteClinica(request.ImporteServicio, request.ImporteMedico);
         entity.Activo = true;
 
         await dbContext
@@ -168,17 +159,9 @@ public sealed class MedicoServicioAcuerdoService(AppDbContext dbContext)
             medicoId,
             cancellationToken);
 
-        await EnsureServicioExistsAsync(
-            request.ServicioId,
-            cancellationToken);
-
-        ValidateImportes(
-            request.ImporteServicio,
-            request.ImporteMedico);
-
-        ValidateFechas(
-            request.FechaInicio,
-            request.FechaFin);
+        await EnsureServicioExistsAsync(request.ServicioId, cancellationToken);
+        ValidateImportes(request.ImporteServicio, request.ImporteMedico);
+        ValidateFechas(request.FechaInicio, request.FechaFin);
 
         var entity = await BuildQuery()
             .FirstOrDefaultAsync(
@@ -205,23 +188,12 @@ public sealed class MedicoServicioAcuerdoService(AppDbContext dbContext)
             request,
             entity);
 
-        entity.ImporteServicio =
-            request.ImporteServicio;
+        entity.ImporteServicio = request.ImporteServicio;
+        entity.ImporteMedico = request.ImporteMedico;
+        entity.ImporteClinica = CalcularImporteClinica(request.ImporteServicio, request.ImporteMedico);
 
-        entity.ImporteMedico =
-            request.ImporteMedico;
-
-        entity.ImporteClinica =
-            CalcularImporteClinica(
-                request.ImporteServicio,
-                request.ImporteMedico);
-
-        await dbContext.SaveChangesAsync(
-            cancellationToken);
-
-        await LoadServicioAsync(
-            entity,
-            cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await LoadServicioAsync(entity, cancellationToken);
 
         return MapToResponse(entity);
     }
@@ -339,9 +311,7 @@ public sealed class MedicoServicioAcuerdoService(AppDbContext dbContext)
         }
     }
 
-    private static void ValidateImportes(
-        decimal importeServicio,
-        decimal importeMedico)
+    private static void ValidateImportes(decimal importeServicio, decimal importeMedico)
     {
         if (importeServicio <= 0)
         {
@@ -402,43 +372,19 @@ public sealed class MedicoServicioAcuerdoService(AppDbContext dbContext)
         return new MedicoServicioAcuerdoResponse
         {
             Id = entity.Id,
-
             MedicoId = entity.MedicoId,
-
             ServicioId = entity.ServicioId,
-
-            Servicio = MapServicioInfo(
-                entity.Servicio),
-
-            ImporteServicio =
-                entity.ImporteServicio,
-
-            ImporteClinica =
-                entity.ImporteClinica,
-
-            ImporteMedico =
-                entity.ImporteMedico,
-
-            FechaInicio =
-                entity.FechaInicio,
-
-            FechaFin =
-                entity.FechaFin,
-
-            Activo =
-                entity.Activo,
-
-            FechaCreacion =
-                entity.FechaCreacion,
-
-            FechaModificacion =
-                entity.FechaModificacion,
-
-            CreadoPor =
-                entity.CreadoPor,
-
-            ModificadoPor =
-                entity.ModificadoPor
+            Servicio = MapServicioInfo(entity.Servicio),
+            ImporteServicio = entity.ImporteServicio,
+            ImporteClinica = entity.ImporteClinica,
+            ImporteMedico = entity.ImporteMedico,
+            FechaInicio = entity.FechaInicio,
+            FechaFin = entity.FechaFin,
+            Activo = entity.Activo,
+            FechaCreacion = entity.FechaCreacion,
+            FechaModificacion = entity.FechaModificacion,
+            CreadoPor = entity.CreadoPor,
+            ModificadoPor = entity.ModificadoPor
         };
     }
 

@@ -31,7 +31,12 @@ import {
   type SelectedServiceCartItem,
 } from "../store/use-admision-store";
 import type { CategoriaServicioResponse } from "@/modules/servicios/categoria-servicio/types/categoria-servicio.types";
-import type { ServicioResponse, PagedResult } from "@/modules/servicios/servicio/types/servicio.types";
+import type {
+  ServicioResponse,
+  ServicioTarifarioResponse,
+  MedicoServicioResponse,
+  PagedResult,
+} from "@/modules/servicios/servicio/types/servicio.types";
 import { toast } from "sonner";
 
 export interface MultiServicePickerModalProps {
@@ -100,18 +105,19 @@ export function MultiServicePickerModal({
     Boolean(isOpen && currentCatId > 0)
   );
 
-  const serviciosList: ServicioResponse[] = React.useMemo(() => {
+  const serviciosList: ServicioTarifarioResponse[] = React.useMemo(() => {
     if (!serviciosData) return [];
-    if (Array.isArray(serviciosData)) return serviciosData as ServicioResponse[];
-    if (Array.isArray((serviciosData as PagedResult<ServicioResponse>).items)) {
-      return (serviciosData as PagedResult<ServicioResponse>).items;
+    if (Array.isArray(serviciosData)) return serviciosData as ServicioTarifarioResponse[];
+    if (Array.isArray((serviciosData as PagedResult<ServicioTarifarioResponse>).items)) {
+      return (serviciosData as PagedResult<ServicioTarifarioResponse>).items;
     }
     return [];
   }, [serviciosData]);
 
   const activeCategory = categorias.find((c) => c.id === activeCatId) || categorias[0];
 
-  const getServicePrice = (s: ServicioResponse): number => {
+  const getServicePrice = (s: ServicioTarifarioResponse | ServicioResponse): number => {
+    if (typeof s.precio === "number" && !isNaN(s.precio)) return s.precio;
     const raw = s as unknown as Record<string, unknown>;
     const keys = ["precio", "Precio", "precioBase", "PrecioBase", "monto", "Monto", "price", "Price"];
     for (const key of keys) {
@@ -125,18 +131,29 @@ export function MultiServicePickerModal({
     return 0;
   };
 
+  const getServiceMedicos = (s: ServicioTarifarioResponse | ServicioResponse): MedicoServicioResponse[] => {
+    return (
+      (s as ServicioTarifarioResponse).medicos ||
+      ((s as unknown as Record<string, unknown>).Medicos as MedicoServicioResponse[] | undefined) ||
+      []
+    );
+  };
+
   const filteredServicios = React.useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return serviciosList;
     return serviciosList.filter(
       (s) =>
         s.nombre.toLowerCase().includes(q) ||
+        (s.codigo && s.codigo.toLowerCase().includes(q)) ||
         (s.descripcion && s.descripcion.toLowerCase().includes(q))
     );
   }, [serviciosList, searchQuery]);
 
-  const handleToggleSelect = (s: ServicioResponse) => {
+  const handleToggleSelect = (s: ServicioTarifarioResponse) => {
     const price = getServicePrice(s);
+    const medicos = getServiceMedicos(s);
+    const defaultMedicoId = medicos.length === 1 ? medicos[0].medicoId : undefined;
     setSelectedMap((prev) => {
       const next = new Map(prev);
       if (next.has(s.id)) {
@@ -145,12 +162,26 @@ export function MultiServicePickerModal({
         next.set(s.id, {
           servicio: {
             ...s,
-            precioBase: price,
-          } as unknown as ServicioResponse,
+            precio: price,
+            medicos: medicos,
+          },
           catId: currentCatId,
           catNombre: activeCategory?.nombre || "Catálogo",
           cantidad: 1,
+          medicosDisponibles: medicos,
+          medicoId: defaultMedicoId,
         });
+      }
+      return next;
+    });
+  };
+
+  const handleSelectMedico = (sId: number, medicoId: number | undefined) => {
+    setSelectedMap((prev) => {
+      const next = new Map(prev);
+      const item = next.get(sId);
+      if (item) {
+        next.set(sId, { ...item, medicoId });
       }
       return next;
     });
@@ -272,23 +303,32 @@ export function MultiServicePickerModal({
                   const isAlreadyInCart = isServiceInCart(s.id);
                   const selectedData = selectedMap.get(s.id);
                   const price = getServicePrice(s);
+                  const medicos = getServiceMedicos(s);
 
                   return (
                     <div
                       key={s.id}
                       onClick={() => handleToggleSelect(s)}
-                      className={`p-4 rounded-xl border transition-all text-left flex flex-col justify-between cursor-pointer space-y-3 shadow-2xs ${isSelectedInModal
+                      className={`p-3.5 rounded-xl border transition-all text-left flex flex-col justify-between cursor-pointer space-y-2.5 shadow-2xs ${
+                        isSelectedInModal
                           ? "border-primary bg-primary/10 ring-2 ring-primary/30 shadow-md"
                           : isAlreadyInCart
                             ? "border-emerald-500/50 bg-emerald-500/10 shadow-xs"
                             : "border-border/70 bg-card hover:border-primary/50 hover:bg-primary/5"
-                        }`}
+                      }`}
                     >
-                      <div className="space-y-1">
-                        <div className="flex items-start justify-between gap-1">
-                          <p className="font-bold text-xs text-foreground leading-snug">
-                            {s.nombre}
-                          </p>
+                      <div className="space-y-1.5">
+                        <div className="flex items-start justify-between gap-1.5">
+                          <div className="space-y-0.5 min-w-0">
+                            {s.codigo && (
+                              <span className="text-[10px] font-mono font-bold text-muted-foreground uppercase">
+                                {s.codigo}
+                              </span>
+                            )}
+                            <p className="font-bold text-xs text-foreground leading-snug">
+                              {s.nombre}
+                            </p>
+                          </div>
                           {isSelectedInModal ? (
                             <Badge className="bg-primary text-primary-foreground border-0 text-[10px] shrink-0 font-bold px-1.5 py-0">
                               <Check className="size-3 mr-0.5" /> ELEGIDO
@@ -305,9 +345,44 @@ export function MultiServicePickerModal({
                             {s.descripcion}
                           </p>
                         )}
+
+                        {isSelectedInModal && medicos.length > 0 ? (
+                          <div
+                            onClick={(e) => e.stopPropagation()}
+                            className="pt-1 space-y-1"
+                          >
+                            <label className="text-[10px] font-bold text-primary flex items-center gap-1">
+                              👨‍⚕️ Médico Asignado:
+                            </label>
+                            <select
+                              value={selectedData?.medicoId ?? ""}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                handleSelectMedico(s.id, val ? Number(val) : undefined);
+                              }}
+                              className="w-full h-7 text-[11px] font-semibold rounded-lg bg-background border border-primary/40 px-2 text-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs cursor-pointer"
+                            >
+                              <option value="">-- Sin Médico / Guardia --</option>
+                              {medicos.map((m) => (
+                                <option key={m.medicoId} value={m.medicoId}>
+                                  {m.nombreMedico}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        ) : medicos.length > 0 ? (
+                          <div className="flex items-center gap-1 text-[10px] text-primary/90 font-medium bg-primary/5 px-2 py-0.5 rounded-md border border-primary/15">
+                            <span className="shrink-0">👨‍⚕️</span>
+                            <span className="truncate" title={medicos.map((m) => m.nombreMedico).join(", ")}>
+                              {medicos.length === 1
+                                ? medicos[0].nombreMedico
+                                : `${medicos.length} médicos disponibles`}
+                            </span>
+                          </div>
+                        ) : null}
                       </div>
 
-                      <div className="flex items-center justify-between pt-2.5 border-t border-border/40 w-full">
+                      <div className="flex items-center justify-between pt-2 border-t border-border/40 w-full">
                         <span className="text-xs font-extrabold text-primary">
                           S/. {price.toFixed(2)}
                         </span>

@@ -4,6 +4,7 @@ import type {
   PagedResult,
   ServicioQueryParams,
   ServicioResponse,
+  ServicioTarifarioResponse,
   UpdateServicioRequest,
 } from "../types/servicio.types";
 
@@ -22,12 +23,12 @@ export async function getServiciosByCategoriaTarifario(
   categoriaId: number,
   tarifarioId?: number,
   params?: ServicioQueryParams
-): Promise<PagedResult<ServicioResponse> | ServicioResponse[]> {
+): Promise<PagedResult<ServicioTarifarioResponse> | ServicioTarifarioResponse[]> {
   const queryParams = {
     ...params,
     ...(tarifarioId ? { tarifarioId } : {}),
   };
-  const response = await apiClient.get<PagedResult<ServicioResponse> | ServicioResponse[]>(
+  const response = await apiClient.get<PagedResult<ServicioTarifarioResponse> | ServicioTarifarioResponse[]>(
     `/categorias-servicios/${categoriaId}/servicios/tarifario`,
     { params: queryParams }
   );

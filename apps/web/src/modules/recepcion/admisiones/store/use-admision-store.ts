@@ -1,19 +1,27 @@
 import { create } from "zustand";
 import type { CreateAdmisionDetalleRequest } from "../types/admision.types";
-import type { ServicioResponse } from "@/modules/servicios/servicio/types/servicio.types";
+import type {
+  ServicioResponse,
+  ServicioTarifarioResponse,
+  MedicoServicioResponse,
+} from "@/modules/servicios/servicio/types/servicio.types";
 
 export interface ServiceItemState extends CreateAdmisionDetalleRequest {
   id: string;
   categoriaId?: number;
   categoriaNombre?: string;
+  servicioCodigo?: string;
   servicioNombre?: string;
+  medicosDisponibles?: MedicoServicioResponse[];
 }
 
 export interface SelectedServiceCartItem {
-  servicio: ServicioResponse;
+  servicio: ServicioTarifarioResponse | ServicioResponse;
   catId: number;
   catNombre: string;
   cantidad: number;
+  medicosDisponibles?: MedicoServicioResponse[];
+  medicoId?: number;
 }
 
 interface AdmisionStoreState {
@@ -37,12 +45,19 @@ export const useAdmisionStore = create<AdmisionStoreState>((set, get) => ({
         const existingIdx = current.findIndex((d) => Number(d.servicioId) === item.servicio.id);
         const raw = item.servicio as unknown as { precio?: number; Precio?: number; precioBase?: number };
         const price = raw.precio ?? raw.Precio ?? raw.precioBase ?? 0;
+        const medicos =
+          item.medicosDisponibles ||
+          (item.servicio as ServicioTarifarioResponse).medicos ||
+          ((item.servicio as unknown as Record<string, unknown>).Medicos as MedicoServicioResponse[] | undefined) ||
+          [];
+        const defaultMedicoId = item.medicoId ?? (medicos.length === 1 ? medicos[0].medicoId : undefined);
 
         if (existingIdx >= 0) {
           // Si ya está en el carrito, actualizar la cantidad sin duplicar la fila
           current[existingIdx] = {
             ...current[existingIdx],
             cantidad: current[existingIdx].cantidad + item.cantidad,
+            medicosDisponibles: medicos.length > 0 ? medicos : current[existingIdx].medicosDisponibles,
           };
         } else {
           // Si no está, agregar nueva fila
@@ -51,8 +66,10 @@ export const useAdmisionStore = create<AdmisionStoreState>((set, get) => ({
             categoriaId: item.catId,
             categoriaNombre: item.catNombre,
             servicioId: item.servicio.id,
+            servicioCodigo: item.servicio.codigo,
             servicioNombre: item.servicio.nombre,
-            medicoId: undefined,
+            medicosDisponibles: medicos,
+            medicoId: defaultMedicoId,
             cantidad: item.cantidad,
             precioUnitario: price,
             descuento: 0,

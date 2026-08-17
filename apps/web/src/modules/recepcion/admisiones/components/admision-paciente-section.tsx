@@ -90,7 +90,6 @@ export function AdmisionPacienteSection({
                 onClick={() => {
                   setSelectedPacienteId("");
                   setPatientSearch("");
-                  onOpenRegisterModal(null);
                 }}
                 className="h-7 text-xs text-rose-600 hover:bg-rose-50 px-2.5 font-semibold"
               >

@@ -16,6 +16,11 @@ export interface ServicioResponse {
   modificadoPor?: string;
 }
 
+export interface MedicoServicioResponse {
+  medicoId: number;
+  nombreMedico: string;
+}
+
 export interface ServicioTarifarioResponse {
   id: number;
   categoriaServicioId: number;
@@ -24,6 +29,8 @@ export interface ServicioTarifarioResponse {
   descripcion?: string | null;
   precio: number;
   Precio?: number;
+  medicos?: MedicoServicioResponse[];
+  Medicos?: MedicoServicioResponse[];
 }
 
 export interface CreateServicioRequest {
