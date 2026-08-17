@@ -90,10 +90,10 @@ export function AdmisionTable({
   ];
 
   return (
-    <Card className="border border-border/70 shadow-xs bg-card overflow-hidden">
+    <Card className="border border-border/70 shadow-2xs bg-card overflow-hidden">
       {/* PESTAÑAS DE FILTRO RÁPIDO & BUSCADOR */}
-      <div className="p-4 space-y-3.5 border-b border-border/70 bg-muted/20">
-        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+      <div className="p-2.5 sm:px-3.5 sm:py-2 border-b border-border/70 bg-muted/15">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2">
           {/* Tabs por estado */}
           <div className="flex items-center gap-1 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
             {tabs.map((t) => {
@@ -104,9 +104,9 @@ export function AdmisionTable({
                   variant={isActive ? "default" : "ghost"}
                   size="sm"
                   onClick={() => onEstadoTabChange?.(t.key as EstadoAdmision | "TODOS")}
-                  className={`h-8 text-xs font-semibold px-3 rounded-lg transition-all ${
+                  className={`h-7 text-[11px] font-semibold px-2.5 rounded-lg transition-all ${
                     isActive
-                      ? "bg-primary text-primary-foreground shadow-xs"
+                      ? "bg-primary text-primary-foreground shadow-2xs"
                       : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                   }`}
                 >
@@ -117,12 +117,12 @@ export function AdmisionTable({
           </div>
 
           {/* Buscador de admisión */}
-          <div className="w-full md:w-72">
+          <div className="w-full md:w-64">
             <SearchInput
               value={searchTerm}
               onChange={onSearchChange}
-              placeholder="Buscar N° admisión, DNI, paciente..."
-              className="h-9 text-xs"
+              placeholder="Buscar admisión, DNI, paciente..."
+              className="h-8 text-xs"
             />
           </div>
         </div>
@@ -131,38 +131,38 @@ export function AdmisionTable({
       <CardContent className="p-0">
         <div className="overflow-x-auto">
           <Table>
-            <TableHeader className="bg-muted/40 text-[11px] uppercase tracking-wider font-semibold">
-              <TableRow>
-                <TableHead className="w-[140px] pl-4">N° Admisión</TableHead>
-                <TableHead className="min-w-[220px]">Paciente</TableHead>
-                <TableHead className="min-w-[170px]">Convenio / Cobertura</TableHead>
-                <TableHead className="min-w-[140px]">Fecha & Hora</TableHead>
-                <TableHead className="text-right w-[110px]">Total</TableHead>
-                <TableHead className="w-[130px] text-center">Estado</TableHead>
-                <TableHead className="w-[60px] text-right pr-4">Acción</TableHead>
+            <TableHeader className="bg-muted/40 text-[10px] uppercase tracking-wider font-bold">
+              <TableRow className="h-8">
+                <TableHead className="w-[130px] pl-3 py-1.5">N° Admisión</TableHead>
+                <TableHead className="min-w-[200px] py-1.5">Paciente</TableHead>
+                <TableHead className="min-w-[160px] py-1.5">Convenio / Cobertura</TableHead>
+                <TableHead className="min-w-[130px] py-1.5">Fecha & Hora</TableHead>
+                <TableHead className="text-right w-[100px] py-1.5">Total</TableHead>
+                <TableHead className="w-[120px] text-center py-1.5">Estado</TableHead>
+                <TableHead className="w-[50px] text-right pr-3 py-1.5">Acción</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell className="pl-4"><Skeleton className="h-5 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-40" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-28" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                    <TableCell className="text-right"><Skeleton className="h-5 w-16 ml-auto" /></TableCell>
-                    <TableCell className="text-center"><Skeleton className="h-5 w-20 mx-auto" /></TableCell>
-                    <TableCell className="pr-4"><Skeleton className="h-5 w-6 ml-auto" /></TableCell>
+                  <TableRow key={i} className="h-10">
+                    <TableCell className="pl-3 py-2"><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell className="py-2"><Skeleton className="h-4 w-36" /></TableCell>
+                    <TableCell className="py-2"><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell className="py-2"><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell className="text-right py-2"><Skeleton className="h-4 w-14 ml-auto" /></TableCell>
+                    <TableCell className="text-center py-2"><Skeleton className="h-4 w-18 mx-auto" /></TableCell>
+                    <TableCell className="pr-3 py-2"><Skeleton className="h-4 w-5 ml-auto" /></TableCell>
                   </TableRow>
                 ))
               ) : admisiones.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-44 text-center">
-                    <div className="flex flex-col items-center justify-center text-muted-foreground space-y-2">
-                      <FileText className="size-8 text-muted-foreground/50" />
-                      <p className="font-semibold text-sm">No se encontraron admisiones</p>
-                      <p className="text-xs max-w-xs text-muted-foreground">
-                        Intenta ajustar los filtros de búsqueda o registra una nueva admisión de paciente.
+                  <TableCell colSpan={7} className="h-36 text-center">
+                    <div className="flex flex-col items-center justify-center text-muted-foreground space-y-1.5">
+                      <FileText className="size-7 text-muted-foreground/50" />
+                      <p className="font-bold text-xs">No se encontraron admisiones</p>
+                      <p className="text-[11px] max-w-xs text-muted-foreground">
+                        Intente ajustar los filtros de búsqueda o registre una nueva admisión de paciente.
                       </p>
                     </div>
                   </TableCell>
@@ -178,41 +178,41 @@ export function AdmisionTable({
                   const convenio = adm.convenio?.nombre || formatConvenioNombre(adm.convenio, adm.convenioNombre);
 
                   return (
-                    <TableRow key={adm.id} className="hover:bg-muted/30 transition-colors group">
+                    <TableRow key={adm.id} className="hover:bg-muted/30 transition-colors group h-10">
                       {/* N° Admisión */}
-                      <TableCell className="pl-4 font-mono font-bold text-xs text-foreground">
+                      <TableCell className="pl-3 py-2 font-mono font-bold text-xs text-foreground">
                         <div className="flex items-center gap-1.5">
-                          <span className="size-2 rounded-full bg-primary/80 inline-block" />
+                          <span className="size-1.5 rounded-full bg-primary/80 inline-block" />
                           {adm.numero}
                         </div>
                       </TableCell>
 
                       {/* Paciente */}
-                      <TableCell>
+                      <TableCell className="py-2">
                         <div className="flex flex-col">
-                          <span className="font-bold text-xs text-foreground group-hover:text-primary transition-colors">
+                          <span className="font-bold text-xs text-foreground group-hover:text-primary transition-colors leading-snug">
                             {nombreCompleto}
                           </span>
-                          <span className="text-[11px] text-muted-foreground">
+                          <span className="text-[10px] text-muted-foreground leading-tight">
                             Doc: {documento}
                           </span>
                         </div>
                       </TableCell>
 
                       {/* Convenio */}
-                      <TableCell>
+                      <TableCell className="py-2">
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <Building2 className="size-3.5 text-primary/70 shrink-0" />
-                          <span className="truncate max-w-[150px] font-medium text-foreground">
+                          <Building2 className="size-3 text-primary/70 shrink-0" />
+                          <span className="truncate max-w-[140px] font-medium text-xs text-foreground" title={convenio}>
                             {convenio}
                           </span>
                         </div>
                       </TableCell>
 
                       {/* Fecha y Hora */}
-                      <TableCell>
+                      <TableCell className="py-2">
                         <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                          <Calendar className="size-3 text-muted-foreground" />
+                          <Calendar className="size-3 text-muted-foreground shrink-0" />
                           <span>
                             {new Date(adm.fechaHora).toLocaleString("es-ES", {
                               dateStyle: "short",
@@ -223,20 +223,20 @@ export function AdmisionTable({
                       </TableCell>
 
                       {/* Total */}
-                      <TableCell className="text-right font-bold text-xs text-foreground">
+                      <TableCell className="text-right font-bold text-xs text-foreground py-2 font-mono">
                         S/. {total.toFixed(2)}
                       </TableCell>
 
                       {/* Estado */}
-                      <TableCell className="text-center">
+                      <TableCell className="text-center py-2">
                         <AdmisionStatusBadge estado={adm.estado} />
                       </TableCell>
 
                       {/* Menú de Acciones */}
-                      <TableCell className="text-right pr-4">
+                      <TableCell className="text-right pr-3 py-2">
                         <DropdownMenu>
-                          <DropdownMenuTrigger className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors inline-flex items-center justify-center">
-                            <MoreHorizontal className="size-4" />
+                          <DropdownMenuTrigger className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors inline-flex items-center justify-center size-7">
+                            <MoreHorizontal className="size-3.5" />
                             <span className="sr-only">Acciones</span>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-48 text-xs">
@@ -295,7 +295,7 @@ export function AdmisionTable({
         </div>
 
         {/* PAGINACIÓN */}
-        <div className="p-4 border-t border-border/70">
+        <div className="p-2.5 sm:px-3.5 border-t border-border/70">
           <DataTablePagination
             currentPage={currentPage}
             pageSize={pageSize}

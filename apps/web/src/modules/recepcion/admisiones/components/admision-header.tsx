@@ -22,33 +22,33 @@ export function AdmisionHeader({ onAddClick, onRefresh }: AdmisionHeaderProps) {
   };
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-card via-card to-primary/5 p-4 rounded-xl border border-border/70 shadow-xs">
-      <div className="flex items-center gap-3">
-        <div className="size-11 rounded-xl bg-gradient-to-br from-primary/20 via-primary/10 to-blue-500/20 text-primary flex items-center justify-center border border-primary/20 shadow-xs">
-          <FileText className="size-6" />
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-card via-card to-primary/5 px-4 py-2.5 rounded-xl border border-border/70 shadow-2xs">
+      <div className="flex items-center gap-2.5">
+        <div className="size-8.5 rounded-lg bg-gradient-to-br from-primary/20 via-primary/10 to-blue-500/20 text-primary flex items-center justify-center border border-primary/20 shadow-2xs shrink-0">
+          <FileText className="size-4.5" />
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-foreground tracking-tight">
+            <h1 className="text-base font-bold text-foreground tracking-tight">
               Admisión de Pacientes
             </h1>
-            <span className="text-[10px] font-semibold bg-primary/10 text-primary px-2 py-0.5 rounded-full border border-primary/20">
+            <span className="text-[10px] font-semibold bg-primary/10 text-primary px-2 py-0.2 rounded-full border border-primary/20">
               Recepción
             </span>
           </div>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Registro de ingresos, orden de prestaciones médicas, control de pagos y flujo de atención.
+          <p className="text-[11px] text-muted-foreground line-clamp-1">
+            Registro de ingresos, prestaciones médicas, control de pagos y atención clínica.
           </p>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 self-end sm:self-auto">
+      <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
         {onRefresh && (
           <Button
             variant="outline"
             size="sm"
             onClick={onRefresh}
-            className="h-9 px-3 text-xs gap-1.5 border-border/80 hover:bg-accent hover:text-accent-foreground transition-all"
+            className="h-8 px-2.5 text-xs gap-1.5 border-border/80 hover:bg-accent hover:text-accent-foreground transition-all"
             title="Actualizar datos"
           >
             <RefreshCw className="size-3.5" />
@@ -59,9 +59,9 @@ export function AdmisionHeader({ onAddClick, onRefresh }: AdmisionHeaderProps) {
         <Button
           size="sm"
           onClick={handleAddClick}
-          className="h-9 px-4 text-xs font-semibold gap-2 bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-700 text-primary-foreground shadow-md shadow-primary/20 transition-all duration-200"
+          className="h-8 px-3.5 text-xs font-semibold gap-1.5 bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-700 text-primary-foreground shadow-xs shadow-primary/20 transition-all duration-200"
         >
-          <Plus className="size-4" />
+          <Plus className="size-3.5" />
           Nueva Admisión
         </Button>
       </div>

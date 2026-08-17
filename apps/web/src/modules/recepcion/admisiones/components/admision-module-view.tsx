@@ -164,7 +164,7 @@ export function AdmisionModuleView() {
   };
 
   return (
-    <div className="flex flex-col gap-4 w-full animate-in fade-in-50 duration-300">
+    <div className="flex flex-col gap-3 w-full animate-in fade-in-50 duration-300">
       {/* Cabecera del Módulo */}
       <AdmisionHeader onAddClick={handleOpenAdd} onRefresh={() => refetch()} />
 
