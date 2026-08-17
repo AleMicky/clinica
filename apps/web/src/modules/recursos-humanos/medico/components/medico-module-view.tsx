@@ -8,6 +8,7 @@ import { MedicoMetricsCards, type MedicoMetrics } from "./medico-metrics";
 import { MedicoCardList } from "./medico-card-list";
 import { MedicoFormDialog } from "./medico-form-dialog";
 import { MedicoDeleteDialog } from "./medico-delete-dialog";
+import { PageContainer } from "@/components/shared";
 import type { MedicoResponse } from "../types/medico.types";
 
 export function MedicoModuleView() {
@@ -77,7 +78,7 @@ export function MedicoModuleView() {
   };
 
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <PageContainer>
       {/* 1. Header with "+ Nuevo Médico" action */}
       <MedicoHeader onAddClick={handleAddClick} />
 
@@ -113,6 +114,6 @@ export function MedicoModuleView() {
         onOpenChange={setIsDeleteOpen}
         medico={selectedMedico}
       />
-    </div>
+    </PageContainer>
   );
 }

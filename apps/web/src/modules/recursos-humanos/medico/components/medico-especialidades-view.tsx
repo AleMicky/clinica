@@ -30,7 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { StatusBadge } from "@/components/shared";
+import { StatusBadge, PageContainer } from "@/components/shared";
 import {
   useDeleteMedicoEspecialidad,
   useMedico,
@@ -129,14 +129,16 @@ export function MedicoEspecialidadesView({ medicoId }: MedicoEspecialidadesViewP
 
   if (!medico) {
     return (
-      <div className="p-6 max-w-4xl mx-auto space-y-4">
-        <Button variant="ghost" onClick={() => router.push("/recursos-humanos/medicos")} className="text-xs gap-1.5">
-          <ArrowLeft className="size-4" /> Volver a Médicos
-        </Button>
+      <PageContainer>
+        <div>
+          <Button variant="ghost" onClick={() => router.push("/recursos-humanos/medicos")} className="text-xs gap-1.5">
+            <ArrowLeft className="size-4" /> Volver a Médicos
+          </Button>
+        </div>
         <div className="text-center py-16 border border-dashed rounded-2xl text-muted-foreground text-sm">
           No se encontró información para el médico solicitado.
         </div>
-      </div>
+      </PageContainer>
     );
   }
 
@@ -162,7 +164,7 @@ export function MedicoEspecialidadesView({ medicoId }: MedicoEspecialidadesViewP
     .toUpperCase() || "MD";
 
   return (
-    <div className="p-4 sm:p-6 max-w-5xl mx-auto w-full space-y-5">
+    <PageContainer>
       {/* Top Breadcrumb / Navigation */}
       <div className="flex items-center justify-between">
         <Button
@@ -424,6 +426,6 @@ export function MedicoEspecialidadesView({ medicoId }: MedicoEspecialidadesViewP
         medicoId={medicoId}
         existingEspecialidadIds={existingEspecialidadIds}
       />
-    </div>
+    </PageContainer>
   );
 }
