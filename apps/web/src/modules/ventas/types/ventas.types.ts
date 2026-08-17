@@ -5,6 +5,13 @@ export enum EstadoVenta {
   Anulada = 4,
 }
 
+export const EstadoVentaLabels: Record<EstadoVenta, string> = {
+  [EstadoVenta.Pendiente]: "Pendiente",
+  [EstadoVenta.ParcialmentePagada]: "Parcialmente Pagada",
+  [EstadoVenta.Pagada]: "Pagada",
+  [EstadoVenta.Anulada]: "Anulada",
+};
+
 export enum TipoPagador {
   Paciente = 1,
   Convenio = 2,

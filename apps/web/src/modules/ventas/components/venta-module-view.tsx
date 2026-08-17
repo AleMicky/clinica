@@ -4,10 +4,11 @@ import * as React from "react";
 import { toast } from "sonner";
 import { VentaHeader } from "./venta-header";
 import { VentaMetricsCards } from "./venta-metrics";
-import { VentaTable } from "./venta-table";
+import { VentaList } from "./venta-list";
 import { VentaFormDialog } from "./venta-form-dialog";
 import { VentaDetailSheet } from "./venta-detail-sheet";
 import { VentaStatusDialog } from "./venta-status-dialog";
+import { VentaConfirmStatusDialog } from "./venta-confirm-status-dialog";
 import { ConfirmDeleteDialog } from "@/components/shared";
 
 import {
@@ -17,6 +18,7 @@ import {
 } from "../hooks/use-ventas";
 import {
   EstadoVenta,
+  EstadoVentaLabels,
   type VentaMetrics,
   type VentaResponse,
 } from "../types/ventas.types";
@@ -30,10 +32,18 @@ export function VentaModuleView() {
   const [selectedVentaForDetail, setSelectedVentaForDetail] =
     React.useState<VentaResponse | null>(null);
 
-  // Modal State: Cambiar Estado
+  // Modal State: Cambiar Estado con Formulario
   const [statusDialogOpen, setStatusDialogOpen] = React.useState(false);
   const [selectedVentaForStatus, setSelectedVentaForStatus] =
     React.useState<VentaResponse | null>(null);
+
+  // Modal State: Alerta de Confirmación de Cambio de Estado
+  const [confirmStatusDialogOpen, setConfirmStatusDialogOpen] = React.useState(false);
+  const [statusChangeCandidate, setStatusChangeCandidate] = React.useState<{
+    venta: VentaResponse;
+    targetEstado: EstadoVenta;
+    motivo?: string;
+  } | null>(null);
 
   // Modal State: Anular Venta
   const [anularDialogOpen, setAnularDialogOpen] = React.useState(false);
@@ -115,6 +125,42 @@ export function VentaModuleView() {
     setAnularDialogOpen(true);
   };
 
+  const handleRequestDirectChangeStatus = (
+    venta: VentaResponse,
+    nuevoEstado: EstadoVenta
+  ) => {
+    setStatusChangeCandidate({
+      venta,
+      targetEstado: nuevoEstado,
+      motivo: `Cambio a ${EstadoVentaLabels[nuevoEstado]}`,
+    });
+    setConfirmStatusDialogOpen(true);
+  };
+
+  const handleExecuteStatusChange = async () => {
+    if (!statusChangeCandidate) return;
+    const { venta, targetEstado, motivo } = statusChangeCandidate;
+
+    try {
+      await cambiarEstadoMutation.mutateAsync({
+        id: venta.id,
+        data: {
+          estadoDestino: targetEstado,
+          motivo: motivo || `Cambio de estado a ${EstadoVentaLabels[targetEstado]}`,
+        },
+      });
+      toast.success(
+        `Venta #${venta.numero} actualizada a "${EstadoVentaLabels[targetEstado]}".`
+      );
+      refetch();
+    } catch {
+      toast.error("No se pudo actualizar el estado de la venta.");
+    } finally {
+      setStatusChangeCandidate(null);
+      setConfirmStatusDialogOpen(false);
+    }
+  };
+
   const handleConfirmStatusChange = async (
     targetEstado: EstadoVenta,
     motivo?: string
@@ -124,7 +170,10 @@ export function VentaModuleView() {
     try {
       await cambiarEstadoMutation.mutateAsync({
         id: selectedVentaForStatus.id,
-        data: { estadoDestino: targetEstado, motivo },
+        data: {
+          estadoDestino: targetEstado,
+          motivo: motivo || `Cambio de estado a ${EstadoVentaLabels[targetEstado]}`,
+        },
       });
       toast.success(
         `Estado de la venta #${selectedVentaForStatus.numero} actualizado.`
@@ -151,7 +200,7 @@ export function VentaModuleView() {
   };
 
   return (
-    <div className="flex flex-col gap-4 w-full animate-in fade-in-50 duration-300">
+    <div className="flex flex-col gap-3 w-full animate-in fade-in-50 duration-300">
       {/* Cabecera del Módulo */}
       <VentaHeader
         onAddClick={handleOpenAdd}
@@ -162,8 +211,8 @@ export function VentaModuleView() {
       {/* Tarjetas de Métricas */}
       <VentaMetricsCards metrics={metrics} />
 
-      {/* Tabla de Ventas */}
-      <VentaTable
+      {/* Listado Principal de Ventas (Formato Lista) */}
+      <VentaList
         ventas={ventas}
         isLoading={isLoading}
         totalItems={apiData?.totalItems ?? ventas.length}
@@ -176,6 +225,7 @@ export function VentaModuleView() {
         onPageChange={setCurrentPage}
         onPageSizeChange={handlePageSizeChange}
         onViewDetail={handleViewDetail}
+        onDirectChangeStatus={handleRequestDirectChangeStatus}
         onChangeStatus={handleOpenStatusDialog}
         onAnular={handleOpenAnular}
         onRefresh={() => refetch()}
@@ -196,12 +246,22 @@ export function VentaModuleView() {
         onChangeStatusClick={handleOpenStatusDialog}
       />
 
-      {/* Modal: Cambiar Estado */}
+      {/* Modal: Cambiar Estado con Formulario */}
       <VentaStatusDialog
         open={statusDialogOpen}
         onOpenChange={setStatusDialogOpen}
         venta={selectedVentaForStatus}
         onConfirm={handleConfirmStatusChange}
+        isLoading={cambiarEstadoMutation.isPending}
+      />
+
+      {/* Alert Dialog: Confirmación Rápida de Cambio de Estado */}
+      <VentaConfirmStatusDialog
+        open={confirmStatusDialogOpen}
+        onOpenChange={setConfirmStatusDialogOpen}
+        venta={statusChangeCandidate?.venta ?? null}
+        targetEstado={statusChangeCandidate?.targetEstado ?? null}
+        onConfirm={handleExecuteStatusChange}
         isLoading={cambiarEstadoMutation.isPending}
       />
 

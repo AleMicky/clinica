@@ -700,8 +700,8 @@ export function VentaFormDialog({
             {/* BALANCE COMPARATIVO */}
             <div className="p-3 bg-muted/40 rounded-lg border border-border/60 flex flex-col sm:flex-row items-center justify-between text-xs gap-2">
               <div className="flex items-center gap-4 text-muted-foreground">
-                <span>Total Comprobante: <strong>S/. {grandTotal.toFixed(2)}</strong></span>
-                <span>Asignado Pagadores: <strong className="text-blue-600">S/. {totalPagado.toFixed(2)}</strong></span>
+                <span>Total Comprobante: <strong>Bs. {grandTotal.toFixed(2)}</strong></span>
+                <span>Asignado Pagadores: <strong className="text-blue-600">Bs. {totalPagado.toFixed(2)}</strong></span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="font-bold">Diferencia:</span>
@@ -712,7 +712,7 @@ export function VentaFormDialog({
                       : "bg-rose-500/10 text-rose-600 border-rose-500/20"
                   }`}
                 >
-                  S/. {diferenciaMonto.toFixed(2)}
+                  Bs. {diferenciaMonto.toFixed(2)}
                 </span>
               </div>
             </div>

@@ -17,51 +17,46 @@ import {
   MoreVertical,
   Eye,
   RefreshCw,
-  Trash2,
+  XCircle,
   FileText,
-  Building2,
   Calendar,
-  Printer,
-  Download,
-  Stethoscope,
-  User,
+  CreditCard,
   CheckCircle2,
-  Send,
+  Receipt,
+  User,
+  Hash,
 } from "lucide-react";
 import {
-  EstadoAdmision,
-  formatConvenioNombre,
-  formatPacienteDocumento,
-  formatPacienteNombre,
-  type AdmisionResponse,
-} from "../types/admision.types";
-import { downloadAdmisionPdf, openAdmisionPdfInNewTab } from "../api/admision.api";
-import { toast } from "sonner";
-import { AdmisionStatusBadge } from "./admision-status-badge";
+  EstadoVenta,
+  type VentaResponse,
+} from "../types/ventas.types";
+import { VentaStatusBadge } from "./venta-status-badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { usePacientes } from "@/modules/recepcion/pacientes/hooks/use-pacientes";
+import { useMonedas } from "@/modules/parametros/moneda/hooks/use-monedas";
 
-interface AdmisionListProps {
-  admisiones: AdmisionResponse[];
-  isLoading: boolean;
+interface VentaListProps {
+  ventas: VentaResponse[];
+  isLoading?: boolean;
   totalItems: number;
   currentPage: number;
   pageSize: number;
   searchTerm: string;
-  selectedEstadoTab?: EstadoAdmision | "TODOS";
-  onEstadoTabChange?: (tab: EstadoAdmision | "TODOS") => void;
+  selectedEstadoTab?: EstadoVenta | "TODOS";
+  onEstadoTabChange?: (tab: EstadoVenta | "TODOS") => void;
   onSearchChange: (term: string) => void;
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
-  onViewDetail: (admision: AdmisionResponse) => void;
-  onDirectChangeStatus?: (admision: AdmisionResponse, nuevoEstado: EstadoAdmision) => void;
-  onChangeStatus: (admision: AdmisionResponse) => void;
-  onDelete: (id: number) => void;
+  onViewDetail: (venta: VentaResponse) => void;
+  onDirectChangeStatus?: (venta: VentaResponse, nuevoEstado: EstadoVenta) => void;
+  onChangeStatus: (venta: VentaResponse) => void;
+  onAnular: (id: number) => void;
   onRefresh?: () => void;
 }
 
-export function AdmisionList({
-  admisiones,
-  isLoading,
+export function VentaList({
+  ventas,
+  isLoading = false,
   totalItems,
   currentPage,
   pageSize,
@@ -73,18 +68,24 @@ export function AdmisionList({
   onPageSizeChange,
   onViewDetail,
   onDirectChangeStatus,
-}: AdmisionListProps) {
+  onChangeStatus,
+  onAnular,
+}: VentaListProps) {
+  // Auxiliary queries to render patient and currency info
+  const { data: pacientesData } = usePacientes({ pageSize: 100 });
+  const { data: monedasData } = useMonedas({ pageSize: 100 });
+
   const tabs: Array<{
-    key: EstadoAdmision | "TODOS";
+    key: EstadoVenta | "TODOS";
     label: string;
     activeClasses: string;
   }> = [
-      { key: "TODOS", label: "Todas", activeClasses: "bg-primary text-primary-foreground shadow-xs" },
-      { key: EstadoAdmision.Registrada, label: "Registradas", activeClasses: "bg-blue-600 text-white shadow-xs" },
-      { key: EstadoAdmision.Confirmada, label: "Confirmadas", activeClasses: "bg-emerald-600 text-white shadow-xs" },
-      { key: EstadoAdmision.EnviadaVenta, label: "Enviadas a Venta", activeClasses: "bg-purple-600 text-white shadow-xs" },
-      { key: EstadoAdmision.Cancelada, label: "Canceladas", activeClasses: "bg-rose-600 text-white shadow-xs" },
-    ];
+    { key: "TODOS", label: "Todas", activeClasses: "bg-primary text-primary-foreground shadow-xs" },
+    { key: EstadoVenta.Pendiente, label: "Pendientes", activeClasses: "bg-amber-600 text-white shadow-xs" },
+    { key: EstadoVenta.ParcialmentePagada, label: "Parciales", activeClasses: "bg-blue-600 text-white shadow-xs" },
+    { key: EstadoVenta.Pagada, label: "Pagadas", activeClasses: "bg-emerald-600 text-white shadow-xs" },
+    { key: EstadoVenta.Anulada, label: "Anuladas", activeClasses: "bg-rose-600 text-white shadow-xs" },
+  ];
 
   return (
     <div className="space-y-2.5 w-full">
@@ -99,10 +100,11 @@ export function AdmisionList({
                 key={t.key.toString()}
                 type="button"
                 onClick={() => onEstadoTabChange?.(t.key)}
-                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer select-none ${isActive
-                  ? t.activeClasses
-                  : "bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground"
-                  }`}
+                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer select-none ${
+                  isActive
+                    ? t.activeClasses
+                    : "bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
               >
                 <span>{t.label}</span>
               </button>
@@ -115,7 +117,7 @@ export function AdmisionList({
           <SearchInput
             value={searchTerm}
             onChange={onSearchChange}
-            placeholder="Buscar admisión, DNI, paciente..."
+            placeholder="Buscar por N° venta, paciente..."
             className="h-8 text-xs bg-background shadow-2xs"
           />
         </div>
@@ -143,62 +145,65 @@ export function AdmisionList({
               </div>
             ))}
           </div>
-        ) : admisiones.length === 0 ? (
+        ) : ventas.length === 0 ? (
           <div className="py-12 text-center border border-dashed border-border/60 rounded-xl bg-muted/10 space-y-2">
             <FileText className="size-8 text-muted-foreground/40 mx-auto" />
-            <p className="font-bold text-xs text-foreground">No se encontraron admisiones</p>
+            <p className="font-bold text-xs text-foreground">No se encontraron comprobantes de venta</p>
             <p className="text-[11px] max-w-xs mx-auto text-muted-foreground">
-              Intente ajustar los filtros de búsqueda o registre una nueva admisión de paciente.
+              Intente ajustar los filtros de búsqueda o registre una nueva venta/cobro de atención.
             </p>
           </div>
         ) : (
           <div className="space-y-1.5">
-            {admisiones.map((adm) => {
-              const total =
-                adm.totalAdmision ??
-                adm.detalles.reduce((acc, d) => acc + (d.total || 0), 0);
+            {ventas.map((venta) => {
+              const pacienteObj = pacientesData?.items?.find((p) => p.id === venta.pacienteId);
+              const pacienteNombre = pacienteObj?.persona
+                ? `${pacienteObj.persona.nombres} ${pacienteObj.persona.apellidoPaterno} ${pacienteObj.persona.apellidoMaterno || ""}`.trim()
+                : `Paciente #${venta.pacienteId}`;
+              const docPaciente = pacienteObj?.persona?.numeroDocumento
+                ? `(Doc: ${pacienteObj.persona.numeroDocumento})`
+                : "";
 
-              const nombreCompleto = formatPacienteNombre(adm.paciente, adm.pacienteNombre);
-              const documento = formatPacienteDocumento(adm.paciente, adm.pacienteDocumento);
-              const convenio =
-                adm.convenio?.nombre || formatConvenioNombre(adm.convenio, adm.convenioNombre);
+              const monedaObj = monedasData?.items?.find((m) => m.id === venta.monedaId);
+              const monedaSimbolo = monedaObj?.simbolo || "Bs.";
 
-              const numPrestaciones = adm.detalles.length;
-              const primeraPrestacion = adm.detalles[0]?.servicioNombre || "Consulta Médica";
+              const numDetalles = venta.detalles?.length || 0;
 
               return (
                 <div
-                  key={adm.id}
-                  onClick={() => onViewDetail(adm)}
+                  key={venta.id}
+                  onClick={() => onViewDetail(venta)}
                   className="group cursor-pointer p-3 rounded-xl border border-border/50 bg-card hover:border-primary/40 hover:bg-muted/25 transition-all shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative"
                 >
-                  {/* Bloque Izquierdo: Avatar + Paciente + Documento + Convenio + Fecha + Prestaciones */}
+                  {/* Bloque Izquierdo: Avatar + Paciente + Documento + Admisión + Fecha */}
                   <div className="flex items-start gap-3 min-w-0 flex-1">
-                    {/* Badge Icono / Avatar */}
+                    {/* Icono / Avatar */}
                     <div className="size-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0 border border-primary/20 mt-0.5 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                      <User className="size-4.5" />
+                      <Receipt className="size-4.5" />
                     </div>
 
                     <div className="min-w-0 flex-1 space-y-0.5">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-mono font-bold text-xs text-primary bg-primary/10 px-1.5 py-0.2 rounded border border-primary/20">
-                          #{adm.numero}
+                          #{venta.numero}
                         </span>
 
                         <span className="font-bold text-xs text-foreground group-hover:text-primary transition-colors truncate">
-                          {nombreCompleto}
+                          {pacienteNombre}
                         </span>
 
-                        <span className="text-[11px] text-muted-foreground font-mono">
-                          (Doc: {documento})
-                        </span>
+                        {docPaciente && (
+                          <span className="text-[11px] text-muted-foreground font-mono">
+                            {docPaciente}
+                          </span>
+                        )}
                       </div>
 
                       {/* Detalles secundarios en línea compacta */}
                       <div className="flex items-center gap-2.5 text-[11px] text-muted-foreground flex-wrap pt-0.5">
                         <span className="flex items-center gap-1 font-medium text-foreground">
-                          <Building2 className="size-3 text-primary/70 shrink-0" />
-                          {convenio}
+                          <Hash className="size-3 text-primary/70 shrink-0" />
+                          Admisión #{venta.admisionId}
                         </span>
 
                         <span className="text-muted-foreground/40">•</span>
@@ -206,71 +211,56 @@ export function AdmisionList({
                         <span className="flex items-center gap-1">
                           <Calendar className="size-3 text-muted-foreground/70 shrink-0" />
                           <span>
-                            {new Date(adm.fechaHora).toLocaleString("es-ES", {
+                            {new Date(venta.fecha).toLocaleString("es-ES", {
                               dateStyle: "short",
                               timeStyle: "short",
                             })}
                           </span>
                         </span>
 
-                        <span className="text-muted-foreground/40">•</span>
-
-                        <span className="flex items-center gap-1">
-                          <Stethoscope className="size-3 text-blue-600/70 shrink-0" />
-                          <span>
-                            {numPrestaciones === 1
-                              ? primeraPrestacion
-                              : `${primeraPrestacion} +${numPrestaciones - 1}`}
-                          </span>
-                        </span>
+                        {numDetalles > 0 && (
+                          <>
+                            <span className="text-muted-foreground/40">•</span>
+                            <span className="flex items-center gap-1">
+                              <CreditCard className="size-3 text-blue-600/70 shrink-0" />
+                              <span>{numDetalles} ítem{numDetalles !== 1 ? "s" : ""}</span>
+                            </span>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
 
-                  {/* Bloque Derecho: Precio, Estado & Acciones */}
+                  {/* Bloque Derecho: Monto, Estado & Acciones */}
                   <div className="flex items-center justify-between sm:justify-end gap-2.5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/30">
                     <div className="flex flex-col items-start sm:items-end pr-0.5">
                       <span className="text-xs font-extrabold text-foreground font-mono">
-                        Bs. {total.toFixed(2)}
+                        {monedaSimbolo} {venta.total.toFixed(2)}
                       </span>
-                      <span className="text-[10px] text-muted-foreground">
-                        {numPrestaciones} prestación{numPrestaciones !== 1 ? "es" : ""}
-                      </span>
+                      {venta.descuento > 0 && (
+                        <span className="text-[10px] text-emerald-600 font-medium">
+                          Desc: -{monedaSimbolo} {venta.descuento.toFixed(2)}
+                        </span>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-1.5">
-                      <AdmisionStatusBadge estado={adm.estado} />
+                      <VentaStatusBadge estado={venta.estado} />
 
-                      {/* Botón directo de flujo según estado (Sin Modal) */}
-                      {adm.estado === EstadoAdmision.Registrada && (
+                      {/* Botón directo de flujo según estado */}
+                      {venta.estado === EstadoVenta.Pendiente && (
                         <Button
                           type="button"
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
-                            onDirectChangeStatus?.(adm, EstadoAdmision.Confirmada);
+                            onDirectChangeStatus?.(venta, EstadoVenta.Pagada);
                           }}
                           className="h-7 px-2.5 text-[11px] font-semibold gap-1 bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs cursor-pointer transition-all hover:scale-[1.02]"
-                          title="Confirmar admisión directamente"
+                          title="Marcar venta como Pagada"
                         >
                           <CheckCircle2 className="size-3" />
-                          <span>Confirmar</span>
-                        </Button>
-                      )}
-
-                      {adm.estado === EstadoAdmision.Confirmada && (
-                        <Button
-                          type="button"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDirectChangeStatus?.(adm, EstadoAdmision.EnviadaVenta);
-                          }}
-                          className="h-7 px-2.5 text-[11px] font-semibold gap-1 bg-purple-600 hover:bg-purple-700 text-white shadow-2xs cursor-pointer transition-all hover:scale-[1.02]"
-                          title="Enviar admisión a Venta/Facturación"
-                        >
-                          <Send className="size-3" />
-                          <span>Enviar a Venta</span>
+                          <span>Marcar Pagada</span>
                         </Button>
                       )}
 
@@ -287,80 +277,49 @@ export function AdmisionList({
                           <DropdownMenuItem
                             onClick={(e) => {
                               e.stopPropagation();
-                              onViewDetail(adm);
+                              onViewDetail(venta);
                             }}
                             className="gap-2 cursor-pointer"
                           >
                             <Eye className="size-3.5 text-primary" />
-                            Ver Ficha de Admisión
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={async (e) => {
-                              e.stopPropagation();
-                              try {
-                                await openAdmisionPdfInNewTab(adm.id);
-                              } catch {
-                                toast.error("Error al generar el PDF de admisión.");
-                              }
-                            }}
-                            className="gap-2 cursor-pointer"
-                          >
-                            <Printer className="size-3.5 text-blue-600" />
-                            Ver Ticket PDF
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={async (e) => {
-                              e.stopPropagation();
-                              try {
-                                await downloadAdmisionPdf(adm.id, adm.numero);
-                                toast.success("PDF descargado correctamente.");
-                              } catch {
-                                toast.error("Error al descargar el PDF.");
-                              }
-                            }}
-                            className="gap-2 cursor-pointer"
-                          >
-                            <Download className="size-3.5 text-emerald-600" />
-                            Descargar PDF
+                            Ver Ficha Detalle
                           </DropdownMenuItem>
 
-                          {/* Acciones de Estado directas en menú */}
-                          {adm.estado !== EstadoAdmision.Cancelada && (
+                          {venta.estado !== EstadoVenta.Anulada && (
                             <>
                               <DropdownMenuSeparator />
-                              {adm.estado === EstadoAdmision.Registrada && (
+                              {venta.estado === EstadoVenta.Pendiente && (
                                 <DropdownMenuItem
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    onDirectChangeStatus?.(adm, EstadoAdmision.Confirmada);
+                                    onDirectChangeStatus?.(venta, EstadoVenta.Pagada);
                                   }}
                                   className="gap-2 text-emerald-600 dark:text-emerald-400 cursor-pointer font-medium"
                                 >
                                   <CheckCircle2 className="size-3.5" />
-                                  Confirmar Admisión
-                                </DropdownMenuItem>
-                              )}
-                              {adm.estado === EstadoAdmision.Confirmada && (
-                                <DropdownMenuItem
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onDirectChangeStatus?.(adm, EstadoAdmision.EnviadaVenta);
-                                  }}
-                                  className="gap-2 text-purple-600 dark:text-purple-400 cursor-pointer font-medium"
-                                >
-                                  <Send className="size-3.5" />
-                                  Enviar a Venta
+                                  Registrar Pago Total
                                 </DropdownMenuItem>
                               )}
                               <DropdownMenuItem
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  onDirectChangeStatus?.(adm, EstadoAdmision.Cancelada);
+                                  onChangeStatus(venta);
+                                }}
+                                className="gap-2 cursor-pointer"
+                              >
+                                <RefreshCw className="size-3.5 text-amber-500" />
+                                Cambiar Estado
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onAnular(venta.id);
                                 }}
                                 className="gap-2 text-rose-600 dark:text-rose-400 focus:text-rose-600 cursor-pointer"
                               >
-                                <Trash2 className="size-3.5" />
-                                Cancelar Admisión
+                                <XCircle className="size-3.5" />
+                                Anular Comprobante
                               </DropdownMenuItem>
                             </>
                           )}

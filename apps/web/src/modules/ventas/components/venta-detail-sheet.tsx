@@ -66,7 +66,7 @@ export function VentaDetailSheet({
     : `Paciente #${venta.pacienteId}`;
 
   const monedaObj = monedasData?.items?.find((m) => m.id === venta.monedaId);
-  const monedaSimbolo = monedaObj?.simbolo || "S/.";
+  const monedaSimbolo = monedaObj?.simbolo || "Bs.";
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
