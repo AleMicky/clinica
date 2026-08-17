@@ -29,24 +29,31 @@ export const medicoEspecialidadSchema = z.object({
 
 export type MedicoEspecialidadFormValues = z.infer<typeof medicoEspecialidadSchema>;
 
-export const medicoServicioAcuerdoSchema = z.object({
-  servicioId: z
-    .number({ message: "Debe seleccionar un servicio." })
-    .int()
-    .gt(0, "Debe seleccionar un servicio."),
-  porcentajeMedico: z
-    .number({ message: "Debe ingresar un porcentaje válido" })
-    .min(0, "Mínimo 0%")
-    .max(100, "Máximo 100%"),
-  fechaInicio: z
-    .string()
-    .trim()
-    .min(1, "La fecha de inicio es requerida"),
-  fechaFin: z
-    .string()
-    .trim()
-    .optional()
-    .or(z.literal("")),
-});
+export const medicoServicioAcuerdoSchema = z
+  .object({
+    servicioId: z
+      .number({ message: "Debe seleccionar un servicio." })
+      .int()
+      .gt(0, "Debe seleccionar un servicio."),
+    importeServicio: z
+      .number({ message: "Debe ingresar el importe del servicio." })
+      .min(0, "El importe del servicio debe ser mayor o igual a 0."),
+    importeMedico: z
+      .number({ message: "Debe ingresar el importe del médico." })
+      .min(0, "El importe del médico debe ser mayor o igual a 0."),
+    fechaInicio: z
+      .string()
+      .trim()
+      .min(1, "La fecha de inicio es requerida."),
+    fechaFin: z
+      .string()
+      .trim()
+      .optional()
+      .or(z.literal("")),
+  })
+  .refine((data) => data.importeMedico <= data.importeServicio, {
+    message: "El importe del médico no puede superar el importe total del servicio.",
+    path: ["importeMedico"],
+  });
 
 export type MedicoServicioAcuerdoFormValues = z.infer<typeof medicoServicioAcuerdoSchema>;

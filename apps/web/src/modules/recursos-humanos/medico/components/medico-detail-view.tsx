@@ -19,6 +19,10 @@ import {
   CreditCard,
   Edit,
   FolderTree,
+  DollarSign,
+  Building2,
+  User,
+  Calculator,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,6 +34,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Autocomplete, type AutocompleteOption } from "@/components/ui/autocomplete";
 import { StatusBadge } from "@/components/shared";
+import { formatCurrency } from "@/lib/utils";
 import { useEspecialidades } from "@/modules/recursos-humanos/especialidad/hooks/use-especialidades";
 import { useCategoriasServicio } from "@/modules/servicios/categoria-servicio";
 import { useServicios } from "@/modules/servicios/servicio";
@@ -184,13 +189,48 @@ export function MedicoDetailView({ medicoId }: MedicoDetailViewProps) {
     resolver: zodResolver(medicoServicioAcuerdoSchema),
     defaultValues: {
       servicioId: 0,
-      porcentajeMedico: 50,
+      importeServicio: 0,
+      importeMedico: 0,
       fechaInicio: getTodayISO(),
       fechaFin: "",
     },
   });
 
   const selectedServicioId = watchAcuerdo("servicioId");
+  const watchImporteServicio = watchAcuerdo("importeServicio") || 0;
+  const watchImporteMedico = watchAcuerdo("importeMedico") || 0;
+  const calculatedClinica = Math.max(0, watchImporteServicio - watchImporteMedico);
+  const calculatedMedicoPct =
+    watchImporteServicio > 0
+      ? Math.round((watchImporteMedico / watchImporteServicio) * 100)
+      : 0;
+  const calculatedClinicaPct =
+    watchImporteServicio > 0
+      ? Math.round((calculatedClinica / watchImporteServicio) * 100)
+      : 0;
+
+  const handleSelectServicioAcuerdo = (val: string) => {
+    const sId = Number(val);
+    setValueAcuerdo("servicioId", sId, { shouldValidate: true });
+
+    const srv = servicios.find((s) => s.id === sId);
+    if (srv) {
+      const precioBase = Number(srv.precio ?? srv.Precio ?? 0);
+      if (precioBase > 0) {
+        setValueAcuerdo("importeServicio", precioBase, { shouldValidate: true });
+        setValueAcuerdo("importeMedico", Math.round(precioBase * 0.5 * 100) / 100, {
+          shouldValidate: true,
+        });
+      }
+    }
+  };
+
+  const applyPercentageShortcut = (pct: number) => {
+    if (watchImporteServicio > 0) {
+      const valor = Math.round(watchImporteServicio * (pct / 100) * 100) / 100;
+      setValueAcuerdo("importeMedico", valor, { shouldValidate: true });
+    }
+  };
 
   // Submit Handlers
   const onSubmitAddEspecialidad = async (values: MedicoEspecialidadFormValues) => {
@@ -251,14 +291,16 @@ export function MedicoDetailView({ medicoId }: MedicoDetailViewProps) {
         medicoId: medico.id,
         request: {
           servicioId: values.servicioId,
-          porcentajeMedico: values.porcentajeMedico,
+          importeServicio: values.importeServicio,
+          importeMedico: values.importeMedico,
           fechaInicio: values.fechaInicio,
           fechaFin: values.fechaFin?.trim() || null,
         },
       });
       resetAcuerdo({
         servicioId: 0,
-        porcentajeMedico: 50,
+        importeServicio: 0,
+        importeMedico: 0,
         fechaInicio: getTodayISO(),
         fechaFin: "",
       });
@@ -581,10 +623,10 @@ export function MedicoDetailView({ medicoId }: MedicoDetailViewProps) {
               <CardHeader className="p-4 pb-3 border-b bg-muted/20">
                 <CardTitle className="text-sm font-bold flex items-center gap-2">
                   <Plus className="size-4 text-emerald-600" />
-                  <span>Registrar Acuerdo de Honorarios</span>
+                  <span>Registrar Acuerdo de Servicio</span>
                 </CardTitle>
                 <CardDescription className="text-xs">
-                  Filtre por catálogo o categoría de servicio y establezca el porcentaje de cobro.
+                  Configure los importes y distribución de honorarios por servicio clínico.
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-4">
@@ -618,9 +660,7 @@ export function MedicoDetailView({ medicoId }: MedicoDetailViewProps) {
                     <Autocomplete
                       id="servicioId"
                       value={selectedServicioId ? String(selectedServicioId) : ""}
-                      onValueChange={(val) =>
-                        setValueAcuerdo("servicioId", Number(val), { shouldValidate: true })
-                      }
+                      onValueChange={handleSelectServicioAcuerdo}
                       options={servicioOptions}
                       placeholder={
                         selectedCategoriaId === 0
@@ -640,34 +680,111 @@ export function MedicoDetailView({ medicoId }: MedicoDetailViewProps) {
                     )}
                   </div>
 
-                  {/* Porcentaje % */}
-                  <div className="space-y-1.5">
-                    <Label htmlFor="porcentajeMedico" className="text-xs">
-                      % Honorario del Médico <span className="text-destructive">*</span>
-                    </Label>
-                    <div className="relative">
-                      <Input
-                        id="porcentajeMedico"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        max="100"
-                        className="h-9 pr-7"
-                        {...registerAcuerdo("porcentajeMedico", { valueAsNumber: true })}
-                      />
-                      <Percent className="size-3.5 absolute right-2.5 top-2.5 text-muted-foreground" />
+                  {/* Importes: Servicio & Médico */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="importeServicio" className="text-xs font-semibold">
+                        Importe Servicio <span className="text-destructive">*</span>
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          id="importeServicio"
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          placeholder="0.00"
+                          className="h-9 pl-7 text-xs font-mono font-medium"
+                          {...registerAcuerdo("importeServicio", { valueAsNumber: true })}
+                        />
+                        <DollarSign className="size-3.5 absolute left-2 top-2.5 text-muted-foreground" />
+                      </div>
+                      {errorsAcuerdo.importeServicio && (
+                        <p className="text-xs text-destructive">
+                          {errorsAcuerdo.importeServicio.message}
+                        </p>
+                      )}
                     </div>
-                    {errorsAcuerdo.porcentajeMedico && (
-                      <p className="text-xs text-destructive">
-                        {errorsAcuerdo.porcentajeMedico.message}
-                      </p>
-                    )}
+
+                    <div className="space-y-1.5">
+                      <Label htmlFor="importeMedico" className="text-xs font-semibold">
+                        Importe Médico <span className="text-destructive">*</span>
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          id="importeMedico"
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          placeholder="0.00"
+                          className="h-9 pl-7 text-xs font-mono font-medium"
+                          {...registerAcuerdo("importeMedico", { valueAsNumber: true })}
+                        />
+                        <DollarSign className="size-3.5 absolute left-2 top-2.5 text-emerald-600" />
+                      </div>
+                      {errorsAcuerdo.importeMedico && (
+                        <p className="text-xs text-destructive">
+                          {errorsAcuerdo.importeMedico.message}
+                        </p>
+                      )}
+                    </div>
                   </div>
+
+                  {/* Quick % Helpers */}
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Calculator className="size-3" /> Asignación rápida % Médico:
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      {[40, 50, 60, 70, 80, 100].map((pct) => (
+                        <Button
+                          key={pct}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-6 px-2 text-[11px] cursor-pointer flex-1"
+                          onClick={() => applyPercentageShortcut(pct)}
+                          disabled={watchImporteServicio <= 0}
+                        >
+                          {pct}%
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Live Distribution Summary Card */}
+                  {watchImporteServicio > 0 && (
+                    <div className="rounded-lg border bg-muted/40 p-3 space-y-2 text-xs">
+                      <div className="flex items-center justify-between font-semibold border-b pb-1.5">
+                        <span>Desglose de Acuerdo</span>
+                        <span className="font-mono text-foreground font-bold">
+                          {formatCurrency(watchImporteServicio)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-muted-foreground">
+                        <span className="flex items-center gap-1 text-emerald-600 font-medium">
+                          <User className="size-3.5" /> Médico ({calculatedMedicoPct}%)
+                        </span>
+                        <span className="font-mono font-semibold text-emerald-600">
+                          {formatCurrency(watchImporteMedico)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-muted-foreground">
+                        <span className="flex items-center gap-1 text-sky-600 font-medium">
+                          <Building2 className="size-3.5" /> Clínica ({calculatedClinicaPct}%)
+                        </span>
+                        <span className="font-mono font-semibold text-sky-600">
+                          {formatCurrency(calculatedClinica)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Fechas */}
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <Label htmlFor="fechaInicio" className="text-xs">
+                      <Label htmlFor="fechaInicio" className="text-xs font-semibold">
                         Fecha Inicio <span className="text-destructive">*</span>
                       </Label>
                       <Input
@@ -723,7 +840,7 @@ export function MedicoDetailView({ medicoId }: MedicoDetailViewProps) {
                     <span>Acuerdos Registrados</span>
                   </CardTitle>
                   <CardDescription className="text-xs">
-                    Listado de porcentajes de honorarios acordados por servicio.
+                    Distribución económica y honorarios vigentes por servicio.
                   </CardDescription>
                 </div>
                 <Badge variant="secondary" className="font-bold text-xs">
@@ -738,50 +855,94 @@ export function MedicoDetailView({ medicoId }: MedicoDetailViewProps) {
                   </div>
                 ) : acuerdos.length === 0 ? (
                   <div className="text-center py-12 border border-dashed rounded-xl text-sm text-muted-foreground">
-                    No hay acuerdos de porcentaje registrados para este médico.
+                    No hay acuerdos de servicio registrados para este médico.
                   </div>
                 ) : (
                   <div className="divide-y border rounded-xl overflow-hidden bg-card">
-                    {acuerdos.map((item) => (
-                      <div
-                        key={item.id}
-                        className="flex items-center justify-between p-3.5 hover:bg-muted/10 transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold text-sm flex items-center gap-0.5 shrink-0 border border-emerald-500/20">
-                            {item.porcentajeMedico}%
+                    {acuerdos.map((item) => {
+                      const medicoPct =
+                        item.importeServicio > 0
+                          ? Math.round((item.importeMedico / item.importeServicio) * 100)
+                          : 0;
+
+                      return (
+                        <div
+                          key={item.id}
+                          className="p-3.5 hover:bg-muted/10 transition-colors space-y-2.5"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="text-sm font-bold text-foreground">
+                                {item.servicio?.nombre || `Servicio #${item.servicioId}`}
+                              </p>
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5 flex-wrap">
+                                <span className="font-mono">
+                                  Código: {item.servicio?.codigo || "N/A"}
+                                </span>
+                                <span>•</span>
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="size-3" />
+                                  {item.fechaInicio}
+                                  {item.fechaFin ? ` al ${item.fechaFin}` : " (Vigente)"}
+                                </span>
+                              </div>
+                            </div>
+
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="size-8 text-muted-foreground hover:text-destructive cursor-pointer rounded-md shrink-0"
+                              onClick={() => handleDeleteAcuerdo(item.id)}
+                              disabled={deleteAcuerdoMutation.isPending}
+                              title="Desactivar acuerdo"
+                            >
+                              <Trash2 className="size-4" />
+                            </Button>
                           </div>
-                          <div>
-                            <p className="text-sm font-bold text-foreground">
-                              {item.servicio?.nombre || `Servicio #${item.servicioId}`}
-                            </p>
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                              <span className="font-mono">
-                                Código: {item.servicio?.codigo || "N/A"}
+
+                          {/* Amounts Breakdown Cards */}
+                          <div className="grid grid-cols-3 gap-2 text-xs">
+                            <div className="bg-muted/40 rounded-md p-2 border border-border/50">
+                              <span className="text-[11px] text-muted-foreground block font-medium">
+                                Importe Total
                               </span>
-                              <span>•</span>
-                              <span className="flex items-center gap-1">
-                                <Calendar className="size-3" />
-                                {item.fechaInicio}
-                                {item.fechaFin ? ` al ${item.fechaFin}` : " (Vigente)"}
+                              <span className="font-mono font-bold text-foreground">
+                                {formatCurrency(item.importeServicio)}
+                              </span>
+                            </div>
+
+                            <div className="bg-emerald-500/10 rounded-md p-2 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[11px] font-medium block">
+                                  Médico
+                                </span>
+                                <span className="text-[10px] font-bold px-1 rounded bg-emerald-500/20">
+                                  {medicoPct}%
+                                </span>
+                              </div>
+                              <span className="font-mono font-bold">
+                                {formatCurrency(item.importeMedico)}
+                              </span>
+                            </div>
+
+                            <div className="bg-sky-500/10 rounded-md p-2 border border-sky-500/20 text-sky-700 dark:text-sky-300">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[11px] font-medium block">
+                                  Clínica
+                                </span>
+                                <span className="text-[10px] font-bold px-1 rounded bg-sky-500/20">
+                                  {100 - medicoPct}%
+                                </span>
+                              </div>
+                              <span className="font-mono font-bold">
+                                {formatCurrency(item.importeClinica)}
                               </span>
                             </div>
                           </div>
                         </div>
-
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="size-8 text-muted-foreground hover:text-destructive cursor-pointer rounded-md"
-                          onClick={() => handleDeleteAcuerdo(item.id)}
-                          disabled={deleteAcuerdoMutation.isPending}
-                          title="Desactivar acuerdo"
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>

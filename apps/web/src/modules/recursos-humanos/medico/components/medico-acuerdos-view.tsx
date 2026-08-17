@@ -8,7 +8,6 @@ import {
   ArrowLeft,
   Loader2,
   Plus,
-  Percent,
   Trash2,
   Handshake,
   Calendar,
@@ -16,6 +15,10 @@ import {
   FileBadge,
   CreditCard,
   FolderTree,
+  DollarSign,
+  Building2,
+  User,
+  Calculator,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,6 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Autocomplete, type AutocompleteOption } from "@/components/ui/autocomplete";
 import { StatusBadge } from "@/components/shared";
+import { formatCurrency } from "@/lib/utils";
 import { useCategoriasServicio } from "@/modules/servicios/categoria-servicio";
 import { useServicios } from "@/modules/servicios/servicio";
 import {
@@ -102,7 +106,9 @@ export function MedicoAcuerdosView({ medicoId }: MedicoAcuerdosViewProps) {
     return servicios.map((srv) => ({
       value: String(srv.id),
       label: srv.nombre,
-      description: srv.codigo ? `Cód: ${srv.codigo}` : undefined,
+      description: srv.codigo
+        ? `Cód: ${srv.codigo}${srv.precio || srv.Precio ? ` • ${formatCurrency(Number(srv.precio ?? srv.Precio))}` : ""}`
+        : undefined,
     }));
   }, [servicios]);
 
@@ -117,13 +123,49 @@ export function MedicoAcuerdosView({ medicoId }: MedicoAcuerdosViewProps) {
     resolver: zodResolver(medicoServicioAcuerdoSchema),
     defaultValues: {
       servicioId: 0,
-      porcentajeMedico: 50,
+      importeServicio: 0,
+      importeMedico: 0,
       fechaInicio: getTodayISO(),
       fechaFin: "",
     },
   });
 
   const selectedServicioId = watch("servicioId");
+  const watchImporteServicio = watch("importeServicio") || 0;
+  const watchImporteMedico = watch("importeMedico") || 0;
+  const calculatedClinica = Math.max(0, watchImporteServicio - watchImporteMedico);
+  const calculatedMedicoPct =
+    watchImporteServicio > 0
+      ? Math.round((watchImporteMedico / watchImporteServicio) * 100)
+      : 0;
+  const calculatedClinicaPct =
+    watchImporteServicio > 0
+      ? Math.round((calculatedClinica / watchImporteServicio) * 100)
+      : 0;
+
+  const handleSelectServicio = (val: string) => {
+    const sId = Number(val);
+    setValue("servicioId", sId, { shouldValidate: true });
+
+    const srv = servicios.find((s) => s.id === sId);
+    if (srv) {
+      const precioBase = Number(srv.precio ?? srv.Precio ?? 0);
+      if (precioBase > 0) {
+        setValue("importeServicio", precioBase, { shouldValidate: true });
+        // Set default 50% for doctor
+        setValue("importeMedico", Math.round(precioBase * 0.5 * 100) / 100, {
+          shouldValidate: true,
+        });
+      }
+    }
+  };
+
+  const applyPercentageShortcut = (pct: number) => {
+    if (watchImporteServicio > 0) {
+      const valor = Math.round(watchImporteServicio * (pct / 100) * 100) / 100;
+      setValue("importeMedico", valor, { shouldValidate: true });
+    }
+  };
 
   const onSubmitAdd = async (values: MedicoServicioAcuerdoFormValues) => {
     if (!medico) return;
@@ -133,14 +175,16 @@ export function MedicoAcuerdosView({ medicoId }: MedicoAcuerdosViewProps) {
         medicoId: medico.id,
         request: {
           servicioId: values.servicioId,
-          porcentajeMedico: values.porcentajeMedico,
+          importeServicio: values.importeServicio,
+          importeMedico: values.importeMedico,
           fechaInicio: values.fechaInicio,
           fechaFin: values.fechaFin?.trim() || null,
         },
       });
       reset({
         servicioId: 0,
-        porcentajeMedico: 50,
+        importeServicio: 0,
+        importeMedico: 0,
         fechaInicio: getTodayISO(),
         fechaFin: "",
       });
@@ -206,7 +250,7 @@ export function MedicoAcuerdosView({ medicoId }: MedicoAcuerdosViewProps) {
     .toUpperCase() || "MD";
 
   return (
-    <div className="p-4 sm:p-6 max-w-5xl mx-auto w-full space-y-5">
+    <div className="p-4 sm:p-6 max-w-6xl mx-auto w-full space-y-5">
       {/* Navigation Top Bar */}
       <div className="flex items-center justify-between">
         <Button
@@ -260,7 +304,7 @@ export function MedicoAcuerdosView({ medicoId }: MedicoAcuerdosViewProps) {
 
             <Badge variant="outline" className="self-start sm:self-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-xs font-semibold">
               <Handshake className="size-4" />
-              Acuerdos de Honorarios
+              Acuerdos Económicos
             </Badge>
           </div>
         </CardContent>
@@ -273,10 +317,10 @@ export function MedicoAcuerdosView({ medicoId }: MedicoAcuerdosViewProps) {
           <CardHeader className="p-4 pb-3 border-b bg-muted/20">
             <CardTitle className="text-sm font-bold flex items-center gap-2">
               <Plus className="size-4 text-emerald-600" />
-              <span>Registrar Nuevo Acuerdo</span>
+              <span>Registrar Acuerdo de Servicio</span>
             </CardTitle>
             <CardDescription className="text-xs">
-              Filtre por catálogo o categoría de servicio y configure el porcentaje de cobro.
+              Configure los importes y distribución de honorarios por servicio clínico.
             </CardDescription>
           </CardHeader>
           <CardContent className="p-4">
@@ -310,9 +354,7 @@ export function MedicoAcuerdosView({ medicoId }: MedicoAcuerdosViewProps) {
                 <Autocomplete
                   id="servicioId"
                   value={selectedServicioId ? String(selectedServicioId) : ""}
-                  onValueChange={(val) =>
-                    setValue("servicioId", Number(val), { shouldValidate: true })
-                  }
+                  onValueChange={handleSelectServicio}
                   options={servicioOptions}
                   placeholder={
                     selectedCategoriaId === 0
@@ -332,34 +374,111 @@ export function MedicoAcuerdosView({ medicoId }: MedicoAcuerdosViewProps) {
                 )}
               </div>
 
-              {/* Porcentaje % */}
-              <div className="space-y-1.5">
-                <Label htmlFor="porcentajeMedico" className="text-xs">
-                  % Honorario del Médico <span className="text-destructive">*</span>
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="porcentajeMedico"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    max="100"
-                    className="h-9 pr-6"
-                    {...register("porcentajeMedico", { valueAsNumber: true })}
-                  />
-                  <Percent className="size-3.5 absolute right-2 top-2.5 text-muted-foreground" />
+              {/* Importes: Servicio & Médico */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="importeServicio" className="text-xs font-semibold">
+                    Importe Servicio <span className="text-destructive">*</span>
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="importeServicio"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00"
+                      className="h-9 pl-7 text-xs font-mono font-medium"
+                      {...register("importeServicio", { valueAsNumber: true })}
+                    />
+                    <DollarSign className="size-3.5 absolute left-2 top-2.5 text-muted-foreground" />
+                  </div>
+                  {errors.importeServicio && (
+                    <p className="text-xs text-destructive">
+                      {errors.importeServicio.message}
+                    </p>
+                  )}
                 </div>
-                {errors.porcentajeMedico && (
-                  <p className="text-xs text-destructive">
-                    {errors.porcentajeMedico.message}
-                  </p>
-                )}
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="importeMedico" className="text-xs font-semibold">
+                    Importe Médico <span className="text-destructive">*</span>
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="importeMedico"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00"
+                      className="h-9 pl-7 text-xs font-mono font-medium"
+                      {...register("importeMedico", { valueAsNumber: true })}
+                    />
+                    <DollarSign className="size-3.5 absolute left-2 top-2.5 text-emerald-600" />
+                  </div>
+                  {errors.importeMedico && (
+                    <p className="text-xs text-destructive">
+                      {errors.importeMedico.message}
+                    </p>
+                  )}
+                </div>
               </div>
+
+              {/* Quick % Helpers */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Calculator className="size-3" /> Asignación rápida % Médico:
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  {[40, 50, 60, 70, 80, 100].map((pct) => (
+                    <Button
+                      key={pct}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-6 px-2 text-[11px] cursor-pointer flex-1"
+                      onClick={() => applyPercentageShortcut(pct)}
+                      disabled={watchImporteServicio <= 0}
+                    >
+                      {pct}%
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Live Distribution Summary Card */}
+              {watchImporteServicio > 0 && (
+                <div className="rounded-lg border bg-muted/40 p-3 space-y-2 text-xs">
+                  <div className="flex items-center justify-between font-semibold border-b pb-1.5">
+                    <span>Desglose de Acuerdo</span>
+                    <span className="font-mono text-foreground font-bold">
+                      {formatCurrency(watchImporteServicio)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-muted-foreground">
+                    <span className="flex items-center gap-1 text-emerald-600 font-medium">
+                      <User className="size-3.5" /> Médico ({calculatedMedicoPct}%)
+                    </span>
+                    <span className="font-mono font-semibold text-emerald-600">
+                      {formatCurrency(watchImporteMedico)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-muted-foreground">
+                    <span className="flex items-center gap-1 text-sky-600 font-medium">
+                      <Building2 className="size-3.5" /> Clínica ({calculatedClinicaPct}%)
+                    </span>
+                    <span className="font-mono font-semibold text-sky-600">
+                      {formatCurrency(calculatedClinica)}
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {/* Fechas */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="fechaInicio" className="text-xs">
+                  <Label htmlFor="fechaInicio" className="text-xs font-semibold">
                     Fecha Inicio <span className="text-destructive">*</span>
                   </Label>
                   <Input
@@ -415,7 +534,7 @@ export function MedicoAcuerdosView({ medicoId }: MedicoAcuerdosViewProps) {
                 <span>Acuerdos Registrados</span>
               </CardTitle>
               <CardDescription className="text-xs">
-                Porcentajes de honorarios por servicios vigentes.
+                Distribución económica y honorarios vigentes por servicio.
               </CardDescription>
             </div>
             <Badge variant="secondary" className="font-bold text-xs">
@@ -430,49 +549,94 @@ export function MedicoAcuerdosView({ medicoId }: MedicoAcuerdosViewProps) {
               </div>
             ) : acuerdos.length === 0 ? (
               <div className="text-center py-8 border border-dashed rounded-lg text-sm text-muted-foreground">
-                No hay acuerdos de porcentaje registrados para este médico.
+                No hay acuerdos de servicio registrados para este médico.
               </div>
             ) : (
               <div className="divide-y border rounded-lg">
-                {acuerdos.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between p-3.5 hover:bg-muted/10 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold text-xs flex items-center gap-0.5 shrink-0 border border-emerald-500/20">
-                        {item.porcentajeMedico}%
+                {acuerdos.map((item) => {
+                  const medicoPct =
+                    item.importeServicio > 0
+                      ? Math.round((item.importeMedico / item.importeServicio) * 100)
+                      : 0;
+
+                  return (
+                    <div
+                      key={item.id}
+                      className="p-3.5 hover:bg-muted/10 transition-colors space-y-2.5"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">
+                            {item.servicio?.nombre || `Servicio #${item.servicioId}`}
+                          </p>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5 flex-wrap">
+                            <span className="font-mono">
+                              Código: {item.servicio?.codigo || "N/A"}
+                            </span>
+                            <span>•</span>
+                            <span className="flex items-center gap-1">
+                              <Calendar className="size-3" />
+                              {item.fechaInicio}
+                              {item.fechaFin ? ` al ${item.fechaFin}` : " (Vigente)"}
+                            </span>
+                          </div>
+                        </div>
+
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="size-8 text-muted-foreground hover:text-destructive cursor-pointer shrink-0"
+                          onClick={() => handleDelete(item.id)}
+                          disabled={deleteMutation.isPending}
+                          title="Eliminar acuerdo"
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
                       </div>
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">
-                          {item.servicio?.nombre || `Servicio #${item.servicioId}`}
-                        </p>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                          <span className="font-mono">
-                            Código: {item.servicio?.codigo || "N/A"}
+
+                      {/* Amounts Breakdown Cards */}
+                      <div className="grid grid-cols-3 gap-2 text-xs">
+                        <div className="bg-muted/40 rounded-md p-2 border border-border/50">
+                          <span className="text-[11px] text-muted-foreground block font-medium">
+                            Importe Total
                           </span>
-                          <span>•</span>
-                          <span className="flex items-center gap-1">
-                            <Calendar className="size-3" />
-                            {item.fechaInicio}
-                            {item.fechaFin ? ` al ${item.fechaFin}` : " (Vigente)"}
+                          <span className="font-mono font-bold text-foreground">
+                            {formatCurrency(item.importeServicio)}
+                          </span>
+                        </div>
+
+                        <div className="bg-emerald-500/10 rounded-md p-2 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-medium block">
+                              Médico
+                            </span>
+                            <span className="text-[10px] font-bold px-1 rounded bg-emerald-500/20">
+                              {medicoPct}%
+                            </span>
+                          </div>
+                          <span className="font-mono font-bold">
+                            {formatCurrency(item.importeMedico)}
+                          </span>
+                        </div>
+
+                        <div className="bg-sky-500/10 rounded-md p-2 border border-sky-500/20 text-sky-700 dark:text-sky-300">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-medium block">
+                              Clínica
+                            </span>
+                            <span className="text-[10px] font-bold px-1 rounded bg-sky-500/20">
+                              {100 - medicoPct}%
+                            </span>
+                          </div>
+                          <span className="font-mono font-bold">
+                            {formatCurrency(item.importeClinica)}
                           </span>
                         </div>
                       </div>
                     </div>
-
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="size-8 text-muted-foreground hover:text-destructive cursor-pointer"
-                      onClick={() => handleDelete(item.id)}
-                      disabled={deleteMutation.isPending}
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </CardContent>

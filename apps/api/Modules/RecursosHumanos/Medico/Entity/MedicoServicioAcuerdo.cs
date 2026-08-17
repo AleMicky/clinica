@@ -11,8 +11,13 @@ public class MedicoServicioAcuerdo : AuditableEntity
     public int ServicioId { get; set; }
     public Servicio Servicio { get; set; } = null!;
 
-    public decimal PorcentajeMedico { get; set; }
+    public decimal ImporteServicio { get; set; }
+
+    public decimal ImporteClinica { get; set; }
+
+    public decimal ImporteMedico { get; set; }
 
     public DateOnly FechaInicio { get; set; }
+
     public DateOnly? FechaFin { get; set; }
 }

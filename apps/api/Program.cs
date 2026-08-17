@@ -176,5 +176,6 @@ await BancoSeed.SeedAsync(app.Services);
 await RecursosHumanosSeed.SeedAsync(app.Services);
 await ServiciosSeed.SeedAsync(app.Services);
 await TarifarioSeed.SeedAsync(app.Services);
+await EspecialidadSeed.SeedAsync(app.Services);
 
 app.Run();

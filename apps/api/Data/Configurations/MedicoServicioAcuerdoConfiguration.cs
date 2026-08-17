@@ -13,8 +13,16 @@ public sealed class MedicoServicioAcuerdoConfiguration
     {
         builder.ToTable("MedicosServiciosAcuerdos");
 
-        builder.Property(x => x.PorcentajeMedico)
-            .HasPrecision(5, 2)
+        builder.Property(x => x.ImporteServicio)
+            .HasPrecision(18, 2)
+            .IsRequired();
+
+        builder.Property(x => x.ImporteClinica)
+            .HasPrecision(18, 2)
+            .IsRequired();
+
+        builder.Property(x => x.ImporteMedico)
+            .HasPrecision(18, 2)
             .IsRequired();
 
         builder.Property(x => x.FechaInicio)
@@ -26,7 +34,7 @@ public sealed class MedicoServicioAcuerdoConfiguration
         {
             x.MedicoId,
             x.ServicioId
-        }).IsUnique();
+        });
 
         builder.HasOne(x => x.Medico)
             .WithMany()

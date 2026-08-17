@@ -6,8 +6,10 @@ using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
 using MedicoServicioAcuerdoEntity =
     Clinica.Api.Modules.RecursosHumanos.Medico.Entity.MedicoServicioAcuerdo;
-using MedicoEntity = Clinica.Api.Modules.RecursosHumanos.Medico.Entity.Medico;
-using ServicioEntity = Clinica.Api.Modules.Servicios.Servicios.Entity.Servicio;
+using MedicoEntity =
+    Clinica.Api.Modules.RecursosHumanos.Medico.Entity.Medico;
+using ServicioEntity =
+    Clinica.Api.Modules.Servicios.Servicios.Entity.Servicio;
 
 namespace Clinica.Api.Modules.RecursosHumanos.Medico.Services;
 
@@ -20,11 +22,16 @@ public sealed class MedicoServicioAcuerdoService(AppDbContext dbContext)
         string? search,
         CancellationToken cancellationToken = default)
     {
-        await EnsureMedicoExistsAsync(empleadoId, medicoId, cancellationToken);
+        await EnsureMedicoExistsAsync(
+            empleadoId,
+            medicoId,
+            cancellationToken);
 
         var query = BuildQuery()
             .AsNoTracking()
-            .Where(x => x.MedicoId == medicoId && x.Activo);
+            .Where(x =>
+                x.MedicoId == medicoId &&
+                x.Activo);
 
         var normalizedSearch = string.IsNullOrWhiteSpace(search)
             ? null
@@ -39,10 +46,13 @@ public sealed class MedicoServicioAcuerdoService(AppDbContext dbContext)
 
         var totalItems = await query.CountAsync(cancellationToken);
 
-        var offset = (pagination.ValidPage - 1) * pagination.ValidPageSize;
+        var offset =
+            (pagination.ValidPage - 1) *
+            pagination.ValidPageSize;
 
         var entities = await query
             .OrderBy(x => x.Servicio.Nombre)
+            .ThenByDescending(x => x.FechaInicio)
             .ThenBy(x => x.Id)
             .Skip(offset)
             .Take(pagination.ValidPageSize)
@@ -61,18 +71,26 @@ public sealed class MedicoServicioAcuerdoService(AppDbContext dbContext)
         int id,
         CancellationToken cancellationToken = default)
     {
-        await EnsureMedicoExistsAsync(empleadoId, medicoId, cancellationToken);
+        await EnsureMedicoExistsAsync(
+            empleadoId,
+            medicoId,
+            cancellationToken);
 
         var entity = await BuildQuery()
             .AsNoTracking()
             .FirstOrDefaultAsync(
-                x => x.MedicoId == medicoId
-                     && x.Id == id
-                     && x.Activo,
+                x =>
+                    x.MedicoId == medicoId &&
+                    x.Id == id &&
+                    x.Activo,
                 cancellationToken);
 
         if (entity is null)
-            throw new NotFoundException("MedicoServicioAcuerdo", id);
+        {
+            throw new NotFoundException(
+                "MedicoServicioAcuerdo",
+                id);
+        }
 
         return MapToResponse(entity);
     }
@@ -83,30 +101,57 @@ public sealed class MedicoServicioAcuerdoService(AppDbContext dbContext)
         CreateMedicoServicioAcuerdoRequest request,
         CancellationToken cancellationToken = default)
     {
-        await EnsureMedicoExistsAsync(empleadoId, medicoId, cancellationToken);
-        await EnsureServicioExistsAsync(request.ServicioId, cancellationToken);
+        await EnsureMedicoExistsAsync(
+            empleadoId,
+            medicoId,
+            cancellationToken);
 
-        var existe = await dbContext.Set<MedicoServicioAcuerdoEntity>()
-            .AnyAsync(
-                x => x.MedicoId == medicoId
-                     && x.ServicioId == request.ServicioId,
-                cancellationToken);
+        await EnsureServicioExistsAsync(
+            request.ServicioId,
+            cancellationToken);
 
-        if (existe)
-        {
-            throw new ConflictException(
-                "El médico ya tiene un acuerdo para ese servicio.");
-        }
+        ValidateImportes(
+            request.ImporteServicio,
+            request.ImporteMedico);
 
-        var entity = MedicoServicioAcuerdoMapper.ToEntity(request);
+        ValidateFechas(
+            request.FechaInicio,
+            request.FechaFin);
+
+        await EnsureNoExisteAcuerdoVigenteAsync(
+            medicoId,
+            request.ServicioId,
+            null,
+            cancellationToken);
+
+        var entity =
+            MedicoServicioAcuerdoMapper.ToEntity(request);
+
         entity.MedicoId = medicoId;
+
+        entity.ImporteServicio =
+            request.ImporteServicio;
+
+        entity.ImporteMedico =
+            request.ImporteMedico;
+
+        entity.ImporteClinica =
+            CalcularImporteClinica(
+                request.ImporteServicio,
+                request.ImporteMedico);
+
         entity.Activo = true;
 
-        await dbContext.Set<MedicoServicioAcuerdoEntity>()
+        await dbContext
+            .Set<MedicoServicioAcuerdoEntity>()
             .AddAsync(entity, cancellationToken);
-        await dbContext.SaveChangesAsync(cancellationToken);
 
-        await LoadServicioAsync(entity, cancellationToken);
+        await dbContext.SaveChangesAsync(
+            cancellationToken);
+
+        await LoadServicioAsync(
+            entity,
+            cancellationToken);
 
         return MapToResponse(entity);
     }
@@ -118,37 +163,65 @@ public sealed class MedicoServicioAcuerdoService(AppDbContext dbContext)
         UpdateMedicoServicioAcuerdoRequest request,
         CancellationToken cancellationToken = default)
     {
-        await EnsureMedicoExistsAsync(empleadoId, medicoId, cancellationToken);
-        await EnsureServicioExistsAsync(request.ServicioId, cancellationToken);
+        await EnsureMedicoExistsAsync(
+            empleadoId,
+            medicoId,
+            cancellationToken);
+
+        await EnsureServicioExistsAsync(
+            request.ServicioId,
+            cancellationToken);
+
+        ValidateImportes(
+            request.ImporteServicio,
+            request.ImporteMedico);
+
+        ValidateFechas(
+            request.FechaInicio,
+            request.FechaFin);
 
         var entity = await BuildQuery()
             .FirstOrDefaultAsync(
-                x => x.MedicoId == medicoId
-                     && x.Id == id
-                     && x.Activo,
+                x =>
+                    x.MedicoId == medicoId &&
+                    x.Id == id &&
+                    x.Activo,
                 cancellationToken);
 
         if (entity is null)
-            throw new NotFoundException("MedicoServicioAcuerdo", id);
-
-        var existe = await dbContext.Set<MedicoServicioAcuerdoEntity>()
-            .AnyAsync(
-                x => x.Id != id &&
-                     x.MedicoId == medicoId &&
-                     x.ServicioId == request.ServicioId,
-                cancellationToken);
-
-        if (existe)
         {
-            throw new ConflictException(
-                "El médico ya tiene un acuerdo para ese servicio.");
+            throw new NotFoundException(
+                "MedicoServicioAcuerdo",
+                id);
         }
 
-        MedicoServicioAcuerdoMapper.UpdateEntity(request, entity);
+        await EnsureNoExisteAcuerdoVigenteAsync(
+            medicoId,
+            request.ServicioId,
+            id,
+            cancellationToken);
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        MedicoServicioAcuerdoMapper.UpdateEntity(
+            request,
+            entity);
 
-        await LoadServicioAsync(entity, cancellationToken);
+        entity.ImporteServicio =
+            request.ImporteServicio;
+
+        entity.ImporteMedico =
+            request.ImporteMedico;
+
+        entity.ImporteClinica =
+            CalcularImporteClinica(
+                request.ImporteServicio,
+                request.ImporteMedico);
+
+        await dbContext.SaveChangesAsync(
+            cancellationToken);
+
+        await LoadServicioAsync(
+            entity,
+            cancellationToken);
 
         return MapToResponse(entity);
     }
@@ -159,26 +232,37 @@ public sealed class MedicoServicioAcuerdoService(AppDbContext dbContext)
         int id,
         CancellationToken cancellationToken = default)
     {
-        await EnsureMedicoExistsAsync(empleadoId, medicoId, cancellationToken);
+        await EnsureMedicoExistsAsync(
+            empleadoId,
+            medicoId,
+            cancellationToken);
 
-        var entity = await dbContext.Set<MedicoServicioAcuerdoEntity>()
+        var entity = await dbContext
+            .Set<MedicoServicioAcuerdoEntity>()
             .FirstOrDefaultAsync(
-                x => x.MedicoId == medicoId
-                     && x.Id == id
-                     && x.Activo,
+                x =>
+                    x.MedicoId == medicoId &&
+                    x.Id == id &&
+                    x.Activo,
                 cancellationToken);
 
         if (entity is null)
-            throw new NotFoundException("MedicoServicioAcuerdo", id);
+        {
+            throw new NotFoundException(
+                "MedicoServicioAcuerdo",
+                id);
+        }
 
         entity.Activo = false;
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await dbContext.SaveChangesAsync(
+            cancellationToken);
     }
 
     private IQueryable<MedicoServicioAcuerdoEntity> BuildQuery()
     {
-        return dbContext.Set<MedicoServicioAcuerdoEntity>()
+        return dbContext
+            .Set<MedicoServicioAcuerdoEntity>()
             .Include(x => x.Servicio);
     }
 
@@ -187,28 +271,117 @@ public sealed class MedicoServicioAcuerdoService(AppDbContext dbContext)
         int medicoId,
         CancellationToken cancellationToken)
     {
-        var existe = await dbContext.Set<MedicoEntity>()
+        var existe = await dbContext
+            .Set<MedicoEntity>()
             .AnyAsync(
-                x => x.Id == medicoId
-                     && x.EmpleadoId == empleadoId
-                     && x.Activo,
+                x =>
+                    x.Id == medicoId &&
+                    x.EmpleadoId == empleadoId &&
+                    x.Activo,
                 cancellationToken);
 
         if (!existe)
-            throw new NotFoundException("Medico", medicoId);
+        {
+            throw new NotFoundException(
+                "Medico",
+                medicoId);
+        }
     }
 
     private async Task EnsureServicioExistsAsync(
         int servicioId,
         CancellationToken cancellationToken)
     {
-        var existe = await dbContext.Set<ServicioEntity>()
+        var existe = await dbContext
+            .Set<ServicioEntity>()
             .AnyAsync(
-                x => x.Id == servicioId && x.Activo,
+                x =>
+                    x.Id == servicioId &&
+                    x.Activo,
                 cancellationToken);
 
         if (!existe)
-            throw new NotFoundException("Servicio", servicioId);
+        {
+            throw new NotFoundException(
+                "Servicio",
+                servicioId);
+        }
+    }
+
+    private async Task EnsureNoExisteAcuerdoVigenteAsync(
+        int medicoId,
+        int servicioId,
+        int? excludeId,
+        CancellationToken cancellationToken)
+    {
+        var hoy = DateOnly.FromDateTime(DateTime.Today);
+
+        var existe = await dbContext
+            .Set<MedicoServicioAcuerdoEntity>()
+            .AnyAsync(
+                x =>
+                    x.MedicoId == medicoId &&
+                    x.ServicioId == servicioId &&
+                    x.Activo &&
+                    (!excludeId.HasValue ||
+                     x.Id != excludeId.Value) &&
+                    x.FechaInicio <= hoy &&
+                    (
+                        x.FechaFin == null ||
+                        x.FechaFin >= hoy
+                    ),
+                cancellationToken);
+
+        if (existe)
+        {
+            throw new ConflictException(
+                "El médico ya tiene un acuerdo vigente para ese servicio.");
+        }
+    }
+
+    private static void ValidateImportes(
+        decimal importeServicio,
+        decimal importeMedico)
+    {
+        if (importeServicio <= 0)
+        {
+            throw new BusinessException(
+                "El importe del servicio debe ser mayor a cero.");
+        }
+
+        if (importeMedico < 0)
+        {
+            throw new BusinessException(
+                "El importe del médico no puede ser negativo.");
+        }
+
+        if (importeMedico > importeServicio)
+        {
+            throw new BusinessException(
+                "El importe del médico no puede ser mayor al importe del servicio.");
+        }
+    }
+
+    private static void ValidateFechas(
+        DateOnly fechaInicio,
+        DateOnly? fechaFin)
+    {
+        if (fechaFin.HasValue &&
+            fechaFin.Value < fechaInicio)
+        {
+            throw new BusinessException(
+                "La fecha fin no puede ser menor a la fecha inicio.");
+        }
+    }
+
+    private static decimal CalcularImporteClinica(
+        decimal importeServicio,
+        decimal importeMedico)
+    {
+        return Math.Round(
+            importeServicio - importeMedico,
+            2,
+            MidpointRounding.AwayFromZero);
     }
 
     private async Task LoadServicioAsync(
@@ -229,17 +402,43 @@ public sealed class MedicoServicioAcuerdoService(AppDbContext dbContext)
         return new MedicoServicioAcuerdoResponse
         {
             Id = entity.Id,
+
             MedicoId = entity.MedicoId,
+
             ServicioId = entity.ServicioId,
-            Servicio = MapServicioInfo(entity.Servicio),
-            PorcentajeMedico = entity.PorcentajeMedico,
-            FechaInicio = entity.FechaInicio,
-            FechaFin = entity.FechaFin,
-            Activo = entity.Activo,
-            FechaCreacion = entity.FechaCreacion,
-            FechaModificacion = entity.FechaModificacion,
-            CreadoPor = entity.CreadoPor,
-            ModificadoPor = entity.ModificadoPor
+
+            Servicio = MapServicioInfo(
+                entity.Servicio),
+
+            ImporteServicio =
+                entity.ImporteServicio,
+
+            ImporteClinica =
+                entity.ImporteClinica,
+
+            ImporteMedico =
+                entity.ImporteMedico,
+
+            FechaInicio =
+                entity.FechaInicio,
+
+            FechaFin =
+                entity.FechaFin,
+
+            Activo =
+                entity.Activo,
+
+            FechaCreacion =
+                entity.FechaCreacion,
+
+            FechaModificacion =
+                entity.FechaModificacion,
+
+            CreadoPor =
+                entity.CreadoPor,
+
+            ModificadoPor =
+                entity.ModificadoPor
         };
     }
 

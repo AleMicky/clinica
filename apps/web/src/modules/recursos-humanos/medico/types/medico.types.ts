@@ -84,7 +84,9 @@ export interface MedicoServicioAcuerdoResponse {
   medicoId: number;
   servicioId: number;
   servicio?: ServicioInfo | null;
-  porcentajeMedico: number;
+  importeServicio: number;
+  importeClinica: number;
+  importeMedico: number;
   fechaInicio: string;
   fechaFin?: string | null;
   activo: boolean;
@@ -96,14 +98,16 @@ export interface MedicoServicioAcuerdoResponse {
 
 export interface CreateMedicoServicioAcuerdoRequest {
   servicioId: number;
-  porcentajeMedico: number;
+  importeServicio: number;
+  importeMedico: number;
   fechaInicio: string;
   fechaFin?: string | null;
 }
 
 export interface UpdateMedicoServicioAcuerdoRequest {
   servicioId: number;
-  porcentajeMedico: number;
+  importeServicio: number;
+  importeMedico: number;
   fechaInicio: string;
   fechaFin?: string | null;
 }

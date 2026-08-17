@@ -3,7 +3,17 @@
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, Plus, Percent, Trash2, Handshake, Calendar } from "lucide-react";
+import {
+  Loader2,
+  Plus,
+  Trash2,
+  Handshake,
+  Calendar,
+  DollarSign,
+  Building2,
+  User,
+  Calculator,
+} from "lucide-react";
 import {
   Drawer,
   DrawerContent,
@@ -15,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Autocomplete, type AutocompleteOption } from "@/components/ui/autocomplete";
+import { formatCurrency } from "@/lib/utils";
 import { useServicios } from "@/modules/servicios/servicio";
 import {
   useCreateMedicoServicioAcuerdo,
@@ -71,7 +82,9 @@ export function MedicoAcuerdosDrawer({
     return servicios.map((srv) => ({
       value: String(srv.id),
       label: srv.nombre,
-      description: srv.codigo ? `Cód: ${srv.codigo}` : undefined,
+      description: srv.codigo
+        ? `Cód: ${srv.codigo}${srv.precio || srv.Precio ? ` • ${formatCurrency(Number(srv.precio ?? srv.Precio))}` : ""}`
+        : undefined,
     }));
   }, [servicios]);
 
@@ -86,24 +99,60 @@ export function MedicoAcuerdosDrawer({
     resolver: zodResolver(medicoServicioAcuerdoSchema),
     defaultValues: {
       servicioId: 0,
-      porcentajeMedico: 50,
+      importeServicio: 0,
+      importeMedico: 0,
       fechaInicio: getTodayISO(),
       fechaFin: "",
     },
   });
 
   const selectedServicioId = watch("servicioId");
+  const watchImporteServicio = watch("importeServicio") || 0;
+  const watchImporteMedico = watch("importeMedico") || 0;
+  const calculatedClinica = Math.max(0, watchImporteServicio - watchImporteMedico);
+  const calculatedMedicoPct =
+    watchImporteServicio > 0
+      ? Math.round((watchImporteMedico / watchImporteServicio) * 100)
+      : 0;
+  const calculatedClinicaPct =
+    watchImporteServicio > 0
+      ? Math.round((calculatedClinica / watchImporteServicio) * 100)
+      : 0;
 
   React.useEffect(() => {
     if (open) {
       reset({
         servicioId: 0,
-        porcentajeMedico: 50,
+        importeServicio: 0,
+        importeMedico: 0,
         fechaInicio: getTodayISO(),
         fechaFin: "",
       });
     }
   }, [open, reset]);
+
+  const handleSelectServicio = (val: string) => {
+    const sId = Number(val);
+    setValue("servicioId", sId, { shouldValidate: true });
+
+    const srv = servicios.find((s) => s.id === sId);
+    if (srv) {
+      const precioBase = Number(srv.precio ?? srv.Precio ?? 0);
+      if (precioBase > 0) {
+        setValue("importeServicio", precioBase, { shouldValidate: true });
+        setValue("importeMedico", Math.round(precioBase * 0.5 * 100) / 100, {
+          shouldValidate: true,
+        });
+      }
+    }
+  };
+
+  const applyPercentageShortcut = (pct: number) => {
+    if (watchImporteServicio > 0) {
+      const valor = Math.round(watchImporteServicio * (pct / 100) * 100) / 100;
+      setValue("importeMedico", valor, { shouldValidate: true });
+    }
+  };
 
   const onSubmitAdd = async (values: MedicoServicioAcuerdoFormValues) => {
     if (!medico) return;
@@ -113,14 +162,16 @@ export function MedicoAcuerdosDrawer({
         medicoId: medico.id,
         request: {
           servicioId: values.servicioId,
-          porcentajeMedico: values.porcentajeMedico,
+          importeServicio: values.importeServicio,
+          importeMedico: values.importeMedico,
           fechaInicio: values.fechaInicio,
           fechaFin: values.fechaFin?.trim() || null,
         },
       });
       reset({
         servicioId: 0,
-        porcentajeMedico: 50,
+        importeServicio: 0,
+        importeMedico: 0,
         fechaInicio: getTodayISO(),
         fechaFin: "",
       });
@@ -154,7 +205,8 @@ export function MedicoAcuerdosDrawer({
               <DrawerTitle className="text-lg">Acuerdos de Honorarios por Servicio</DrawerTitle>
             </div>
             <DrawerDescription>
-              Configuración de porcentajes de pago por servicio clínico para <span className="font-semibold text-foreground">{medicoNombre}</span>.
+              Configuración de importes y distribución de cobro por servicio clínico para{" "}
+              <span className="font-semibold text-foreground">{medicoNombre}</span>.
             </DrawerDescription>
           </DrawerHeader>
 
@@ -166,16 +218,14 @@ export function MedicoAcuerdosDrawer({
             <form onSubmit={handleSubmit(onSubmitAdd)} className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
                 {/* Servicio Autocomplete */}
-                <div className="sm:col-span-5 space-y-1.5">
-                  <Label htmlFor="servicioId" className="text-xs">
-                    Servicio Clínico
+                <div className="sm:col-span-12 space-y-1.5">
+                  <Label htmlFor="drawerServicioId" className="text-xs font-semibold">
+                    Servicio Clínico <span className="text-destructive">*</span>
                   </Label>
                   <Autocomplete
-                    id="servicioId"
+                    id="drawerServicioId"
                     value={selectedServicioId ? String(selectedServicioId) : ""}
-                    onValueChange={(val) =>
-                      setValue("servicioId", Number(val), { shouldValidate: true })
-                    }
+                    onValueChange={handleSelectServicio}
                     options={servicioOptions}
                     placeholder="Buscar servicio..."
                     emptyText="No se encontraron servicios"
@@ -190,37 +240,61 @@ export function MedicoAcuerdosDrawer({
                   )}
                 </div>
 
-                {/* Porcentaje % */}
-                <div className="sm:col-span-2 space-y-1.5">
-                  <Label htmlFor="porcentajeMedico" className="text-xs">
-                    % Médico
+                {/* Importe Servicio */}
+                <div className="sm:col-span-3 space-y-1.5">
+                  <Label htmlFor="drawerImporteServicio" className="text-xs font-semibold">
+                    Importe Servicio <span className="text-destructive">*</span>
                   </Label>
                   <div className="relative">
                     <Input
-                      id="porcentajeMedico"
+                      id="drawerImporteServicio"
                       type="number"
                       step="0.01"
                       min="0"
-                      max="100"
-                      className="h-9 pr-6"
-                      {...register("porcentajeMedico", { valueAsNumber: true })}
+                      placeholder="0.00"
+                      className="h-9 pl-7 text-xs font-mono"
+                      {...register("importeServicio", { valueAsNumber: true })}
                     />
-                    <Percent className="size-3.5 absolute right-2 top-2.5 text-muted-foreground" />
+                    <DollarSign className="size-3.5 absolute left-2 top-2.5 text-muted-foreground" />
                   </div>
-                  {errors.porcentajeMedico && (
+                  {errors.importeServicio && (
                     <p className="text-xs text-destructive">
-                      {errors.porcentajeMedico.message}
+                      {errors.importeServicio.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Importe Médico */}
+                <div className="sm:col-span-3 space-y-1.5">
+                  <Label htmlFor="drawerImporteMedico" className="text-xs font-semibold">
+                    Importe Médico <span className="text-destructive">*</span>
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="drawerImporteMedico"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00"
+                      className="h-9 pl-7 text-xs font-mono"
+                      {...register("importeMedico", { valueAsNumber: true })}
+                    />
+                    <DollarSign className="size-3.5 absolute left-2 top-2.5 text-emerald-600" />
+                  </div>
+                  {errors.importeMedico && (
+                    <p className="text-xs text-destructive">
+                      {errors.importeMedico.message}
                     </p>
                   )}
                 </div>
 
                 {/* Fecha Inicio */}
-                <div className="sm:col-span-2 space-y-1.5">
-                  <Label htmlFor="fechaInicio" className="text-xs">
-                    Fecha Inicio
+                <div className="sm:col-span-3 space-y-1.5">
+                  <Label htmlFor="drawerFechaInicio" className="text-xs font-semibold">
+                    Fecha Inicio <span className="text-destructive">*</span>
                   </Label>
                   <Input
-                    id="fechaInicio"
+                    id="drawerFechaInicio"
                     type="date"
                     className="h-9 text-xs"
                     {...register("fechaInicio")}
@@ -232,14 +306,14 @@ export function MedicoAcuerdosDrawer({
                   )}
                 </div>
 
-                {/* Fecha Fin */}
+                {/* Fecha Fin & Botón */}
                 <div className="sm:col-span-3 space-y-1.5">
-                  <Label htmlFor="fechaFin" className="text-xs">
+                  <Label htmlFor="drawerFechaFin" className="text-xs">
                     Fecha Fin (Opcional)
                   </Label>
                   <div className="flex gap-2">
                     <Input
-                      id="fechaFin"
+                      id="drawerFechaFin"
                       type="date"
                       className="h-9 text-xs"
                       {...register("fechaFin")}
@@ -247,7 +321,7 @@ export function MedicoAcuerdosDrawer({
                     <Button
                       type="submit"
                       size="sm"
-                      className="h-9 px-3 shrink-0"
+                      className="h-9 px-3 shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white"
                       disabled={createMutation.isPending || isSubmitting}
                     >
                       {createMutation.isPending ? (
@@ -258,6 +332,34 @@ export function MedicoAcuerdosDrawer({
                     </Button>
                   </div>
                 </div>
+              </div>
+
+              {/* Quick % Helpers */}
+              <div className="flex items-center gap-1.5 pt-1">
+                <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                  <Calculator className="size-3" /> % Médico:
+                </span>
+                {[40, 50, 60, 70, 80, 100].map((pct) => (
+                  <Button
+                    key={pct}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-6 px-2 text-[11px] cursor-pointer"
+                    onClick={() => applyPercentageShortcut(pct)}
+                    disabled={watchImporteServicio <= 0}
+                  >
+                    {pct}%
+                  </Button>
+                ))}
+                {watchImporteServicio > 0 && (
+                  <span className="ml-auto text-xs text-muted-foreground font-medium">
+                    Clínica ({calculatedClinicaPct}%):{" "}
+                    <span className="font-mono text-foreground font-bold">
+                      {formatCurrency(calculatedClinica)}
+                    </span>
+                  </span>
+                )}
               </div>
             </form>
           </div>
@@ -270,53 +372,85 @@ export function MedicoAcuerdosDrawer({
 
             {isLoadingAcuerdos ? (
               <div className="flex items-center justify-center py-8 text-sm text-muted-foreground gap-2">
-                <Loader2 className="size-4 animate-spin" /> Cargando acuerdos de servicio...
+                <Loader2 className="size-4 animate-spin text-emerald-600" /> Cargando acuerdos de servicio...
               </div>
             ) : acuerdos.length === 0 ? (
               <div className="text-center py-8 border border-dashed rounded-lg text-sm text-muted-foreground">
-                No hay acuerdos de porcentaje registrados para este médico.
+                No hay acuerdos de servicio registrados para este médico.
               </div>
             ) : (
               <div className="divide-y border rounded-lg">
-                {acuerdos.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between p-3.5 hover:bg-muted/10 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold text-xs flex items-center gap-0.5">
-                        {item.porcentajeMedico}%
+                {acuerdos.map((item) => {
+                  const medicoPct =
+                    item.importeServicio > 0
+                      ? Math.round((item.importeMedico / item.importeServicio) * 100)
+                      : 0;
+
+                  return (
+                    <div
+                      key={item.id}
+                      className="p-3.5 hover:bg-muted/10 transition-colors space-y-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">
+                            {item.servicio?.nombre || `Servicio #${item.servicioId}`}
+                          </p>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                            <span className="font-mono">
+                              Código: {item.servicio?.codigo || "N/A"}
+                            </span>
+                            <span>•</span>
+                            <span className="flex items-center gap-1">
+                              <Calendar className="size-3" />
+                              {item.fechaInicio}
+                              {item.fechaFin ? ` al ${item.fechaFin}` : " (Vigente)"}
+                            </span>
+                          </div>
+                        </div>
+
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="size-8 text-muted-foreground hover:text-destructive cursor-pointer"
+                          onClick={() => handleDelete(item.id)}
+                          disabled={deleteMutation.isPending}
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
                       </div>
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">
-                          {item.servicio?.nombre || `Servicio #${item.servicioId}`}
-                        </p>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                          <span className="font-mono">
-                            Código: {item.servicio?.codigo || "N/A"}
+
+                      {/* Amounts Breakdown */}
+                      <div className="grid grid-cols-3 gap-2 text-xs">
+                        <div className="bg-muted/40 rounded p-1.5 border">
+                          <span className="text-[10px] text-muted-foreground block">
+                            Total
                           </span>
-                          <span>•</span>
-                          <span className="flex items-center gap-1">
-                            <Calendar className="size-3" />
-                            {item.fechaInicio}
-                            {item.fechaFin ? ` al ${item.fechaFin}` : " (Vigente)"}
+                          <span className="font-mono font-semibold">
+                            {formatCurrency(item.importeServicio)}
+                          </span>
+                        </div>
+                        <div className="bg-emerald-500/10 rounded p-1.5 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300">
+                          <span className="text-[10px] block">
+                            Médico ({medicoPct}%)
+                          </span>
+                          <span className="font-mono font-semibold">
+                            {formatCurrency(item.importeMedico)}
+                          </span>
+                        </div>
+                        <div className="bg-sky-500/10 rounded p-1.5 border border-sky-500/20 text-sky-700 dark:text-sky-300">
+                          <span className="text-[10px] block">
+                            Clínica ({100 - medicoPct}%)
+                          </span>
+                          <span className="font-mono font-semibold">
+                            {formatCurrency(item.importeClinica)}
                           </span>
                         </div>
                       </div>
                     </div>
-
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="size-8 text-muted-foreground hover:text-destructive"
-                      onClick={() => handleDelete(item.id)}
-                      disabled={deleteMutation.isPending}
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

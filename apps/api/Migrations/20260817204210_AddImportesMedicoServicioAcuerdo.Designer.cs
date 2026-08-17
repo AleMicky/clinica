@@ -4,6 +4,7 @@ using Clinica.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Clinica.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260817204210_AddImportesMedicoServicioAcuerdo")]
+    partial class AddImportesMedicoServicioAcuerdo
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1719,10 +1722,6 @@ namespace Clinica.Api.Migrations
                     b.Property<DateTime?>("FechaModificacion")
                         .HasColumnType("datetime2");
 
-                    b.Property<decimal>("ImporteClinica")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<decimal>("ImporteMedico")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
@@ -1738,6 +1737,10 @@ namespace Clinica.Api.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<decimal>("PorcentajeMedico")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
                     b.Property<int>("ServicioId")
                         .HasColumnType("int");
 
@@ -1745,7 +1748,8 @@ namespace Clinica.Api.Migrations
 
                     b.HasIndex("ServicioId");
 
-                    b.HasIndex("MedicoId", "ServicioId");
+                    b.HasIndex("MedicoId", "ServicioId")
+                        .IsUnique();
 
                     b.ToTable("MedicosServiciosAcuerdos", (string)null);
                 });
