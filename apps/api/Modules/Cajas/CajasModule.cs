@@ -28,6 +28,7 @@ public static class CajasModule
         services.AddScoped<CierreCajaService>();
         services.AddScoped<MovimientoCajaService>();
         services.AddScoped<CobroService>();
+        services.AddScoped<CobroDetalleService>();
         services.AddScoped<DevolucionCobroService>();
         services.AddScoped<ArqueoCajaService>();
 

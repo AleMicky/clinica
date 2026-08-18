@@ -3,11 +3,8 @@ using Clinica.Api.Modules.Cajas.Cobro.Dtos;
 using Clinica.Api.Modules.Cajas.Cobro.Entity;
 using Clinica.Api.Modules.Cajas.Cobro.Mappers;
 using Clinica.Api.Modules.Cajas.TurnoCaja.Dtos;
-using Clinica.Api.Modules.Parametros.Banco.Entity;
 using Clinica.Api.Modules.Parametros.Correlativo.Dtos;
 using Clinica.Api.Modules.Parametros.Correlativo.Services;
-using Clinica.Api.Modules.Parametros.MetodoPago.Entity;
-using Clinica.Api.Modules.Parametros.Moneda.Entity;
 using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
@@ -19,7 +16,8 @@ namespace Clinica.Api.Modules.Cajas.Cobro.Services;
 
 public sealed class CobroService(
     AppDbContext dbContext,
-    CorrelativoService correlativoService
+    CorrelativoService correlativoService,
+    CobroDetalleService cobroDetalleService
 )
 {
     private AppDbContext DbContext { get; } = dbContext;
@@ -75,7 +73,7 @@ public sealed class CobroService(
 
         return MapToResponse(entity) with
         {
-            Detalles = MapDetalles(
+            Detalles = CobroDetalleMapper.MapDetalles(
                 entity.Detalles.Where(x => x.Activo))
         };
     }
@@ -89,15 +87,15 @@ public sealed class CobroService(
             request.VentaPagadorId,
             cancellationToken);
 
-        await ValidarMetodosPagoAsync(
+        await cobroDetalleService.ValidarMetodosPagoAsync(
             request.Detalles,
             cancellationToken);
 
-        await ValidarMonedasAsync(
+        await cobroDetalleService.ValidarMonedasAsync(
             request.Detalles,
             cancellationToken);
 
-        await ValidarCuentasBancariasAsync(
+        await cobroDetalleService.ValidarCuentasBancariasAsync(
             request.Detalles,
             cancellationToken);
 
@@ -152,15 +150,15 @@ public sealed class CobroService(
             request.VentaPagadorId,
             cancellationToken);
 
-        await ValidarMetodosPagoAsync(
+        await cobroDetalleService.ValidarMetodosPagoAsync(
             request.Detalles,
             cancellationToken);
 
-        await ValidarMonedasAsync(
+        await cobroDetalleService.ValidarMonedasAsync(
             request.Detalles,
             cancellationToken);
 
-        await ValidarCuentasBancariasAsync(
+        await cobroDetalleService.ValidarCuentasBancariasAsync(
             request.Detalles,
             cancellationToken);
 
@@ -241,9 +239,9 @@ public sealed class CobroService(
         var entity = CobroMapper.ToEntity(request);
         entity.Estado = EstadoCobro.Registrado;
         entity.Detalles = request.Detalles
-            .Select(CrearDetalle)
+            .Select(CobroDetalleMapper.CrearDetalle)
             .ToList();
-        CalcularTotal(entity);
+        CobroDetalleMapper.CalcularTotal(entity);
         Normalizar(entity);
         return entity;
     }
@@ -253,8 +251,8 @@ public sealed class CobroService(
         CobroEntity entity)
     {
         CobroMapper.UpdateEntity(request, entity);
-        ReemplazarDetalles(entity, request.Detalles);
-        CalcularTotal(entity);
+        CobroDetalleMapper.ReemplazarDetalles(entity, request.Detalles);
+        CobroDetalleMapper.CalcularTotal(entity);
         Normalizar(entity);
     }
 
@@ -273,7 +271,7 @@ public sealed class CobroService(
             Observacion = entity.Observacion,
             MotivoAnulacion = entity.MotivoAnulacion,
             FechaHoraAnulacion = entity.FechaHoraAnulacion,
-            Detalles = MapDetalles(entity.Detalles.Where(x => x.Activo)),
+            Detalles = CobroDetalleMapper.MapDetalles(entity.Detalles.Where(x => x.Activo)),
             Activo = entity.Activo,
             FechaCreacion = entity.FechaCreacion,
             FechaModificacion = entity.FechaModificacion,
@@ -320,172 +318,9 @@ public sealed class CobroService(
             throw new NotFoundException("VentaPagador", ventaPagadorId);
     }
 
-    private async Task ValidarMetodosPagoAsync(
-        IReadOnlyCollection<CobroDetalleRequest> detalles,
-        CancellationToken cancellationToken)
-    {
-        var ids = detalles
-            .Select(x => x.MetodoPagoId)
-            .Distinct()
-            .ToList();
-
-        var existentes = await DbContext.Set<MetodoPago>()
-            .Where(x => ids.Contains(x.Id) && x.Activo)
-            .Select(x => x.Id)
-            .ToListAsync(cancellationToken);
-
-        foreach (var id in ids.Except(existentes))
-            throw new NotFoundException("MetodoPago", id);
-    }
-
-    private async Task ValidarMonedasAsync(
-        IReadOnlyCollection<CobroDetalleRequest> detalles,
-        CancellationToken cancellationToken)
-    {
-        var ids = detalles
-            .Select(x => x.MonedaId)
-            .Distinct()
-            .ToList();
-
-        var existentes = await DbContext.Set<Moneda>()
-            .Where(x => ids.Contains(x.Id) && x.Activo)
-            .Select(x => x.Id)
-            .ToListAsync(cancellationToken);
-
-        foreach (var id in ids.Except(existentes))
-            throw new NotFoundException("Moneda", id);
-    }
-
-    private async Task ValidarCuentasBancariasAsync(
-        IReadOnlyCollection<CobroDetalleRequest> detalles,
-        CancellationToken cancellationToken)
-    {
-        var ids = detalles
-            .Where(x => x.CuentaBancariaId.HasValue)
-            .Select(x => x.CuentaBancariaId!.Value)
-            .Distinct()
-            .ToList();
-
-        if (ids.Count == 0)
-            return;
-
-        var existentes = await DbContext.Set<CuentaBancaria>()
-            .Where(x => ids.Contains(x.Id) && x.Activo)
-            .Select(x => x.Id)
-            .ToListAsync(cancellationToken);
-
-        foreach (var id in ids.Except(existentes))
-            throw new NotFoundException("CuentaBancaria", id);
-    }
-
-    private static CobroDetalle CrearDetalle(
-        CobroDetalleRequest request)
-    {
-        var montoMonedaBase = decimal.Round(
-            request.Monto * request.TipoCambio,
-            2,
-            MidpointRounding.AwayFromZero);
-
-        return new CobroDetalle
-        {
-            MetodoPagoId = request.MetodoPagoId,
-            MonedaId = request.MonedaId,
-            CuentaBancariaId = request.CuentaBancariaId,
-            Monto = request.Monto,
-            TipoCambio = request.TipoCambio,
-            MontoMonedaBase = montoMonedaBase,
-            Referencia = NormalizarOpcional(request.Referencia),
-            EntidadFinanciera = NormalizarOpcional(request.EntidadFinanciera),
-            Observacion = NormalizarOpcional(request.Observacion)
-        };
-    }
-
-    private static void ReemplazarDetalles(
-        CobroEntity entity,
-        IReadOnlyCollection<CobroDetalleRequest> detalles)
-    {
-        var existingByKey = entity.Detalles
-            .Where(x => x.Activo)
-            .ToDictionary(ClaveDetalle);
-
-        var incomingKeys = detalles
-            .Select(ClaveDetalle)
-            .ToHashSet();
-
-        foreach (var existing in entity.Detalles
-                     .Where(x => x.Activo && !incomingKeys.Contains(ClaveDetalle(x)))
-                     .ToList())
-        {
-            entity.Detalles.Remove(existing);
-        }
-
-        foreach (var request in detalles)
-        {
-            if (existingByKey.TryGetValue(
-                    ClaveDetalle(request),
-                    out var detalle))
-            {
-                detalle.MetodoPagoId = request.MetodoPagoId;
-                detalle.MonedaId = request.MonedaId;
-                detalle.CuentaBancariaId = request.CuentaBancariaId;
-                detalle.Monto = request.Monto;
-                detalle.TipoCambio = request.TipoCambio;
-                detalle.MontoMonedaBase = decimal.Round(
-                    request.Monto * request.TipoCambio,
-                    2,
-                    MidpointRounding.AwayFromZero);
-                detalle.Referencia = NormalizarOpcional(request.Referencia);
-                detalle.EntidadFinanciera = NormalizarOpcional(request.EntidadFinanciera);
-                detalle.Observacion = NormalizarOpcional(request.Observacion);
-            }
-            else
-            {
-                entity.Detalles.Add(CrearDetalle(request));
-            }
-        }
-    }
-
-    private static void CalcularTotal(CobroEntity entity)
-    {
-        entity.Total = entity.Detalles
-            .Where(x => x.Activo)
-            .Sum(x => x.MontoMonedaBase);
-    }
-
     private static void Normalizar(CobroEntity entity)
     {
-        entity.Observacion = NormalizarOpcional(entity.Observacion);
-    }
-
-    private static string? NormalizarOpcional(string? value)
-    {
-        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
-    }
-
-    private static IReadOnlyCollection<CobroDetalleResponse> MapDetalles(
-        IEnumerable<CobroDetalle> detalles)
-    {
-        return detalles
-            .Select(d => new CobroDetalleResponse
-            {
-                Id = d.Id,
-                CobroId = d.CobroId,
-                MetodoPagoId = d.MetodoPagoId,
-                MonedaId = d.MonedaId,
-                CuentaBancariaId = d.CuentaBancariaId,
-                Monto = d.Monto,
-                TipoCambio = d.TipoCambio,
-                MontoMonedaBase = d.MontoMonedaBase,
-                Referencia = d.Referencia,
-                EntidadFinanciera = d.EntidadFinanciera,
-                Observacion = d.Observacion,
-                Activo = d.Activo,
-                FechaCreacion = d.FechaCreacion,
-                FechaModificacion = d.FechaModificacion,
-                CreadoPor = d.CreadoPor,
-                ModificadoPor = d.ModificadoPor
-            })
-            .ToList();
+        entity.Observacion = CobroDetalleMapper.NormalizarOpcional(entity.Observacion);
     }
 
     private static TurnoCajaInfo? MapTurnoCajaInfo(TurnoCajaEntity? turno)
@@ -559,19 +394,8 @@ public sealed class CobroService(
         };
     }
 
-    private static DetalleKey ClaveDetalle(CobroDetalle d) =>
-        new(d.MetodoPagoId, d.MonedaId, d.CuentaBancariaId);
-
-    private static DetalleKey ClaveDetalle(CobroDetalleRequest r) =>
-        new(r.MetodoPagoId, r.MonedaId, r.CuentaBancariaId);
-
     private static NotFoundException CreateNotFoundException(int id)
     {
         return new NotFoundException(typeof(CobroEntity).Name, id);
     }
-
-    private readonly record struct DetalleKey(
-        int MetodoPagoId,
-        int MonedaId,
-        int? CuentaBancariaId);
 }
