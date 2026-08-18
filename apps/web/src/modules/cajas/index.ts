@@ -1,4 +1,4 @@
-// Module exports for Cajas, Turnos, Movimientos, Arqueos & Cobros
+// Module exports for Cajas, Turnos, Aperturas, Movimientos, Arqueos & Cobros
 export type {
   CajaResponse,
   CreateCajaRequest,
@@ -21,6 +21,16 @@ export type {
 } from "./turno-caja/types/turno-caja.types";
 export { EstadoTurnoCaja } from "./turno-caja/types/turno-caja.types";
 export * from "./turno-caja/hooks/use-turnos-caja";
+
+export type {
+  AperturaCajaResponse,
+  CreateAperturaCajaRequest,
+  UpdateAperturaCajaRequest,
+  AperturaCajaQueryParams,
+} from "./apertura-caja/types/apertura-caja.types";
+export * from "./apertura-caja/hooks/use-aperturas-caja";
+export * from "./apertura-caja/components/apertura-caja-form-dialog";
+export * from "./apertura-caja/components/apertura-caja-delete-dialog";
 
 export type {
   MovimientoCajaResponse,
