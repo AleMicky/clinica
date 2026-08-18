@@ -55,11 +55,9 @@ public abstract record PacienteConvenioRequest
     public bool EsPrincipal { get; init; }
 }
 
-public sealed record CreatePacienteConvenioRequest
-    : PacienteConvenioRequest;
+public sealed record CreatePacienteConvenioRequest : PacienteConvenioRequest;
 
-public sealed record UpdatePacienteConvenioRequest
-    : PacienteConvenioRequest;
+public sealed record UpdatePacienteConvenioRequest : PacienteConvenioRequest;
 
 public sealed record PacienteConvenioResponse
 {
@@ -83,4 +81,12 @@ public sealed record ConvenioInfo
     public int Id { get; init; }
     public string Codigo { get; init; } = string.Empty;
     public string Nombre { get; init; } = string.Empty;
+}
+
+public sealed record PacienteBaseInfo
+{
+    public int Id { get; init; }
+    public required string NumeroHistoriaClinica { get; init; }
+    public string NombreCompleto { get; init; } = string.Empty;
+    
 }

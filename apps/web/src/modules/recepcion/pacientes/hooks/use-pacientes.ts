@@ -42,7 +42,8 @@ export function useCreatePaciente() {
   return useMutation({
     mutationFn: (data: CreatePacienteRequest) => createPaciente(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: pacienteKeys.all });
+      queryClient.invalidateQueries({ queryKey: pacienteKeys.all, refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["admisiones"], refetchType: "all" });
     },
   });
 }
@@ -54,8 +55,9 @@ export function useUpdatePaciente() {
     mutationFn: ({ id, data }: { id: number; data: UpdatePacienteRequest }) =>
       updatePaciente(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: pacienteKeys.all });
-      queryClient.invalidateQueries({ queryKey: pacienteKeys.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: pacienteKeys.all, refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: pacienteKeys.detail(variables.id), refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["admisiones"], refetchType: "all" });
     },
   });
 }
@@ -66,7 +68,8 @@ export function useDeletePaciente() {
   return useMutation({
     mutationFn: (id: number) => deletePaciente(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: pacienteKeys.all });
+      queryClient.invalidateQueries({ queryKey: pacienteKeys.all, refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["admisiones"], refetchType: "all" });
     },
   });
 }

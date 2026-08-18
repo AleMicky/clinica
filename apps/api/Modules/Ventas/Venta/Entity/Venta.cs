@@ -1,6 +1,7 @@
 using Clinica.Api.Modules.Parametros.Moneda.Entity;
 using Clinica.Api.Modules.Recepcion.Admision.Entity;
 using Clinica.Api.Modules.Recepcion.Pacientes.Entity;
+using Clinica.Api.Modules.RecursosHumanos.Empleado.Entity;
 using Clinica.Api.Shared.Abstractions;
 
 namespace Clinica.Api.Modules.Ventas.Venta.Entity;
@@ -14,6 +15,9 @@ public sealed class Venta : AuditableEntity
 
     public int PacienteId { get; set; }
     public Paciente Paciente { get; set; } = null!;
+    
+    public int VendedorId { get; set; }
+    public Empleado Vendedor { get; set; } = null!;
 
     public int MonedaId { get; set; }
     public Moneda Moneda { get; set; } = null!;

@@ -378,6 +378,7 @@ public sealed class AdmisionService(
                 await ventaService
                     .GenerarVentaDesdeAdmisionAsync(
                         entity.Id,
+                        entity.RecepcionistaId,
                         cancellationToken
                     );
             }

@@ -18,6 +18,10 @@ public abstract class VentaRequestValidator<TRequest>
             .GreaterThan(0)
             .WithMessage("El paciente es obligatorio.");
 
+        RuleFor(x => x.VendedorId)
+            .GreaterThan(0)
+            .WithMessage("El Vendedor es obligatorio.");
+
         RuleFor(x => x.MonedaId)
             .GreaterThan(0)
             .WithMessage("La moneda es obligatoria.");

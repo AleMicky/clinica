@@ -1,9 +1,16 @@
+using Clinica.Api.Modules.Parametros.Banco.Dtos;
+using Clinica.Api.Modules.Parametros.Moneda.Entity;
+using Clinica.Api.Modules.Recepcion.Pacientes.Dtos;
+using Clinica.Api.Modules.Recepcion.Pacientes.Entity;
+using Clinica.Api.Modules.RecursosHumanos.Empleado.Dtos;
+using Clinica.Api.Modules.RecursosHumanos.Empleado.Entity;
 using Clinica.Api.Modules.RecursosHumanos.Medico.Entity;
+using Clinica.Api.Modules.Seguridad.Personas.Entity;
+using Clinica.Api.Modules.Servicios.Servicios.Entity;
 using Clinica.Api.Modules.Ventas.Venta.Dtos;
+using Clinica.Api.Modules.Ventas.Venta.Entity;
 using Riok.Mapperly.Abstractions;
 using VentaEntity = Clinica.Api.Modules.Ventas.Venta.Entity.Venta;
-using VentaDetalleEntity = Clinica.Api.Modules.Ventas.Venta.Entity.VentaDetalle;
-using VentaPagadorEntity = Clinica.Api.Modules.Ventas.Venta.Entity.VentaPagador;
 
 namespace Clinica.Api.Modules.Ventas.Venta.Mappers;
 
@@ -11,10 +18,9 @@ namespace Clinica.Api.Modules.Ventas.Venta.Mappers;
 public static partial class VentaMapper
 {
     [MapperIgnoreSource(nameof(VentaEntity.Admision))]
-    [MapperIgnoreSource(nameof(VentaEntity.Paciente))]
-    [MapperIgnoreSource(nameof(VentaEntity.Moneda))]
-    [MapperIgnoreSource(nameof(VentaEntity.Detalles))]
-    [MapperIgnoreSource(nameof(VentaEntity.Pagadores))]
+    [MapperIgnoreSource(nameof(VentaEntity.PacienteId))]
+    [MapperIgnoreSource(nameof(VentaEntity.VendedorId))]
+    [MapperIgnoreSource(nameof(VentaEntity.MonedaId))]
     public static partial VentaResponse ToResponse(
         VentaEntity entity
     );
@@ -23,12 +29,118 @@ public static partial class VentaMapper
         IEnumerable<VentaEntity> entities
     );
 
+    [MapProperty(
+        nameof(Paciente.Persona),
+        nameof(PacienteBaseInfo.NombreCompleto),
+        Use = nameof(MapNombreCompleto)
+    )]
+    [MapperIgnoreSource(nameof(Paciente.PersonaId))]
+    [MapperIgnoreSource(nameof(Paciente.Activo))]
+    [MapperIgnoreSource(nameof(Paciente.FechaCreacion))]
+    [MapperIgnoreSource(nameof(Paciente.FechaModificacion))]
+    [MapperIgnoreSource(nameof(Paciente.CreadoPor))]
+    [MapperIgnoreSource(nameof(Paciente.ModificadoPor))]
+    private static partial PacienteBaseInfo ToPacienteBaseInfo(
+        Paciente entity
+    );
+
+    [MapperIgnoreSource(nameof(Empleado.PersonaId))]
+    [MapperIgnoreSource(nameof(Empleado.FechaIngreso))]
+    [MapperIgnoreSource(nameof(Empleado.FechaRetiro))]
+    [MapperIgnoreSource(nameof(Empleado.Asignaciones))]
+    [MapperIgnoreSource(nameof(Empleado.FechaCreacion))]
+    [MapperIgnoreSource(nameof(Empleado.FechaModificacion))]
+    [MapperIgnoreSource(nameof(Empleado.CreadoPor))]
+    [MapperIgnoreSource(nameof(Empleado.ModificadoPor))]
+    [MapperIgnoreSource(nameof(Empleado.Activo))]
+    [MapProperty(
+        nameof(Empleado.Persona),
+        nameof(EmpleadoBaseInfo.NombreCompleto),
+        Use = nameof(MapNombreCompleto)
+    )]
+    private static partial EmpleadoBaseInfo ToEmpleadoBaseInfo(
+        Empleado entity
+    );
+
+    [MapperIgnoreSource(nameof(Moneda.Simbolo))]
+    [MapperIgnoreSource(nameof(Moneda.Decimales))]
+    [MapperIgnoreSource(nameof(Moneda.EsBase))]
+    [MapperIgnoreSource(nameof(Moneda.Activo))]
+    [MapperIgnoreSource(nameof(Moneda.FechaCreacion))]
+    [MapperIgnoreSource(nameof(Moneda.FechaModificacion))]
+    [MapperIgnoreSource(nameof(Moneda.CreadoPor))]
+    [MapperIgnoreSource(nameof(Moneda.ModificadoPor))]
+    private static partial MonedaInfo ToMonedaInfo(
+        Moneda entity
+    );
+
+
+    [MapperIgnoreSource(nameof(VentaDetalle.Venta))]
+    [MapperIgnoreSource(nameof(VentaDetalle.ServicioId))]
+    [MapperIgnoreSource(nameof(VentaDetalle.MedicoId))]
+    private static partial VentaDetalleResponse ToVentaDetalleResponse(
+        VentaDetalle entity
+    );
+
+    [MapProperty(
+        $"{nameof(Medico.Empleado)}.{nameof(Empleado.Persona)}",
+        nameof(MedicoInfo.NombreMedico),
+        Use = nameof(MapNombreCompleto)
+    )]
+    [MapperIgnoreSource(nameof(Medico.EmpleadoId))]
+    [MapperIgnoreSource(nameof(Medico.MatriculaProfesional))]
+    [MapperIgnoreSource(nameof(Medico.RegistroMinisterioSalud))]
+    [MapperIgnoreSource(nameof(Medico.Especialidades))]
+    [MapperIgnoreSource(nameof(Medico.Activo))]
+    [MapperIgnoreSource(nameof(Medico.FechaCreacion))]
+    [MapperIgnoreSource(nameof(Medico.FechaModificacion))]
+    [MapperIgnoreSource(nameof(Medico.CreadoPor))]
+    [MapperIgnoreSource(nameof(Medico.ModificadoPor))]
+    private static partial MedicoInfo ToMedicoInfo(
+        Medico entity
+    );
+
+    [MapperIgnoreSource(nameof(VentaPagador.Venta))]
+    [MapperIgnoreSource(nameof(VentaPagador.Convenio))]
+    private static partial VentaPagadorResponse ToVentaPagadorResponse(
+        VentaPagador entity
+    );
+
+    [MapperIgnoreSource(nameof(Servicio.Activo))]
+    [MapperIgnoreSource(nameof(Servicio.Descripcion))]
+    [MapperIgnoreSource(nameof(Servicio.CategoriaServicioId))]
+    [MapperIgnoreSource(nameof(Servicio.CategoriaServicio))]
+    [MapperIgnoreSource(nameof(Servicio.Tarifas))]
+    [MapperIgnoreSource(nameof(Servicio.FechaCreacion))]
+    [MapperIgnoreSource(nameof(Servicio.FechaModificacion))]
+    [MapperIgnoreSource(nameof(Servicio.CreadoPor))]
+    [MapperIgnoreSource(nameof(Servicio.ModificadoPor))]
+    private static partial ServiceInfo ToServiceInfo(
+        Servicio entity
+    );
+
+    private static string MapNombreCompleto(Persona persona)
+    {
+        if (persona is null) return string.Empty;
+
+        return string.Join(" ",
+            new[]
+                {
+                    persona.Nombres,
+                    persona.ApellidoPaterno,
+                    persona.ApellidoMaterno
+                }
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+        );
+    }
+
     [MapperIgnoreSource(nameof(CreateVentaRequest.Detalles))]
     [MapperIgnoreSource(nameof(CreateVentaRequest.Pagadores))]
     [MapperIgnoreTarget(nameof(VentaEntity.Id))]
     [MapperIgnoreTarget(nameof(VentaEntity.Numero))]
     [MapperIgnoreTarget(nameof(VentaEntity.Admision))]
     [MapperIgnoreTarget(nameof(VentaEntity.Paciente))]
+    [MapperIgnoreTarget(nameof(VentaEntity.Vendedor))]
     [MapperIgnoreTarget(nameof(VentaEntity.Moneda))]
     [MapperIgnoreTarget(nameof(VentaEntity.Detalles))]
     [MapperIgnoreTarget(nameof(VentaEntity.Pagadores))]
@@ -45,12 +157,14 @@ public static partial class VentaMapper
         CreateVentaRequest request
     );
 
+
     [MapperIgnoreSource(nameof(UpdateVentaRequest.Detalles))]
     [MapperIgnoreSource(nameof(UpdateVentaRequest.Pagadores))]
     [MapperIgnoreTarget(nameof(VentaEntity.Id))]
     [MapperIgnoreTarget(nameof(VentaEntity.Numero))]
     [MapperIgnoreTarget(nameof(VentaEntity.Admision))]
     [MapperIgnoreTarget(nameof(VentaEntity.Paciente))]
+    [MapperIgnoreTarget(nameof(VentaEntity.Vendedor))]
     [MapperIgnoreTarget(nameof(VentaEntity.Moneda))]
     [MapperIgnoreTarget(nameof(VentaEntity.Detalles))]
     [MapperIgnoreTarget(nameof(VentaEntity.Pagadores))]
@@ -66,156 +180,5 @@ public static partial class VentaMapper
     public static partial void UpdateEntity(
         UpdateVentaRequest request,
         VentaEntity entity
-    );
-}
-[Mapper]
-public static partial class VentaDetalleMapper
-{
-    public static VentaDetalleResponse ToResponse(
-        VentaDetalleEntity entity)
-    {
-        ArgumentNullException.ThrowIfNull(entity);
-
-        return new VentaDetalleResponse
-        {
-            Id = entity.Id,
-            VentaId = entity.VentaId,
-
-            Servicio = entity.Servicio is null
-                ? null
-                : new ServiceInfo
-                {
-                    Id = entity.Servicio.Id,
-                    Codigo = entity.Servicio.Codigo,
-                    Nombre = entity.Servicio.Nombre
-                },
-
-            Medico = entity.Medico is null
-                ? null
-                : new MedicoInfo
-                {
-                    Id = entity.Medico.Id,
-                    NombreMedico = ObtenerNombreMedico(entity.Medico)
-                },
-
-            Cantidad = entity.Cantidad,
-            PrecioUnitario = entity.PrecioUnitario,
-            Descuento = entity.Descuento,
-            Total = entity.Total,
-            MontoMedico = entity.MontoMedico,
-            MontoClinica = entity.MontoClinica,
-
-            Activo = entity.Activo,
-            FechaCreacion = entity.FechaCreacion,
-            FechaModificacion = entity.FechaModificacion,
-            CreadoPor = entity.CreadoPor,
-            ModificadoPor = entity.ModificadoPor
-        };
-    }
-
-    public static List<VentaDetalleResponse> ToResponse(
-        IEnumerable<VentaDetalleEntity> entities)
-    {
-        return entities
-            .Where(x => x is not null)
-            .Select(ToResponse)
-            .ToList();
-    }
-
-    [MapperIgnoreTarget(nameof(VentaDetalleEntity.Id))]
-    [MapperIgnoreTarget(nameof(VentaDetalleEntity.VentaId))]
-    [MapperIgnoreTarget(nameof(VentaDetalleEntity.Venta))]
-    [MapperIgnoreTarget(nameof(VentaDetalleEntity.Servicio))]
-    [MapperIgnoreTarget(nameof(VentaDetalleEntity.Medico))]
-    [MapperIgnoreTarget(nameof(VentaDetalleEntity.Total))]
-    [MapperIgnoreTarget(nameof(VentaDetalleEntity.MontoMedico))]
-    [MapperIgnoreTarget(nameof(VentaDetalleEntity.MontoClinica))]
-    [MapperIgnoreTarget(nameof(VentaDetalleEntity.Activo))]
-    [MapperIgnoreTarget(nameof(VentaDetalleEntity.FechaCreacion))]
-    [MapperIgnoreTarget(nameof(VentaDetalleEntity.FechaModificacion))]
-    [MapperIgnoreTarget(nameof(VentaDetalleEntity.CreadoPor))]
-    [MapperIgnoreTarget(nameof(VentaDetalleEntity.ModificadoPor))]
-    public static partial VentaDetalleEntity ToEntity(
-        CreateVentaDetalleRequest request
-    );
-
-    [MapperIgnoreTarget(nameof(VentaDetalleEntity.Id))]
-    [MapperIgnoreTarget(nameof(VentaDetalleEntity.VentaId))]
-    [MapperIgnoreTarget(nameof(VentaDetalleEntity.Venta))]
-    [MapperIgnoreTarget(nameof(VentaDetalleEntity.Servicio))]
-    [MapperIgnoreTarget(nameof(VentaDetalleEntity.Medico))]
-    [MapperIgnoreTarget(nameof(VentaDetalleEntity.Total))]
-    [MapperIgnoreTarget(nameof(VentaDetalleEntity.MontoMedico))]
-    [MapperIgnoreTarget(nameof(VentaDetalleEntity.MontoClinica))]
-    [MapperIgnoreTarget(nameof(VentaDetalleEntity.Activo))]
-    [MapperIgnoreTarget(nameof(VentaDetalleEntity.FechaCreacion))]
-    [MapperIgnoreTarget(nameof(VentaDetalleEntity.FechaModificacion))]
-    [MapperIgnoreTarget(nameof(VentaDetalleEntity.CreadoPor))]
-    [MapperIgnoreTarget(nameof(VentaDetalleEntity.ModificadoPor))]
-    public static partial void UpdateEntity(
-        UpdateVentaDetalleRequest request,
-        VentaDetalleEntity entity
-    );
-
-    private static string ObtenerNombreMedico(
-        Medico medico)
-    {
-        var persona = medico.Empleado?.Persona;
-
-        if (persona is null)
-            return string.Empty;
-
-        return string.Join(
-            " ",
-            new[]
-            {
-                persona.Nombres,
-                persona.ApellidoPaterno,
-                persona.ApellidoMaterno
-            }
-            .Where(x => !string.IsNullOrWhiteSpace(x))
-        );
-    }
-}
-[Mapper]
-public static partial class VentaPagadorMapper
-{
-    [MapperIgnoreSource(nameof(VentaPagadorEntity.Venta))]
-    [MapperIgnoreSource(nameof(VentaPagadorEntity.Convenio))]
-    public static partial VentaPagadorResponse ToResponse(
-        VentaPagadorEntity entity
-    );
-
-    public static partial List<VentaPagadorResponse> ToResponse(
-        IEnumerable<VentaPagadorEntity> entities
-    );
-
-    [MapperIgnoreTarget(nameof(VentaPagadorEntity.Id))]
-    [MapperIgnoreTarget(nameof(VentaPagadorEntity.VentaId))]
-    [MapperIgnoreTarget(nameof(VentaPagadorEntity.Venta))]
-    [MapperIgnoreTarget(nameof(VentaPagadorEntity.Convenio))]
-    [MapperIgnoreTarget(nameof(VentaPagadorEntity.Estado))]
-    [MapperIgnoreTarget(nameof(VentaPagadorEntity.Activo))]
-    [MapperIgnoreTarget(nameof(VentaPagadorEntity.FechaCreacion))]
-    [MapperIgnoreTarget(nameof(VentaPagadorEntity.FechaModificacion))]
-    [MapperIgnoreTarget(nameof(VentaPagadorEntity.CreadoPor))]
-    [MapperIgnoreTarget(nameof(VentaPagadorEntity.ModificadoPor))]
-    public static partial VentaPagadorEntity ToEntity(
-        CreateVentaPagadorRequest request
-    );
-
-    [MapperIgnoreTarget(nameof(VentaPagadorEntity.Id))]
-    [MapperIgnoreTarget(nameof(VentaPagadorEntity.VentaId))]
-    [MapperIgnoreTarget(nameof(VentaPagadorEntity.Venta))]
-    [MapperIgnoreTarget(nameof(VentaPagadorEntity.Convenio))]
-    [MapperIgnoreTarget(nameof(VentaPagadorEntity.Estado))]
-    [MapperIgnoreTarget(nameof(VentaPagadorEntity.Activo))]
-    [MapperIgnoreTarget(nameof(VentaPagadorEntity.FechaCreacion))]
-    [MapperIgnoreTarget(nameof(VentaPagadorEntity.FechaModificacion))]
-    [MapperIgnoreTarget(nameof(VentaPagadorEntity.CreadoPor))]
-    [MapperIgnoreTarget(nameof(VentaPagadorEntity.ModificadoPor))]
-    public static partial void UpdateEntity(
-        UpdateVentaPagadorRequest request,
-        VentaPagadorEntity entity
     );
 }

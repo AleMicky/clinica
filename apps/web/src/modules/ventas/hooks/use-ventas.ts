@@ -48,7 +48,8 @@ export function useCreateVenta() {
   return useMutation({
     mutationFn: (data: CreateVentaRequest) => createVenta(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ventaKeys.all });
+      queryClient.invalidateQueries({ queryKey: ventaKeys.all, refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["admisiones"], refetchType: "all" });
     },
   });
 }
@@ -60,8 +61,9 @@ export function useCambiarEstadoVenta() {
     mutationFn: ({ id, data }: { id: number; data: CambiarEstadoVentaRequest }) =>
       cambiarEstadoVenta(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ventaKeys.all });
-      queryClient.invalidateQueries({ queryKey: ventaKeys.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: ventaKeys.all, refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ventaKeys.detail(variables.id), refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["admisiones"], refetchType: "all" });
     },
   });
 }
@@ -72,7 +74,8 @@ export function useAnularVenta() {
   return useMutation({
     mutationFn: (id: number) => anularVenta(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ventaKeys.all });
+      queryClient.invalidateQueries({ queryKey: ventaKeys.all, refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["admisiones"], refetchType: "all" });
     },
   });
 }

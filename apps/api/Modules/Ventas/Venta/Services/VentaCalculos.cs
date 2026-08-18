@@ -4,11 +4,9 @@ namespace Clinica.Api.Modules.Ventas.Venta.Services;
 
 internal static class VentaCalculos
 {
-    public static decimal TotalDetalle(
-        VentaDetalleRequest request)
+    public static decimal TotalDetalle(VentaDetalleRequest request)
     {
-        return (request.Cantidad * request.PrecioUnitario)
-               - request.Descuento;
+        return (request.Cantidad * request.PrecioUnitario) - request.Descuento;
     }
 
     public static (decimal? MontoMedico, decimal? MontoClinica) RepartoMedico(

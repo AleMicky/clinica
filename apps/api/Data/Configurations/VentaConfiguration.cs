@@ -48,6 +48,11 @@ public sealed class VentaConfiguration
             .WithMany()
             .HasForeignKey(x => x.PacienteId)
             .OnDelete(DeleteBehavior.Restrict);
+        
+          builder.HasOne(x => x.Vendedor)
+            .WithMany()
+            .HasForeignKey(x => x.VendedorId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(x => x.Moneda)
             .WithMany()
