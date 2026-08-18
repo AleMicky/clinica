@@ -29,8 +29,6 @@ import {
 } from "../types/ventas.types";
 import { VentaStatusBadge } from "./venta-status-badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { usePacientes } from "@/modules/recepcion/pacientes/hooks/use-pacientes";
-import { useMonedas } from "@/modules/parametros/moneda/hooks/use-monedas";
 
 interface VentaListProps {
   ventas: VentaResponse[];
@@ -70,10 +68,6 @@ export function VentaList({
   onChangeStatus,
   onAnular,
 }: VentaListProps) {
-  // Auxiliary queries to render patient and currency info
-  const { data: pacientesData } = usePacientes({ pageSize: 100 });
-  const { data: monedasData } = useMonedas({ pageSize: 100 });
-
   const tabs: Array<{
     key: EstadoVenta | "TODOS";
     label: string;
@@ -155,17 +149,12 @@ export function VentaList({
         ) : (
           <div className="space-y-1.5">
             {ventas.map((venta) => {
-              const pacienteObj = pacientesData?.items?.find((p) => p.id === venta.pacienteId);
-              const pacienteNombre = pacienteObj?.persona
-                ? `${pacienteObj.persona.nombres} ${pacienteObj.persona.apellidoPaterno} ${pacienteObj.persona.apellidoMaterno || ""}`.trim()
-                : `Paciente #${venta.pacienteId}`;
-              const docPaciente = pacienteObj?.persona?.numeroDocumento
-                ? `(Doc: ${pacienteObj.persona.numeroDocumento})`
+              const pacienteNombre = venta.paciente?.nombreCompleto || "Paciente";
+              const docPaciente = venta.paciente?.numeroHistoriaClinica
+                ? `(HC: ${venta.paciente.numeroHistoriaClinica})`
                 : "";
 
-              const monedaObj = monedasData?.items?.find((m) => m.id === venta.monedaId);
-              const monedaSimbolo = monedaObj?.simbolo || "Bs.";
-
+              const monedaSimbolo = venta.moneda?.simbolo || (venta.moneda?.codigo === "USD" ? "$" : "Bs.");
               const numDetalles = venta.detalles?.length || 0;
               const isSelected = selectedVentaId === venta.id;
 
@@ -221,6 +210,15 @@ export function VentaList({
                             })}
                           </span>
                         </span>
+
+                        {venta.vendedor?.nombreCompleto && (
+                          <>
+                            <span className="text-muted-foreground/40">•</span>
+                            <span className="text-muted-foreground">
+                              Cajero: <strong className="text-foreground font-normal">{venta.vendedor.nombreCompleto}</strong>
+                            </span>
+                          </>
+                        )}
 
                         {numDetalles > 0 && (
                           <>

@@ -37,9 +37,7 @@ import {
   useVentaDetalles,
   useVentaPagadores,
 } from "../hooks/use-ventas";
-import { usePacientes } from "@/modules/recepcion/pacientes/hooks/use-pacientes";
 import { useConvenios } from "@/modules/servicios/convenio/hooks/use-convenio";
-import { useMonedas } from "@/modules/parametros/moneda/hooks/use-monedas";
 
 interface VentaDetailSheetProps {
   open: boolean;
@@ -70,9 +68,7 @@ export function VentaDetailSheet({
   const venta = fullVentaData ?? initialVenta;
 
   // Queries auxiliares para resolver nombres en la interfaz
-  const { data: pacientesData } = usePacientes({ pageSize: 100 });
   const { data: conveniosData } = useConvenios({ pageSize: 100 });
-  const { data: monedasData } = useMonedas({ pageSize: 100 });
 
   if (!venta) return null;
 
@@ -91,14 +87,12 @@ export function VentaDetailSheet({
       ? fullVentaData.pagadores
       : initialVenta?.pagadores ?? [];
 
-  // Mapas de ayuda
-  const pacienteObj = pacientesData?.items?.find((p) => p.id === venta.pacienteId);
-  const pacienteNombre = pacienteObj?.persona
-    ? `${pacienteObj.persona.nombres} ${pacienteObj.persona.apellidoPaterno} ${pacienteObj.persona.apellidoMaterno || ""}`.trim()
-    : `Paciente #${venta.pacienteId}`;
+  const pacienteNombre = venta.paciente?.nombreCompleto || "Paciente";
+  const docPaciente = venta.paciente?.numeroHistoriaClinica
+    ? `HC: ${venta.paciente.numeroHistoriaClinica}`
+    : "";
 
-  const monedaObj = monedasData?.items?.find((m) => m.id === venta.monedaId);
-  const monedaSimbolo = monedaObj?.simbolo || "Bs.";
+  const monedaSimbolo = venta.moneda?.simbolo || (venta.moneda?.codigo === "USD" ? "$" : "Bs.");
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -142,6 +136,11 @@ export function VentaDetailSheet({
                   <User className="size-3 text-primary shrink-0" />
                   {pacienteNombre}
                 </span>
+                {docPaciente && (
+                  <span className="text-[10px] text-muted-foreground font-mono block pl-4">
+                    {docPaciente}
+                  </span>
+                )}
               </div>
 
               <div>
@@ -156,7 +155,7 @@ export function VentaDetailSheet({
                 <span className="text-muted-foreground block text-[11px]">Moneda:</span>
                 <span className="font-semibold text-foreground flex items-center gap-1 mt-0.5">
                   <Coins className="size-3 text-primary shrink-0" />
-                  {monedaObj ? `${monedaObj.nombre} (${monedaSimbolo})` : `Moneda #${venta.monedaId}`}
+                  {venta.moneda ? `${venta.moneda.nombre} (${monedaSimbolo})` : monedaSimbolo}
                 </span>
               </div>
 
@@ -167,6 +166,16 @@ export function VentaDetailSheet({
                   {new Date(venta.fecha).toLocaleDateString()}
                 </span>
               </div>
+
+              {venta.vendedor?.nombreCompleto && (
+                <div className="col-span-2 pt-2 border-t border-border/40">
+                  <span className="text-muted-foreground block text-[11px]">Cajero / Vendedor:</span>
+                  <span className="font-semibold text-foreground flex items-center gap-1 mt-0.5">
+                    <User className="size-3 text-blue-600 shrink-0" />
+                    {venta.vendedor.nombreCompleto}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 

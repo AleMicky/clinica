@@ -30,9 +30,7 @@ import {
   useVentaDetalles,
   useVentaPagadores,
 } from "../hooks/use-ventas";
-import { usePacientes } from "@/modules/recepcion/pacientes/hooks/use-pacientes";
 import { useConvenios } from "@/modules/servicios/convenio/hooks/use-convenio";
-import { useMonedas } from "@/modules/parametros/moneda/hooks/use-monedas";
 
 interface VentaDetailCardProps {
   venta: VentaResponse | null;
@@ -63,9 +61,7 @@ export function VentaDetailCard({
   const venta = fullVentaData ?? initialVenta;
 
   // Consultas auxiliares para nombres generales
-  const { data: pacientesData } = usePacientes({ pageSize: 100 });
   const { data: conveniosData } = useConvenios({ pageSize: 100 });
-  const { data: monedasData } = useMonedas({ pageSize: 100 });
 
   if (!venta) {
     return (
@@ -98,16 +94,12 @@ export function VentaDetailCard({
       ? fullVentaData.pagadores
       : initialVenta?.pagadores ?? [];
 
-  const pacienteObj = pacientesData?.items?.find((p) => p.id === venta.pacienteId);
-  const pacienteNombre = pacienteObj?.persona
-    ? `${pacienteObj.persona.nombres} ${pacienteObj.persona.apellidoPaterno} ${pacienteObj.persona.apellidoMaterno || ""}`.trim()
-    : `Paciente #${venta.pacienteId}`;
-  const docPaciente = pacienteObj?.persona?.numeroDocumento
-    ? `Doc: ${pacienteObj.persona.numeroDocumento}`
+  const pacienteNombre = venta.paciente?.nombreCompleto || "Paciente";
+  const docPaciente = venta.paciente?.numeroHistoriaClinica
+    ? `HC: ${venta.paciente.numeroHistoriaClinica}`
     : "";
 
-  const monedaObj = monedasData?.items?.find((m) => m.id === venta.monedaId);
-  const monedaSimbolo = monedaObj?.simbolo || "Bs.";
+  const monedaSimbolo = venta.moneda?.simbolo || (venta.moneda?.codigo === "USD" ? "$" : "Bs.");
 
   return (
     <Card className="border border-border/70 shadow-xs bg-card rounded-xl overflow-hidden flex flex-col">
@@ -192,7 +184,7 @@ export function VentaDetailCard({
       </CardHeader>
 
       <CardContent className="p-3.5 space-y-3.5 overflow-y-auto max-h-[calc(100vh-280px)] scrollbar-thin">
-        {/* METADATOS BÁSICOS (Fecha, Moneda) */}
+        {/* METADATOS BÁSICOS (Fecha, Moneda, Vendedor) */}
         <div className="grid grid-cols-2 gap-2 text-xs p-2.5 rounded-lg border border-border/60 bg-muted/20">
           <div className="flex items-center gap-1.5 text-muted-foreground">
             <Calendar className="size-3.5 text-primary/70 shrink-0" />
@@ -209,9 +201,17 @@ export function VentaDetailCard({
           <div className="flex items-center gap-1.5 text-muted-foreground">
             <Coins className="size-3.5 text-emerald-600 shrink-0" />
             <span>
-              Moneda: <strong className="text-foreground">{monedaSimbolo}</strong>
+              Moneda: <strong className="text-foreground">{venta.moneda?.nombre || monedaSimbolo}</strong>
             </span>
           </div>
+          {venta.vendedor?.nombreCompleto && (
+            <div className="col-span-2 flex items-center gap-1.5 text-muted-foreground pt-1 border-t border-border/40 text-[11px]">
+              <User className="size-3.5 text-blue-600 shrink-0" />
+              <span>
+                Cajero / Vendedor: <strong className="text-foreground">{venta.vendedor.nombreCompleto}</strong>
+              </span>
+            </div>
+          )}
         </div>
 
         {/* TABS DE DETALLES Y PAGADORES */}

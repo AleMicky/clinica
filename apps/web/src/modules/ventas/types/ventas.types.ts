@@ -31,6 +31,25 @@ export interface AuditableResponse {
   lastModifiedBy?: string;
 }
 
+export interface PacienteBaseInfo {
+  id: number;
+  numeroHistoriaClinica: string;
+  nombreCompleto: string;
+}
+
+export interface EmpleadoBaseInfo {
+  id: number;
+  codigoEmpleado?: string | null;
+  nombreCompleto: string;
+}
+
+export interface MonedaInfo {
+  id: number;
+  codigo: string;
+  nombre: string;
+  simbolo?: string;
+}
+
 export interface ServiceInfo {
   id: number;
   codigo: string;
@@ -70,8 +89,9 @@ export interface VentaResponse extends AuditableResponse {
   id: number;
   numero: string;
   admisionId: number;
-  pacienteId: number;
-  monedaId: number;
+  paciente?: PacienteBaseInfo | null;
+  vendedor?: EmpleadoBaseInfo | null;
+  moneda?: MonedaInfo | null;
   fecha: string;
   subtotal: number;
   descuento: number;
@@ -104,6 +124,7 @@ export interface UpdateVentaPagadorRequest extends VentaPagadorRequest { }
 export interface VentaRequest {
   admisionId: number;
   pacienteId: number;
+  vendedorId: number;
   monedaId: number;
   fecha: string;
   detalles: VentaDetalleRequest[];

@@ -39,6 +39,7 @@ import { useCreateVenta } from "../hooks/use-ventas";
 import { useAdmisiones } from "@/modules/recepcion/admisiones/hooks/use-admisiones";
 import { usePacientes } from "@/modules/recepcion/pacientes/hooks/use-pacientes";
 import { useMonedas } from "@/modules/parametros/moneda/hooks/use-monedas";
+import { useEmpleados } from "@/modules/recursos-humanos/empleado/hooks/use-empleados";
 import { useMedicos } from "@/modules/recursos-humanos/medico/hooks/use-medicos";
 import { useConvenios } from "@/modules/servicios/convenio/hooks/use-convenio";
 import { useServicios } from "@/modules/servicios/servicio/hooks/use-servicio";
@@ -67,6 +68,7 @@ export function VentaFormDialog({
   const { data: admisionesData, isLoading: isLoadingAdmisiones } = useAdmisiones({ pageSize: 100 });
   const { data: pacientesData } = usePacientes({ pageSize: 100 });
   const { data: monedasData, isLoading: isLoadingMonedas } = useMonedas({ pageSize: 100 });
+  const { data: empleadosData, isLoading: isLoadingEmpleados } = useEmpleados({ pageSize: 100 });
   const { data: medicosData } = useMedicos({ pageSize: 100 });
   const { data: conveniosData } = useConvenios({ pageSize: 100 });
   const { data: categoriasData } = useCategoriasServicio({ pageSize: 100 });
@@ -83,6 +85,7 @@ export function VentaFormDialog({
   // Form State
   const [admisionId, setAdmisionId] = React.useState<string>("");
   const [pacienteId, setPacienteId] = React.useState<string>("");
+  const [vendedorId, setVendedorId] = React.useState<string>("");
   const [monedaId, setMonedaId] = React.useState<string>("");
   const [fecha, setFecha] = React.useState<string>(
     new Date().toISOString().slice(0, 16)
@@ -99,6 +102,9 @@ export function VentaFormDialog({
 
       const defaultMoneda = monedasData?.items?.[0];
       setMonedaId(defaultMoneda ? defaultMoneda.id.toString() : "");
+
+      const defaultEmpleado = empleadosData?.items?.[0];
+      setVendedorId(defaultEmpleado ? defaultEmpleado.id.toString() : "");
 
       setFecha(new Date().toISOString().slice(0, 16));
 
@@ -123,7 +129,7 @@ export function VentaFormDialog({
         },
       ]);
     }
-  }, [open, monedasData, serviciosData]);
+  }, [open, monedasData, empleadosData, serviciosData]);
 
   // Handle Admission selection: auto pick patient & prefill services if available
   const handleSelectAdmision = (admIdStr: string | null) => {
@@ -268,6 +274,11 @@ export function VentaFormDialog({
       return;
     }
 
+    if (!vendedorId) {
+      toast.error("Por favor seleccione el cajero/vendedor responsable.");
+      return;
+    }
+
     if (!monedaId) {
       toast.error("Por favor seleccione el tipo de moneda.");
       return;
@@ -286,6 +297,7 @@ export function VentaFormDialog({
     const payload = {
       admisionId: Number(admisionId),
       pacienteId: Number(pacienteId),
+      vendedorId: Number(vendedorId),
       monedaId: Number(monedaId),
       fecha: new Date(fecha).toISOString(),
       detalles: detalles.map((d) => ({
@@ -314,6 +326,7 @@ export function VentaFormDialog({
 
   const admisionesList = admisionesData?.items ?? [];
   const pacientesList = pacientesData?.items ?? [];
+  const empleadosList = empleadosData?.items ?? [];
   const monedasList = monedasData?.items ?? [];
   const medicosList = medicosData?.items ?? [];
   const conveniosList = conveniosData?.items ?? [];
@@ -343,12 +356,12 @@ export function VentaFormDialog({
           <div className="p-4 rounded-xl border border-border/70 bg-card space-y-4 shadow-xs">
             <h3 className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
               <HeartPulse className="size-3.5 text-primary" />
-              1. Admisión, Paciente y Cotización
+              1. Admisión, Paciente y Venta
             </h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
               {/* Seleccionar Admisión */}
-              <div className="space-y-1 sm:col-span-1">
+              <div className="space-y-1">
                 <Label className="text-xs font-semibold flex items-center gap-1">
                   Admisión Relacionada <span className="text-rose-500">*</span>
                 </Label>
@@ -373,10 +386,10 @@ export function VentaFormDialog({
               </div>
 
               {/* Paciente (auto-seleccionado o verificado) */}
-              <div className="space-y-1 sm:col-span-1">
+              <div className="space-y-1">
                 <Label className="text-xs font-semibold flex items-center gap-1">
                   <User className="size-3 text-muted-foreground" />
-                  Paciente
+                  Paciente <span className="text-rose-500">*</span>
                 </Label>
                 <Select value={pacienteId} onValueChange={(val) => setPacienteId(val || "")}>
                   <SelectTrigger className="h-9 text-xs bg-background">
@@ -393,6 +406,28 @@ export function VentaFormDialog({
                         </SelectItem>
                       );
                     })}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Cajero / Vendedor */}
+              <div className="space-y-1">
+                <Label className="text-xs font-semibold flex items-center gap-1">
+                  <User className="size-3 text-muted-foreground" />
+                  Cajero / Vendedor <span className="text-rose-500">*</span>
+                </Label>
+                <Select value={vendedorId} onValueChange={(val) => setVendedorId(val || "")}>
+                  <SelectTrigger className="h-9 text-xs bg-background">
+                    <SelectValue placeholder={isLoadingEmpleados ? "Cargando..." : "Seleccionar cajero..."} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {empleadosList.map((emp) => (
+                      <SelectItem key={emp.id} value={emp.id.toString()} className="text-xs">
+                        {emp.persona
+                          ? `${emp.persona.nombres} ${emp.persona.apellidoPaterno}`
+                          : `Empleado #${emp.id}`}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -418,7 +453,7 @@ export function VentaFormDialog({
               </div>
 
               {/* Fecha */}
-              <div className="space-y-1 sm:col-span-1">
+              <div className="space-y-1 sm:col-span-2 lg:col-span-2">
                 <Label className="text-xs font-semibold flex items-center gap-1">
                   <Calendar className="size-3 text-muted-foreground" />
                   Fecha de Comprobante
