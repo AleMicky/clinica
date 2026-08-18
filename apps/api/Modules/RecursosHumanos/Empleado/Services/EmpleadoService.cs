@@ -99,7 +99,7 @@ public sealed class EmpleadoService(
             .AsNoTracking()
             .AsQueryable();
 
-        if (!currentUserService.IsInRole("ADMIN"))
+        if (!currentUserService.IsInRole("ADMINISTRADOR"))
         {
             var personaId = await dbContext.Users
                 .Where(u => u.Id == usuarioId.Value)

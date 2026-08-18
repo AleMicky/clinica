@@ -18,6 +18,12 @@ export interface PersonaRef {
     estadoCivil?: string | null;
 }
 
+export interface EmpleadoBaseInfo {
+    id: number;
+    codigoEmpleado: string;
+    nombreCompleto: string;
+}
+
 export interface EmpleadoResponse {
     id: number;
     personaId: number;

@@ -9,7 +9,7 @@ import { Autocomplete, type AutocompleteOption } from "@/components/ui/autocompl
 import { Building2, UserCheck, Calendar } from "lucide-react";
 import type { PacienteConvenioResponse } from "../../pacientes/types/paciente.types";
 import type { ConvenioResponse } from "@/modules/servicios/convenio/types/convenio.types";
-import type { EmpleadoResponse } from "@/modules/recursos-humanos/empleado/types/empleado.types";
+import type { EmpleadoBaseInfo } from "@/modules/recursos-humanos/empleado/types/empleado.types";
 
 export interface AdmisionCoberturaSectionProps {
   convenioId: string;
@@ -22,7 +22,7 @@ export interface AdmisionCoberturaSectionProps {
   setObservacion: (val: string) => void;
   pacienteConveniosList: PacienteConvenioResponse[];
   conveniosList: ConvenioResponse[];
-  empleadosList: EmpleadoResponse[];
+  empleadosList: EmpleadoBaseInfo[];
   isLoadingPacienteConvenios: boolean;
   isLoadingEmpleados?: boolean;
   selectedConvenioNombre?: string;
@@ -44,15 +44,10 @@ export function AdmisionCoberturaSection({
   isLoadingEmpleados,
 }: AdmisionCoberturaSectionProps) {
   const recepcionistaOptions: AutocompleteOption[] = React.useMemo(() => {
-    return empleadosList.map((emp) => {
-      const nombre = emp.persona
-        ? `${emp.persona.nombres} ${emp.persona.apellidoPaterno} ${emp.persona.apellidoMaterno || ""}`.trim()
-        : emp.codigoEmpleado || `Empleado #${emp.id}`;
-      return {
-        value: String(emp.id),
-        label: nombre,
-      };
-    });
+    return empleadosList.map((emp) => ({
+      value: String(emp.id),
+      label: emp.nombreCompleto || emp.codigoEmpleado || `Empleado #${emp.id}`,
+    }));
   }, [empleadosList]);
 
   const convenioOptions: AutocompleteOption[] = React.useMemo(() => {

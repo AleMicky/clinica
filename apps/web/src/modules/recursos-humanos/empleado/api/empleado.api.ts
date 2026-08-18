@@ -1,6 +1,7 @@
 import { apiClient } from "@/lib/api/api-client";
 import type {
     CreateEmpleadoRequest,
+    EmpleadoBaseInfo,
     EmpleadoQueryParams,
     EmpleadoResponse,
     PagedResult,
@@ -8,6 +9,13 @@ import type {
 } from "../types/empleado.types";
 
 const BASE = "/empleados";
+
+export async function getEmpleadosPermitidos(): Promise<EmpleadoBaseInfo[]> {
+    const response = await apiClient.get<EmpleadoBaseInfo[]>(
+        `${BASE}/permitidos`,
+    );
+    return response.data;
+}
 
 export async function getEmpleados(
     params?: EmpleadoQueryParams,

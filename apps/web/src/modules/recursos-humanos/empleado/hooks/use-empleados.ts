@@ -6,6 +6,7 @@ import {
     deleteEmpleado,
     getEmpleadoById,
     getEmpleados,
+    getEmpleadosPermitidos,
     updateEmpleado,
 } from "../api/empleado.api";
 import { empleadoKeys } from "../api/empleado.key";
@@ -14,6 +15,13 @@ import type {
     EmpleadoQueryParams,
     UpdateEmpleadoRequest,
 } from "../types/empleado.types";
+
+export function useEmpleadosPermitidos() {
+    return useQuery({
+        queryKey: empleadoKeys.permitidos(),
+        queryFn: () => getEmpleadosPermitidos(),
+    });
+}
 
 export function useEmpleados(params?: EmpleadoQueryParams) {
     return useQuery({

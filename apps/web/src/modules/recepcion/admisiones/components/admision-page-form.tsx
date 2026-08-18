@@ -10,11 +10,11 @@ import { PacienteFormDialog } from "../../pacientes/components/paciente-form-dia
 import { getPacienteFullName } from "../../pacientes/components/paciente-card";
 import type { PacienteResponse } from "../../pacientes/types/paciente.types";
 import { useMedicos } from "@/modules/recursos-humanos/medico/hooks/use-medicos";
-import { useEmpleados } from "@/modules/recursos-humanos/empleado/hooks/use-empleados";
+import { useEmpleadosPermitidos } from "@/modules/recursos-humanos/empleado/hooks/use-empleados";
 import { useConvenios } from "@/modules/servicios/convenio/hooks/use-convenio";
 import { useCategoriasServicio } from "@/modules/servicios/categoria-servicio/hooks/use-categoria-servicio";
 import type { ConvenioResponse } from "@/modules/servicios/convenio/types/convenio.types";
-import type { EmpleadoResponse } from "@/modules/recursos-humanos/empleado/types/empleado.types";
+import type { EmpleadoBaseInfo } from "@/modules/recursos-humanos/empleado/types/empleado.types";
 import { useCreateAdmision } from "../hooks/use-admisiones";
 import { useAdmisionStore } from "../store/use-admision-store";
 import { MultiServicePickerModal } from "./multi-service-picker-modal";
@@ -39,9 +39,7 @@ export function AdmisionPageForm() {
   const { data: medicosData } = useMedicos({
     pageSize: 100,
   });
-  const { data: empleadosData, isLoading: isLoadingEmpleados } = useEmpleados({
-    pageSize: 100,
-  });
+  const { data: empleadosData, isLoading: isLoadingEmpleados } = useEmpleadosPermitidos();
   const { data: categoriasData } = useCategoriasServicio({ pageSize: 100 });
 
   const categoriasList = categoriasData?.items ?? [];
@@ -51,10 +49,8 @@ export function AdmisionPageForm() {
     : Array.isArray(conveniosData)
     ? (conveniosData as unknown as ConvenioResponse[])
     : [];
-  const empleadosList: EmpleadoResponse[] = Array.isArray(empleadosData?.items)
-    ? empleadosData.items
-    : Array.isArray(empleadosData)
-    ? (empleadosData as unknown as EmpleadoResponse[])
+  const empleadosList: EmpleadoBaseInfo[] = Array.isArray(empleadosData)
+    ? empleadosData
     : [];
 
   // Modales
@@ -69,8 +65,14 @@ export function AdmisionPageForm() {
   const [patientSearch, setPatientSearch] = React.useState("");
   const [selectedPacienteId, setSelectedPacienteId] = React.useState<string>("");
 
-  // Estado del Recepcionista Responsable (inicia vacío)
+  // Estado del Recepcionista Responsable (inicia vacío o se auto-asigna si solo hay 1 permitido)
   const [recepcionistaId, setRecepcionistaId] = React.useState<string>("");
+
+  React.useEffect(() => {
+    if (empleadosList.length === 1 && !recepcionistaId) {
+      setRecepcionistaId(String(empleadosList[0].id));
+    }
+  }, [empleadosList, recepcionistaId]);
 
   // Consulta de Convenios específicos del Paciente Seleccionado (GET /api/v1/pacientes/{pacienteId}/convenios)
   const numericPacienteId = selectedPacienteId ? Number(selectedPacienteId) : 0;
