@@ -20,7 +20,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Building2,
   Calendar,
   Coins,
   CreditCard,
@@ -32,7 +31,6 @@ import {
   Stethoscope,
   Trash2,
   User,
-  Users,
 } from "lucide-react";
 import { toast } from "sonner";
 import { TipoPagador, type CreateVentaDetalleRequest, type CreateVentaPagadorRequest } from "../types/ventas.types";

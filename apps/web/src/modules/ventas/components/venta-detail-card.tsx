@@ -13,7 +13,6 @@ import {
   Coins,
   Receipt,
   RefreshCw,
-  Stethoscope,
   User,
   Users,
   XCircle,

@@ -1,7 +1,5 @@
 "use client";
 
-import * as React from "react";
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,7 +21,6 @@ import {
   CreditCard,
   CheckCircle2,
   Receipt,
-  User,
   Hash,
 } from "lucide-react";
 import {

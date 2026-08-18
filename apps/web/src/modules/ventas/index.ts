@@ -6,7 +6,6 @@ export * from "./hooks/use-ventas";
 export { VentaHeader } from "./components/venta-header";
 export { VentaMetricsCards } from "./components/venta-metrics";
 export { VentaStatusBadge, PagadorStatusBadge } from "./components/venta-status-badge";
-export { VentaTable } from "./components/venta-table";
 export { VentaList } from "./components/venta-list";
 export { VentaDetailCard } from "./components/venta-detail-card";
 export { VentaConfirmStatusDialog } from "./components/venta-confirm-status-dialog";
