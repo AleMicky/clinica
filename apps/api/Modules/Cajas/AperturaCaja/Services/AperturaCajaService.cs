@@ -2,8 +2,8 @@ using Clinica.Api.Data;
 using Clinica.Api.Modules.Cajas.AperturaCaja.Dtos;
 using Clinica.Api.Modules.Cajas.AperturaCaja.Mappers;
 using Clinica.Api.Modules.Cajas.TurnoCaja.Dtos;
-using Clinica.Api.Shared.Crud;
 using Clinica.Api.Shared.Exceptions;
+using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
 using AperturaCajaEntity = Clinica.Api.Modules.Cajas.AperturaCaja.Entity.AperturaCaja;
 using TurnoCajaEntity = Clinica.Api.Modules.Cajas.TurnoCaja.Entity.TurnoCaja;
@@ -11,14 +11,65 @@ using TurnoCajaEntity = Clinica.Api.Modules.Cajas.TurnoCaja.Entity.TurnoCaja;
 namespace Clinica.Api.Modules.Cajas.AperturaCaja.Services;
 
 public sealed class AperturaCajaService(AppDbContext dbContext)
-    : CrudService<
-        AperturaCajaEntity,
-        CreateAperturaCajaRequest,
-        UpdateAperturaCajaRequest,
-        AperturaCajaResponse
-    >(dbContext)
 {
-    public override async Task<AperturaCajaResponse> CrearAsync(
+    private AppDbContext DbContext { get; } = dbContext;
+
+    private DbSet<AperturaCajaEntity> Entities => DbContext.Set<AperturaCajaEntity>();
+
+    public async Task<PagedResult<AperturaCajaResponse>> ListarAsync(
+        PaginationRequest pagination,
+        string? search,
+        int? turnoCajaId,
+        CancellationToken cancellationToken = default)
+    {
+        var query = BuildQuery()
+            .AsNoTracking()
+            .Where(x => x.Activo);
+
+        if (turnoCajaId.HasValue)
+            query = query.Where(x => x.TurnoCajaId == turnoCajaId.Value);
+
+        var normalizedSearch = string.IsNullOrWhiteSpace(search)
+            ? null
+            : search.Trim();
+
+        query = ApplySearch(query, normalizedSearch);
+
+        var totalItems = await query.CountAsync(cancellationToken);
+
+        var offset = (pagination.ValidPage - 1)
+                     * pagination.ValidPageSize;
+
+        var entities = await ApplyOrder(query)
+            .Skip(offset)
+            .Take(pagination.ValidPageSize)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<AperturaCajaResponse>(
+            MapToResponseList(entities),
+            pagination.ValidPage,
+            pagination.ValidPageSize,
+            totalItems);
+    }
+
+    public async Task<AperturaCajaResponse> ObtenerAsync(
+        int id,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await BuildQuery()
+            .AsNoTracking()
+            .Where(x => x.Activo)
+            .FirstOrDefaultAsync(
+                x => x.Id == id,
+                cancellationToken);
+
+        if (entity is null)
+            throw CreateNotFoundException(id);
+
+        return MapToResponse(entity);
+    }
+
+    public async Task<AperturaCajaResponse> CrearAsync(
         CreateAperturaCajaRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -35,7 +86,7 @@ public sealed class AperturaCajaService(AppDbContext dbContext)
         return MapToResponse(entity);
     }
 
-    public override async Task<AperturaCajaResponse> ActualizarAsync(
+    public async Task<AperturaCajaResponse> ActualizarAsync(
         int id,
         UpdateAperturaCajaRequest request,
         CancellationToken cancellationToken = default)
@@ -59,20 +110,37 @@ public sealed class AperturaCajaService(AppDbContext dbContext)
         return MapToResponse(entity);
     }
 
-    protected override IQueryable<AperturaCajaEntity> BuildQuery()
+    public async Task EliminarAsync(
+        int id,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await Entities
+            .FirstOrDefaultAsync(
+                x => x.Id == id,
+                cancellationToken);
+
+        if (entity is null)
+            throw CreateNotFoundException(id);
+
+        Entities.Remove(entity);
+
+        await DbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private IQueryable<AperturaCajaEntity> BuildQuery()
     {
         return Entities
             .Include(x => x.TurnoCaja).ThenInclude(t => t.Caja)
             .Include(x => x.TurnoCaja).ThenInclude(t => t.Empleado).ThenInclude(e => e.Persona);
     }
 
-    protected override IQueryable<AperturaCajaEntity> ApplyOrder(
+    private IQueryable<AperturaCajaEntity> ApplyOrder(
         IQueryable<AperturaCajaEntity> query)
     {
         return query.OrderByDescending(x => x.FechaHora);
     }
 
-    protected override AperturaCajaEntity MapToNewEntity(
+    private AperturaCajaEntity MapToNewEntity(
         CreateAperturaCajaRequest request)
     {
         var entity = AperturaCajaMapper.ToEntity(request);
@@ -80,7 +148,7 @@ public sealed class AperturaCajaService(AppDbContext dbContext)
         return entity;
     }
 
-    protected override void MapToExistingEntity(
+    private void MapToExistingEntity(
         UpdateAperturaCajaRequest request,
         AperturaCajaEntity entity)
     {
@@ -88,7 +156,7 @@ public sealed class AperturaCajaService(AppDbContext dbContext)
         Normalizar(entity);
     }
 
-    protected override AperturaCajaResponse MapToResponse(
+    private static AperturaCajaResponse MapToResponse(
         AperturaCajaEntity entity)
     {
         return new AperturaCajaResponse
@@ -106,13 +174,13 @@ public sealed class AperturaCajaService(AppDbContext dbContext)
         };
     }
 
-    protected override IReadOnlyCollection<AperturaCajaResponse>
+    private static IReadOnlyCollection<AperturaCajaResponse>
         MapToResponseList(IEnumerable<AperturaCajaEntity> entities)
     {
         return entities.Select(MapToResponse).ToList();
     }
 
-    protected override IQueryable<AperturaCajaEntity> ApplySearch(
+    private IQueryable<AperturaCajaEntity> ApplySearch(
         IQueryable<AperturaCajaEntity> query,
         string? search)
     {
@@ -142,14 +210,10 @@ public sealed class AperturaCajaService(AppDbContext dbContext)
         AperturaCajaEntity entity,
         CancellationToken cancellationToken)
     {
-        await DbContext.Entry(entity)
-            .Reference(x => x.TurnoCaja).LoadAsync(cancellationToken);
-        await DbContext.Entry(entity.TurnoCaja)
-            .Reference(x => x.Caja).LoadAsync(cancellationToken);
-        await DbContext.Entry(entity.TurnoCaja)
-            .Reference(x => x.Empleado).LoadAsync(cancellationToken);
-        await DbContext.Entry(entity.TurnoCaja.Empleado)
-            .Reference(x => x.Persona).LoadAsync(cancellationToken);
+        await DbContext.Entry(entity).Reference(x => x.TurnoCaja).LoadAsync(cancellationToken);
+        await DbContext.Entry(entity.TurnoCaja).Reference(x => x.Caja).LoadAsync(cancellationToken);
+        await DbContext.Entry(entity.TurnoCaja).Reference(x => x.Empleado).LoadAsync(cancellationToken);
+        await DbContext.Entry(entity.TurnoCaja.Empleado).Reference(x => x.Persona).LoadAsync(cancellationToken);
     }
 
     private static void Normalizar(AperturaCajaEntity entity)
@@ -209,5 +273,10 @@ public sealed class AperturaCajaService(AppDbContext dbContext)
             CodigoEmpleado = empleado.CodigoEmpleado,
             NombreCompleto = nombreCompleto
         };
+    }
+
+    private static NotFoundException CreateNotFoundException(int id)
+    {
+        return new NotFoundException(typeof(AperturaCajaEntity).Name, id);
     }
 }
