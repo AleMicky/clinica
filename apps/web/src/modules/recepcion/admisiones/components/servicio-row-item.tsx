@@ -91,51 +91,42 @@ export function ServicioRowItem({
       <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 pt-1 border-t border-border/40">
         {/* Selector de Médico */}
         <div className="w-full sm:w-60 min-w-[170px]">
-          <Select
-            value={row.medicoId ? row.medicoId.toString() : "sin-medico"}
-            onValueChange={(val: string | null) =>
-              onUpdate(
-                row.id,
-                "medicoId",
-                !val || val === "sin-medico" ? undefined : Number(val)
-              )
-            }
-          >
-            <SelectTrigger className="h-7 w-full bg-background text-[11px] font-medium border-border/80 truncate">
-              <SelectValue placeholder="Médico tratante...">
-                {selectedMedicoNombre}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent className="max-w-md">
-              <SelectItem value="sin-medico" label="Sin Médico / Guardia">
-                Sin Médico / Guardia
-              </SelectItem>
-              {row.medicosDisponibles && row.medicosDisponibles.length > 0 && (
-                <div className="border-b border-border/50 pb-1 mb-1">
-                  <div className="px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary">
-                    Médicos Asignados ({row.medicosDisponibles.length})
-                  </div>
-                  {row.medicosDisponibles.map((md) => (
-                    <SelectItem
-                      key={`md-${md.medicoId}`}
-                      value={md.medicoId.toString()}
-                      label={md.nombreMedico}
-                    >
-                      {md.nombreMedico}
-                    </SelectItem>
-                  ))}
-                </div>
-              )}
-              {medicos.map((m) => {
-                const nombre = m.empleado?.nombreCompleto || `Médico #${m.id}`;
-                return (
-                  <SelectItem key={m.id} value={m.id.toString()} label={nombre}>
-                    {nombre}
+          {row.medicosDisponibles && row.medicosDisponibles.length > 0 ? (
+            <Select
+              value={row.medicoId ? row.medicoId.toString() : "sin-medico"}
+              onValueChange={(val: string | null) =>
+                onUpdate(
+                  row.id,
+                  "medicoId",
+                  !val || val === "sin-medico" ? undefined : Number(val)
+                )
+              }
+            >
+              <SelectTrigger className="h-7 w-full bg-background text-[11px] font-medium border-border/80 truncate">
+                <SelectValue placeholder="Seleccionar médico...">
+                  {selectedMedicoNombre}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent className="max-w-md">
+                <SelectItem value="sin-medico" label="Sin Médico / Guardia">
+                  Sin Médico / Guardia
+                </SelectItem>
+                {row.medicosDisponibles.map((md) => (
+                  <SelectItem
+                    key={`md-${md.medicoId}`}
+                    value={md.medicoId.toString()}
+                    label={md.nombreMedico}
+                  >
+                    {md.nombreMedico}
                   </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <div className="h-7 px-2.5 flex items-center bg-muted/40 rounded border border-border/60 text-[11px] text-muted-foreground font-medium select-none">
+              <span className="truncate">Sin Médico / Guardia</span>
+            </div>
+          )}
         </div>
 
         {/* Valores Numéricos: Cantidad + Precio + Subtotal */}
