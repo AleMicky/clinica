@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Building2,
   Calendar,
@@ -27,6 +28,12 @@ import {
   type VentaResponse,
 } from "../types/ventas.types";
 import { PagadorStatusBadge, VentaStatusBadge } from "./venta-status-badge";
+import {
+  useVenta,
+  useVentaDetalles,
+  useVentaPagadores,
+} from "../hooks/use-ventas";
+import { useAdmision } from "@/modules/recepcion/admisiones/hooks/use-admisiones";
 import { usePacientes } from "@/modules/recepcion/pacientes/hooks/use-pacientes";
 import { useMedicos } from "@/modules/recursos-humanos/medico/hooks/use-medicos";
 import { useConvenios } from "@/modules/servicios/convenio/hooks/use-convenio";
@@ -42,11 +49,30 @@ interface VentaDetailCardProps {
 }
 
 export function VentaDetailCard({
-  venta,
+  venta: initialVenta,
   onDirectChangeStatus,
   onChangeStatusClick,
   onAnularClick,
 }: VentaDetailCardProps) {
+  const ventaId = initialVenta?.id ?? 0;
+
+  // Fetch full details & sub-resources from backend
+  const { data: fullVentaData } = useVenta(ventaId, ventaId > 0);
+  const { data: detallesResult, isLoading: isLoadingDetalles } = useVentaDetalles(
+    ventaId,
+    ventaId > 0
+  );
+  const { data: pagadoresResult, isLoading: isLoadingPagadores } = useVentaPagadores(
+    ventaId,
+    ventaId > 0
+  );
+
+  const venta = fullVentaData ?? initialVenta;
+  const admisionId = venta?.admisionId ?? 0;
+
+  // Linked admission to resolve service & doctor names if needed
+  const { data: admisionData } = useAdmision(admisionId, admisionId > 0);
+
   // Auxiliary queries to resolve names
   const { data: pacientesData } = usePacientes({ pageSize: 100 });
   const { data: medicosData } = useMedicos({ pageSize: 100 });
@@ -76,6 +102,21 @@ export function VentaDetailCard({
       </Card>
     );
   }
+
+  // Aggregate items and pagadores
+  const detalles =
+    fullVentaData?.detalles && fullVentaData.detalles.length > 0
+      ? fullVentaData.detalles
+      : detallesResult?.items && detallesResult.items.length > 0
+      ? detallesResult.items
+      : initialVenta?.detalles ?? [];
+
+  const pagadores =
+    fullVentaData?.pagadores && fullVentaData.pagadores.length > 0
+      ? fullVentaData.pagadores
+      : pagadoresResult?.items && pagadoresResult.items.length > 0
+      ? pagadoresResult.items
+      : initialVenta?.pagadores ?? [];
 
   const pacienteObj = pacientesData?.items?.find((p) => p.id === venta.pacienteId);
   const pacienteNombre = pacienteObj?.persona
@@ -197,10 +238,10 @@ export function VentaDetailCard({
         <Tabs defaultValue="detalles" className="w-full">
           <TabsList className="grid grid-cols-2 w-full h-8 bg-muted/60 p-0.5">
             <TabsTrigger value="detalles" className="text-xs font-semibold">
-              Prestaciones ({venta.detalles.length})
+              Prestaciones ({detalles.length})
             </TabsTrigger>
             <TabsTrigger value="pagadores" className="text-xs font-semibold">
-              Pagadores ({venta.pagadores.length})
+              Pagadores ({pagadores.length})
             </TabsTrigger>
           </TabsList>
 
@@ -215,17 +256,33 @@ export function VentaDetailCard({
               </div>
 
               <div className="divide-y divide-border/50">
-                {venta.detalles.length === 0 ? (
+                {isLoadingDetalles ? (
+                  <div className="p-3 space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                  </div>
+                ) : detalles.length === 0 ? (
                   <div className="p-3 text-center text-muted-foreground text-xs">
                     No hay servicios registrados en este comprobante.
                   </div>
                 ) : (
-                  venta.detalles.map((det, index) => {
+                  detalles.map((det, index) => {
+                    // Match with linked admission details if available
+                    const admDet = admisionData?.detalles?.find(
+                      (ad) => ad.servicioId === det.servicioId || ad.id === det.id
+                    );
+
                     const servicioObj = serviciosData?.items?.find((s) => s.id === det.servicioId);
-                    const servicioNombre = servicioObj?.nombre || `Servicio #${det.servicioId}`;
+                    const servicioNombre =
+                      admDet?.servicioNombre ||
+                      admDet?.servicio?.nombre ||
+                      servicioObj?.nombre ||
+                      `Servicio #${det.servicioId}`;
 
                     const medicoObj = medicosData?.items?.find((m) => m.id === det.medicoId);
                     const medicoNombre =
+                      admDet?.medicoNombre ||
+                      admDet?.medico?.empleado?.nombreCompleto ||
                       medicoObj?.empleado?.nombreCompleto ||
                       (det.medicoId ? `Médico #${det.medicoId}` : "Sin asignar");
 
@@ -264,12 +321,16 @@ export function VentaDetailCard({
           {/* TAB PAGADORES */}
           <TabsContent value="pagadores" className="space-y-2 mt-2.5">
             <div className="space-y-1.5">
-              {venta.pagadores.length === 0 ? (
+              {isLoadingPagadores ? (
+                <div className="p-3 space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                </div>
+              ) : pagadores.length === 0 ? (
                 <div className="p-4 text-center text-xs text-muted-foreground border rounded-lg">
                   No hay pagadores configurados.
                 </div>
               ) : (
-                venta.pagadores.map((pag, index) => {
+                pagadores.map((pag, index) => {
                   const convenioObj = conveniosData?.items?.find((c) => c.id === pag.convenioId);
                   const convenioNombre =
                     convenioObj?.nombre || (pag.convenioId ? `Convenio #${pag.convenioId}` : null);
