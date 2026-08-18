@@ -69,15 +69,8 @@ export function AdmisionPageForm() {
   const [patientSearch, setPatientSearch] = React.useState("");
   const [selectedPacienteId, setSelectedPacienteId] = React.useState<string>("");
 
-  // Estado del Recepcionista Responsable
+  // Estado del Recepcionista Responsable (inicia vacío)
   const [recepcionistaId, setRecepcionistaId] = React.useState<string>("");
-
-  // Auto-seleccionar primer recepcionista disponible
-  React.useEffect(() => {
-    if (empleadosList.length > 0 && !recepcionistaId) {
-      setRecepcionistaId(String(empleadosList[0].id));
-    }
-  }, [empleadosList, recepcionistaId]);
 
   // Consulta de Convenios específicos del Paciente Seleccionado (GET /api/v1/pacientes/{pacienteId}/convenios)
   const numericPacienteId = selectedPacienteId ? Number(selectedPacienteId) : 0;

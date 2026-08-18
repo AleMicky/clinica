@@ -44,10 +44,14 @@ export function Autocomplete({
 
   // Synchronize input query with external value prop change
   React.useEffect(() => {
+    if (!value) {
+      setQuery("");
+      return;
+    }
     const selectedOpt = options.find(
-      (opt) => opt.value.toLowerCase() === (value || "").toLowerCase()
+      (opt) => opt.value.toLowerCase() === value.toLowerCase()
     );
-    const nextQuery = selectedOpt ? selectedOpt.label : value ?? "";
+    const nextQuery = selectedOpt ? selectedOpt.label : value;
     setQuery((prev) => (prev !== nextQuery ? nextQuery : prev));
   }, [value, options]);
 
@@ -62,15 +66,21 @@ export function Autocomplete({
             onValueChange(query);
           }
         } else {
-          const selectedOption = options.find(
-            (opt) =>
-              opt.value.toLowerCase() === (value || "").toLowerCase() ||
-              opt.label.toLowerCase() === (query || "").toLowerCase()
+          if (!query.trim()) {
+            setQuery("");
+            if (value) {
+              onValueChange("");
+            }
+            return;
+          }
+
+          const matchedOption = options.find(
+            (opt) => opt.label.toLowerCase() === query.toLowerCase().trim()
           );
-          if (selectedOption) {
-            setQuery(selectedOption.label);
-            if (selectedOption.value !== value) {
-              onValueChange(selectedOption.value);
+          if (matchedOption) {
+            setQuery(matchedOption.label);
+            if (matchedOption.value !== value) {
+              onValueChange(matchedOption.value);
             }
           } else {
             const currentSelected = options.find(
@@ -80,7 +90,7 @@ export function Autocomplete({
               setQuery(currentSelected.label);
             } else {
               setQuery("");
-              if (value !== "") {
+              if (value) {
                 onValueChange("");
               }
             }
@@ -105,12 +115,20 @@ export function Autocomplete({
   }, [options, query]);
 
   const handleSelectOption = (option: AutocompleteOption) => {
+    if (option.value.toLowerCase() === (value || "").toLowerCase()) {
+      // Toggle off / deseleccionar si ya estaba seleccionado
+      setQuery("");
+      onValueChange("");
+      setIsOpen(false);
+      return;
+    }
     setQuery(option.label);
     onValueChange(option.value);
     setIsOpen(false);
   };
 
   const handleClear = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     setQuery("");
     onValueChange("");
@@ -147,40 +165,41 @@ export function Autocomplete({
               } else if (allowCustomValue) {
                 onValueChange(query);
                 setIsOpen(false);
+              } else if (!query.trim()) {
+                onValueChange("");
+                setIsOpen(false);
               }
             }
           }}
           className={cn(
-            "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 pr-14",
+            "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 pr-8",
             error && "border-destructive focus-visible:ring-destructive",
             className
           )}
         />
 
-        <div className="absolute right-2 flex items-center gap-1 text-muted-foreground">
+        <div className="absolute right-2 flex items-center text-muted-foreground">
           {isLoading ? (
             <Loader2 className="size-4 animate-spin text-primary" />
+          ) : query && !disabled ? (
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={handleClear}
+              className="rounded-full p-0.5 hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
+            >
+              <X className="size-3.5" />
+              <span className="sr-only">Limpiar</span>
+            </button>
           ) : (
-            <>
-              {query && !disabled && (
-                <button
-                  type="button"
-                  onClick={handleClear}
-                  className="rounded-full p-0.5 hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
-                >
-                  <X className="size-3.5" />
-                  <span className="sr-only">Limpiar</span>
-                </button>
-              )}
-              <button
-                type="button"
-                tabIndex={-1}
-                onClick={() => setIsOpen((prev) => !prev)}
-                className="p-0.5 hover:text-foreground transition-colors cursor-pointer"
-              >
-                <ChevronsUpDown className="size-4" />
-              </button>
-            </>
+            <button
+              type="button"
+              tabIndex={-1}
+              onClick={() => setIsOpen((prev) => !prev)}
+              className="p-0.5 hover:text-foreground transition-colors cursor-pointer"
+            >
+              <ChevronsUpDown className="size-4" />
+            </button>
           )}
         </div>
       </div>
