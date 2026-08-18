@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { AdmisionHeader } from "./admision-header";
 import { AdmisionMetricsCards } from "./admision-metrics";
 import { AdmisionList } from "./admision-list";
-import { AdmisionFormDialog } from "./admision-form-dialog";
 import { AdmisionDetailSheet } from "./admision-detail-sheet";
 import { AdmisionStatusDialog } from "./admision-status-dialog";
 import { AdmisionConfirmStatusDialog } from "./admision-confirm-status-dialog";
@@ -24,8 +23,7 @@ import {
 } from "../types/admision.types";
 
 export function AdmisionModuleView() {
-  // Modal State: Form Nueva Admisión
-  const [formDialogOpen, setFormDialogOpen] = React.useState(false);
+  const router = useRouter();
 
   // Modal State: Panel deslizable de Detalle Ficha
   const [detailSheetOpen, setDetailSheetOpen] = React.useState(false);
@@ -115,8 +113,6 @@ export function AdmisionModuleView() {
     enviadasVenta,
     montoTotalHoy,
   };
-
-  const router = useRouter();
 
   // Handlers de navegación y modales
   const handleOpenAdd = () => {
@@ -238,13 +234,6 @@ export function AdmisionModuleView() {
         onChangeStatus={handleOpenStatusDialog}
         onDelete={handleOpenDelete}
         onRefresh={() => refetch()}
-      />
-
-      {/* Modal: Formulario Nueva Admisión */}
-      <AdmisionFormDialog
-        open={formDialogOpen}
-        onOpenChange={setFormDialogOpen}
-        onSuccessCallback={() => refetch()}
       />
 
       {/* Sheet: Ficha y Detalle de Admisión */}
