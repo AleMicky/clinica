@@ -49,7 +49,8 @@ export function useCreateMedico() {
   return useMutation({
     mutationFn: (request: CreateMedicoRequest) => createMedico(request),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: medicoKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: medicoKeys.all, refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["admisiones"], refetchType: "all" });
       toast.success("Médico registrado exitosamente");
     },
     onError: (error: any) => {
@@ -69,8 +70,9 @@ export function useUpdateMedico() {
     mutationFn: ({ id, request }: { id: number; request: UpdateMedicoRequest }) =>
       updateMedico(id, request),
     onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: medicoKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: medicoKeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: medicoKeys.all, refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: medicoKeys.detail(id), refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["admisiones"], refetchType: "all" });
       toast.success("Médico actualizado exitosamente");
     },
     onError: (error: any) => {
@@ -89,7 +91,8 @@ export function useDeleteMedico() {
   return useMutation({
     mutationFn: (id: number) => deleteMedico(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: medicoKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: medicoKeys.all, refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["admisiones"], refetchType: "all" });
       toast.success("Médico inhabilitado exitosamente");
     },
     onError: (error: any) => {

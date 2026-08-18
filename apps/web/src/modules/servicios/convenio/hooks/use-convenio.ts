@@ -42,7 +42,10 @@ export function useCreateConvenio() {
   return useMutation({
     mutationFn: (data: CreateConvenioRequest) => createConvenio(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: convenioKeys.all });
+      queryClient.invalidateQueries({ queryKey: convenioKeys.all, refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["admisiones"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["pacientes"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["ventas"], refetchType: "all" });
     },
   });
 }
@@ -54,8 +57,11 @@ export function useUpdateConvenio() {
     mutationFn: ({ id, data }: { id: number; data: UpdateConvenioRequest }) =>
       updateConvenio(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: convenioKeys.all });
-      queryClient.invalidateQueries({ queryKey: convenioKeys.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: convenioKeys.all, refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: convenioKeys.detail(variables.id), refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["admisiones"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["pacientes"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["ventas"], refetchType: "all" });
     },
   });
 }
@@ -66,7 +72,10 @@ export function useDeleteConvenio() {
   return useMutation({
     mutationFn: (id: number) => deleteConvenio(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: convenioKeys.all });
+      queryClient.invalidateQueries({ queryKey: convenioKeys.all, refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["admisiones"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["pacientes"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["ventas"], refetchType: "all" });
     },
   });
 }

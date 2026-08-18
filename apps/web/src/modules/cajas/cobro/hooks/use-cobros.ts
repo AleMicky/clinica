@@ -37,7 +37,11 @@ export function useCreateCobro() {
   return useMutation({
     mutationFn: (data: CreateCobroRequest) => createCobro(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: cobroKeys.all });
+      queryClient.invalidateQueries({ queryKey: cobroKeys.all, refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["ventas"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["cajas"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["movimientos-caja"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["admisiones"], refetchType: "all" });
     },
   });
 }
@@ -49,8 +53,11 @@ export function useAnularCobro() {
     mutationFn: ({ id, data }: { id: number; data: AnularCobroRequest }) =>
       anularCobro(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: cobroKeys.all });
-      queryClient.invalidateQueries({ queryKey: cobroKeys.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: cobroKeys.all, refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: cobroKeys.detail(variables.id), refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["ventas"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["cajas"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["movimientos-caja"], refetchType: "all" });
     },
   });
 }
@@ -61,7 +68,10 @@ export function useDeleteCobro() {
   return useMutation({
     mutationFn: (id: number) => deleteCobro(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: cobroKeys.all });
+      queryClient.invalidateQueries({ queryKey: cobroKeys.all, refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["ventas"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["cajas"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["movimientos-caja"], refetchType: "all" });
     },
   });
 }

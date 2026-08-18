@@ -52,8 +52,10 @@ export function useCreateServicio() {
     mutationFn: ({ categoriaId, data }: { categoriaId: number; data: CreateServicioRequest }) =>
       createServicio(categoriaId, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: servicioKeys.all });
-      queryClient.invalidateQueries({ queryKey: servicioKeys.byCategory(variables.categoriaId) });
+      queryClient.invalidateQueries({ queryKey: servicioKeys.all, refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: servicioKeys.byCategory(variables.categoriaId), refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["admisiones"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["ventas"], refetchType: "all" });
     },
   });
 }
@@ -72,8 +74,10 @@ export function useUpdateServicio() {
       data: UpdateServicioRequest;
     }) => updateServicio(categoriaId, servicioId, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: servicioKeys.all });
-      queryClient.invalidateQueries({ queryKey: servicioKeys.byCategory(variables.categoriaId) });
+      queryClient.invalidateQueries({ queryKey: servicioKeys.all, refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: servicioKeys.byCategory(variables.categoriaId), refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["admisiones"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["ventas"], refetchType: "all" });
     },
   });
 }
@@ -85,8 +89,10 @@ export function useDeleteServicio() {
     mutationFn: ({ categoriaId, servicioId }: { categoriaId: number; servicioId: number }) =>
       deleteServicio(categoriaId, servicioId),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: servicioKeys.all });
-      queryClient.invalidateQueries({ queryKey: servicioKeys.byCategory(variables.categoriaId) });
+      queryClient.invalidateQueries({ queryKey: servicioKeys.all, refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: servicioKeys.byCategory(variables.categoriaId), refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["admisiones"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["ventas"], refetchType: "all" });
     },
   });
 }

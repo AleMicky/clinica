@@ -44,7 +44,10 @@ export function useCreateEmpleado() {
     return useMutation({
         mutationFn: (data: CreateEmpleadoRequest) => createEmpleado(data),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: empleadoKeys.all });
+            queryClient.invalidateQueries({ queryKey: empleadoKeys.all, refetchType: "all" });
+            queryClient.invalidateQueries({ queryKey: ["admisiones"], refetchType: "all" });
+            queryClient.invalidateQueries({ queryKey: ["ventas"], refetchType: "all" });
+            queryClient.invalidateQueries({ queryKey: ["cajas"], refetchType: "all" });
         },
     });
 }
@@ -63,10 +66,15 @@ export function useUpdateEmpleado() {
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({
                 queryKey: empleadoKeys.all,
+                refetchType: "all",
             });
             queryClient.invalidateQueries({
                 queryKey: empleadoKeys.detail(variables.id),
+                refetchType: "all",
             });
+            queryClient.invalidateQueries({ queryKey: ["admisiones"], refetchType: "all" });
+            queryClient.invalidateQueries({ queryKey: ["ventas"], refetchType: "all" });
+            queryClient.invalidateQueries({ queryKey: ["cajas"], refetchType: "all" });
         },
     });
 }
@@ -79,7 +87,11 @@ export function useDeleteEmpleado() {
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: empleadoKeys.all,
+                refetchType: "all",
             });
+            queryClient.invalidateQueries({ queryKey: ["admisiones"], refetchType: "all" });
+            queryClient.invalidateQueries({ queryKey: ["ventas"], refetchType: "all" });
+            queryClient.invalidateQueries({ queryKey: ["cajas"], refetchType: "all" });
         },
     });
 }
