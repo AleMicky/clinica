@@ -254,23 +254,6 @@ export function VentaList({
                     <div className="flex items-center gap-1.5">
                       <VentaStatusBadge estado={venta.estado} />
 
-                      {/* Botón directo de flujo según estado */}
-                      {venta.estado === EstadoVenta.Pendiente && (
-                        <Button
-                          type="button"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDirectChangeStatus?.(venta, EstadoVenta.Pagada);
-                          }}
-                          className="h-7 px-2.5 text-[11px] font-semibold gap-1 bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs cursor-pointer transition-all hover:scale-[1.02]"
-                          title="Marcar venta como Pagada"
-                        >
-                          <CheckCircle2 className="size-3" />
-                          <span>Marcar Pagada</span>
-                        </Button>
-                      )}
-
                       {/* Menú de Acciones Rápidas */}
                       <DropdownMenu>
                         <DropdownMenuTrigger
