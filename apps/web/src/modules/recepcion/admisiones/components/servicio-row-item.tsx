@@ -44,26 +44,32 @@ export function ServicioRowItem({
   }, [row.medicoId, medicos, row.medicosDisponibles]);
 
   return (
-    <div className="p-2.5 bg-card rounded-lg border border-border/70 shadow-2xs space-y-2 hover:border-primary/40 transition-colors w-full text-xs">
-      {/* Cabecera del Item */}
-      <div className="flex items-center justify-between gap-2 pb-1.5 border-b border-border/50">
-        <div className="flex items-center gap-1.5 min-w-0">
-          <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/20 font-bold px-1.5 py-0 h-4.5 shrink-0">
+    <div className="p-2.5 rounded-lg border border-border/70 bg-card/60 hover:bg-card hover:border-primary/40 transition-all space-y-1.5 shadow-2xs">
+      {/* Fila Superior: Badge + Nombre Completo + Código + Categoría + Botón Eliminar */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+          <Badge
+            variant="outline"
+            className="text-[10px] bg-primary/10 text-primary border-primary/25 font-bold px-1.5 py-0 h-4.5 shrink-0"
+          >
             #{index + 1}
           </Badge>
 
-          <span className="font-semibold text-foreground truncate">
+          <span
+            className="font-bold text-foreground text-xs leading-snug truncate"
+            title={row.servicioNombre}
+          >
             {row.servicioNombre || "Consulta Médica"}
           </span>
 
           {row.servicioCodigo && (
-            <span className="font-mono text-[10px] text-muted-foreground shrink-0">
-              ({row.servicioCodigo})
+            <span className="font-mono text-[9.5px] font-bold text-muted-foreground bg-muted/60 px-1.5 py-0.2 rounded shrink-0">
+              {row.servicioCodigo}
             </span>
           )}
 
           {row.categoriaNombre && (
-            <span className="text-[10px] text-muted-foreground/70 truncate hidden sm:inline">
+            <span className="text-[10px] text-muted-foreground/80 font-medium truncate hidden md:inline">
               • {row.categoriaNombre}
             </span>
           )}
@@ -74,17 +80,17 @@ export function ServicioRowItem({
           variant="ghost"
           size="icon"
           onClick={() => onRemove(row.id)}
-          className="size-6 text-destructive hover:bg-destructive/10 shrink-0 cursor-pointer"
+          className="size-6 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md cursor-pointer transition-colors shrink-0"
           title="Quitar prestación"
         >
-          <Trash2 className="size-3" />
+          <Trash2 className="size-3.5" />
         </Button>
       </div>
 
-      {/* Grid de Inputs: Médico + Cantidad + Precio + Subtotal */}
-      <div className="grid grid-cols-12 gap-2 items-center">
-        {/* Médico Tratante */}
-        <div className="col-span-12 sm:col-span-5">
+      {/* Fila Inferior: Selector de Médico + Cantidad + Precio + Subtotal */}
+      <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 pt-1 border-t border-border/40">
+        {/* Selector de Médico */}
+        <div className="w-full sm:w-60 min-w-[170px]">
           <Select
             value={row.medicoId ? row.medicoId.toString() : "sin-medico"}
             onValueChange={(val: string | null) =>
@@ -95,12 +101,12 @@ export function ServicioRowItem({
               )
             }
           >
-            <SelectTrigger className="h-7.5 w-full bg-background text-xs font-medium border-border/80">
+            <SelectTrigger className="h-7 w-full bg-background text-[11px] font-medium border-border/80 truncate">
               <SelectValue placeholder="Médico tratante...">
                 {selectedMedicoNombre}
               </SelectValue>
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-w-md">
               <SelectItem value="sin-medico" label="Sin Médico / Guardia">
                 Sin Médico / Guardia
               </SelectItem>
@@ -132,34 +138,37 @@ export function ServicioRowItem({
           </Select>
         </div>
 
-        {/* Cantidad */}
-        <div className="col-span-3 sm:col-span-2">
-          <Input
-            type="number"
-            min="1"
-            value={row.cantidad}
-            onChange={(e) => onUpdate(row.id, "cantidad", Math.max(1, Number(e.target.value)))}
-            className="h-7.5 text-xs text-center font-bold font-mono bg-background"
-            placeholder="Cant."
-          />
-        </div>
+        {/* Valores Numéricos: Cantidad + Precio + Subtotal */}
+        <div className="flex items-center gap-2.5 ml-auto">
+          {/* Cantidad */}
+          <div className="flex items-center gap-1">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase">Cant:</span>
+            <Input
+              type="number"
+              min="1"
+              value={row.cantidad}
+              onChange={(e) => onUpdate(row.id, "cantidad", Math.max(1, Number(e.target.value)))}
+              className="h-7 w-12 text-xs text-center font-bold font-mono bg-background px-1"
+              placeholder="1"
+            />
+          </div>
 
-        {/* Precio Unitario */}
-        <div className="col-span-4 sm:col-span-2">
-          <Input
-            type="number"
-            min="0"
-            step="0.5"
-            value={row.precioUnitario}
-            onChange={(e) => onUpdate(row.id, "precioUnitario", Math.max(0, Number(e.target.value)))}
-            className="h-7.5 text-xs text-right font-mono font-medium bg-background"
-            placeholder="Precio"
-          />
-        </div>
+          {/* Precio Unitario */}
+          <div className="flex items-center gap-1">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase">P. Unit:</span>
+            <Input
+              type="number"
+              min="0"
+              step="0.5"
+              value={row.precioUnitario}
+              onChange={(e) => onUpdate(row.id, "precioUnitario", Math.max(0, Number(e.target.value)))}
+              className="h-7 w-18 text-xs text-right font-mono font-medium bg-background px-1.5"
+              placeholder="0.00"
+            />
+          </div>
 
-        {/* Subtotal */}
-        <div className="col-span-5 sm:col-span-3 text-right">
-          <span className="text-xs font-bold text-primary font-mono">
+          {/* Subtotal */}
+          <span className="text-xs font-bold text-primary font-mono min-w-[70px] text-right">
             Bs. {Math.max(0, subtotalFila).toFixed(2)}
           </span>
         </div>

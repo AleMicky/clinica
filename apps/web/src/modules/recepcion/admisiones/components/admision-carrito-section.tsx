@@ -102,7 +102,7 @@ export function AdmisionCarritoSection({
             </p>
           </div>
         ) : (
-          <div className="space-y-2 max-h-[calc(100vh-300px)] overflow-y-auto pr-0.5 scrollbar-thin">
+          <div className="space-y-2 max-h-[calc(100vh-320px)] overflow-y-auto pr-0.5 scrollbar-thin">
             {detalles.map((row, idx) => (
               <ServicioRowItem
                 key={row.id}
