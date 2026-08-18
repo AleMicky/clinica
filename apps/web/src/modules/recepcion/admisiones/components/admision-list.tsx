@@ -3,26 +3,15 @@
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   SearchInput,
   DataTablePagination,
 } from "@/components/shared";
 import {
-  MoreVertical,
   Eye,
-  RefreshCw,
   Trash2,
   FileText,
   Building2,
   Calendar,
-  Printer,
-  Download,
   Stethoscope,
   User,
   CheckCircle2,
@@ -35,8 +24,6 @@ import {
   formatPacienteNombre,
   type AdmisionResponse,
 } from "../types/admision.types";
-import { downloadAdmisionPdf, openAdmisionPdfInNewTab } from "../api/admision.api";
-import { toast } from "sonner";
 import { AdmisionStatusBadge } from "./admision-status-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -287,74 +274,39 @@ export function AdmisionList({
                         </Button>
                       )}
 
-                      {/* Menú de Acciones Rápidas */}
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          onClick={(e) => e.stopPropagation()}
-                          className="size-7 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground inline-flex items-center justify-center transition-colors border border-border/60 cursor-pointer"
-                        >
-                          <MoreVertical className="size-3.5" />
-                          <span className="sr-only">Más opciones</span>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48 text-xs">
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onViewDetail(adm);
-                            }}
-                            className="gap-2 cursor-pointer"
-                          >
-                            <Eye className="size-3.5 text-primary" />
-                            Ver Ficha de Admisión
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={async (e) => {
-                              e.stopPropagation();
-                              try {
-                                await openAdmisionPdfInNewTab(adm.id);
-                              } catch {
-                                toast.error("Error al generar el PDF de admisión.");
-                              }
-                            }}
-                            className="gap-2 cursor-pointer"
-                          >
-                            <Printer className="size-3.5 text-blue-600" />
-                            Ver Ticket PDF
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={async (e) => {
-                              e.stopPropagation();
-                              try {
-                                await downloadAdmisionPdf(adm.id, adm.numero);
-                                toast.success("PDF descargado correctamente.");
-                              } catch {
-                                toast.error("Error al descargar el PDF.");
-                              }
-                            }}
-                            className="gap-2 cursor-pointer"
-                          >
-                            <Download className="size-3.5 text-emerald-600" />
-                            Descargar PDF
-                          </DropdownMenuItem>
+                      {/* Botón Ver Ficha Visible */}
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onViewDetail(adm);
+                        }}
+                        className="h-7 px-2.5 text-[11px] font-semibold gap-1 border-border/80 text-foreground hover:bg-accent hover:text-primary shadow-2xs cursor-pointer transition-all"
+                        title="Ver Ficha y Detalle de Admisión"
+                      >
+                        <Eye className="size-3 text-primary" />
+                        <span>Ver Ficha</span>
+                      </Button>
 
-                          {/* Acción de Cancelación */}
-                          {adm.estado !== EstadoAdmision.Cancelada && (
-                            <>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onDelete(adm.id);
-                                }}
-                                className="gap-2 text-rose-600 dark:text-rose-400 focus:text-rose-600 cursor-pointer"
-                              >
-                                <Trash2 className="size-3.5" />
-                                Cancelar Admisión
-                              </DropdownMenuItem>
-                            </>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      {/* Botón Cancelar Visible */}
+                      {adm.estado !== EstadoAdmision.Cancelada && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDelete(adm.id);
+                          }}
+                          className="h-7 px-2 text-[11px] font-semibold gap-1 text-destructive/80 hover:text-destructive hover:bg-destructive/10 cursor-pointer transition-all"
+                          title="Cancelar admisión"
+                        >
+                          <Trash2 className="size-3" />
+                          <span>Cancelar</span>
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
