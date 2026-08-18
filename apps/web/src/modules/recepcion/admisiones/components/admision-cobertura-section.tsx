@@ -5,16 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectSeparator,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Autocomplete, type AutocompleteOption } from "@/components/ui/autocomplete";
 import { Building2, UserCheck, Calendar } from "lucide-react";
 import type { PacienteConvenioResponse } from "../../pacientes/types/paciente.types";
@@ -35,7 +25,7 @@ export interface AdmisionCoberturaSectionProps {
   empleadosList: EmpleadoResponse[];
   isLoadingPacienteConvenios: boolean;
   isLoadingEmpleados?: boolean;
-  selectedConvenioNombre: string;
+  selectedConvenioNombre?: string;
 }
 
 export function AdmisionCoberturaSection({
@@ -52,7 +42,6 @@ export function AdmisionCoberturaSection({
   empleadosList,
   isLoadingPacienteConvenios,
   isLoadingEmpleados,
-  selectedConvenioNombre,
 }: AdmisionCoberturaSectionProps) {
   const recepcionistaOptions: AutocompleteOption[] = React.useMemo(() => {
     return empleadosList.map((emp) => {
@@ -65,6 +54,47 @@ export function AdmisionCoberturaSection({
       };
     });
   }, [empleadosList]);
+
+  const convenioOptions: AutocompleteOption[] = React.useMemo(() => {
+    const options: AutocompleteOption[] = [
+      {
+        value: "particular",
+        label: "Particular (Sin Convenio / Cobertura Directa)",
+        description: "Cobertura directa sin convenio",
+      },
+    ];
+
+    // 1. Convenios Afiliados al Paciente
+    if (pacienteConveniosList.length > 0) {
+      pacienteConveniosList.forEach((pc) => {
+        const cNombre = pc.convenio?.nombre || `Convenio #${pc.convenioId}`;
+        const cCodigo = pc.convenio?.codigo ? ` (${pc.convenio.codigo})` : "";
+        const afil = pc.numeroAfiliado ? `N° Afil: ${pc.numeroAfiliado}` : "";
+        const principal = pc.esPrincipal ? "★ Principal" : "";
+        const desc = [afil, principal].filter(Boolean).join(" • ");
+
+        options.push({
+          value: pc.convenioId.toString(),
+          label: `${cNombre}${cCodigo}`,
+          description: desc ? `Afiliado al paciente (${desc})` : "Afiliado al paciente",
+        });
+      });
+    }
+
+    // 2. Convenios Generales del Sistema
+    const affiliatedIds = new Set(pacienteConveniosList.map((pc) => pc.convenioId.toString()));
+    conveniosList.forEach((c) => {
+      if (!affiliatedIds.has(c.id.toString())) {
+        options.push({
+          value: c.id.toString(),
+          label: `${c.nombre}${c.codigo ? ` (${c.codigo})` : ""}`,
+          description: "Convenio general del sistema",
+        });
+      }
+    });
+
+    return options;
+  }, [pacienteConveniosList, conveniosList]);
 
   return (
     <Card className="border border-border/70 shadow-2xs bg-card">
@@ -104,62 +134,22 @@ export function AdmisionCoberturaSection({
         {/* Convenio / Cobertura */}
         <div className="space-y-1 w-full text-xs">
           <div className="flex items-center justify-between">
-            <Label className="text-xs font-semibold">Convenio / Cobertura</Label>
+            <Label htmlFor="convenio" className="text-xs font-semibold">Convenio / Cobertura</Label>
             {isLoadingPacienteConvenios && (
               <span className="text-[10px] text-muted-foreground animate-pulse">Cargando...</span>
             )}
           </div>
-          <Select
+          <Autocomplete
+            id="convenio"
             value={convenioId}
-            onValueChange={(val: string | null) => setConvenioId(val || "particular")}
-          >
-            <SelectTrigger className="h-8 w-full bg-background text-xs font-medium border-border/80">
-              <SelectValue placeholder="Seleccionar convenio...">
-                {selectedConvenioNombre}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent className="max-w-xl w-full">
-              <SelectItem value="particular" label="Particular (Sin Convenio / Cobertura Directa)">
-                Particular (Sin Convenio / Cobertura Directa)
-              </SelectItem>
-
-              {pacienteConveniosList.length > 0 && (
-                <SelectGroup>
-                  <SelectLabel className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                    Convenios Afiliados al Paciente
-                  </SelectLabel>
-                  {pacienteConveniosList.map((pc) => {
-                    const cNombre = pc.convenio?.nombre || `Convenio #${pc.convenioId}`;
-                    const cCodigo = pc.convenio?.codigo ? ` (${pc.convenio.codigo})` : "";
-                    const afil = pc.numeroAfiliado ? ` - Afil: ${pc.numeroAfiliado}` : "";
-                    const star = pc.esPrincipal ? " ★ [Principal]" : "";
-                    const labelText = `${cNombre}${cCodigo}${afil}${star}`;
-                    return (
-                      <SelectItem key={`pc-${pc.id}`} value={pc.convenioId.toString()} label={labelText}>
-                        {cNombre}{cCodigo}{afil}{star}
-                      </SelectItem>
-                    );
-                  })}
-                </SelectGroup>
-              )}
-
-              <SelectSeparator />
-
-              <SelectGroup>
-                <SelectLabel className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                  Todos los Convenios del Sistema
-                </SelectLabel>
-                {conveniosList.map((c) => {
-                  const cLabel = `${c.nombre}${c.codigo ? ` (${c.codigo})` : ""}`;
-                  return (
-                    <SelectItem key={`c-${c.id}`} value={c.id.toString()} label={cLabel}>
-                      {c.nombre} {c.codigo ? `(${c.codigo})` : ""}
-                    </SelectItem>
-                  );
-                })}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+            onValueChange={(val) => setConvenioId(val)}
+            options={convenioOptions}
+            placeholder="Seleccionar o buscar convenio..."
+            emptyText="No se encontraron convenios."
+            allowCustomValue={false}
+            isLoading={isLoadingPacienteConvenios}
+            className="h-8 text-xs bg-background border-border/80 font-medium"
+          />
         </div>
 
         {/* Fecha & Hora de Atención */}
