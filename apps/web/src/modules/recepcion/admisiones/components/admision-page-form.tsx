@@ -10,8 +10,11 @@ import { PacienteFormDialog } from "../../pacientes/components/paciente-form-dia
 import { getPacienteFullName } from "../../pacientes/components/paciente-card";
 import type { PacienteResponse } from "../../pacientes/types/paciente.types";
 import { useMedicos } from "@/modules/recursos-humanos/medico/hooks/use-medicos";
+import { useEmpleados } from "@/modules/recursos-humanos/empleado/hooks/use-empleados";
 import { useConvenios } from "@/modules/servicios/convenio/hooks/use-convenio";
 import { useCategoriasServicio } from "@/modules/servicios/categoria-servicio/hooks/use-categoria-servicio";
+import type { ConvenioResponse } from "@/modules/servicios/convenio/types/convenio.types";
+import type { EmpleadoResponse } from "@/modules/recursos-humanos/empleado/types/empleado.types";
 import { useCreateAdmision } from "../hooks/use-admisiones";
 import { useAdmisionStore } from "../store/use-admision-store";
 import { MultiServicePickerModal } from "./multi-service-picker-modal";
@@ -36,11 +39,23 @@ export function AdmisionPageForm() {
   const { data: medicosData } = useMedicos({
     pageSize: 100,
   });
+  const { data: empleadosData, isLoading: isLoadingEmpleados } = useEmpleados({
+    pageSize: 100,
+  });
   const { data: categoriasData } = useCategoriasServicio({ pageSize: 100 });
 
   const categoriasList = categoriasData?.items ?? [];
   const medicosList = medicosData?.items ?? [];
-  const conveniosList = conveniosData?.items ?? [];
+  const conveniosList: ConvenioResponse[] = Array.isArray(conveniosData?.items)
+    ? conveniosData.items
+    : Array.isArray(conveniosData)
+    ? (conveniosData as unknown as ConvenioResponse[])
+    : [];
+  const empleadosList: EmpleadoResponse[] = Array.isArray(empleadosData?.items)
+    ? empleadosData.items
+    : Array.isArray(empleadosData)
+    ? (empleadosData as unknown as EmpleadoResponse[])
+    : [];
 
   // Modales
   const [multiPickerOpen, setMultiPickerOpen] = React.useState<boolean>(false);
@@ -53,6 +68,16 @@ export function AdmisionPageForm() {
   // Estado del Paciente Seleccionado
   const [patientSearch, setPatientSearch] = React.useState("");
   const [selectedPacienteId, setSelectedPacienteId] = React.useState<string>("");
+
+  // Estado del Recepcionista Responsable
+  const [recepcionistaId, setRecepcionistaId] = React.useState<string>("");
+
+  // Auto-seleccionar primer recepcionista disponible
+  React.useEffect(() => {
+    if (empleadosList.length > 0 && !recepcionistaId) {
+      setRecepcionistaId(String(empleadosList[0].id));
+    }
+  }, [empleadosList, recepcionistaId]);
 
   // Consulta de Convenios específicos del Paciente Seleccionado (GET /api/v1/pacientes/{pacienteId}/convenios)
   const numericPacienteId = selectedPacienteId ? Number(selectedPacienteId) : 0;
@@ -136,6 +161,11 @@ export function AdmisionPageForm() {
       return;
     }
 
+    if (!recepcionistaId) {
+      toast.error("Debe seleccionar un recepcionista responsable.");
+      return;
+    }
+
     if (detalles.length === 0) {
       toast.error("Debe agregar al menos una prestación médica a la admisión.");
       return;
@@ -151,6 +181,7 @@ export function AdmisionPageForm() {
 
     const payload = {
       pacienteId: Number(selectedPacienteId),
+      recepcionistaId: Number(recepcionistaId),
       convenioId: convenioId === "particular" ? null : Number(convenioId),
       fechaHora: new Date(fechaHora).toISOString(),
       observacion: observacion.trim() || undefined,
@@ -159,7 +190,7 @@ export function AdmisionPageForm() {
 
     try {
       const res = await createAdmisionMutation.mutateAsync(payload);
-      toast.success(`¡Admisión #${res.numero || res.id} registrada exitosamente! (POST /admisiones)`);
+      toast.success(`¡Admisión #${res.numero || res.id} registrada exitosamente!`);
       clearDetalles();
       router.push("/recepcion/admisiones");
     } catch {
@@ -200,109 +231,116 @@ export function AdmisionPageForm() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-card via-card to-primary/5 p-4 rounded-xl border border-border/70 shadow-xs">
         <div className="flex items-center gap-3">
           <Button
+            type="button"
             variant="outline"
             size="icon"
             onClick={() => router.push("/recepcion/admisiones")}
-            className="size-9 rounded-lg border-border/80 hover:bg-accent"
-            title="Volver a admisiones"
+            className="size-9 rounded-lg border-border/80 hover:bg-muted shrink-0 cursor-pointer"
+            title="Volver a la lista de admisiones"
           >
-            <ArrowLeft className="size-4" />
+            <ArrowLeft className="size-4.5" />
           </Button>
+
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-lg font-bold text-foreground tracking-tight">
-                Nueva Admisión de Paciente
+              <h1 className="text-base sm:text-lg font-bold tracking-tight text-foreground">
+                Nueva Admisión Médica
               </h1>
-              <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/20 h-5 px-2 font-semibold">
-                Expediente Paciente 100% Oficial
+              <Badge variant="secondary" className="text-[10px] bg-primary/10 text-primary border-primary/20">
+                Paso a Paso
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground">
-              Filiación completa con PacienteFormDialog oficial. Desbloqueo del Paso 3 al seleccionar.
+              Búsqueda de paciente, asignación de convenio, recepcionista y prestaciones en un solo flujo.
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5 self-end sm:self-auto">
+        <div className="flex items-center gap-2.5">
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={() => router.push("/recepcion/admisiones")}
             disabled={isSubmitting}
-            className="h-9 px-4 text-xs font-medium"
+            className="h-8.5 text-xs px-3 cursor-pointer"
           >
             Cancelar
           </Button>
+
           <Button
             type="button"
-            size="sm"
             onClick={handleSubmit}
             disabled={isSubmitting || !isPatientValid || detalles.length === 0}
-            className="h-9 px-5 text-xs font-semibold gap-2 bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-700 text-primary-foreground shadow-md shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="h-8.5 text-xs font-semibold gap-1.5 px-4 shadow-xs bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer"
           >
             {isSubmitting ? (
-              <Loader2 className="size-4 animate-spin" />
+              <>
+                <Loader2 className="size-3.5 animate-spin" />
+                <span>Guardando...</span>
+              </>
             ) : (
-              <CheckCircle2 className="size-4" />
+              <>
+                <CheckCircle2 className="size-3.5" />
+                <span>Guardar Admisión</span>
+              </>
             )}
-            Guardar Admisión
           </Button>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-          {/* COLUMNA IZQUIERDA: PACIENTE Y DATOS DE INGRESO (5 COLS) */}
-          <div className="lg:col-span-5 space-y-4">
-            {/* SECCIÓN 1: PACIENTE */}
-            <AdmisionPacienteSection
-              selectedPaciente={selectedPaciente}
-              isPatientValid={isPatientValid}
-              patientSearch={patientSearch}
-              setPatientSearch={setPatientSearch}
-              setSelectedPacienteId={setSelectedPacienteId}
-              filteredPacientes={filteredPacientes}
-              isLoadingPacientes={isLoadingPacientes}
-              onOpenRegisterModal={(pToEdit) => {
-                setPacienteToEdit(pToEdit ?? null);
-                setRegisterPacienteOpen(true);
-              }}
-            />
+      {/* CUERPO DEL FORMULARIO: GRID DE 3 PASOS */}
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+        {/* COLUMNA IZQUIERDA (Paso 1: Paciente + Paso 2: Cobertura y Recepción) */}
+        <div className="lg:col-span-5 flex flex-col gap-4">
+          <AdmisionPacienteSection
+            patientSearch={patientSearch}
+            setPatientSearch={setPatientSearch}
+            setSelectedPacienteId={setSelectedPacienteId}
+            filteredPacientes={filteredPacientes}
+            selectedPaciente={selectedPaciente}
+            isPatientValid={isPatientValid}
+            isLoadingPacientes={isLoadingPacientes}
+            onOpenRegisterModal={(paciente) => {
+              setPacienteToEdit(paciente || null);
+              setRegisterPacienteOpen(true);
+            }}
+          />
 
-            {/* SECCIÓN 2: INGRESO & COBERTURA */}
-            <AdmisionCoberturaSection
-              convenioId={convenioId}
-              setConvenioId={setConvenioId}
-              fechaHora={fechaHora}
-              setFechaHora={setFechaHora}
-              observacion={observacion}
-              setObservacion={setObservacion}
-              pacienteConveniosList={pacienteConveniosList}
-              conveniosList={conveniosList}
-              isLoadingPacienteConvenios={isLoadingPacienteConvenios}
-              selectedConvenioNombre={selectedConvenioNombre}
-            />
-          </div>
+          <AdmisionCoberturaSection
+            convenioId={convenioId}
+            setConvenioId={setConvenioId}
+            recepcionistaId={recepcionistaId}
+            setRecepcionistaId={setRecepcionistaId}
+            fechaHora={fechaHora}
+            setFechaHora={setFechaHora}
+            observacion={observacion}
+            setObservacion={setObservacion}
+            pacienteConveniosList={pacienteConveniosList}
+            conveniosList={conveniosList}
+            empleadosList={empleadosList}
+            isLoadingPacienteConvenios={isLoadingPacienteConvenios}
+            isLoadingEmpleados={isLoadingEmpleados}
+            selectedConvenioNombre={selectedConvenioNombre}
+          />
+        </div>
 
-          {/* COLUMNA DERECHA: CARRITO DE PRESTACIONES (7 COLS) */}
-          <div className="lg:col-span-7">
-            {/* SECCIÓN 3: CARRITO */}
-            <AdmisionCarritoSection
-              isPatientValid={isPatientValid}
-              detalles={detalles}
-              medicosList={medicosList}
-              updateDetalle={updateDetalle}
-              removeDetalle={removeDetalle}
-              onOpenMultiPicker={() => setMultiPickerOpen(true)}
-              totalSubtotal={totalSubtotal}
-              totalDescuentos={totalDescuentos}
-              grandTotal={grandTotal}
-              isSubmitting={isSubmitting}
-              onCancel={() => router.push("/recepcion/admisiones")}
-              onSubmit={handleSubmit}
-            />
-          </div>
+        {/* COLUMNA DERECHA (Paso 3: Carrito de Servicios & Prestaciones) */}
+        <div className="lg:col-span-7">
+          <AdmisionCarritoSection
+            isPatientValid={isPatientValid}
+            detalles={detalles}
+            medicosList={medicosList}
+            totalSubtotal={totalSubtotal}
+            totalDescuentos={totalDescuentos}
+            grandTotal={grandTotal}
+            isSubmitting={isSubmitting}
+            onOpenMultiPicker={() => setMultiPickerOpen(true)}
+            removeDetalle={removeDetalle}
+            updateDetalle={updateDetalle}
+            onCancel={() => router.push("/recepcion/admisiones")}
+            onSubmit={handleSubmit}
+          />
         </div>
       </form>
     </div>

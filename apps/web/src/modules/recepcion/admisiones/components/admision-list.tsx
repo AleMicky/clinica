@@ -223,6 +223,18 @@ export function AdmisionList({
                               : `${primeraPrestacion} +${numPrestaciones - 1}`}
                           </span>
                         </span>
+
+                        {adm.recepcionista && (
+                          <>
+                            <span className="text-muted-foreground/40">•</span>
+                            <span className="flex items-center gap-1 text-[10.5px] text-foreground/80">
+                              <User className="size-3 text-emerald-600 shrink-0" />
+                              <span className="truncate max-w-[150px]" title={adm.recepcionista.nombreCompleto}>
+                                {adm.recepcionista.nombreCompleto}
+                              </span>
+                            </span>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>

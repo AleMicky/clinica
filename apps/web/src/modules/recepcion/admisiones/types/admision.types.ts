@@ -45,6 +45,12 @@ export interface ServicioInfoAdmision {
   nombre: string;
 }
 
+export interface EmpleadoBaseInfo {
+  id: number;
+  codigoEmpleado?: string | null;
+  nombreCompleto: string;
+}
+
 export interface EmpleadoInfoAdmision {
   id: number;
   codigoEmpleado: string;
@@ -81,6 +87,8 @@ export interface AdmisionResponse {
   pacienteId?: number;
   pacienteNombre?: string | null;
   pacienteDocumento?: string | null;
+  recepcionista?: EmpleadoBaseInfo | null;
+  recepcionistaId?: number;
   convenio?: ConvenioInfoAdmision | null;
   convenioId?: number | null;
   convenioNombre?: string | null;
@@ -122,6 +130,13 @@ export function formatPacienteDocumento(
     : persona.numeroDocumento;
 }
 
+export function formatRecepcionistaNombre(
+  recepcionista?: EmpleadoBaseInfo | null,
+  fallback?: string | null
+): string {
+  return recepcionista?.nombreCompleto || fallback || "Recepción General";
+}
+
 export function formatConvenioNombre(
   convenio?: ConvenioInfoAdmision | null,
   fallback?: string | null
@@ -158,6 +173,7 @@ export interface UpdateAdmisionDetalleRequest extends CreateAdmisionDetalleReque
 export interface CreateAdmisionRequest {
   numero?: string;
   pacienteId: number;
+  recepcionistaId: number;
   convenioId?: number | null;
   fechaHora: string;
   observacion?: string | null;
@@ -167,6 +183,7 @@ export interface CreateAdmisionRequest {
 export interface CreateAdmisionConPacienteRequest {
   paciente: CreatePacienteRequest;
   numero?: string;
+  recepcionistaId: number;
   convenioId?: number | null;
   fechaHora: string;
   observacion?: string | null;
@@ -174,8 +191,9 @@ export interface CreateAdmisionConPacienteRequest {
 }
 
 export interface UpdateAdmisionRequest {
-  numero: string;
+  numero?: string;
   pacienteId: number;
+  recepcionistaId: number;
   convenioId?: number | null;
   fechaHora: string;
   observacion?: string | null;

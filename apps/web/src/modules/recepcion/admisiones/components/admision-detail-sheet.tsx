@@ -193,7 +193,7 @@ export function AdmisionDetailSheet({
 
                   <Separator className="my-1.5" />
 
-                  <div className="grid grid-cols-2 gap-2 text-[11px] text-muted-foreground">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-muted-foreground">
                     <div className="flex items-center gap-1.5">
                       <Building2 className="size-3.5 text-primary/70 shrink-0" />
                       <span>
@@ -212,6 +212,22 @@ export function AdmisionDetailSheet({
                         </strong>
                       </span>
                     </div>
+                    {admision.recepcionista && (
+                      <div className="flex items-center gap-1.5 col-span-2 pt-1 border-t border-border/40">
+                        <User className="size-3.5 text-emerald-600 shrink-0" />
+                        <span>
+                          Recepcionista:{" "}
+                          <strong className="text-foreground">
+                            {admision.recepcionista.nombreCompleto}
+                          </strong>
+                          {admision.recepcionista.codigoEmpleado && (
+                            <span className="font-mono text-[10px] ml-1 text-muted-foreground">
+                              ({admision.recepcionista.codigoEmpleado})
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
