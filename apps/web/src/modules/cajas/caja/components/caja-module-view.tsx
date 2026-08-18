@@ -8,7 +8,7 @@ import {
 } from "../../turno-caja/hooks/use-turnos-caja";
 import { CajaHeader } from "./caja-header";
 import { CajaMetrics } from "./caja-metrics";
-import { CajaList, type CajaEstadoFiltro } from "./caja-list";
+import { CajaList } from "./caja-list";
 import { CajaTurnosPanel } from "./caja-turnos-panel";
 import { CajaFormDialog } from "./caja-form-dialog";
 import { CajaDeleteDialog } from "./caja-delete-dialog";
@@ -23,7 +23,6 @@ export function CajaModuleView() {
   const [pageSize, setPageSize] = React.useState(10);
   const [searchTerm, setSearchTerm] = React.useState("");
   const [debouncedSearch, setDebouncedSearch] = React.useState("");
-  const [selectedEstadoTab, setSelectedEstadoTab] = React.useState<CajaEstadoFiltro>("TODOS");
   const [selectedCaja, setSelectedCaja] = React.useState<CajaResponse | null>(null);
 
   // Dialogs de Caja
@@ -78,16 +77,6 @@ export function CajaModuleView() {
     }
   }, [cajas, selectedCaja]);
 
-  const filteredCajas = React.useMemo(() => {
-    if (selectedEstadoTab === "ACTIVAS") {
-      return cajas.filter((c) => c.activo);
-    }
-    if (selectedEstadoTab === "INACTIVAS") {
-      return cajas.filter((c) => !c.activo);
-    }
-    return cajas;
-  }, [cajas, selectedEstadoTab]);
-
   const metrics = React.useMemo(() => {
     return {
       totalCajas: totalItems,
@@ -127,11 +116,6 @@ export function CajaModuleView() {
       const err = error as { response?: { data?: { detail?: string } }; message?: string };
       toast.error(err.response?.data?.detail || err.message || "Error al eliminar la caja.");
     }
-  };
-
-  const handleEstadoTabChange = (tab: CajaEstadoFiltro) => {
-    setSelectedEstadoTab(tab);
-    setCurrentPage(1);
   };
 
   // Handlers Turnos (Detalle)
@@ -183,16 +167,14 @@ export function CajaModuleView() {
         {/* Columna Izquierda: Maestro (Puntos de Caja) */}
         <div className="lg:col-span-5 xl:col-span-4 h-full">
           <CajaList
-            cajas={filteredCajas}
+            cajas={cajas}
             selectedCajaId={selectedCaja?.id ?? null}
             onSelectCaja={setSelectedCaja}
             isLoading={isLoading}
-            totalItems={selectedEstadoTab === "TODOS" ? totalItems : filteredCajas.length}
+            totalItems={totalItems}
             currentPage={currentPage}
             pageSize={pageSize}
             searchTerm={searchTerm}
-            selectedEstadoTab={selectedEstadoTab}
-            onEstadoTabChange={handleEstadoTabChange}
             onSearchChange={setSearchTerm}
             onPageChange={setCurrentPage}
             onPageSizeChange={(size) => {
