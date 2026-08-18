@@ -10,31 +10,35 @@ using Clinica.Api.Modules.RecursosHumanos.Medico.Entity;
 using Clinica.Api.Modules.Servicios.Convenios.Entity;
 using Clinica.Api.Modules.Servicios.Servicios.Entity;
 using Clinica.Api.Modules.Ventas.Venta.Services;
+using Clinica.Api.Shared.Abstractions;
 using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Extensions;
 using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
-using AdmisionEntity =
-    Clinica.Api.Modules.Recepcion.Admision.Entity.Admision;
-using AdmisionDetalleEntity =
-    Clinica.Api.Modules.Recepcion.Admision.Entity.AdmisionDetalle;
+using AdmisionEntity = Clinica.Api.Modules.Recepcion.Admision.Entity.Admision;
+using AdmisionDetalleEntity = Clinica.Api.Modules.Recepcion.Admision.Entity.AdmisionDetalle;
 
 namespace Clinica.Api.Modules.Recepcion.Admision.Services;
 
 public sealed class AdmisionService(
     AppDbContext dbContext,
     VentaService ventaService,
-    CorrelativoService correlativoService
+    CorrelativoService correlativoService,
+    ICurrentUserService currentUserService
 )
 {
-    private DbSet<AdmisionEntity> Admisiones =>
-        dbContext.Set<AdmisionEntity>();
+    private DbSet<AdmisionEntity> Admisiones => dbContext.Set<AdmisionEntity>();
 
     public async Task<PagedResult<AdmisionResponse>> ListarAsync(
         PaginationRequest pagination,
         string? search,
         CancellationToken cancellationToken = default)
     {
+        var usuarioId = currentUserService.UserId;
+
+        if (usuarioId is null)
+            throw new UnauthorizedAccessException();
+
         var query = Admisiones
             .AsNoTracking()
             .Include(x => x.Paciente)
@@ -49,6 +53,32 @@ public sealed class AdmisionService(
             .ThenInclude(x => x.Empleado)
             .ThenInclude(x => x.Persona)
             .Where(x => x.Activo);
+
+        // Si NO es ADMIN, solo ve sus propias admisiones
+        if (!currentUserService.IsInRole("ADMINISTRADOR"))
+        {
+            var empleadoId = await dbContext.Users
+                .Where(u => u.Id == usuarioId.Value)
+                .Join(
+                    dbContext.Empleados,
+                    usuario => usuario.PersonaId,
+                    empleado => empleado.PersonaId,
+                    (usuario, empleado) => empleado.Id
+                )
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (empleadoId == 0)
+            {
+                return new PagedResult<AdmisionResponse>(
+                    [],
+                    pagination.ValidPage,
+                    pagination.ValidPageSize,
+                    0
+                );
+            }
+
+            query = query.Where(x => x.RecepcionistaId == empleadoId);
+        }
 
         var normalizedSearch = string.IsNullOrWhiteSpace(search)
             ? null
@@ -97,6 +127,7 @@ public sealed class AdmisionService(
             totalItems
         );
     }
+
 
     public async Task<AdmisionResponse> ObtenerAsync(
         int id,
@@ -632,7 +663,7 @@ public sealed class AdmisionService(
             return;
 
         entity.Observacion = string.IsNullOrWhiteSpace(entity.Observacion)
-                ? motivoNormalizado
-                : $"{entity.Observacion.Trim()} | {motivoNormalizado}";
+            ? motivoNormalizado
+            : $"{entity.Observacion.Trim()} | {motivoNormalizado}";
     }
 }
