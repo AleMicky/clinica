@@ -25,6 +25,7 @@ export interface PersonaInfoAdmision {
   numeroDocumento: string;
   extensionDocumento?: string | null;
   complementoDocumento?: string | null;
+  telefono?: string | null;
 }
 
 export interface PacienteInfoAdmision {

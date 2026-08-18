@@ -16,6 +16,8 @@ import {
   User,
   CheckCircle2,
   Send,
+  ShieldCheck,
+  History,
 } from "lucide-react";
 import {
   EstadoAdmision,
@@ -224,6 +226,48 @@ export function AdmisionList({
                           </>
                         )}
                       </div>
+
+                      {/* Metadatos de Auditoría UX/UI */}
+                      {(adm.creadoPor || adm.fechaCreacion || adm.modificadoPor) && (
+                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground/70 flex-wrap pt-1 border-t border-border/30 mt-1">
+                          {adm.creadoPor && (
+                            <span className="flex items-center gap-1">
+                              <ShieldCheck className="size-2.5 text-primary/70 shrink-0" />
+                              <span>
+                                Creado por: <strong className="text-foreground/75 font-medium">{adm.creadoPor}</strong>
+                              </span>
+                              {adm.fechaCreacion && (
+                                <span className="font-mono text-[9.5px] text-muted-foreground/60">
+                                  ({new Date(adm.fechaCreacion).toLocaleString("es-ES", {
+                                    dateStyle: "short",
+                                    timeStyle: "short",
+                                  })})
+                                </span>
+                              )}
+                            </span>
+                          )}
+
+                          {adm.modificadoPor && (
+                            <>
+                              <span className="text-muted-foreground/30">•</span>
+                              <span className="flex items-center gap-1">
+                                <History className="size-2.5 text-amber-600/70 shrink-0" />
+                                <span>
+                                  Modificado por: <strong className="text-foreground/75 font-medium">{adm.modificadoPor}</strong>
+                                </span>
+                                {adm.fechaModificacion && (
+                                  <span className="font-mono text-[9.5px] text-muted-foreground/60">
+                                    ({new Date(adm.fechaModificacion).toLocaleString("es-ES", {
+                                      dateStyle: "short",
+                                      timeStyle: "short",
+                                    })})
+                                  </span>
+                                )}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
 
