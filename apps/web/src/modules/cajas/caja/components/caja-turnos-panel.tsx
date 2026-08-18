@@ -25,9 +25,6 @@ import {
   RefreshCw,
   Calendar,
   Vault,
-  CheckCircle2,
-  XCircle,
-  User,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { CajaResponse } from "../types/caja.types";
@@ -100,8 +97,8 @@ export function CajaTurnosPanel({
   const turnos = Array.isArray(apiData?.items)
     ? apiData.items
     : Array.isArray(apiData)
-    ? (apiData as unknown as TurnoCajaResponse[])
-    : [];
+      ? (apiData as unknown as TurnoCajaResponse[])
+      : [];
   const totalItems = apiData?.totalItems ?? turnos.length;
 
   const turnosAbiertos = turnos.filter((t) => t.estado === EstadoTurnoCaja.Abierto).length;
@@ -137,16 +134,14 @@ export function CajaTurnosPanel({
                 {selectedCaja.nombre}
               </h2>
               <span
-                className={`inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.2 rounded-full border ${
-                  selectedCaja.activo
+                className={`inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.2 rounded-full border ${selectedCaja.activo
                     ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
                     : "bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800"
-                }`}
+                  }`}
               >
                 <span
-                  className={`size-1.5 rounded-full ${
-                    selectedCaja.activo ? "bg-emerald-500" : "bg-slate-400"
-                  }`}
+                  className={`size-1.5 rounded-full ${selectedCaja.activo ? "bg-emerald-500" : "bg-slate-400"
+                    }`}
                 />
                 {selectedCaja.activo ? "Activa" : "Inactiva"}
               </span>
@@ -256,20 +251,18 @@ export function CajaTurnosPanel({
               return (
                 <div
                   key={turno.id}
-                  className={`group p-2.5 rounded-lg border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 ${
-                    isAbierto
+                  className={`group p-2.5 rounded-lg border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 ${isAbierto
                       ? "border-emerald-500/40 bg-emerald-500/[0.04] shadow-xs border-l-[3.5px] border-l-emerald-600"
                       : "border-border/50 bg-card hover:border-primary/40 hover:bg-muted/30"
-                  }`}
+                    }`}
                 >
                   {/* Bloque Izquierdo: Icono + Cajero + Fechas */}
                   <div className="flex items-start gap-2.5 min-w-0 flex-1">
                     <div
-                      className={`size-7.5 rounded-lg flex items-center justify-center shrink-0 border mt-0.5 ${
-                        isAbierto
+                      className={`size-7.5 rounded-lg flex items-center justify-center shrink-0 border mt-0.5 ${isAbierto
                           ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
                           : "bg-muted text-muted-foreground border-border"
-                      }`}
+                        }`}
                     >
                       <Clock className="size-3.5" />
                     </div>
@@ -310,11 +303,10 @@ export function CajaTurnosPanel({
                   <div className="flex items-center justify-between sm:justify-end gap-1.5 shrink-0 pt-1.5 sm:pt-0 border-t sm:border-t-0 border-border/30">
                     <Badge
                       variant={isAbierto ? "default" : "secondary"}
-                      className={`text-[9px] font-semibold px-1.5 py-0.2 rounded ${
-                        isAbierto
+                      className={`text-[9px] font-semibold px-1.5 py-0.2 rounded ${isAbierto
                           ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30"
                           : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
-                      }`}
+                        }`}
                     >
                       {isAbierto ? "Abierto" : "Cerrado"}
                     </Badge>
@@ -350,17 +342,6 @@ export function CajaTurnosPanel({
                           <span className="sr-only">Opciones</span>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-36 text-xs">
-                          <DropdownMenuLabel className="text-[10px]">Turno</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          {isAbierto && (
-                            <DropdownMenuItem
-                              onClick={() => onCloseTurno(turno)}
-                              className="gap-2 text-amber-600 font-medium cursor-pointer text-xs"
-                            >
-                              <LogOut className="size-3" />
-                              <span>Cerrar Turno</span>
-                            </DropdownMenuItem>
-                          )}
                           <DropdownMenuItem
                             onClick={() => onEditTurno(turno)}
                             className="gap-2 cursor-pointer text-xs"

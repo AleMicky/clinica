@@ -4,7 +4,7 @@ import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Clock, LogOut, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -17,8 +17,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Autocomplete, type AutocompleteOption } from "@/components/ui/autocomplete";
+import { cn } from "@/lib/utils";
 
-import { useCajas } from "../../caja/hooks/use-cajas";
 import { useEmpleados } from "@/modules/recursos-humanos/empleado/hooks/use-empleados";
 import {
   turnoCajaSchema,
@@ -66,12 +66,6 @@ export function TurnoCajaFormDialog({
   const isClosing = mode === "close";
   const isEditing = mode === "edit";
 
-  // Fetch real Cajas
-  const { data: cajasData, isLoading: isLoadingCajas } = useCajas(
-    STATIC_QUERY_PARAMS,
-    open
-  );
-
   // Fetch real Empleados
   const { data: empleadosData, isLoading: isLoadingEmpleados } = useEmpleados(
     STATIC_QUERY_PARAMS
@@ -80,18 +74,16 @@ export function TurnoCajaFormDialog({
   const createMutation = useCreateTurnoCaja();
   const updateMutation = useUpdateTurnoCaja();
 
-  const isSubmitting = createMutation.isPending || updateMutation.isPending;
-
   const {
     handleSubmit,
     reset,
     setValue,
     watch,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<TurnoCajaFormValues>({
     resolver: zodResolver(turnoCajaSchema),
     defaultValues: {
-      cajaId: 0,
+      cajaId: defaultCajaId || 0,
       empleadoId: 0,
       fechaHoraApertura: toLocalDatetimeString(),
       fechaHoraCierre: "",
@@ -99,30 +91,15 @@ export function TurnoCajaFormDialog({
     },
   });
 
-  const selectedCajaId = watch("cajaId");
   const selectedEmpleadoId = watch("empleadoId");
   const fechaAperturaVal = watch("fechaHoraApertura");
   const fechaCierreVal = watch("fechaHoraCierre");
 
-  const cajasList = Array.isArray(cajasData?.items)
-    ? cajasData.items
-    : Array.isArray(cajasData)
-    ? cajasData
-    : [];
   const empleadosList = Array.isArray(empleadosData?.items)
     ? empleadosData.items
     : Array.isArray(empleadosData)
     ? empleadosData
     : [];
-
-  // Mapeo de opciones Autocomplete para Cajas
-  const cajaOptions: AutocompleteOption[] = React.useMemo(() => {
-    return cajasList.map((caja) => ({
-      value: String(caja.id),
-      label: `${caja.codigo} - ${caja.nombre}`,
-      description: caja.descripcion || undefined,
-    }));
-  }, [cajasList]);
 
   // Mapeo de opciones Autocomplete para Empleados / Cajeros
   const empleadoOptions: AutocompleteOption[] = React.useMemo(() => {
@@ -144,7 +121,7 @@ export function TurnoCajaFormDialog({
     if (open) {
       const nowStr = toLocalDatetimeString();
       if (turnoToEdit) {
-        const cId = turnoToEdit.caja?.id || 0;
+        const cId = turnoToEdit.caja?.id || defaultCajaId || 0;
         const eId = turnoToEdit.empleado?.id || 0;
         reset({
           cajaId: cId,
@@ -169,13 +146,6 @@ export function TurnoCajaFormDialog({
     }
   }, [open, turnoToEdit, defaultCajaId, mode, isClosing, reset]);
 
-  const handleCajaChange = React.useCallback(
-    (val: string) => {
-      setValue("cajaId", Number(val), { shouldValidate: true });
-    },
-    [setValue]
-  );
-
   const handleEmpleadoChange = React.useCallback(
     (val: string) => {
       setValue("empleadoId", Number(val), { shouldValidate: true });
@@ -185,6 +155,12 @@ export function TurnoCajaFormDialog({
 
   const onSubmit = async (values: TurnoCajaFormValues) => {
     try {
+      const targetCajaId = Number(defaultCajaId || turnoToEdit?.caja?.id || values.cajaId);
+      if (!targetCajaId) {
+        toast.error("No se pudo identificar la caja asociada.");
+        return;
+      }
+
       const aperturaIso = new Date(values.fechaHoraApertura).toISOString();
       const cierreIso = values.fechaHoraCierre
         ? new Date(values.fechaHoraCierre).toISOString()
@@ -197,7 +173,7 @@ export function TurnoCajaFormDialog({
           : turnoToEdit?.estado ?? EstadoTurnoCaja.Abierto;
 
       const payload = {
-        cajaId: Number(values.cajaId),
+        cajaId: targetCajaId,
         empleadoId: Number(values.empleadoId),
         fechaHoraApertura: aperturaIso,
         fechaHoraCierre: cierreIso,
@@ -232,53 +208,51 @@ export function TurnoCajaFormDialog({
     }
   };
 
+  const isLoading = createMutation.isPending || updateMutation.isPending || isSubmitting;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>
-            {isClosing
-              ? "Cerrar Turno de Caja"
-              : isEditing
-              ? "Editar Turno de Caja"
-              : "Apertura de Turno de Caja"}
+      <DialogContent className="sm:max-w-lg p-6">
+        <DialogHeader className="space-y-1">
+          <DialogTitle className="flex items-center gap-2 text-xl">
+            <div
+              className={cn(
+                "flex size-9 items-center justify-center rounded-lg",
+                isClosing
+                  ? "bg-amber-500/10 text-amber-600"
+                  : "bg-primary/10 text-primary"
+              )}
+            >
+              {isClosing ? <LogOut className="size-5" /> : <Clock className="size-5" />}
+            </div>
+            <span>
+              {isClosing
+                ? "Cerrar Turno de Caja"
+                : isEditing
+                ? "Editar Turno de Caja"
+                : "Apertura de Turno"}
+            </span>
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-xs text-muted-foreground">
             {isClosing
               ? "Confirme la fecha y hora de cierre para registrar el término de este turno."
               : isEditing
               ? "Modifique la información del turno de caja."
-              : "Busque y seleccione la caja y el cajero asignado para iniciar el turno."}
+              : "Seleccione el cajero responsable y confirme el horario de apertura."}
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-2">
-          {/* Punto de Caja Autocomplete */}
-          <div className="space-y-2">
-            <Label htmlFor="cajaId" className="required font-medium">
-              Punto de Caja
-            </Label>
-            <Autocomplete
-              id="cajaId"
-              value={selectedCajaId ? String(selectedCajaId) : ""}
-              onValueChange={handleCajaChange}
-              options={cajaOptions}
-              placeholder="Buscar o seleccionar punto de caja..."
-              emptyText="No se encontraron puntos de caja registrados"
-              allowCustomValue={false}
-              isLoading={isLoadingCajas}
-              disabled={isSubmitting || isClosing}
-              error={Boolean(errors.cajaId)}
-            />
-            {errors.cajaId && (
-              <p className="text-xs text-destructive">{errors.cajaId.message}</p>
-            )}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-2">
+          {/* Indicador de campos obligatorios */}
+          <div className="flex items-center justify-between text-xs text-muted-foreground bg-muted/40 px-3 py-1.5 rounded-md border border-border/40">
+            <span>Configuración del Turno</span>
+            <span className="text-destructive font-medium">* Requeridos</span>
           </div>
 
           {/* Cajero / Empleado Responsable Autocomplete */}
-          <div className="space-y-2">
-            <Label htmlFor="empleadoId" className="required font-medium">
-              Cajero / Empleado Responsable
+          <div className="space-y-1.5">
+            <Label htmlFor="empleadoId" className="text-xs flex items-center gap-1">
+              Cajero / Empleado Responsable <span className="text-destructive">*</span>
             </Label>
             <Autocomplete
               id="empleadoId"
@@ -289,20 +263,20 @@ export function TurnoCajaFormDialog({
               emptyText="No se encontraron cajeros/empleados registrados"
               allowCustomValue={false}
               isLoading={isLoadingEmpleados}
-              disabled={isSubmitting || isClosing}
+              disabled={isLoading || isClosing}
               error={Boolean(errors.empleadoId)}
             />
             {errors.empleadoId && (
-              <p className="text-xs text-destructive">
+              <p className="text-[11px] text-destructive font-medium">
                 {errors.empleadoId.message}
               </p>
             )}
           </div>
 
           {/* Fecha y Hora de Apertura */}
-          <div className="space-y-2">
-            <Label htmlFor="fechaHoraApertura" className="required font-medium">
-              Fecha y Hora de Apertura
+          <div className="space-y-1.5">
+            <Label htmlFor="fechaHoraApertura" className="text-xs flex items-center gap-1">
+              Fecha y Hora de Apertura <span className="text-destructive">*</span>
             </Label>
             <Input
               id="fechaHoraApertura"
@@ -313,11 +287,15 @@ export function TurnoCajaFormDialog({
                   shouldValidate: true,
                 })
               }
-              className="h-9 text-sm font-mono"
-              disabled={isSubmitting || isClosing}
+              className={cn(
+                "h-9 text-sm font-mono",
+                errors.fechaHoraApertura && "border-destructive focus-visible:ring-destructive"
+              )}
+              aria-invalid={Boolean(errors.fechaHoraApertura)}
+              disabled={isLoading || isClosing}
             />
             {errors.fechaHoraApertura && (
-              <p className="text-xs text-destructive">
+              <p className="text-[11px] text-destructive font-medium">
                 {errors.fechaHoraApertura.message}
               </p>
             )}
@@ -325,9 +303,9 @@ export function TurnoCajaFormDialog({
 
           {/* Fecha y Hora de Cierre (Si es Cierre o Edición) */}
           {(isClosing || isEditing || fechaCierreVal) && (
-            <div className="space-y-2">
-              <Label htmlFor="fechaHoraCierre" className="font-medium">
-                Fecha y Hora de Cierre
+            <div className="space-y-1.5 pt-2 border-t border-border/40">
+              <Label htmlFor="fechaHoraCierre" className="text-xs flex items-center gap-1">
+                Fecha y Hora de Cierre {isClosing && <span className="text-destructive">*</span>}
               </Label>
               <Input
                 id="fechaHoraCierre"
@@ -339,38 +317,43 @@ export function TurnoCajaFormDialog({
                     setValue("estado", EstadoTurnoCaja.Cerrado);
                   }
                 }}
-                className="h-9 text-sm font-mono"
-                disabled={isSubmitting}
+                className={cn(
+                  "h-9 text-sm font-mono",
+                  errors.fechaHoraCierre && "border-destructive focus-visible:ring-destructive"
+                )}
+                aria-invalid={Boolean(errors.fechaHoraCierre)}
+                disabled={isLoading}
               />
               {errors.fechaHoraCierre && (
-                <p className="text-xs text-destructive">
+                <p className="text-[11px] text-destructive font-medium">
                   {errors.fechaHoraCierre.message}
                 </p>
               )}
             </div>
           )}
 
-          <DialogFooter className="pt-4 gap-2 sm:gap-0">
+          <DialogFooter className="pt-4 border-t gap-2 sm:gap-0">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
-              className="h-9 text-xs sm:text-sm"
+              disabled={isLoading}
+              className="h-9 text-xs sm:text-sm cursor-pointer"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
-              disabled={isSubmitting}
-              className={`h-9 gap-2 text-xs sm:text-sm ${
-                isClosing ? "bg-amber-600 hover:bg-amber-700 text-white" : ""
-              }`}
+              disabled={isLoading}
+              className={cn(
+                "h-9 gap-2 text-xs sm:text-sm cursor-pointer",
+                isClosing && "bg-amber-600 hover:bg-amber-700 text-white"
+              )}
             >
-              {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+              {isLoading && <Loader2 className="size-4 animate-spin" />}
               <span>
                 {isClosing
-                  ? "Confirmar Cierre de Turno"
+                  ? "Confirmar Cierre"
                   : isEditing
                   ? "Guardar Cambios"
                   : "Abrir Turno"}
