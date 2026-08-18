@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { useCajas, useDeleteCaja } from "../hooks/use-cajas";
 import { CajaHeader } from "./caja-header";
 import { CajaMetrics } from "./caja-metrics";
-import { CajaTable } from "./caja-table";
+import { CajaList, type CajaEstadoFiltro } from "./caja-list";
 import { CajaFormDialog } from "./caja-form-dialog";
 import { CajaDeleteDialog } from "./caja-delete-dialog";
 import type { CajaResponse } from "../types/caja.types";
@@ -15,6 +15,7 @@ export function CajaModuleView() {
   const [pageSize, setPageSize] = React.useState(10);
   const [searchTerm, setSearchTerm] = React.useState("");
   const [debouncedSearch, setDebouncedSearch] = React.useState("");
+  const [selectedEstadoTab, setSelectedEstadoTab] = React.useState<CajaEstadoFiltro>("TODOS");
 
   const [formDialogOpen, setFormDialogOpen] = React.useState(false);
   const [cajaToEdit, setCajaToEdit] = React.useState<CajaResponse | null>(null);
@@ -49,6 +50,16 @@ export function CajaModuleView() {
     ? (apiData as unknown as CajaResponse[])
     : [];
   const totalItems = apiData?.totalItems ?? cajas.length;
+
+  const filteredCajas = React.useMemo(() => {
+    if (selectedEstadoTab === "ACTIVAS") {
+      return cajas.filter((c) => c.activo);
+    }
+    if (selectedEstadoTab === "INACTIVAS") {
+      return cajas.filter((c) => !c.activo);
+    }
+    return cajas;
+  }, [cajas, selectedEstadoTab]);
 
   const metrics = React.useMemo(() => {
     return {
@@ -87,19 +98,26 @@ export function CajaModuleView() {
     }
   };
 
+  const handleEstadoTabChange = (tab: CajaEstadoFiltro) => {
+    setSelectedEstadoTab(tab);
+    setCurrentPage(1);
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-3 w-full animate-in fade-in-50 duration-300">
       <CajaHeader onNewCajaClick={handleOpenCreateModal} />
 
       <CajaMetrics metrics={metrics} isLoading={isLoading} />
 
-      <CajaTable
-        cajas={cajas}
+      <CajaList
+        cajas={filteredCajas}
         isLoading={isLoading}
-        totalItems={totalItems}
+        totalItems={selectedEstadoTab === "TODOS" ? totalItems : filteredCajas.length}
         currentPage={currentPage}
         pageSize={pageSize}
         searchTerm={searchTerm}
+        selectedEstadoTab={selectedEstadoTab}
+        onEstadoTabChange={handleEstadoTabChange}
         onSearchChange={setSearchTerm}
         onPageChange={setCurrentPage}
         onPageSizeChange={(size) => {
