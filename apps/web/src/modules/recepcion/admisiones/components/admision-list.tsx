@@ -73,6 +73,7 @@ export function AdmisionList({
   onPageSizeChange,
   onViewDetail,
   onDirectChangeStatus,
+  onDelete,
 }: AdmisionListProps) {
   const tabs: Array<{
     key: EstadoAdmision | "TODOS";
@@ -336,38 +337,14 @@ export function AdmisionList({
                             Descargar PDF
                           </DropdownMenuItem>
 
-                          {/* Acciones de Estado directas en menú */}
+                          {/* Acción de Cancelación */}
                           {adm.estado !== EstadoAdmision.Cancelada && (
                             <>
                               <DropdownMenuSeparator />
-                              {adm.estado === EstadoAdmision.Registrada && (
-                                <DropdownMenuItem
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onDirectChangeStatus?.(adm, EstadoAdmision.Confirmada);
-                                  }}
-                                  className="gap-2 text-emerald-600 dark:text-emerald-400 cursor-pointer font-medium"
-                                >
-                                  <CheckCircle2 className="size-3.5" />
-                                  Confirmar Admisión
-                                </DropdownMenuItem>
-                              )}
-                              {adm.estado === EstadoAdmision.Confirmada && (
-                                <DropdownMenuItem
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onDirectChangeStatus?.(adm, EstadoAdmision.EnviadaVenta);
-                                  }}
-                                  className="gap-2 text-purple-600 dark:text-purple-400 cursor-pointer font-medium"
-                                >
-                                  <Send className="size-3.5" />
-                                  Enviar a Venta
-                                </DropdownMenuItem>
-                              )}
                               <DropdownMenuItem
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  onDirectChangeStatus?.(adm, EstadoAdmision.Cancelada);
+                                  onDelete(adm.id);
                                 }}
                                 className="gap-2 text-rose-600 dark:text-rose-400 focus:text-rose-600 cursor-pointer"
                               >
