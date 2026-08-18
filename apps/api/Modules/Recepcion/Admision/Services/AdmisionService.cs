@@ -5,6 +5,7 @@ using Clinica.Api.Modules.Recepcion.Admision.Dtos;
 using Clinica.Api.Modules.Recepcion.Admision.Entity;
 using Clinica.Api.Modules.Recepcion.Admision.Mappers;
 using Clinica.Api.Modules.Recepcion.Pacientes.Entity;
+using Clinica.Api.Modules.RecursosHumanos.Empleado.Entity;
 using Clinica.Api.Modules.RecursosHumanos.Medico.Entity;
 using Clinica.Api.Modules.Servicios.Convenios.Entity;
 using Clinica.Api.Modules.Servicios.Servicios.Entity;
@@ -13,8 +14,10 @@ using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Extensions;
 using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
-using AdmisionEntity = Clinica.Api.Modules.Recepcion.Admision.Entity.Admision;
-using AdmisionDetalleEntity = Clinica.Api.Modules.Recepcion.Admision.Entity.AdmisionDetalle;
+using AdmisionEntity =
+    Clinica.Api.Modules.Recepcion.Admision.Entity.Admision;
+using AdmisionDetalleEntity =
+    Clinica.Api.Modules.Recepcion.Admision.Entity.AdmisionDetalle;
 
 namespace Clinica.Api.Modules.Recepcion.Admision.Services;
 
@@ -24,7 +27,8 @@ public sealed class AdmisionService(
     CorrelativoService correlativoService
 )
 {
-    private DbSet<AdmisionEntity> Admisiones => dbContext.Set<AdmisionEntity>();
+    private DbSet<AdmisionEntity> Admisiones =>
+        dbContext.Set<AdmisionEntity>();
 
     public async Task<PagedResult<AdmisionResponse>> ListarAsync(
         PaginationRequest pagination,
@@ -34,6 +38,8 @@ public sealed class AdmisionService(
         var query = Admisiones
             .AsNoTracking()
             .Include(x => x.Paciente)
+            .ThenInclude(x => x.Persona)
+            .Include(x => x.Recepcionista)
             .ThenInclude(x => x.Persona)
             .Include(x => x.Convenio)
             .Include(x => x.Detalles)
@@ -52,12 +58,19 @@ public sealed class AdmisionService(
         {
             query = query.Where(x =>
                 x.Numero.Contains(normalizedSearch) ||
-                (x.Observacion != null &&
-                 x.Observacion.Contains(normalizedSearch)) ||
+                (
+                    x.Observacion != null &&
+                    x.Observacion.Contains(normalizedSearch)
+                ) ||
                 x.Paciente.NumeroHistoriaClinica.Contains(normalizedSearch) ||
                 x.Paciente.Persona.Nombres.Contains(normalizedSearch) ||
                 x.Paciente.Persona.ApellidoPaterno.Contains(normalizedSearch) ||
-                x.Paciente.Persona.NumeroDocumento.Contains(normalizedSearch));
+                (
+                    x.Paciente.Persona.ApellidoMaterno != null &&
+                    x.Paciente.Persona.ApellidoMaterno.Contains(normalizedSearch)
+                ) ||
+                x.Paciente.Persona.NumeroDocumento.Contains(normalizedSearch)
+            );
         }
 
         var totalItems = await query.CountAsync(cancellationToken);
@@ -73,13 +86,16 @@ public sealed class AdmisionService(
             .Take(pagination.ValidPageSize)
             .ToListAsync(cancellationToken);
 
-        var items = entities.Select(MapToResponse).ToList();
+        var items = entities
+            .Select(MapToResponse)
+            .ToList();
 
         return new PagedResult<AdmisionResponse>(
             items,
             pagination.ValidPage,
             pagination.ValidPageSize,
-            totalItems);
+            totalItems
+        );
     }
 
     public async Task<AdmisionResponse> ObtenerAsync(
@@ -90,6 +106,8 @@ public sealed class AdmisionService(
             .AsNoTracking()
             .Include(x => x.Paciente)
             .ThenInclude(x => x.Persona)
+            .Include(x => x.Recepcionista)
+            .ThenInclude(x => x.Persona)
             .Include(x => x.Convenio)
             .Include(x => x.Detalles)
             .ThenInclude(x => x.Servicio)
@@ -97,16 +115,17 @@ public sealed class AdmisionService(
             .ThenInclude(x => x.Medico)
             .ThenInclude(x => x.Empleado)
             .ThenInclude(x => x.Persona)
-            .Where(x => x.Activo)
             .FirstOrDefaultAsync(
-                x => x.Id == id,
-                cancellationToken);
+                x => x.Id == id && x.Activo,
+                cancellationToken
+            );
 
         if (entity is null)
         {
             throw new NotFoundException(
                 nameof(AdmisionEntity),
-                id);
+                id
+            );
         }
 
         return MapToResponse(entity);
@@ -116,38 +135,72 @@ public sealed class AdmisionService(
         CreateAdmisionRequest request,
         CancellationToken cancellationToken = default)
     {
-        await EnsurePacienteExistsAsync(request.PacienteId, cancellationToken);
-        await EnsureConvenioExistsAsync(request.ConvenioId, cancellationToken);
-        await ValidarDetallesAsync(request.Detalles, cancellationToken);
+        await ValidarRequestAsync(
+            request,
+            cancellationToken
+        );
 
-        var entity = AdmisionMapper.ToEntity(request);
+        await using var transaction =
+            await dbContext.Database.BeginTransactionAsync(
+                cancellationToken
+            );
 
-        Normalizar(entity, request.Observacion);
-
-        var paramCorrelativo = new GenerarCorrelativoRequest
+        try
         {
-            Codigo = "ADM",
-            Gestion = entity.FechaHora.Year,
-            Prefijo = "ADM",
-            Longitud = 6
-        };
+            var entity = AdmisionMapper.ToEntity(request);
 
-        await using var tx = await dbContext.Database
-            .BeginTransactionAsync(cancellationToken);
+            Normalizar(
+                entity,
+                request.Observacion
+            );
 
-        var correlativo = await correlativoService.GenerarAsync(
-            paramCorrelativo, cancellationToken);
+            var correlativoRequest = new GenerarCorrelativoRequest
+            {
+                Codigo = "ADM",
+                Gestion = entity.FechaHora.Year,
+                Prefijo = "ADM",
+                Longitud = 6
+            };
 
-        entity.Numero = correlativo.NumeroFormateado;
-        entity.Estado = EstadoAdmision.Registrada;
-        entity.Detalles = request.Detalles.Select(CrearDetalle).ToList();
+            var correlativo =
+                await correlativoService.GenerarAsync(
+                    correlativoRequest,
+                    cancellationToken
+                );
 
-        await Admisiones.AddAsync(entity, cancellationToken);
-        await dbContext.SaveChangesAsync(cancellationToken);
+            entity.Numero = correlativo.NumeroFormateado;
+            entity.Estado = EstadoAdmision.Registrada;
 
-        await tx.CommitAsync(cancellationToken);
+            entity.Detalles = request.Detalles
+                .Select(CrearDetalle)
+                .ToList();
 
-        return await ObtenerAsync(entity.Id, cancellationToken);
+            await Admisiones.AddAsync(
+                entity,
+                cancellationToken
+            );
+
+            await dbContext.SaveChangesAsync(
+                cancellationToken
+            );
+
+            await transaction.CommitAsync(
+                cancellationToken
+            );
+
+            return await ObtenerAsync(
+                entity.Id,
+                cancellationToken
+            );
+        }
+        catch
+        {
+            await transaction.RollbackAsync(
+                cancellationToken
+            );
+
+            throw;
+        }
     }
 
     public async Task<AdmisionResponse> ActualizarAsync(
@@ -159,31 +212,54 @@ public sealed class AdmisionService(
             .Include(x => x.Detalles)
             .FirstOrDefaultAsync(
                 x => x.Id == id && x.Activo,
-                cancellationToken);
+                cancellationToken
+            );
 
         if (entity is null)
-            throw new NotFoundException(nameof(AdmisionEntity), id);
+        {
+            throw new NotFoundException(
+                nameof(AdmisionEntity),
+                id
+            );
+        }
 
         if (entity.Estado != EstadoAdmision.Registrada)
         {
             throw new ConflictException(
                 $"No se puede editar una admisión en estado {entity.Estado}. " +
-                $"Solo las admisiones en estado {EstadoAdmision.Registrada} pueden ser editadas.");
+                $"Solo las admisiones en estado {EstadoAdmision.Registrada} " +
+                "pueden ser editadas."
+            );
         }
 
-        await EnsurePacienteExistsAsync(request.PacienteId, cancellationToken);
-        await EnsureConvenioExistsAsync(request.ConvenioId, cancellationToken);
-        await ValidarDetallesAsync(request.Detalles, cancellationToken);
+        await ValidarRequestAsync(
+            request,
+            cancellationToken
+        );
 
-        AdmisionMapper.UpdateEntity(request, entity);
+        AdmisionMapper.UpdateEntity(
+            request,
+            entity
+        );
 
-        Normalizar(entity, request.Observacion);
+        Normalizar(
+            entity,
+            request.Observacion
+        );
 
-        ReemplazarDetalles(entity, request.Detalles);
+        ReemplazarDetalles(
+            entity,
+            request.Detalles
+        );
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await dbContext.SaveChangesAsync(
+            cancellationToken
+        );
 
-        return await ObtenerAsync(entity.Id, cancellationToken);
+        return await ObtenerAsync(
+            entity.Id,
+            cancellationToken
+        );
     }
 
     public async Task EliminarAsync(
@@ -193,14 +269,31 @@ public sealed class AdmisionService(
         var entity = await Admisiones
             .FirstOrDefaultAsync(
                 x => x.Id == id && x.Activo,
-                cancellationToken);
+                cancellationToken
+            );
 
         if (entity is null)
-            throw new NotFoundException(nameof(AdmisionEntity), id);
+        {
+            throw new NotFoundException(
+                nameof(AdmisionEntity),
+                id
+            );
+        }
+
+        if (entity.Estado != EstadoAdmision.Registrada)
+        {
+            throw new ConflictException(
+                $"No se puede eliminar una admisión en estado {entity.Estado}. " +
+                $"Solo las admisiones en estado {EstadoAdmision.Registrada} " +
+                "pueden ser eliminadas."
+            );
+        }
 
         entity.Activo = false;
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await dbContext.SaveChangesAsync(
+            cancellationToken
+        );
     }
 
     public async Task<AdmisionResponse> CambiarEstadoAsync(
@@ -208,8 +301,10 @@ public sealed class AdmisionService(
         CambiarEstadoRequest request,
         CancellationToken cancellationToken = default)
     {
-        await using var transaction = await dbContext.Database
-            .BeginTransactionAsync(cancellationToken);
+        await using var transaction =
+            await dbContext.Database.BeginTransactionAsync(
+                cancellationToken
+            );
 
         try
         {
@@ -217,10 +312,16 @@ public sealed class AdmisionService(
                 .Include(x => x.Detalles)
                 .FirstOrDefaultAsync(
                     x => x.Id == id && x.Activo,
-                    cancellationToken);
+                    cancellationToken
+                );
 
             if (entity is null)
-                throw new NotFoundException(nameof(AdmisionEntity), id);
+            {
+                throw new NotFoundException(
+                    nameof(AdmisionEntity),
+                    id
+                );
+            }
 
             if (!AdmisionTransiciones.EsValida(
                     entity.Estado,
@@ -228,99 +329,192 @@ public sealed class AdmisionService(
             {
                 throw new ConflictException(
                     $"No se puede transitar de {entity.Estado} " +
-                    $"a {request.EstadoDestino}.");
+                    $"a {request.EstadoDestino}."
+                );
             }
 
-            // Si la admisión pasa a Ventas,
-            // primero generamos la venta.
-            if (request.EstadoDestino == EstadoAdmision.EnviadaVenta)
+            if (request.EstadoDestino ==
+                EstadoAdmision.EnviadaVenta)
             {
-                await ventaService.GenerarVentaDesdeAdmisionAsync(
-                    entity.Id,
-                    cancellationToken);
+                if (entity.Detalles.Count == 0)
+                {
+                    throw new ConflictException(
+                        "La admisión no tiene servicios registrados " +
+                        "y no puede ser enviada a ventas."
+                    );
+                }
+
+                await ventaService
+                    .GenerarVentaDesdeAdmisionAsync(
+                        entity.Id,
+                        cancellationToken
+                    );
             }
 
-            // La venta ya fue creada correctamente.
-            // Ahora sí cambiamos el estado.
             entity.Estado = request.EstadoDestino;
 
-            if (!string.IsNullOrWhiteSpace(request.Motivo))
-            {
-                var motivo = request.Motivo.Trim();
+            AgregarMotivo(
+                entity,
+                request.Motivo
+            );
 
-                entity.Observacion =
-                    string.IsNullOrWhiteSpace(entity.Observacion)
-                        ? motivo
-                        : $"{entity.Observacion.Trim()} | {motivo}";
-            }
+            await dbContext.SaveChangesAsync(
+                cancellationToken
+            );
 
-            await dbContext.SaveChangesAsync(cancellationToken);
-
-            await transaction.CommitAsync(cancellationToken);
+            await transaction.CommitAsync(
+                cancellationToken
+            );
 
             return await ObtenerAsync(
                 entity.Id,
-                cancellationToken);
+                cancellationToken
+            );
         }
         catch
         {
-            await transaction.RollbackAsync(cancellationToken);
+            await transaction.RollbackAsync(
+                cancellationToken
+            );
+
             throw;
         }
     }
 
-    private static AdmisionResponse MapToResponse(AdmisionEntity entity)
+    private static AdmisionResponse MapToResponse(
+        AdmisionEntity entity)
     {
         return AdmisionMapper.ToResponse(entity) with
         {
-            Detalles = AdmisionDetalleMapper.ToResponse(entity.Detalles)
+            Detalles =
+            AdmisionDetalleMapper.ToResponse(
+                entity.Detalles
+            )
         };
+    }
+
+    private async Task ValidarRequestAsync(
+        AdmisionRequest request,
+        CancellationToken cancellationToken)
+    {
+        await EnsurePacienteExistsAsync(
+            request.PacienteId,
+            cancellationToken
+        );
+
+        await EnsureRecepcionistaExistsAsync(
+            request.RecepcionistaId,
+            cancellationToken
+        );
+
+        await EnsureConvenioExistsAsync(
+            request.ConvenioId,
+            cancellationToken
+        );
+
+        await ValidarDetallesAsync(
+            request.Detalles,
+            cancellationToken
+        );
     }
 
     private async Task EnsurePacienteExistsAsync(
         int pacienteId,
         CancellationToken cancellationToken)
     {
-        var existe = await dbContext.Pacientes.AnyAsync(
-            x => x.Id == pacienteId && x.Activo,
-            cancellationToken);
+        var existe = await dbContext.Pacientes
+            .AnyAsync(
+                x => x.Id == pacienteId && x.Activo,
+                cancellationToken
+            );
 
         if (!existe)
-            throw new NotFoundException(nameof(Paciente), pacienteId);
+        {
+            throw new NotFoundException(
+                nameof(Paciente),
+                pacienteId
+            );
+        }
+    }
+
+    private async Task EnsureRecepcionistaExistsAsync(
+        int recepcionistaId,
+        CancellationToken cancellationToken)
+    {
+        var existe = await dbContext.Empleados
+            .AnyAsync(
+                x => x.Id == recepcionistaId && x.Activo,
+                cancellationToken
+            );
+
+        if (!existe)
+        {
+            throw new NotFoundException(
+                nameof(Empleado),
+                recepcionistaId
+            );
+        }
     }
 
     private async Task EnsureConvenioExistsAsync(
         int? convenioId,
         CancellationToken cancellationToken)
     {
-        if (convenioId is null)
+        if (!convenioId.HasValue)
             return;
 
-        var existe = await dbContext.Convenios.AnyAsync(
-            x => x.Id == convenioId && x.Activo,
-            cancellationToken);
+        var existe = await dbContext.Convenios
+            .AnyAsync(
+                x =>
+                    x.Id == convenioId.Value &&
+                    x.Activo,
+                cancellationToken
+            );
 
         if (!existe)
-            throw new NotFoundException(nameof(Convenio), convenioId.Value);
+        {
+            throw new NotFoundException(
+                nameof(Convenio),
+                convenioId.Value
+            );
+        }
     }
 
     private async Task ValidarDetallesAsync(
         IReadOnlyCollection<AdmisionDetalleRequest> detalles,
         CancellationToken cancellationToken)
     {
+        if (detalles.Count == 0)
+        {
+            throw new ConflictException(
+                "La admisión debe contener al menos un servicio."
+            );
+        }
+
+        ValidarServiciosDuplicados(detalles);
+
         var servicioIds = detalles
             .Select(x => x.ServicioId)
             .Distinct()
             .ToList();
 
         var serviciosExistentes = await dbContext.Servicio
-            .Where(x => servicioIds.Contains(x.Id) && x.Activo)
+            .Where(x =>
+                servicioIds.Contains(x.Id) &&
+                x.Activo)
             .Select(x => x.Id)
             .ToListAsync(cancellationToken);
 
-        foreach (var servicioId in servicioIds.Except(serviciosExistentes))
+        var serviciosNoExistentes = servicioIds
+            .Except(serviciosExistentes)
+            .ToList();
+
+        if (serviciosNoExistentes.Count > 0)
         {
-            throw new NotFoundException(nameof(Servicio), servicioId);
+            throw new NotFoundException(
+                nameof(Servicio),
+                serviciosNoExistentes[0]
+            );
         }
 
         var medicoIds = detalles
@@ -333,14 +527,39 @@ public sealed class AdmisionService(
             return;
 
         var medicosExistentes = await dbContext.Medicos
-            .Where(x => medicoIds.Contains(x.Id) && x.Activo)
+            .Where(x =>
+                medicoIds.Contains(x.Id) &&
+                x.Activo)
             .Select(x => x.Id)
             .ToListAsync(cancellationToken);
 
-        foreach (var medicoId in medicoIds.Except(medicosExistentes))
+        var medicosNoExistentes = medicoIds
+            .Except(medicosExistentes)
+            .ToList();
+
+        if (medicosNoExistentes.Count > 0)
         {
-            throw new NotFoundException(nameof(Medico), medicoId);
+            throw new NotFoundException(
+                nameof(Medico),
+                medicosNoExistentes[0]
+            );
         }
+    }
+
+    private static void ValidarServiciosDuplicados(
+        IReadOnlyCollection<AdmisionDetalleRequest> detalles)
+    {
+        var servicioDuplicado = detalles
+            .GroupBy(x => x.ServicioId)
+            .FirstOrDefault(x => x.Count() > 1);
+
+        if (servicioDuplicado is null)
+            return;
+
+        throw new ConflictException(
+            $"El servicio con ID {servicioDuplicado.Key} " +
+            "está registrado más de una vez en la admisión."
+        );
     }
 
     private static AdmisionDetalleEntity CrearDetalle(
@@ -368,11 +587,16 @@ public sealed class AdmisionService(
             .Select(x => x.ServicioId)
             .ToHashSet();
 
-        foreach (var existing in entity.Detalles
-                     .Where(x => !incomingServicioIds.Contains(x.ServicioId))
-                     .ToList())
+        var detallesAEliminar = entity.Detalles
+            .Where(x =>
+                !incomingServicioIds.Contains(
+                    x.ServicioId
+                ))
+            .ToList();
+
+        foreach (var detalle in detallesAEliminar)
         {
-            entity.Detalles.Remove(existing);
+            entity.Detalles.Remove(detalle);
         }
 
         foreach (var request in detalles)
@@ -386,18 +610,29 @@ public sealed class AdmisionService(
                 detalle.PrecioUnitario = request.PrecioUnitario;
                 detalle.Descuento = request.Descuento;
                 detalle.Total = request.CalcularTotal();
+                continue;
             }
-            else
-            {
-                entity.Detalles.Add(CrearDetalle(request));
-            }
+
+            entity.Detalles.Add(
+                CrearDetalle(request)
+            );
         }
     }
 
-    private static void Normalizar(
-        AdmisionEntity entity,
-        string? observacion)
+    private static void Normalizar(AdmisionEntity entity, string? observacion)
     {
         entity.Observacion = observacion.TrimOrNull();
+    }
+
+    private static void AgregarMotivo(AdmisionEntity entity, string? motivo)
+    {
+        var motivoNormalizado = motivo.TrimOrNull();
+
+        if (motivoNormalizado is null)
+            return;
+
+        entity.Observacion = string.IsNullOrWhiteSpace(entity.Observacion)
+                ? motivoNormalizado
+                : $"{entity.Observacion.Trim()} | {motivoNormalizado}";
     }
 }

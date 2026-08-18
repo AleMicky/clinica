@@ -1,23 +1,21 @@
 using Clinica.Api.Data;
-using Clinica.Api.Modules.RecursosHumanos.AsignacionEmpleado.Services;
 using Clinica.Api.Modules.RecursosHumanos.Empleado.Dtos;
 using Clinica.Api.Modules.RecursosHumanos.Empleado.Mappers;
+using Clinica.Api.Shared.Abstractions;
 using Clinica.Api.Shared.Exceptions;
-using Clinica.Api.Shared.Extensions;
 using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
-using EmpleadoEntity =
-    Clinica.Api.Modules.RecursosHumanos.Empleado.Entity.Empleado;
-using PersonaEntity =
-    Clinica.Api.Modules.Seguridad.Personas.Entity.Persona;
+using EmpleadoEntity = Clinica.Api.Modules.RecursosHumanos.Empleado.Entity.Empleado;
+using PersonaEntity = Clinica.Api.Modules.Seguridad.Personas.Entity.Persona;
 
 namespace Clinica.Api.Modules.RecursosHumanos.Empleado.Services;
 
-public sealed class EmpleadoService(AppDbContext dbContext)
+public sealed class EmpleadoService(
+    AppDbContext dbContext,
+    ICurrentUserService currentUserService
+)
 {
-    public async Task<PagedResult<EmpleadoResponse>> ListarAsync(
-        PaginationRequest pagination,
-        string? search,
+    public async Task<PagedResult<EmpleadoResponse>> ListarAsync(PaginationRequest pagination, string? search,
         CancellationToken cancellationToken = default)
     {
         var query = dbContext.Empleados
@@ -59,9 +57,7 @@ public sealed class EmpleadoService(AppDbContext dbContext)
             totalItems);
     }
 
-    public async Task<EmpleadoResponse> ObtenerAsync(
-        int id,
-        CancellationToken cancellationToken = default)
+    public async Task<EmpleadoResponse> ObtenerAsync(int id, CancellationToken cancellationToken = default)
     {
         var empleado = await dbContext.Empleados
                            .Include(x => x.Persona)
@@ -76,40 +72,77 @@ public sealed class EmpleadoService(AppDbContext dbContext)
         return MapToResponse(empleado);
     }
 
-    public async Task<EmpleadoResponse> CrearAsync(
-        CreateEmpleadoRequest request,
+    public async Task<List<EmpleadoBaseInfo>> EmpleadoBase(CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Empleados
+            .AsNoTracking()
+            .Select(x => new EmpleadoBaseInfo
+            {
+                Id = x.Id,
+                CodigoEmpleado = x.CodigoEmpleado,
+                NombreCompleto =
+                    x.Persona.Nombres + " " +
+                    x.Persona.ApellidoPaterno + " " +
+                    x.Persona.ApellidoMaterno
+            })
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<EmpleadoBaseInfo>> EmpleadosPermitidos(CancellationToken cancellationToken = default)
+    {
+        var usuarioId = currentUserService.UserId;
+
+        if (usuarioId is null)
+            throw new UnauthorizedAccessException();
+
+        var query = dbContext.Empleados
+            .AsNoTracking()
+            .AsQueryable();
+
+        if (!currentUserService.IsInRole("ADMIN"))
+        {
+            var personaId = await dbContext.Users
+                .Where(u => u.Id == usuarioId.Value)
+                .Select(u => u.PersonaId)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            query = query.Where(e =>
+                e.PersonaId == personaId);
+        }
+
+        return await query
+            .Select(e => new EmpleadoBaseInfo
+            {
+                Id = e.Id,
+                CodigoEmpleado = e.CodigoEmpleado,
+                NombreCompleto =
+                    e.Persona.Nombres + " " +
+                    e.Persona.ApellidoPaterno + " " +
+                    (e.Persona.ApellidoMaterno ?? "")
+            })
+            .ToListAsync(cancellationToken);
+    }
+
+
+    public async Task<EmpleadoResponse> CrearAsync(CreateEmpleadoRequest request,
         CancellationToken cancellationToken = default)
     {
-        await ValidarPersonaAsync(
-            request.PersonaId,
-            excludeId: null,
-            cancellationToken);
-
+        await ValidarPersonaAsync(request.PersonaId, excludeId: null, cancellationToken);
         var empleado = EmpleadoMapper.ToEntity(request);
-
         empleado.Activo = true;
-
-        await dbContext.Empleados.AddAsync(
-            empleado,
-            cancellationToken);
-
+        await dbContext.Empleados.AddAsync(empleado, cancellationToken);
         // Primer guardado para obtener el Id
         await dbContext.SaveChangesAsync(cancellationToken);
-
         // Generar código definitivo
         empleado.CodigoEmpleado = GenerarCodigoEmpleado(empleado.Id);
-
         // Guardar el código generado
         await dbContext.SaveChangesAsync(cancellationToken);
-
         await dbContext.Entry(empleado)
             .Reference(x => x.Persona)
             .LoadAsync(cancellationToken);
 
         return MapToResponse(empleado);
     }
-
- 
 
     public async Task<EmpleadoResponse> ActualizarAsync(
         int id,

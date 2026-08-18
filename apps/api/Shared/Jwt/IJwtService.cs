@@ -1,4 +1,3 @@
-using Clinica.Api.Modules.Seguridad.Usuarios;
 using Clinica.Api.Modules.Seguridad.Usuarios.Entity;
 
 namespace Clinica.Api.Shared.Jwt;

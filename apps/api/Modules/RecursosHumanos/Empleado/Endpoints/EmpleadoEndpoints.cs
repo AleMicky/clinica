@@ -17,12 +17,10 @@ public static class EmpleadoEndpoints
 
         group.MapGet("/", ListarAsync).WithName("ListarEmpleados");
         group.MapGet("/{id:int}", ObtenerAsync).WithName("ObtenerEmpleado");
-        group.MapPost("/", CrearAsync)
-            .WithName("CrearEmpleado")
-            .Validate<CreateEmpleadoRequest>();
-        group.MapPut("/{id:int}", ActualizarAsync)
-            .WithName("ActualizarEmpleado")
-            .Validate<UpdateEmpleadoRequest>();
+        group.MapGet("/base", EmpleadoBaseAsync).WithName("EmpleadoBase");
+        group.MapGet("/permitidos", EmpleadosPermitidosAsync).WithName("EmpleadosPermitidos");
+        group.MapPost("/", CrearAsync).WithName("CrearEmpleado").Validate<CreateEmpleadoRequest>();
+        group.MapPut("/{id:int}", ActualizarAsync).WithName("ActualizarEmpleado").Validate<UpdateEmpleadoRequest>();
         group.MapDelete("/{id:int}", EliminarAsync).WithName("EliminarEmpleado");
 
         return app;
@@ -80,5 +78,22 @@ public static class EmpleadoEndpoints
     {
         await service.EliminarAsync(id);
         return Results.NoContent();
+    }
+
+    private static async Task<IResult> EmpleadoBaseAsync(
+        EmpleadoService service,
+        CancellationToken cancellationToken)
+    {
+        return Results.Ok(
+            await service.EmpleadoBase(cancellationToken));
+    }
+
+    private static async Task<IResult> EmpleadosPermitidosAsync(
+        EmpleadoService service,
+        CancellationToken cancellationToken)
+    {
+        return Results.Ok(
+            await service.EmpleadosPermitidos(
+                cancellationToken));
     }
 }

@@ -1,4 +1,5 @@
 using Clinica.Api.Modules.Recepcion.Pacientes.Entity;
+using Clinica.Api.Modules.RecursosHumanos.Empleado.Entity;
 using Clinica.Api.Modules.Servicios.Convenios.Entity;
 using Clinica.Api.Shared.Abstractions;
 
@@ -10,6 +11,9 @@ public sealed class Admision : AuditableEntity
 
     public int PacienteId { get; set; }
     public Paciente Paciente { get; set; } = null!;
+    
+    public int RecepcionistaId { get; set; }
+    public Empleado Recepcionista { get; set; } = null!;
 
     public int? ConvenioId { get; set; }
     public Convenio? Convenio { get; set; }

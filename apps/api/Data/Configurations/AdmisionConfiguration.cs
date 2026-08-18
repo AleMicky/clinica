@@ -20,6 +20,9 @@ public sealed class AdmisionConfiguration
         builder.Property(x => x.PacienteId)
             .IsRequired();
 
+        builder.Property(x => x.RecepcionistaId)
+            .IsRequired();
+
         builder.Property(x => x.FechaHora)
             .IsRequired();
 
@@ -32,9 +35,20 @@ public sealed class AdmisionConfiguration
         builder.HasIndex(x => x.Numero)
             .IsUnique();
 
+        builder.HasIndex(x => x.PacienteId);
+
+        builder.HasIndex(x => x.RecepcionistaId);
+
+        builder.HasIndex(x => x.ConvenioId);
+
         builder.HasOne(x => x.Paciente)
             .WithMany()
             .HasForeignKey(x => x.PacienteId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(x => x.Recepcionista)
+            .WithMany()
+            .HasForeignKey(x => x.RecepcionistaId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(x => x.Convenio)

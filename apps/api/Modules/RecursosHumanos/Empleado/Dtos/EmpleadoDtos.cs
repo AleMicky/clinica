@@ -40,3 +40,10 @@ public sealed record PersonaInfoResponse
     public string? Genero { get; init; }
     public string? EstadoCivil { get; init; }
 }
+
+public sealed record EmpleadoBaseInfo
+{
+    public int Id { get; init; }
+    public string? CodigoEmpleado { get; init; }
+    public string NombreCompleto { get; init; } = string.Empty;
+}

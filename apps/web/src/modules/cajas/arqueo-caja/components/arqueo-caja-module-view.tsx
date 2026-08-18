@@ -8,7 +8,7 @@ import {
 } from "../hooks/use-arqueos-caja";
 import { ArqueoCajaHeader } from "./arqueo-caja-header";
 import { ArqueoCajaMetrics } from "./arqueo-caja-metrics";
-import { ArqueoCajaTable } from "./arqueo-caja-table";
+import { ArqueoCajaList } from "./arqueo-caja-list";
 import { ArqueoCajaFormDialog } from "./arqueo-caja-form-dialog";
 import { ArqueoCajaDeleteDialog } from "./arqueo-caja-delete-dialog";
 import type { ArqueoCajaResponse } from "../types/arqueo-caja.types";
@@ -111,12 +111,12 @@ export function ArqueoCajaModuleView() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-3 w-full animate-in fade-in-50 duration-300">
       <ArqueoCajaHeader onNewArqueoClick={handleOpenCreateModal} />
 
       <ArqueoCajaMetrics metrics={metrics} isLoading={isLoading} />
 
-      <ArqueoCajaTable
+      <ArqueoCajaList
         arqueos={arqueos}
         isLoading={isLoading}
         totalItems={totalItems}

@@ -1,24 +1,45 @@
 using System.Security.Claims;
 using Clinica.Api.Shared.Abstractions;
-using Microsoft.AspNetCore.Http;
 
 namespace Clinica.Api.Shared;
 
 public sealed class CurrentUserService(IHttpContextAccessor accessor)
     : ICurrentUserService
 {
+    private ClaimsPrincipal? User =>
+        accessor.HttpContext?.User;
+
+    public bool IsAuthenticated =>
+        User?.Identity?.IsAuthenticated == true;
+
+    public int? UserId
+    {
+        get
+        {
+            var value = User?.FindFirstValue(
+                ClaimTypes.NameIdentifier);
+
+            return int.TryParse(value, out var id)
+                ? id
+                : null;
+        }
+    }
+
     public string? UserName
     {
         get
         {
-            var user = accessor.HttpContext?.User;
-
-            if (user?.Identity?.IsAuthenticated != true)
+            if (!IsAuthenticated)
                 return null;
 
-            return user.FindFirstValue(ClaimTypes.Name)
-                ?? user.FindFirstValue("unique_name")
-                ?? user.FindFirstValue(ClaimTypes.NameIdentifier);
+            return User?.FindFirstValue(ClaimTypes.Name)
+                   ?? User?.FindFirstValue("unique_name")
+                   ?? User?.FindFirstValue(ClaimTypes.NameIdentifier);
         }
+    }
+
+    public bool IsInRole(string role)
+    {
+        return User?.IsInRole(role) == true;
     }
 }

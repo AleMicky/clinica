@@ -64,11 +64,8 @@ var jwt = builder.Configuration
 builder.Services
     .AddAuthentication(options =>
     {
-        options.DefaultAuthenticateScheme =
-            JwtBearerDefaults.AuthenticationScheme;
-
-        options.DefaultChallengeScheme =
-            JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     })
     .AddJwtBearer(options =>
     {
@@ -122,12 +119,8 @@ builder.Services.AddCors(options =>
 
 
 builder.Services.AddScoped<IJwtService, JwtService>();
-
 builder.Services.AddOpenApi();
-
-builder.Services.Configure<ClinicaOptions>(
-    builder.Configuration.GetSection(ClinicaOptions.SectionName));
-
+builder.Services.Configure<ClinicaOptions>(builder.Configuration.GetSection(ClinicaOptions.SectionName));
 builder.Services.AddShared();
 builder.Services.AddModules();
 

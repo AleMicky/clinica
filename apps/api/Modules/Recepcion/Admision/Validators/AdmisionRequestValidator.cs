@@ -13,6 +13,11 @@ public abstract class AdmisionRequestValidator<TRequest>
         RuleFor(x => x.PacienteId)
             .GreaterThan(0)
             .WithMessage("El paciente es obligatorio.");
+        
+        RuleFor(x => x.RecepcionistaId)
+            .GreaterThan(0)
+            .WithMessage("El recepcionista es obligatorio.");
+        
 
         RuleFor(x => x.FechaHora)
             .NotEmpty()

@@ -1,4 +1,5 @@
 using Clinica.Api.Modules.Recepcion.Admision.Entity;
+using Clinica.Api.Modules.RecursosHumanos.Empleado.Dtos;
 using Clinica.Api.Shared.Abstractions;
 
 namespace Clinica.Api.Modules.Recepcion.Admision.Dtos;
@@ -6,6 +7,7 @@ namespace Clinica.Api.Modules.Recepcion.Admision.Dtos;
 public abstract record AdmisionRequest
 {
     public required int PacienteId { get; init; }
+    public required int RecepcionistaId { get; init; }
     public int? ConvenioId { get; init; }
     public required DateTime FechaHora { get; init; }
     public string? Observacion { get; init; }
@@ -21,6 +23,7 @@ public sealed record AdmisionResponse : AuditableResponse
     public int Id { get; init; }
     public string Numero { get; init; }
     public PacienteInfo Paciente { get; init; }
+    public EmpleadoBaseInfo Recepcionista { get; init; }
     public ConvenioInfo? Convenio { get; init; }
     public DateTime FechaHora { get; init; }
     public EstadoAdmision Estado { get; init; }

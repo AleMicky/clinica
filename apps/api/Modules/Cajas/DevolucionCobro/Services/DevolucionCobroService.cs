@@ -5,8 +5,8 @@ using Clinica.Api.Modules.Cajas.DevolucionCobro.Mappers;
 using Clinica.Api.Modules.Cajas.TurnoCaja.Dtos;
 using Clinica.Api.Modules.Parametros.Correlativo.Dtos;
 using Clinica.Api.Modules.Parametros.Correlativo.Services;
-using Clinica.Api.Shared.Crud;
 using Clinica.Api.Shared.Exceptions;
+using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
 using CobroEntity = Clinica.Api.Modules.Cajas.Cobro.Entity.Cobro;
 using DevolucionCobroEntity = Clinica.Api.Modules.Cajas.DevolucionCobro.Entity.DevolucionCobro;
@@ -18,14 +18,62 @@ public sealed class DevolucionCobroService(
     AppDbContext dbContext,
     CorrelativoService correlativoService
 )
-    : CrudService<
-        DevolucionCobroEntity,
-        CreateDevolucionCobroRequest,
-        UpdateDevolucionCobroRequest,
-        DevolucionCobroResponse
-    >(dbContext)
 {
-    public override async Task<DevolucionCobroResponse> CrearAsync(
+    private AppDbContext DbContext { get; } = dbContext;
+
+    private DbSet<DevolucionCobroEntity> Entities =>
+        DbContext.Set<DevolucionCobroEntity>();
+
+    public async Task<PagedResult<DevolucionCobroResponse>> ListarAsync(
+        PaginationRequest pagination,
+        string? search,
+        CancellationToken cancellationToken = default)
+    {
+        var query = BuildQuery()
+            .AsNoTracking()
+            .Where(x => x.Activo);
+
+        var normalizedSearch = string.IsNullOrWhiteSpace(search)
+            ? null
+            : search.Trim();
+
+        query = ApplySearch(query, normalizedSearch);
+
+        var totalItems = await query.CountAsync(cancellationToken);
+
+        var offset = (pagination.ValidPage - 1)
+                     * pagination.ValidPageSize;
+
+        var entities = await ApplyOrder(query)
+            .Skip(offset)
+            .Take(pagination.ValidPageSize)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<DevolucionCobroResponse>(
+            MapToResponseList(entities),
+            pagination.ValidPage,
+            pagination.ValidPageSize,
+            totalItems);
+    }
+
+    public async Task<DevolucionCobroResponse> ObtenerAsync(
+        int id,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await BuildQuery()
+            .AsNoTracking()
+            .Where(x => x.Activo)
+            .FirstOrDefaultAsync(
+                x => x.Id == id,
+                cancellationToken);
+
+        if (entity is null)
+            throw CreateNotFoundException(id);
+
+        return MapToResponse(entity);
+    }
+
+    public async Task<DevolucionCobroResponse> CrearAsync(
         CreateDevolucionCobroRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -60,7 +108,7 @@ public sealed class DevolucionCobroService(
         return await ObtenerAsync(entity.Id, cancellationToken);
     }
 
-    public override async Task<DevolucionCobroResponse> ActualizarAsync(
+    public async Task<DevolucionCobroResponse> ActualizarAsync(
         int id,
         UpdateDevolucionCobroRequest request,
         CancellationToken cancellationToken = default)
@@ -85,7 +133,24 @@ public sealed class DevolucionCobroService(
         return await ObtenerAsync(entity.Id, cancellationToken);
     }
 
-    protected override IQueryable<DevolucionCobroEntity> BuildQuery()
+    public async Task EliminarAsync(
+        int id,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await Entities
+            .FirstOrDefaultAsync(
+                x => x.Id == id,
+                cancellationToken);
+
+        if (entity is null)
+            throw CreateNotFoundException(id);
+
+        Entities.Remove(entity);
+
+        await DbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private IQueryable<DevolucionCobroEntity> BuildQuery()
     {
         return Entities
             .Include(x => x.Cobro)
@@ -93,7 +158,7 @@ public sealed class DevolucionCobroService(
             .Include(x => x.TurnoCaja).ThenInclude(t => t.Empleado).ThenInclude(e => e.Persona);
     }
 
-    protected override IQueryable<DevolucionCobroEntity> ApplyOrder(
+    private IQueryable<DevolucionCobroEntity> ApplyOrder(
         IQueryable<DevolucionCobroEntity> query)
     {
         return query
@@ -101,7 +166,7 @@ public sealed class DevolucionCobroService(
             .ThenByDescending(x => x.Id);
     }
 
-    protected override DevolucionCobroEntity MapToNewEntity(
+    private DevolucionCobroEntity MapToNewEntity(
         CreateDevolucionCobroRequest request)
     {
         var entity = DevolucionCobroMapper.ToEntity(request);
@@ -109,7 +174,7 @@ public sealed class DevolucionCobroService(
         return entity;
     }
 
-    protected override void MapToExistingEntity(
+    private void MapToExistingEntity(
         UpdateDevolucionCobroRequest request,
         DevolucionCobroEntity entity)
     {
@@ -117,7 +182,7 @@ public sealed class DevolucionCobroService(
         Normalizar(entity);
     }
 
-    protected override DevolucionCobroResponse MapToResponse(
+    private static DevolucionCobroResponse MapToResponse(
         DevolucionCobroEntity entity)
     {
         return new DevolucionCobroResponse
@@ -137,13 +202,13 @@ public sealed class DevolucionCobroService(
         };
     }
 
-    protected override IReadOnlyCollection<DevolucionCobroResponse>
+    private static IReadOnlyCollection<DevolucionCobroResponse>
         MapToResponseList(IEnumerable<DevolucionCobroEntity> entities)
     {
         return entities.Select(MapToResponse).ToList();
     }
 
-    protected override IQueryable<DevolucionCobroEntity> ApplySearch(
+    private IQueryable<DevolucionCobroEntity> ApplySearch(
         IQueryable<DevolucionCobroEntity> query,
         string? search)
     {
@@ -247,5 +312,10 @@ public sealed class DevolucionCobroService(
             CodigoEmpleado = empleado.CodigoEmpleado,
             NombreCompleto = nombreCompleto
         };
+    }
+
+    private static NotFoundException CreateNotFoundException(int id)
+    {
+        return new NotFoundException(typeof(DevolucionCobroEntity).Name, id);
     }
 }
