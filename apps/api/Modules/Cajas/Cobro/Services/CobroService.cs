@@ -8,7 +8,6 @@ using Clinica.Api.Modules.Parametros.Correlativo.Dtos;
 using Clinica.Api.Modules.Parametros.Correlativo.Services;
 using Clinica.Api.Modules.Parametros.MetodoPago.Entity;
 using Clinica.Api.Modules.Parametros.Moneda.Entity;
-using Clinica.Api.Shared.Crud;
 using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
@@ -22,14 +21,45 @@ public sealed class CobroService(
     AppDbContext dbContext,
     CorrelativoService correlativoService
 )
-    : CrudService<
-        CobroEntity,
-        CreateCobroRequest,
-        UpdateCobroRequest,
-        CobroResponse
-    >(dbContext)
 {
-    public override async Task<CobroResponse> ObtenerAsync(
+    private AppDbContext DbContext { get; } = dbContext;
+
+    private DbSet<CobroEntity> Entities =>
+        DbContext.Set<CobroEntity>();
+
+    public async Task<PagedResult<CobroResponse>> ListarAsync(
+        PaginationRequest pagination,
+        string? search,
+        CancellationToken cancellationToken = default)
+    {
+        var query = BuildQuery()
+            .AsNoTracking()
+            .Where(x => x.Activo);
+
+        var normalizedSearch = string.IsNullOrWhiteSpace(search)
+            ? null
+            : search.Trim();
+
+        query = ApplySearch(query, normalizedSearch);
+
+        var totalItems = await query.CountAsync(cancellationToken);
+
+        var offset = (pagination.ValidPage - 1)
+                     * pagination.ValidPageSize;
+
+        var entities = await ApplyOrder(query)
+            .Skip(offset)
+            .Take(pagination.ValidPageSize)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<CobroResponse>(
+            MapToResponseList(entities),
+            pagination.ValidPage,
+            pagination.ValidPageSize,
+            totalItems);
+    }
+
+    public async Task<CobroResponse> ObtenerAsync(
         int id,
         CancellationToken cancellationToken = default)
     {
@@ -50,7 +80,7 @@ public sealed class CobroService(
         };
     }
 
-    public override async Task<CobroResponse> CrearAsync(
+    public async Task<CobroResponse> CrearAsync(
         CreateCobroRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -97,7 +127,7 @@ public sealed class CobroService(
         return await ObtenerAsync(entity.Id, cancellationToken);
     }
 
-    public override async Task<CobroResponse> ActualizarAsync(
+    public async Task<CobroResponse> ActualizarAsync(
         int id,
         UpdateCobroRequest request,
         CancellationToken cancellationToken = default)
@@ -141,7 +171,7 @@ public sealed class CobroService(
         return await ObtenerAsync(entity.Id, cancellationToken);
     }
 
-    public override async Task EliminarAsync(
+    public async Task EliminarAsync(
         int id,
         CancellationToken cancellationToken = default)
     {
@@ -187,7 +217,7 @@ public sealed class CobroService(
         return MapToResponse(entity);
     }
 
-    protected override IQueryable<CobroEntity> BuildQuery()
+    private IQueryable<CobroEntity> BuildQuery()
     {
         return Entities
             .Include(x => x.TurnoCaja).ThenInclude(t => t.Caja)
@@ -197,7 +227,7 @@ public sealed class CobroService(
             .Include(x => x.Detalles);
     }
 
-    protected override IQueryable<CobroEntity> ApplyOrder(
+    private IQueryable<CobroEntity> ApplyOrder(
         IQueryable<CobroEntity> query)
     {
         return query
@@ -205,7 +235,7 @@ public sealed class CobroService(
             .ThenByDescending(x => x.Id);
     }
 
-    protected override CobroEntity MapToNewEntity(
+    private CobroEntity MapToNewEntity(
         CreateCobroRequest request)
     {
         var entity = CobroMapper.ToEntity(request);
@@ -218,7 +248,7 @@ public sealed class CobroService(
         return entity;
     }
 
-    protected override void MapToExistingEntity(
+    private void MapToExistingEntity(
         UpdateCobroRequest request,
         CobroEntity entity)
     {
@@ -228,7 +258,7 @@ public sealed class CobroService(
         Normalizar(entity);
     }
 
-    protected override CobroResponse MapToResponse(
+    private static CobroResponse MapToResponse(
         CobroEntity entity)
     {
         return new CobroResponse
@@ -252,13 +282,13 @@ public sealed class CobroService(
         };
     }
 
-    protected override IReadOnlyCollection<CobroResponse>
+    private static IReadOnlyCollection<CobroResponse>
         MapToResponseList(IEnumerable<CobroEntity> entities)
     {
         return entities.Select(MapToResponse).ToList();
     }
 
-    protected override IQueryable<CobroEntity> ApplySearch(
+    private IQueryable<CobroEntity> ApplySearch(
         IQueryable<CobroEntity> query,
         string? search)
     {
@@ -534,6 +564,11 @@ public sealed class CobroService(
 
     private static DetalleKey ClaveDetalle(CobroDetalleRequest r) =>
         new(r.MetodoPagoId, r.MonedaId, r.CuentaBancariaId);
+
+    private static NotFoundException CreateNotFoundException(int id)
+    {
+        return new NotFoundException(typeof(CobroEntity).Name, id);
+    }
 
     private readonly record struct DetalleKey(
         int MetodoPagoId,

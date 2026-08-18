@@ -15,19 +15,14 @@ public sealed class CobroDetalle : AuditableEntity
 
     public int MonedaId { get; set; }
     public Moneda Moneda { get; set; } = null!;
-    
+
     public int? CuentaBancariaId { get; set; }
     public CuentaBancaria? CuentaBancaria { get; set; }
 
     public decimal Monto { get; set; }
-
     public decimal TipoCambio { get; set; } = 1m;
-
     public decimal MontoMonedaBase { get; set; }
-
-    public string? Referencia { get; set; }
-
-    public string? EntidadFinanciera { get; set; }
-
-    public string? Observacion { get; set; }
+    public string? Referencia { get; set; } = string.Empty;
+    public string? EntidadFinanciera { get; set; } = string.Empty;
+    public string? Observacion { get; set; } = string.Empty;
 }
