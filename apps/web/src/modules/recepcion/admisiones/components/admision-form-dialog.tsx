@@ -71,8 +71,12 @@ export function AdmisionFormDialog({
   const { data: categoriasData } = useCategoriasServicio({ pageSize: 100 });
 
   // Obtener primera categoría activa para listar servicios de API
-  const firstCategoryId = categoriasData?.items?.[0]?.id ?? 1;
-  const { data: serviciosData } = useServicios(firstCategoryId, { pageSize: 100 }, open);
+  const firstCategoryId = categoriasData?.items?.[0]?.id;
+  const { data: serviciosData } = useServicios(
+    firstCategoryId ?? 0,
+    { pageSize: 100 },
+    Boolean(open && firstCategoryId)
+  );
 
   const createMutation = useCreateAdmision();
 

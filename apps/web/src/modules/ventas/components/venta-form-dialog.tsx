@@ -73,8 +73,12 @@ export function VentaFormDialog({
   const { data: conveniosData } = useConvenios({ pageSize: 100 });
   const { data: categoriasData } = useCategoriasServicio({ pageSize: 100 });
 
-  const firstCatId = categoriasData?.items?.[0]?.id ?? 1;
-  const { data: serviciosData } = useServicios(firstCatId, { pageSize: 100 }, open);
+  const firstCatId = categoriasData?.items?.[0]?.id;
+  const { data: serviciosData } = useServicios(
+    firstCatId ?? 0,
+    { pageSize: 100 },
+    Boolean(open && firstCatId)
+  );
 
   const createMutation = useCreateVenta();
 

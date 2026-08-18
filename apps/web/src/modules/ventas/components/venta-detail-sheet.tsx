@@ -54,8 +54,12 @@ export function VentaDetailSheet({
   const { data: monedasData } = useMonedas({ pageSize: 100 });
   const { data: categoriasData } = useCategoriasServicio({ pageSize: 100 });
 
-  const firstCatId = categoriasData?.items?.[0]?.id ?? 1;
-  const { data: serviciosData } = useServicios(firstCatId, { pageSize: 100 }, open);
+  const firstCatId = categoriasData?.items?.[0]?.id;
+  const { data: serviciosData } = useServicios(
+    firstCatId ?? 0,
+    { pageSize: 100 },
+    Boolean(open && firstCatId)
+  );
 
   if (!venta) return null;
 

@@ -43,6 +43,7 @@ interface VentaListProps {
   pageSize: number;
   searchTerm: string;
   selectedEstadoTab?: EstadoVenta | "TODOS";
+  selectedVentaId?: number | null;
   onEstadoTabChange?: (tab: EstadoVenta | "TODOS") => void;
   onSearchChange: (term: string) => void;
   onPageChange: (page: number) => void;
@@ -62,6 +63,7 @@ export function VentaList({
   pageSize,
   searchTerm,
   selectedEstadoTab = "TODOS",
+  selectedVentaId,
   onEstadoTabChange,
   onSearchChange,
   onPageChange,
@@ -168,12 +170,17 @@ export function VentaList({
               const monedaSimbolo = monedaObj?.simbolo || "Bs.";
 
               const numDetalles = venta.detalles?.length || 0;
+              const isSelected = selectedVentaId === venta.id;
 
               return (
                 <div
                   key={venta.id}
                   onClick={() => onViewDetail(venta)}
-                  className="group cursor-pointer p-3 rounded-xl border border-border/50 bg-card hover:border-primary/40 hover:bg-muted/25 transition-all shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative"
+                  className={`group cursor-pointer p-3 rounded-xl transition-all shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative ${
+                    isSelected
+                      ? "border-primary/80 bg-primary/5 dark:bg-primary/10 shadow-xs ring-1 ring-primary/40 border"
+                      : "border border-border/50 bg-card hover:border-primary/40 hover:bg-muted/25"
+                  }`}
                 >
                   {/* Bloque Izquierdo: Avatar + Paciente + Documento + Admisión + Fecha */}
                   <div className="flex items-start gap-3 min-w-0 flex-1">

@@ -7,6 +7,7 @@ import { VentaMetricsCards } from "./venta-metrics";
 import { VentaList } from "./venta-list";
 import { VentaFormDialog } from "./venta-form-dialog";
 import { VentaDetailSheet } from "./venta-detail-sheet";
+import { VentaDetailCard } from "./venta-detail-card";
 import { VentaStatusDialog } from "./venta-status-dialog";
 import { VentaConfirmStatusDialog } from "./venta-confirm-status-dialog";
 import { ConfirmDeleteDialog } from "@/components/shared";
@@ -105,6 +106,20 @@ export function VentaModuleView() {
     montoTotal,
   };
 
+  // Auto-seleccionar la primera venta para la vista Master-Detail en pantallas grandes
+  React.useEffect(() => {
+    if (ventas.length > 0) {
+      if (!selectedVentaForDetail) {
+        setSelectedVentaForDetail(ventas[0]);
+      } else {
+        const updated = ventas.find((v) => v.id === selectedVentaForDetail.id);
+        if (updated) {
+          setSelectedVentaForDetail(updated);
+        }
+      }
+    }
+  }, [ventas]);
+
   // Handlers
   const handleOpenAdd = () => {
     setFormDialogOpen(true);
@@ -112,7 +127,10 @@ export function VentaModuleView() {
 
   const handleViewDetail = (venta: VentaResponse) => {
     setSelectedVentaForDetail(venta);
-    setDetailSheetOpen(true);
+    // En móviles/tablets abre el panel sheet deslizable
+    if (typeof window !== "undefined" && window.innerWidth < 1024) {
+      setDetailSheetOpen(true);
+    }
   };
 
   const handleOpenStatusDialog = (venta: VentaResponse) => {
@@ -211,25 +229,41 @@ export function VentaModuleView() {
       {/* Tarjetas de Métricas */}
       <VentaMetricsCards metrics={metrics} />
 
-      {/* Listado Principal de Ventas (Formato Lista) */}
-      <VentaList
-        ventas={ventas}
-        isLoading={isLoading}
-        totalItems={apiData?.totalItems ?? ventas.length}
-        currentPage={currentPage}
-        pageSize={pageSize}
-        searchTerm={searchTerm}
-        selectedEstadoTab={selectedEstadoTab}
-        onEstadoTabChange={handleEstadoTabChange}
-        onSearchChange={handleSearchChange}
-        onPageChange={setCurrentPage}
-        onPageSizeChange={handlePageSizeChange}
-        onViewDetail={handleViewDetail}
-        onDirectChangeStatus={handleRequestDirectChangeStatus}
-        onChangeStatus={handleOpenStatusDialog}
-        onAnular={handleOpenAnular}
-        onRefresh={() => refetch()}
-      />
+      {/* CUERPO PRINCIPAL: MASTER - DETAIL SPLIT LAYOUT */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-start">
+        {/* PANEL IZQUIERDO: MASTER LIST (7 Columnas) */}
+        <div className="lg:col-span-7 xl:col-span-7 space-y-2.5">
+          <VentaList
+            ventas={ventas}
+            isLoading={isLoading}
+            totalItems={apiData?.totalItems ?? ventas.length}
+            currentPage={currentPage}
+            pageSize={pageSize}
+            searchTerm={searchTerm}
+            selectedEstadoTab={selectedEstadoTab}
+            selectedVentaId={selectedVentaForDetail?.id ?? null}
+            onEstadoTabChange={handleEstadoTabChange}
+            onSearchChange={handleSearchChange}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={handlePageSizeChange}
+            onViewDetail={handleViewDetail}
+            onDirectChangeStatus={handleRequestDirectChangeStatus}
+            onChangeStatus={handleOpenStatusDialog}
+            onAnular={handleOpenAnular}
+            onRefresh={() => refetch()}
+          />
+        </div>
+
+        {/* PANEL DERECHO: DETAIL CARD (5 Columnas - Sticky en Desktop) */}
+        <div className="hidden lg:block lg:col-span-5 xl:col-span-5 sticky top-4 space-y-2.5">
+          <VentaDetailCard
+            venta={selectedVentaForDetail}
+            onDirectChangeStatus={handleRequestDirectChangeStatus}
+            onChangeStatusClick={handleOpenStatusDialog}
+            onAnularClick={handleOpenAnular}
+          />
+        </div>
+      </div>
 
       {/* Modal: Nueva Venta */}
       <VentaFormDialog
@@ -238,7 +272,7 @@ export function VentaModuleView() {
         onSuccessCallback={() => refetch()}
       />
 
-      {/* Sheet: Detalle Ficha Venta */}
+      {/* Sheet: Detalle Ficha Venta (Para Móvil o Pantallas Pequeñas) */}
       <VentaDetailSheet
         open={detailSheetOpen}
         onOpenChange={setDetailSheetOpen}
