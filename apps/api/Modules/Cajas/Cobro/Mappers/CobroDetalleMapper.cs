@@ -6,8 +6,7 @@ namespace Clinica.Api.Modules.Cajas.Cobro.Mappers;
 
 internal static class CobroDetalleMapper
 {
-    internal static CobroDetalle CrearDetalle(
-        CobroDetalleRequest request)
+    internal static CobroDetalle CrearDetalle(CobroDetalleRequest request)
     {
         var montoMonedaBase = decimal.Round(
             request.Monto * request.TipoCambio,
