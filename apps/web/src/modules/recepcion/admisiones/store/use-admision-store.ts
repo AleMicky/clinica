@@ -26,6 +26,7 @@ export interface SelectedServiceCartItem {
 
 interface AdmisionStoreState {
   detalles: ServiceItemState[];
+  setServicesFromPicker: (items: SelectedServiceCartItem[]) => void;
   addServicesFromPicker: (items: SelectedServiceCartItem[]) => void;
   removeDetalle: (id: string) => void;
   updateDetalle: (id: string, field: keyof ServiceItemState, value: unknown) => void;
@@ -35,6 +36,38 @@ interface AdmisionStoreState {
 
 export const useAdmisionStore = create<AdmisionStoreState>((set, get) => ({
   detalles: [],
+
+  setServicesFromPicker: (items) => {
+    set((state) => {
+      const newDetalles: ServiceItemState[] = items.map((item) => {
+        const existing = state.detalles.find((d) => Number(d.servicioId) === item.servicio.id);
+        const raw = item.servicio as unknown as { precio?: number; Precio?: number; precioBase?: number };
+        const price = raw.precio ?? raw.Precio ?? raw.precioBase ?? 0;
+        const medicos =
+          item.medicosDisponibles ||
+          (item.servicio as ServicioTarifarioResponse).medicos ||
+          ((item.servicio as unknown as Record<string, unknown>).Medicos as MedicoServicioResponse[] | undefined) ||
+          [];
+        const defaultMedicoId = item.medicoId ?? existing?.medicoId ?? (medicos.length === 1 ? medicos[0].medicoId : undefined);
+
+        return {
+          id: existing?.id || Math.random().toString(),
+          categoriaId: item.catId || existing?.categoriaId,
+          categoriaNombre: item.catNombre || existing?.categoriaNombre,
+          servicioId: item.servicio.id,
+          servicioCodigo: item.servicio.codigo || existing?.servicioCodigo,
+          servicioNombre: item.servicio.nombre || existing?.servicioNombre,
+          medicosDisponibles: medicos.length > 0 ? medicos : existing?.medicosDisponibles,
+          medicoId: defaultMedicoId,
+          cantidad: item.cantidad,
+          precioUnitario: existing?.precioUnitario !== undefined ? existing.precioUnitario : price,
+          descuento: existing?.descuento ?? 0,
+        };
+      });
+
+      return { detalles: newDetalles };
+    });
+  },
 
   addServicesFromPicker: (items) => {
     set((state) => {

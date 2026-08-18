@@ -21,7 +21,6 @@ import {
   ChevronRight,
   Plus,
   Minus,
-  Sparkles,
   X,
 } from "lucide-react";
 import { useServiciosTarifario } from "@/modules/servicios/servicio/hooks/use-servicio";
@@ -57,7 +56,7 @@ export function MultiServicePickerModal({
   const [activeCatId, setActiveCatId] = React.useState<number | undefined>(categorias[0]?.id);
   const [searchQuery, setSearchQuery] = React.useState<string>("");
 
-  const { addServicesFromPicker, isServiceInCart } = useAdmisionStore();
+  const { setServicesFromPicker, detalles, isServiceInCart } = useAdmisionStore();
 
   const [selectedMap, setSelectedMap] = React.useState<Map<number, SelectedServiceCartItem>>(
     new Map()
@@ -72,15 +71,33 @@ export function MultiServicePickerModal({
     }
   }, [categorias, activeCatId]);
 
+  // Cargar prestaciones existentes del carrito para conservar selecciones y totales
   React.useEffect(() => {
     if (isOpen) {
-      setSelectedMap(new Map());
+      const initialMap = new Map<number, SelectedServiceCartItem>();
+      for (const d of detalles) {
+        initialMap.set(Number(d.servicioId), {
+          servicio: {
+            id: Number(d.servicioId),
+            codigo: d.servicioCodigo || "",
+            nombre: d.servicioNombre || "",
+            precio: Number(d.precioUnitario) || 0,
+            medicos: d.medicosDisponibles || [],
+          } as unknown as ServicioTarifarioResponse,
+          catId: d.categoriaId || 0,
+          catNombre: d.categoriaNombre || "Catálogo",
+          cantidad: d.cantidad || 1,
+          medicosDisponibles: d.medicosDisponibles || [],
+          medicoId: d.medicoId ?? undefined,
+        });
+      }
+      setSelectedMap(initialMap);
       setSearchQuery("");
       if (categorias.length > 0) {
         setActiveCatId(categorias[0].id);
       }
     }
-  }, [isOpen, categorias]);
+  }, [isOpen, categorias, detalles]);
 
   // Si se recibe un convenioId, consultar sus tarifarios para obtener el tarifarioId correspondiente
   const numericConvenioId = convenioId && convenioId !== "particular" ? Number(convenioId) : 0;
@@ -89,10 +106,14 @@ export function MultiServicePickerModal({
     Boolean(isOpen && numericConvenioId)
   );
 
-  const activeTarifarioId =
+  const activeTarifarioId: number | undefined =
     tarifarioId ||
-    convenioTarifariosData?.items?.[0]?.tarifarioId ||
-    convenioTarifariosData?.items?.[0]?.tarifario?.id ||
+    (convenioTarifariosData?.items?.[0]?.tarifarioId != null
+      ? Number(convenioTarifariosData.items[0].tarifarioId)
+      : undefined) ||
+    (convenioTarifariosData?.items?.[0]?.tarifario?.id != null
+      ? Number(convenioTarifariosData.items[0].tarifario.id)
+      : undefined) ||
     undefined;
 
   const currentCatId = activeCatId ?? categorias[0]?.id ?? 0;
@@ -225,8 +246,8 @@ export function MultiServicePickerModal({
       toast.warning("Seleccione al menos una prestación médica para agregar.");
       return;
     }
-    addServicesFromPicker(selectedItemsArray);
-    toast.success(`¡${selectedItemsArray.length} prestación(es) añadida(s) al carrito de la admisión!`);
+    setServicesFromPicker(selectedItemsArray);
+    toast.success(`¡${selectedItemsArray.length} prestación(es) guardada(s) en la admisión!`);
     onClose();
   };
 
@@ -298,28 +319,25 @@ export function MultiServicePickerModal({
                   key={cat.id}
                   type="button"
                   onClick={() => setActiveCatId(cat.id)}
-                  className={`w-full px-2.5 py-2 rounded-lg text-left transition-all flex items-center justify-between text-xs cursor-pointer ${
-                    isActive
+                  className={`w-full px-2.5 py-2 rounded-lg text-left transition-all flex items-center justify-between text-xs cursor-pointer ${isActive
                       ? "bg-primary text-primary-foreground shadow-xs font-semibold"
                       : "bg-background hover:bg-muted text-foreground border border-border/50 font-medium"
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <FolderTree
-                      className={`size-3.5 shrink-0 ${
-                        isActive ? "text-primary-foreground" : "text-primary"
-                      }`}
+                      className={`size-3.5 shrink-0 ${isActive ? "text-primary-foreground" : "text-primary"
+                        }`}
                     />
                     <span className="truncate leading-tight text-[11.5px]">{cat.nombre}</span>
                   </div>
                   <div className="flex items-center gap-1 shrink-0 ml-1">
                     {inCatCount > 0 && (
                       <span
-                        className={`text-[9px] font-extrabold px-1.5 py-0.2 rounded-full ${
-                          isActive
+                        className={`text-[9px] font-extrabold px-1.5 py-0.2 rounded-full ${isActive
                             ? "bg-primary-foreground text-primary"
                             : "bg-primary/15 text-primary"
-                        }`}
+                          }`}
                       >
                         {inCatCount}
                       </span>
@@ -375,13 +393,12 @@ export function MultiServicePickerModal({
                     <div
                       key={s.id}
                       onClick={() => handleToggleSelect(s)}
-                      className={`p-2.5 rounded-lg border transition-all text-left flex flex-col justify-between cursor-pointer space-y-2 shadow-2xs select-none ${
-                        isSelectedInModal
+                      className={`p-2.5 rounded-lg border transition-all text-left flex flex-col justify-between cursor-pointer space-y-2 shadow-2xs select-none ${isSelectedInModal
                           ? "border-primary bg-primary/8 ring-1.5 ring-primary/40 shadow-xs"
                           : isAlreadyInCart
-                          ? "border-emerald-500/40 bg-emerald-500/5 hover:border-emerald-500/70"
-                          : "border-border/70 bg-card hover:border-primary/50 hover:bg-muted/30"
-                      }`}
+                            ? "border-emerald-500/40 bg-emerald-500/5 hover:border-emerald-500/70"
+                            : "border-border/70 bg-card hover:border-primary/50 hover:bg-muted/30"
+                        }`}
                     >
                       <div className="space-y-1.5">
                         {/* CÓDIGO, TÍTULO Y BADGE */}
@@ -539,7 +556,7 @@ export function MultiServicePickerModal({
               disabled={selectedItemsArray.length === 0}
               className="h-7.5 px-3.5 text-xs font-semibold gap-1.5 bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-700 text-primary-foreground shadow-xs"
             >
-              <Sparkles className="size-3.5" />
+              <Plus className="size-3.5" />
               Añadir ({totalSelectedCount})
             </Button>
           </div>
