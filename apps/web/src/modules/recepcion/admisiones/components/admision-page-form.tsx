@@ -199,7 +199,7 @@ export function AdmisionPageForm() {
   };
 
   return (
-    <div className="flex flex-col gap-4 w-full px-4 sm:px-6 pb-12 animate-in fade-in-50 duration-300">
+    <div className="flex flex-col gap-3 w-full px-3 sm:px-5 pb-8 animate-in fade-in-50 duration-300">
       {/* MODAL MULTI-SELECCIÓN DE SERVICIOS */}
       <MultiServicePickerModal
         isOpen={multiPickerOpen}
@@ -227,43 +227,43 @@ export function AdmisionPageForm() {
         }}
       />
 
-      {/* CABECERA PRINCIPAL */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-card via-card to-primary/5 p-4 rounded-xl border border-border/70 shadow-xs">
-        <div className="flex items-center gap-3">
+      {/* CABECERA PRINCIPAL COMPACTA */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-card p-3 rounded-xl border border-border/70 shadow-2xs">
+        <div className="flex items-center gap-2.5 min-w-0">
           <Button
             type="button"
             variant="outline"
             size="icon"
             onClick={() => router.push("/recepcion/admisiones")}
-            className="size-9 rounded-lg border-border/80 hover:bg-muted shrink-0 cursor-pointer"
-            title="Volver a la lista de admisiones"
+            className="size-8 rounded-lg border-border/80 hover:bg-muted shrink-0 cursor-pointer"
+            title="Volver a admisiones"
           >
-            <ArrowLeft className="size-4.5" />
+            <ArrowLeft className="size-4" />
           </Button>
 
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h1 className="text-base sm:text-lg font-bold tracking-tight text-foreground">
+              <h1 className="text-sm sm:text-base font-bold tracking-tight text-foreground truncate">
                 Nueva Admisión Médica
               </h1>
-              <Badge variant="secondary" className="text-[10px] bg-primary/10 text-primary border-primary/20">
+              <Badge variant="secondary" className="text-[9px] bg-primary/10 text-primary border-primary/20 font-semibold px-1.5 py-0 h-4.5 shrink-0">
                 Paso a Paso
               </Badge>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Búsqueda de paciente, asignación de convenio, recepcionista y prestaciones en un solo flujo.
+            <p className="text-[11px] text-muted-foreground truncate">
+              Búsqueda de paciente, asignación de cobertura, recepcionista y prestaciones.
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2 shrink-0">
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={() => router.push("/recepcion/admisiones")}
             disabled={isSubmitting}
-            className="h-8.5 text-xs px-3 cursor-pointer"
+            className="h-8 text-xs px-3 cursor-pointer"
           >
             Cancelar
           </Button>
@@ -272,7 +272,7 @@ export function AdmisionPageForm() {
             type="button"
             onClick={handleSubmit}
             disabled={isSubmitting || !isPatientValid || detalles.length === 0}
-            className="h-8.5 text-xs font-semibold gap-1.5 px-4 shadow-xs bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer"
+            className="h-8 text-xs font-semibold gap-1.5 px-3.5 shadow-xs bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer"
           >
             {isSubmitting ? (
               <>
@@ -289,10 +289,10 @@ export function AdmisionPageForm() {
         </div>
       </div>
 
-      {/* CUERPO DEL FORMULARIO: GRID DE 3 PASOS */}
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+      {/* CUERPO DEL FORMULARIO: GRID DE 3 PASOS COMPACTO */}
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-start">
         {/* COLUMNA IZQUIERDA (Paso 1: Paciente + Paso 2: Cobertura y Recepción) */}
-        <div className="lg:col-span-5 flex flex-col gap-4">
+        <div className="lg:col-span-5 flex flex-col gap-3">
           <AdmisionPacienteSection
             patientSearch={patientSearch}
             setPatientSearch={setPatientSearch}

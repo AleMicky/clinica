@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Trash2 } from "lucide-react";
+import { Trash2, Stethoscope } from "lucide-react";
 import type { ServiceItemState } from "../store/use-admision-store";
 import type { MedicoResponse } from "@/modules/recursos-humanos/medico/types/medico.types";
 
@@ -44,46 +44,47 @@ export function ServicioRowItem({
   }, [row.medicoId, medicos, row.medicosDisponibles]);
 
   return (
-    <div className="p-4 bg-card rounded-xl border border-border/80 shadow-2xs space-y-3 hover:border-primary/40 transition-colors w-full">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2.5 border-b border-border/50">
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20 font-bold px-2 py-0.5">
-            Prestación #{index + 1}
+    <div className="p-2.5 bg-card rounded-lg border border-border/70 shadow-2xs space-y-2 hover:border-primary/40 transition-colors w-full text-xs">
+      {/* Cabecera del Item */}
+      <div className="flex items-center justify-between gap-2 pb-1.5 border-b border-border/50">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/20 font-bold px-1.5 py-0 h-4.5 shrink-0">
+            #{index + 1}
           </Badge>
 
-          <div className="flex items-center gap-1.5 text-xs">
-            <span className="font-semibold text-muted-foreground">📁 {row.categoriaNombre || "Catálogo General"}</span>
-            <span className="text-muted-foreground">→</span>
-            <span className="font-extrabold text-foreground text-xs">
-              🩺 {row.servicioNombre || "Consulta Médica General"}
-              {row.servicioCodigo ? ` (${row.servicioCodigo})` : ""}
+          <span className="font-semibold text-foreground truncate">
+            {row.servicioNombre || "Consulta Médica"}
+          </span>
+
+          {row.servicioCodigo && (
+            <span className="font-mono text-[10px] text-muted-foreground shrink-0">
+              ({row.servicioCodigo})
             </span>
-          </div>
+          )}
+
+          {row.categoriaNombre && (
+            <span className="text-[10px] text-muted-foreground/70 truncate hidden sm:inline">
+              • {row.categoriaNombre}
+            </span>
+          )}
         </div>
 
         <Button
           type="button"
-          variant="outline"
-          size="sm"
+          variant="ghost"
+          size="icon"
           onClick={() => onRemove(row.id)}
-          className="h-7 px-2.5 text-xs font-semibold gap-1 text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border-rose-200 self-end sm:self-auto"
-          title="Quitar esta prestación"
+          className="size-6 text-destructive hover:bg-destructive/10 shrink-0 cursor-pointer"
+          title="Quitar prestación"
         >
-          <Trash2 className="size-3.5" />
-          <span className="hidden sm:inline">Quitar</span>
+          <Trash2 className="size-3" />
         </Button>
       </div>
 
-      <div className="grid grid-cols-12 gap-3 items-end pt-1">
-        <div className="col-span-12 sm:col-span-5 space-y-1">
-          <div className="flex items-center justify-between">
-            <Label className="text-[11px] text-muted-foreground font-semibold">Médico Tratante</Label>
-            {row.medicosDisponibles && row.medicosDisponibles.length > 0 && (
-              <span className="text-[10px] text-primary font-medium">
-                {row.medicosDisponibles.length} asignado(s)
-              </span>
-            )}
-          </div>
+      {/* Grid de Inputs: Médico + Cantidad + Precio + Subtotal */}
+      <div className="grid grid-cols-12 gap-2 items-center">
+        {/* Médico Tratante */}
+        <div className="col-span-12 sm:col-span-5">
           <Select
             value={row.medicoId ? row.medicoId.toString() : "sin-medico"}
             onValueChange={(val: string | null) =>
@@ -94,17 +95,19 @@ export function ServicioRowItem({
               )
             }
           >
-            <SelectTrigger className="h-9 w-full bg-background text-xs font-medium border-border/80">
-              <SelectValue placeholder="Seleccionar médico...">
+            <SelectTrigger className="h-7.5 w-full bg-background text-xs font-medium border-border/80">
+              <SelectValue placeholder="Médico tratante...">
                 {selectedMedicoNombre}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="sin-medico" label="Sin Médico / Guardia">Sin Médico / Guardia</SelectItem>
+              <SelectItem value="sin-medico" label="Sin Médico / Guardia">
+                Sin Médico / Guardia
+              </SelectItem>
               {row.medicosDisponibles && row.medicosDisponibles.length > 0 && (
                 <div className="border-b border-border/50 pb-1 mb-1">
-                  <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-primary">
-                    Médicos Asignados a la Prestación ({row.medicosDisponibles.length})
+                  <div className="px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary">
+                    Médicos Asignados ({row.medicosDisponibles.length})
                   </div>
                   {row.medicosDisponibles.map((md) => (
                     <SelectItem
@@ -112,7 +115,7 @@ export function ServicioRowItem({
                       value={md.medicoId.toString()}
                       label={md.nombreMedico}
                     >
-                      👨‍⚕️ {md.nombreMedico}
+                      {md.nombreMedico}
                     </SelectItem>
                   ))}
                 </div>
@@ -129,32 +132,34 @@ export function ServicioRowItem({
           </Select>
         </div>
 
-        <div className="col-span-4 sm:col-span-2 space-y-1">
-          <Label className="text-[11px] text-muted-foreground font-semibold text-center block">Cantidad</Label>
+        {/* Cantidad */}
+        <div className="col-span-3 sm:col-span-2">
           <Input
             type="number"
             min="1"
             value={row.cantidad}
-            onChange={(e) => onUpdate(row.id, "cantidad", Number(e.target.value))}
-            className="h-9 text-xs text-center font-bold bg-background"
+            onChange={(e) => onUpdate(row.id, "cantidad", Math.max(1, Number(e.target.value)))}
+            className="h-7.5 text-xs text-center font-bold font-mono bg-background"
+            placeholder="Cant."
           />
         </div>
 
-        <div className="col-span-4 sm:col-span-2 space-y-1">
-          <Label className="text-[11px] text-muted-foreground font-semibold text-right block">Precio (Bs.)</Label>
+        {/* Precio Unitario */}
+        <div className="col-span-4 sm:col-span-2">
           <Input
             type="number"
             min="0"
             step="0.5"
             value={row.precioUnitario}
-            onChange={(e) => onUpdate(row.id, "precioUnitario", Number(e.target.value))}
-            className="h-9 text-xs text-right font-mono font-bold bg-background"
+            onChange={(e) => onUpdate(row.id, "precioUnitario", Math.max(0, Number(e.target.value)))}
+            className="h-7.5 text-xs text-right font-mono font-medium bg-background"
+            placeholder="Precio"
           />
         </div>
 
-        <div className="col-span-4 sm:col-span-3 text-right">
-          <span className="text-[10px] text-muted-foreground uppercase block font-bold">Subtotal</span>
-          <span className="text-base font-extrabold text-primary">
+        {/* Subtotal */}
+        <div className="col-span-5 sm:col-span-3 text-right">
+          <span className="text-xs font-bold text-primary font-mono">
             Bs. {Math.max(0, subtotalFila).toFixed(2)}
           </span>
         </div>

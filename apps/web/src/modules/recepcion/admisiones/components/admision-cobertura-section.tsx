@@ -53,7 +53,6 @@ export function AdmisionCoberturaSection({
   isLoadingEmpleados,
   selectedConvenioNombre,
 }: AdmisionCoberturaSectionProps) {
-  // Formatear nombre del recepcionista seleccionado
   const selectedRecepcionistaNombre = React.useMemo(() => {
     if (!recepcionistaId) return "Seleccione recepcionista responsable...";
     const emp = empleadosList.find((e) => String(e.id) === recepcionistaId);
@@ -67,23 +66,23 @@ export function AdmisionCoberturaSection({
 
   return (
     <Card className="border border-border/70 shadow-2xs bg-card">
-      <CardHeader className="p-4 pb-2.5 border-b border-border/60">
+      <CardHeader className="p-3 pb-2 border-b border-border/60">
         <CardTitle className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
           <Building2 className="size-4 text-primary" />
           2. Cobertura & Recepción
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="p-4 space-y-3.5">
-        {/* 1. Recepcionista Responsable (Full Width Select) */}
+      <CardContent className="p-3 space-y-2.5">
+        {/* Recepcionista Responsable */}
         <div className="space-y-1 w-full text-xs">
           <div className="flex items-center justify-between">
             <Label className="text-xs font-semibold flex items-center gap-1">
-              <UserCheck className="size-3.5 text-primary" />
-              Recepcionista Responsable <span className="text-destructive">*</span>
+              <UserCheck className="size-3 text-primary" />
+              Recepcionista <span className="text-destructive">*</span>
             </Label>
             {isLoadingEmpleados && (
-              <span className="text-[10px] text-muted-foreground animate-pulse">Cargando empleados...</span>
+              <span className="text-[10px] text-muted-foreground animate-pulse">Cargando...</span>
             )}
           </div>
 
@@ -91,22 +90,22 @@ export function AdmisionCoberturaSection({
             value={recepcionistaId}
             onValueChange={(val: string | null) => setRecepcionistaId(val || "")}
           >
-            <SelectTrigger className="h-9 w-full bg-background text-xs font-medium border-border/80">
-              <SelectValue placeholder="Seleccione recepcionista responsable...">
+            <SelectTrigger className="h-8 w-full bg-background text-xs font-medium border-border/80">
+              <SelectValue placeholder="Seleccionar recepcionista...">
                 {selectedRecepcionistaNombre}
               </SelectValue>
             </SelectTrigger>
             <SelectContent className="max-w-xl w-full">
               <SelectGroup>
-                <SelectLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                  Personal de Recepción y Admisión ({empleadosList.length})
+                <SelectLabel className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Personal de Recepción ({empleadosList.length})
                 </SelectLabel>
                 {empleadosList.map((emp) => {
                   const nombre = emp.persona
                     ? `${emp.persona.nombres} ${emp.persona.apellidoPaterno} ${emp.persona.apellidoMaterno || ""}`.trim()
                     : emp.codigoEmpleado || `Empleado #${emp.id}`;
                   const codigo = emp.codigoEmpleado ? `[${emp.codigoEmpleado}] ` : "";
-                  const doc = emp.persona?.numeroDocumento ? ` • CI/DNI: ${emp.persona.numeroDocumento}` : "";
+                  const doc = emp.persona?.numeroDocumento ? ` • CI: ${emp.persona.numeroDocumento}` : "";
                   const label = `${codigo}${nombre}${doc}`;
 
                   return (
@@ -118,23 +117,9 @@ export function AdmisionCoberturaSection({
               </SelectGroup>
             </SelectContent>
           </Select>
-
-          {recepcionistaId ? (
-            <div className="flex items-center justify-between text-[11px] text-emerald-600 font-medium pt-0.5 px-0.5 gap-2">
-              <span className="shrink-0">✓ Recepcionista Asignado</span>
-              <span className="font-semibold text-emerald-700 truncate max-w-[280px] text-right" title={selectedRecepcionistaNombre}>
-                {selectedRecepcionistaNombre}
-              </span>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between text-[11px] text-destructive font-medium pt-0.5 px-0.5 gap-2">
-              <span>Sin Recepcionista</span>
-              <span>Requerido para guardar</span>
-            </div>
-          )}
         </div>
 
-        {/* 2. Convenio / Cobertura (Full Width Select) */}
+        {/* Convenio / Cobertura */}
         <div className="space-y-1 w-full text-xs">
           <div className="flex items-center justify-between">
             <Label className="text-xs font-semibold">Convenio / Cobertura</Label>
@@ -146,7 +131,7 @@ export function AdmisionCoberturaSection({
             value={convenioId}
             onValueChange={(val: string | null) => setConvenioId(val || "particular")}
           >
-            <SelectTrigger className="h-9 w-full bg-background text-xs font-medium border-border/80">
+            <SelectTrigger className="h-8 w-full bg-background text-xs font-medium border-border/80">
               <SelectValue placeholder="Seleccionar convenio...">
                 {selectedConvenioNombre}
               </SelectValue>
@@ -158,7 +143,7 @@ export function AdmisionCoberturaSection({
 
               {pacienteConveniosList.length > 0 && (
                 <SelectGroup>
-                  <SelectLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  <SelectLabel className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                     Convenios Afiliados al Paciente
                   </SelectLabel>
                   {pacienteConveniosList.map((pc) => {
@@ -179,7 +164,7 @@ export function AdmisionCoberturaSection({
               <SelectSeparator />
 
               <SelectGroup>
-                <SelectLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                <SelectLabel className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                   Todos los Convenios del Sistema
                 </SelectLabel>
                 {conveniosList.map((c) => {
@@ -193,23 +178,9 @@ export function AdmisionCoberturaSection({
               </SelectGroup>
             </SelectContent>
           </Select>
-
-          {convenioId !== "particular" ? (
-            <div className="flex items-center justify-between text-[11px] text-emerald-600 font-medium pt-0.5 px-0.5 gap-2">
-              <span className="shrink-0">✓ Cobertura por Convenio</span>
-              <span className="font-semibold text-emerald-700 truncate max-w-[280px] text-right" title={selectedConvenioNombre}>
-                {selectedConvenioNombre}
-              </span>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between text-[11px] text-muted-foreground font-medium pt-0.5 px-0.5 gap-2">
-              <span>Atención Particular</span>
-              <span className="font-semibold text-foreground">Particular (Sin Convenio)</span>
-            </div>
-          )}
         </div>
 
-        {/* 3. Fecha & Hora de Atención */}
+        {/* Fecha & Hora de Atención */}
         <div className="space-y-1 w-full text-xs">
           <Label className="text-xs font-semibold flex items-center gap-1">
             <Calendar className="size-3 text-muted-foreground" />
@@ -219,19 +190,19 @@ export function AdmisionCoberturaSection({
             type="datetime-local"
             value={fechaHora}
             onChange={(e) => setFechaHora(e.target.value)}
-            className="h-9 text-xs bg-background font-medium w-full"
+            className="h-8 text-xs bg-background font-mono font-medium w-full"
           />
         </div>
 
-        {/* 4. Observaciones */}
+        {/* Observaciones */}
         <div className="space-y-1 text-xs">
-          <Label className="text-xs font-semibold">Observaciones Clínicas / Indicaciones de Recepción</Label>
+          <Label className="text-xs font-semibold">Observaciones Clínicas / Indicaciones</Label>
           <Textarea
             value={observacion}
             onChange={(e) => setObservacion(e.target.value)}
-            placeholder="Escriba sintomatología de ingreso o notas médicas..."
-            rows={2.5}
-            className="text-xs bg-background resize-none border-border/70"
+            placeholder="Sintomatología de ingreso o notas médicas..."
+            rows={2}
+            className="text-xs bg-background resize-none border-border/70 min-h-[44px]"
           />
         </div>
       </CardContent>
