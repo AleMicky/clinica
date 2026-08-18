@@ -16,7 +16,6 @@ import {
   Building2,
   Calendar,
   Coins,
-  DollarSign,
   FileText,
   HeartPulse,
   Receipt,
@@ -25,20 +24,22 @@ import {
   User,
   Users,
 } from "lucide-react";
-import { EstadoVenta, TipoPagador, type VentaResponse } from "../types/ventas.types";
+import {
+  EstadoVenta,
+  TipoPagador,
+  formatVentaMedicoNombre,
+  formatVentaServicioNombre,
+  type VentaResponse,
+} from "../types/ventas.types";
 import { PagadorStatusBadge, VentaStatusBadge } from "./venta-status-badge";
 import {
   useVenta,
   useVentaDetalles,
   useVentaPagadores,
 } from "../hooks/use-ventas";
-import { useAdmision } from "@/modules/recepcion/admisiones/hooks/use-admisiones";
 import { usePacientes } from "@/modules/recepcion/pacientes/hooks/use-pacientes";
-import { useMedicos } from "@/modules/recursos-humanos/medico/hooks/use-medicos";
 import { useConvenios } from "@/modules/servicios/convenio/hooks/use-convenio";
 import { useMonedas } from "@/modules/parametros/moneda/hooks/use-monedas";
-import { useServicios } from "@/modules/servicios/servicio/hooks/use-servicio";
-import { useCategoriasServicio } from "@/modules/servicios/categoria-servicio/hooks/use-categoria-servicio";
 
 interface VentaDetailSheetProps {
   open: boolean;
@@ -55,7 +56,7 @@ export function VentaDetailSheet({
 }: VentaDetailSheetProps) {
   const ventaId = initialVenta?.id ?? 0;
 
-  // Fetch full details & sub-resources from backend
+  // Consultas directas del recurso y sub-recursos
   const { data: fullVentaData } = useVenta(ventaId, Boolean(open && ventaId > 0));
   const { data: detallesResult, isLoading: isLoadingDetalles } = useVentaDetalles(
     ventaId,
@@ -67,40 +68,27 @@ export function VentaDetailSheet({
   );
 
   const venta = fullVentaData ?? initialVenta;
-  const admisionId = venta?.admisionId ?? 0;
-
-  // Linked admission to resolve service & doctor names if needed
-  const { data: admisionData } = useAdmision(admisionId, Boolean(open && admisionId > 0));
 
   // Queries auxiliares para resolver nombres en la interfaz
   const { data: pacientesData } = usePacientes({ pageSize: 100 });
-  const { data: medicosData } = useMedicos({ pageSize: 100 });
   const { data: conveniosData } = useConvenios({ pageSize: 100 });
   const { data: monedasData } = useMonedas({ pageSize: 100 });
-  const { data: categoriasData } = useCategoriasServicio({ pageSize: 100 });
-
-  const firstCatId = categoriasData?.items?.[0]?.id;
-  const { data: serviciosData } = useServicios(
-    firstCatId ?? 0,
-    { pageSize: 100 },
-    Boolean(open && firstCatId)
-  );
 
   if (!venta) return null;
 
-  // Aggregate items and pagadores
+  // Agrupación limpia de detalles y pagadores (priorizando endpoint directo /ventas/{id}/detalles)
   const detalles =
-    fullVentaData?.detalles && fullVentaData.detalles.length > 0
-      ? fullVentaData.detalles
-      : detallesResult?.items && detallesResult.items.length > 0
+    detallesResult?.items && detallesResult.items.length > 0
       ? detallesResult.items
+      : fullVentaData?.detalles && fullVentaData.detalles.length > 0
+      ? fullVentaData.detalles
       : initialVenta?.detalles ?? [];
 
   const pagadores =
-    fullVentaData?.pagadores && fullVentaData.pagadores.length > 0
-      ? fullVentaData.pagadores
-      : pagadoresResult?.items && pagadoresResult.items.length > 0
+    pagadoresResult?.items && pagadoresResult.items.length > 0
       ? pagadoresResult.items
+      : fullVentaData?.pagadores && fullVentaData.pagadores.length > 0
+      ? fullVentaData.pagadores
       : initialVenta?.pagadores ?? [];
 
   // Mapas de ayuda
@@ -207,23 +195,8 @@ export function VentaDetailSheet({
               ) : (
                 <div className="space-y-2.5">
                   {detalles.map((det, index) => {
-                    const admDet = admisionData?.detalles?.find(
-                      (ad) => ad.servicioId === det.servicioId || ad.id === det.id
-                    );
-
-                    const servicioObj = serviciosData?.items?.find((s) => s.id === det.servicioId);
-                    const servicioNombre =
-                      admDet?.servicioNombre ||
-                      admDet?.servicio?.nombre ||
-                      servicioObj?.nombre ||
-                      `Servicio #${det.servicioId}`;
-
-                    const medicoObj = medicosData?.items?.find((m) => m.id === det.medicoId);
-                    const medicoNombre =
-                      admDet?.medicoNombre ||
-                      admDet?.medico?.empleado?.nombreCompleto ||
-                      medicoObj?.empleado?.nombreCompleto ||
-                      (det.medicoId ? `Médico #${det.medicoId}` : null);
+                    const servicioNombre = formatVentaServicioNombre(det);
+                    const medicoNombre = formatVentaMedicoNombre(det);
 
                     return (
                       <div
@@ -243,7 +216,7 @@ export function VentaDetailSheet({
                         <div className="grid grid-cols-2 gap-2 text-[11px] text-muted-foreground pt-1 border-t border-border/40">
                           <div>
                             <span>Médico: </span>
-                            <strong className="text-foreground">{medicoNombre || "Sin asignar"}</strong>
+                            <strong className="text-foreground">{medicoNombre}</strong>
                           </div>
                           <div className="text-right">
                             <span>{det.cantidad} x {monedaSimbolo} {det.precioUnitario.toFixed(2)}</span>
@@ -253,9 +226,9 @@ export function VentaDetailSheet({
                           </div>
                         </div>
 
-                        {det.porcentajeMedico != null && (
+                        {(det.montoMedico != null || det.montoClinica != null) && (
                           <div className="flex items-center justify-between text-[10px] bg-muted/40 p-1.5 rounded-md border border-border/40 text-muted-foreground">
-                            <span>Reparto Médico ({det.porcentajeMedico}%): <strong className="text-foreground">{monedaSimbolo} {(det.montoMedico || 0).toFixed(2)}</strong></span>
+                            <span>Médico: <strong className="text-foreground">{monedaSimbolo} {(det.montoMedico || 0).toFixed(2)}</strong></span>
                             <span>Clínica: <strong className="text-foreground">{monedaSimbolo} {(det.montoClinica || 0).toFixed(2)}</strong></span>
                           </div>
                         )}

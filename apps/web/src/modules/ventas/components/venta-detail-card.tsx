@@ -11,13 +11,9 @@ import {
   Calendar,
   CheckCircle2,
   Coins,
-  CreditCard,
-  FileText,
-  HeartPulse,
   Receipt,
   RefreshCw,
   Stethoscope,
-  Trash2,
   User,
   Users,
   XCircle,
@@ -25,6 +21,8 @@ import {
 import {
   EstadoVenta,
   TipoPagador,
+  formatVentaMedicoNombre,
+  formatVentaServicioNombre,
   type VentaResponse,
 } from "../types/ventas.types";
 import { PagadorStatusBadge, VentaStatusBadge } from "./venta-status-badge";
@@ -33,13 +31,9 @@ import {
   useVentaDetalles,
   useVentaPagadores,
 } from "../hooks/use-ventas";
-import { useAdmision } from "@/modules/recepcion/admisiones/hooks/use-admisiones";
 import { usePacientes } from "@/modules/recepcion/pacientes/hooks/use-pacientes";
-import { useMedicos } from "@/modules/recursos-humanos/medico/hooks/use-medicos";
 import { useConvenios } from "@/modules/servicios/convenio/hooks/use-convenio";
 import { useMonedas } from "@/modules/parametros/moneda/hooks/use-monedas";
-import { useServicios } from "@/modules/servicios/servicio/hooks/use-servicio";
-import { useCategoriasServicio } from "@/modules/servicios/categoria-servicio/hooks/use-categoria-servicio";
 
 interface VentaDetailCardProps {
   venta: VentaResponse | null;
@@ -56,7 +50,7 @@ export function VentaDetailCard({
 }: VentaDetailCardProps) {
   const ventaId = initialVenta?.id ?? 0;
 
-  // Fetch full details & sub-resources from backend
+  // Consultas directas del recurso y sub-recursos
   const { data: fullVentaData } = useVenta(ventaId, ventaId > 0);
   const { data: detallesResult, isLoading: isLoadingDetalles } = useVentaDetalles(
     ventaId,
@@ -68,24 +62,11 @@ export function VentaDetailCard({
   );
 
   const venta = fullVentaData ?? initialVenta;
-  const admisionId = venta?.admisionId ?? 0;
 
-  // Linked admission to resolve service & doctor names if needed
-  const { data: admisionData } = useAdmision(admisionId, admisionId > 0);
-
-  // Auxiliary queries to resolve names
+  // Consultas auxiliares para nombres generales
   const { data: pacientesData } = usePacientes({ pageSize: 100 });
-  const { data: medicosData } = useMedicos({ pageSize: 100 });
   const { data: conveniosData } = useConvenios({ pageSize: 100 });
   const { data: monedasData } = useMonedas({ pageSize: 100 });
-  const { data: categoriasData } = useCategoriasServicio({ pageSize: 100 });
-
-  const firstCatId = categoriasData?.items?.[0]?.id;
-  const { data: serviciosData } = useServicios(
-    firstCatId ?? 0,
-    { pageSize: 100 },
-    Boolean(venta && firstCatId)
-  );
 
   if (!venta) {
     return (
@@ -103,19 +84,19 @@ export function VentaDetailCard({
     );
   }
 
-  // Aggregate items and pagadores
+  // Agrupación limpia de detalles y pagadores (priorizando endpoint directo /ventas/{id}/detalles)
   const detalles =
-    fullVentaData?.detalles && fullVentaData.detalles.length > 0
-      ? fullVentaData.detalles
-      : detallesResult?.items && detallesResult.items.length > 0
+    detallesResult?.items && detallesResult.items.length > 0
       ? detallesResult.items
+      : fullVentaData?.detalles && fullVentaData.detalles.length > 0
+      ? fullVentaData.detalles
       : initialVenta?.detalles ?? [];
 
   const pagadores =
-    fullVentaData?.pagadores && fullVentaData.pagadores.length > 0
-      ? fullVentaData.pagadores
-      : pagadoresResult?.items && pagadoresResult.items.length > 0
+    pagadoresResult?.items && pagadoresResult.items.length > 0
       ? pagadoresResult.items
+      : fullVentaData?.pagadores && fullVentaData.pagadores.length > 0
+      ? fullVentaData.pagadores
       : initialVenta?.pagadores ?? [];
 
   const pacienteObj = pacientesData?.items?.find((p) => p.id === venta.pacienteId);
@@ -174,7 +155,7 @@ export function VentaDetailCard({
               type="button"
               size="sm"
               onClick={() => onDirectChangeStatus?.(venta, EstadoVenta.Pagada)}
-              className="h-7 px-3 text-xs font-semibold gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs"
+              className="h-7 px-3 text-xs font-semibold gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs cursor-pointer"
             >
               <CheckCircle2 className="size-3.5" />
               Marcar Pagada
@@ -187,7 +168,7 @@ export function VentaDetailCard({
               variant="outline"
               size="sm"
               onClick={() => onChangeStatusClick(venta)}
-              className="h-7 px-2.5 text-xs font-medium gap-1"
+              className="h-7 px-2.5 text-xs font-medium gap-1 cursor-pointer"
               title="Cambiar Estado"
             >
               <RefreshCw className="size-3 text-amber-500" />
@@ -201,7 +182,7 @@ export function VentaDetailCard({
               variant="ghost"
               size="sm"
               onClick={() => onAnularClick(venta.id)}
-              className="h-7 px-2 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 ml-auto"
+              className="h-7 px-2 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 ml-auto cursor-pointer"
               title="Anular Comprobante"
             >
               <XCircle className="size-3.5" />
@@ -212,7 +193,7 @@ export function VentaDetailCard({
       </CardHeader>
 
       <CardContent className="p-3.5 space-y-3.5 overflow-y-auto max-h-[calc(100vh-280px)] scrollbar-thin">
-        {/* METADATOS BÁSICOS (Fecha, Admisión) */}
+        {/* METADATOS BÁSICOS (Fecha, Moneda) */}
         <div className="grid grid-cols-2 gap-2 text-xs p-2.5 rounded-lg border border-border/60 bg-muted/20">
           <div className="flex items-center gap-1.5 text-muted-foreground">
             <Calendar className="size-3.5 text-primary/70 shrink-0" />
@@ -237,10 +218,10 @@ export function VentaDetailCard({
         {/* TABS DE DETALLES Y PAGADORES */}
         <Tabs defaultValue="detalles" className="w-full">
           <TabsList className="grid grid-cols-2 w-full h-8 bg-muted/60 p-0.5">
-            <TabsTrigger value="detalles" className="text-xs font-semibold">
+            <TabsTrigger value="detalles" className="text-xs font-semibold cursor-pointer">
               Prestaciones ({detalles.length})
             </TabsTrigger>
-            <TabsTrigger value="pagadores" className="text-xs font-semibold">
+            <TabsTrigger value="pagadores" className="text-xs font-semibold cursor-pointer">
               Pagadores ({pagadores.length})
             </TabsTrigger>
           </TabsList>
@@ -267,24 +248,8 @@ export function VentaDetailCard({
                   </div>
                 ) : (
                   detalles.map((det, index) => {
-                    // Match with linked admission details if available
-                    const admDet = admisionData?.detalles?.find(
-                      (ad) => ad.servicioId === det.servicioId || ad.id === det.id
-                    );
-
-                    const servicioObj = serviciosData?.items?.find((s) => s.id === det.servicioId);
-                    const servicioNombre =
-                      admDet?.servicioNombre ||
-                      admDet?.servicio?.nombre ||
-                      servicioObj?.nombre ||
-                      `Servicio #${det.servicioId}`;
-
-                    const medicoObj = medicosData?.items?.find((m) => m.id === det.medicoId);
-                    const medicoNombre =
-                      admDet?.medicoNombre ||
-                      admDet?.medico?.empleado?.nombreCompleto ||
-                      medicoObj?.empleado?.nombreCompleto ||
-                      (det.medicoId ? `Médico #${det.medicoId}` : "Sin asignar");
+                    const servicioNombre = formatVentaServicioNombre(det);
+                    const medicoNombre = formatVentaMedicoNombre(det);
 
                     return (
                       <div

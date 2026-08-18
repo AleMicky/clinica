@@ -54,10 +54,19 @@ export async function getVentaDetalles(
   ventaId: number,
   params?: VentaQueryParams
 ): Promise<PagedResult<VentaDetalleResponse>> {
-  const response = await apiClient.get<PagedResult<VentaDetalleResponse>>(
+  const response = await apiClient.get<any>(
     `/ventas/${ventaId}/detalles`,
     { params }
   );
+  if (Array.isArray(response.data)) {
+    return {
+      items: response.data,
+      totalItems: response.data.length,
+      pageNumber: 1,
+      pageSize: response.data.length,
+      totalPages: 1,
+    };
+  }
   return response.data;
 }
 
@@ -96,10 +105,19 @@ export async function getVentaPagadores(
   ventaId: number,
   params?: VentaQueryParams
 ): Promise<PagedResult<VentaPagadorResponse>> {
-  const response = await apiClient.get<PagedResult<VentaPagadorResponse>>(
+  const response = await apiClient.get<any>(
     `/ventas/${ventaId}/pagadores`,
     { params }
   );
+  if (Array.isArray(response.data)) {
+    return {
+      items: response.data,
+      totalItems: response.data.length,
+      pageNumber: 1,
+      pageSize: response.data.length,
+      totalPages: 1,
+    };
+  }
   return response.data;
 }
 

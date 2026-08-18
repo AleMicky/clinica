@@ -113,7 +113,6 @@ export function VentaFormDialog({
           cantidad: 1,
           precioUnitario: 100,
           descuento: 0,
-          porcentajeMedico: 0,
         },
       ]);
 
@@ -297,7 +296,6 @@ export function VentaFormDialog({
         cantidad: Number(d.cantidad) || 1,
         precioUnitario: Number(d.precioUnitario) || 0,
         descuento: Number(d.descuento) || 0,
-        porcentajeMedico: d.porcentajeMedico ? Number(d.porcentajeMedico) : null,
       })),
       pagadores: pagadores.map((p) => ({
         tipo: Number(p.tipo) as TipoPagador,

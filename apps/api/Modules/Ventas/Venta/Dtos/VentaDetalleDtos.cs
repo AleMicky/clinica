@@ -22,22 +22,26 @@ public sealed record UpdateVentaDetalleRequest : VentaDetalleRequest;
 public sealed record VentaDetalleResponse : AuditableResponse
 {
     public int Id { get; init; }
-
     public int VentaId { get; init; }
-
-    public int ServicioId { get; init; }
-
-    public int? MedicoId { get; init; }
-
+    public ServiceInfo Servicio { get; init; }
+    public MedicoInfo? Medico { get; init; }
     public decimal Cantidad { get; init; }
-
     public decimal PrecioUnitario { get; init; }
-
     public decimal Descuento { get; init; }
-
     public decimal Total { get; init; }
-
     public decimal? MontoMedico { get; init; }
-
     public decimal? MontoClinica { get; init; }
+}
+
+public record ServiceInfo
+{
+    public int Id { get; init; }
+    public string Codigo { get; init; }
+    public string Nombre { get; init; }
+}
+
+public record MedicoInfo
+{
+    public int Id { get; init; }
+    public string NombreMedico { get; init; } = string.Empty;
 }

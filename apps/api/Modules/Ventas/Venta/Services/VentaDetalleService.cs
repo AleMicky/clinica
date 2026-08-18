@@ -27,6 +27,9 @@ public sealed class VentaDetalleService(AppDbContext dbContext)
         var query = dbContext.VentaDetalles
             .AsNoTracking()
             .Include(x => x.Servicio)
+            .Include(x => x.Medico)
+            .ThenInclude(x => x.Empleado)
+            .ThenInclude(x => x.Persona)
             .Where(x =>
                 x.VentaId == ventaId &&
                 x.Activo);
@@ -76,6 +79,8 @@ public sealed class VentaDetalleService(AppDbContext dbContext)
             .AsNoTracking()
             .Include(x => x.Servicio)
             .Include(x => x.Medico)
+            .ThenInclude(x => x.Empleado)
+            .ThenInclude(x => x.Persona)
             .FirstOrDefaultAsync(
                 x =>
                     x.VentaId == ventaId &&

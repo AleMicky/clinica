@@ -31,16 +31,28 @@ export interface AuditableResponse {
   lastModifiedBy?: string;
 }
 
+export interface ServiceInfo {
+  id: number;
+  codigo: string;
+  nombre: string;
+}
+
+export interface MedicoInfo {
+  id: number;
+  nombreMedico: string;
+}
+
 export interface VentaDetalleResponse extends AuditableResponse {
   id: number;
   ventaId: number;
-  servicioId: number;
+  servicioId?: number;
+  servicio?: ServiceInfo | null;
   medicoId?: number | null;
+  medico?: MedicoInfo | null;
   cantidad: number;
   precioUnitario: number;
   descuento: number;
   total: number;
-  porcentajeMedico?: number | null;
   montoMedico?: number | null;
   montoClinica?: number | null;
 }
@@ -75,11 +87,10 @@ export interface VentaDetalleRequest {
   cantidad: number;
   precioUnitario: number;
   descuento: number;
-  porcentajeMedico?: number | null;
 }
 
-export interface CreateVentaDetalleRequest extends VentaDetalleRequest {}
-export interface UpdateVentaDetalleRequest extends VentaDetalleRequest {}
+export interface CreateVentaDetalleRequest extends VentaDetalleRequest { }
+export interface UpdateVentaDetalleRequest extends VentaDetalleRequest { }
 
 export interface VentaPagadorRequest {
   tipo: TipoPagador;
@@ -87,8 +98,8 @@ export interface VentaPagadorRequest {
   monto: number;
 }
 
-export interface CreateVentaPagadorRequest extends VentaPagadorRequest {}
-export interface UpdateVentaPagadorRequest extends VentaPagadorRequest {}
+export interface CreateVentaPagadorRequest extends VentaPagadorRequest { }
+export interface UpdateVentaPagadorRequest extends VentaPagadorRequest { }
 
 export interface VentaRequest {
   admisionId: number;
@@ -99,8 +110,8 @@ export interface VentaRequest {
   pagadores: VentaPagadorRequest[];
 }
 
-export interface CreateVentaRequest extends VentaRequest {}
-export interface UpdateVentaRequest extends VentaRequest {}
+export interface CreateVentaRequest extends VentaRequest { }
+export interface UpdateVentaRequest extends VentaRequest { }
 
 export interface CambiarEstadoVentaRequest {
   estadoDestino: EstadoVenta;
@@ -128,4 +139,19 @@ export interface VentaMetrics {
   pagadas: number;
   anuladas: number;
   montoTotal: number;
+}
+
+// Helpers de formateo limpio
+export function formatVentaServicioNombre(detalle: VentaDetalleResponse): string {
+  if (detalle.servicio?.nombre) {
+    return detalle.servicio.nombre;
+  }
+  return `Servicio #${detalle.servicioId || detalle.servicio?.id || detalle.id}`;
+}
+
+export function formatVentaMedicoNombre(detalle: VentaDetalleResponse): string {
+  if (detalle.medico?.nombreMedico) {
+    return detalle.medico.nombreMedico;
+  }
+  return detalle.medicoId ? `Médico #${detalle.medicoId}` : "Sin asignar";
 }
