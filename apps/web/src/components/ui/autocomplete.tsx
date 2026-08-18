@@ -47,7 +47,8 @@ export function Autocomplete({
     const selectedOpt = options.find(
       (opt) => opt.value.toLowerCase() === (value || "").toLowerCase()
     );
-    setQuery(selectedOpt ? selectedOpt.label : value ?? "");
+    const nextQuery = selectedOpt ? selectedOpt.label : value ?? "";
+    setQuery((prev) => (prev !== nextQuery ? nextQuery : prev));
   }, [value, options]);
 
   // Handle clicking outside the popover container

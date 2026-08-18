@@ -16,13 +16,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Autocomplete, type AutocompleteOption } from "@/components/ui/autocomplete";
 
 import { useCajas } from "../../caja/hooks/use-cajas";
@@ -48,6 +41,8 @@ interface TurnoCajaFormDialogProps {
   onSuccessCallback?: () => void;
 }
 
+const STATIC_QUERY_PARAMS = { page: 1, pageSize: 100 };
+
 function toLocalDatetimeString(dateInput?: string | Date | null): string {
   const d = dateInput ? new Date(dateInput) : new Date();
   if (isNaN(d.getTime())) return "";
@@ -71,13 +66,13 @@ export function TurnoCajaFormDialog({
 
   // Fetch real Cajas
   const { data: cajasData, isLoading: isLoadingCajas } = useCajas(
-    { page: 1, pageSize: 100 },
+    STATIC_QUERY_PARAMS,
     open
   );
 
   // Fetch real Empleados
   const { data: empleadosData, isLoading: isLoadingEmpleados } = useEmpleados(
-    { page: 1, pageSize: 100 }
+    STATIC_QUERY_PARAMS
   );
 
   const createMutation = useCreateTurnoCaja();
@@ -106,7 +101,6 @@ export function TurnoCajaFormDialog({
   const selectedEmpleadoId = watch("empleadoId");
   const fechaAperturaVal = watch("fechaHoraApertura");
   const fechaCierreVal = watch("fechaHoraCierre");
-  const estadoVal = watch("estado");
 
   const cajasList = Array.isArray(cajasData?.items)
     ? cajasData.items
@@ -173,6 +167,20 @@ export function TurnoCajaFormDialog({
     }
   }, [open, turnoToEdit, mode, isClosing, reset]);
 
+  const handleCajaChange = React.useCallback(
+    (val: string) => {
+      setValue("cajaId", Number(val), { shouldValidate: true });
+    },
+    [setValue]
+  );
+
+  const handleEmpleadoChange = React.useCallback(
+    (val: string) => {
+      setValue("empleadoId", Number(val), { shouldValidate: true });
+    },
+    [setValue]
+  );
+
   const onSubmit = async (values: TurnoCajaFormValues) => {
     try {
       const aperturaIso = new Date(values.fechaHoraApertura).toISOString();
@@ -180,12 +188,18 @@ export function TurnoCajaFormDialog({
         ? new Date(values.fechaHoraCierre).toISOString()
         : null;
 
+      // Determinación automática del estado según si hay cierre o es acción de cierre
+      const finalEstado =
+        isClosing || Boolean(values.fechaHoraCierre)
+          ? EstadoTurnoCaja.Cerrado
+          : turnoToEdit?.estado ?? EstadoTurnoCaja.Abierto;
+
       const payload = {
         cajaId: Number(values.cajaId),
         empleadoId: Number(values.empleadoId),
         fechaHoraApertura: aperturaIso,
         fechaHoraCierre: cierreIso,
-        estado: Number(values.estado),
+        estado: finalEstado,
       };
 
       if ((isEditing || isClosing) && turnoToEdit) {
@@ -245,9 +259,7 @@ export function TurnoCajaFormDialog({
             <Autocomplete
               id="cajaId"
               value={selectedCajaId ? String(selectedCajaId) : ""}
-              onValueChange={(val) =>
-                setValue("cajaId", Number(val), { shouldValidate: true })
-              }
+              onValueChange={handleCajaChange}
               options={cajaOptions}
               placeholder="Buscar o seleccionar punto de caja..."
               emptyText="No se encontraron puntos de caja registrados"
@@ -269,9 +281,7 @@ export function TurnoCajaFormDialog({
             <Autocomplete
               id="empleadoId"
               value={selectedEmpleadoId ? String(selectedEmpleadoId) : ""}
-              onValueChange={(val) =>
-                setValue("empleadoId", Number(val), { shouldValidate: true })
-              }
+              onValueChange={handleEmpleadoChange}
               options={empleadoOptions}
               placeholder="Buscar por código, nombre o DNI de cajero..."
               emptyText="No se encontraron cajeros/empleados registrados"
@@ -337,46 +347,6 @@ export function TurnoCajaFormDialog({
               )}
             </div>
           )}
-
-          {/* Estado del Turno */}
-          <div className="space-y-2">
-            <Label htmlFor="estado" className="required font-medium">
-              Estado del Turno
-            </Label>
-            <Select
-              value={String(estadoVal)}
-              onValueChange={(val) =>
-                setValue("estado", Number(val), { shouldValidate: true })
-              }
-              disabled={isSubmitting || isClosing}
-            >
-              <SelectTrigger id="estado" className="w-full h-9 text-sm">
-                <SelectValue placeholder="Seleccione un estado...">
-                  {Number(estadoVal) === EstadoTurnoCaja.Abierto ? (
-                    <span className="font-medium text-sm text-emerald-600">
-                      Abierto
-                    </span>
-                  ) : Number(estadoVal) === EstadoTurnoCaja.Cerrado ? (
-                    <span className="font-medium text-sm text-slate-600">
-                      Cerrado
-                    </span>
-                  ) : null}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={String(EstadoTurnoCaja.Abierto)}>
-                  <span className="font-medium text-sm text-emerald-600">
-                    Abierto
-                  </span>
-                </SelectItem>
-                <SelectItem value={String(EstadoTurnoCaja.Cerrado)}>
-                  <span className="font-medium text-sm text-slate-600">
-                    Cerrado
-                  </span>
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
 
           <DialogFooter className="pt-4 gap-2 sm:gap-0">
             <Button

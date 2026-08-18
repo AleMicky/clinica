@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { useDeleteTurnoCaja, useTurnosCaja } from "../hooks/use-turnos-caja";
 import { TurnoCajaHeader } from "./turno-caja-header";
 import { TurnoCajaMetrics } from "./turno-caja-metrics";
-import { TurnoCajaTable } from "./turno-caja-table";
+import { TurnoCajaList, type TurnoCajaEstadoFiltro } from "./turno-caja-list";
 import { TurnoCajaFormDialog } from "./turno-caja-form-dialog";
 import { TurnoCajaDeleteDialog } from "./turno-caja-delete-dialog";
 import { EstadoTurnoCaja, type TurnoCajaResponse } from "../types/turno-caja.types";
@@ -15,6 +15,7 @@ export function TurnoCajaModuleView() {
   const [pageSize, setPageSize] = React.useState(10);
   const [searchTerm, setSearchTerm] = React.useState("");
   const [debouncedSearch, setDebouncedSearch] = React.useState("");
+  const [selectedEstadoTab, setSelectedEstadoTab] = React.useState<TurnoCajaEstadoFiltro>("TODOS");
 
   const [formDialogOpen, setFormDialogOpen] = React.useState(false);
   const [dialogMode, setDialogMode] = React.useState<"create" | "edit" | "close">("create");
@@ -50,6 +51,16 @@ export function TurnoCajaModuleView() {
     ? (apiData as unknown as TurnoCajaResponse[])
     : [];
   const totalItems = apiData?.totalItems ?? turnos.length;
+
+  const filteredTurnos = React.useMemo(() => {
+    if (selectedEstadoTab === "ABIERTOS") {
+      return turnos.filter((t) => t.estado === EstadoTurnoCaja.Abierto);
+    }
+    if (selectedEstadoTab === "CERRADOS") {
+      return turnos.filter((t) => t.estado === EstadoTurnoCaja.Cerrado);
+    }
+    return turnos;
+  }, [turnos, selectedEstadoTab]);
 
   const metrics = React.useMemo(() => {
     return {
@@ -96,19 +107,26 @@ export function TurnoCajaModuleView() {
     }
   };
 
+  const handleEstadoTabChange = (tab: TurnoCajaEstadoFiltro) => {
+    setSelectedEstadoTab(tab);
+    setCurrentPage(1);
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-3 w-full animate-in fade-in-50 duration-300">
       <TurnoCajaHeader onOpenTurnoClick={handleOpenCreateModal} />
 
       <TurnoCajaMetrics metrics={metrics} isLoading={isLoading} />
 
-      <TurnoCajaTable
-        turnos={turnos}
+      <TurnoCajaList
+        turnos={filteredTurnos}
         isLoading={isLoading}
-        totalItems={totalItems}
+        totalItems={selectedEstadoTab === "TODOS" ? totalItems : filteredTurnos.length}
         currentPage={currentPage}
         pageSize={pageSize}
         searchTerm={searchTerm}
+        selectedEstadoTab={selectedEstadoTab}
+        onEstadoTabChange={handleEstadoTabChange}
         onSearchChange={setSearchTerm}
         onPageChange={setCurrentPage}
         onPageSizeChange={(size) => {
