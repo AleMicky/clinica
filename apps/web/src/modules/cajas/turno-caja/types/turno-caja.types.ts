@@ -58,6 +58,7 @@ export interface TurnoCajaQueryParams {
   page?: number;
   pageSize?: number;
   search?: string;
+  cajaId?: number;
 }
 
 export interface TurnoCajaMetrics {

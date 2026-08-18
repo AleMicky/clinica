@@ -31,6 +31,7 @@ public static class TurnoCajaEndpoints
     private static async Task<IResult> ListarAsync(
         [AsParameters] PaginationRequest pagination,
         string? search,
+        int? cajaId,
         TurnoCajaService service,
         CancellationToken cancellationToken)
     {
@@ -38,6 +39,7 @@ public static class TurnoCajaEndpoints
             await service.ListarAsync(
                 pagination,
                 search,
+                cajaId,
                 cancellationToken));
     }
 

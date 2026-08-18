@@ -15,17 +15,20 @@ public sealed class TurnoCajaService(AppDbContext dbContext)
 {
     private AppDbContext DbContext { get; } = dbContext;
 
-    private DbSet<TurnoCajaEntity> Entities =>
-        DbContext.Set<TurnoCajaEntity>();
+    private DbSet<TurnoCajaEntity> Entities => DbContext.Set<TurnoCajaEntity>();
 
     public async Task<PagedResult<TurnoCajaResponse>> ListarAsync(
         PaginationRequest pagination,
         string? search,
+        int? cajaId,
         CancellationToken cancellationToken = default)
     {
         var query = BuildQuery()
             .AsNoTracking()
             .Where(x => x.Activo);
+
+        if (cajaId.HasValue)
+            query = query.Where(x => x.CajaId == cajaId.Value);
 
         var normalizedSearch = string.IsNullOrWhiteSpace(search)
             ? null

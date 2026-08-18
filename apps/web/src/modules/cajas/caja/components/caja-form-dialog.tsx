@@ -25,7 +25,7 @@ interface CajaFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   cajaToEdit?: CajaResponse | null;
-  onSuccessCallback?: () => void;
+  onSuccessCallback?: (caja?: CajaResponse) => void;
 }
 
 export function CajaFormDialog({
@@ -81,18 +81,19 @@ export function CajaFormDialog({
         descripcion: values.descripcion?.trim() || null,
       };
 
+      let result: CajaResponse | undefined;
       if (isEditing && cajaToEdit) {
-        await updateMutation.mutateAsync({
+        result = await updateMutation.mutateAsync({
           id: cajaToEdit.id,
           data: payload,
         });
         toast.success(`Caja ${payload.nombre} actualizada correctamente.`);
       } else {
-        await createMutation.mutateAsync(payload);
+        result = await createMutation.mutateAsync(payload);
         toast.success(`Caja ${payload.nombre} creada correctamente.`);
       }
 
-      onSuccessCallback?.();
+      onSuccessCallback?.(result);
       onOpenChange(false);
     } catch (error: unknown) {
       const err = error as { response?: { data?: { detail?: string; title?: string } }; message?: string };

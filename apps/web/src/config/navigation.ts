@@ -253,13 +253,7 @@ export const cajasNav: NavGroup = {
       title: "Puntos de Caja",
       href: "/cajas",
       icon: Vault,
-      description: "Catálogo y administración de terminales de cobro",
-    },
-    {
-      title: "Turnos de Caja",
-      href: "/cajas/turnos",
-      icon: Clock,
-      description: "Apertura, operatividad y cierre de turnos de cajero",
+      description: "Catálogo y administración de terminales de cobro y turnos",
     },
     {
       title: "Movimientos",

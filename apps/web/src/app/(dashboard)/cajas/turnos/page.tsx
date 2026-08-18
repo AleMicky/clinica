@@ -1,7 +1,6 @@
-"use client";
-
-import { TurnoCajaModuleView } from "@/modules/cajas/turno-caja/components/turno-caja-module-view";
+import { redirect } from "next/navigation";
 
 export default function TurnosCajaPage() {
-  return <TurnoCajaModuleView />;
+  redirect("/cajas");
 }
+

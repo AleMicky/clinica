@@ -37,6 +37,7 @@ interface TurnoCajaFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   turnoToEdit?: TurnoCajaResponse | null;
+  defaultCajaId?: number | null;
   mode?: "create" | "edit" | "close";
   onSuccessCallback?: () => void;
 }
@@ -58,6 +59,7 @@ export function TurnoCajaFormDialog({
   open,
   onOpenChange,
   turnoToEdit,
+  defaultCajaId,
   mode = "create",
   onSuccessCallback,
 }: TurnoCajaFormDialogProps) {
@@ -157,7 +159,7 @@ export function TurnoCajaFormDialog({
         });
       } else {
         reset({
-          cajaId: 0,
+          cajaId: defaultCajaId || 0,
           empleadoId: 0,
           fechaHoraApertura: nowStr,
           fechaHoraCierre: "",
@@ -165,7 +167,7 @@ export function TurnoCajaFormDialog({
         });
       }
     }
-  }, [open, turnoToEdit, mode, isClosing, reset]);
+  }, [open, turnoToEdit, defaultCajaId, mode, isClosing, reset]);
 
   const handleCajaChange = React.useCallback(
     (val: string) => {
