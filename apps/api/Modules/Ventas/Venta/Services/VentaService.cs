@@ -1,4 +1,6 @@
 using Clinica.Api.Data;
+using Clinica.Api.Modules.Cajas.Cobro.Dtos;
+using Clinica.Api.Modules.Cajas.Cobro.Services;
 using Clinica.Api.Modules.Parametros.Correlativo.Dtos;
 using Clinica.Api.Modules.Parametros.Correlativo.Services;
 using Clinica.Api.Modules.Parametros.Moneda.Entity;
@@ -9,8 +11,9 @@ using Clinica.Api.Modules.RecursosHumanos.Medico.Entity;
 using Clinica.Api.Modules.Servicios.Convenios.Entity;
 using Clinica.Api.Modules.Servicios.Servicios.Entity;
 using Clinica.Api.Modules.Ventas.Venta.Dtos;
-using Clinica.Api.Modules.Ventas.Venta.Entity;
+using Clinica.Api.Modules.Ventas.Venta.Enums;
 using Clinica.Api.Modules.Ventas.Venta.Mappers;
+using Clinica.Api.Modules.Ventas.Venta.Rules;
 using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
@@ -22,7 +25,8 @@ namespace Clinica.Api.Modules.Ventas.Venta.Services;
 
 public sealed class VentaService(
     AppDbContext dbContext,
-    CorrelativoService correlativoService
+    CorrelativoService correlativoService,
+    CobroService cobroService
 )
 {
     private DbSet<VentaEntity> Entities => dbContext.Set<VentaEntity>();
@@ -187,41 +191,84 @@ public sealed class VentaService(
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
         try
         {
-            var entity = await Entities.
-                Include(x => x.Detalles)
-                .FirstOrDefaultAsync(x
-                    => x.Id == id && x.Activo,
-                cancellationToken);
+            var entity = await Entities
+                .Include(x => x.Detalles)
+                .Include(x => x.Pagadores)
+                .FirstOrDefaultAsync(
+                    x => x.Id == id && x.Activo,
+                    cancellationToken);
 
             if (entity is null)
                 throw CreateNotFoundException(id);
 
             if (!VentaTransiciones.EsValida(entity.Estado, request.EstadoDestino))
             {
-                throw new ConflictException($"No se puede transitar de {entity.Estado} a {request.EstadoDestino}.");
+                throw new ConflictException($"No se puede transitar de {entity.Estado} " + $"a {request.EstadoDestino}.");
             }
 
-            if (request.EstadoDestino == EstadoVenta.Pagada)
+            // Los estados de pago no se cambian manualmente desde Ventas.
+            if (request.EstadoDestino is
+                EstadoVenta.ParcialmentePagada or
+                EstadoVenta.Pagada)
             {
-                
+                throw new ConflictException(
+                    $"El estado {request.EstadoDestino} " +
+                    $"se actualiza automáticamente desde el módulo de cobros.");
             }
 
+            // ============================================
+            // ENVIAR LA VENTA A COBRO
+            // ============================================
+            if (request.EstadoDestino == EstadoVenta.PendienteCobro)
+            {
+                if (request.CajaId is null)
+                {
+                    throw new ConflictException("Debe seleccionar una caja para enviar la venta a cobro.");
+                }
+
+                var pagadores = entity.Pagadores
+                    .Where(x =>
+                        x.Activo &&
+                        x.Estado != EstadoVentaPagador.Anulado)
+                    .ToList();
+
+                if (pagadores.Count == 0)
+                {
+                    throw new ConflictException(
+                        "La venta no tiene pagadores activos.");
+                }
+
+                foreach (var pagador in pagadores)
+                {
+                    await cobroService.GenerarDesdeVentaAsync(
+                        new GenerarCobroDesdeVentaRequest
+                        {
+                            VentaPagadorId = pagador.Id,
+                            CajaId = request.CajaId.Value
+                        },
+                        cancellationToken);
+                }
+            }
+
+            // ============================================
+            // CAMBIAR ESTADO
+            // ============================================
             entity.Estado = request.EstadoDestino;
 
-            await dbContext.SaveChangesAsync(
-                cancellationToken
-            );
-
-            await transaction.CommitAsync(
-                cancellationToken
-            );
+            // Guarda:
+            // - cambio de estado de Venta
+            // - Cobros generados desde Venta
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
             return await ObtenerAsync(entity.Id, cancellationToken);
         }
         catch
         {
-            await transaction.RollbackAsync(cancellationToken);
+            await transaction.RollbackAsync(
+                cancellationToken);
+
             throw;
-        } 
+        }
     }
 
     public async Task<VentaResponse> GenerarVentaDesdeAdmisionAsync(

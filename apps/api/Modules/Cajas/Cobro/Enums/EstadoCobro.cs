@@ -1,4 +1,4 @@
-namespace Clinica.Api.Modules.Cajas.Cobro.Entity;
+namespace Clinica.Api.Modules.Cajas.Cobro.Enums;
 
 public enum EstadoCobro
 {

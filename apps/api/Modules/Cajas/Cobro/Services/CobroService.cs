@@ -1,10 +1,12 @@
 using Clinica.Api.Data;
 using Clinica.Api.Modules.Cajas.Cobro.Dtos;
-using Clinica.Api.Modules.Cajas.Cobro.Entity;
+using Clinica.Api.Modules.Cajas.Cobro.Enums;
 using Clinica.Api.Modules.Cajas.Cobro.Mappers;
 using Clinica.Api.Modules.Cajas.TurnoCaja.Dtos;
+using Clinica.Api.Modules.Cajas.TurnoCaja.Entity;
 using Clinica.Api.Modules.Parametros.Correlativo.Dtos;
 using Clinica.Api.Modules.Parametros.Correlativo.Services;
+using Clinica.Api.Modules.Ventas.Venta.Enums;
 using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
@@ -76,7 +78,8 @@ public sealed class CobroService(
         };
     }
 
-    public async Task<CobroResponse> CrearAsync(CreateCobroRequest request, CancellationToken cancellationToken = default)
+    public async Task<CobroResponse> CrearAsync(CreateCobroRequest request,
+        CancellationToken cancellationToken = default)
     {
         await ValidarFksAsync(request.TurnoCajaId, request.VentaPagadorId, cancellationToken);
         await cobroDetalleService.ValidarMetodosPagoAsync(request.Detalles, cancellationToken);
@@ -150,6 +153,7 @@ public sealed class CobroService(
         return await ObtenerAsync(entity.Id, cancellationToken);
     }
 
+
     public async Task EliminarAsync(int id, CancellationToken cancellationToken = default)
     {
         await AnularAsync(id, null, cancellationToken);
@@ -190,6 +194,95 @@ public sealed class CobroService(
 
         return MapToResponse(entity);
     }
+
+    public async Task GenerarDesdeVentaAsync(GenerarCobroDesdeVentaRequest request,CancellationToken cancellationToken = default)
+    {
+        var ventaPagador = await DbContext
+            .Set<VentaPagadorEntity>()
+            .Include(x => x.Venta)
+            .FirstOrDefaultAsync(
+                x => x.Id == request.VentaPagadorId &&
+                     x.Activo,
+                cancellationToken);
+
+        if (ventaPagador is null)
+        {
+            throw new NotFoundException("VentaPagador", request.VentaPagadorId);
+        }
+
+        switch (ventaPagador.Estado)
+        {
+            case EstadoVentaPagador.Pagado:
+                throw new ConflictException("El pagador ya se encuentra pagado.");
+            case EstadoVentaPagador.Anulado:
+                throw new ConflictException("El pagador se encuentra anulado.");
+        }
+
+        var caja = await DbContext
+            .Set<Clinica.Api.Modules.Cajas.Caja.Entity.Caja>()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                x => x.Id == request.CajaId &&
+                     x.Activo,
+                cancellationToken);
+
+        if (caja is null)
+        {
+            throw new NotFoundException("Caja", request.CajaId);
+        }
+
+        var turnoCaja = await DbContext
+            .Set<TurnoCajaEntity>()
+            .FirstOrDefaultAsync(
+                x => x.CajaId == request.CajaId &&
+                     x.Estado == EstadoTurnoCaja.Abierto &&
+                     x.Activo,
+                cancellationToken);
+
+        if (turnoCaja is null)
+        {
+            throw new ConflictException($"La caja '{caja.Nombre}' no tiene un turno abierto.");
+        }
+
+        var existeCobroPendiente = await Entities
+            .AnyAsync(x => x.VentaPagadorId == ventaPagador.Id &&
+                           x.Estado == EstadoCobro.Registrado &&
+                           x.Activo,
+                cancellationToken);
+
+        if (existeCobroPendiente)
+        {
+            throw new ConflictException("Ya existe un cobro pendiente para este pagador.");
+        }
+
+        var fechaHora = DateTime.UtcNow;
+
+        var correlativo = await correlativoService.GenerarAsync(
+            new GenerarCorrelativoRequest
+            {
+                Codigo = "COB",
+                Gestion = fechaHora.Year,
+                Prefijo = "COB",
+                Longitud = 6
+            },
+            cancellationToken);
+
+        var cobro = new CobroEntity
+        {
+            Numero = correlativo.NumeroFormateado,
+            TurnoCajaId = turnoCaja.Id,
+            VentaPagadorId = ventaPagador.Id,
+            FechaHora = fechaHora,
+            Total = 0m,
+            Estado = EstadoCobro.Registrado,
+            Observacion = null,
+            Activo = true,
+            Detalles = []
+        };
+
+        await Entities.AddAsync(cobro, cancellationToken);
+    }
+
 
     private IQueryable<CobroEntity> BuildQuery()
     {

@@ -1,4 +1,4 @@
-namespace Clinica.Api.Modules.Ventas.Venta.Entity;
+namespace Clinica.Api.Modules.Ventas.Venta.Enums;
 
 public enum TipoPagador
 {

@@ -1,6 +1,6 @@
-using Clinica.Api.Modules.Cajas.Cobro.Entity;
+using Clinica.Api.Modules.Cajas.Cobro.Enums;
 using Clinica.Api.Modules.Cajas.TurnoCaja.Dtos;
-using Clinica.Api.Modules.Ventas.Venta.Entity;
+using Clinica.Api.Modules.Ventas.Venta.Enums;
 using Clinica.Api.Shared.Abstractions;
 
 namespace Clinica.Api.Modules.Cajas.Cobro.Dtos;
@@ -21,6 +21,12 @@ public sealed record UpdateCobroRequest : CobroRequest;
 public sealed record AnularCobroRequest
 {
     public required string MotivoAnulacion { get; init; }
+}
+
+public sealed record GenerarCobroDesdeVentaRequest
+{
+    public required int VentaPagadorId { get; init; }
+    public required int CajaId { get; init; }
 }
 
 public sealed record CobroResponse : AuditableResponse

@@ -1,5 +1,6 @@
 using Clinica.Api.Modules.Ventas.Venta.Dtos;
 using Clinica.Api.Modules.Ventas.Venta.Entity;
+using Clinica.Api.Modules.Ventas.Venta.Enums;
 using FluentValidation;
 
 namespace Clinica.Api.Modules.Ventas.Venta.Validators;

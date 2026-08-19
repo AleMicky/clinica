@@ -63,8 +63,8 @@ export function CajaModuleView() {
   const cajas = Array.isArray(apiData?.items)
     ? apiData.items
     : Array.isArray(apiData)
-    ? (apiData as unknown as CajaResponse[])
-    : [];
+      ? (apiData as unknown as CajaResponse[])
+      : [];
   const totalItems = apiData?.totalItems ?? cajas.length;
 
   // Auto-seleccionar primera caja disponible

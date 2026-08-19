@@ -1,4 +1,5 @@
 using Clinica.Api.Modules.Cajas.Cobro.Entity;
+using Clinica.Api.Modules.Cajas.Cobro.Enums;
 using Clinica.Api.Modules.Cajas.TurnoCaja.Dtos;
 using Clinica.Api.Shared.Abstractions;
 

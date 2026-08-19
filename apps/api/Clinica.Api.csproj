@@ -52,6 +52,7 @@
     <Folder Include="Modules\Cajas\Cobro\Dtos\" />
     <Folder Include="Modules\Cajas\Cobro\Endpoints\" />
     <Folder Include="Modules\Cajas\Cobro\Mappers\" />
+    <Folder Include="Modules\Cajas\Cobro\Rules\" />
     <Folder Include="Modules\Cajas\Cobro\Services\" />
     <Folder Include="Modules\Cajas\Cobro\Validators\" />
     <Folder Include="Modules\Cajas\DevolucionCobro\Dtos\" />

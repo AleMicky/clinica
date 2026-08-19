@@ -2,6 +2,7 @@ using Clinica.Api.Data;
 using Clinica.Api.Modules.Servicios.Convenios.Entity;
 using Clinica.Api.Modules.Ventas.Venta.Dtos;
 using Clinica.Api.Modules.Ventas.Venta.Entity;
+using Clinica.Api.Modules.Ventas.Venta.Enums;
 using Clinica.Api.Modules.Ventas.Venta.Mappers;
 using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Pagination;

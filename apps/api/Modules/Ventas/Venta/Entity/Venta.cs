@@ -2,6 +2,7 @@ using Clinica.Api.Modules.Parametros.Moneda.Entity;
 using Clinica.Api.Modules.Recepcion.Admision.Entity;
 using Clinica.Api.Modules.Recepcion.Pacientes.Entity;
 using Clinica.Api.Modules.RecursosHumanos.Empleado.Entity;
+using Clinica.Api.Modules.Ventas.Venta.Enums;
 using Clinica.Api.Shared.Abstractions;
 
 namespace Clinica.Api.Modules.Ventas.Venta.Entity;

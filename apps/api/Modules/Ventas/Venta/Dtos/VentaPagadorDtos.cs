@@ -1,4 +1,5 @@
 using Clinica.Api.Modules.Ventas.Venta.Entity;
+using Clinica.Api.Modules.Ventas.Venta.Enums;
 using Clinica.Api.Shared.Abstractions;
 
 namespace Clinica.Api.Modules.Ventas.Venta.Dtos;

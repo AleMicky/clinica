@@ -1,3 +1,4 @@
+using Clinica.Api.Modules.Cajas.Cobro.Enums;
 using Clinica.Api.Modules.Ventas.Venta.Entity;
 using Clinica.Api.Shared.Abstractions;
 using TurnoCajaEntity = Clinica.Api.Modules.Cajas.TurnoCaja.Entity.TurnoCaja;
