@@ -2,9 +2,7 @@ using System.Text;
 using Clinica.Api.Data;
 using Clinica.Api.Data.Seed;
 using Clinica.Api.Modules;
-using Clinica.Api.Modules.Seguridad.Roles;
 using Clinica.Api.Modules.Seguridad.Roles.Entity;
-using Clinica.Api.Modules.Seguridad.Usuarios;
 using Clinica.Api.Modules.Seguridad.Usuarios.Entity;
 using Clinica.Api.Shared.Configuration;
 using Clinica.Api.Shared.Extensions;
@@ -18,7 +16,6 @@ using QuestPDF;
 using QuestPDF.Infrastructure;
 using Scalar.AspNetCore;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 const string CorsPolicy = "DefaultCors";
@@ -31,7 +28,9 @@ var connectionString =
 builder.Services.AddDbContext<AppDbContext>((sp, options) =>
 {
     options.UseSqlServer(connectionString);
-    options.AddInterceptors(sp.GetRequiredService<AuditSaveChangesInterceptor>());
+
+    options.AddInterceptors(
+        sp.GetRequiredService<AuditSaveChangesInterceptor>());
 });
 
 builder.Services.AddDataProtection();
@@ -64,8 +63,11 @@ var jwt = builder.Configuration
 builder.Services
     .AddAuthentication(options =>
     {
-        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultAuthenticateScheme =
+            JwtBearerDefaults.AuthenticationScheme;
+
+        options.DefaultChallengeScheme =
+            JwtBearerDefaults.AuthenticationScheme;
     })
     .AddJwtBearer(options =>
     {
@@ -90,37 +92,31 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
+var allowedOrigins = builder.Configuration
+                         .GetSection("Cors:AllowedOrigins")
+                         .Get<string[]>()
+                     ?? [];
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(CorsPolicy, policy =>
     {
-        var origins = builder.Configuration
-            .GetSection("Cors:AllowedOrigins")
-            .Get<string[]>() ?? [];
-
-        if (origins.Length > 0 && !origins.Contains("*"))
-        {
-            policy
-                .WithOrigins(origins)
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials();
-        }
-        else
-        {
-            policy
-                .SetIsOriginAllowed(_ => true)
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials();
-        }
+        policy
+            .WithOrigins(allowedOrigins)
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 
-
 builder.Services.AddScoped<IJwtService, JwtService>();
+
 builder.Services.AddOpenApi();
-builder.Services.Configure<ClinicaOptions>(builder.Configuration.GetSection(ClinicaOptions.SectionName));
+
+builder.Services.Configure<ClinicaOptions>(
+    builder.Configuration.GetSection(
+        ClinicaOptions.SectionName));
+
 builder.Services.AddShared();
 builder.Services.AddModules();
 
@@ -128,9 +124,9 @@ QuestPDF.Settings.License = LicenseType.Community;
 
 var app = builder.Build();
 
-app.UseShared();
-
 app.UseCors(CorsPolicy);
+
+app.UseShared();
 
 if (app.Environment.IsDevelopment())
 {
@@ -159,7 +155,10 @@ app.MapModules();
 
 using (var scope = app.Services.CreateScope())
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var dbContext =
+        scope.ServiceProvider
+            .GetRequiredService<AppDbContext>();
+
     await dbContext.Database.MigrateAsync();
 }
 
