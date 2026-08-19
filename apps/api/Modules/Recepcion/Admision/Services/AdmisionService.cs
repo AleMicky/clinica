@@ -364,8 +364,7 @@ public sealed class AdmisionService(
                 );
             }
 
-            if (request.EstadoDestino ==
-                EstadoAdmision.EnviadaVenta)
+            if (request.EstadoDestino == EstadoAdmision.EnviadaVenta)
             {
                 if (entity.Detalles.Count == 0)
                 {
@@ -375,8 +374,7 @@ public sealed class AdmisionService(
                     );
                 }
 
-                await ventaService
-                    .GenerarVentaDesdeAdmisionAsync(
+                await ventaService.GenerarVentaDesdeAdmisionAsync(
                         entity.Id,
                         entity.RecepcionistaId,
                         cancellationToken

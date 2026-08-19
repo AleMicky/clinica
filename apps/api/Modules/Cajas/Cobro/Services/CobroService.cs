@@ -21,9 +21,7 @@ public sealed class CobroService(
 )
 {
     private AppDbContext DbContext { get; } = dbContext;
-
-    private DbSet<CobroEntity> Entities =>
-        DbContext.Set<CobroEntity>();
+    private DbSet<CobroEntity> Entities => DbContext.Set<CobroEntity>();
 
     public async Task<PagedResult<CobroResponse>> ListarAsync(
         PaginationRequest pagination,
@@ -78,27 +76,12 @@ public sealed class CobroService(
         };
     }
 
-    public async Task<CobroResponse> CrearAsync(
-        CreateCobroRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<CobroResponse> CrearAsync(CreateCobroRequest request, CancellationToken cancellationToken = default)
     {
-        await ValidarFksAsync(
-            request.TurnoCajaId,
-            request.VentaPagadorId,
-            cancellationToken);
-
-        await cobroDetalleService.ValidarMetodosPagoAsync(
-            request.Detalles,
-            cancellationToken);
-
-        await cobroDetalleService.ValidarMonedasAsync(
-            request.Detalles,
-            cancellationToken);
-
-        await cobroDetalleService.ValidarCuentasBancariasAsync(
-            request.Detalles,
-            cancellationToken);
-
+        await ValidarFksAsync(request.TurnoCajaId, request.VentaPagadorId, cancellationToken);
+        await cobroDetalleService.ValidarMetodosPagoAsync(request.Detalles, cancellationToken);
+        await cobroDetalleService.ValidarMonedasAsync(request.Detalles, cancellationToken);
+        await cobroDetalleService.ValidarCuentasBancariasAsync(request.Detalles, cancellationToken);
         var entity = MapToNewEntity(request);
         entity.Activo = true;
 
@@ -125,9 +108,7 @@ public sealed class CobroService(
         return await ObtenerAsync(entity.Id, cancellationToken);
     }
 
-    public async Task<CobroResponse> ActualizarAsync(
-        int id,
-        UpdateCobroRequest request,
+    public async Task<CobroResponse> ActualizarAsync(int id, UpdateCobroRequest request,
         CancellationToken cancellationToken = default)
     {
         var entity = await BuildQuery()
@@ -169,17 +150,12 @@ public sealed class CobroService(
         return await ObtenerAsync(entity.Id, cancellationToken);
     }
 
-    public async Task EliminarAsync(
-        int id,
-        CancellationToken cancellationToken = default)
+    public async Task EliminarAsync(int id, CancellationToken cancellationToken = default)
     {
         await AnularAsync(id, null, cancellationToken);
     }
 
-    public async Task<CobroResponse> AnularAsync(
-        int id,
-        string? motivo,
-        CancellationToken cancellationToken = default)
+    public async Task<CobroResponse> AnularAsync(int id, string? motivo, CancellationToken cancellationToken = default)
     {
         var entity = await BuildQuery()
             .FirstOrDefaultAsync(
@@ -225,16 +201,14 @@ public sealed class CobroService(
             .Include(x => x.Detalles);
     }
 
-    private IQueryable<CobroEntity> ApplyOrder(
-        IQueryable<CobroEntity> query)
+    private IQueryable<CobroEntity> ApplyOrder(IQueryable<CobroEntity> query)
     {
         return query
             .OrderByDescending(x => x.FechaHora)
             .ThenByDescending(x => x.Id);
     }
 
-    private CobroEntity MapToNewEntity(
-        CreateCobroRequest request)
+    private CobroEntity MapToNewEntity(CreateCobroRequest request)
     {
         var entity = CobroMapper.ToEntity(request);
         entity.Estado = EstadoCobro.Registrado;
@@ -246,9 +220,7 @@ public sealed class CobroService(
         return entity;
     }
 
-    private void MapToExistingEntity(
-        UpdateCobroRequest request,
-        CobroEntity entity)
+    private void MapToExistingEntity(UpdateCobroRequest request, CobroEntity entity)
     {
         CobroMapper.UpdateEntity(request, entity);
         CobroDetalleMapper.ReemplazarDetalles(entity, request.Detalles);
@@ -256,8 +228,7 @@ public sealed class CobroService(
         Normalizar(entity);
     }
 
-    private static CobroResponse MapToResponse(
-        CobroEntity entity)
+    private static CobroResponse MapToResponse(CobroEntity entity)
     {
         return new CobroResponse
         {
@@ -280,15 +251,12 @@ public sealed class CobroService(
         };
     }
 
-    private static IReadOnlyCollection<CobroResponse>
-        MapToResponseList(IEnumerable<CobroEntity> entities)
+    private static IReadOnlyCollection<CobroResponse> MapToResponseList(IEnumerable<CobroEntity> entities)
     {
         return entities.Select(MapToResponse).ToList();
     }
 
-    private IQueryable<CobroEntity> ApplySearch(
-        IQueryable<CobroEntity> query,
-        string? search)
+    private IQueryable<CobroEntity> ApplySearch(IQueryable<CobroEntity> query, string? search)
     {
         if (search is null)
             return query;
@@ -353,8 +321,7 @@ public sealed class CobroService(
         };
     }
 
-    private static EmpleadoInfo? MapEmpleadoInfo(
-        Clinica.Api.Modules.RecursosHumanos.Empleado.Entity.Empleado? empleado)
+    private static EmpleadoInfo? MapEmpleadoInfo(Clinica.Api.Modules.RecursosHumanos.Empleado.Entity.Empleado? empleado)
     {
         if (empleado is null)
             return null;

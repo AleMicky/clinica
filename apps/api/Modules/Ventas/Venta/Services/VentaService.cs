@@ -25,8 +25,7 @@ public sealed class VentaService(
     CorrelativoService correlativoService
 )
 {
-    private AppDbContext DbContext { get; } = dbContext;
-    private DbSet<VentaEntity> Entities => DbContext.Set<VentaEntity>();
+    private DbSet<VentaEntity> Entities => dbContext.Set<VentaEntity>();
 
     public async Task<PagedResult<VentaResponse>> ListarAsync(
         PaginationRequest pagination,
@@ -35,25 +34,12 @@ public sealed class VentaService(
     {
         var query = Entities
             .AsNoTracking()
-            .Include(x => x.Paciente)
-            .ThenInclude(p => p.Persona)
-            .Include(x => x.Vendedor)
-            .ThenInclude(e => e.Persona)
-            .Include(x => x.Moneda)
-            .Include(x => x.Detalles)
-            .ThenInclude(d => d.Servicio)
-            .Include(x => x.Detalles)
-            .ThenInclude(d => d.Medico)
-            .ThenInclude(m => m!.Empleado)
-            .ThenInclude(e => e.Persona)
-            .Include(x => x.Pagadores)
+            .WithFullDetails()
             .Where(x => x.Activo);
 
-        var normalizedSearch = string.IsNullOrWhiteSpace(search) ? null : search.Trim();
-        query = ApplySearch(query, normalizedSearch);
+        query = ApplySearch(query, search?.Trim());
 
         var totalItems = await query.CountAsync(cancellationToken);
-
         var offset = (pagination.ValidPage - 1) * pagination.ValidPageSize;
 
         var entities = await ApplyOrder(query)
@@ -62,7 +48,7 @@ public sealed class VentaService(
             .ToListAsync(cancellationToken);
 
         return new PagedResult<VentaResponse>(
-            MapToResponseList(entities),
+            VentaMapper.ToResponse(entities),
             pagination.ValidPage,
             pagination.ValidPageSize,
             totalItems);
@@ -74,37 +60,33 @@ public sealed class VentaService(
     {
         var entity = await Entities
             .AsNoTracking()
-            .Include(x => x.Paciente)
-            .ThenInclude(p => p.Persona)
-            .Include(x => x.Vendedor)
-            .ThenInclude(e => e.Persona)
-            .Include(x => x.Moneda)
-            .Include(x => x.Detalles)
-            .ThenInclude(d => d.Servicio)
-            .Include(x => x.Detalles)
-            .ThenInclude(d => d.Medico)
-            .ThenInclude(m => m!.Empleado)
-            .ThenInclude(e => e.Persona)
-            .Include(x => x.Pagadores)
+            .WithFullDetails()
             .Where(x => x.Activo)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (entity is null)
             throw CreateNotFoundException(id);
 
-        return MapToResponse(entity);
+        return VentaMapper.ToResponse(entity);
     }
 
     public async Task<VentaResponse> CrearAsync(
         CreateVentaRequest request,
         CancellationToken cancellationToken = default)
     {
-        await ValidateCreateAsync(request, cancellationToken);
+        await ValidarVentaContextoAsync(
+            request.AdmisionId,
+            request.PacienteId,
+            request.VendedorId,
+            request.MonedaId,
+            request.Detalles,
+            request.Pagadores,
+            cancellationToken);
 
         var entity = await MapToNewEntityAsync(request, cancellationToken);
         entity.Activo = true;
 
-        await using var tx = await DbContext.Database.BeginTransactionAsync(cancellationToken);
+        await using var tx = await dbContext.Database.BeginTransactionAsync(cancellationToken);
         try
         {
             var correlativo = await correlativoService.GenerarAsync(
@@ -120,7 +102,7 @@ public sealed class VentaService(
             entity.Numero = correlativo.NumeroFormateado;
 
             await Entities.AddAsync(entity, cancellationToken);
-            await DbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
             await tx.CommitAsync(cancellationToken);
         }
         catch
@@ -151,10 +133,18 @@ public sealed class VentaService(
                 $"No se puede editar una venta en estado {entity.Estado}. Solo las ventas en estado {EstadoVenta.Pendiente} pueden ser editadas.");
         }
 
-        await ValidateUpdateAsync(id, request, cancellationToken);
+        await ValidarVentaContextoAsync(
+            request.AdmisionId,
+            request.PacienteId,
+            request.VendedorId,
+            request.MonedaId,
+            request.Detalles,
+            request.Pagadores,
+            cancellationToken);
+
         await MapToExistingEntityAsync(request, entity, cancellationToken);
 
-        await DbContext.SaveChangesAsync(cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         return await ObtenerAsync(entity.Id, cancellationToken);
     }
@@ -186,7 +176,7 @@ public sealed class VentaService(
             pagador.Activo = false;
         }
 
-        await DbContext.SaveChangesAsync(cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<VentaResponse> CambiarEstadoAsync(
@@ -194,21 +184,44 @@ public sealed class VentaService(
         CambiarEstadoVentaRequest request,
         CancellationToken cancellationToken = default)
     {
-        var entity = await Entities
-            .FirstOrDefaultAsync(x => x.Id == id && x.Activo, cancellationToken);
-
-        if (entity is null)
-            throw CreateNotFoundException(id);
-
-        if (!VentaTransiciones.EsValida(entity.Estado, request.EstadoDestino))
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        try
         {
-            throw new ConflictException($"No se puede transitar de {entity.Estado} a {request.EstadoDestino}.");
+            var entity = await Entities.
+                Include(x => x.Detalles)
+                .FirstOrDefaultAsync(x
+                    => x.Id == id && x.Activo,
+                cancellationToken);
+
+            if (entity is null)
+                throw CreateNotFoundException(id);
+
+            if (!VentaTransiciones.EsValida(entity.Estado, request.EstadoDestino))
+            {
+                throw new ConflictException($"No se puede transitar de {entity.Estado} a {request.EstadoDestino}.");
+            }
+
+            if (request.EstadoDestino == EstadoVenta.Pagada)
+            {
+                
+            }
+
+            entity.Estado = request.EstadoDestino;
+
+            await dbContext.SaveChangesAsync(
+                cancellationToken
+            );
+
+            await transaction.CommitAsync(
+                cancellationToken
+            );
+            return await ObtenerAsync(entity.Id, cancellationToken);
         }
-
-        entity.Estado = request.EstadoDestino;
-        await DbContext.SaveChangesAsync(cancellationToken);
-
-        return await ObtenerAsync(entity.Id, cancellationToken);
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        } 
     }
 
     public async Task<VentaResponse> GenerarVentaDesdeAdmisionAsync(
@@ -216,7 +229,7 @@ public sealed class VentaService(
         int vendedorId,
         CancellationToken cancellationToken = default)
     {
-        var admision = await DbContext.Admisiones
+        var admision = await dbContext.Admisiones
             .Include(x => x.Detalles)
             .FirstOrDefaultAsync(x => x.Id == admisionId && x.Activo, cancellationToken);
 
@@ -236,12 +249,19 @@ public sealed class VentaService(
         if (detallesAdmision.Count == 0)
             throw new ConflictException("La admisión no tiene servicios activos para generar la venta.");
 
-        var moneda = await DbContext.Monedas
+        var moneda = await dbContext.Monedas
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.EsBase && x.Activo, cancellationToken);
 
         if (moneda is null)
             throw new ConflictException("No existe una moneda base configurada.");
+
+        var pairs = detallesAdmision
+            .Where(x => x.MedicoId.HasValue)
+            .Select(x => (x.MedicoId!.Value, x.ServicioId))
+            .Distinct();
+
+        var acuerdosMap = await CargarAcuerdosMedicosMapAsync(pairs, cancellationToken);
 
         var entity = new VentaEntity
         {
@@ -258,21 +278,8 @@ public sealed class VentaService(
 
         foreach (var detalle in detallesAdmision)
         {
-            decimal? montoMedico = null;
-            decimal? montoClinica = null;
-
-            if (detalle.MedicoId.HasValue)
-            {
-                var acuerdo = await ObtenerAcuerdoMedicoAsync(detalle.MedicoId, detalle.ServicioId, cancellationToken);
-                if (acuerdo is null)
-                {
-                    throw new ConflictException(
-                        $"El médico {detalle.MedicoId.Value} no tiene un acuerdo vigente para el servicio {detalle.ServicioId}.");
-                }
-
-                montoMedico = acuerdo.ImporteMedico * detalle.Cantidad;
-                montoClinica = acuerdo.ImporteClinica * detalle.Cantidad;
-            }
+            var (montoMedico, montoClinica) =
+                CalcularMontosMedico(detalle.MedicoId, detalle.ServicioId, detalle.Cantidad, acuerdosMap);
 
             entity.Detalles.Add(new VentaDetalleEntity
             {
@@ -312,12 +319,12 @@ public sealed class VentaService(
         entity.Numero = correlativo.NumeroFormateado;
 
         await Entities.AddAsync(entity, cancellationToken);
-        await DbContext.SaveChangesAsync(cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         return await ObtenerAsync(entity.Id, cancellationToken);
     }
 
-    private IQueryable<VentaEntity> ApplyOrder(IQueryable<VentaEntity> query) =>
+    private static IQueryable<VentaEntity> ApplyOrder(IQueryable<VentaEntity> query) =>
         query.OrderByDescending(x => x.Fecha).ThenByDescending(x => x.Id);
 
     private async Task<VentaEntity> MapToNewEntityAsync(
@@ -328,8 +335,17 @@ public sealed class VentaService(
         entity.Estado = EstadoVenta.Pendiente;
         entity.Detalles = [];
 
+        var pairs = request.Detalles
+            .Where(x => x.MedicoId.HasValue)
+            .Select(x => (x.MedicoId!.Value, x.ServicioId))
+            .Distinct();
+
+        var acuerdosMap = await CargarAcuerdosMedicosMapAsync(pairs, cancellationToken);
+
         foreach (var detalle in request.Detalles)
-            entity.Detalles.Add(await CrearDetalleAsync(detalle, cancellationToken));
+        {
+            entity.Detalles.Add(CrearDetalle(detalle, acuerdosMap));
+        }
 
         entity.Pagadores = request.Pagadores.Select(CrearPagador).ToList();
         CalcularTotales(entity);
@@ -344,47 +360,47 @@ public sealed class VentaService(
         CancellationToken cancellationToken)
     {
         VentaMapper.UpdateEntity(request, entity);
-        await ReemplazarDetallesAsync(entity, request.Detalles, cancellationToken);
+
+        var pairs = request.Detalles
+            .Where(x => x.MedicoId.HasValue)
+            .Select(x => (x.MedicoId!.Value, x.ServicioId))
+            .Distinct();
+
+        var acuerdosMap = await CargarAcuerdosMedicosMapAsync(pairs, cancellationToken);
+
+        ReemplazarDetalles(entity, request.Detalles, acuerdosMap);
         ReemplazarPagadores(entity, request.Pagadores);
+
         CalcularTotales(entity);
         ValidarMontoPagadores(entity);
     }
 
-    private VentaResponse MapToResponse(VentaEntity entity) =>
-        VentaMapper.ToResponse(entity);
-
-    private IReadOnlyCollection<VentaResponse> MapToResponseList(IEnumerable<VentaEntity> entities) =>
-        VentaMapper.ToResponse(entities);
-
-    private async Task ValidateCreateAsync(CreateVentaRequest request, CancellationToken cancellationToken)
+    private async Task ValidarVentaContextoAsync(
+        int admisionId,
+        int pacienteId,
+        int vendedorId,
+        int monedaId,
+        IReadOnlyCollection<VentaDetalleRequest> detalles,
+        IReadOnlyCollection<VentaPagadorRequest> pagadores,
+        CancellationToken cancellationToken)
     {
-        await EnsureAdmisionValidaAsync(request.AdmisionId, request.PacienteId, cancellationToken);
-        await EnsurePacienteExistsAsync(request.PacienteId, cancellationToken);
-        await EnsureVendedorExistsAsync(request.VendedorId, cancellationToken);
-        await EnsureMonedaExistsAsync(request.MonedaId, cancellationToken);
-        await ValidarDetallesAsync(request.Detalles, cancellationToken);
-        await ValidarPagadoresAsync(request.Pagadores, cancellationToken);
+        await EnsureAdmisionValidaAsync(admisionId, pacienteId, cancellationToken);
+        await EnsurePacienteExistsAsync(pacienteId, cancellationToken);
+        await EnsureVendedorExistsAsync(vendedorId, cancellationToken);
+        await EnsureMonedaExistsAsync(monedaId, cancellationToken);
+        await ValidarDetallesAsync(detalles, cancellationToken);
+        await ValidarPagadoresAsync(pagadores, cancellationToken);
     }
 
-    private async Task ValidateUpdateAsync(int id, UpdateVentaRequest request, CancellationToken cancellationToken)
-    {
-        await EnsureAdmisionValidaAsync(request.AdmisionId, request.PacienteId, cancellationToken);
-        await EnsurePacienteExistsAsync(request.PacienteId, cancellationToken);
-        await EnsureVendedorExistsAsync(request.VendedorId, cancellationToken);
-        await EnsureMonedaExistsAsync(request.MonedaId, cancellationToken);
-        await ValidarDetallesAsync(request.Detalles, cancellationToken);
-        await ValidarPagadoresAsync(request.Pagadores, cancellationToken);
-    }
-
-    private IQueryable<VentaEntity> ApplySearch(IQueryable<VentaEntity> query, string? search) =>
-        search is null ? query : query.Where(x => x.Numero.Contains(search));
+    private static IQueryable<VentaEntity> ApplySearch(IQueryable<VentaEntity> query, string? search) =>
+        string.IsNullOrWhiteSpace(search) ? query : query.Where(x => x.Numero.Contains(search));
 
     private static NotFoundException CreateNotFoundException(int id) =>
         new(nameof(VentaEntity), id);
 
     private async Task EnsureAdmisionValidaAsync(int admisionId, int pacienteId, CancellationToken cancellationToken)
     {
-        var admision = await DbContext.Admisiones
+        var admision = await dbContext.Admisiones
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == admisionId && x.Activo, cancellationToken);
 
@@ -400,19 +416,19 @@ public sealed class VentaService(
 
     private async Task EnsurePacienteExistsAsync(int pacienteId, CancellationToken cancellationToken)
     {
-        if (!await DbContext.Pacientes.AnyAsync(x => x.Id == pacienteId && x.Activo, cancellationToken))
+        if (!await dbContext.Pacientes.AnyAsync(x => x.Id == pacienteId && x.Activo, cancellationToken))
             throw new NotFoundException(nameof(Paciente), pacienteId);
     }
 
     private async Task EnsureVendedorExistsAsync(int vendedorId, CancellationToken cancellationToken)
     {
-        if (!await DbContext.Empleados.AnyAsync(x => x.Id == vendedorId && x.Activo, cancellationToken))
+        if (!await dbContext.Empleados.AnyAsync(x => x.Id == vendedorId && x.Activo, cancellationToken))
             throw new NotFoundException(nameof(Empleado), vendedorId);
     }
 
     private async Task EnsureMonedaExistsAsync(int monedaId, CancellationToken cancellationToken)
     {
-        if (!await DbContext.Monedas.AnyAsync(x => x.Id == monedaId && x.Activo, cancellationToken))
+        if (!await dbContext.Monedas.AnyAsync(x => x.Id == monedaId && x.Activo, cancellationToken))
             throw new NotFoundException(nameof(Moneda), monedaId);
     }
 
@@ -424,7 +440,7 @@ public sealed class VentaService(
             throw new ConflictException("La venta debe tener al menos un detalle.");
 
         var servicioIds = detalles.Select(x => x.ServicioId).Distinct().ToList();
-        var serviciosExistentes = await DbContext.Servicio
+        var serviciosExistentes = await dbContext.Servicio
             .Where(x => servicioIds.Contains(x.Id) && x.Activo)
             .Select(x => x.Id)
             .ToListAsync(cancellationToken);
@@ -436,7 +452,7 @@ public sealed class VentaService(
         var medicoIds = detalles.Where(x => x.MedicoId.HasValue).Select(x => x.MedicoId!.Value).Distinct().ToList();
         if (medicoIds.Count == 0) return;
 
-        var medicosExistentes = await DbContext.Medicos
+        var medicosExistentes = await dbContext.Medicos
             .Where(x => medicoIds.Contains(x.Id) && x.Activo)
             .Select(x => x.Id)
             .ToListAsync(cancellationToken);
@@ -461,7 +477,7 @@ public sealed class VentaService(
 
         if (convenioIds.Count == 0) return;
 
-        var conveniosExistentes = await DbContext.Convenios
+        var conveniosExistentes = await dbContext.Convenios
             .Where(x => convenioIds.Contains(x.Id) && x.Activo)
             .Select(x => x.Id)
             .ToListAsync(cancellationToken);
@@ -481,26 +497,12 @@ public sealed class VentaService(
         }
     }
 
-    private async Task<VentaDetalleEntity> CrearDetalleAsync(
+    private static VentaDetalleEntity CrearDetalle(
         VentaDetalleRequest request,
-        CancellationToken cancellationToken)
+        IReadOnlyDictionary<(int MedicoId, int ServicioId), MedicoServicioAcuerdo> acuerdosMap)
     {
-        var total = VentaCalculos.TotalDetalle(request);
-        decimal? montoMedico = null;
-        decimal? montoClinica = null;
-
-        if (request.MedicoId.HasValue)
-        {
-            var acuerdo = await ObtenerAcuerdoMedicoAsync(request.MedicoId, request.ServicioId, cancellationToken);
-            if (acuerdo is null)
-            {
-                throw new ConflictException(
-                    $"El médico {request.MedicoId.Value} no tiene un acuerdo vigente para el servicio {request.ServicioId}.");
-            }
-
-            montoMedico = acuerdo.ImporteMedico * request.Cantidad;
-            montoClinica = acuerdo.ImporteClinica * request.Cantidad;
-        }
+        var (montoMedico, montoClinica) =
+            CalcularMontosMedico(request.MedicoId, request.ServicioId, request.Cantidad, acuerdosMap);
 
         return new VentaDetalleEntity
         {
@@ -509,11 +511,29 @@ public sealed class VentaService(
             Cantidad = request.Cantidad,
             PrecioUnitario = request.PrecioUnitario,
             Descuento = request.Descuento,
-            Total = total,
+            Total = VentaCalculos.TotalDetalle(request),
             MontoMedico = montoMedico,
             MontoClinica = montoClinica,
             Activo = true
         };
+    }
+
+    private static (decimal? MontoMedico, decimal? MontoClinica) CalcularMontosMedico(
+        int? medicoId,
+        int servicioId,
+        decimal cantidad,
+        IReadOnlyDictionary<(int MedicoId, int ServicioId), MedicoServicioAcuerdo> acuerdosMap)
+    {
+        if (!medicoId.HasValue)
+            return (null, null);
+
+        if (!acuerdosMap.TryGetValue((medicoId.Value, servicioId), out var acuerdo))
+        {
+            throw new ConflictException(
+                $"El médico {medicoId.Value} no tiene un acuerdo vigente para el servicio {servicioId}.");
+        }
+
+        return (acuerdo.ImporteMedico * cantidad, acuerdo.ImporteClinica * cantidad);
     }
 
     private static VentaPagadorEntity CrearPagador(VentaPagadorRequest request) =>
@@ -526,14 +546,13 @@ public sealed class VentaService(
             Activo = true
         };
 
-    private async Task ReemplazarDetallesAsync(
+    private static void ReemplazarDetalles(
         VentaEntity entity,
         IReadOnlyCollection<VentaDetalleRequest> detalles,
-        CancellationToken cancellationToken)
+        IReadOnlyDictionary<(int MedicoId, int ServicioId), MedicoServicioAcuerdo> acuerdosMap)
     {
         var incomingServicioIds = detalles.Select(x => x.ServicioId).ToHashSet();
 
-        // Borrado suave en lugar de entity.Detalles.Remove()
         foreach (var existing in entity.Detalles.Where(x => x.Activo && !incomingServicioIds.Contains(x.ServicioId)))
         {
             existing.Activo = false;
@@ -543,6 +562,9 @@ public sealed class VentaService(
 
         foreach (var request in detalles)
         {
+            var (montoMedico, montoClinica) =
+                CalcularMontosMedico(request.MedicoId, request.ServicioId, request.Cantidad, acuerdosMap);
+
             if (existingByServicio.TryGetValue(request.ServicioId, out var detalle))
             {
                 detalle.MedicoId = request.MedicoId;
@@ -550,29 +572,12 @@ public sealed class VentaService(
                 detalle.PrecioUnitario = request.PrecioUnitario;
                 detalle.Descuento = request.Descuento;
                 detalle.Total = VentaCalculos.TotalDetalle(request);
-
-                if (request.MedicoId.HasValue)
-                {
-                    var acuerdo =
-                        await ObtenerAcuerdoMedicoAsync(request.MedicoId, request.ServicioId, cancellationToken);
-                    if (acuerdo is null)
-                    {
-                        throw new ConflictException(
-                            $"El médico {request.MedicoId.Value} no tiene un acuerdo vigente para el servicio {request.ServicioId}.");
-                    }
-
-                    detalle.MontoMedico = acuerdo.ImporteMedico * request.Cantidad;
-                    detalle.MontoClinica = acuerdo.ImporteClinica * request.Cantidad;
-                }
-                else
-                {
-                    detalle.MontoMedico = null;
-                    detalle.MontoClinica = null;
-                }
+                detalle.MontoMedico = montoMedico;
+                detalle.MontoClinica = montoClinica;
             }
             else
             {
-                entity.Detalles.Add(await CrearDetalleAsync(request, cancellationToken));
+                entity.Detalles.Add(CrearDetalle(request, acuerdosMap));
             }
         }
     }
@@ -585,7 +590,6 @@ public sealed class VentaService(
             .Select(x => new PagadorKey(x.Tipo, x.Tipo == TipoPagador.Convenio ? x.ConvenioId : null))
             .ToHashSet();
 
-        // Borrado suave
         foreach (var existing in entity.Pagadores.Where(x =>
                      x.Activo && !incomingKeys.Contains(new PagadorKey(x.Tipo, x.ConvenioId))))
         {
@@ -610,25 +614,32 @@ public sealed class VentaService(
         }
     }
 
-    private async Task<MedicoServicioAcuerdo?> ObtenerAcuerdoMedicoAsync(
-        int? medicoId,
-        int servicioId,
+    private async Task<Dictionary<(int MedicoId, int ServicioId), MedicoServicioAcuerdo>> CargarAcuerdosMedicosMapAsync(
+        IEnumerable<(int MedicoId, int ServicioId)> pairs,
         CancellationToken cancellationToken)
     {
-        if (!medicoId.HasValue) return null;
+        var pairsList = pairs.ToList();
+        if (pairsList.Count == 0)
+            return [];
 
         var hoy = DateOnly.FromDateTime(DateTime.Today);
+        var medicoIds = pairsList.Select(p => p.MedicoId).Distinct().ToList();
+        var servicioIds = pairsList.Select(p => p.ServicioId).Distinct().ToList();
 
-        return await DbContext.MedicosServiciosAcuerdos
+        var acuerdos = await dbContext.MedicosServiciosAcuerdos
             .AsNoTracking()
             .Where(x =>
-                x.MedicoId == medicoId.Value &&
-                x.ServicioId == servicioId &&
+                medicoIds.Contains(x.MedicoId) &&
+                servicioIds.Contains(x.ServicioId) &&
                 x.Activo &&
                 x.FechaInicio <= hoy &&
                 (x.FechaFin == null || x.FechaFin >= hoy))
             .OrderByDescending(x => x.FechaInicio)
-            .FirstOrDefaultAsync(cancellationToken);
+            .ToListAsync(cancellationToken);
+
+        return acuerdos
+            .GroupBy(x => (x.MedicoId, x.ServicioId))
+            .ToDictionary(g => g.Key, g => g.First());
     }
 
     private static void CalcularTotales(VentaEntity entity)
@@ -641,4 +652,24 @@ public sealed class VentaService(
     }
 
     private readonly record struct PagadorKey(TipoPagador Tipo, int? ConvenioId);
+}
+
+public static class VentaQueryExtensions
+{
+    public static IQueryable<VentaEntity> WithFullDetails(this IQueryable<VentaEntity> query)
+    {
+        return query
+            .Include(x => x.Paciente)
+            .ThenInclude(p => p.Persona)
+            .Include(x => x.Vendedor)
+            .ThenInclude(e => e.Persona)
+            .Include(x => x.Moneda)
+            .Include(x => x.Detalles)
+            .ThenInclude(d => d.Servicio)
+            .Include(x => x.Detalles)
+            .ThenInclude(d => d.Medico)
+            .ThenInclude(m => m!.Empleado)
+            .ThenInclude(e => e.Persona)
+            .Include(x => x.Pagadores);
+    }
 }
