@@ -14,8 +14,9 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=${CONNECTION_STRING:-Server=host.docker.internal,1433;Database=ClinicaDb;User Id=sa;Password=YourSecurePasswordHere!;TrustServerCertificate=True;}
-      - Cors__AllowedOrigins__0=http://157.173.99.216:8084
-      - Cors__AllowedOrigins__1=http://157.173.99.216:5011
+      - Cors__AllowedOrigins__0=*
+      - Cors__AllowedOrigins__1=http://157.173.99.216:8084
+      - Cors__AllowedOrigins__2=http://157.173.99.216:5011
 
     extra_hosts:
       - "host.docker.internal:host-gateway"
