@@ -1,12 +1,14 @@
 export enum EstadoVenta {
   Pendiente = 1,
-  ParcialmentePagada = 2,
-  Pagada = 3,
-  Anulada = 4,
+  PendienteCobro = 2,
+  ParcialmentePagada = 3,
+  Pagada = 4,
+  Anulada = 5,
 }
 
 export const EstadoVentaLabels: Record<EstadoVenta, string> = {
   [EstadoVenta.Pendiente]: "Pendiente",
+  [EstadoVenta.PendienteCobro]: "Pendiente de Cobro",
   [EstadoVenta.ParcialmentePagada]: "Parcialmente Pagada",
   [EstadoVenta.Pagada]: "Pagada",
   [EstadoVenta.Anulada]: "Anulada",
@@ -137,6 +139,7 @@ export interface UpdateVentaRequest extends VentaRequest { }
 export interface CambiarEstadoVentaRequest {
   estadoDestino: EstadoVenta;
   motivo?: string;
+  cajaId?: number;
 }
 
 export interface VentaQueryParams {
@@ -157,6 +160,7 @@ export interface PagedResult<T> {
 export interface VentaMetrics {
   totalVentas: number;
   pendientes: number;
+  pendientesCobro: number;
   pagadas: number;
   anuladas: number;
   montoTotal: number;

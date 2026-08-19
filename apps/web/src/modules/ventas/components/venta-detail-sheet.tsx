@@ -20,6 +20,7 @@ import {
   HeartPulse,
   Receipt,
   RefreshCw,
+  Send,
   Stethoscope,
   User,
   Users,
@@ -43,6 +44,7 @@ interface VentaDetailSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   venta: VentaResponse | null;
+  onEnviarACajaClick?: (venta: VentaResponse) => void;
   onChangeStatusClick?: (venta: VentaResponse) => void;
 }
 
@@ -50,6 +52,7 @@ export function VentaDetailSheet({
   open,
   onOpenChange,
   venta: initialVenta,
+  onEnviarACajaClick,
   onChangeStatusClick,
 }: VentaDetailSheetProps) {
   const ventaId = initialVenta?.id ?? 0;
@@ -318,29 +321,46 @@ export function VentaDetailSheet({
         </div>
 
         {/* PIE DE SHEET */}
-        <div className="p-4 border-t border-border/70 bg-muted/30 flex items-center justify-between">
+        <div className="p-4 border-t border-border/70 bg-muted/30 flex items-center justify-between gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={() => onOpenChange(false)}
-            className="h-8 text-xs"
+            className="h-8 text-xs cursor-pointer"
           >
             Cerrar
           </Button>
 
-          {venta.estado !== EstadoVenta.Anulada && onChangeStatusClick && (
-            <Button
-              size="sm"
-              onClick={() => {
-                onOpenChange(false);
-                onChangeStatusClick(venta);
-              }}
-              className="h-8 text-xs font-semibold gap-1.5 bg-primary text-primary-foreground"
-            >
-              <RefreshCw className="size-3.5" />
-              Cambiar Estado / Cobro
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {venta.estado === EstadoVenta.Pendiente && onEnviarACajaClick && (
+              <Button
+                size="sm"
+                onClick={() => {
+                  onOpenChange(false);
+                  onEnviarACajaClick(venta);
+                }}
+                className="h-8 text-xs font-semibold gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer shadow-xs"
+              >
+                <Send className="size-3.5" />
+                Mandar a Caja
+              </Button>
+            )}
+
+            {venta.estado !== EstadoVenta.Anulada && onChangeStatusClick && (
+              <Button
+                variant={venta.estado === EstadoVenta.Pendiente ? "outline" : "default"}
+                size="sm"
+                onClick={() => {
+                  onOpenChange(false);
+                  onChangeStatusClick(venta);
+                }}
+                className="h-8 text-xs font-semibold gap-1.5 cursor-pointer"
+              >
+                <RefreshCw className="size-3.5" />
+                Cambiar Estado
+              </Button>
+            )}
+          </div>
         </div>
       </SheetContent>
     </Sheet>

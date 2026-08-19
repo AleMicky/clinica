@@ -4,18 +4,35 @@ import * as React from "react";
 import { useCobros } from "../hooks/use-cobros";
 import { CobroHeader } from "./cobro-header";
 import { CobroMetrics } from "./cobro-metrics";
-import { CobroTable } from "./cobro-table";
+import { CobroList, type CobroFilterTab } from "./cobro-list";
+import { CobroDetailCard } from "./cobro-detail-card";
+import { CobroDetailSheet } from "./cobro-detail-sheet";
 import { CobroAnularDialog } from "./cobro-anular-dialog";
-import { EstadoCobro, type CobroResponse } from "../types/cobro.types";
+import {
+  EstadoCobro,
+  type CobroMetrics as CobroMetricsType,
+  type CobroResponse,
+} from "../types/cobro.types";
 
 export function CobroModuleView() {
+  // Paginación y búsqueda
   const [currentPage, setCurrentPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(10);
   const [searchTerm, setSearchTerm] = React.useState("");
   const [debouncedSearch, setDebouncedSearch] = React.useState("");
+  const [selectedFilterTab, setSelectedFilterTab] =
+    React.useState<CobroFilterTab>("TODOS");
 
+  // Estado Master-Detail
+  const [selectedCobroForDetail, setSelectedCobroForDetail] =
+    React.useState<CobroResponse | null>(null);
+  const [detailSheetOpen, setDetailSheetOpen] = React.useState(false);
+
+  // Modal Anular
   const [anularDialogOpen, setAnularDialogOpen] = React.useState(false);
-  const [cobroToAnular, setCobroToAnular] = React.useState<CobroResponse | null>(null);
+  const [cobroToAnular, setCobroToAnular] = React.useState<CobroResponse | null>(
+    null
+  );
 
   // Debounce search
   React.useEffect(() => {
@@ -29,67 +46,147 @@ export function CobroModuleView() {
   const {
     data: apiData,
     isLoading,
+    isRefetching,
     refetch,
   } = useCobros({
     page: currentPage,
     pageSize,
     search: debouncedSearch || undefined,
+    estado:
+      selectedFilterTab === "ANULADOS"
+        ? EstadoCobro.Anulado
+        : selectedFilterTab === "POR_COBRAR" || selectedFilterTab === "COBRADOS"
+        ? EstadoCobro.Registrado
+        : undefined,
   });
 
-  const cobros = Array.isArray(apiData?.items)
+  const cobros: CobroResponse[] = Array.isArray(apiData?.items)
     ? apiData.items
     : Array.isArray(apiData)
     ? (apiData as unknown as CobroResponse[])
     : [];
+
   const totalItems = apiData?.totalItems ?? cobros.length;
 
-  const metrics = React.useMemo(() => {
+  // Cálculo de Métricas
+  const metrics: CobroMetricsType = React.useMemo(() => {
     let montoTotal = 0;
+    let pendientesCobroCount = 0;
+    let completadosCount = 0;
     let anuladosCount = 0;
 
     cobros.forEach((c) => {
       if (c.estado === EstadoCobro.Anulado) {
         anuladosCount++;
       } else {
-        montoTotal += Number(c.total);
+        const isPending =
+          c.estado === EstadoCobro.Registrado &&
+          (c.total === 0 || (c.detalles && c.detalles.length === 0));
+
+        if (isPending) {
+          pendientesCobroCount++;
+        } else {
+          completadosCount++;
+          montoTotal += Number(c.total) || 0;
+        }
       }
     });
 
     return {
       totalCobros: totalItems,
+      pendientesCobro: pendientesCobroCount,
+      completados: completadosCount,
+      anulados: anuladosCount,
       totalMontoCobrado: montoTotal,
-      totalAnulados: anuladosCount,
     };
   }, [cobros, totalItems]);
+
+  // Auto-seleccionar primer cobro en pantallas grandes
+  React.useEffect(() => {
+    if (cobros.length > 0) {
+      if (!selectedCobroForDetail) {
+        setSelectedCobroForDetail(cobros[0]);
+      } else {
+        const updated = cobros.find((c) => c.id === selectedCobroForDetail.id);
+        if (updated) {
+          setSelectedCobroForDetail(updated);
+        }
+      }
+    }
+  }, [cobros]);
+
+  // Handlers
+  const handleSelectCobro = (cobro: CobroResponse) => {
+    setSelectedCobroForDetail(cobro);
+    if (typeof window !== "undefined" && window.innerWidth < 1024) {
+      setDetailSheetOpen(true);
+    }
+  };
 
   const handlePromptAnular = (cobro: CobroResponse) => {
     setCobroToAnular(cobro);
     setAnularDialogOpen(true);
   };
 
-  return (
-    <div className="space-y-4">
-      <CobroHeader />
+  const handleFilterTabChange = (tab: CobroFilterTab) => {
+    setSelectedFilterTab(tab);
+    setCurrentPage(1);
+  };
 
+  return (
+    <div className="flex flex-col gap-3 w-full animate-in fade-in-50 duration-300">
+      {/* Cabecera del Módulo */}
+      <CobroHeader onRefresh={() => refetch()} isRefreshing={isRefetching} />
+
+      {/* Tarjetas de Métricas */}
       <CobroMetrics metrics={metrics} isLoading={isLoading} />
 
-      <CobroTable
-        cobros={cobros}
-        isLoading={isLoading}
-        totalItems={totalItems}
-        currentPage={currentPage}
-        pageSize={pageSize}
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        onPageChange={setCurrentPage}
-        onPageSizeChange={(size) => {
-          setPageSize(size);
-          setCurrentPage(1);
-        }}
+      {/* CUERPO PRINCIPAL: MASTER - DETAIL SPLIT LAYOUT */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-start">
+        {/* PANEL IZQUIERDO: MASTER LIST (7 Columnas) */}
+        <div className="lg:col-span-7 xl:col-span-7 space-y-2.5">
+          <CobroList
+            cobros={cobros}
+            isLoading={isLoading}
+            totalItems={totalItems}
+            currentPage={currentPage}
+            pageSize={pageSize}
+            searchTerm={searchTerm}
+            selectedFilterTab={selectedFilterTab}
+            selectedCobroId={selectedCobroForDetail?.id ?? null}
+            onFilterTabChange={handleFilterTabChange}
+            onSearchChange={setSearchTerm}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setCurrentPage(1);
+            }}
+            onSelectCobro={handleSelectCobro}
+            onAnular={handlePromptAnular}
+            onRefresh={() => refetch()}
+          />
+        </div>
+
+        {/* PANEL DERECHO: DETAIL / TERMINAL DE COBRO (5 Columnas - Sticky en Desktop) */}
+        <div className="hidden lg:block lg:col-span-5 xl:col-span-5 sticky top-4 space-y-2.5">
+          <CobroDetailCard
+            cobro={selectedCobroForDetail}
+            onSuccessCobro={() => refetch()}
+            onAnular={handlePromptAnular}
+          />
+        </div>
+      </div>
+
+      {/* Sheet: Detalle Ficha Cobro (Para Móvil o Pantallas Pequeñas) */}
+      <CobroDetailSheet
+        open={detailSheetOpen}
+        onOpenChange={setDetailSheetOpen}
+        cobro={selectedCobroForDetail}
+        onSuccessCobro={() => refetch()}
         onAnular={handlePromptAnular}
-        onRefresh={() => refetch()}
       />
 
+      {/* Modal: Confirmación de Anulación de Cobro */}
       <CobroAnularDialog
         open={anularDialogOpen}
         onOpenChange={setAnularDialogOpen}

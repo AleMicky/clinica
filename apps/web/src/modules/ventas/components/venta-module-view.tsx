@@ -10,6 +10,7 @@ import { VentaDetailSheet } from "./venta-detail-sheet";
 import { VentaDetailCard } from "./venta-detail-card";
 import { VentaStatusDialog } from "./venta-status-dialog";
 import { VentaConfirmStatusDialog } from "./venta-confirm-status-dialog";
+import { VentaEnviarCajaDialog } from "./venta-enviar-caja-dialog";
 import { ConfirmDeleteDialog } from "@/components/shared";
 
 import {
@@ -31,6 +32,11 @@ export function VentaModuleView() {
   // Modal State: Ficha Detalle Venta
   const [detailSheetOpen, setDetailSheetOpen] = React.useState(false);
   const [selectedVentaForDetail, setSelectedVentaForDetail] =
+    React.useState<VentaResponse | null>(null);
+
+  // Modal State: Enviar Venta a Caja
+  const [enviarCajaDialogOpen, setEnviarCajaDialogOpen] = React.useState(false);
+  const [selectedVentaForEnviarCaja, setSelectedVentaForEnviarCaja] =
     React.useState<VentaResponse | null>(null);
 
   // Modal State: Cambiar Estado con Formulario
@@ -94,13 +100,19 @@ export function VentaModuleView() {
   // Metrics calculation
   const totalVentas = apiData?.totalItems ?? ventas.length;
   const pendientes = ventas.filter((v) => v.estado === EstadoVenta.Pendiente).length;
-  const pagadas = ventas.filter((v) => v.estado === EstadoVenta.Pagada).length;
+  const pendientesCobro = ventas.filter(
+    (v) => v.estado === EstadoVenta.PendienteCobro
+  ).length;
+  const pagadas = ventas.filter(
+    (v) => v.estado === EstadoVenta.Pagada || v.estado === EstadoVenta.ParcialmentePagada
+  ).length;
   const anuladas = ventas.filter((v) => v.estado === EstadoVenta.Anulada).length;
   const montoTotal = ventas.reduce((acc, v) => acc + (v.total || 0), 0);
 
   const metrics: VentaMetrics = {
     totalVentas,
     pendientes,
+    pendientesCobro,
     pagadas,
     anuladas,
     montoTotal,
@@ -130,6 +142,36 @@ export function VentaModuleView() {
     // En móviles/tablets abre el panel sheet deslizable
     if (typeof window !== "undefined" && window.innerWidth < 1024) {
       setDetailSheetOpen(true);
+    }
+  };
+
+  const handleOpenEnviarCaja = (venta: VentaResponse) => {
+    setSelectedVentaForEnviarCaja(venta);
+    setEnviarCajaDialogOpen(true);
+  };
+
+  const handleConfirmEnviarCaja = async (cajaId: number, motivo?: string) => {
+    if (!selectedVentaForEnviarCaja) return;
+
+    try {
+      await cambiarEstadoMutation.mutateAsync({
+        id: selectedVentaForEnviarCaja.id,
+        data: {
+          estadoDestino: EstadoVenta.PendienteCobro,
+          cajaId,
+          motivo: motivo || "Venta enviada a caja para cobro",
+        },
+      });
+      toast.success(
+        `Venta #${selectedVentaForEnviarCaja.numero} enviada a caja exitosamente.`
+      );
+      refetch();
+    } catch (error: any) {
+      const msg =
+        error?.response?.data?.detail ||
+        error?.message ||
+        "No se pudo enviar la venta a caja.";
+      toast.error(msg);
     }
   };
 
@@ -171,8 +213,12 @@ export function VentaModuleView() {
         `Venta #${venta.numero} actualizada a "${EstadoVentaLabels[targetEstado]}".`
       );
       refetch();
-    } catch {
-      toast.error("No se pudo actualizar el estado de la venta.");
+    } catch (error: any) {
+      const msg =
+        error?.response?.data?.detail ||
+        error?.message ||
+        "No se pudo actualizar el estado de la venta.";
+      toast.error(msg);
     } finally {
       setStatusChangeCandidate(null);
       setConfirmStatusDialogOpen(false);
@@ -181,7 +227,8 @@ export function VentaModuleView() {
 
   const handleConfirmStatusChange = async (
     targetEstado: EstadoVenta,
-    motivo?: string
+    motivo?: string,
+    cajaId?: number
   ) => {
     if (!selectedVentaForStatus) return;
 
@@ -190,6 +237,7 @@ export function VentaModuleView() {
         id: selectedVentaForStatus.id,
         data: {
           estadoDestino: targetEstado,
+          cajaId,
           motivo: motivo || `Cambio de estado a ${EstadoVentaLabels[targetEstado]}`,
         },
       });
@@ -197,8 +245,12 @@ export function VentaModuleView() {
         `Estado de la venta #${selectedVentaForStatus.numero} actualizado.`
       );
       refetch();
-    } catch {
-      toast.error("No se pudo actualizar el estado de la venta.");
+    } catch (error: any) {
+      const msg =
+        error?.response?.data?.detail ||
+        error?.message ||
+        "No se pudo actualizar el estado de la venta.";
+      toast.error(msg);
     }
   };
 
@@ -209,8 +261,12 @@ export function VentaModuleView() {
       await anularMutation.mutateAsync(ventaToAnularId);
       toast.success("Comprobante de venta anulado correctamente.");
       refetch();
-    } catch {
-      toast.error("Ocurrió un error al anular el comprobante de venta.");
+    } catch (error: any) {
+      const msg =
+        error?.response?.data?.detail ||
+        error?.message ||
+        "Ocurrió un error al anular el comprobante de venta.";
+      toast.error(msg);
     } finally {
       setVentaToAnularId(null);
       setAnularDialogOpen(false);
@@ -247,6 +303,7 @@ export function VentaModuleView() {
             onPageChange={setCurrentPage}
             onPageSizeChange={handlePageSizeChange}
             onViewDetail={handleViewDetail}
+            onEnviarACaja={handleOpenEnviarCaja}
             onDirectChangeStatus={handleRequestDirectChangeStatus}
             onChangeStatus={handleOpenStatusDialog}
             onAnular={handleOpenAnular}
@@ -258,6 +315,7 @@ export function VentaModuleView() {
         <div className="hidden lg:block lg:col-span-5 xl:col-span-5 sticky top-4 space-y-2.5">
           <VentaDetailCard
             venta={selectedVentaForDetail}
+            onEnviarACajaClick={handleOpenEnviarCaja}
             onDirectChangeStatus={handleRequestDirectChangeStatus}
             onChangeStatusClick={handleOpenStatusDialog}
             onAnularClick={handleOpenAnular}
@@ -277,7 +335,17 @@ export function VentaModuleView() {
         open={detailSheetOpen}
         onOpenChange={setDetailSheetOpen}
         venta={selectedVentaForDetail}
+        onEnviarACajaClick={handleOpenEnviarCaja}
         onChangeStatusClick={handleOpenStatusDialog}
+      />
+
+      {/* Modal: Enviar Venta a Caja */}
+      <VentaEnviarCajaDialog
+        open={enviarCajaDialogOpen}
+        onOpenChange={setEnviarCajaDialogOpen}
+        venta={selectedVentaForEnviarCaja}
+        onConfirm={handleConfirmEnviarCaja}
+        isLoading={cambiarEstadoMutation.isPending}
       />
 
       {/* Modal: Cambiar Estado con Formulario */}

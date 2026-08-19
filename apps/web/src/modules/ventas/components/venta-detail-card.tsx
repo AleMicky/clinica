@@ -13,6 +13,7 @@ import {
   Coins,
   Receipt,
   RefreshCw,
+  Send,
   User,
   Users,
   XCircle,
@@ -34,6 +35,7 @@ import { useConvenios } from "@/modules/servicios/convenio/hooks/use-convenio";
 
 interface VentaDetailCardProps {
   venta: VentaResponse | null;
+  onEnviarACajaClick?: (venta: VentaResponse) => void;
   onDirectChangeStatus?: (venta: VentaResponse, nuevoEstado: EstadoVenta) => void;
   onChangeStatusClick?: (venta: VentaResponse) => void;
   onAnularClick?: (id: number) => void;
@@ -41,6 +43,7 @@ interface VentaDetailCardProps {
 
 export function VentaDetailCard({
   venta: initialVenta,
+  onEnviarACajaClick,
   onDirectChangeStatus,
   onChangeStatusClick,
   onAnularClick,
@@ -145,11 +148,11 @@ export function VentaDetailCard({
             <Button
               type="button"
               size="sm"
-              onClick={() => onDirectChangeStatus?.(venta, EstadoVenta.Pagada)}
-              className="h-7 px-3 text-xs font-semibold gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs cursor-pointer"
+              onClick={() => onEnviarACajaClick?.(venta)}
+              className="h-7 px-3 text-xs font-semibold gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white shadow-2xs cursor-pointer"
             >
-              <CheckCircle2 className="size-3.5" />
-              Marcar Pagada
+              <Send className="size-3.5" />
+              Mandar a Caja
             </Button>
           )}
 

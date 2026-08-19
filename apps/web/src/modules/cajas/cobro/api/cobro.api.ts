@@ -4,6 +4,7 @@ import type {
   CobroQueryParams,
   CobroResponse,
   CreateCobroRequest,
+  UpdateCobroRequest,
   PagedResult,
 } from "../types/cobro.types";
 
@@ -25,6 +26,14 @@ export async function createCobro(
   request: CreateCobroRequest
 ): Promise<CobroResponse> {
   const response = await apiClient.post<CobroResponse>("/cobros", request);
+  return response.data;
+}
+
+export async function updateCobro(
+  id: number,
+  request: UpdateCobroRequest
+): Promise<CobroResponse> {
+  const response = await apiClient.put<CobroResponse>(`/cobros/${id}`, request);
   return response.data;
 }
 

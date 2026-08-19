@@ -148,6 +148,8 @@ public sealed class CobroService(
 
         MapToExistingEntity(request, entity);
 
+        await SincronizarEstadoVentaYPagadorAsync(entity.VentaPagadorId, cancellationToken);
+
         await DbContext.SaveChangesAsync(cancellationToken);
 
         return await ObtenerAsync(entity.Id, cancellationToken);
@@ -190,9 +192,60 @@ public sealed class CobroService(
             : motivo.Trim();
         entity.FechaHoraAnulacion = DateTime.UtcNow;
 
+        await SincronizarEstadoVentaYPagadorAsync(entity.VentaPagadorId, cancellationToken);
+
         await DbContext.SaveChangesAsync(cancellationToken);
 
         return MapToResponse(entity);
+    }
+
+    private async Task SincronizarEstadoVentaYPagadorAsync(
+        int ventaPagadorId,
+        CancellationToken cancellationToken)
+    {
+        var ventaPagador = await DbContext.Set<VentaPagadorEntity>()
+            .Include(vp => vp.Venta)
+                .ThenInclude(v => v.Pagadores)
+            .FirstOrDefaultAsync(vp => vp.Id == ventaPagadorId, cancellationToken);
+
+        if (ventaPagador is null) return;
+
+        var totalCobrado = await Entities
+            .Where(c => c.VentaPagadorId == ventaPagador.Id && c.Activo && c.Estado != EstadoCobro.Anulado)
+            .SumAsync(c => c.Total, cancellationToken);
+
+        if (totalCobrado >= ventaPagador.Monto && ventaPagador.Monto > 0)
+        {
+            ventaPagador.Estado = EstadoVentaPagador.Pagado;
+        }
+        else if (totalCobrado > 0)
+        {
+            ventaPagador.Estado = EstadoVentaPagador.ParcialmentePagado;
+        }
+        else
+        {
+            ventaPagador.Estado = EstadoVentaPagador.Pendiente;
+        }
+
+        if (ventaPagador.Venta is not null)
+        {
+            var pagadoresActivos = ventaPagador.Venta.Pagadores
+                .Where(p => p.Activo && p.Estado != EstadoVentaPagador.Anulado)
+                .ToList();
+
+            if (pagadoresActivos.Count > 0 && pagadoresActivos.All(p => p.Estado == EstadoVentaPagador.Pagado))
+            {
+                ventaPagador.Venta.Estado = EstadoVenta.Pagada;
+            }
+            else if (pagadoresActivos.Any(p => p.Estado is EstadoVentaPagador.Pagado or EstadoVentaPagador.ParcialmentePagado))
+            {
+                ventaPagador.Venta.Estado = EstadoVenta.ParcialmentePagada;
+            }
+            else
+            {
+                ventaPagador.Venta.Estado = EstadoVenta.PendienteCobro;
+            }
+        }
     }
 
     public async Task GenerarDesdeVentaAsync(GenerarCobroDesdeVentaRequest request,CancellationToken cancellationToken = default)

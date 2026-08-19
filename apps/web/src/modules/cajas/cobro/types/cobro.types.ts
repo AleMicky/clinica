@@ -46,7 +46,9 @@ export interface VentaPagadorInfo {
 export interface CobroResponse {
   id: number;
   numero: string;
+  turnoCajaId?: number;
   turnoCaja?: TurnoCajaInfo | null;
+  ventaPagadorId?: number;
   ventaPagador?: VentaPagadorInfo | null;
   fechaHora: string;
   total: number;
@@ -60,6 +62,21 @@ export interface CobroResponse {
 }
 
 export interface CreateCobroRequest {
+  turnoCajaId: number;
+  ventaPagadorId: number;
+  fechaHora: string;
+  observacion?: string | null;
+  detalles: CobroDetalleRequest[];
+}
+
+export const EstadoCobroLabels: Record<EstadoCobro, string> = {
+  [EstadoCobro.Registrado]: "Registrado",
+  [EstadoCobro.Anulado]: "Anulado",
+  [EstadoCobro.DevueltoParcial]: "Devuelto Parcial",
+  [EstadoCobro.Devuelto]: "Devuelto",
+};
+
+export interface UpdateCobroRequest {
   turnoCajaId: number;
   ventaPagadorId: number;
   fechaHora: string;
@@ -81,8 +98,10 @@ export interface CobroQueryParams {
 
 export interface CobroMetrics {
   totalCobros: number;
+  pendientesCobro: number;
+  completados: number;
+  anulados: number;
   totalMontoCobrado: number;
-  totalAnulados: number;
 }
 
 export interface PagedResult<T> {

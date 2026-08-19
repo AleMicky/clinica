@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle2, Clock, DollarSign, Receipt } from "lucide-react";
+import { CheckCircle2, Clock, DollarSign, Receipt, Send } from "lucide-react";
 import type { VentaMetrics } from "../types/ventas.types";
 
 interface VentaMetricsCardsProps {
@@ -11,20 +11,20 @@ interface VentaMetricsCardsProps {
 
 export function VentaMetricsCards({ metrics }: VentaMetricsCardsProps) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
       {/* 1. Total Ventas del Día */}
       <Card className="border border-border/70 bg-card hover:shadow-xs transition-all duration-200">
         <CardContent className="p-3 flex items-center justify-between">
           <div>
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-              Ventas del Día
+              Total Ventas
             </p>
             <div className="flex items-baseline gap-1.5 mt-0.5">
               <span className="text-xl font-extrabold text-foreground tracking-tight">
                 {metrics.totalVentas}
               </span>
-              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
-                Hoy
+              <span className="text-[10px] text-muted-foreground font-medium">
+                hoy
               </span>
             </div>
           </div>
@@ -34,19 +34,19 @@ export function VentaMetricsCards({ metrics }: VentaMetricsCardsProps) {
         </CardContent>
       </Card>
 
-      {/* 2. Pendientes de Cobro */}
+      {/* 2. Pendientes (por enviar a caja) */}
       <Card className="border border-border/70 bg-card hover:shadow-xs transition-all duration-200">
         <CardContent className="p-3 flex items-center justify-between">
           <div>
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-              Pendientes de Cobro
+              Pendientes
             </p>
             <div className="flex items-baseline gap-1.5 mt-0.5">
               <span className="text-xl font-extrabold text-amber-600 dark:text-amber-400 tracking-tight">
                 {metrics.pendientes}
               </span>
               <span className="text-[10px] text-muted-foreground font-normal">
-                por regularizar
+                sin enviar
               </span>
             </div>
           </div>
@@ -56,19 +56,41 @@ export function VentaMetricsCards({ metrics }: VentaMetricsCardsProps) {
         </CardContent>
       </Card>
 
-      {/* 3. Pagadas */}
+      {/* 3. En Caja (Pendientes de Cobro) */}
       <Card className="border border-border/70 bg-card hover:shadow-xs transition-all duration-200">
         <CardContent className="p-3 flex items-center justify-between">
           <div>
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-              Pagadas / Completadas
+              En Caja
+            </p>
+            <div className="flex items-baseline gap-1.5 mt-0.5">
+              <span className="text-xl font-extrabold text-indigo-600 dark:text-indigo-400 tracking-tight">
+                {metrics.pendientesCobro}
+              </span>
+              <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-medium">
+                por cobrar
+              </span>
+            </div>
+          </div>
+          <div className="size-8.5 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-500/20 shrink-0">
+            <Send className="size-4" />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 4. Pagadas */}
+      <Card className="border border-border/70 bg-card hover:shadow-xs transition-all duration-200">
+        <CardContent className="p-3 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              Pagadas
             </p>
             <div className="flex items-baseline gap-1.5 mt-0.5">
               <span className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight">
                 {metrics.pagadas}
               </span>
               <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
-                abonadas
+                cobradas
               </span>
             </div>
           </div>
@@ -78,12 +100,12 @@ export function VentaMetricsCards({ metrics }: VentaMetricsCardsProps) {
         </CardContent>
       </Card>
 
-      {/* 4. Monto Total Recaudado */}
-      <Card className="border border-border/70 bg-card hover:shadow-xs transition-all duration-200">
+      {/* 5. Monto Total Recaudado */}
+      <Card className="border border-border/70 bg-card hover:shadow-xs transition-all duration-200 col-span-2 sm:col-span-1 lg:col-span-1">
         <CardContent className="p-3 flex items-center justify-between">
           <div>
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-              Monto Recaudado Día
+              Monto del Día
             </p>
             <div className="flex items-baseline gap-1 mt-0.5">
               <span className="text-xs font-semibold text-emerald-600">Bs.</span>

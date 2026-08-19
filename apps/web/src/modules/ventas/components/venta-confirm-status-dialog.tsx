@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Loader2, CheckCircle2, DollarSign, XCircle, Clock } from "lucide-react";
+import { Loader2, CheckCircle2, DollarSign, XCircle, Clock, Send } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -46,7 +46,12 @@ export function VentaConfirmStatusDialog({
   let buttonClass = "bg-emerald-600 hover:bg-emerald-700 text-white";
   let confirmText = `Sí, Marcar Pagada`;
 
-  if (targetEstado === EstadoVenta.ParcialmentePagada) {
+  if (targetEstado === EstadoVenta.PendienteCobro) {
+    icon = <Send className="size-5 text-indigo-600" />;
+    mediaClass = "bg-indigo-500/10 text-indigo-600";
+    buttonClass = "bg-indigo-600 hover:bg-indigo-700 text-white";
+    confirmText = `Sí, Enviar a Cobro`;
+  } else if (targetEstado === EstadoVenta.ParcialmentePagada) {
     icon = <DollarSign className="size-5 text-blue-600" />;
     mediaClass = "bg-blue-500/10 text-blue-600";
     buttonClass = "bg-blue-600 hover:bg-blue-700 text-white";

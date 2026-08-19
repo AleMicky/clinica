@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,90 +14,118 @@ import {
 } from "@/components/shared";
 import {
   MoreVertical,
-  Eye,
-  RefreshCw,
-  XCircle,
-  FileText,
   Calendar,
   CreditCard,
-  CheckCircle2,
+  Ban,
   Receipt,
-  Hash,
-  Send,
+  Building2,
+  Store,
+  Wallet,
+  ArrowRight,
 } from "lucide-react";
 import {
-  EstadoVenta,
-  type VentaResponse,
-} from "../types/ventas.types";
-import { VentaStatusBadge } from "./venta-status-badge";
+  EstadoCobro,
+  type CobroResponse,
+} from "../types/cobro.types";
+import { CobroStatusBadge } from "./cobro-status-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
-interface VentaListProps {
-  ventas: VentaResponse[];
+export type CobroFilterTab = "TODOS" | "POR_COBRAR" | "COBRADOS" | "ANULADOS";
+
+interface CobroListProps {
+  cobros: CobroResponse[];
   isLoading?: boolean;
   totalItems: number;
   currentPage: number;
   pageSize: number;
   searchTerm: string;
-  selectedEstadoTab?: EstadoVenta | "TODOS";
-  selectedVentaId?: number | null;
-  onEstadoTabChange?: (tab: EstadoVenta | "TODOS") => void;
+  selectedFilterTab?: CobroFilterTab;
+  selectedCobroId?: number | null;
+  onFilterTabChange?: (tab: CobroFilterTab) => void;
   onSearchChange: (term: string) => void;
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
-  onViewDetail: (venta: VentaResponse) => void;
-  onEnviarACaja?: (venta: VentaResponse) => void;
-  onDirectChangeStatus?: (venta: VentaResponse, nuevoEstado: EstadoVenta) => void;
-  onChangeStatus: (venta: VentaResponse) => void;
-  onAnular: (id: number) => void;
+  onSelectCobro: (cobro: CobroResponse) => void;
+  onAnular: (cobro: CobroResponse) => void;
   onRefresh?: () => void;
 }
 
-export function VentaList({
-  ventas,
+export function CobroList({
+  cobros,
   isLoading = false,
   totalItems,
   currentPage,
   pageSize,
   searchTerm,
-  selectedEstadoTab = "TODOS",
-  selectedVentaId,
-  onEstadoTabChange,
+  selectedFilterTab = "TODOS",
+  selectedCobroId,
+  onFilterTabChange,
   onSearchChange,
   onPageChange,
   onPageSizeChange,
-  onViewDetail,
-  onEnviarACaja,
-  onDirectChangeStatus,
-  onChangeStatus,
+  onSelectCobro,
   onAnular,
-}: VentaListProps) {
+}: CobroListProps) {
   const tabs: Array<{
-    key: EstadoVenta | "TODOS";
+    key: CobroFilterTab;
     label: string;
     activeClasses: string;
   }> = [
-    { key: "TODOS", label: "Todas", activeClasses: "bg-primary text-primary-foreground shadow-xs" },
-    { key: EstadoVenta.Pendiente, label: "Pendientes", activeClasses: "bg-amber-600 text-white shadow-xs" },
-    { key: EstadoVenta.PendienteCobro, label: "En Caja", activeClasses: "bg-indigo-600 text-white shadow-xs" },
-    { key: EstadoVenta.ParcialmentePagada, label: "Parciales", activeClasses: "bg-blue-600 text-white shadow-xs" },
-    { key: EstadoVenta.Pagada, label: "Pagadas", activeClasses: "bg-emerald-600 text-white shadow-xs" },
-    { key: EstadoVenta.Anulada, label: "Anuladas", activeClasses: "bg-rose-600 text-white shadow-xs" },
+    {
+      key: "TODOS",
+      label: "Todos",
+      activeClasses: "bg-primary text-primary-foreground shadow-xs",
+    },
+    {
+      key: "POR_COBRAR",
+      label: "Por Cobrar",
+      activeClasses: "bg-amber-600 text-white shadow-xs",
+    },
+    {
+      key: "COBRADOS",
+      label: "Cobrados",
+      activeClasses: "bg-emerald-600 text-white shadow-xs",
+    },
+    {
+      key: "ANULADOS",
+      label: "Anulados",
+      activeClasses: "bg-rose-600 text-white shadow-xs",
+    },
   ];
+
+  // Filtrado local según la pestaña si la API devuelve todos
+  const filteredCobros = React.useMemo(() => {
+    return cobros.filter((c) => {
+      const isPending =
+        c.estado === EstadoCobro.Registrado &&
+        (c.total === 0 || (c.detalles && c.detalles.length === 0));
+      const isCompleted =
+        c.estado === EstadoCobro.Registrado &&
+        c.total > 0 &&
+        c.detalles &&
+        c.detalles.length > 0;
+      const isAnulado = c.estado === EstadoCobro.Anulado;
+
+      if (selectedFilterTab === "POR_COBRAR") return isPending;
+      if (selectedFilterTab === "COBRADOS") return isCompleted;
+      if (selectedFilterTab === "ANULADOS") return isAnulado;
+      return true;
+    });
+  }, [cobros, selectedFilterTab]);
 
   return (
     <div className="space-y-2.5 w-full">
       {/* FILTROS EN FORMATO BADGE Y BUSCADOR */}
       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 px-0.5">
-        {/* Badges interactivos de estado */}
+        {/* Badges interactivos de pestañas */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
           {tabs.map((t) => {
-            const isActive = selectedEstadoTab === t.key;
+            const isActive = selectedFilterTab === t.key;
             return (
               <button
-                key={t.key.toString()}
+                key={t.key}
                 type="button"
-                onClick={() => onEstadoTabChange?.(t.key)}
+                onClick={() => onFilterTabChange?.(t.key)}
                 className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer select-none ${
                   isActive
                     ? t.activeClasses
@@ -114,7 +143,7 @@ export function VentaList({
           <SearchInput
             value={searchTerm}
             onChange={onSearchChange}
-            placeholder="Buscar por N° venta, paciente..."
+            placeholder="Buscar por N° cobro, venta..."
             className="h-8 text-xs bg-background shadow-2xs"
           />
         </div>
@@ -142,65 +171,87 @@ export function VentaList({
               </div>
             ))}
           </div>
-        ) : ventas.length === 0 ? (
+        ) : filteredCobros.length === 0 ? (
           <div className="py-12 text-center border border-dashed border-border/60 rounded-xl bg-muted/10 space-y-2">
-            <FileText className="size-8 text-muted-foreground/40 mx-auto" />
-            <p className="font-bold text-xs text-foreground">No se encontraron comprobantes de venta</p>
+            <CreditCard className="size-8 text-muted-foreground/40 mx-auto" />
+            <p className="font-bold text-xs text-foreground">
+              No se encontraron registros de cobro
+            </p>
             <p className="text-[11px] max-w-xs mx-auto text-muted-foreground">
-              Intente ajustar los filtros de búsqueda o registre una nueva venta/cobro de atención.
+              Los cobros enviados desde Ventas o generados en caja aparecerán automáticamente aquí.
             </p>
           </div>
         ) : (
           <div className="space-y-1.5">
-            {ventas.map((venta) => {
-              const pacienteNombre = venta.paciente?.nombreCompleto || "Paciente";
-              const docPaciente = venta.paciente?.numeroHistoriaClinica
-                ? `(HC: ${venta.paciente.numeroHistoriaClinica})`
-                : "";
+            {filteredCobros.map((cobro) => {
+              const isSelected = selectedCobroId === cobro.id;
+              const isPendingPayment =
+                cobro.estado === EstadoCobro.Registrado &&
+                (cobro.total === 0 || (cobro.detalles && cobro.detalles.length === 0));
 
-              const monedaSimbolo = venta.moneda?.simbolo || (venta.moneda?.codigo === "USD" ? "$" : "Bs.");
-              const numDetalles = venta.detalles?.length || 0;
-              const isSelected = selectedVentaId === venta.id;
+              const cajaNombre =
+                cobro.turnoCaja?.caja?.nombre ||
+                cobro.turnoCaja?.caja?.codigo ||
+                (cobro.turnoCajaId ? `Caja #${cobro.turnoCajaId}` : "-");
+
+              const pagadorMonto = cobro.ventaPagador?.monto ?? 0;
+              const numDetalles = cobro.detalles?.length || 0;
 
               return (
                 <div
-                  key={venta.id}
-                  onClick={() => onViewDetail(venta)}
+                  key={cobro.id}
+                  onClick={() => onSelectCobro(cobro)}
                   className={`group cursor-pointer p-3 rounded-xl transition-all shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative ${
                     isSelected
                       ? "border-primary/80 bg-primary/5 dark:bg-primary/10 shadow-xs ring-1 ring-primary/40 border"
                       : "border border-border/50 bg-card hover:border-primary/40 hover:bg-muted/25"
                   }`}
                 >
-                  {/* Bloque Izquierdo: Avatar + Paciente + Documento + Admisión + Fecha */}
+                  {/* Bloque Izquierdo: Icono + Cobro # + Venta # + Convenio + Fecha + Caja */}
                   <div className="flex items-start gap-3 min-w-0 flex-1">
-                    {/* Icono / Avatar */}
-                    <div className="size-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0 border border-primary/20 mt-0.5 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                      <Receipt className="size-4.5" />
+                    <div
+                      className={`size-9 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 border mt-0.5 transition-colors ${
+                        isPendingPayment
+                          ? "bg-amber-500/10 text-amber-600 border-amber-500/20 group-hover:bg-amber-500 group-hover:text-white"
+                          : "bg-primary/10 text-primary border-primary/20 group-hover:bg-primary group-hover:text-primary-foreground"
+                      }`}
+                    >
+                      {isPendingPayment ? (
+                        <Wallet className="size-4.5" />
+                      ) : (
+                        <Receipt className="size-4.5" />
+                      )}
                     </div>
 
                     <div className="min-w-0 flex-1 space-y-0.5">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-mono font-bold text-xs text-primary bg-primary/10 px-1.5 py-0.2 rounded border border-primary/20">
-                          #{venta.numero}
+                          #{cobro.numero}
                         </span>
 
-                        <span className="font-bold text-xs text-foreground group-hover:text-primary transition-colors truncate">
-                          {pacienteNombre}
-                        </span>
+                        {cobro.ventaPagador?.ventaNumero ? (
+                          <span className="font-bold text-xs text-foreground group-hover:text-primary transition-colors">
+                            Venta #{cobro.ventaPagador.ventaNumero}
+                          </span>
+                        ) : (
+                          <span className="font-bold text-xs text-foreground">
+                            Cobro Directo
+                          </span>
+                        )}
 
-                        {docPaciente && (
-                          <span className="text-[11px] text-muted-foreground font-mono">
-                            {docPaciente}
+                        {cobro.ventaPagador?.convenioNombre && (
+                          <span className="text-[10px] text-blue-600 dark:text-blue-400 bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.2 rounded flex items-center gap-1 font-medium">
+                            <Building2 className="size-2.5" />
+                            {cobro.ventaPagador.convenioNombre}
                           </span>
                         )}
                       </div>
 
                       {/* Detalles secundarios en línea compacta */}
                       <div className="flex items-center gap-2.5 text-[11px] text-muted-foreground flex-wrap pt-0.5">
-                        <span className="flex items-center gap-1 font-medium text-foreground">
-                          <Hash className="size-3 text-primary/70 shrink-0" />
-                          Admisión #{venta.admisionId}
+                        <span className="flex items-center gap-1">
+                          <Store className="size-3 text-muted-foreground/70 shrink-0" />
+                          <span>{cajaNombre}</span>
                         </span>
 
                         <span className="text-muted-foreground/40">•</span>
@@ -208,28 +259,18 @@ export function VentaList({
                         <span className="flex items-center gap-1">
                           <Calendar className="size-3 text-muted-foreground/70 shrink-0" />
                           <span>
-                            {new Date(venta.fecha).toLocaleString("es-ES", {
+                            {new Date(cobro.fechaHora).toLocaleString("es-ES", {
                               dateStyle: "short",
                               timeStyle: "short",
                             })}
                           </span>
                         </span>
 
-                        {venta.vendedor?.nombreCompleto && (
-                          <>
-                            <span className="text-muted-foreground/40">•</span>
-                            <span className="text-muted-foreground">
-                              Cajero: <strong className="text-foreground font-normal">{venta.vendedor.nombreCompleto}</strong>
-                            </span>
-                          </>
-                        )}
-
                         {numDetalles > 0 && (
                           <>
                             <span className="text-muted-foreground/40">•</span>
-                            <span className="flex items-center gap-1">
-                              <CreditCard className="size-3 text-blue-600/70 shrink-0" />
-                              <span>{numDetalles} ítem{numDetalles !== 1 ? "s" : ""}</span>
+                            <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                              {numDetalles} pago{numDetalles !== 1 ? "s" : ""}
                             </span>
                           </>
                         )}
@@ -240,18 +281,31 @@ export function VentaList({
                   {/* Bloque Derecho: Monto, Estado & Acciones */}
                   <div className="flex items-center justify-between sm:justify-end gap-2.5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/30">
                     <div className="flex flex-col items-start sm:items-end pr-0.5">
-                      <span className="text-xs font-extrabold text-foreground font-mono">
-                        {monedaSimbolo} {venta.total.toFixed(2)}
-                      </span>
-                      {venta.descuento > 0 && (
-                        <span className="text-[10px] text-emerald-600 font-medium">
-                          Desc: -{monedaSimbolo} {venta.descuento.toFixed(2)}
-                        </span>
+                      {isPendingPayment ? (
+                        <>
+                          <span className="text-xs font-extrabold text-amber-600 dark:text-amber-400 font-mono">
+                            Por cobrar: Bs. {pagadorMonto.toFixed(2)}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground">
+                            Pendiente en caja
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
+                            Bs. {Number(cobro.total).toFixed(2)}
+                          </span>
+                          {pagadorMonto > 0 && (
+                            <span className="text-[10px] text-muted-foreground">
+                              Asignado: Bs. {pagadorMonto.toFixed(2)}
+                            </span>
+                          )}
+                        </>
                       )}
                     </div>
 
                     <div className="flex items-center gap-1.5">
-                      <VentaStatusBadge estado={venta.estado} />
+                      <CobroStatusBadge cobro={cobro} />
 
                       {/* Menú de Acciones Rápidas */}
                       <DropdownMenu>
@@ -260,55 +314,32 @@ export function VentaList({
                           className="size-7 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground inline-flex items-center justify-center transition-colors border border-border/60 cursor-pointer"
                         >
                           <MoreVertical className="size-3.5" />
-                          <span className="sr-only">Más opciones</span>
+                          <span className="sr-only">Opciones</span>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48 text-xs">
+                        <DropdownMenuContent align="end" className="w-44 text-xs">
                           <DropdownMenuItem
                             onClick={(e) => {
                               e.stopPropagation();
-                              onViewDetail(venta);
+                              onSelectCobro(cobro);
                             }}
-                            className="gap-2 cursor-pointer"
+                            className="gap-2 cursor-pointer font-medium"
                           >
-                            <Eye className="size-3.5 text-primary" />
-                            Ver Ficha Detalle
+                            <ArrowRight className="size-3.5 text-primary" />
+                            {isPendingPayment ? "Abrir y Cobrar" : "Ver Detalle"}
                           </DropdownMenuItem>
 
-                          {venta.estado !== EstadoVenta.Anulada && (
+                          {cobro.estado === EstadoCobro.Registrado && (
                             <>
                               <DropdownMenuSeparator />
-                              {venta.estado === EstadoVenta.Pendiente && (
-                                <DropdownMenuItem
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onEnviarACaja ? onEnviarACaja(venta) : onChangeStatus(venta);
-                                  }}
-                                  className="gap-2 text-indigo-600 dark:text-indigo-400 cursor-pointer font-medium"
-                                >
-                                  <Send className="size-3.5" />
-                                  Mandar a Caja
-                                </DropdownMenuItem>
-                              )}
                               <DropdownMenuItem
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  onChangeStatus(venta);
-                                }}
-                                className="gap-2 cursor-pointer"
-                              >
-                                <RefreshCw className="size-3.5 text-amber-500" />
-                                Cambiar Estado
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onAnular(venta.id);
+                                  onAnular(cobro);
                                 }}
                                 className="gap-2 text-rose-600 dark:text-rose-400 focus:text-rose-600 cursor-pointer"
                               >
-                                <XCircle className="size-3.5" />
-                                Anular Comprobante
+                                <Ban className="size-3.5" />
+                                Anular Cobro
                               </DropdownMenuItem>
                             </>
                           )}
@@ -322,7 +353,7 @@ export function VentaList({
           </div>
         )}
 
-        {/* PAGINACIÓN: Solo se muestra si hay más de 10 registros */}
+        {/* PAGINACIÓN */}
         {totalItems > 10 && (
           <div className="pt-2 px-1">
             <DataTablePagination

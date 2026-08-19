@@ -1,7 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Clock, DollarSign, XCircle } from "lucide-react";
+import { CheckCircle2, Clock, DollarSign, Send, XCircle } from "lucide-react";
 import { EstadoVenta, EstadoVentaPagador } from "../types/ventas.types";
 
 interface VentaStatusBadgeProps {
@@ -19,6 +19,16 @@ export function VentaStatusBadge({ estado, className }: VentaStatusBadgeProps) {
         >
           <Clock className="size-3" />
           Pendiente
+        </Badge>
+      );
+    case EstadoVenta.PendienteCobro:
+      return (
+        <Badge
+          variant="outline"
+          className={`bg-indigo-500/15 text-indigo-700 dark:text-indigo-400 border-indigo-500/30 gap-1 text-[11px] font-semibold ${className}`}
+        >
+          <Send className="size-3" />
+          Pendiente Cobro
         </Badge>
       );
     case EstadoVenta.ParcialmentePagada:
