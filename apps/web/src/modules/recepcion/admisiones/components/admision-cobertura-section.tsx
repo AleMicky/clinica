@@ -25,7 +25,6 @@ export interface AdmisionCoberturaSectionProps {
   empleadosList: EmpleadoBaseInfo[];
   isLoadingPacienteConvenios: boolean;
   isLoadingEmpleados?: boolean;
-  selectedConvenioNombre?: string;
 }
 
 export function AdmisionCoberturaSection({

@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
   FileText,
   User,
@@ -23,9 +22,7 @@ import {
   Download,
   Loader2,
   ShieldCheck,
-  History,
   Phone,
-  Hash,
 } from "lucide-react";
 import {
   EstadoAdmision,

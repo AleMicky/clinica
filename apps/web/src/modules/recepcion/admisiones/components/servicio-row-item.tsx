@@ -3,7 +3,6 @@
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -12,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Trash2, Stethoscope } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import type { ServiceItemState } from "../store/use-admision-store";
 import type { MedicoResponse } from "@/modules/recursos-humanos/medico/types/medico.types";
 
@@ -22,7 +21,6 @@ export interface ServicioRowItemProps {
   medicos: MedicoResponse[];
   onUpdate: (id: string, field: keyof ServiceItemState, value: unknown) => void;
   onRemove: (id: string) => void;
-  isOnlyRow?: boolean;
 }
 
 export function ServicioRowItem({

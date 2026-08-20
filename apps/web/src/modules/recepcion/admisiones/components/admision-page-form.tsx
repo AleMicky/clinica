@@ -6,8 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
 import { usePacientes, usePacienteConvenios } from "../../pacientes/hooks/use-pacientes";
-import { getPacienteFullName } from "../../pacientes/components/paciente-list";
-import type { PacienteResponse } from "../../pacientes/types/paciente.types";
 import { useMedicos } from "@/modules/recursos-humanos/medico/hooks/use-medicos";
 import { useEmpleadosPermitidos } from "@/modules/recursos-humanos/empleado/hooks/use-empleados";
 import { useConvenios } from "@/modules/servicios/convenio/hooks/use-convenio";
@@ -20,11 +18,6 @@ import { MultiServicePickerModal } from "./multi-service-picker-modal";
 import { AdmisionPacienteSection } from "./admision-paciente-section";
 import { AdmisionCoberturaSection } from "./admision-cobertura-section";
 import { AdmisionCarritoSection } from "./admision-carrito-section";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
 import { toast } from "sonner";
 
 export function AdmisionPageForm() {
@@ -102,20 +95,6 @@ export function AdmisionPageForm() {
     }
     setConvenioId("particular");
   }, [numericPacienteId, pacienteConveniosList]);
-
-  // Nombre formateado del convenio seleccionado para visualización (sin mostrar el ID)
-  const selectedConvenioNombre = React.useMemo(() => {
-    if (convenioId === "particular") return "Particular (Sin Convenio)";
-    const pc = pacienteConveniosList.find((p) => p.convenioId.toString() === convenioId);
-    if (pc?.convenio?.nombre) {
-      return `${pc.convenio.nombre}${pc.convenio.codigo ? ` (${pc.convenio.codigo})` : ""}`;
-    }
-    const c = conveniosList.find((item) => item.id.toString() === convenioId);
-    if (c?.nombre) {
-      return `${c.nombre}${c.codigo ? ` (${c.codigo})` : ""}`;
-    }
-    return `Convenio #${convenioId}`;
-  }, [convenioId, pacienteConveniosList, conveniosList]);
 
   // Limpiar el carrito al cargar la página
   React.useEffect(() => {
@@ -267,83 +246,11 @@ export function AdmisionPageForm() {
         </div>
       </div>
 
-      {/* CUERPO DEL FORMULARIO: PANELES REDIMENSIONABLES (RESIZABLE) */}
+      {/* CUERPO DEL FORMULARIO: DISEÑO RESPONSIVO UNIFICADO */}
       <form onSubmit={handleSubmit}>
-        {/* Vista Desktop con Paneles Redimensionables */}
-        <div className="hidden lg:block">
-          <ResizablePanelGroup
-            direction="horizontal"
-            className="min-h-[580px] w-full rounded-xl gap-2 items-start"
-          >
-            {/* Panel Izquierdo: Paciente + Cobertura */}
-            <ResizablePanel defaultSize={42} minSize={30} maxSize={55}>
-              <div className="flex flex-col gap-3 pr-1">
-                <AdmisionPacienteSection
-                  patientSearch={patientSearch}
-                  setPatientSearch={setPatientSearch}
-                  setSelectedPacienteId={setSelectedPacienteId}
-                  filteredPacientes={filteredPacientes}
-                  selectedPaciente={selectedPaciente}
-                  isPatientValid={isPatientValid}
-                  isLoadingPacientes={isLoadingPacientes}
-                  onOpenRegisterModal={(paciente) => {
-                    if (paciente) {
-                      router.push(`/recepcion/pacientes/${paciente.id}/editar`);
-                    } else {
-                      router.push("/recepcion/pacientes/nuevo");
-                    }
-                  }}
-                />
-
-                <AdmisionCoberturaSection
-                  convenioId={convenioId}
-                  setConvenioId={setConvenioId}
-                  recepcionistaId={recepcionistaId}
-                  setRecepcionistaId={setRecepcionistaId}
-                  fechaHora={fechaHora}
-                  setFechaHora={setFechaHora}
-                  observacion={observacion}
-                  setObservacion={setObservacion}
-                  pacienteConveniosList={pacienteConveniosList}
-                  conveniosList={conveniosList}
-                  empleadosList={empleadosList}
-                  isLoadingPacienteConvenios={isLoadingPacienteConvenios}
-                  isLoadingEmpleados={isLoadingEmpleados}
-                  selectedConvenioNombre={selectedConvenioNombre}
-                />
-              </div>
-            </ResizablePanel>
-
-            <ResizableHandle
-              withHandle
-              className="bg-border/60 hover:bg-primary/50 transition-colors mx-1"
-            />
-
-            {/* Panel Derecho: Carrito & Prestaciones */}
-            <ResizablePanel defaultSize={58} minSize={45}>
-              <div className="pl-1">
-                <AdmisionCarritoSection
-                  isPatientValid={isPatientValid}
-                  detalles={detalles}
-                  medicosList={medicosList}
-                  totalSubtotal={totalSubtotal}
-                  totalDescuentos={totalDescuentos}
-                  grandTotal={grandTotal}
-                  isSubmitting={isSubmitting}
-                  onOpenMultiPicker={() => setMultiPickerOpen(true)}
-                  removeDetalle={removeDetalle}
-                  updateDetalle={updateDetalle}
-                  onCancel={() => router.push("/recepcion/admisiones")}
-                  onSubmit={handleSubmit}
-                />
-              </div>
-            </ResizablePanel>
-          </ResizablePanelGroup>
-        </div>
-
-        {/* Vista Móvil / Tablet en Formato Apilado */}
-        <div className="grid grid-cols-1 gap-3 lg:hidden items-start">
-          <div className="flex flex-col gap-3">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-start">
+          {/* Panel Izquierdo: Paso 1 (Paciente) + Paso 2 (Cobertura y Recepción) */}
+          <div className="lg:col-span-5 xl:col-span-5 flex flex-col gap-3.5">
             <AdmisionPacienteSection
               patientSearch={patientSearch}
               setPatientSearch={setPatientSearch}
@@ -375,11 +282,11 @@ export function AdmisionPageForm() {
               empleadosList={empleadosList}
               isLoadingPacienteConvenios={isLoadingPacienteConvenios}
               isLoadingEmpleados={isLoadingEmpleados}
-              selectedConvenioNombre={selectedConvenioNombre}
             />
           </div>
 
-          <div>
+          {/* Panel Derecho: Paso 3 (Prestaciones, Carrito y Totales) */}
+          <div className="lg:col-span-7 xl:col-span-7 flex flex-col gap-3.5">
             <AdmisionCarritoSection
               isPatientValid={isPatientValid}
               detalles={detalles}
@@ -387,12 +294,9 @@ export function AdmisionPageForm() {
               totalSubtotal={totalSubtotal}
               totalDescuentos={totalDescuentos}
               grandTotal={grandTotal}
-              isSubmitting={isSubmitting}
               onOpenMultiPicker={() => setMultiPickerOpen(true)}
               removeDetalle={removeDetalle}
               updateDetalle={updateDetalle}
-              onCancel={() => router.push("/recepcion/admisiones")}
-              onSubmit={handleSubmit}
             />
           </div>
         </div>

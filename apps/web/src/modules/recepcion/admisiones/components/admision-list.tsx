@@ -43,9 +43,7 @@ interface AdmisionListProps {
   onPageSizeChange: (size: number) => void;
   onViewDetail: (admision: AdmisionResponse) => void;
   onDirectChangeStatus?: (admision: AdmisionResponse, nuevoEstado: EstadoAdmision) => void;
-  onChangeStatus: (admision: AdmisionResponse) => void;
   onDelete: (id: number) => void;
-  onRefresh?: () => void;
 }
 
 export function AdmisionList({

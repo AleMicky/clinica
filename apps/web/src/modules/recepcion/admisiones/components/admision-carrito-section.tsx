@@ -24,9 +24,6 @@ export interface AdmisionCarritoSectionProps {
   totalSubtotal: number;
   totalDescuentos: number;
   grandTotal: number;
-  isSubmitting: boolean;
-  onCancel: () => void;
-  onSubmit: (e: React.FormEvent) => void;
 }
 
 export function AdmisionCarritoSection({

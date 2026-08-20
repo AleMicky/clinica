@@ -231,9 +231,7 @@ export function AdmisionModuleView() {
         onPageSizeChange={handlePageSizeChange}
         onViewDetail={handleViewDetail}
         onDirectChangeStatus={handleRequestDirectChangeStatus}
-        onChangeStatus={handleOpenStatusDialog}
         onDelete={handleOpenDelete}
-        onRefresh={() => refetch()}
       />
 
       {/* Sheet: Ficha y Detalle de Admisión */}
