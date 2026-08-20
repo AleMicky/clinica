@@ -21,6 +21,11 @@ import { MultiServicePickerModal } from "./multi-service-picker-modal";
 import { AdmisionPacienteSection } from "./admision-paciente-section";
 import { AdmisionCoberturaSection } from "./admision-cobertura-section";
 import { AdmisionCarritoSection } from "./admision-carrito-section";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
 import { toast } from "sonner";
 
 export function AdmisionPageForm() {
@@ -284,60 +289,131 @@ export function AdmisionPageForm() {
         </div>
       </div>
 
-      {/* CUERPO DEL FORMULARIO: GRID DE 3 PASOS COMPACTO */}
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-start">
-        {/* COLUMNA IZQUIERDA (Paso 1: Paciente + Paso 2: Cobertura y Recepción) */}
-        <div className="lg:col-span-5 flex flex-col gap-3">
-          <AdmisionPacienteSection
-            patientSearch={patientSearch}
-            setPatientSearch={setPatientSearch}
-            setSelectedPacienteId={setSelectedPacienteId}
-            filteredPacientes={filteredPacientes}
-            selectedPaciente={selectedPaciente}
-            isPatientValid={isPatientValid}
-            isLoadingPacientes={isLoadingPacientes}
-            onOpenRegisterModal={(paciente) => {
-              setPacienteToEdit(paciente || null);
-              setRegisterPacienteOpen(true);
-            }}
-          />
+      {/* CUERPO DEL FORMULARIO: PANELES REDIMENSIONABLES (RESIZABLE) */}
+      <form onSubmit={handleSubmit}>
+        {/* Vista Desktop con Paneles Redimensionables */}
+        <div className="hidden lg:block">
+          <ResizablePanelGroup
+            direction="horizontal"
+            className="min-h-[580px] w-full rounded-xl gap-2 items-start"
+          >
+            {/* Panel Izquierdo: Paciente + Cobertura */}
+            <ResizablePanel defaultSize={42} minSize={30} maxSize={55}>
+              <div className="flex flex-col gap-3 pr-1">
+                <AdmisionPacienteSection
+                  patientSearch={patientSearch}
+                  setPatientSearch={setPatientSearch}
+                  setSelectedPacienteId={setSelectedPacienteId}
+                  filteredPacientes={filteredPacientes}
+                  selectedPaciente={selectedPaciente}
+                  isPatientValid={isPatientValid}
+                  isLoadingPacientes={isLoadingPacientes}
+                  onOpenRegisterModal={(paciente) => {
+                    setPacienteToEdit(paciente || null);
+                    setRegisterPacienteOpen(true);
+                  }}
+                />
 
-          <AdmisionCoberturaSection
-            convenioId={convenioId}
-            setConvenioId={setConvenioId}
-            recepcionistaId={recepcionistaId}
-            setRecepcionistaId={setRecepcionistaId}
-            fechaHora={fechaHora}
-            setFechaHora={setFechaHora}
-            observacion={observacion}
-            setObservacion={setObservacion}
-            pacienteConveniosList={pacienteConveniosList}
-            conveniosList={conveniosList}
-            empleadosList={empleadosList}
-            isLoadingPacienteConvenios={isLoadingPacienteConvenios}
-            isLoadingEmpleados={isLoadingEmpleados}
-            selectedConvenioNombre={selectedConvenioNombre}
-          />
+                <AdmisionCoberturaSection
+                  convenioId={convenioId}
+                  setConvenioId={setConvenioId}
+                  recepcionistaId={recepcionistaId}
+                  setRecepcionistaId={setRecepcionistaId}
+                  fechaHora={fechaHora}
+                  setFechaHora={setFechaHora}
+                  observacion={observacion}
+                  setObservacion={setObservacion}
+                  pacienteConveniosList={pacienteConveniosList}
+                  conveniosList={conveniosList}
+                  empleadosList={empleadosList}
+                  isLoadingPacienteConvenios={isLoadingPacienteConvenios}
+                  isLoadingEmpleados={isLoadingEmpleados}
+                  selectedConvenioNombre={selectedConvenioNombre}
+                />
+              </div>
+            </ResizablePanel>
+
+            <ResizableHandle
+              withHandle
+              className="bg-border/60 hover:bg-primary/50 transition-colors mx-1"
+            />
+
+            {/* Panel Derecho: Carrito & Prestaciones */}
+            <ResizablePanel defaultSize={58} minSize={45}>
+              <div className="pl-1">
+                <AdmisionCarritoSection
+                  isPatientValid={isPatientValid}
+                  detalles={detalles}
+                  medicosList={medicosList}
+                  totalSubtotal={totalSubtotal}
+                  totalDescuentos={totalDescuentos}
+                  grandTotal={grandTotal}
+                  isSubmitting={isSubmitting}
+                  onOpenMultiPicker={() => setMultiPickerOpen(true)}
+                  removeDetalle={removeDetalle}
+                  updateDetalle={updateDetalle}
+                  onCancel={() => router.push("/recepcion/admisiones")}
+                  onSubmit={handleSubmit}
+                />
+              </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
         </div>
 
-        {/* COLUMNA DERECHA (Paso 3: Carrito de Servicios & Prestaciones) */}
-        <div className="lg:col-span-7">
-          <AdmisionCarritoSection
-            isPatientValid={isPatientValid}
-            detalles={detalles}
-            medicosList={medicosList}
-            totalSubtotal={totalSubtotal}
-            totalDescuentos={totalDescuentos}
-            grandTotal={grandTotal}
-            isSubmitting={isSubmitting}
-            onOpenMultiPicker={() => setMultiPickerOpen(true)}
-            removeDetalle={removeDetalle}
-            updateDetalle={updateDetalle}
-            onCancel={() => router.push("/recepcion/admisiones")}
-            onSubmit={handleSubmit}
-          />
+        {/* Vista Móvil / Tablet en Formato Apilado */}
+        <div className="grid grid-cols-1 gap-3 lg:hidden items-start">
+          <div className="flex flex-col gap-3">
+            <AdmisionPacienteSection
+              patientSearch={patientSearch}
+              setPatientSearch={setPatientSearch}
+              setSelectedPacienteId={setSelectedPacienteId}
+              filteredPacientes={filteredPacientes}
+              selectedPaciente={selectedPaciente}
+              isPatientValid={isPatientValid}
+              isLoadingPacientes={isLoadingPacientes}
+              onOpenRegisterModal={(paciente) => {
+                setPacienteToEdit(paciente || null);
+                setRegisterPacienteOpen(true);
+              }}
+            />
+
+            <AdmisionCoberturaSection
+              convenioId={convenioId}
+              setConvenioId={setConvenioId}
+              recepcionistaId={recepcionistaId}
+              setRecepcionistaId={setRecepcionistaId}
+              fechaHora={fechaHora}
+              setFechaHora={setFechaHora}
+              observacion={observacion}
+              setObservacion={setObservacion}
+              pacienteConveniosList={pacienteConveniosList}
+              conveniosList={conveniosList}
+              empleadosList={empleadosList}
+              isLoadingPacienteConvenios={isLoadingPacienteConvenios}
+              isLoadingEmpleados={isLoadingEmpleados}
+              selectedConvenioNombre={selectedConvenioNombre}
+            />
+          </div>
+
+          <div>
+            <AdmisionCarritoSection
+              isPatientValid={isPatientValid}
+              detalles={detalles}
+              medicosList={medicosList}
+              totalSubtotal={totalSubtotal}
+              totalDescuentos={totalDescuentos}
+              grandTotal={grandTotal}
+              isSubmitting={isSubmitting}
+              onOpenMultiPicker={() => setMultiPickerOpen(true)}
+              removeDetalle={removeDetalle}
+              updateDetalle={updateDetalle}
+              onCancel={() => router.push("/recepcion/admisiones")}
+              onSubmit={handleSubmit}
+            />
+          </div>
         </div>
       </form>
     </div>
   );
 }
+

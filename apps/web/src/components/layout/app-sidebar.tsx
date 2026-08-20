@@ -18,6 +18,7 @@ import {
   SidebarContent,
   SidebarHeader,
   SidebarFooter,
+  SidebarRail,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -369,6 +370,9 @@ export function AppSidebar({ variant = "inset", ...props }: React.ComponentProps
           <span className="text-[10px] text-muted-foreground/70">Seguro &bull; SSL</span>
         </div>
       </SidebarFooter>
+
+      {/* ================= RESIZABLE RAIL ================= */}
+      <SidebarRail />
     </Sidebar>
   )
 }
