@@ -1,35 +1,30 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { CargoHeader } from "./cargo-header";
 import { CargoMetricsCards, type CargoMetrics } from "./cargo-metrics";
-import { CargoTable, type CargoItem } from "./cargo-table";
-import { CargoFormDialog } from "./cargo-form-dialog";
+import { CargoList } from "./cargo-list";
 import { CargoDeleteDialog } from "./cargo-delete-dialog";
-import {
-  useCargos,
-  useDeleteCargo,
-} from "../hooks/use-cargos";
+import { useDeleteCargo, useCargos } from "../hooks/use-cargos";
 import type { CargoResponse } from "../types/cargo.types";
 
 export function CargoModuleView() {
-  const [formDialogOpen, setFormDialogOpen] = React.useState(false);
-  const [cargoToEdit, setCargoToEdit] = React.useState<
-    CargoResponse | CargoItem | null
-  >(null);
+  const router = useRouter();
 
-  // State for Delete AlertDialog confirmation
+  // Delete dialog confirmation state
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
-  const [cargoToDelete, setCargoToDelete] = React.useState<CargoItem | null>(null);
+  const [cargoToDelete, setCargoToDelete] = React.useState<CargoResponse | null>(null);
 
-  // State for server-side pagination, search & filters
+  // Pagination & search parameters
   const [currentPage, setCurrentPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(10);
   const [searchTerm, setSearchTerm] = React.useState("");
-  const [estadoFilter, setEstadoFilter] = React.useState("Todos");
+  const [selectedStatusTab, setSelectedStatusTab] = React.useState<
+    "TODOS" | "ACTIVOS" | "INACTIVOS"
+  >("TODOS");
 
-  // React Query Hook
   const {
     data: apiData,
     isLoading,
@@ -40,16 +35,15 @@ export function CargoModuleView() {
     search: searchTerm.trim() || undefined,
   });
 
-  const deleteCargoMutation = useDeleteCargo();
+  const deleteMutation = useDeleteCargo();
 
-  // Reset pagination when searching or changing filters
   const handleSearchChange = (term: string) => {
     setSearchTerm(term);
     setCurrentPage(1);
   };
 
-  const handleEstadoFilterChange = (estado: string) => {
-    setEstadoFilter(estado);
+  const handleStatusTabChange = (tab: "TODOS" | "ACTIVOS" | "INACTIVOS") => {
+    setSelectedStatusTab(tab);
     setCurrentPage(1);
   };
 
@@ -58,102 +52,91 @@ export function CargoModuleView() {
     setCurrentPage(1);
   };
 
-  // Maps backend API response directly to table items & applies status filter
-  const cargos: CargoItem[] = React.useMemo(() => {
-    if (!apiData?.items) return [];
+  const allCargos: CargoResponse[] = apiData?.items ?? [];
 
-    const mapped = apiData.items.map((item) => ({
-      id: item.id,
-      codigo: item.codigo,
-      nombre: item.nombre,
-      descripcion: item.descripcion,
-      activo: item.activo ?? true,
-    }));
-
-    if (estadoFilter === "Activos") {
-      return mapped.filter((c) => c.activo);
+  // Filter by status tab
+  const filteredCargos = React.useMemo(() => {
+    if (selectedStatusTab === "ACTIVOS") {
+      return allCargos.filter((c) => c.activo);
     }
-    if (estadoFilter === "Inactivos") {
-      return mapped.filter((c) => !c.activo);
+    if (selectedStatusTab === "INACTIVOS") {
+      return allCargos.filter((c) => !c.activo);
     }
+    return allCargos;
+  }, [allCargos, selectedStatusTab]);
 
-    return mapped;
-  }, [apiData, estadoFilter]);
+  // Compute Metrics
+  const total = apiData?.totalItems ?? allCargos.length;
+  const activos = allCargos.filter((c) => c.activo).length;
+  const inactivos = allCargos.filter((c) => !c.activo).length;
 
-  // Compute Metrics from API data
-  const metrics: CargoMetrics = React.useMemo(() => {
-    const rawItems = apiData?.items ?? [];
-    return {
-      total: apiData?.totalItems ?? rawItems.length,
-      activos: rawItems.filter((c) => c.activo ?? true).length,
-      inactivos: rawItems.filter((c) => !c.activo).length,
-    };
-  }, [apiData]);
+  const metrics: CargoMetrics = {
+    total,
+    activos,
+    inactivos,
+  };
 
   const handleOpenAdd = () => {
-    setCargoToEdit(null);
-    setFormDialogOpen(true);
+    router.push("/recursos-humanos/cargos/nuevo");
   };
 
-  const handleOpenEdit = (cargo: CargoItem) => {
-    setCargoToEdit(cargo);
-    setFormDialogOpen(true);
+  const handleOpenEdit = (cargo: CargoResponse) => {
+    router.push(`/recursos-humanos/cargos/${cargo.id}/editar`);
   };
 
-  const handleOpenDelete = (id: number | string) => {
-    const target = cargos.find((c) => c.id === id || c.id === Number(id));
-    if (target) {
-      setCargoToDelete(target);
-      setDeleteDialogOpen(true);
-    }
+  const handleOpenDelete = (cargo: CargoResponse) => {
+    setCargoToDelete(cargo);
+    setDeleteDialogOpen(true);
   };
 
   const handleConfirmDelete = async () => {
     if (!cargoToDelete) return;
-    const numId = Number(cargoToDelete.id);
 
     try {
-      await deleteCargoMutation.mutateAsync(numId);
-      toast.success(`Cargo ${cargoToDelete.codigo} eliminado correctamente.`);
+      await deleteMutation.mutateAsync(cargoToDelete.id);
+      toast.success(`Cargo "${cargoToDelete.nombre}" eliminado correctamente.`);
       refetch();
     } catch {
+      toast.error("Ocurrió un error al eliminar el cargo.");
     } finally {
       setCargoToDelete(null);
+      setDeleteDialogOpen(false);
     }
   };
 
   return (
-    <div className="flex flex-col gap-4 w-full">
-      <CargoHeader onAddClick={handleOpenAdd} />
+    <div className="flex flex-col gap-3 w-full animate-in fade-in-50 duration-300">
+      {/* Cabecera del Módulo */}
+      <CargoHeader onAddClick={handleOpenAdd} onRefresh={() => refetch()} />
+
+      {/* Tarjetas de Métricas en Vivo */}
       <CargoMetricsCards metrics={metrics} />
-      <CargoTable
-        cargos={cargos}
+
+      {/* Listado Principal de Cargos (Formato Lista igual a los demás módulos) */}
+      <CargoList
+        cargos={filteredCargos}
         isLoading={isLoading}
-        totalItems={apiData?.totalItems ?? 0}
+        totalItems={apiData?.totalItems ?? allCargos.length}
         currentPage={currentPage}
         pageSize={pageSize}
         searchTerm={searchTerm}
-        estadoFilter={estadoFilter}
+        selectedStatusTab={selectedStatusTab}
+        onStatusTabChange={handleStatusTabChange}
         onSearchChange={handleSearchChange}
-        onEstadoFilterChange={handleEstadoFilterChange}
         onPageChange={setCurrentPage}
         onPageSizeChange={handlePageSizeChange}
         onEdit={handleOpenEdit}
         onDelete={handleOpenDelete}
         onRefresh={() => refetch()}
       />
-      <CargoFormDialog
-        open={formDialogOpen}
-        onOpenChange={setFormDialogOpen}
-        cargoToEdit={cargoToEdit}
-        onSuccessCallback={() => refetch()}
-      />
+
+      {/* Modal: Confirmación de Eliminación */}
       <CargoDeleteDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         cargo={cargoToDelete}
         onConfirm={handleConfirmDelete}
-        isLoading={deleteCargoMutation.isPending}
+        isLoading={deleteMutation.isPending}
       />
     </div>
   );

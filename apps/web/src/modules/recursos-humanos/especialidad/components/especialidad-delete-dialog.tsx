@@ -12,13 +12,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
-import type { EspecialidadItem } from "./especialidad-table";
+import type { EspecialidadResponse } from "../types/especialidad.types";
 
 interface EspecialidadDeleteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  especialidad: EspecialidadItem | null;
+  especialidad: EspecialidadResponse | null;
   onConfirm: () => Promise<void> | void;
   isLoading?: boolean;
 }
@@ -52,10 +51,7 @@ export function EspecialidadDeleteDialog({
         </AlertDialogHeader>
 
         <AlertDialogFooter className="pt-2 gap-2 sm:gap-0">
-          <AlertDialogCancel
-            disabled={isLoading}
-            className="h-8 text-xs"
-          >
+          <AlertDialogCancel disabled={isLoading} className="h-8 text-xs">
             Cancelar
           </AlertDialogCancel>
           <AlertDialogAction

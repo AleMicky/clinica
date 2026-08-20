@@ -1,11 +1,11 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { EspecialidadHeader } from "./especialidad-header";
 import { EspecialidadMetricsCards } from "./especialidad-metrics";
-import { EspecialidadTable, type EspecialidadItem } from "./especialidad-table";
-import { EspecialidadFormDialog } from "./especialidad-form-dialog";
+import { EspecialidadList } from "./especialidad-list";
 import { EspecialidadDeleteDialog } from "./especialidad-delete-dialog";
 import {
   useEspecialidades,
@@ -17,20 +17,20 @@ import type {
 } from "../types/especialidad.types";
 
 export function EspecialidadModuleView() {
-  const [formDialogOpen, setFormDialogOpen] = React.useState(false);
-  const [especialidadToEdit, setEspecialidadToEdit] = React.useState<
-    EspecialidadResponse | EspecialidadItem | null
-  >(null);
+  const router = useRouter();
 
   // Delete Dialog state
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [especialidadToDelete, setEspecialidadToDelete] =
-    React.useState<EspecialidadItem | null>(null);
+    React.useState<EspecialidadResponse | null>(null);
 
   // Pagination & Search parameters
   const [currentPage, setCurrentPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(10);
   const [searchTerm, setSearchTerm] = React.useState("");
+  const [selectedStatusTab, setSelectedStatusTab] = React.useState<
+    "TODOS" | "ACTIVOS" | "INACTIVOS"
+  >("TODOS");
 
   // Query Hook
   const {
@@ -50,46 +50,51 @@ export function EspecialidadModuleView() {
     setCurrentPage(1);
   };
 
+  const handleStatusTabChange = (tab: "TODOS" | "ACTIVOS" | "INACTIVOS") => {
+    setSelectedStatusTab(tab);
+    setCurrentPage(1);
+  };
+
   const handlePageSizeChange = (size: number) => {
     setPageSize(size);
     setCurrentPage(1);
   };
 
-  // Map API items to EspecialidadItem
-  const especialidades: EspecialidadItem[] = React.useMemo(() => {
-    if (!apiData?.items) return [];
-    return apiData.items.map((item) => ({
-      id: item.id,
-      codigo: item.codigo,
-      nombre: item.nombre,
-      descripcion: item.descripcion,
-      activo: item.activo,
-    }));
-  }, [apiData]);
+  const allEspecialidades: EspecialidadResponse[] = apiData?.items ?? [];
 
-  // Compute Metrics
+  // Filter by status tab
+  const filteredEspecialidades = React.useMemo(() => {
+    if (selectedStatusTab === "ACTIVOS") {
+      return allEspecialidades.filter((e) => e.activo);
+    }
+    if (selectedStatusTab === "INACTIVOS") {
+      return allEspecialidades.filter((e) => !e.activo);
+    }
+    return allEspecialidades;
+  }, [allEspecialidades, selectedStatusTab]);
+
+  // Calculate metrics
+  const total = apiData?.totalItems ?? allEspecialidades.length;
+  const activos = allEspecialidades.filter((e) => e.activo).length;
+  const inactivos = allEspecialidades.filter((e) => !e.activo).length;
+
   const metrics: EspecialidadMetricsType = {
-    totalEspecialidades: apiData?.totalItems ?? especialidades.length,
-    especialidadesActivas: especialidades.filter((e) => e.activo).length,
-    especialidadesInactivas: especialidades.filter((e) => !e.activo).length,
+    totalEspecialidades: total,
+    especialidadesActivas: activos,
+    especialidadesInactivas: inactivos,
   };
 
   const handleOpenAdd = () => {
-    setEspecialidadToEdit(null);
-    setFormDialogOpen(true);
+    router.push("/recursos-humanos/especialidades/nueva");
   };
 
-  const handleOpenEdit = (esp: EspecialidadItem) => {
-    setEspecialidadToEdit(esp);
-    setFormDialogOpen(true);
+  const handleOpenEdit = (especialidad: EspecialidadResponse) => {
+    router.push(`/recursos-humanos/especialidades/${especialidad.id}/editar`);
   };
 
-  const handleOpenDelete = (id: number) => {
-    const target = especialidades.find((e) => e.id === id);
-    if (target) {
-      setEspecialidadToDelete(target);
-      setDeleteDialogOpen(true);
-    }
+  const handleOpenDelete = (especialidad: EspecialidadResponse) => {
+    setEspecialidadToDelete(especialidad);
+    setDeleteDialogOpen(true);
   };
 
   const handleConfirmDelete = async () => {
@@ -102,7 +107,7 @@ export function EspecialidadModuleView() {
       );
       refetch();
     } catch {
-      // Error handled by query client / toast interceptor
+      toast.error("Ocurrió un error al eliminar la especialidad.");
     } finally {
       setEspecialidadToDelete(null);
       setDeleteDialogOpen(false);
@@ -110,16 +115,23 @@ export function EspecialidadModuleView() {
   };
 
   return (
-    <div className="flex flex-col gap-4 w-full">
-      <EspecialidadHeader onAddClick={handleOpenAdd} />
+    <div className="flex flex-col gap-3 w-full animate-in fade-in-50 duration-300">
+      {/* Cabecera del Módulo */}
+      <EspecialidadHeader onAddClick={handleOpenAdd} onRefresh={() => refetch()} />
+
+      {/* Tarjetas de Métricas en Vivo */}
       <EspecialidadMetricsCards metrics={metrics} />
-      <EspecialidadTable
-        especialidades={especialidades}
+
+      {/* Listado Principal de Especialidades */}
+      <EspecialidadList
+        especialidades={filteredEspecialidades}
         isLoading={isLoading}
-        totalItems={apiData?.totalItems ?? 0}
+        totalItems={apiData?.totalItems ?? allEspecialidades.length}
         currentPage={currentPage}
         pageSize={pageSize}
         searchTerm={searchTerm}
+        selectedStatusTab={selectedStatusTab}
+        onStatusTabChange={handleStatusTabChange}
         onSearchChange={handleSearchChange}
         onPageChange={setCurrentPage}
         onPageSizeChange={handlePageSizeChange}
@@ -127,12 +139,8 @@ export function EspecialidadModuleView() {
         onDelete={handleOpenDelete}
         onRefresh={() => refetch()}
       />
-      <EspecialidadFormDialog
-        open={formDialogOpen}
-        onOpenChange={setFormDialogOpen}
-        especialidadToEdit={especialidadToEdit}
-        onSuccessCallback={() => refetch()}
-      />
+
+      {/* Modal: Confirmación de Eliminación */}
       <EspecialidadDeleteDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}

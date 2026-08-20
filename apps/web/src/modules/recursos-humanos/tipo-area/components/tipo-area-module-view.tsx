@@ -1,14 +1,14 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { TipoAreaHeader } from "./tipo-area-header";
 import {
   TipoAreaMetricsCards,
   type TipoAreaMetrics,
 } from "./tipo-area-metrics";
-import { TipoAreaTable, type TipoAreaItem } from "./tipo-area-table";
-import { TipoAreaFormDialog } from "./tipo-area-form-dialog";
+import { TipoAreaList } from "./tipo-area-list";
 import { TipoAreaDeleteDialog } from "./tipo-area-delete-dialog";
 import {
   useDeleteTipoArea,
@@ -17,20 +17,20 @@ import {
 import type { TipoAreaResponse } from "../types/tipo-area.types";
 
 export function TipoAreaModuleView() {
-  const [formDialogOpen, setFormDialogOpen] = React.useState(false);
-  const [tipoAreaToEdit, setTipoAreaToEdit] = React.useState<
-    TipoAreaResponse | TipoAreaItem | null
-  >(null);
+  const router = useRouter();
 
   // State for Delete AlertDialog confirmation
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
-  const [tipoAreaToDelete, setTipoAreaToDelete] = React.useState<TipoAreaItem | null>(null);
+  const [tipoAreaToDelete, setTipoAreaToDelete] =
+    React.useState<TipoAreaResponse | null>(null);
 
   // State for server-side pagination, search & filters
   const [currentPage, setCurrentPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(10);
   const [searchTerm, setSearchTerm] = React.useState("");
-  const [estadoFilter, setEstadoFilter] = React.useState("Todos");
+  const [selectedStatusTab, setSelectedStatusTab] = React.useState<
+    "TODOS" | "ACTIVOS" | "INACTIVOS"
+  >("TODOS");
 
   // React Query Hook
   const {
@@ -43,16 +43,15 @@ export function TipoAreaModuleView() {
     search: searchTerm.trim() || undefined,
   });
 
-  const deleteTipoAreaMutation = useDeleteTipoArea();
+  const deleteMutation = useDeleteTipoArea();
 
-  // Reset pagination when searching or changing filters
   const handleSearchChange = (term: string) => {
     setSearchTerm(term);
     setCurrentPage(1);
   };
 
-  const handleEstadoFilterChange = (estado: string) => {
-    setEstadoFilter(estado);
+  const handleStatusTabChange = (tab: "TODOS" | "ACTIVOS" | "INACTIVOS") => {
+    setSelectedStatusTab(tab);
     setCurrentPage(1);
   };
 
@@ -61,111 +60,93 @@ export function TipoAreaModuleView() {
     setCurrentPage(1);
   };
 
-  // Maps backend API response directly to table items & applies status filter
-  const tiposArea: TipoAreaItem[] = React.useMemo(() => {
-    if (!apiData?.items) return [];
+  const allTiposArea: TipoAreaResponse[] = apiData?.items ?? [];
 
-    const mapped = apiData.items.map((item) => ({
-      id: item.id,
-      codigo: item.codigo,
-      nombre: item.nombre,
-      descripcion: item.descripcion,
-      orden: item.orden,
-      activo: item.activo ?? true,
-    }));
-
-    if (estadoFilter === "Activos") {
-      return mapped.filter((t) => t.activo);
+  // Filter by status tab
+  const filteredTiposArea = React.useMemo(() => {
+    if (selectedStatusTab === "ACTIVOS") {
+      return allTiposArea.filter((t) => t.activo);
     }
-    if (estadoFilter === "Inactivos") {
-      return mapped.filter((t) => !t.activo);
+    if (selectedStatusTab === "INACTIVOS") {
+      return allTiposArea.filter((t) => !t.activo);
     }
+    return allTiposArea;
+  }, [allTiposArea, selectedStatusTab]);
 
-    return mapped;
-  }, [apiData, estadoFilter]);
+  // Compute Metrics
+  const total = apiData?.totalItems ?? allTiposArea.length;
+  const activos = allTiposArea.filter((t) => t.activo).length;
+  const inactivos = allTiposArea.filter((t) => !t.activo).length;
 
-  const ordenMax = React.useMemo(() => {
-    const rawItems = apiData?.items ?? [];
-    return rawItems.reduce((max, t) => (t.orden > max ? t.orden : max), 0);
-  }, [apiData]);
-
-  // Compute Metrics from API data
-  const metrics: TipoAreaMetrics = React.useMemo(() => {
-    const rawItems = apiData?.items ?? [];
-    return {
-      total: apiData?.totalItems ?? rawItems.length,
-      activos: rawItems.filter((t) => t.activo ?? true).length,
-      inactivos: rawItems.filter((t) => !t.activo).length,
-      ordenMax,
-    };
-  }, [apiData, ordenMax]);
+  const metrics: TipoAreaMetrics = {
+    total,
+    activos,
+    inactivos,
+  };
 
   const handleOpenAdd = () => {
-    setTipoAreaToEdit(null);
-    setFormDialogOpen(true);
+    router.push("/recursos-humanos/tipos-area/nuevo");
   };
 
-  const handleOpenEdit = (tipoArea: TipoAreaItem) => {
-    setTipoAreaToEdit(tipoArea);
-    setFormDialogOpen(true);
+  const handleOpenEdit = (tipoArea: TipoAreaResponse) => {
+    router.push(`/recursos-humanos/tipos-area/${tipoArea.id}/editar`);
   };
 
-  const handleOpenDelete = (id: number | string) => {
-    const target = tiposArea.find((t) => t.id === id || t.id === Number(id));
-    if (target) {
-      setTipoAreaToDelete(target);
-      setDeleteDialogOpen(true);
-    }
+  const handleOpenDelete = (tipoArea: TipoAreaResponse) => {
+    setTipoAreaToDelete(tipoArea);
+    setDeleteDialogOpen(true);
   };
 
   const handleConfirmDelete = async () => {
     if (!tipoAreaToDelete) return;
-    const numId = Number(tipoAreaToDelete.id);
 
     try {
-      await deleteTipoAreaMutation.mutateAsync(numId);
+      await deleteMutation.mutateAsync(tipoAreaToDelete.id);
       toast.success(
-        `Tipo de área ${tipoAreaToDelete.codigo} eliminado correctamente.`
+        `Tipo de área "${tipoAreaToDelete.nombre}" eliminado correctamente.`
       );
       refetch();
     } catch {
+      toast.error("Ocurrió un error al eliminar el tipo de área.");
     } finally {
       setTipoAreaToDelete(null);
+      setDeleteDialogOpen(false);
     }
   };
 
   return (
-    <div className="flex flex-col gap-4 w-full">
-      <TipoAreaHeader onAddClick={handleOpenAdd} />
+    <div className="flex flex-col gap-3 w-full animate-in fade-in-50 duration-300">
+      {/* Cabecera del Módulo */}
+      <TipoAreaHeader onAddClick={handleOpenAdd} onRefresh={() => refetch()} />
+
+      {/* Tarjetas de Métricas en Vivo */}
       <TipoAreaMetricsCards metrics={metrics} />
-      <TipoAreaTable
-        tiposArea={tiposArea}
+
+      {/* Listado Principal de Tipos de Área */}
+      <TipoAreaList
+        tiposArea={filteredTiposArea}
         isLoading={isLoading}
-        totalItems={apiData?.totalItems ?? 0}
+        totalItems={apiData?.totalItems ?? allTiposArea.length}
         currentPage={currentPage}
         pageSize={pageSize}
         searchTerm={searchTerm}
-        estadoFilter={estadoFilter}
+        selectedStatusTab={selectedStatusTab}
+        onStatusTabChange={handleStatusTabChange}
         onSearchChange={handleSearchChange}
-        onEstadoFilterChange={handleEstadoFilterChange}
         onPageChange={setCurrentPage}
         onPageSizeChange={handlePageSizeChange}
         onEdit={handleOpenEdit}
         onDelete={handleOpenDelete}
         onRefresh={() => refetch()}
       />
-      <TipoAreaFormDialog
-        open={formDialogOpen}
-        onOpenChange={setFormDialogOpen}
-        tipoAreaToEdit={tipoAreaToEdit}
-        onSuccessCallback={() => refetch()}
-      />
+
+      {/* Modal: Confirmación de Eliminación */}
       <TipoAreaDeleteDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         tipoArea={tipoAreaToDelete}
         onConfirm={handleConfirmDelete}
-        isLoading={deleteTipoAreaMutation.isPending}
+        isLoading={deleteMutation.isPending}
       />
     </div>
   );

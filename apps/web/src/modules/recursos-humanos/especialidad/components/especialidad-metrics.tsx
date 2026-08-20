@@ -1,57 +1,109 @@
 "use client";
 
 import * as React from "react";
-import { Stethoscope, CheckCircle2, CircleX } from "lucide-react";
-import type { EspecialidadMetrics } from "../types/especialidad.types";
+import { Card, CardContent } from "@/components/ui/card";
+import { Sparkles, CheckCircle2, XCircle, Layers } from "lucide-react";
+import type { EspecialidadMetrics as EspecialidadMetricsType } from "../types/especialidad.types";
 
 interface EspecialidadMetricsProps {
-  metrics: EspecialidadMetrics;
+  metrics: EspecialidadMetricsType;
 }
 
 export function EspecialidadMetricsCards({ metrics }: EspecialidadMetricsProps) {
+  const tasaActividad =
+    metrics.totalEspecialidades > 0
+      ? Math.round((metrics.especialidadesActivas / metrics.totalEspecialidades) * 100)
+      : 100;
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-muted/20 p-2.5 rounded-lg border">
-      <div className="flex items-center gap-2.5 px-2 py-1">
-        <div className="p-2 rounded-md bg-primary/10 text-primary shrink-0">
-          <Stethoscope className="size-4" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-[11px] font-medium text-muted-foreground truncate">
-            Total Especialidades
-          </p>
-          <p className="text-base font-bold text-foreground leading-tight">
-            {metrics.totalEspecialidades}
-          </p>
-        </div>
-      </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+      {/* 1. Total Especialidades */}
+      <Card className="border border-border/70 bg-card hover:shadow-xs transition-all duration-200">
+        <CardContent className="p-3 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              Total Especialidades
+            </p>
+            <div className="flex items-baseline gap-1.5 mt-0.5">
+              <span className="text-xl font-extrabold text-foreground tracking-tight">
+                {metrics.totalEspecialidades}
+              </span>
+              <span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">
+                catálogo
+              </span>
+            </div>
+          </div>
+          <div className="size-8.5 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-500/20 shrink-0">
+            <Sparkles className="size-4" />
+          </div>
+        </CardContent>
+      </Card>
 
-      <div className="flex items-center gap-2.5 px-2 py-1 sm:border-l sm:border-border/60">
-        <div className="p-2 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
-          <CheckCircle2 className="size-4" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-[11px] font-medium text-muted-foreground truncate">
-            Especialidades Activas
-          </p>
-          <p className="text-base font-bold text-foreground leading-tight">
-            {metrics.especialidadesActivas}
-          </p>
-        </div>
-      </div>
+      {/* 2. Especialidades Activas */}
+      <Card className="border border-border/70 bg-card hover:shadow-xs transition-all duration-200">
+        <CardContent className="p-3 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              Activas en Servicio
+            </p>
+            <div className="flex items-baseline gap-1.5 mt-0.5">
+              <span className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight">
+                {metrics.especialidadesActivas}
+              </span>
+              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                habilitadas
+              </span>
+            </div>
+          </div>
+          <div className="size-8.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20 shrink-0">
+            <CheckCircle2 className="size-4" />
+          </div>
+        </CardContent>
+      </Card>
 
-      <div className="flex items-center gap-2.5 px-2 py-1 sm:border-l sm:border-border/60">
-        <div className="p-2 rounded-md bg-muted text-muted-foreground shrink-0">
-          <CircleX className="size-4" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-[11px] font-medium text-muted-foreground truncate">
-            Especialidades Inactivas
-          </p>
-          <p className="text-base font-bold text-foreground leading-tight">
-            {metrics.especialidadesInactivas}
-          </p>
-        </div>
-      </div>
+      {/* 3. Especialidades Inactivas */}
+      <Card className="border border-border/70 bg-card hover:shadow-xs transition-all duration-200">
+        <CardContent className="p-3 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              Inactivas
+            </p>
+            <div className="flex items-baseline gap-1.5 mt-0.5">
+              <span className="text-xl font-extrabold text-rose-600 dark:text-rose-400 tracking-tight">
+                {metrics.especialidadesInactivas}
+              </span>
+              <span className="text-[10px] text-rose-600 dark:text-rose-400 font-medium">
+                pausadas
+              </span>
+            </div>
+          </div>
+          <div className="size-8.5 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center border border-rose-500/20 shrink-0">
+            <XCircle className="size-4" />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 4. Tasa Operativa */}
+      <Card className="border border-border/70 bg-card hover:shadow-xs transition-all duration-200">
+        <CardContent className="p-3 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              Tasa Operativa
+            </p>
+            <div className="flex items-baseline gap-1 mt-0.5">
+              <span className="text-xl font-extrabold text-purple-600 dark:text-purple-400 tracking-tight">
+                {tasaActividad}%
+              </span>
+              <span className="text-[10px] text-purple-600 dark:text-purple-400 font-medium ml-1">
+                disponibilidad
+              </span>
+            </div>
+          </div>
+          <div className="size-8.5 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-500/20 shrink-0">
+            <Layers className="size-4" />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

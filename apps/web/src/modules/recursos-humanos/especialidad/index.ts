@@ -1,9 +1,11 @@
-export { EspecialidadModuleView } from "./components/especialidad-module-view";
-export { EspecialidadHeader } from "./components/especialidad-header";
-export { EspecialidadMetricsCards } from "./components/especialidad-metrics";
-export { EspecialidadTable } from "./components/especialidad-table";
-export { EspecialidadFormDialog } from "./components/especialidad-form-dialog";
-export { EspecialidadDeleteDialog } from "./components/especialidad-delete-dialog";
 export * from "./types/especialidad.types";
 export * from "./schemas/especialidad.schema";
+export * from "./api/especialidad.api";
+export * from "./api/especialidad.key";
 export * from "./hooks/use-especialidades";
+export * from "./components/especialidad-header";
+export * from "./components/especialidad-metrics";
+export * from "./components/especialidad-list";
+export * from "./components/especialidad-page-form";
+export * from "./components/especialidad-delete-dialog";
+export * from "./components/especialidad-module-view";
