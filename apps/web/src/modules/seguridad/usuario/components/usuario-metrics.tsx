@@ -1,60 +1,104 @@
 "use client";
 
 import * as React from "react";
-import { Users, ShieldCheck, ShieldAlert } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Users, ShieldCheck, ShieldAlert, Shield } from "lucide-react";
 import type { UsuarioMetrics } from "../types/usuario.types";
 
-interface UsuarioMetricsProps {
+interface UsuarioMetricsCardsProps {
   metrics: UsuarioMetrics;
 }
 
-export function UsuarioMetricsCards({ metrics }: UsuarioMetricsProps) {
+export function UsuarioMetricsCards({ metrics }: UsuarioMetricsCardsProps) {
   return (
-    <div className="grid grid-cols-3 gap-2 sm:gap-3">
-      {/* Total Usuarios */}
-      <div className="flex items-center p-2.5 rounded-lg border border-border/60 bg-card shadow-2xs hover:border-primary/30 transition-colors gap-2.5">
-        <div className="size-7 sm:size-8 rounded-md bg-primary/10 flex items-center justify-center text-primary shrink-0">
-          <Users className="size-3.5 sm:size-4" />
-        </div>
-        <div className="flex flex-col leading-tight min-w-0">
-          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider truncate">
-            Total Usuarios
-          </span>
-          <span className="text-base sm:text-lg font-bold text-foreground leading-tight">
-            {metrics.totalUsuarios}
-          </span>
-        </div>
-      </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+      {/* 1. Total Usuarios */}
+      <Card className="border border-border/70 bg-card hover:shadow-xs transition-all duration-200">
+        <CardContent className="p-3 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              Total Usuarios
+            </p>
+            <div className="flex items-baseline gap-1.5 mt-0.5">
+              <span className="text-xl font-extrabold text-foreground tracking-tight">
+                {metrics.totalUsuarios}
+              </span>
+              <span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">
+                registrados
+              </span>
+            </div>
+          </div>
+          <div className="size-8.5 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-500/20 shrink-0">
+            <Users className="size-4" />
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Activas */}
-      <div className="flex items-center p-2.5 rounded-lg border border-border/60 bg-card shadow-2xs hover:border-emerald-500/30 transition-colors gap-2.5">
-        <div className="size-7 sm:size-8 rounded-md bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
-          <ShieldCheck className="size-3.5 sm:size-4" />
-        </div>
-        <div className="flex flex-col leading-tight min-w-0">
-          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider truncate">
-            Cuentas Activas
-          </span>
-          <span className="text-base sm:text-lg font-bold text-emerald-600 dark:text-emerald-400 leading-tight">
-            {metrics.cuentasActivas}
-          </span>
-        </div>
-      </div>
+      {/* 2. Cuentas Activas */}
+      <Card className="border border-border/70 bg-card hover:shadow-xs transition-all duration-200">
+        <CardContent className="p-3 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              Cuentas Activas
+            </p>
+            <div className="flex items-baseline gap-1.5 mt-0.5">
+              <span className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight">
+                {metrics.cuentasActivas}
+              </span>
+              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                habilitadas
+              </span>
+            </div>
+          </div>
+          <div className="size-8.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20 shrink-0">
+            <ShieldCheck className="size-4" />
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Inactivos */}
-      <div className="flex items-center p-2.5 rounded-lg border border-border/60 bg-card shadow-2xs hover:border-destructive/30 transition-colors gap-2.5">
-        <div className="size-7 sm:size-8 rounded-md bg-destructive/10 flex items-center justify-center text-destructive shrink-0">
-          <ShieldAlert className="size-3.5 sm:size-4" />
-        </div>
-        <div className="flex flex-col leading-tight min-w-0">
-          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider truncate">
-            Inactivos
-          </span>
-          <span className="text-base sm:text-lg font-bold text-destructive leading-tight">
-            {metrics.cuentasBloqueadas}
-          </span>
-        </div>
-      </div>
+      {/* 3. Inactivas / Bloqueadas */}
+      <Card className="border border-border/70 bg-card hover:shadow-xs transition-all duration-200">
+        <CardContent className="p-3 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              Cuentas Inactivas
+            </p>
+            <div className="flex items-baseline gap-1.5 mt-0.5">
+              <span className="text-xl font-extrabold text-rose-600 dark:text-rose-400 tracking-tight">
+                {metrics.cuentasBloqueadas}
+              </span>
+              <span className="text-[10px] text-rose-600 dark:text-rose-400 font-medium">
+                bloqueadas
+              </span>
+            </div>
+          </div>
+          <div className="size-8.5 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center border border-rose-500/20 shrink-0">
+            <ShieldAlert className="size-4" />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 4. Cobertura de Seguridad */}
+      <Card className="border border-border/70 bg-card hover:shadow-xs transition-all duration-200">
+        <CardContent className="p-3 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              Disponibilidad
+            </p>
+            <div className="flex items-baseline gap-1 mt-0.5">
+              <span className="text-xl font-extrabold text-purple-600 dark:text-purple-400 tracking-tight">
+                {metrics.coberturaSeguridad}%
+              </span>
+              <span className="text-[10px] text-purple-600 dark:text-purple-400 font-medium">
+                cuentas operativas
+              </span>
+            </div>
+          </div>
+          <div className="size-8.5 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-500/20 shrink-0">
+            <Shield className="size-4" />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
