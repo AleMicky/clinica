@@ -32,6 +32,7 @@ public sealed class AdmisionService(
     public async Task<PagedResult<AdmisionResponse>> ListarAsync(
         PaginationRequest pagination,
         string? search,
+        EstadoAdmision? estado = null,
         CancellationToken cancellationToken = default)
     {
         var usuarioId = currentUserService.UserId;
@@ -78,6 +79,11 @@ public sealed class AdmisionService(
             }
 
             query = query.Where(x => x.RecepcionistaId == empleadoId);
+        }
+
+        if (estado.HasValue)
+        {
+            query = query.Where(x => x.Estado == estado.Value);
         }
 
         var normalizedSearch = string.IsNullOrWhiteSpace(search)

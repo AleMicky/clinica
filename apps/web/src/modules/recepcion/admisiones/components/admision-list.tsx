@@ -36,8 +36,8 @@ interface AdmisionListProps {
   currentPage: number;
   pageSize: number;
   searchTerm: string;
-  selectedEstadoTab?: EstadoAdmision | "TODOS";
-  onEstadoTabChange?: (tab: EstadoAdmision | "TODOS") => void;
+  selectedEstadoTab?: EstadoAdmision;
+  onEstadoTabChange?: (tab: EstadoAdmision) => void;
   onSearchChange: (term: string) => void;
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
@@ -53,7 +53,7 @@ export function AdmisionList({
   currentPage,
   pageSize,
   searchTerm,
-  selectedEstadoTab = "TODOS",
+  selectedEstadoTab = EstadoAdmision.Registrada,
   onEstadoTabChange,
   onSearchChange,
   onPageChange,
@@ -63,11 +63,10 @@ export function AdmisionList({
   onDelete,
 }: AdmisionListProps) {
   const tabs: Array<{
-    key: EstadoAdmision | "TODOS";
+    key: EstadoAdmision;
     label: string;
     activeClasses: string;
   }> = [
-      { key: "TODOS", label: "Todas", activeClasses: "bg-primary text-primary-foreground shadow-xs" },
       { key: EstadoAdmision.Registrada, label: "Registradas", activeClasses: "bg-blue-600 text-white shadow-xs" },
       { key: EstadoAdmision.Confirmada, label: "Confirmadas", activeClasses: "bg-emerald-600 text-white shadow-xs" },
       { key: EstadoAdmision.EnviadaVenta, label: "Enviadas a Venta", activeClasses: "bg-purple-600 text-white shadow-xs" },

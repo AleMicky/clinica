@@ -51,11 +51,11 @@ export function AdmisionModuleView() {
   const [currentPage, setCurrentPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(10);
   const [searchTerm, setSearchTerm] = React.useState("");
-  const [selectedEstadoTab, setSelectedEstadoTab] = React.useState<
-    EstadoAdmision | "TODOS"
-  >("TODOS");
+  const [selectedEstadoTab, setSelectedEstadoTab] = React.useState<EstadoAdmision>(
+    EstadoAdmision.Registrada
+  );
 
-  // Fetch de React Query
+  // Fetch de React Query para la lista filtrada
   const {
     data: apiData,
     isLoading,
@@ -64,7 +64,12 @@ export function AdmisionModuleView() {
     page: currentPage,
     pageSize: pageSize,
     search: searchTerm.trim() || undefined,
-    estado: selectedEstadoTab === "TODOS" ? undefined : selectedEstadoTab,
+    estado: selectedEstadoTab,
+  });
+
+  // Fetch para métricas globales del día
+  const { data: allAdmisionesData } = useAdmisiones({
+    pageSize: 100,
   });
 
   const cambiarEstadoMutation = useCambiarEstadoAdmision();
@@ -75,7 +80,7 @@ export function AdmisionModuleView() {
     setCurrentPage(1);
   };
 
-  const handleEstadoTabChange = (tab: EstadoAdmision | "TODOS") => {
+  const handleEstadoTabChange = (tab: EstadoAdmision) => {
     setSelectedEstadoTab(tab);
     setCurrentPage(1);
   };
@@ -86,20 +91,21 @@ export function AdmisionModuleView() {
   };
 
   const admisiones: AdmisionResponse[] = apiData?.items ?? [];
+  const allAdmisionesList: AdmisionResponse[] = allAdmisionesData?.items ?? admisiones;
 
   // Cálculo de Métricas en Vivo
-  const totalHoy = apiData?.totalItems ?? admisiones.length;
-  const registradas = admisiones.filter(
+  const totalHoy = allAdmisionesData?.totalItems ?? allAdmisionesList.length;
+  const registradas = allAdmisionesList.filter(
     (a) => a.estado === EstadoAdmision.Registrada
   ).length;
-  const confirmadas = admisiones.filter(
+  const confirmadas = allAdmisionesList.filter(
     (a) => a.estado === EstadoAdmision.Confirmada
   ).length;
-  const enviadasVenta = admisiones.filter(
+  const enviadasVenta = allAdmisionesList.filter(
     (a) => a.estado === EstadoAdmision.EnviadaVenta
   ).length;
 
-  const montoTotalHoy = admisiones.reduce((acc, a) => {
+  const montoTotalHoy = allAdmisionesList.reduce((acc, a) => {
     const total =
       a.totalAdmision ??
       a.detalles.reduce((sub, d) => sub + (d.total || 0), 0);

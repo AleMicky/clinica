@@ -1,4 +1,5 @@
 using Clinica.Api.Modules.Recepcion.Admision.Dtos;
+using Clinica.Api.Modules.Recepcion.Admision.Entity;
 using Clinica.Api.Modules.Recepcion.Admision.Services;
 using Clinica.Api.Shared.Pagination;
 using Clinica.Api.Shared.Validation;
@@ -71,6 +72,7 @@ public static class AdmisionEndpoints
     private static async Task<IResult> ListarAsync(
         [AsParameters] PaginationRequest pagination,
         string? search,
+        EstadoAdmision? estado,
         AdmisionService service,
         CancellationToken cancellationToken)
     {
@@ -78,6 +80,7 @@ public static class AdmisionEndpoints
             await service.ListarAsync(
                 pagination,
                 search,
+                estado,
                 cancellationToken));
     }
 
