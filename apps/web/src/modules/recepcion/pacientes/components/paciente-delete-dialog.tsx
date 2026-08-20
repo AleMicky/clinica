@@ -13,7 +13,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import type { PacienteResponse } from "../types/paciente.types";
-import { getPacienteFullName } from "./paciente-card";
+import { getPacienteFullName } from "./paciente-list";
 
 interface PacienteDeleteDialogProps {
   open: boolean;

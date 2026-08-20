@@ -13,7 +13,7 @@ import {
   Check,
   Edit,
 } from "lucide-react";
-import { getPacienteFullName, getPacienteDocument } from "../../pacientes/components/paciente-card";
+import { getPacienteFullName, getPacienteDocument } from "../../pacientes/components/paciente-list";
 import type { PacienteResponse } from "../../pacientes/types/paciente.types";
 import { toast } from "sonner";
 

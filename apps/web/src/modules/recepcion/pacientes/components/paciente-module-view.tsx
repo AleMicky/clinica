@@ -1,20 +1,18 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { PacienteHeader } from "./paciente-header";
 import { PacienteMetricsCards } from "./paciente-metrics";
-import { PacienteTable } from "./paciente-table";
-import { PacienteFormDialog } from "./paciente-form-dialog";
+import { PacienteList } from "./paciente-list";
 import { PacienteDeleteDialog } from "./paciente-delete-dialog";
 import { PacienteConveniosDialog } from "./paciente-convenios-dialog";
 import { usePacientes, useDeletePaciente } from "../hooks/use-pacientes";
 import type { PacienteMetrics, PacienteResponse } from "../types/paciente.types";
-import { getPacienteFullName } from "./paciente-card";
 
 export function PacienteModuleView() {
-  const [formDialogOpen, setFormDialogOpen] = React.useState(false);
-  const [pacienteToEdit, setPacienteToEdit] = React.useState<PacienteResponse | null>(null);
+  const router = useRouter();
 
   // Delete dialog confirmation state
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
@@ -30,6 +28,9 @@ export function PacienteModuleView() {
   const [currentPage, setCurrentPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(10);
   const [searchTerm, setSearchTerm] = React.useState("");
+  const [selectedStatusTab, setSelectedStatusTab] = React.useState<
+    "TODOS" | "ACTIVOS" | "INACTIVOS"
+  >("TODOS");
 
   // React Query Hook: Requests API endpoint `/pacientes`
   const {
@@ -50,41 +51,48 @@ export function PacienteModuleView() {
     setCurrentPage(1);
   };
 
+  const handleStatusTabChange = (tab: "TODOS" | "ACTIVOS" | "INACTIVOS") => {
+    setSelectedStatusTab(tab);
+    setCurrentPage(1);
+  };
+
   const handlePageSizeChange = (size: number) => {
     setPageSize(size);
     setCurrentPage(1);
   };
 
-  const pacientes: PacienteResponse[] = apiData?.items ?? [];
+  const allPacientes: PacienteResponse[] = apiData?.items ?? [];
 
-  // Compute Metrics
-  const total = apiData?.totalItems ?? pacientes.length;
-  const activos = pacientes.filter((p) => p.activo).length;
-  const conTelefono = pacientes.filter((p) => Boolean(p.persona?.telefono)).length;
+  // Filter by status tab
+  const filteredPacientes = React.useMemo(() => {
+    if (selectedStatusTab === "ACTIVOS") {
+      return allPacientes.filter((p) => p.activo);
+    }
+    if (selectedStatusTab === "INACTIVOS") {
+      return allPacientes.filter((p) => !p.activo);
+    }
+    return allPacientes;
+  }, [allPacientes, selectedStatusTab]);
+
+  // Compute Metrics from API data
+  const total = apiData?.totalItems ?? allPacientes.length;
+  const activos = allPacientes.filter((p) => p.activo).length;
+  const conTelefono = allPacientes.filter((p) => Boolean(p.persona?.telefono?.trim())).length;
+  const conConvenio = 0; // Calculable según convenios activos
 
   const metrics: PacienteMetrics = {
     totalPacientes: total,
     pacientesActivos: activos,
-    conTelefono: conTelefono,
-    conConvenio: Math.round(total * 0.4),
+    conTelefono,
+    conConvenio,
   };
 
   const handleOpenAdd = () => {
-    setPacienteToEdit(null);
-    setFormDialogOpen(true);
+    router.push("/recepcion/pacientes/nuevo");
   };
 
   const handleOpenEdit = (paciente: PacienteResponse) => {
-    setPacienteToEdit(paciente);
-    setFormDialogOpen(true);
-  };
-
-  const handleOpenDelete = (id: number) => {
-    const target = pacientes.find((p) => p.id === id);
-    if (target) {
-      setPacienteToDelete(target);
-      setDeleteDialogOpen(true);
-    }
+    router.push(`/recepcion/pacientes/${paciente.id}/editar`);
   };
 
   const handleOpenConvenios = (paciente: PacienteResponse) => {
@@ -92,16 +100,26 @@ export function PacienteModuleView() {
     setConveniosDialogOpen(true);
   };
 
+  const handleOpenDelete = (id: number) => {
+    const target = allPacientes.find((p) => p.id === id);
+    if (target) {
+      setPacienteToDelete(target);
+      setDeleteDialogOpen(true);
+    }
+  };
+
   const handleConfirmDelete = async () => {
     if (!pacienteToDelete) return;
 
     try {
       await deleteMutation.mutateAsync(pacienteToDelete.id);
-      toast.success(
-        `Paciente ${getPacienteFullName(pacienteToDelete)} desactivado correctamente.`
-      );
+      const nombre = pacienteToDelete.persona
+        ? `${pacienteToDelete.persona.nombres} ${pacienteToDelete.persona.apellidoPaterno}`
+        : `#${pacienteToDelete.id}`;
+      toast.success(`Paciente "${nombre}" eliminado correctamente.`);
       refetch();
     } catch {
+      toast.error("Ocurrió un error al eliminar el paciente.");
     } finally {
       setPacienteToDelete(null);
       setDeleteDialogOpen(false);
@@ -109,16 +127,23 @@ export function PacienteModuleView() {
   };
 
   return (
-    <div className="flex flex-col gap-4 w-full animate-in fade-in-50 duration-300">
-      <PacienteHeader onAddClick={handleOpenAdd} />
+    <div className="flex flex-col gap-3 w-full animate-in fade-in-50 duration-300">
+      {/* Cabecera del Módulo */}
+      <PacienteHeader onAddClick={handleOpenAdd} onRefresh={() => refetch()} />
+
+      {/* Tarjetas de Métricas en Vivo */}
       <PacienteMetricsCards metrics={metrics} />
-      <PacienteTable
-        pacientes={pacientes}
+
+      {/* Listado Principal de Pacientes (Formato Lista igual a Admisiones, Usuarios y Personas) */}
+      <PacienteList
+        pacientes={filteredPacientes}
         isLoading={isLoading}
-        totalItems={apiData?.totalItems ?? 0}
+        totalItems={apiData?.totalItems ?? allPacientes.length}
         currentPage={currentPage}
         pageSize={pageSize}
         searchTerm={searchTerm}
+        selectedStatusTab={selectedStatusTab}
+        onStatusTabChange={handleStatusTabChange}
         onSearchChange={handleSearchChange}
         onPageChange={setCurrentPage}
         onPageSizeChange={handlePageSizeChange}
@@ -127,23 +152,21 @@ export function PacienteModuleView() {
         onManageConvenios={handleOpenConvenios}
         onRefresh={() => refetch()}
       />
-      <PacienteFormDialog
-        open={formDialogOpen}
-        onOpenChange={setFormDialogOpen}
-        pacienteToEdit={pacienteToEdit}
-        onSuccessCallback={() => refetch()}
+
+      {/* Modal: Gestión de Convenios y Aseguradoras */}
+      <PacienteConveniosDialog
+        open={conveniosDialogOpen}
+        onOpenChange={setConveniosDialogOpen}
+        paciente={pacienteForConvenios}
       />
+
+      {/* Modal: Confirmación de Eliminación */}
       <PacienteDeleteDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         paciente={pacienteToDelete}
         onConfirm={handleConfirmDelete}
         isLoading={deleteMutation.isPending}
-      />
-      <PacienteConveniosDialog
-        open={conveniosDialogOpen}
-        onOpenChange={setConveniosDialogOpen}
-        paciente={pacienteForConvenios}
       />
     </div>
   );

@@ -6,8 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
 import { usePacientes, usePacienteConvenios } from "../../pacientes/hooks/use-pacientes";
-import { PacienteFormDialog } from "../../pacientes/components/paciente-form-dialog";
-import { getPacienteFullName } from "../../pacientes/components/paciente-card";
+import { getPacienteFullName } from "../../pacientes/components/paciente-list";
 import type { PacienteResponse } from "../../pacientes/types/paciente.types";
 import { useMedicos } from "@/modules/recursos-humanos/medico/hooks/use-medicos";
 import { useEmpleadosPermitidos } from "@/modules/recursos-humanos/empleado/hooks/use-empleados";
@@ -60,8 +59,6 @@ export function AdmisionPageForm() {
 
   // Modales
   const [multiPickerOpen, setMultiPickerOpen] = React.useState<boolean>(false);
-  const [registerPacienteOpen, setRegisterPacienteOpen] = React.useState<boolean>(false);
-  const [pacienteToEdit, setPacienteToEdit] = React.useState<PacienteResponse | null>(null);
 
   // Mutation estándar de Admisión (POST /admisiones)
   const createAdmisionMutation = useCreateAdmision();
@@ -208,25 +205,6 @@ export function AdmisionPageForm() {
         convenioId={convenioId}
       />
 
-      {/* DIÁLOGO OFICIAL COMPLETO DE REGISTRO / EDICIÓN DE PACIENTE */}
-      <PacienteFormDialog
-        open={registerPacienteOpen}
-        onOpenChange={(open) => {
-          setRegisterPacienteOpen(open);
-          if (!open) setPacienteToEdit(null);
-        }}
-        pacienteToEdit={pacienteToEdit}
-        initialSearchQuery={patientSearch}
-        onSuccessCallback={(savedPaciente) => {
-          if (savedPaciente) {
-            setSelectedPacienteId(savedPaciente.id.toString());
-            const nom = getPacienteFullName(savedPaciente);
-            setPatientSearch(nom);
-            toast.success(`¡Expediente de "${nom}" actualizado y seleccionado en la admisión!`);
-          }
-        }}
-      />
-
       {/* CABECERA PRINCIPAL COMPACTA */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-card p-3 rounded-xl border border-border/70 shadow-2xs">
         <div className="flex items-center gap-2.5 min-w-0">
@@ -309,8 +287,11 @@ export function AdmisionPageForm() {
                   isPatientValid={isPatientValid}
                   isLoadingPacientes={isLoadingPacientes}
                   onOpenRegisterModal={(paciente) => {
-                    setPacienteToEdit(paciente || null);
-                    setRegisterPacienteOpen(true);
+                    if (paciente) {
+                      router.push(`/recepcion/pacientes/${paciente.id}/editar`);
+                    } else {
+                      router.push("/recepcion/pacientes/nuevo");
+                    }
                   }}
                 />
 
@@ -372,8 +353,11 @@ export function AdmisionPageForm() {
               isPatientValid={isPatientValid}
               isLoadingPacientes={isLoadingPacientes}
               onOpenRegisterModal={(paciente) => {
-                setPacienteToEdit(paciente || null);
-                setRegisterPacienteOpen(true);
+                if (paciente) {
+                  router.push(`/recepcion/pacientes/${paciente.id}/editar`);
+                } else {
+                  router.push("/recepcion/pacientes/nuevo");
+                }
               }}
             />
 

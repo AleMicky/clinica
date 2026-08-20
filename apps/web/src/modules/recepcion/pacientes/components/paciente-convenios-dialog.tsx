@@ -49,7 +49,7 @@ import {
   type PacienteConvenioFormValues,
 } from "../schemas/paciente.schema";
 import type { PacienteResponse } from "../types/paciente.types";
-import { getPacienteFullName, getPacienteDocument } from "./paciente-card";
+import { getPacienteFullName, getPacienteDocument } from "./paciente-list";
 import { cn } from "@/lib/utils";
 
 interface PacienteConveniosDialogProps {

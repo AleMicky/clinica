@@ -1,60 +1,104 @@
 "use client";
 
 import * as React from "react";
-import { Users, UserCheck, FileText } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Users, UserCheck, Phone, UserX } from "lucide-react";
 import type { PersonaMetrics } from "../types/persona.types";
 
-interface PersonaMetricsProps {
+interface PersonaMetricsCardsProps {
   metrics: PersonaMetrics;
 }
 
-export function PersonaMetricsCards({ metrics }: PersonaMetricsProps) {
+export function PersonaMetricsCards({ metrics }: PersonaMetricsCardsProps) {
   return (
-    <div className="grid grid-cols-3 gap-2 sm:gap-3">
-      {/* Total Personas */}
-      <div className="flex items-center p-2.5 rounded-lg border border-border/60 bg-card shadow-2xs hover:border-primary/30 transition-colors gap-2.5">
-        <div className="size-7 sm:size-8 rounded-md bg-primary/10 flex items-center justify-center text-primary shrink-0">
-          <Users className="size-3.5 sm:size-4" />
-        </div>
-        <div className="flex flex-col leading-tight min-w-0">
-          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider truncate">
-            Total Personas
-          </span>
-          <span className="text-base sm:text-lg font-bold text-foreground leading-tight">
-            {metrics.totalPersonas}
-          </span>
-        </div>
-      </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+      {/* 1. Total Personas */}
+      <Card className="border border-border/70 bg-card hover:shadow-xs transition-all duration-200">
+        <CardContent className="p-3 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              Total Personas
+            </p>
+            <div className="flex items-baseline gap-1.5 mt-0.5">
+              <span className="text-xl font-extrabold text-foreground tracking-tight">
+                {metrics.totalPersonas}
+              </span>
+              <span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">
+                registradas
+              </span>
+            </div>
+          </div>
+          <div className="size-8.5 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-500/20 shrink-0">
+            <Users className="size-4" />
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Activas */}
-      <div className="flex items-center p-2.5 rounded-lg border border-border/60 bg-card shadow-2xs hover:border-emerald-500/30 transition-colors gap-2.5">
-        <div className="size-7 sm:size-8 rounded-md bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
-          <UserCheck className="size-3.5 sm:size-4" />
-        </div>
-        <div className="flex flex-col leading-tight min-w-0">
-          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider truncate">
-            Personas Activas
-          </span>
-          <span className="text-base sm:text-lg font-bold text-emerald-600 dark:text-emerald-400 leading-tight">
-            {metrics.personasActivas}
-          </span>
-        </div>
-      </div>
+      {/* 2. Personas Activas */}
+      <Card className="border border-border/70 bg-card hover:shadow-xs transition-all duration-200">
+        <CardContent className="p-3 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              Personas Activas
+            </p>
+            <div className="flex items-baseline gap-1.5 mt-0.5">
+              <span className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight">
+                {metrics.personasActivas}
+              </span>
+              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                habilitadas
+              </span>
+            </div>
+          </div>
+          <div className="size-8.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20 shrink-0">
+            <UserCheck className="size-4" />
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Inactivas */}
-      <div className="flex items-center p-2.5 rounded-lg border border-border/60 bg-card shadow-2xs hover:border-destructive/30 transition-colors gap-2.5">
-        <div className="size-7 sm:size-8 rounded-md bg-destructive/10 flex items-center justify-center text-destructive shrink-0">
-          <FileText className="size-3.5 sm:size-4" />
-        </div>
-        <div className="flex flex-col leading-tight min-w-0">
-          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider truncate">
-            Inactivas / Bajas
-          </span>
-          <span className="text-base sm:text-lg font-bold text-destructive leading-tight">
-            {metrics.personasInactivas}
-          </span>
-        </div>
-      </div>
+      {/* 3. Con Teléfono de Contacto */}
+      <Card className="border border-border/70 bg-card hover:shadow-xs transition-all duration-200">
+        <CardContent className="p-3 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              Con Teléfono
+            </p>
+            <div className="flex items-baseline gap-1.5 mt-0.5">
+              <span className="text-xl font-extrabold text-purple-600 dark:text-purple-400 tracking-tight">
+                {metrics.conTelefono}
+              </span>
+              <span className="text-[10px] text-purple-600 dark:text-purple-400 font-medium">
+                contactables
+              </span>
+            </div>
+          </div>
+          <div className="size-8.5 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-500/20 shrink-0">
+            <Phone className="size-4" />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 4. Inactivas */}
+      <Card className="border border-border/70 bg-card hover:shadow-xs transition-all duration-200">
+        <CardContent className="p-3 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              Inactivas
+            </p>
+            <div className="flex items-baseline gap-1 mt-0.5">
+              <span className="text-xl font-extrabold text-rose-600 dark:text-rose-400 tracking-tight">
+                {metrics.personasInactivas}
+              </span>
+              <span className="text-[10px] text-rose-600 dark:text-rose-400 font-medium ml-1">
+                deshabilitadas
+              </span>
+            </div>
+          </div>
+          <div className="size-8.5 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center border border-rose-500/20 shrink-0">
+            <UserX className="size-4" />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

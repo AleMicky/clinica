@@ -1,104 +1,104 @@
 "use client";
 
 import * as React from "react";
-import { HeartPulse, UserCheck, Phone, Handshake, TrendingUp } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Users, UserCheck, Phone, Building2 } from "lucide-react";
 import type { PacienteMetrics } from "../types/paciente.types";
 
-interface PacienteMetricsProps {
+interface PacienteMetricsCardsProps {
   metrics: PacienteMetrics;
 }
 
-export function PacienteMetricsCards({ metrics }: PacienteMetricsProps) {
-  const percentActivos = metrics.totalPacientes > 0
-    ? Math.round((metrics.pacientesActivos / metrics.totalPacientes) * 100)
-    : 0;
-
+export function PacienteMetricsCards({ metrics }: PacienteMetricsCardsProps) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      {/* Total Pacientes Card */}
-      <div className="group relative p-3.5 rounded-xl border border-border/70 bg-card hover:border-primary/50 hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col justify-between">
-        <div className="absolute top-0 right-0 size-16 bg-primary/5 rounded-bl-full pointer-events-none group-hover:scale-110 transition-transform" />
-        <div className="flex items-center justify-between">
-          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-            Total Pacientes
-          </span>
-          <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover:scale-105 transition-transform">
-            <HeartPulse className="size-4" />
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+      {/* 1. Total Pacientes */}
+      <Card className="border border-border/70 bg-card hover:shadow-xs transition-all duration-200">
+        <CardContent className="p-3 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              Total Pacientes
+            </p>
+            <div className="flex items-baseline gap-1.5 mt-0.5">
+              <span className="text-xl font-extrabold text-foreground tracking-tight">
+                {metrics.totalPacientes}
+              </span>
+              <span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">
+                historias clínicas
+              </span>
+            </div>
           </div>
-        </div>
-        <div className="mt-2 flex items-baseline justify-between">
-          <span className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
-            {metrics.totalPacientes}
-          </span>
-          <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
-            <TrendingUp className="size-3" />
-            Vigentes
-          </span>
-        </div>
-      </div>
+          <div className="size-8.5 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-500/20 shrink-0">
+            <Users className="size-4" />
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Activos Card */}
-      <div className="group relative p-3.5 rounded-xl border border-border/70 bg-card hover:border-emerald-500/50 hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col justify-between">
-        <div className="absolute top-0 right-0 size-16 bg-emerald-500/5 rounded-bl-full pointer-events-none group-hover:scale-110 transition-transform" />
-        <div className="flex items-center justify-between">
-          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-            Pacientes Activos
-          </span>
-          <div className="size-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-105 transition-transform">
+      {/* 2. Pacientes Activos */}
+      <Card className="border border-border/70 bg-card hover:shadow-xs transition-all duration-200">
+        <CardContent className="p-3 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              Pacientes Activos
+            </p>
+            <div className="flex items-baseline gap-1.5 mt-0.5">
+              <span className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight">
+                {metrics.pacientesActivos}
+              </span>
+              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                con atención vigente
+              </span>
+            </div>
+          </div>
+          <div className="size-8.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20 shrink-0">
             <UserCheck className="size-4" />
           </div>
-        </div>
-        <div className="mt-2 flex items-baseline justify-between">
-          <span className="text-xl sm:text-2xl font-black tracking-tight text-emerald-600 dark:text-emerald-400">
-            {metrics.pacientesActivos}
-          </span>
-          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono">
-            {percentActivos}%
-          </span>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* Con Teléfono Card */}
-      <div className="group relative p-3.5 rounded-xl border border-border/70 bg-card hover:border-sky-500/50 hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col justify-between">
-        <div className="absolute top-0 right-0 size-16 bg-sky-500/5 rounded-bl-full pointer-events-none group-hover:scale-110 transition-transform" />
-        <div className="flex items-center justify-between">
-          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-            Con Contacto
-          </span>
-          <div className="size-8 rounded-lg bg-sky-500/10 flex items-center justify-center text-sky-600 dark:text-sky-400 group-hover:scale-105 transition-transform">
+      {/* 3. Con Teléfono de Contacto */}
+      <Card className="border border-border/70 bg-card hover:shadow-xs transition-all duration-200">
+        <CardContent className="p-3 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              Con Teléfono
+            </p>
+            <div className="flex items-baseline gap-1.5 mt-0.5">
+              <span className="text-xl font-extrabold text-purple-600 dark:text-purple-400 tracking-tight">
+                {metrics.conTelefono}
+              </span>
+              <span className="text-[10px] text-purple-600 dark:text-purple-400 font-medium">
+                contactables
+              </span>
+            </div>
+          </div>
+          <div className="size-8.5 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-500/20 shrink-0">
             <Phone className="size-4" />
           </div>
-        </div>
-        <div className="mt-2 flex items-baseline justify-between">
-          <span className="text-xl sm:text-2xl font-black tracking-tight text-sky-600 dark:text-sky-400">
-            {metrics.conTelefono}
-          </span>
-          <span className="text-[10px] font-semibold text-muted-foreground">
-            Verificados
-          </span>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* Con Convenio Card */}
-      <div className="group relative p-3.5 rounded-xl border border-border/70 bg-card hover:border-purple-500/50 hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col justify-between">
-        <div className="absolute top-0 right-0 size-16 bg-purple-500/5 rounded-bl-full pointer-events-none group-hover:scale-110 transition-transform" />
-        <div className="flex items-center justify-between">
-          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-            Con Convenio
-          </span>
-          <div className="size-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-600 dark:text-purple-400 group-hover:scale-105 transition-transform">
-            <Handshake className="size-4" />
+      {/* 4. Con Convenio */}
+      <Card className="border border-border/70 bg-card hover:shadow-xs transition-all duration-200">
+        <CardContent className="p-3 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              Con Convenio
+            </p>
+            <div className="flex items-baseline gap-1 mt-0.5">
+              <span className="text-xl font-extrabold text-amber-600 dark:text-amber-400 tracking-tight">
+                {metrics.conConvenio}
+              </span>
+              <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium ml-1">
+                asegurados
+              </span>
+            </div>
           </div>
-        </div>
-        <div className="mt-2 flex items-baseline justify-between">
-          <span className="text-xl sm:text-2xl font-black tracking-tight text-purple-600 dark:text-purple-400">
-            {metrics.conConvenio}
-          </span>
-          <span className="text-[10px] font-semibold text-purple-600 dark:text-purple-400">
-            Asegurados
-          </span>
-        </div>
-      </div>
+          <div className="size-8.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20 shrink-0">
+            <Building2 className="size-4" />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
