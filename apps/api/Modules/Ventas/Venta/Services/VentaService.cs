@@ -34,12 +34,18 @@ public sealed class VentaService(
     public async Task<PagedResult<VentaResponse>> ListarAsync(
         PaginationRequest pagination,
         string? search,
+        EstadoVenta? estado = null,
         CancellationToken cancellationToken = default)
     {
         var query = Entities
             .AsNoTracking()
             .WithFullDetails()
             .Where(x => x.Activo);
+
+        if (estado.HasValue)
+        {
+            query = query.Where(x => x.Estado == estado.Value);
+        }
 
         query = ApplySearch(query, search?.Trim());
 

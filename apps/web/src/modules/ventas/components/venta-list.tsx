@@ -38,9 +38,9 @@ interface VentaListProps {
   currentPage: number;
   pageSize: number;
   searchTerm: string;
-  selectedEstadoTab?: EstadoVenta | "TODOS";
+  selectedEstadoTab?: EstadoVenta;
   selectedVentaId?: number | null;
-  onEstadoTabChange?: (tab: EstadoVenta | "TODOS") => void;
+  onEstadoTabChange?: (tab: EstadoVenta) => void;
   onSearchChange: (term: string) => void;
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
@@ -59,7 +59,7 @@ export function VentaList({
   currentPage,
   pageSize,
   searchTerm,
-  selectedEstadoTab = "TODOS",
+  selectedEstadoTab = EstadoVenta.Pendiente,
   selectedVentaId,
   onEstadoTabChange,
   onSearchChange,
@@ -72,11 +72,10 @@ export function VentaList({
   onAnular,
 }: VentaListProps) {
   const tabs: Array<{
-    key: EstadoVenta | "TODOS";
+    key: EstadoVenta;
     label: string;
     activeClasses: string;
   }> = [
-    { key: "TODOS", label: "Todas", activeClasses: "bg-primary text-primary-foreground shadow-xs" },
     { key: EstadoVenta.Pendiente, label: "Pendientes", activeClasses: "bg-amber-600 text-white shadow-xs" },
     { key: EstadoVenta.PendienteCobro, label: "En Caja", activeClasses: "bg-indigo-600 text-white shadow-xs" },
     { key: EstadoVenta.ParcialmentePagada, label: "Parciales", activeClasses: "bg-blue-600 text-white shadow-xs" },

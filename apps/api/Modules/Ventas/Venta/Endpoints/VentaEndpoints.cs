@@ -1,4 +1,5 @@
 using Clinica.Api.Modules.Ventas.Venta.Dtos;
+using Clinica.Api.Modules.Ventas.Venta.Enums;
 using Clinica.Api.Modules.Ventas.Venta.Services;
 using Clinica.Api.Shared.Constants;
 using Clinica.Api.Shared.Pagination;
@@ -82,6 +83,7 @@ public static class VentaEndpoints
     private static async Task<IResult> ListarAsync(
         [AsParameters] PaginationRequest pagination,
         string? search,
+        EstadoVenta? estado,
         VentaService service,
         CancellationToken cancellationToken)
     {
@@ -89,6 +91,7 @@ public static class VentaEndpoints
             await service.ListarAsync(
                 pagination,
                 search,
+                estado,
                 cancellationToken));
     }
 

@@ -60,11 +60,11 @@ export function VentaModuleView() {
   const [currentPage, setCurrentPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(10);
   const [searchTerm, setSearchTerm] = React.useState("");
-  const [selectedEstadoTab, setSelectedEstadoTab] = React.useState<
-    EstadoVenta | "TODOS"
-  >("TODOS");
+  const [selectedEstadoTab, setSelectedEstadoTab] = React.useState<EstadoVenta>(
+    EstadoVenta.Pendiente
+  );
 
-  // React Query Fetch
+  // React Query Fetch para la lista filtrada
   const {
     data: apiData,
     isLoading,
@@ -74,7 +74,12 @@ export function VentaModuleView() {
     pageNumber: currentPage,
     pageSize: pageSize,
     search: searchTerm.trim() || undefined,
-    estado: selectedEstadoTab === "TODOS" ? undefined : selectedEstadoTab,
+    estado: selectedEstadoTab,
+  });
+
+  // Fetch para métricas globales
+  const { data: allVentasData } = useVentas({
+    pageSize: 100,
   });
 
   const cambiarEstadoMutation = useCambiarEstadoVenta();
@@ -85,7 +90,7 @@ export function VentaModuleView() {
     setCurrentPage(1);
   };
 
-  const handleEstadoTabChange = (tab: EstadoVenta | "TODOS") => {
+  const handleEstadoTabChange = (tab: EstadoVenta) => {
     setSelectedEstadoTab(tab);
     setCurrentPage(1);
   };
@@ -96,18 +101,19 @@ export function VentaModuleView() {
   };
 
   const ventas: VentaResponse[] = apiData?.items ?? [];
+  const allVentasList: VentaResponse[] = allVentasData?.items ?? ventas;
 
   // Metrics calculation
-  const totalVentas = apiData?.totalItems ?? ventas.length;
-  const pendientes = ventas.filter((v) => v.estado === EstadoVenta.Pendiente).length;
-  const pendientesCobro = ventas.filter(
+  const totalVentas = allVentasData?.totalItems ?? allVentasList.length;
+  const pendientes = allVentasList.filter((v) => v.estado === EstadoVenta.Pendiente).length;
+  const pendientesCobro = allVentasList.filter(
     (v) => v.estado === EstadoVenta.PendienteCobro
   ).length;
-  const pagadas = ventas.filter(
+  const pagadas = allVentasList.filter(
     (v) => v.estado === EstadoVenta.Pagada || v.estado === EstadoVenta.ParcialmentePagada
   ).length;
-  const anuladas = ventas.filter((v) => v.estado === EstadoVenta.Anulada).length;
-  const montoTotal = ventas.reduce((acc, v) => acc + (v.total || 0), 0);
+  const anuladas = allVentasList.filter((v) => v.estado === EstadoVenta.Anulada).length;
+  const montoTotal = allVentasList.reduce((acc, v) => acc + (v.total || 0), 0);
 
   const metrics: VentaMetrics = {
     totalVentas,
