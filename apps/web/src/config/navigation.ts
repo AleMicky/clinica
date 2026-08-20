@@ -276,7 +276,69 @@ export const cajasNav: NavGroup = {
   ],
 }
 
-// Módulos agrupados
+// Categorías organizadas para navegación moderna en acordeón
+export interface NavCategory {
+  title: string
+  items: (NavItem | NavGroup)[]
+}
+
+export function isNavGroup(item: NavItem | NavGroup): item is NavGroup {
+  return "items" in item && Array.isArray((item as NavGroup).items)
+}
+
+export const navCategories: NavCategory[] = [
+  {
+    title: "Principal",
+    items: [
+      {
+        title: "Inicio",
+        href: "/dashboard",
+        icon: Home,
+        description: "Panel principal del sistema",
+      },
+      {
+        title: "Admisiones",
+        href: "/recepcion/admisiones",
+        icon: FileText,
+        description: "Registro de ingresos, atención y detalle de servicios",
+      },
+    ],
+  },
+  {
+    title: "Clínica & Servicios",
+    items: [
+      recepcionNav,
+      serviciosNav,
+    ],
+  },
+  {
+    title: "Caja & Ventas",
+    items: [
+      {
+        title: "Ventas",
+        href: "/ventas",
+        icon: Coins,
+        description: "Gestión de ventas, comprobantes y detalle de pagadores",
+      },
+      cajasNav,
+    ],
+  },
+  {
+    title: "Gestión Humana",
+    items: [
+      recursosHumanosNav,
+    ],
+  },
+  {
+    title: "Configuración & Sistema",
+    items: [
+      seguridadNav,
+      parametrosNav,
+    ],
+  },
+]
+
+// Módulos agrupados (compatibilidad)
 export const moduleGroups: NavGroup[] = [
   recepcionNav,
   cajasNav,
@@ -290,6 +352,7 @@ export const moduleGroups: NavGroup[] = [
 export const navigationConfig = {
   directNavItems,
   moduleGroups,
+  navCategories,
   recepcion: recepcionNav,
   cajas: cajasNav,
   servicios: serviciosNav,
