@@ -8,14 +8,14 @@ namespace Clinica.Api.Modules.Recepcion.Admision.Reports;
 
 public sealed class AdmisionPdfDocument : IDocument
 {
+    private static readonly string Primary = Colors.Blue.Darken2;
+    private static readonly string PrimaryDark = Colors.Blue.Darken3;
+    private static readonly string Tint = Colors.Blue.Lighten5;
+    private static readonly string TextDark = Colors.Grey.Darken3;
+    private static readonly string TextMuted = Colors.Grey.Darken1;
+
     private readonly AdmisionResponse _admision;
     private readonly ClinicaOptions _clinica;
-
-    private static readonly IReadOnlyList<string> EstadoLabels =
-    [
-        "", "Registrada", "Pendiente de Pago",
-        "Pagada", "En Atención", "Finalizada", "Cancelada"
-    ];
 
     public AdmisionPdfDocument(AdmisionResponse admision, ClinicaOptions clinica)
     {
@@ -32,7 +32,8 @@ public sealed class AdmisionPdfDocument : IDocument
 
                 page.DefaultTextStyle(text => text
                     .FontSize(10)
-                    .FontFamily(Fonts.Arial));
+                    .FontFamily(Fonts.Arial)
+                    .FontColor(TextDark));
 
                 page.Header().Element(ComposeHeader);
                 page.Content().Element(ComposeContent);
@@ -44,67 +45,71 @@ public sealed class AdmisionPdfDocument : IDocument
     {
         container.Column(column =>
         {
-            column.Spacing(4);
+            column.Spacing(12);
+
+            column.Item().Background(PrimaryDark).CornerRadius(6)
+                .Padding(16)
+                .Row(row =>
+                {
+                    row.RelativeItem().Column(clinicCol =>
+                    {
+                        clinicCol.Item()
+                            .Text(_clinica.Nombre)
+                            .FontSize(17)
+                            .Bold()
+                            .FontColor(Colors.White);
+
+                        var contacto = new List<string>(3);
+                        if (!string.IsNullOrWhiteSpace(_clinica.Direccion))
+                            contacto.Add(_clinica.Direccion);
+                        if (!string.IsNullOrWhiteSpace(_clinica.Telefono))
+                            contacto.Add($"Tel. {_clinica.Telefono}");
+                        if (!string.IsNullOrWhiteSpace(_clinica.Nit))
+                            contacto.Add($"NIT {_clinica.Nit}");
+
+                        if (contacto.Count > 0)
+                        {
+                            clinicCol.Item().PaddingTop(3)
+                                .Text(string.Join("   ·   ", contacto))
+                                .FontSize(8)
+                                .FontColor(Colors.Blue.Lighten4);
+                        }
+                    });
+
+                    row.ConstantItem(12);
+
+                    row.AutoItem().Background(Colors.White).CornerRadius(5)
+                        .PaddingHorizontal(14).PaddingVertical(8)
+                        .Column(col =>
+                        {
+                            col.Item()
+                                .Text("COMPROBANTE DE ADMISIÓN")
+                                .FontSize(7.5f)
+                                .SemiBold()
+                                .LetterSpacing(1)
+                                .FontColor(TextMuted);
+
+                            col.Item()
+                                .Text(_admision.Numero)
+                                .FontSize(14)
+                                .Bold()
+                                .FontColor(PrimaryDark);
+                        });
+                });
 
             column.Item().Row(row =>
             {
-                row.RelativeItem().Column(clinicCol =>
+                row.RelativeItem().Element(e => InfoField(e, "FECHA Y HORA", _admision.FechaHora.ToString("dd/MM/yyyy HH:mm")));
+
+                row.RelativeItem().Element(e => InfoField(e, "ATENDIDO POR", _admision.Recepcionista.NombreCompleto));
+
+                row.RelativeItem(0.9f).Column(col =>
                 {
-                    clinicCol.Item()
-                        .Text(_clinica.Nombre)
-                        .FontSize(18)
-                        .Bold()
-                        .FontColor(Colors.Blue.Darken2);
-
-                    if (!string.IsNullOrWhiteSpace(_clinica.Direccion))
-                        clinicCol.Item().Text(_clinica.Direccion);
-
-                    if (!string.IsNullOrWhiteSpace(_clinica.Telefono))
-                        clinicCol.Item().Text($"Tel: {_clinica.Telefono}");
-
-                    if (!string.IsNullOrWhiteSpace(_clinica.Nit))
-                        clinicCol.Item().Text($"NIT: {_clinica.Nit}");
-                });
-
-                row.ConstantItem(200).AlignRight().Column(col =>
-                {
-                    col.Item()
-                        .Text("COMPROBANTE DE ADMISIÓN")
-                        .FontSize(14)
-                        .Bold()
-                        .FontColor(Colors.Grey.Darken2);
-
-                    col.Item()
-                        .Text(_admision.Numero)
-                        .FontSize(12)
-                        .Bold();
-                });
-            });
-
-            column.Item().PaddingTop(8).LineHorizontal(1).LineColor(Colors.Grey.Lighten1);
-
-            column.Item().PaddingTop(8).Grid(grid =>
-            {
-                grid.Spacing(8);
-                grid.VerticalSpacing(4);
-                grid.Columns(2);
-
-                grid.Item(1).Column(infoCol =>
-                {
-                    infoCol.Item()
-                        .Text("Fecha y Hora")
-                        .Bold()
-                        .FontColor(Colors.Grey.Darken1);
-                    infoCol.Item().Text(_admision.FechaHora.ToString("dd/MM/yyyy HH:mm"));
-                });
-
-                grid.Item(1).Column(infoCol =>
-                {
-                    infoCol.Item()
-                        .Text("Estado")
-                        .Bold()
-                        .FontColor(Colors.Grey.Darken1);
-                    infoCol.Item().Text(GetEstadoLabel(_admision.Estado));
+                    col.Item().Text("ESTADO").FontSize(7.5f).Bold().FontColor(TextMuted);
+                    col.Item().PaddingTop(2).Row(badgeRow =>
+                    {
+                        badgeRow.AutoItem().Element(EstadoBadge);
+                    });
                 });
             });
         });
@@ -112,9 +117,9 @@ public sealed class AdmisionPdfDocument : IDocument
 
     private void ComposeContent(IContainer container)
     {
-        container.PaddingVertical(16).Column(column =>
+        container.PaddingVertical(14).Column(column =>
         {
-            column.Spacing(16);
+            column.Spacing(14);
 
             ComposeDatosPaciente(column.Item());
             ComposeConvenio(column.Item());
@@ -126,67 +131,30 @@ public sealed class AdmisionPdfDocument : IDocument
 
     private void ComposeDatosPaciente(IContainer container)
     {
-        container.Border(1).BorderColor(Colors.Grey.Lighten2).Padding(10).Column(column =>
+        var paciente = _admision.Paciente;
+        var persona = paciente.Persona;
+
+        var nombres = persona.ApellidoMaterno is null
+            ? $"{persona.Nombres} {persona.ApellidoPaterno}"
+            : $"{persona.Nombres} {persona.ApellidoPaterno} {persona.ApellidoMaterno}";
+
+        var documento = persona.ExtensionDocumento is null
+            ? persona.NumeroDocumento
+            : $"{persona.NumeroDocumento} {persona.ExtensionDocumento}";
+
+        Card(container).Column(column =>
         {
-            column.Spacing(4);
+            column.Spacing(10);
 
-            column.Item()
-                .Text("DATOS DEL PACIENTE")
-                .FontSize(11)
-                .Bold()
-                .FontColor(Colors.Blue.Darken2);
+            SectionTitle(column.Item(), "DATOS DEL PACIENTE");
 
-            var paciente = _admision.Paciente;
-            var persona = paciente.Persona;
-
-            column.Item().Grid(grid =>
-            {
-                grid.Spacing(8);
-                grid.VerticalSpacing(4);
-                grid.Columns(2);
-
-                grid.Item(1).Column(col =>
-                {
-                    col.Item()
-                        .Text("No. Historia Clínica")
-                        .Bold()
-                        .FontColor(Colors.Grey.Darken1);
-                    col.Item().Text(paciente.NumeroHistoriaClinica);
-                });
-
-                grid.Item(1).Column(col =>
-                {
-                    var nombres = persona.ApellidoMaterno is null
-                        ? $"{persona.Nombres} {persona.ApellidoPaterno}"
-                        : $"{persona.Nombres} {persona.ApellidoPaterno} {persona.ApellidoMaterno}";
-                    col.Item()
-                        .Text("Nombre Completo")
-                        .Bold()
-                        .FontColor(Colors.Grey.Darken1);
-                    col.Item().Text(nombres);
-                });
-
-                grid.Item(1).Column(col =>
-                {
-                    col.Item()
-                        .Text("Tipo Documento")
-                        .Bold()
-                        .FontColor(Colors.Grey.Darken1);
-                    col.Item().Text(persona.TipoDocumento);
-                });
-
-                grid.Item(1).Column(col =>
-                {
-                    var documento = persona.ExtensionDocumento is null
-                        ? persona.NumeroDocumento
-                        : $"{persona.NumeroDocumento} {persona.ExtensionDocumento}";
-                    col.Item()
-                        .Text("Número Documento")
-                        .Bold()
-                        .FontColor(Colors.Grey.Darken1);
-                    col.Item().Text(documento);
-                });
-            });
+            InfoGrid(column.Item(), 
+            [
+                ("NO. HISTORIA CLÍNICA", paciente.NumeroHistoriaClinica),
+                ("NOMBRE COMPLETO", nombres),
+                ("TIPO DOCUMENTO", persona.TipoDocumento),
+                ("NÚMERO DOCUMENTO", documento),
+            ]);
         });
     }
 
@@ -195,39 +163,17 @@ public sealed class AdmisionPdfDocument : IDocument
         if (_admision.Convenio is null)
             return;
 
-        container.Border(1).BorderColor(Colors.Grey.Lighten2).Padding(10).Column(column =>
+        Card(container).Column(column =>
         {
-            column.Spacing(4);
+            column.Spacing(10);
 
-            column.Item()
-                .Text("CONVENIO")
-                .FontSize(11)
-                .Bold()
-                .FontColor(Colors.Blue.Darken2);
+            SectionTitle(column.Item(), "CONVENIO");
 
-            column.Item().Grid(grid =>
-            {
-                grid.Spacing(8);
-                grid.Columns(2);
-
-                grid.Item(1).Column(col =>
-                {
-                    col.Item()
-                        .Text("Código")
-                        .Bold()
-                        .FontColor(Colors.Grey.Darken1);
-                    col.Item().Text(_admision.Convenio.Codigo);
-                });
-
-                grid.Item(1).Column(col =>
-                {
-                    col.Item()
-                        .Text("Nombre")
-                        .Bold()
-                        .FontColor(Colors.Grey.Darken1);
-                    col.Item().Text(_admision.Convenio.Nombre);
-                });
-            });
+            InfoGrid(column.Item(), 
+            [
+                ("CÓDIGO", _admision.Convenio.Codigo),
+                ("NOMBRE", _admision.Convenio.Nombre),
+            ]);
         });
     }
 
@@ -237,34 +183,30 @@ public sealed class AdmisionPdfDocument : IDocument
         {
             column.Spacing(8);
 
-            column.Item()
-                .Text("DETALLES DE LA ADMISIÓN")
-                .FontSize(11)
-                .Bold()
-                .FontColor(Colors.Blue.Darken2);
+            SectionTitle(column.Item(), "DETALLES DE LA ADMISIÓN");
 
             column.Item().Table(table =>
             {
                 table.ColumnsDefinition(columns =>
                 {
-                    columns.ConstantColumn(40);
+                    columns.ConstantColumn(28);
                     columns.RelativeColumn(2);
                     columns.RelativeColumn(2);
-                    columns.ConstantColumn(50);
-                    columns.ConstantColumn(60);
+                    columns.ConstantColumn(45);
+                    columns.ConstantColumn(55);
                     columns.ConstantColumn(50);
                     columns.ConstantColumn(60);
                 });
 
                 table.Header(header =>
                 {
-                    header.Cell().Element(HeaderCell).Text("#");
-                    header.Cell().Element(HeaderCell).Text("Servicio");
-                    header.Cell().Element(HeaderCell).Text("Médico");
-                    header.Cell().Element(HeaderCell).AlignCenter().Text("Cant.");
-                    header.Cell().Element(HeaderCell).AlignRight().Text("Precio");
-                    header.Cell().Element(HeaderCell).AlignRight().Text("Desc.");
-                    header.Cell().Element(HeaderCell).AlignRight().Text("Total");
+                    header.Cell().Element(HeaderCell).AlignCenter().Text("#");
+                    header.Cell().Element(HeaderCell).Text("SERVICIO");
+                    header.Cell().Element(HeaderCell).Text("MÉDICO");
+                    header.Cell().Element(HeaderCell).AlignCenter().Text("CANT.");
+                    header.Cell().Element(HeaderCell).AlignRight().Text("PRECIO");
+                    header.Cell().Element(HeaderCell).AlignRight().Text("DESC.");
+                    header.Cell().Element(HeaderCell).AlignRight().Text("TOTAL");
                 });
 
                 var idx = 0;
@@ -275,74 +217,47 @@ public sealed class AdmisionPdfDocument : IDocument
 
                     table.Cell().Element(cell => CellStyle(cell, isAlt))
                         .AlignCenter()
-                        .Text(idx.ToString());
+                        .Text(idx.ToString())
+                        .FontSize(9)
+                        .FontColor(TextMuted);
+
                     table.Cell().Element(cell => CellStyle(cell, isAlt))
                         .Column(col =>
                         {
                             col.Item()
+                                .Text(detalle.Servicio.Nombre)
+                                .FontSize(9.5f)
+                                .Medium();
+                            col.Item()
                                 .Text(detalle.Servicio.Codigo)
-                                .FontSize(8)
-                                .FontColor(Colors.Grey.Darken1);
-                            col.Item().Text(detalle.Servicio.Nombre).FontSize(9);
+                                .FontSize(7.5f)
+                                .FontColor(TextMuted);
                         });
-
-                    var medicoNombre = string.Empty;
-                    if (detalle.Medico?.Empleado is not null)
-                    {
-                        medicoNombre = detalle.Medico.Empleado.NombreCompleto;
-                        if (!string.IsNullOrWhiteSpace(detalle.Medico.MatriculaProfesional))
-                            medicoNombre = $"{medicoNombre} ({detalle.Medico.MatriculaProfesional})";
-                    }
 
                     table.Cell().Element(cell => CellStyle(cell, isAlt))
-                        .Column(col =>
-                        {
-                            if (!string.IsNullOrWhiteSpace(medicoNombre))
-                            {
-                                col.Item().Text(medicoNombre).FontSize(9);
-                            }
-                            else
-                            {
-                                col.Item()
-                                    .Text("—")
-                                    .FontColor(Colors.Grey.Lighten1);
-                            }
-                        });
+                        .Text(GetMedicoNombre(detalle))
+                        .FontSize(9.5f);
 
                     table.Cell().Element(cell => CellStyle(cell, isAlt))
                         .AlignCenter()
-                        .Text(detalle.Cantidad.ToString("N2"));
+                        .Text(detalle.Cantidad.ToString("N2"))
+                        .FontSize(9.5f);
                     table.Cell().Element(cell => CellStyle(cell, isAlt))
                         .AlignRight()
-                        .Text(detalle.PrecioUnitario.ToString("N2"));
+                        .Text(detalle.PrecioUnitario.ToString("N2"))
+                        .FontSize(9.5f);
                     table.Cell().Element(cell => CellStyle(cell, isAlt))
                         .AlignRight()
-                        .Text(detalle.Descuento.ToString("N2"));
+                        .Text(detalle.Descuento.ToString("N2"))
+                        .FontSize(9.5f);
                     table.Cell().Element(cell => CellStyle(cell, isAlt))
                         .AlignRight()
-                        .Text(detalle.Total.ToString("N2"));
+                        .Text(detalle.Total.ToString("N2"))
+                        .FontSize(9.5f)
+                        .SemiBold();
                 }
             });
         });
-    }
-
-    private static IContainer CellStyle(IContainer cell, bool isAlt)
-    {
-        if (isAlt)
-            cell.Background(Colors.Grey.Lighten5);
-        return cell.BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(6);
-    }
-
-    private static IContainer HeaderCell(IContainer cell)
-    {
-        return cell.BorderBottom(2).BorderTop(1)
-            .BorderColor(Colors.Grey.Lighten1)
-            .Background(Colors.Grey.Lighten4)
-            .Padding(6)
-            .AlignCenter()
-            .DefaultTextStyle(text => text
-                .FontSize(8)
-                .Bold());
     }
 
     private void ComposeTotales(IContainer container)
@@ -351,48 +266,32 @@ public sealed class AdmisionPdfDocument : IDocument
         var descuentoTotal = _admision.Detalles.Sum(d => d.Descuento);
         var subtotal = _admision.Detalles.Sum(d => d.Cantidad * d.PrecioUnitario);
 
-        container.AlignRight().Width(200).Column(column =>
+        container.AlignRight().Width(230).Column(column =>
         {
-            column.Spacing(4);
-
             if (descuentoTotal > 0)
             {
-                column.Item().Row(row =>
-                {
-                    row.RelativeItem()
-                        .Text("Subtotal:")
-                        .FontColor(Colors.Grey.Darken1);
-                    row.ConstantItem(80)
-                        .AlignRight()
-                        .Text(subtotal.ToString("N2"));
-                });
+                TotalRow(column.Item(), "Subtotal", subtotal.ToString("N2"));
+                TotalRow(column.Item(), "Descuento", $"-{descuentoTotal:N2}", Colors.Red.Darken1);
 
-                column.Item().Row(row =>
-                {
-                    row.RelativeItem()
-                        .Text("Descuento:")
-                        .FontColor(Colors.Grey.Darken1);
-                    row.ConstantItem(80)
-                        .AlignRight()
-                        .Text(descuentoTotal.ToString("N2"));
-                });
+                column.Item().PaddingVertical(4).LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
             }
 
-            column.Item().LineHorizontal(1).LineColor(Colors.Grey.Lighten1);
-
-            column.Item().Row(row =>
-            {
-                row.RelativeItem()
-                    .Text("TOTAL:")
-                    .FontSize(12)
-                    .Bold();
-                row.ConstantItem(80)
-                    .AlignRight()
-                    .Text(total.ToString("N2"))
-                    .FontSize(13)
-                    .FontColor(Colors.Blue.Darken2)
-                    .Bold();
-            });
+            column.Item()
+                .Background(Primary).CornerRadius(5)
+                .PaddingHorizontal(12).PaddingVertical(8)
+                .Row(row =>
+                {
+                    row.RelativeItem()
+                        .Text("TOTAL")
+                        .FontSize(11)
+                        .Bold()
+                        .FontColor(Colors.White);
+                    row.AutoItem()
+                        .Text(total.ToString("N2"))
+                        .FontSize(13)
+                        .Bold()
+                        .FontColor(Colors.White);
+                });
         });
     }
 
@@ -401,57 +300,164 @@ public sealed class AdmisionPdfDocument : IDocument
         if (string.IsNullOrWhiteSpace(_admision.Observacion))
             return;
 
-        container.PaddingTop(16).Column(column =>
+        container.Column(column =>
         {
-            column.Spacing(4);
+            column.Spacing(8);
+
+            SectionTitle(column.Item(), "OBSERVACIONES");
 
             column.Item()
-                .Text("OBSERVACIONES")
-                .FontSize(11)
-                .Bold()
-                .FontColor(Colors.Blue.Darken2);
-
-            column.Item()
-                .Border(1)
-                .BorderColor(Colors.Grey.Lighten2)
-                .Padding(8)
-                .Text(_admision.Observacion);
+                .Background(Colors.Amber.Lighten5).CornerRadius(5)
+                .BorderLeft(3).BorderColor(Colors.Amber.Darken1)
+                .Padding(10)
+                .Text(_admision.Observacion)
+                .FontSize(9.5f)
+                .FontColor(Colors.Grey.Darken2);
         });
     }
 
     private void ComposeFooter(IContainer container)
     {
-        container.PaddingTop(16).Column(column =>
+        container.PaddingTop(10).Column(column =>
         {
-            column.Item().LineHorizontal(1).LineColor(Colors.Grey.Lighten1);
+            column.Item().LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
 
             column.Item().PaddingTop(6).Row(row =>
             {
                 row.RelativeItem()
                     .Text($"Generado el {DateTime.Now:dd/MM/yyyy HH:mm}")
                     .FontSize(8)
-                    .FontColor(Colors.Grey.Darken1);
+                    .FontColor(TextMuted);
 
-                row.ConstantItem(120)
-                    .AlignRight()
-                    .Text(text =>
-                    {
-                        text.CurrentPageNumber()
-                            .FontSize(8)
-                            .FontColor(Colors.Grey.Darken1);
-                        text.Span(" / ")
-                            .FontSize(8)
-                            .FontColor(Colors.Grey.Darken1);
-                        text.TotalPages()
-                            .FontSize(8)
-                            .FontColor(Colors.Grey.Darken1);
-                    });
+                row.AutoItem().Text(text =>
+                {
+                    text.AlignRight();
+                    text.Span("Página ").FontSize(8).FontColor(TextMuted);
+                    text.CurrentPageNumber().FontSize(8).Bold().FontColor(Primary);
+                    text.Span(" de ").FontSize(8).FontColor(TextMuted);
+                    text.TotalPages().FontSize(8).Bold().FontColor(Primary);
+                });
             });
         });
     }
 
-    private static string GetEstadoLabel(Entity.EstadoAdmision estado) =>
-        (int)estado is > 0 and < 7
-            ? EstadoLabels[(int)estado]
-            : estado.ToString();
+    private static string GetMedicoNombre(AdmisionDetalleResponse detalle)
+    {
+        if (detalle.Medico?.Empleado is null)
+            return "—";
+
+        var nombre = detalle.Medico.Empleado.NombreCompleto;
+        return string.IsNullOrWhiteSpace(detalle.Medico.MatriculaProfesional)
+            ? nombre
+            : $"{nombre} ({detalle.Medico.MatriculaProfesional})";
+    }
+
+    private void EstadoBadge(IContainer container)
+    {
+        (string Label, string TextColor, string BackgroundColor) style = _admision.Estado switch
+        {
+            Entity.EstadoAdmision.Registrada => ("REGISTRADA", Colors.Blue.Darken2, Colors.Blue.Lighten5),
+            Entity.EstadoAdmision.Confirmada => ("CONFIRMADA", Colors.Teal.Darken2, Colors.Teal.Lighten5),
+            Entity.EstadoAdmision.EnviadaVenta => ("ENVIADA A VENTA", Colors.Green.Darken2, Colors.Green.Lighten5),
+            Entity.EstadoAdmision.Cancelada => ("CANCELADA", Colors.Red.Darken2, Colors.Red.Lighten5),
+            _ => (_admision.Estado.ToString().ToUpperInvariant(), TextDark, Colors.Grey.Lighten4),
+        };
+
+        container.Background(style.BackgroundColor).CornerRadius(9)
+            .Border(1).BorderColor(style.TextColor)
+            .PaddingHorizontal(8).PaddingVertical(2)
+            .Text(style.Label)
+            .FontSize(8)
+            .Bold()
+            .FontColor(style.TextColor);
+    }
+
+    private static void SectionTitle(IContainer container, string title)
+    {
+        container.Row(row =>
+        {
+            row.AutoItem().Width(3).Background(Primary).CornerRadius(1.5f);
+            row.RelativeItem().PaddingLeft(6)
+                .Text(title)
+                .FontSize(11)
+                .Bold()
+                .FontColor(PrimaryDark);
+        });
+    }
+
+    private static void InfoField(IContainer container, string label, string value)
+    {
+        container.Column(col =>
+        {
+            col.Item()
+                .Text(label)
+                .FontSize(7.5f)
+                .Bold()
+                .FontColor(TextMuted);
+            col.Item().PaddingTop(1)
+                .Text(value)
+                .FontSize(10)
+                .Medium()
+                .FontColor(TextDark);
+        });
+    }
+
+    private static void InfoGrid(IContainer container, IReadOnlyList<(string Label, string Value)> fields)
+    {
+        container.Table(table =>
+        {
+            table.ColumnsDefinition(columns =>
+            {
+                columns.RelativeColumn();
+                columns.RelativeColumn();
+            });
+
+            foreach (var (label, value) in fields)
+            {
+                table.Cell().PaddingVertical(4).PaddingRight(16)
+                    .Element(e => InfoField(e, label, value));
+            }
+        });
+    }
+
+    private static void TotalRow(IContainer container, string label, string value, string? valueColor = null)
+    {
+        container.PaddingVertical(2).Row(row =>
+        {
+            row.RelativeItem()
+                .Text(label)
+                .FontSize(9.5f)
+                .FontColor(TextMuted);
+            row.AutoItem()
+                .Text(value)
+                .FontSize(9.5f)
+                .FontColor(valueColor ?? TextDark);
+        });
+    }
+
+    private static IContainer Card(IContainer container)
+    {
+        return container.Border(1)
+            .BorderColor(Colors.Grey.Lighten2)
+            .CornerRadius(6)
+            .Background(Colors.White)
+            .Padding(12);
+    }
+
+    private static IContainer HeaderCell(IContainer cell)
+    {
+        return cell.Background(Primary)
+            .PaddingVertical(6).PaddingHorizontal(6)
+            .AlignCenter()
+            .DefaultTextStyle(text => text
+                .FontSize(7.5f)
+                .Bold()
+                .FontColor(Colors.White));
+    }
+
+    private static IContainer CellStyle(IContainer cell, bool isAlt)
+    {
+        var styled = isAlt ? cell.Background(Tint) : cell;
+        return styled.BorderBottom(1).BorderColor(Colors.Grey.Lighten2).PaddingVertical(5).PaddingHorizontal(6);
+    }
 }
