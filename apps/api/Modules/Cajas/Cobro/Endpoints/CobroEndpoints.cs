@@ -1,4 +1,5 @@
 using Clinica.Api.Modules.Cajas.Cobro.Dtos;
+using Clinica.Api.Modules.Cajas.Cobro.Enums;
 using Clinica.Api.Modules.Cajas.Cobro.Services;
 using Clinica.Api.Shared.Constants;
 using Clinica.Api.Shared.Pagination;
@@ -35,6 +36,7 @@ public static class CobroEndpoints
     private static async Task<IResult> ListarAsync(
         [AsParameters] PaginationRequest pagination,
         string? search,
+        EstadoCobro? estado,
         CobroService service,
         CancellationToken cancellationToken)
     {
@@ -42,6 +44,7 @@ public static class CobroEndpoints
             await service.ListarAsync(
                 pagination,
                 search,
+                estado,
                 cancellationToken));
     }
 

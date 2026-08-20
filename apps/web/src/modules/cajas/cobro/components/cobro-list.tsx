@@ -30,8 +30,6 @@ import {
 import { CobroStatusBadge } from "./cobro-status-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export type CobroFilterTab = "TODOS" | "POR_COBRAR" | "COBRADOS" | "ANULADOS";
-
 interface CobroListProps {
   cobros: CobroResponse[];
   isLoading?: boolean;
@@ -39,9 +37,9 @@ interface CobroListProps {
   currentPage: number;
   pageSize: number;
   searchTerm: string;
-  selectedFilterTab?: CobroFilterTab;
+  selectedEstadoTab?: EstadoCobro;
   selectedCobroId?: number | null;
-  onFilterTabChange?: (tab: CobroFilterTab) => void;
+  onEstadoTabChange?: (tab: EstadoCobro) => void;
   onSearchChange: (term: string) => void;
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
@@ -57,9 +55,9 @@ export function CobroList({
   currentPage,
   pageSize,
   searchTerm,
-  selectedFilterTab = "TODOS",
+  selectedEstadoTab = EstadoCobro.Registrado,
   selectedCobroId,
-  onFilterTabChange,
+  onEstadoTabChange,
   onSearchChange,
   onPageChange,
   onPageSizeChange,
@@ -67,51 +65,31 @@ export function CobroList({
   onAnular,
 }: CobroListProps) {
   const tabs: Array<{
-    key: CobroFilterTab;
+    key: EstadoCobro;
     label: string;
     activeClasses: string;
   }> = [
     {
-      key: "TODOS",
-      label: "Todos",
-      activeClasses: "bg-primary text-primary-foreground shadow-xs",
-    },
-    {
-      key: "POR_COBRAR",
-      label: "Por Cobrar",
-      activeClasses: "bg-amber-600 text-white shadow-xs",
-    },
-    {
-      key: "COBRADOS",
+      key: EstadoCobro.Registrado,
       label: "Cobrados",
       activeClasses: "bg-emerald-600 text-white shadow-xs",
     },
     {
-      key: "ANULADOS",
+      key: EstadoCobro.Anulado,
       label: "Anulados",
       activeClasses: "bg-rose-600 text-white shadow-xs",
     },
+    {
+      key: EstadoCobro.DevueltoParcial,
+      label: "Dev. Parcial",
+      activeClasses: "bg-amber-600 text-white shadow-xs",
+    },
+    {
+      key: EstadoCobro.Devuelto,
+      label: "Devueltos",
+      activeClasses: "bg-purple-600 text-white shadow-xs",
+    },
   ];
-
-  // Filtrado local según la pestaña si la API devuelve todos
-  const filteredCobros = React.useMemo(() => {
-    return cobros.filter((c) => {
-      const isPending =
-        c.estado === EstadoCobro.Registrado &&
-        (c.total === 0 || (c.detalles && c.detalles.length === 0));
-      const isCompleted =
-        c.estado === EstadoCobro.Registrado &&
-        c.total > 0 &&
-        c.detalles &&
-        c.detalles.length > 0;
-      const isAnulado = c.estado === EstadoCobro.Anulado;
-
-      if (selectedFilterTab === "POR_COBRAR") return isPending;
-      if (selectedFilterTab === "COBRADOS") return isCompleted;
-      if (selectedFilterTab === "ANULADOS") return isAnulado;
-      return true;
-    });
-  }, [cobros, selectedFilterTab]);
 
   return (
     <div className="space-y-2.5 w-full">
@@ -120,12 +98,12 @@ export function CobroList({
         {/* Badges interactivos de pestañas */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
           {tabs.map((t) => {
-            const isActive = selectedFilterTab === t.key;
+            const isActive = selectedEstadoTab === t.key;
             return (
               <button
-                key={t.key}
+                key={t.key.toString()}
                 type="button"
-                onClick={() => onFilterTabChange?.(t.key)}
+                onClick={() => onEstadoTabChange?.(t.key)}
                 className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer select-none ${
                   isActive
                     ? t.activeClasses
@@ -171,7 +149,7 @@ export function CobroList({
               </div>
             ))}
           </div>
-        ) : filteredCobros.length === 0 ? (
+        ) : cobros.length === 0 ? (
           <div className="py-12 text-center border border-dashed border-border/60 rounded-xl bg-muted/10 space-y-2">
             <CreditCard className="size-8 text-muted-foreground/40 mx-auto" />
             <p className="font-bold text-xs text-foreground">
@@ -183,7 +161,7 @@ export function CobroList({
           </div>
         ) : (
           <div className="space-y-1.5">
-            {filteredCobros.map((cobro) => {
+            {cobros.map((cobro) => {
               const isSelected = selectedCobroId === cobro.id;
               const isPendingPayment =
                 cobro.estado === EstadoCobro.Registrado &&

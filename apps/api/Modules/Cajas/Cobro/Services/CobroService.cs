@@ -28,11 +28,17 @@ public sealed class CobroService(
     public async Task<PagedResult<CobroResponse>> ListarAsync(
         PaginationRequest pagination,
         string? search,
+        EstadoCobro? estado = null,
         CancellationToken cancellationToken = default)
     {
         var query = BuildQuery()
             .AsNoTracking()
             .Where(x => x.Activo);
+
+        if (estado.HasValue)
+        {
+            query = query.Where(x => x.Estado == estado.Value);
+        }
 
         var normalizedSearch = string.IsNullOrWhiteSpace(search)
             ? null

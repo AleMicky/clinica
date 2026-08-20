@@ -4,7 +4,7 @@ import * as React from "react";
 import { useCobros } from "../hooks/use-cobros";
 import { CobroHeader } from "./cobro-header";
 import { CobroMetrics } from "./cobro-metrics";
-import { CobroList, type CobroFilterTab } from "./cobro-list";
+import { CobroList } from "./cobro-list";
 import { CobroDetailCard } from "./cobro-detail-card";
 import { CobroDetailSheet } from "./cobro-detail-sheet";
 import { CobroAnularDialog } from "./cobro-anular-dialog";
@@ -20,8 +20,9 @@ export function CobroModuleView() {
   const [pageSize, setPageSize] = React.useState(10);
   const [searchTerm, setSearchTerm] = React.useState("");
   const [debouncedSearch, setDebouncedSearch] = React.useState("");
-  const [selectedFilterTab, setSelectedFilterTab] =
-    React.useState<CobroFilterTab>("TODOS");
+  const [selectedEstadoTab, setSelectedEstadoTab] = React.useState<EstadoCobro>(
+    EstadoCobro.Registrado
+  );
 
   // Estado Master-Detail
   const [selectedCobroForDetail, setSelectedCobroForDetail] =
@@ -43,6 +44,7 @@ export function CobroModuleView() {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
+  // Consulta de lista filtrada por estado
   const {
     data: apiData,
     isLoading,
@@ -52,12 +54,12 @@ export function CobroModuleView() {
     page: currentPage,
     pageSize,
     search: debouncedSearch || undefined,
-    estado:
-      selectedFilterTab === "ANULADOS"
-        ? EstadoCobro.Anulado
-        : selectedFilterTab === "POR_COBRAR" || selectedFilterTab === "COBRADOS"
-        ? EstadoCobro.Registrado
-        : undefined,
+    estado: selectedEstadoTab,
+  });
+
+  // Consulta para métricas globales
+  const { data: allCobrosData } = useCobros({
+    pageSize: 100,
   });
 
   const cobros: CobroResponse[] = Array.isArray(apiData?.items)
@@ -68,6 +70,12 @@ export function CobroModuleView() {
 
   const totalItems = apiData?.totalItems ?? cobros.length;
 
+  const allCobrosList: CobroResponse[] = Array.isArray(allCobrosData?.items)
+    ? allCobrosData.items
+    : cobros;
+
+  const totalItemsCount = allCobrosData?.totalItems ?? allCobrosList.length;
+
   // Cálculo de Métricas
   const metrics: CobroMetricsType = React.useMemo(() => {
     let montoTotal = 0;
@@ -75,7 +83,7 @@ export function CobroModuleView() {
     let completadosCount = 0;
     let anuladosCount = 0;
 
-    cobros.forEach((c) => {
+    allCobrosList.forEach((c) => {
       if (c.estado === EstadoCobro.Anulado) {
         anuladosCount++;
       } else {
@@ -93,13 +101,13 @@ export function CobroModuleView() {
     });
 
     return {
-      totalCobros: totalItems,
+      totalCobros: totalItemsCount,
       pendientesCobro: pendientesCobroCount,
       completados: completadosCount,
       anulados: anuladosCount,
       totalMontoCobrado: montoTotal,
     };
-  }, [cobros, totalItems]);
+  }, [allCobrosList, totalItemsCount]);
 
   // Auto-seleccionar primer cobro en pantallas grandes
   React.useEffect(() => {
@@ -128,8 +136,8 @@ export function CobroModuleView() {
     setAnularDialogOpen(true);
   };
 
-  const handleFilterTabChange = (tab: CobroFilterTab) => {
-    setSelectedFilterTab(tab);
+  const handleEstadoTabChange = (tab: EstadoCobro) => {
+    setSelectedEstadoTab(tab);
     setCurrentPage(1);
   };
 
@@ -152,9 +160,9 @@ export function CobroModuleView() {
             currentPage={currentPage}
             pageSize={pageSize}
             searchTerm={searchTerm}
-            selectedFilterTab={selectedFilterTab}
+            selectedEstadoTab={selectedEstadoTab}
             selectedCobroId={selectedCobroForDetail?.id ?? null}
-            onFilterTabChange={handleFilterTabChange}
+            onEstadoTabChange={handleEstadoTabChange}
             onSearchChange={setSearchTerm}
             onPageChange={setCurrentPage}
             onPageSizeChange={(size) => {
