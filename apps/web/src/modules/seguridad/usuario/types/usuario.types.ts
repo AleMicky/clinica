@@ -32,7 +32,7 @@ export interface PersonaUsuarioPayload {
   nombres: string;
   apellidoPaterno: string;
   apellidoMaterno?: string;
-  fechaNacimiento: string;
+  fechaNacimiento?: string;
   telefono?: string;
   direccion?: string;
   tipoDocumento: string;

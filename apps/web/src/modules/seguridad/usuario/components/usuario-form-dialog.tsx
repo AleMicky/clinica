@@ -43,6 +43,7 @@ import { cn } from "@/lib/utils";
 
 import { usuarioSchema, type UsuarioFormValues } from "../schemas/usuario.schema";
 import { useCreateUsuario, useUpdateUsuario } from "../hooks/use-usuarios";
+import { useRoles } from "@/modules/seguridad/rol";
 import type { UsuarioResponse } from "../types/usuario.types";
 
 interface UsuarioFormDialogProps {
@@ -51,17 +52,6 @@ interface UsuarioFormDialogProps {
   usuarioToEdit?: UsuarioResponse | null;
   onSuccessCallback?: () => void;
 }
-
-const ROL_DEFECTO = "RECEPCION";
-
-const ROLES_DISPONIBLES = [
-  { value: "ADMINISTRADOR", label: "Administrador del Sistema" },
-  { value: "RECEPCION", label: "Recepción / Admisión" },
-  { value: "CAJA", label: "Contabilidad / Caja" },
-  { value: "FARMACIA", label: "Farmacia" },
-  { value: "ALMACEN", label: "Almacén" },
-  { value: "RECURSOS_HUMANOS", label: "Recursos Humanos" },
-];
 
 const STEPS: StepItem[] = [
   {
@@ -87,6 +77,9 @@ export function UsuarioFormDialog({
   const isEditing = Boolean(usuarioToEdit);
   const [currentStep, setCurrentStep] = React.useState<1 | 2>(1);
   const [showPassword, setShowPassword] = React.useState(false);
+
+  const { data: rolesData, isLoading: isLoadingRoles } = useRoles({ pageSize: 100 });
+  const roles = rolesData?.items ?? [];
 
   const createMutation = useCreateUsuario();
   const updateMutation = useUpdateUsuario();
@@ -116,11 +109,11 @@ export function UsuarioFormDialog({
       complementoDocumento: "",
       genero: "",
       estadoCivil: "",
-      rol: ROL_DEFECTO,
+      rol: "",
     },
   });
 
-  const rolValue: string = watch("rol") || ROL_DEFECTO;
+  const rolValue: string = watch("rol") || "";
   const tipoDocumentoValue: string = watch("tipoDocumento") || "";
   const extensionDocumentoValue: string = watch("extensionDocumento") || "";
   const generoValue: string = watch("genero") || "";
@@ -159,7 +152,7 @@ export function UsuarioFormDialog({
           complementoDocumento: usuarioToEdit.persona?.complementoDocumento || "",
           genero: usuarioToEdit.persona?.genero || "",
           estadoCivil: usuarioToEdit.persona?.estadoCivil || "",
-          rol: usuarioToEdit.roles?.[0] || ROL_DEFECTO,
+          rol: usuarioToEdit.roles?.[0] || "",
         });
       } else {
         reset({
@@ -177,7 +170,7 @@ export function UsuarioFormDialog({
           complementoDocumento: "",
           genero: "",
           estadoCivil: "",
-          rol: ROL_DEFECTO,
+          rol: "",
         });
       }
     }
@@ -239,7 +232,7 @@ export function UsuarioFormDialog({
         await createMutation.mutateAsync({
           userName: values.userName.trim(),
           email: values.email.trim(),
-          password: values.password || "Clinica123*",
+          password: values.password?.trim() || undefined,
           roles: values.rol ? [values.rol] : [],
           persona: {
             nombres: values.nombres.trim(),
@@ -249,7 +242,7 @@ export function UsuarioFormDialog({
             numeroDocumento: values.numeroDocumento.trim(),
             extensionDocumento: values.extensionDocumento?.trim() || undefined,
             complementoDocumento: values.complementoDocumento?.trim() || undefined,
-            fechaNacimiento: values.fechaNacimiento || new Date().toISOString().split("T")[0],
+            fechaNacimiento: values.fechaNacimiento?.trim() || undefined,
             genero: values.genero?.trim() || undefined,
             estadoCivil: values.estadoCivil?.trim() || undefined,
           },
@@ -385,7 +378,7 @@ export function UsuarioFormDialog({
                     </Label>
                     <CatalogoAutocomplete
                       id="tipoDocumento"
-                      codigo="TIPOS_DOCUMENTO"
+                      codigo="TIPO_DOCUMENTO"
                       value={tipoDocumentoValue}
                       onValueChange={(val) => setValue("tipoDocumento", val || "", { shouldValidate: true })}
                       placeholder="Tipo"
@@ -420,7 +413,7 @@ export function UsuarioFormDialog({
                     </Label>
                     <CatalogoAutocomplete
                       id="extensionDocumento"
-                      codigo="EXTENSIONES"
+                      codigo="EXTENSION_BOLIVIA"
                       value={extensionDocumentoValue}
                       onValueChange={(val) => setValue("extensionDocumento", val || "", { shouldValidate: true })}
                       placeholder="Sin ext."
@@ -474,7 +467,7 @@ export function UsuarioFormDialog({
                     </Label>
                     <CatalogoAutocomplete
                       id="genero"
-                      codigo="GENEROS"
+                      codigo="GENERO"
                       value={generoValue}
                       onValueChange={(val) => setValue("genero", val || "", { shouldValidate: true })}
                       placeholder="Seleccione género"
@@ -489,7 +482,7 @@ export function UsuarioFormDialog({
                     </Label>
                     <CatalogoAutocomplete
                       id="estadoCivil"
-                      codigo="ESTADOS_CIVILES"
+                      codigo="ESTADO_CIVIL"
                       value={estadoCivilValue}
                       onValueChange={(val) => setValue("estadoCivil", val || "", { shouldValidate: true })}
                       placeholder="Seleccione estado civil"
@@ -623,17 +616,24 @@ export function UsuarioFormDialog({
                     </Label>
                     <Select
                       value={rolValue}
-                      onValueChange={(val) => setValue("rol", val || ROL_DEFECTO)}
+                      onValueChange={(val) => setValue("rol", val || "", { shouldValidate: true })}
+                      disabled={isLoadingRoles}
                     >
                       <SelectTrigger id="rol" className="w-full h-9 text-sm">
-                        <SelectValue placeholder="Seleccione un rol" />
+                        <SelectValue placeholder={isLoadingRoles ? "Cargando roles..." : "Seleccione un rol"} />
                       </SelectTrigger>
                       <SelectContent>
-                        {ROLES_DISPONIBLES.map((r) => (
-                          <SelectItem key={r.value} value={r.value}>
-                            {r.label}
-                          </SelectItem>
-                        ))}
+                        {roles.length === 0 ? (
+                          <div className="p-2 text-xs text-muted-foreground text-center">
+                            {isLoadingRoles ? "Cargando..." : "No hay roles disponibles"}
+                          </div>
+                        ) : (
+                          roles.map((r) => (
+                            <SelectItem key={r.id} value={r.name}>
+                              {r.name}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
                     {errors.rol && (
