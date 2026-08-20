@@ -30,10 +30,9 @@ export const usuarioSchema = z.object({
   genero: z.string().trim().optional(),
   estadoCivil: z.string().trim().optional(),
 
-  rol: z
-    .string()
-    .trim()
-    .min(1, "Debe seleccionar un rol para el usuario."),
+  roles: z
+    .array(z.string())
+    .min(1, "Debe seleccionar al menos un rol para el usuario."),
 });
 
 export type UsuarioFormValues = z.infer<typeof usuarioSchema>;

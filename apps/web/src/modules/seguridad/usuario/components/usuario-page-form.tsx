@@ -17,6 +17,8 @@ import {
   AtSign,
   Mail,
   Shield,
+  Check,
+  ShieldAlert,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -25,17 +27,7 @@ import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
 } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { CatalogoAutocomplete } from "@/components/ui/catalogo-autocomplete";
@@ -97,24 +89,24 @@ export function UsuarioPageForm({ id }: UsuarioPageFormProps) {
       complementoDocumento: "",
       genero: "",
       estadoCivil: "",
-      rol: "",
+      roles: [],
     },
   });
 
-  const rolValue: string = watch("rol") || "";
+  const rolesValue: string[] = watch("roles") || [];
   const tipoDocumentoValue: string = watch("tipoDocumento") || "";
   const extensionDocumentoValue: string = watch("extensionDocumento") || "";
   const generoValue: string = watch("genero") || "";
   const estadoCivilValue: string = watch("estadoCivil") || "";
   const activoValue: boolean = watch("activo") ?? true;
 
-  // Register custom select & autocompletes
+  // Register custom autocompletes & fields
   React.useEffect(() => {
     register("tipoDocumento");
     register("extensionDocumento");
     register("genero");
     register("estadoCivil");
-    register("rol");
+    register("roles");
     register("activo");
   }, [register]);
 
@@ -138,10 +130,20 @@ export function UsuarioPageForm({ id }: UsuarioPageFormProps) {
         complementoDocumento: usuarioData.persona?.complementoDocumento || "",
         genero: usuarioData.persona?.genero || "",
         estadoCivil: usuarioData.persona?.estadoCivil || "",
-        rol: usuarioData.roles?.[0] || "",
+        roles: usuarioData.roles ?? [],
       });
     }
   }, [usuarioData, isEditing, reset]);
+
+  const handleToggleRole = (roleName: string) => {
+    const current = new Set(rolesValue);
+    if (current.has(roleName)) {
+      current.delete(roleName);
+    } else {
+      current.add(roleName);
+    }
+    setValue("roles", Array.from(current), { shouldValidate: true });
+  };
 
   const onSubmit = async (values: UsuarioFormValues) => {
     try {
@@ -151,7 +153,7 @@ export function UsuarioPageForm({ id }: UsuarioPageFormProps) {
           data: {
             userName: values.userName.trim(),
             email: values.email.trim(),
-            roles: values.rol ? [values.rol] : [],
+            roles: values.roles,
             activo: values.activo,
           },
         });
@@ -171,7 +173,7 @@ export function UsuarioPageForm({ id }: UsuarioPageFormProps) {
           userName: values.userName.trim(),
           email: values.email.trim(),
           password: values.password?.trim() || undefined,
-          roles: values.rol ? [values.rol] : [],
+          roles: values.roles,
           persona: {
             nombres: values.nombres.trim(),
             apellidoPaterno: values.apellidoPaterno.trim(),
@@ -211,7 +213,7 @@ export function UsuarioPageForm({ id }: UsuarioPageFormProps) {
   }
 
   return (
-    <div className="flex flex-col gap-3 w-full pb-8">
+    <div className="flex flex-col gap-3.5 w-full pb-8">
       {/* Top Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border/60">
         <div className="flex items-center gap-3">
@@ -250,8 +252,8 @@ export function UsuarioPageForm({ id }: UsuarioPageFormProps) {
               </div>
               <p className="text-[11px] text-muted-foreground truncate">
                 {isEditing
-                  ? "Actualice los parámetros de acceso, roles y estado de la cuenta."
-                  : "Defina los datos de filiación, credenciales de acceso y rol del usuario."}
+                  ? "Actualice los parámetros de acceso, roles asignados y estado de la cuenta."
+                  : "Defina los datos de filiación, credenciales de acceso y roles del usuario."}
               </p>
             </div>
           </div>
@@ -287,7 +289,7 @@ export function UsuarioPageForm({ id }: UsuarioPageFormProps) {
       </div>
 
       {/* Unified Form Card Container */}
-      <form onSubmit={handleSubmit(onSubmit)} className="w-full">
+      <form onSubmit={handleSubmit(onSubmit)} className="w-full space-y-4">
         <Card className="border border-border/70 shadow-2xs rounded-xl overflow-hidden bg-card">
           <CardContent className="p-4 sm:p-5 space-y-6">
             {/* SECCIÓN 1: DATOS PERSONALES */}
@@ -481,10 +483,10 @@ export function UsuarioPageForm({ id }: UsuarioPageFormProps) {
                 </div>
                 <div>
                   <h2 className="text-xs sm:text-sm font-bold text-foreground">
-                    Credenciales de Cuenta y Seguridad
+                    Credenciales de Cuenta y Acceso
                   </h2>
                   <p className="text-[11px] text-muted-foreground">
-                    Configuración de acceso al sistema, asignación de rol y estado.
+                    Configuración de inicio de sesión y estado de la cuenta.
                   </p>
                 </div>
               </div>
@@ -533,41 +535,39 @@ export function UsuarioPageForm({ id }: UsuarioPageFormProps) {
                   )}
                 </div>
 
-                {/* Rol Asignado */}
+                {/* Estado Activo */}
                 <div className="space-y-1 sm:col-span-2 md:col-span-1 lg:col-span-4">
-                  <Label htmlFor="rol" className="text-xs font-medium flex items-center gap-0.5">
-                    Rol Principal <span className="text-destructive">*</span>
+                  <Label htmlFor="activo" className="text-xs font-medium">
+                    Estado de la Cuenta
                   </Label>
-                  <Select
-                    value={rolValue}
-                    onValueChange={(val) => setValue("rol", val || "", { shouldValidate: true })}
-                    disabled={isLoadingRoles}
-                  >
-                    <SelectTrigger id="rol" className="w-full h-8 text-xs">
-                      <SelectValue placeholder={isLoadingRoles ? "Cargando roles..." : "Seleccione un rol"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {roles.length === 0 ? (
-                        <div className="p-2 text-xs text-muted-foreground text-center">
-                          {isLoadingRoles ? "Cargando..." : "Sin roles disponibles"}
-                        </div>
-                      ) : (
-                        roles.map((r) => (
-                          <SelectItem key={r.id} value={r.name} className="text-xs cursor-pointer">
-                            {r.name}
-                          </SelectItem>
-                        ))
+                  <div className="flex items-center justify-between h-8 px-3 rounded-md border border-input bg-muted/20">
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="activo"
+                        checked={activoValue}
+                        onCheckedChange={(checked) => setValue("activo", Boolean(checked))}
+                      />
+                      <Label htmlFor="activo" className="text-xs font-medium cursor-pointer">
+                        {activoValue ? "Cuenta Habilitada" : "Cuenta Bloqueada"}
+                      </Label>
+                    </div>
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "text-[9px] px-1.5 py-0 font-semibold uppercase tracking-wider",
+                        activoValue
+                          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                          : "bg-destructive/10 text-destructive border-destructive/20"
                       )}
-                    </SelectContent>
-                  </Select>
-                  {errors.rol && (
-                    <p className="text-[10px] text-destructive font-medium">{errors.rol.message}</p>
-                  )}
+                    >
+                      {activoValue ? "Activo" : "Inactivo"}
+                    </Badge>
+                  </div>
                 </div>
 
                 {/* Contraseña (solo al crear) */}
                 {!isEditing && (
-                  <div className="space-y-1 sm:col-span-1 md:col-span-2 lg:col-span-6">
+                  <div className="space-y-1 sm:col-span-2 md:col-span-3 lg:col-span-12">
                     <Label htmlFor="password" className="text-xs font-medium flex items-center gap-0.5">
                       Contraseña Temporal
                     </Label>
@@ -598,41 +598,95 @@ export function UsuarioPageForm({ id }: UsuarioPageFormProps) {
                       </Button>
                     </div>
                     <p className="text-[10px] text-muted-foreground">
-                      Opcional. Si se deja en blanco, se solicitará al primer inicio de sesión.
+                      Opcional. Si se deja en blanco, el usuario podrá configurarla al iniciar sesión.
                     </p>
                   </div>
                 )}
+              </div>
+            </div>
 
-                {/* Estado Activo */}
-                <div className={cn("space-y-1", !isEditing ? "sm:col-span-1 md:col-span-1 lg:col-span-6" : "sm:col-span-2 md:col-span-3 lg:col-span-12")}>
-                  <Label htmlFor="activo" className="text-xs font-medium">
-                    Estado de la Cuenta
-                  </Label>
-                  <div className="flex items-center justify-between h-8 px-3 rounded-md border border-input bg-muted/20">
-                    <div className="flex items-center gap-2">
-                      <Checkbox
-                        id="activo"
-                        checked={activoValue}
-                        onCheckedChange={(checked) => setValue("activo", Boolean(checked))}
-                      />
-                      <Label htmlFor="activo" className="text-xs font-medium cursor-pointer">
-                        {activoValue ? "Cuenta Habilitada" : "Cuenta Bloqueada"}
-                      </Label>
-                    </div>
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        "text-[9px] px-1.5 py-0 font-semibold uppercase tracking-wider",
-                        activoValue
-                          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-                          : "bg-destructive/10 text-destructive border-destructive/20"
-                      )}
-                    >
-                      {activoValue ? "Activo" : "Inactivo"}
-                    </Badge>
+            {/* SECCIÓN 3: ROLES Y PERMISOS (SELECCIÓN MÚLTIPLE) */}
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center justify-between pb-2 border-b border-border/60">
+                <div className="flex items-center gap-2">
+                  <div className="size-6 rounded-md bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                    <Shield className="size-3.5" />
+                  </div>
+                  <div>
+                    <h2 className="text-xs sm:text-sm font-bold text-foreground flex items-center gap-1.5">
+                      <span>Roles y Permisos del Sistema</span>
+                      <span className="text-destructive">*</span>
+                    </h2>
+                    <p className="text-[11px] text-muted-foreground">
+                      Seleccione uno o más roles para otorgar permisos a este usuario.
+                    </p>
                   </div>
                 </div>
+
+                <Badge variant="secondary" className="text-[10px] px-2 py-0.5 font-medium">
+                  {rolesValue.length} {rolesValue.length === 1 ? "rol seleccionado" : "roles seleccionados"}
+                </Badge>
               </div>
+
+              {isLoadingRoles ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <Skeleton key={i} className="h-14 rounded-lg" />
+                  ))}
+                </div>
+              ) : roles.length === 0 ? (
+                <div className="p-4 rounded-lg border border-dashed text-center text-xs text-muted-foreground">
+                  No hay roles configurados en el sistema.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
+                  {roles.map((r) => {
+                    const isSelected = rolesValue.includes(r.name);
+                    return (
+                      <div
+                        key={r.id}
+                        onClick={() => handleToggleRole(r.name)}
+                        className={cn(
+                          "relative flex items-start gap-2.5 p-2.5 rounded-lg border transition-all cursor-pointer select-none",
+                          isSelected
+                            ? "bg-primary/5 border-primary/40 shadow-2xs ring-1 ring-primary/20"
+                            : "bg-card border-border/60 hover:border-border hover:bg-muted/30"
+                        )}
+                      >
+                        <div className="pt-0.5">
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => handleToggleRole(r.name)}
+                            className="rounded"
+                          />
+                        </div>
+                        <div className="flex flex-col min-w-0 flex-1 leading-tight">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-semibold text-foreground truncate">
+                              {r.name}
+                            </span>
+                            {isSelected && (
+                              <Check className="size-3 text-primary shrink-0 ml-auto" />
+                            )}
+                          </div>
+                          {r.descripcion && (
+                            <span className="text-[10px] text-muted-foreground line-clamp-1 mt-0.5">
+                              {r.descripcion}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {errors.roles && (
+                <div className="flex items-center gap-1.5 text-xs text-destructive font-medium pt-1">
+                  <ShieldAlert className="size-3.5 shrink-0" />
+                  <span>{errors.roles.message}</span>
+                </div>
+              )}
             </div>
 
             {/* Bottom Actions inside Card */}
