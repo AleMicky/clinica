@@ -1,18 +1,17 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { UsuarioHeader } from "./usuario-header";
 import { UsuarioMetricsCards } from "./usuario-metrics";
 import { UsuarioTable } from "./usuario-table";
-import { UsuarioFormDialog } from "./usuario-form-dialog";
 import { UsuarioDeleteDialog } from "./usuario-delete-dialog";
 import { useUsuarios, useDeleteUsuario } from "../hooks/use-usuarios";
 import type { UsuarioMetrics, UsuarioResponse } from "../types/usuario.types";
 
 export function UsuarioModuleView() {
-  const [formDialogOpen, setFormDialogOpen] = React.useState(false);
-  const [usuarioToEdit, setUsuarioToEdit] = React.useState<UsuarioResponse | null>(null);
+  const router = useRouter();
 
   // Delete AlertDialog confirmation state
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
@@ -63,13 +62,11 @@ export function UsuarioModuleView() {
   };
 
   const handleOpenAdd = () => {
-    setUsuarioToEdit(null);
-    setFormDialogOpen(true);
+    router.push("/seguridad/usuarios/nuevo");
   };
 
   const handleOpenEdit = (usuario: UsuarioResponse) => {
-    setUsuarioToEdit(usuario);
-    setFormDialogOpen(true);
+    router.push(`/seguridad/usuarios/${usuario.id}/editar`);
   };
 
   const handleOpenDelete = (id: number) => {
@@ -96,7 +93,7 @@ export function UsuarioModuleView() {
   };
 
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <div className="flex flex-col gap-2.5 w-full">
       <UsuarioHeader onAddClick={handleOpenAdd} />
       <UsuarioMetricsCards metrics={metrics} />
       <UsuarioTable
@@ -112,12 +109,6 @@ export function UsuarioModuleView() {
         onEdit={handleOpenEdit}
         onDelete={handleOpenDelete}
         onRefresh={() => refetch()}
-      />
-      <UsuarioFormDialog
-        open={formDialogOpen}
-        onOpenChange={setFormDialogOpen}
-        usuarioToEdit={usuarioToEdit}
-        onSuccessCallback={() => refetch()}
       />
       <UsuarioDeleteDialog
         open={deleteDialogOpen}
