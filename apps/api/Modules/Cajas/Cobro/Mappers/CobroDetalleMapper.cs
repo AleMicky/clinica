@@ -1,5 +1,7 @@
 using Clinica.Api.Modules.Cajas.Cobro.Dtos;
 using Clinica.Api.Modules.Cajas.Cobro.Entity;
+using Clinica.Api.Modules.Parametros.Banco.Dtos;
+using Clinica.Api.Modules.Parametros.MetodoPago.Dtos;
 using CobroEntity = Clinica.Api.Modules.Cajas.Cobro.Entity.Cobro;
 
 namespace Clinica.Api.Modules.Cajas.Cobro.Mappers;
@@ -87,8 +89,18 @@ internal static class CobroDetalleMapper
             {
                 Id = d.Id,
                 CobroId = d.CobroId,
-                MetodoPagoId = d.MetodoPagoId,
-                MonedaId = d.MonedaId,
+                MetodoPago = new MetodoPagoInfo
+                {
+                    Id = d.MetodoPagoId,
+                    Codigo = d.MetodoPago.Codigo,
+                    Nombre = d.MetodoPago.Nombre
+                },
+                Moneda = new MonedaInfo
+                {
+                    Id = d.MonedaId,
+                    Codigo = d.Moneda.Codigo,
+                    Nombre = d.Moneda.Nombre
+                },
                 CuentaBancariaId = d.CuentaBancariaId,
                 Monto = d.Monto,
                 TipoCambio = d.TipoCambio,

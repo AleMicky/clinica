@@ -1,3 +1,5 @@
+using Clinica.Api.Modules.Parametros.Banco.Dtos;
+using Clinica.Api.Modules.Parametros.MetodoPago.Dtos;
 using Clinica.Api.Shared.Abstractions;
 
 namespace Clinica.Api.Modules.Cajas.Cobro.Dtos;
@@ -18,8 +20,8 @@ public sealed record CobroDetalleResponse : AuditableResponse
 {
     public int Id { get; init; }
     public int CobroId { get; init; }
-    public int MetodoPagoId { get; init; }
-    public int MonedaId { get; init; }
+    public MetodoPagoInfo MetodoPago { get; init; }
+    public MonedaInfo Moneda { get; init; }
     public int? CuentaBancariaId { get; init; }
     public decimal Monto { get; init; }
     public decimal TipoCambio { get; init; }

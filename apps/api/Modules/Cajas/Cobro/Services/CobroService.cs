@@ -350,7 +350,13 @@ public sealed class CobroService(
             .Include(x => x.TurnoCaja).ThenInclude(t => t.Empleado).ThenInclude(e => e.Persona)
             .Include(x => x.VentaPagador).ThenInclude(p => p.Venta)
             .Include(x => x.VentaPagador).ThenInclude(p => p.Convenio)
-            .Include(x => x.Detalles);
+            .Include(x => x.Detalles)
+            .ThenInclude(d => d.MetodoPago)
+            .Include(x => x.Detalles)
+            .ThenInclude(d => d.Moneda)
+            .Include(x => x.Detalles)
+            .ThenInclude(d => d.CuentaBancaria);
+            
     }
 
     private IQueryable<CobroEntity> ApplyOrder(IQueryable<CobroEntity> query)
