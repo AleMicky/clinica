@@ -6,12 +6,10 @@ import {
   FileText,
   Lock,
   Users,
-  Calendar,
   Briefcase,
   Sliders,
   Settings,
   Database,
-  FileBarChart,
   HeartPulse,
   User,
   Coins,
@@ -25,7 +23,6 @@ import {
   Handshake,
   Landmark,
   Vault,
-  Clock,
   ArrowLeftRight,
   Calculator,
   CreditCard,
@@ -67,6 +64,12 @@ export const directNavItems: NavItem[] = [
     href: "/ventas",
     icon: Coins,
     description: "Gestión de ventas, comprobantes y detalle de pagadores",
+  },
+  {
+    title: "Cobros",
+    href: "/cobros",
+    icon: CreditCard,
+    description: "Gestión de cobros procesados y comprobantes de pago",
   },
 ]
 
@@ -253,7 +256,7 @@ export const cajasNav: NavGroup = {
       title: "Puntos de Caja",
       href: "/cajas",
       icon: Vault,
-      description: "Catálogo y administración de terminales de cobro y turnos",
+      description: "Catálogo y administración de terminales de cobro",
     },
     {
       title: "Movimientos",
@@ -266,12 +269,6 @@ export const cajasNav: NavGroup = {
       href: "/cajas/arqueos",
       icon: Calculator,
       description: "Conteo físico y conciliación de saldos por turno",
-    },
-    {
-      title: "Cobros",
-      href: "/cajas/cobros",
-      icon: CreditCard,
-      description: "Gestión de cobros procesados y anulaciones",
     },
   ],
 }
@@ -319,6 +316,12 @@ export const navCategories: NavCategory[] = [
         href: "/ventas",
         icon: Coins,
         description: "Gestión de ventas, comprobantes y detalle de pagadores",
+      },
+      {
+        title: "Cobros",
+        href: "/cobros",
+        icon: CreditCard,
+        description: "Gestión de cobros procesados y comprobantes de pago",
       },
       cajasNav,
     ],
