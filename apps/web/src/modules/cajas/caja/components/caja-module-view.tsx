@@ -3,40 +3,28 @@
 import * as React from "react";
 import { toast } from "sonner";
 import { useCajas, useDeleteCaja } from "../hooks/use-cajas";
-import {
-  useDeleteTurnoCaja,
-} from "../../turno-caja/hooks/use-turnos-caja";
 import { CajaHeader } from "./caja-header";
 import { CajaMetrics } from "./caja-metrics";
 import { CajaList } from "./caja-list";
-import { CajaTurnosPanel } from "./caja-turnos-panel";
 import { CajaFormDialog } from "./caja-form-dialog";
 import { CajaDeleteDialog } from "./caja-delete-dialog";
-import { TurnoCajaFormDialog } from "../../turno-caja/components/turno-caja-form-dialog";
-import { TurnoCajaDeleteDialog } from "../../turno-caja/components/turno-caja-delete-dialog";
 import type { CajaResponse } from "../types/caja.types";
-import type { TurnoCajaResponse } from "../../turno-caja/types/turno-caja.types";
 
 export function CajaModuleView() {
-  // Estado de Maestro: Puntos de Caja
+  // Estado de Paginación y Filtros
   const [currentPage, setCurrentPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(10);
   const [searchTerm, setSearchTerm] = React.useState("");
   const [debouncedSearch, setDebouncedSearch] = React.useState("");
-  const [selectedCaja, setSelectedCaja] = React.useState<CajaResponse | null>(null);
+  const [selectedStatusTab, setSelectedStatusTab] = React.useState<
+    "TODOS" | "ACTIVOS" | "INACTIVOS"
+  >("TODOS");
 
   // Dialogs de Caja
   const [formDialogOpen, setFormDialogOpen] = React.useState(false);
   const [cajaToEdit, setCajaToEdit] = React.useState<CajaResponse | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [cajaToDelete, setCajaToDelete] = React.useState<CajaResponse | null>(null);
-
-  // Dialogs de Turnos de Caja (Detalle)
-  const [turnoFormOpen, setTurnoFormOpen] = React.useState(false);
-  const [turnoDialogMode, setTurnoDialogMode] = React.useState<"create" | "edit" | "close">("create");
-  const [turnoSelected, setTurnoSelected] = React.useState<TurnoCajaResponse | null>(null);
-  const [turnoDeleteOpen, setTurnoDeleteOpen] = React.useState(false);
-  const [turnoToDelete, setTurnoToDelete] = React.useState<TurnoCajaResponse | null>(null);
 
   // Debounce búsqueda de cajas
   React.useEffect(() => {
@@ -58,34 +46,49 @@ export function CajaModuleView() {
   });
 
   const deleteMutation = useDeleteCaja();
-  const deleteTurnoMutation = useDeleteTurnoCaja();
 
-  const cajas = Array.isArray(apiData?.items)
+  const allCajas: CajaResponse[] = Array.isArray(apiData?.items)
     ? apiData.items
     : Array.isArray(apiData)
       ? (apiData as unknown as CajaResponse[])
       : [];
-  const totalItems = apiData?.totalItems ?? cajas.length;
 
-  // Auto-seleccionar primera caja disponible
-  React.useEffect(() => {
-    if (cajas.length > 0 && !selectedCaja) {
-      setSelectedCaja(cajas[0]);
-    } else if (selectedCaja && cajas.length > 0) {
-      const updated = cajas.find((c) => c.id === selectedCaja.id);
-      if (updated) setSelectedCaja(updated);
+  const totalItems = apiData?.totalItems ?? allCajas.length;
+
+  // Filtrado local por pestaña de estado
+  const filteredCajas = React.useMemo(() => {
+    if (selectedStatusTab === "ACTIVOS") {
+      return allCajas.filter((c) => c.activo);
     }
-  }, [cajas, selectedCaja]);
+    if (selectedStatusTab === "INACTIVOS") {
+      return allCajas.filter((c) => !c.activo);
+    }
+    return allCajas;
+  }, [allCajas, selectedStatusTab]);
 
   const metrics = React.useMemo(() => {
     return {
       totalCajas: totalItems,
-      cajasActivas: cajas.filter((c) => c.activo).length,
-      cajasInactivas: cajas.filter((c) => !c.activo).length,
+      cajasActivas: allCajas.filter((c) => c.activo).length,
+      cajasInactivas: allCajas.filter((c) => !c.activo).length,
     };
-  }, [cajas, totalItems]);
+  }, [allCajas, totalItems]);
 
-  // Handlers Caja (Maestro)
+  const handleSearchChange = (term: string) => {
+    setSearchTerm(term);
+  };
+
+  const handleStatusTabChange = (tab: "TODOS" | "ACTIVOS" | "INACTIVOS") => {
+    setSelectedStatusTab(tab);
+    setCurrentPage(1);
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1);
+  };
+
+  // Handlers Caja
   const handleOpenCreateModal = () => {
     setCajaToEdit(null);
     setFormDialogOpen(true);
@@ -106,9 +109,6 @@ export function CajaModuleView() {
     try {
       await deleteMutation.mutateAsync(cajaToDelete.id);
       toast.success(`Caja "${cajaToDelete.nombre}" eliminada correctamente.`);
-      if (selectedCaja?.id === cajaToDelete.id) {
-        setSelectedCaja(null);
-      }
       setDeleteDialogOpen(false);
       setCajaToDelete(null);
       refetch();
@@ -118,123 +118,49 @@ export function CajaModuleView() {
     }
   };
 
-  // Handlers Turnos (Detalle)
-  const handleOpenCreateTurno = (caja: CajaResponse) => {
-    setSelectedCaja(caja);
-    setTurnoSelected(null);
-    setTurnoDialogMode("create");
-    setTurnoFormOpen(true);
-  };
-
-  const handleEditTurno = (turno: TurnoCajaResponse) => {
-    setTurnoSelected(turno);
-    setTurnoDialogMode("edit");
-    setTurnoFormOpen(true);
-  };
-
-  const handleCloseTurno = (turno: TurnoCajaResponse) => {
-    setTurnoSelected(turno);
-    setTurnoDialogMode("close");
-    setTurnoFormOpen(true);
-  };
-
-  const handlePromptDeleteTurno = (turno: TurnoCajaResponse) => {
-    setTurnoToDelete(turno);
-    setTurnoDeleteOpen(true);
-  };
-
-  const handleConfirmDeleteTurno = async () => {
-    if (!turnoToDelete) return;
-    try {
-      await deleteTurnoMutation.mutateAsync(turnoToDelete.id);
-      toast.success("Turno de caja eliminado correctamente.");
-      setTurnoDeleteOpen(false);
-      setTurnoToDelete(null);
-    } catch (error: unknown) {
-      const err = error as { response?: { data?: { detail?: string } }; message?: string };
-      toast.error(err.response?.data?.detail || err.message || "Error al eliminar el turno.");
-    }
-  };
-
   return (
     <div className="flex flex-col gap-3 w-full animate-in fade-in-50 duration-300">
+      {/* Cabecera del Módulo */}
       <CajaHeader onNewCajaClick={handleOpenCreateModal} />
 
+      {/* Métricas Resumen */}
       <CajaMetrics metrics={metrics} isLoading={isLoading} />
 
-      {/* Grid Maestro - Detalle */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-start">
-        {/* Columna Izquierda: Maestro (Puntos de Caja) */}
-        <div className="lg:col-span-5 xl:col-span-4 h-full">
-          <CajaList
-            cajas={cajas}
-            selectedCajaId={selectedCaja?.id ?? null}
-            onSelectCaja={setSelectedCaja}
-            isLoading={isLoading}
-            totalItems={totalItems}
-            currentPage={currentPage}
-            pageSize={pageSize}
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            onPageChange={setCurrentPage}
-            onPageSizeChange={(size) => {
-              setPageSize(size);
-              setCurrentPage(1);
-            }}
-            onEdit={handleEdit}
-            onDelete={handlePromptDelete}
-            onRefresh={() => refetch()}
-          />
-        </div>
+      {/* Listado Principal de Cajas (Full Width) */}
+      <CajaList
+        cajas={filteredCajas}
+        isLoading={isLoading}
+        totalItems={totalItems}
+        currentPage={currentPage}
+        pageSize={pageSize}
+        searchTerm={searchTerm}
+        selectedStatusTab={selectedStatusTab}
+        onStatusTabChange={handleStatusTabChange}
+        onSearchChange={handleSearchChange}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={handlePageSizeChange}
+        onEdit={handleEdit}
+        onDelete={handlePromptDelete}
+        onRefresh={() => refetch()}
+      />
 
-        {/* Columna Derecha: Detalle (Turnos de la Caja Seleccionada) */}
-        <div className="lg:col-span-7 xl:col-span-8 h-full">
-          <CajaTurnosPanel
-            selectedCaja={selectedCaja}
-            onOpenTurno={handleOpenCreateTurno}
-            onEditTurno={handleEditTurno}
-            onCloseTurno={handleCloseTurno}
-            onDeleteTurno={handlePromptDeleteTurno}
-          />
-        </div>
-      </div>
-
-      {/* Modales de Caja */}
+      {/* Modales de Crear / Editar Caja */}
       <CajaFormDialog
         open={formDialogOpen}
         onOpenChange={setFormDialogOpen}
         cajaToEdit={cajaToEdit}
-        onSuccessCallback={(createdOrUpdated) => {
+        onSuccessCallback={() => {
           refetch();
-          if (createdOrUpdated) {
-            setSelectedCaja(createdOrUpdated);
-          }
         }}
       />
 
+      {/* Modal de Confirmación de Eliminación */}
       <CajaDeleteDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         caja={cajaToDelete}
         onConfirm={handleConfirmDelete}
         isLoading={deleteMutation.isPending}
-      />
-
-      {/* Modales de Turnos de Caja */}
-      <TurnoCajaFormDialog
-        open={turnoFormOpen}
-        onOpenChange={setTurnoFormOpen}
-        turnoToEdit={turnoSelected}
-        defaultCajaId={selectedCaja?.id}
-        mode={turnoDialogMode}
-      />
-
-      <TurnoCajaDeleteDialog
-        open={turnoDeleteOpen}
-        onOpenChange={setTurnoDeleteOpen}
-        turno={turnoToDelete}
-        onConfirm={handleConfirmDeleteTurno}
-        isLoading={deleteTurnoMutation.isPending}
       />
     </div>
   );
