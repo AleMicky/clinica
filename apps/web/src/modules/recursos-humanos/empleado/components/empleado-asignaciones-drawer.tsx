@@ -57,7 +57,7 @@ import {
 import { useAreas } from "@/modules/recursos-humanos/area/hooks/use-areas";
 import { useCargos } from "@/modules/recursos-humanos/cargo/hooks/use-cargos";
 import type { AsignacionEmpleadoResponse } from "@/modules/recursos-humanos/asignacion-empleado/types/asignacion-empleado.types";
-import type { EmpleadoItem } from "./empleado-table";
+import type { EmpleadoItem } from "../types/empleado.types";
 
 interface EmpleadoAsignacionesDrawerProps {
     open: boolean;

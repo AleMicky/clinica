@@ -1,7 +1,7 @@
 "use client";
 
 import { ConfirmDeleteDialog } from "@/components/shared";
-import type { EmpleadoItem } from "./empleado-table";
+import type { EmpleadoItem } from "../types/empleado.types";
 
 interface EmpleadoDeleteDialogProps {
     open: boolean;

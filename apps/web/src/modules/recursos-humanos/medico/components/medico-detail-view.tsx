@@ -53,7 +53,6 @@ import {
   useMedicoServicioAcuerdos,
   useUpdateMedicoEspecialidad,
 } from "../hooks/use-medicos";
-import { MedicoFormDialog } from "./medico-form-dialog";
 import { MedicoEspecialidadDialog } from "./medico-especialidad-dialog";
 import { MedicoAcuerdoDialog } from "./medico-acuerdo-dialog";
 import type { MedicoServicioAcuerdoResponse } from "../types/medico.types";
@@ -68,7 +67,6 @@ export function MedicoDetailView({ medicoId }: MedicoDetailViewProps) {
   const defaultTab = searchParams.get("tab") === "acuerdos" ? "acuerdos" : "especialidades";
 
   const [activeTab, setActiveTab] = React.useState(defaultTab);
-  const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
 
   // Dialogs State
   const [isEspecialidadDialogOpen, setIsEspecialidadDialogOpen] = React.useState(false);
@@ -336,7 +334,7 @@ export function MedicoDetailView({ medicoId }: MedicoDetailViewProps) {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setIsEditModalOpen(true)}
+              onClick={() => router.push(`/recursos-humanos/medicos/${medicoId}/editar`)}
               className="text-xs gap-1.5 self-start md:self-center cursor-pointer shadow-2xs hover:border-primary/40 hover:text-primary h-9 rounded-xl"
             >
               <Edit className="size-3.5" />
@@ -819,13 +817,6 @@ export function MedicoDetailView({ medicoId }: MedicoDetailViewProps) {
           </Card>
         </TabsContent>
       </Tabs>
-
-      {/* Edit Basic Info Modal */}
-      <MedicoFormDialog
-        open={isEditModalOpen}
-        onOpenChange={setIsEditModalOpen}
-        medicoToEdit={medico}
-      />
 
       {/* Specialty Modal Dialog */}
       <MedicoEspecialidadDialog

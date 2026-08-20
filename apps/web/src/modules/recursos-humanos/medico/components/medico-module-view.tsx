@@ -2,118 +2,128 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { useMedicos } from "../hooks/use-medicos";
 import { MedicoHeader } from "./medico-header";
 import { MedicoMetricsCards, type MedicoMetrics } from "./medico-metrics";
-import { MedicoCardList } from "./medico-card-list";
-import { MedicoFormDialog } from "./medico-form-dialog";
+import { MedicoList, getMedicoFullName } from "./medico-list";
 import { MedicoDeleteDialog } from "./medico-delete-dialog";
-import { PageContainer } from "@/components/shared";
+import { useMedicos } from "../hooks/use-medicos";
 import type { MedicoResponse } from "../types/medico.types";
 
 export function MedicoModuleView() {
   const router = useRouter();
 
-  const [searchTerm, setSearchTerm] = React.useState("");
-  const [debouncedSearch, setDebouncedSearch] = React.useState("");
+  // Delete dialog confirmation state
+  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
+  const [medicoToDelete, setMedicoToDelete] = React.useState<MedicoResponse | null>(null);
+
+  // Pagination & search parameters
   const [currentPage, setCurrentPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(10);
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [selectedStatusTab, setSelectedStatusTab] = React.useState<
+    "TODOS" | "ACTIVOS" | "INACTIVOS"
+  >("TODOS");
 
-  // Modals state
-  const [isFormOpen, setIsFormOpen] = React.useState(false);
-  const [isDeleteOpen, setIsDeleteOpen] = React.useState(false);
-
-  const [selectedMedico, setSelectedMedico] = React.useState<MedicoResponse | null>(null);
-
-  // Search debounce
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchTerm);
-      setCurrentPage(1);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
-
-  const { data, isLoading, refetch } = useMedicos({
+  const {
+    data: apiData,
+    isLoading,
+    refetch,
+  } = useMedicos({
     page: currentPage,
-    pageSize,
-    search: debouncedSearch,
+    pageSize: pageSize,
+    search: searchTerm.trim() || undefined,
   });
 
-  const medicos = React.useMemo(() => data?.items ?? [], [data]);
-  const totalItems = data?.totalCount ?? 0;
-
-  // Calculate metrics
-  const metrics: MedicoMetrics = React.useMemo(() => {
-    const totalMedicos = totalItems;
-    const conRegistroMinsal = medicos.filter(
-      (m) => Boolean(m.registroMinisterioSalud && m.registroMinisterioSalud.trim().length > 0)
-    ).length;
-    const medicosActivos = medicos.filter((m) => m.activo).length;
-
-    return {
-      totalMedicos,
-      conRegistroMinsal,
-      medicosActivos,
-    };
-  }, [medicos, totalItems]);
-
-  const handleAddClick = () => {
-    setSelectedMedico(null);
-    setIsFormOpen(true);
+  const handleSearchChange = (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
   };
 
-  const handleEdit = (medico: MedicoResponse) => {
-    setSelectedMedico(medico);
-    setIsFormOpen(true);
+  const handleStatusTabChange = (tab: "TODOS" | "ACTIVOS" | "INACTIVOS") => {
+    setSelectedStatusTab(tab);
+    setCurrentPage(1);
   };
 
-  const handleManageExpediente = (medico: MedicoResponse) => {
-    router.push(`/recursos-humanos/medicos/${medico.id}`);
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1);
   };
 
-  const handleDelete = (medico: MedicoResponse) => {
-    setSelectedMedico(medico);
-    setIsDeleteOpen(true);
+  const allMedicos: MedicoResponse[] = apiData?.items ?? [];
+
+  // Filter by status tab
+  const filteredMedicos = React.useMemo(() => {
+    if (selectedStatusTab === "ACTIVOS") {
+      return allMedicos.filter((m) => m.activo);
+    }
+    if (selectedStatusTab === "INACTIVOS") {
+      return allMedicos.filter((m) => !m.activo);
+    }
+    return allMedicos;
+  }, [allMedicos, selectedStatusTab]);
+
+  // Compute Metrics
+  const total = apiData?.totalCount ?? allMedicos.length;
+  const activos = allMedicos.filter((m) => m.activo).length;
+  const conMinsal = allMedicos.filter((m) => Boolean(m.registroMinisterioSalud?.trim())).length;
+
+  const metrics: MedicoMetrics = {
+    totalMedicos: total,
+    medicosActivos: activos,
+    conRegistroMinsal: conMinsal,
+  };
+
+  const handleOpenAdd = () => {
+    router.push("/recursos-humanos/medicos/nuevo");
+  };
+
+  const handleOpenEdit = (medico: MedicoResponse) => {
+    router.push(`/recursos-humanos/medicos/${medico.id}/editar`);
+  };
+
+  const handleOpenDelete = (medico: MedicoResponse) => {
+    setMedicoToDelete(medico);
+    setDeleteDialogOpen(true);
   };
 
   return (
-    <PageContainer>
-      {/* 1. Header with "+ Nuevo Médico" action */}
-      <MedicoHeader onAddClick={handleAddClick} />
+    <div className="flex flex-col gap-3 w-full animate-in fade-in-50 duration-300">
+      {/* Cabecera del Módulo */}
+      <MedicoHeader onAddClick={handleOpenAdd} onRefresh={() => refetch()} />
 
-      {/* 2. Metrics Cards */}
+      {/* Tarjetas de Métricas en Vivo */}
       <MedicoMetricsCards metrics={metrics} />
 
-      {/* 3. Outer Card Container (Search, Mode Toggles, Filter Pills, List/Grid/Table, Pagination) */}
-      <MedicoCardList
-        medicos={medicos}
+      {/* Listado Principal de Médicos (Formato Lista igual a Admisiones, Usuarios, Personas, Pacientes y Empleados) */}
+      <MedicoList
+        medicos={filteredMedicos}
         isLoading={isLoading}
-        totalItems={totalItems}
+        totalItems={apiData?.totalCount ?? allMedicos.length}
         currentPage={currentPage}
         pageSize={pageSize}
         searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
+        selectedStatusTab={selectedStatusTab}
+        onStatusTabChange={handleStatusTabChange}
+        onSearchChange={handleSearchChange}
         onPageChange={setCurrentPage}
-        onPageSizeChange={setPageSize}
-        onEdit={handleEdit}
-        onManageExpediente={handleManageExpediente}
-        onDelete={handleDelete}
-        onRefresh={refetch}
+        onPageSizeChange={handlePageSizeChange}
+        onEdit={handleOpenEdit}
+        onDelete={handleOpenDelete}
+        onRefresh={() => refetch()}
       />
 
-      {/* Modals */}
-      <MedicoFormDialog
-        open={isFormOpen}
-        onOpenChange={setIsFormOpen}
-        medicoToEdit={selectedMedico}
-      />
-
+      {/* Modal: Confirmación de Eliminación */}
       <MedicoDeleteDialog
-        open={isDeleteOpen}
-        onOpenChange={setIsDeleteOpen}
-        medico={selectedMedico}
+        open={deleteDialogOpen}
+        onOpenChange={(open) => {
+          setDeleteDialogOpen(open);
+          if (!open) {
+            setMedicoToDelete(null);
+            refetch();
+          }
+        }}
+        medico={medicoToDelete}
       />
-    </PageContainer>
+    </div>
   );
 }

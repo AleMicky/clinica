@@ -1,42 +1,41 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { EmpleadoHeader } from "./empleado-header";
-import {
-  EmpleadoMetricsCards,
-  type EmpleadoMetrics,
-} from "./empleado-metrics";
-import { EmpleadoTable, type EmpleadoItem } from "./empleado-table";
-import { EmpleadoFormDialog } from "./empleado-form-dialog";
+import { EmpleadoMetricsCards, type EmpleadoMetrics } from "./empleado-metrics";
+import { EmpleadoList } from "./empleado-list";
 import { EmpleadoDeleteDialog } from "./empleado-delete-dialog";
 import { EmpleadoAsignacionesDrawer } from "./empleado-asignaciones-drawer";
+import { useDeleteEmpleado, useEmpleados } from "../hooks/use-empleados";
 import {
-  useDeleteEmpleado,
-  useEmpleados,
-} from "../hooks/use-empleados";
-import type { EmpleadoResponse } from "../types/empleado.types";
-
-type EmpleadoEditable = EmpleadoResponse | EmpleadoItem;
+  nombreCompleto,
+  documentoCompleto,
+  type EmpleadoResponse,
+} from "../types/empleado.types";
 
 export function EmpleadoModuleView() {
-  const [formDialogOpen, setFormDialogOpen] = React.useState(false);
-  const [empleadoToEdit, setEmpleadoToEdit] =
-    React.useState<EmpleadoEditable | null>(null);
+  const router = useRouter();
 
+  // Delete dialog confirmation state
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [empleadoToDelete, setEmpleadoToDelete] =
-    React.useState<EmpleadoItem | null>(null);
+    React.useState<EmpleadoResponse | null>(null);
 
+  // Asignaciones Drawer state
   const [asignacionesDrawerOpen, setAsignacionesDrawerOpen] =
     React.useState(false);
   const [selectedEmpleadoForAsignaciones, setSelectedEmpleadoForAsignaciones] =
-    React.useState<EmpleadoItem | null>(null);
+    React.useState<EmpleadoResponse | null>(null);
 
+  // Pagination & search parameters
   const [currentPage, setCurrentPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(10);
   const [searchTerm, setSearchTerm] = React.useState("");
-  const [estadoFilter, setEstadoFilter] = React.useState("Todos");
+  const [selectedStatusTab, setSelectedStatusTab] = React.useState<
+    "TODOS" | "ACTIVOS" | "INACTIVOS"
+  >("TODOS");
 
   const {
     data: apiData,
@@ -55,8 +54,8 @@ export function EmpleadoModuleView() {
     setCurrentPage(1);
   };
 
-  const handleEstadoFilterChange = (estado: string) => {
-    setEstadoFilter(estado);
+  const handleStatusTabChange = (tab: "TODOS" | "ACTIVOS" | "INACTIVOS") => {
+    setSelectedStatusTab(tab);
     setCurrentPage(1);
   };
 
@@ -65,125 +64,126 @@ export function EmpleadoModuleView() {
     setCurrentPage(1);
   };
 
-  const empleados: EmpleadoItem[] = React.useMemo(() => {
-    if (!apiData?.items) return [];
+  const allEmpleados: EmpleadoResponse[] = apiData?.items ?? [];
 
-    const mapped = apiData.items.map((item) => ({
-      id: item.id,
-      personaId: item.personaId,
-      nombreCompleto: item.persona
-        ? `${[
-            [item.persona.apellidoPaterno, item.persona.apellidoMaterno]
-              .filter(Boolean)
-              .join(" "),
-            item.persona.nombres,
-          ]
-            .filter(Boolean)
-            .join(", ")}`
-        : "—",
-      documento: item.persona
-        ? `${item.persona.tipoDocumento} ${item.persona.numeroDocumento}${
-            item.persona.extensionDocumento
-              ? ` ${item.persona.extensionDocumento}`
-              : ""
-          }`.trim()
-        : "—",
-      codigoEmpleado: item.codigoEmpleado,
-      fechaIngreso: item.fechaIngreso,
-      fechaRetiro: item.fechaRetiro ?? null,
-      activo: item.activo ?? true,
-      telefono: item.persona?.telefono ?? null,
-      fechaNacimiento: item.persona?.fechaNacimiento,
-      genero: item.persona?.genero ?? null,
-      estadoCivil: item.persona?.estadoCivil ?? null,
-      complementoDocumento: item.persona?.complementoDocumento ?? null,
-      extensionDocumento: item.persona?.extensionDocumento ?? null,
-      tipoDocumento: item.persona?.tipoDocumento,
-      numeroDocumento: item.persona?.numeroDocumento,
-      fechaCreacion: item.fechaCreacion,
-      fechaModificacion: item.fechaModificacion ?? null,
-      creadoPor: item.creadoPor ?? null,
-      modificadoPor: item.modificadoPor ?? null,
-    }));
-
-    if (estadoFilter === "Activos") {
-      return mapped.filter((e) => e.activo && !e.fechaRetiro);
+  // Filter by status tab
+  const filteredEmpleados = React.useMemo(() => {
+    if (selectedStatusTab === "ACTIVOS") {
+      return allEmpleados.filter((e) => e.activo);
     }
-    if (estadoFilter === "Inactivos") {
-      return mapped.filter((e) => !e.activo);
+    if (selectedStatusTab === "INACTIVOS") {
+      return allEmpleados.filter((e) => !e.activo);
     }
-    if (estadoFilter === "Retirados") {
-      return mapped.filter((e) => Boolean(e.fechaRetiro));
-    }
+    return allEmpleados;
+  }, [allEmpleados, selectedStatusTab]);
 
-    return mapped;
-  }, [apiData, estadoFilter]);
+  // Compute Metrics
+  const total = apiData?.totalItems ?? allEmpleados.length;
+  const activos = allEmpleados.filter((e) => e.activo).length;
+  const inactivos = allEmpleados.filter((e) => !e.activo).length;
 
-  const metrics: EmpleadoMetrics = React.useMemo(() => {
-    const rawItems = apiData?.items ?? [];
-    return {
-      total: apiData?.totalItems ?? rawItems.length,
-      activos: rawItems.filter((e) => (e.activo ?? true) && !e.fechaRetiro).length,
-      inactivos: rawItems.filter((e) => !e.activo).length,
-      retirados: rawItems.filter((e) => Boolean(e.fechaRetiro)).length,
-    };
-  }, [apiData]);
+  const metrics: EmpleadoMetrics = {
+    total,
+    activos,
+    inactivos,
+  };
 
   const handleOpenAdd = () => {
-    setEmpleadoToEdit(null);
-    setFormDialogOpen(true);
+    router.push("/recursos-humanos/empleados/nuevo");
   };
 
-  const handleOpenEdit = (emp: EmpleadoItem) => {
-    setEmpleadoToEdit(emp);
-    setFormDialogOpen(true);
+  const handleOpenEdit = (empleado: EmpleadoResponse) => {
+    router.push(`/recursos-humanos/empleados/${empleado.id}/editar`);
   };
 
-  const handleOpenDelete = (id: number | string) => {
-    const target = empleados.find(
-      (e) => e.id === id || e.id === Number(id)
-    );
-    if (target) {
-      setEmpleadoToDelete(target);
-      setDeleteDialogOpen(true);
-    }
-  };
-
-  const handleOpenAsignaciones = (emp: EmpleadoItem) => {
-    setSelectedEmpleadoForAsignaciones(emp);
+  const handleOpenAsignaciones = (empleado: EmpleadoResponse) => {
+    setSelectedEmpleadoForAsignaciones(empleado);
     setAsignacionesDrawerOpen(true);
+  };
+
+  const handleOpenDelete = (empleado: EmpleadoResponse) => {
+    setEmpleadoToDelete(empleado);
+    setDeleteDialogOpen(true);
   };
 
   const handleConfirmDelete = async () => {
     if (!empleadoToDelete) return;
-    const numId = Number(empleadoToDelete.id);
 
     try {
-      await deleteMutation.mutateAsync(numId);
-      toast.success(
-        `Empleado ${empleadoToDelete.codigoEmpleado} eliminado correctamente.`
-      );
+      await deleteMutation.mutateAsync(empleadoToDelete.id);
+      const nombre = empleadoToDelete.persona
+        ? nombreCompleto(empleadoToDelete.persona)
+        : `#${empleadoToDelete.id}`;
+      toast.success(`Empleado "${nombre}" eliminado correctamente.`);
       refetch();
     } catch {
+      toast.error("Ocurrió un error al eliminar el empleado.");
     } finally {
       setEmpleadoToDelete(null);
+      setDeleteDialogOpen(false);
     }
   };
 
+  // Convert for drawer compatibility if needed
+  const drawerEmpleadoItem = React.useMemo(() => {
+    if (!selectedEmpleadoForAsignaciones) return null;
+    const emp = selectedEmpleadoForAsignaciones;
+    const persona = emp.persona;
+    return {
+      id: emp.id,
+      personaId: emp.personaId,
+      codigoEmpleado: emp.codigoEmpleado,
+      nombreCompleto: persona ? nombreCompleto(persona) : "—",
+      documentoCompleto: persona ? documentoCompleto(persona) : "—",
+      fechaIngreso: emp.fechaIngreso,
+      fechaRetiro: emp.fechaRetiro,
+      activo: emp.activo,
+      fechaCreacion: emp.fechaCreacion,
+      creadoPor: emp.creadoPor,
+      modificadoPor: emp.modificadoPor,
+      persona,
+    };
+  }, [selectedEmpleadoForAsignaciones]);
+
+  const deleteEmpleadoItem = React.useMemo(() => {
+    if (!empleadoToDelete) return null;
+    const emp = empleadoToDelete;
+    const persona = emp.persona;
+    return {
+      id: emp.id,
+      personaId: emp.personaId,
+      codigoEmpleado: emp.codigoEmpleado,
+      nombreCompleto: persona ? nombreCompleto(persona) : "—",
+      documentoCompleto: persona ? documentoCompleto(persona) : "—",
+      fechaIngreso: emp.fechaIngreso,
+      fechaRetiro: emp.fechaRetiro,
+      activo: emp.activo,
+      fechaCreacion: emp.fechaCreacion,
+      creadoPor: emp.creadoPor,
+      modificadoPor: emp.modificadoPor,
+      persona,
+    };
+  }, [empleadoToDelete]);
+
   return (
-    <div className="flex flex-col gap-4 w-full">
-      <EmpleadoHeader onAddClick={handleOpenAdd} />
+    <div className="flex flex-col gap-3 w-full animate-in fade-in-50 duration-300">
+      {/* Cabecera del Módulo */}
+      <EmpleadoHeader onAddClick={handleOpenAdd} onRefresh={() => refetch()} />
+
+      {/* Tarjetas de Métricas en Vivo */}
       <EmpleadoMetricsCards metrics={metrics} />
-      <EmpleadoTable
-        empleados={empleados}
+
+      {/* Listado Principal de Empleados (Formato Lista igual a Admisiones, Usuarios, Personas y Pacientes) */}
+      <EmpleadoList
+        empleados={filteredEmpleados}
         isLoading={isLoading}
-        totalItems={apiData?.totalItems ?? 0}
+        totalItems={apiData?.totalItems ?? allEmpleados.length}
         currentPage={currentPage}
         pageSize={pageSize}
         searchTerm={searchTerm}
-        estadoFilter={estadoFilter}
+        selectedStatusTab={selectedStatusTab}
+        onStatusTabChange={handleStatusTabChange}
         onSearchChange={handleSearchChange}
-        onEstadoFilterChange={handleEstadoFilterChange}
         onPageChange={setCurrentPage}
         onPageSizeChange={handlePageSizeChange}
         onEdit={handleOpenEdit}
@@ -191,23 +191,21 @@ export function EmpleadoModuleView() {
         onManageAsignaciones={handleOpenAsignaciones}
         onRefresh={() => refetch()}
       />
-      <EmpleadoFormDialog
-        open={formDialogOpen}
-        onOpenChange={setFormDialogOpen}
-        empleadoToEdit={empleadoToEdit}
-        onSuccessCallback={() => refetch()}
-      />
-      <EmpleadoDeleteDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        empleado={empleadoToDelete}
-        onConfirm={handleConfirmDelete}
-        isLoading={deleteMutation.isPending}
-      />
+
+      {/* Drawer: Gestión de Asignaciones (Áreas y Cargos) */}
       <EmpleadoAsignacionesDrawer
         open={asignacionesDrawerOpen}
         onOpenChange={setAsignacionesDrawerOpen}
-        empleado={selectedEmpleadoForAsignaciones}
+        empleado={drawerEmpleadoItem}
+      />
+
+      {/* Modal: Confirmación de Eliminación */}
+      <EmpleadoDeleteDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        empleado={deleteEmpleadoItem}
+        onConfirm={handleConfirmDelete}
+        isLoading={deleteMutation.isPending}
       />
     </div>
   );

@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { UserCheck, FileBadge, CheckCircle2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Stethoscope, CheckCircle2, FileBadge, Award } from "lucide-react";
 
 export interface MedicoMetrics {
   totalMedicos: number;
@@ -14,52 +15,100 @@ interface MedicoMetricsProps {
 }
 
 export function MedicoMetricsCards({ metrics }: MedicoMetricsProps) {
+  const porcentajeMinsal =
+    metrics.totalMedicos > 0
+      ? Math.round((metrics.conRegistroMinsal / metrics.totalMedicos) * 100)
+      : 100;
+
   return (
-    <div className="grid grid-cols-3 gap-2 sm:gap-3">
-      {/* Total Médicos */}
-      <div className="flex items-center p-2.5 rounded-lg border border-border/60 bg-card shadow-2xs hover:border-primary/30 transition-colors gap-2.5">
-        <div className="size-7 sm:size-8 rounded-md bg-primary/10 flex items-center justify-center text-primary shrink-0">
-          <UserCheck className="size-3.5 sm:size-4" />
-        </div>
-        <div className="flex flex-col leading-tight min-w-0">
-          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider truncate">
-            Total Médicos
-          </span>
-          <span className="text-base sm:text-lg font-bold text-foreground leading-tight">
-            {metrics.totalMedicos}
-          </span>
-        </div>
-      </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+      {/* 1. Total Médicos */}
+      <Card className="border border-border/70 bg-card hover:shadow-xs transition-all duration-200">
+        <CardContent className="p-3 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              Total Médicos
+            </p>
+            <div className="flex items-baseline gap-1.5 mt-0.5">
+              <span className="text-xl font-extrabold text-foreground tracking-tight">
+                {metrics.totalMedicos}
+              </span>
+              <span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">
+                cuerpo médico
+              </span>
+            </div>
+          </div>
+          <div className="size-8.5 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-500/20 shrink-0">
+            <Stethoscope className="size-4" />
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Reg. Minsal */}
-      <div className="flex items-center p-2.5 rounded-lg border border-border/60 bg-card shadow-2xs hover:border-sky-500/30 transition-colors gap-2.5">
-        <div className="size-7 sm:size-8 rounded-md bg-sky-500/10 flex items-center justify-center text-sky-600 dark:text-sky-400 shrink-0">
-          <FileBadge className="size-3.5 sm:size-4" />
-        </div>
-        <div className="flex flex-col leading-tight min-w-0">
-          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider truncate">
-            Reg. Min. Salud
-          </span>
-          <span className="text-base sm:text-lg font-bold text-sky-600 dark:text-sky-400 leading-tight">
-            {metrics.conRegistroMinsal}
-          </span>
-        </div>
-      </div>
+      {/* 2. Médicos Activos */}
+      <Card className="border border-border/70 bg-card hover:shadow-xs transition-all duration-200">
+        <CardContent className="p-3 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              Médicos Activos
+            </p>
+            <div className="flex items-baseline gap-1.5 mt-0.5">
+              <span className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight">
+                {metrics.medicosActivos}
+              </span>
+              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                en atención
+              </span>
+            </div>
+          </div>
+          <div className="size-8.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20 shrink-0">
+            <CheckCircle2 className="size-4" />
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Médicos Activos */}
-      <div className="flex items-center p-2.5 rounded-lg border border-border/60 bg-card shadow-2xs hover:border-emerald-500/30 transition-colors gap-2.5">
-        <div className="size-7 sm:size-8 rounded-md bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
-          <CheckCircle2 className="size-3.5 sm:size-4" />
-        </div>
-        <div className="flex flex-col leading-tight min-w-0">
-          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider truncate">
-            Médicos Activos
-          </span>
-          <span className="text-base sm:text-lg font-bold text-emerald-600 dark:text-emerald-400 leading-tight">
-            {metrics.medicosActivos}
-          </span>
-        </div>
-      </div>
+      {/* 3. Reg. Min. Salud */}
+      <Card className="border border-border/70 bg-card hover:shadow-xs transition-all duration-200">
+        <CardContent className="p-3 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              Reg. Min. Salud
+            </p>
+            <div className="flex items-baseline gap-1.5 mt-0.5">
+              <span className="text-xl font-extrabold text-sky-600 dark:text-sky-400 tracking-tight">
+                {metrics.conRegistroMinsal}
+              </span>
+              <span className="text-[10px] text-sky-600 dark:text-sky-400 font-medium">
+                homologados
+              </span>
+            </div>
+          </div>
+          <div className="size-8.5 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center border border-sky-500/20 shrink-0">
+            <FileBadge className="size-4" />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 4. Cobertura Profesional */}
+      <Card className="border border-border/70 bg-card hover:shadow-xs transition-all duration-200">
+        <CardContent className="p-3 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              Reg. Profesional
+            </p>
+            <div className="flex items-baseline gap-1 mt-0.5">
+              <span className="text-xl font-extrabold text-purple-600 dark:text-purple-400 tracking-tight">
+                {porcentajeMinsal}%
+              </span>
+              <span className="text-[10px] text-purple-600 dark:text-purple-400 font-medium ml-1">
+                conducción oficial
+              </span>
+            </div>
+          </div>
+          <div className="size-8.5 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-500/20 shrink-0">
+            <Award className="size-4" />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

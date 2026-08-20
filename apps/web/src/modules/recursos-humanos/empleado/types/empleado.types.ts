@@ -62,6 +62,31 @@ export interface PagedResult<T> {
     hasNextPage?: boolean;
 }
 
+export interface EmpleadoItem {
+    id: number | string;
+    personaId: number;
+    nombreCompleto: string;
+    documentoCompleto?: string;
+    documento?: string;
+    codigoEmpleado: string;
+    fechaIngreso: string;
+    fechaRetiro?: string | null;
+    activo: boolean;
+    telefono?: string | null;
+    fechaNacimiento?: string;
+    genero?: string | null;
+    estadoCivil?: string | null;
+    complementoDocumento?: string | null;
+    extensionDocumento?: string | null;
+    tipoDocumento?: string;
+    numeroDocumento?: string;
+    fechaCreacion?: string;
+    fechaModificacion?: string | null;
+    creadoPor?: string | null;
+    modificadoPor?: string | null;
+    persona?: PersonaRef | null;
+}
+
 export function nombreCompleto(
     p: PersonaRef | null | undefined,
 ): string {
