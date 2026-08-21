@@ -340,6 +340,7 @@ public sealed class CobroService(
         };
 
         await Entities.AddAsync(cobro, cancellationToken);
+        await DbContext.SaveChangesAsync(cancellationToken);
     }
 
 
@@ -348,7 +349,7 @@ public sealed class CobroService(
         return Entities
             .Include(x => x.TurnoCaja).ThenInclude(t => t.Caja)
             .Include(x => x.TurnoCaja).ThenInclude(t => t.Empleado).ThenInclude(e => e.Persona)
-            .Include(x => x.VentaPagador).ThenInclude(p => p.Venta)
+            .Include(x => x.VentaPagador).ThenInclude(p => p.Venta).ThenInclude(v => v.Paciente).ThenInclude(pac => pac.Persona)
             .Include(x => x.VentaPagador).ThenInclude(p => p.Convenio)
             .Include(x => x.Detalles)
             .ThenInclude(d => d.MetodoPago)
@@ -419,7 +420,17 @@ public sealed class CobroService(
         if (search is null)
             return query;
 
-        return query.Where(x => x.Numero.Contains(search));
+        return query.Where(x =>
+            x.Numero.Contains(search) ||
+            (x.VentaPagador != null && x.VentaPagador.Venta != null && x.VentaPagador.Venta.Numero.Contains(search)) ||
+            (x.VentaPagador != null && x.VentaPagador.Venta != null && x.VentaPagador.Venta.Paciente != null && x.VentaPagador.Venta.Paciente.Persona != null && (
+                x.VentaPagador.Venta.Paciente.Persona.Nombres.Contains(search) ||
+                x.VentaPagador.Venta.Paciente.Persona.ApellidoPaterno.Contains(search) ||
+                (x.VentaPagador.Venta.Paciente.Persona.ApellidoMaterno != null && x.VentaPagador.Venta.Paciente.Persona.ApellidoMaterno.Contains(search)) ||
+                x.VentaPagador.Venta.Paciente.Persona.NumeroDocumento.Contains(search)
+            )) ||
+            (x.VentaPagador != null && x.VentaPagador.Convenio != null && x.VentaPagador.Convenio.Nombre.Contains(search))
+        );
     }
 
     private async Task ValidarFksAsync(
@@ -506,12 +517,30 @@ public sealed class CobroService(
         if (pagador is null)
             return null;
 
+        var paciente = pagador.Venta?.Paciente;
+        var persona = paciente?.Persona;
+
+        var pacienteNombre = persona is not null
+            ? string.Join(" ",
+                new[]
+                {
+                    persona.Nombres,
+                    persona.ApellidoPaterno,
+                    persona.ApellidoMaterno
+                }.Where(x => !string.IsNullOrWhiteSpace(x)))
+            : null;
+
         return new VentaPagadorInfo
         {
             Id = pagador.Id,
             Tipo = pagador.Tipo,
             VentaId = pagador.VentaId,
             VentaNumero = pagador.Venta?.Numero ?? string.Empty,
+            VentaTotal = pagador.Venta?.Total ?? 0m,
+            PacienteId = paciente?.Id,
+            PacienteNombreCompleto = pacienteNombre,
+            PacienteDocumento = persona?.NumeroDocumento,
+            NumeroHistoriaClinica = paciente?.NumeroHistoriaClinica,
             ConvenioId = pagador.ConvenioId,
             ConvenioNombre = pagador.Convenio?.Nombre,
             Monto = pagador.Monto,

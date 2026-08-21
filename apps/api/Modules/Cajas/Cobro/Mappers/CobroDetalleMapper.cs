@@ -89,12 +89,14 @@ internal static class CobroDetalleMapper
             {
                 Id = d.Id,
                 CobroId = d.CobroId,
+                MetodoPagoId = d.MetodoPagoId,
                 MetodoPago = new MetodoPagoInfo
                 {
                     Id = d.MetodoPagoId,
                     Codigo = d.MetodoPago.Codigo,
                     Nombre = d.MetodoPago.Nombre
                 },
+                MonedaId = d.MonedaId,
                 Moneda = new MonedaInfo
                 {
                     Id = d.MonedaId,

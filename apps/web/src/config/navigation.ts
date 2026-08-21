@@ -221,6 +221,12 @@ export const parametrosNav: NavGroup = {
       description: "Definición de divisas y monedas de facturación",
     },
     {
+      title: "Métodos de Pago",
+      href: "/parametros/metodos-pago",
+      icon: CreditCard,
+      description: "Formas de pago aceptadas en caja (Efectivo, QR, Tarjeta, etc.)",
+    },
+    {
       title: "Bancos y Cuentas",
       href: "/parametros/bancos",
       icon: Landmark,

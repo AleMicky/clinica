@@ -30,6 +30,7 @@ import {
   Receipt,
   Store,
   Trash2,
+  User,
   Wallet,
   Zap,
 } from "lucide-react";
@@ -118,8 +119,8 @@ export function CobroDetailCard({
       // Si ya tiene detalles guardados
       setDetalles(
         cobro.detalles.map((d) => ({
-          metodoPagoId: d.metodoPagoId,
-          monedaId: d.monedaId,
+          metodoPagoId: d.metodoPagoId || d.metodoPago?.id || 1,
+          monedaId: d.monedaId || d.moneda?.id || 1,
           cuentaBancariaId: d.cuentaBancariaId,
           monto: d.monto,
           tipoCambio: d.tipoCambio,
@@ -344,6 +345,35 @@ export function CobroDetailCard({
           )}
         </div>
 
+        {/* FICHA PACIENTE & VENTA */}
+        {cobro.ventaPagador?.pacienteNombreCompleto && (
+          <div className="p-2.5 rounded-lg border border-primary/20 bg-primary/5 space-y-1.5 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-foreground flex items-center gap-1.5">
+                <User className="size-3.5 text-primary" />
+                {cobro.ventaPagador.pacienteNombreCompleto}
+              </span>
+              {cobro.ventaPagador.numeroHistoriaClinica && (
+                <Badge variant="outline" className="text-[10px] font-mono bg-background">
+                  HC: {cobro.ventaPagador.numeroHistoriaClinica}
+                </Badge>
+              )}
+            </div>
+            <div className="flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap">
+              {cobro.ventaPagador.pacienteDocumento && (
+                <span>
+                  CI/Doc: <strong className="text-foreground font-mono">{cobro.ventaPagador.pacienteDocumento}</strong>
+                </span>
+              )}
+              {cobro.ventaPagador.ventaTotal !== undefined && cobro.ventaPagador.ventaTotal > 0 && (
+                <span>
+                  Total Venta: <strong className="text-foreground font-mono">Bs. {cobro.ventaPagador.ventaTotal.toFixed(2)}</strong>
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* TERMINAL DE COBRO INTERACTIVO (CUANDO ESTÁ EN REGISTRADO / PENDIENTE) */}
         {isPendingCobro || (cobro.estado === EstadoCobro.Registrado && detalles.length > 0) ? (
           <form onSubmit={handleConfirmarCobro} className="space-y-3.5">
@@ -461,7 +491,7 @@ export function CobroDetailCard({
                               Método
                             </Label>
                             <Select
-                              value={det.metodoPagoId.toString()}
+                              value={det.metodoPagoId?.toString()}
                               onValueChange={(val) =>
                                 handleUpdateDetalle(
                                   index,
@@ -471,7 +501,9 @@ export function CobroDetailCard({
                               }
                             >
                               <SelectTrigger className="h-7 text-xs bg-background w-full">
-                                <SelectValue />
+                                <SelectValue placeholder="Seleccione método">
+                                  {metodos.find((m) => m.id === det.metodoPagoId)?.nombre}
+                                </SelectValue>
                               </SelectTrigger>
                               <SelectContent>
                                 {metodos.map((m) => (
@@ -493,7 +525,7 @@ export function CobroDetailCard({
                               Moneda
                             </Label>
                             <Select
-                              value={det.monedaId.toString()}
+                              value={det.monedaId?.toString()}
                               onValueChange={(val) =>
                                 handleUpdateDetalle(
                                   index,
@@ -502,17 +534,22 @@ export function CobroDetailCard({
                                 )
                               }
                             >
-                              <SelectTrigger className="h-7 text-xs bg-background w-full font-mono">
-                                <SelectValue />
+                              <SelectTrigger className="h-7 text-xs bg-background w-full">
+                                <SelectValue placeholder="Seleccione moneda">
+                                  {(() => {
+                                    const m = monedas.find((x) => x.id === det.monedaId);
+                                    return m ? `${m.nombre} (${m.codigo})` : undefined;
+                                  })()}
+                                </SelectValue>
                               </SelectTrigger>
                               <SelectContent>
                                 {monedas.map((m) => (
                                   <SelectItem
                                     key={m.id}
                                     value={m.id.toString()}
-                                    className="text-xs font-mono"
+                                    className="text-xs"
                                   >
-                                    {m.codigo}
+                                    {m.nombre} ({m.codigo})
                                   </SelectItem>
                                 ))}
                               </SelectContent>
@@ -665,9 +702,15 @@ export function CobroDetailCard({
                 <div className="divide-y divide-border/40">
                   {cobro.detalles.map((det) => {
                     const metodoNombre =
+                      det.metodoPago?.nombre ||
                       metodos.find((m) => m.id === det.metodoPagoId)?.nombre ||
-                      `Método #${det.metodoPagoId}`;
+                      "Método de Pago";
+                    const monedaNombre =
+                      det.moneda?.nombre ||
+                      monedas.find((m) => m.id === det.monedaId)?.nombre ||
+                      "";
                     const monedaCodigo =
+                      det.moneda?.codigo ||
                       monedas.find((m) => m.id === det.monedaId)?.codigo ||
                       "BOB";
 
@@ -677,8 +720,13 @@ export function CobroDetailCard({
                         className="py-2 flex items-center justify-between text-xs"
                       >
                         <div>
-                          <p className="font-semibold text-foreground">
-                            {metodoNombre}
+                          <p className="font-semibold text-foreground flex items-center gap-1.5 flex-wrap">
+                            <span>{metodoNombre}</span>
+                            {monedaNombre && (
+                              <span className="text-[10px] text-muted-foreground font-normal">
+                                • {monedaNombre} ({monedaCodigo})
+                              </span>
+                            )}
                           </p>
                           {(det.referencia || det.entidadFinanciera) && (
                             <p className="text-[10px] text-muted-foreground">

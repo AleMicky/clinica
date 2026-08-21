@@ -50,6 +50,11 @@ public sealed record VentaPagadorInfo
     public TipoPagador Tipo { get; init; }
     public int VentaId { get; init; }
     public string VentaNumero { get; init; } = string.Empty;
+    public decimal VentaTotal { get; init; }
+    public int? PacienteId { get; init; }
+    public string? PacienteNombreCompleto { get; init; }
+    public string? PacienteDocumento { get; init; }
+    public string? NumeroHistoriaClinica { get; init; }
     public int? ConvenioId { get; init; }
     public string? ConvenioNombre { get; init; }
     public decimal Monto { get; init; }

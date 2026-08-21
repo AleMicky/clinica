@@ -22,6 +22,7 @@ import {
   Store,
   Wallet,
   ArrowRight,
+  User,
 } from "lucide-react";
 import {
   EstadoCobro,
@@ -121,7 +122,7 @@ export function CobroList({
           <SearchInput
             value={searchTerm}
             onChange={onSearchChange}
-            placeholder="Buscar por N° cobro, venta..."
+            placeholder="Buscar por N° cobro, venta, paciente..."
             className="h-8 text-xs bg-background shadow-2xs"
           />
         </div>
@@ -174,6 +175,7 @@ export function CobroList({
 
               const pagadorMonto = cobro.ventaPagador?.monto ?? 0;
               const numDetalles = cobro.detalles?.length || 0;
+              const pacienteNombre = cobro.ventaPagador?.pacienteNombreCompleto;
 
               return (
                 <div
@@ -185,7 +187,7 @@ export function CobroList({
                       : "border border-border/50 bg-card hover:border-primary/40 hover:bg-muted/25"
                   }`}
                 >
-                  {/* Bloque Izquierdo: Icono + Cobro # + Venta # + Convenio + Fecha + Caja */}
+                  {/* Bloque Izquierdo: Icono + Cobro # + Paciente + Venta # + Convenio + Fecha + Caja */}
                   <div className="flex items-start gap-3 min-w-0 flex-1">
                     <div
                       className={`size-9 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 border mt-0.5 transition-colors ${
@@ -207,9 +209,16 @@ export function CobroList({
                           #{cobro.numero}
                         </span>
 
+                        {pacienteNombre && (
+                          <span className="font-bold text-xs text-foreground flex items-center gap-1 group-hover:text-primary transition-colors">
+                            <User className="size-3 text-muted-foreground shrink-0" />
+                            {pacienteNombre}
+                          </span>
+                        )}
+
                         {cobro.ventaPagador?.ventaNumero ? (
-                          <span className="font-bold text-xs text-foreground group-hover:text-primary transition-colors">
-                            Venta #{cobro.ventaPagador.ventaNumero}
+                          <span className="text-[11px] font-medium text-muted-foreground">
+                            (Venta #{cobro.ventaPagador.ventaNumero})
                           </span>
                         ) : (
                           <span className="font-bold text-xs text-foreground">
@@ -227,6 +236,13 @@ export function CobroList({
 
                       {/* Detalles secundarios en línea compacta */}
                       <div className="flex items-center gap-2.5 text-[11px] text-muted-foreground flex-wrap pt-0.5">
+                        {cobro.ventaPagador?.pacienteDocumento && (
+                          <>
+                            <span>Doc: <strong className="text-foreground font-mono">{cobro.ventaPagador.pacienteDocumento}</strong></span>
+                            <span className="text-muted-foreground/40">•</span>
+                          </>
+                        )}
+
                         <span className="flex items-center gap-1">
                           <Store className="size-3 text-muted-foreground/70 shrink-0" />
                           <span>{cajaNombre}</span>
@@ -248,7 +264,8 @@ export function CobroList({
                           <>
                             <span className="text-muted-foreground/40">•</span>
                             <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-                              {numDetalles} pago{numDetalles !== 1 ? "s" : ""}
+                              {cobro.detalles.map((d) => d.metodoPago?.nombre).filter(Boolean).join(", ") ||
+                                `${numDetalles} pago${numDetalles !== 1 ? "s" : ""}`}
                             </span>
                           </>
                         )}

@@ -139,9 +139,9 @@ export function CobroTable({
             <TableRow className="h-9">
               <TableHead className="w-[120px] text-xs py-2">N° Cobro</TableHead>
               <TableHead className="w-[130px] text-xs py-2">Fecha y Hora</TableHead>
-              <TableHead className="text-xs py-2">Venta / Ref</TableHead>
+              <TableHead className="text-xs py-2">Paciente / Venta</TableHead>
               <TableHead className="w-[120px] text-xs py-2">Caja / Turno</TableHead>
-              <TableHead className="w-[110px] text-right text-xs py-2">Total (S/)</TableHead>
+              <TableHead className="w-[110px] text-right text-xs py-2">Total (Bs.)</TableHead>
               <TableHead className="w-[100px] text-xs py-2">Estado</TableHead>
               <TableHead className="w-[70px] text-right text-xs py-2">Acciones</TableHead>
             </TableRow>
@@ -186,15 +186,22 @@ export function CobroTable({
                       {formatDate(cobro.fechaHora)}
                     </TableCell>
                     <TableCell className="py-1.5">
-                      <span className="font-mono text-xs text-foreground">
-                        {cobro.ventaPagador?.ventaNumero ? `Venta #${cobro.ventaPagador.ventaNumero}` : "-"}
-                      </span>
+                      <div className="flex flex-col">
+                        <span className="font-medium text-xs text-foreground">
+                          {cobro.ventaPagador?.pacienteNombreCompleto || (cobro.ventaPagador?.ventaNumero ? `Venta #${cobro.ventaPagador.ventaNumero}` : "-")}
+                        </span>
+                        {cobro.ventaPagador?.pacienteNombreCompleto && cobro.ventaPagador?.ventaNumero && (
+                          <span className="text-[10px] text-muted-foreground font-mono">
+                            Venta #{cobro.ventaPagador.ventaNumero}
+                          </span>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="font-mono text-xs text-muted-foreground py-1.5">
                       {cobro.turnoCaja?.caja ? cobro.turnoCaja.caja.codigo : `- (Turno #${cobro.turnoCaja?.id || "-"})`}
                     </TableCell>
                     <TableCell className="text-right font-mono text-xs font-bold text-foreground py-1.5">
-                      S/ {Number(cobro.total).toFixed(2)}
+                      Bs. {Number(cobro.total).toFixed(2)}
                     </TableCell>
                     <TableCell className="py-1.5">
                       {renderEstadoBadge(cobro.estado)}

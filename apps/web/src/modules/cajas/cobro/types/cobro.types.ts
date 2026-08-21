@@ -18,11 +18,25 @@ export interface CobroDetalleRequest {
   observacion?: string | null;
 }
 
+export interface MetodoPagoInfo {
+  id: number;
+  codigo: string;
+  nombre: string;
+}
+
+export interface MonedaInfo {
+  id: number;
+  codigo: string;
+  nombre: string;
+}
+
 export interface CobroDetalleResponse {
   id: number;
   cobroId: number;
   metodoPagoId: number;
+  metodoPago?: MetodoPagoInfo | null;
   monedaId: number;
+  moneda?: MonedaInfo | null;
   cuentaBancariaId?: number | null;
   monto: number;
   tipoCambio: number;
@@ -37,6 +51,11 @@ export interface VentaPagadorInfo {
   tipo: number;
   ventaId: number;
   ventaNumero: string;
+  ventaTotal?: number;
+  pacienteId?: number | null;
+  pacienteNombreCompleto?: string | null;
+  pacienteDocumento?: string | null;
+  numeroHistoriaClinica?: string | null;
   convenioId?: number | null;
   convenioNombre?: string | null;
   monto: number;

@@ -43,6 +43,7 @@ const titleMap: Record<string, string> = {
   parametros: "Parámetros",
   catalogos: "Catálogos",
   monedas: "Monedas",
+  "metodos-pago": "Métodos de Pago",
   bancos: "Bancos y Cuentas",
   "tipo-cambio": "Tipo de Cambio",
   "unidades-medida": "Unidades de Medida",

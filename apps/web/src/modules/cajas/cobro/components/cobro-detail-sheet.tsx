@@ -42,7 +42,9 @@ export function CobroDetailSheet({
                 Terminal de Cobro #{cobro.numero}
               </SheetTitle>
               <SheetDescription className="text-xs text-muted-foreground">
-                {cobro.ventaPagador?.ventaNumero
+                {cobro.ventaPagador?.pacienteNombreCompleto
+                  ? `Paciente: ${cobro.ventaPagador.pacienteNombreCompleto} • Venta #${cobro.ventaPagador?.ventaNumero || ""}`
+                  : cobro.ventaPagador?.ventaNumero
                   ? `Vinculado a Venta #${cobro.ventaPagador.ventaNumero}`
                   : "Registro de pagos de caja"}
               </SheetDescription>
