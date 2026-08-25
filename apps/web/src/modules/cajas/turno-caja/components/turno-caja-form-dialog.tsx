@@ -4,7 +4,20 @@ import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Clock, LogOut, Loader2 } from "lucide-react";
+import {
+  Clock,
+  LogOut,
+  Loader2,
+  Vault,
+  Calendar,
+  User,
+  Info,
+  Pencil,
+  CheckCircle2,
+  Sparkles,
+  Timer,
+  AlertCircle,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -16,10 +29,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Autocomplete, type AutocompleteOption } from "@/components/ui/autocomplete";
 import { cn } from "@/lib/utils";
 
 import { useEmpleados } from "@/modules/recursos-humanos/empleado/hooks/use-empleados";
+import type { EmpleadoResponse } from "@/modules/recursos-humanos/empleado/types/empleado.types";
+import { useCajas } from "@/modules/cajas/caja/hooks/use-cajas";
+import type { CajaResponse } from "@/modules/cajas/caja/types/caja.types";
 import {
   turnoCajaSchema,
   type TurnoCajaFormValues,
@@ -55,6 +72,50 @@ function toLocalDatetimeString(dateInput?: string | Date | null): string {
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
+function setTimeOnDate(baseDateInput: string | Date | null | undefined, hours: number, minutes = 0): string {
+  const d = baseDateInput ? new Date(baseDateInput) : new Date();
+  if (isNaN(d.getTime())) return "";
+  d.setHours(hours, minutes, 0, 0);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const h = String(d.getHours()).padStart(2, "0");
+  const m = String(d.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day}T${h}:${m}`;
+}
+
+function formatDisplayDate(dateStr?: string | null): string {
+  if (!dateStr) return "-";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return "-";
+  return d.toLocaleString("es-ES", {
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function calculateDiffDuration(startStr?: string, endStr?: string | null): string {
+  if (!startStr) return "";
+  const start = new Date(startStr);
+  const end = endStr ? new Date(endStr) : new Date();
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) return "";
+
+  const diffMs = end.getTime() - start.getTime();
+  if (diffMs < 0) return "Cierre anterior a apertura (Inválido)";
+
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+  if (diffHours === 0) {
+    return `${diffMinutes} minutos`;
+  }
+  return `${diffHours} hora${diffHours > 1 ? "s" : ""} y ${diffMinutes} minuto${diffMinutes !== 1 ? "s" : ""}`;
+}
+
 export function TurnoCajaFormDialog({
   open,
   onOpenChange,
@@ -66,8 +127,13 @@ export function TurnoCajaFormDialog({
   const isClosing = mode === "close";
   const isEditing = mode === "edit";
 
-  // Fetch real Empleados
+  // Fetch Empleados
   const { data: empleadosData, isLoading: isLoadingEmpleados } = useEmpleados(
+    STATIC_QUERY_PARAMS
+  );
+
+  // Fetch Cajas for selection when not bound to a specific defaultCajaId
+  const { data: cajasData, isLoading: isLoadingCajas } = useCajas(
     STATIC_QUERY_PARAMS
   );
 
@@ -91,19 +157,26 @@ export function TurnoCajaFormDialog({
     },
   });
 
+  const selectedCajaId = watch("cajaId");
   const selectedEmpleadoId = watch("empleadoId");
   const fechaAperturaVal = watch("fechaHoraApertura");
   const fechaCierreVal = watch("fechaHoraCierre");
 
-  const empleadosList = Array.isArray(empleadosData?.items)
+  const empleadosList: EmpleadoResponse[] = Array.isArray(empleadosData?.items)
     ? empleadosData.items
     : Array.isArray(empleadosData)
-    ? empleadosData
+    ? (empleadosData as unknown as EmpleadoResponse[])
+    : [];
+
+  const cajasList: CajaResponse[] = Array.isArray(cajasData?.items)
+    ? cajasData.items
+    : Array.isArray(cajasData)
+    ? (cajasData as unknown as CajaResponse[])
     : [];
 
   // Mapeo de opciones Autocomplete para Empleados / Cajeros
   const empleadoOptions: AutocompleteOption[] = React.useMemo(() => {
-    return empleadosList.map((emp) => {
+    return empleadosList.map((emp: EmpleadoResponse) => {
       const nombreCompleto = emp.persona
         ? `${emp.persona.nombres} ${emp.persona.apellidoPaterno} ${emp.persona.apellidoMaterno || ""}`.trim()
         : emp.codigoEmpleado;
@@ -116,6 +189,25 @@ export function TurnoCajaFormDialog({
       };
     });
   }, [empleadosList]);
+
+  // Mapeo de opciones Autocomplete para Cajas
+  const cajaOptions: AutocompleteOption[] = React.useMemo(() => {
+    return cajasList.map((caja: CajaResponse) => ({
+      value: String(caja.id),
+      label: `${caja.codigo} - ${caja.nombre}`,
+      description: caja.descripcion || (caja.activo ? "Caja Activa" : "Inactiva"),
+    }));
+  }, [cajasList]);
+
+  const activeCaja = React.useMemo(() => {
+    const targetId = defaultCajaId || turnoToEdit?.caja?.id || selectedCajaId;
+    return cajasList.find((c) => c.id === targetId);
+  }, [cajasList, defaultCajaId, turnoToEdit, selectedCajaId]);
+
+  const activeEmpleado = React.useMemo(() => {
+    const targetId = turnoToEdit?.empleado?.id || selectedEmpleadoId;
+    return empleadosList.find((e) => e.id === targetId);
+  }, [empleadosList, turnoToEdit, selectedEmpleadoId]);
 
   React.useEffect(() => {
     if (open) {
@@ -146,6 +238,13 @@ export function TurnoCajaFormDialog({
     }
   }, [open, turnoToEdit, defaultCajaId, mode, isClosing, reset]);
 
+  const handleCajaChange = React.useCallback(
+    (val: string) => {
+      setValue("cajaId", Number(val), { shouldValidate: true });
+    },
+    [setValue]
+  );
+
   const handleEmpleadoChange = React.useCallback(
     (val: string) => {
       setValue("empleadoId", Number(val), { shouldValidate: true });
@@ -153,11 +252,27 @@ export function TurnoCajaFormDialog({
     [setValue]
   );
 
+  const setNowForApertura = () => {
+    setValue("fechaHoraApertura", toLocalDatetimeString(), { shouldValidate: true });
+  };
+
+  const setPresetForApertura = (h: number, m = 0) => {
+    setValue("fechaHoraApertura", setTimeOnDate(fechaAperturaVal, h, m), { shouldValidate: true });
+  };
+
+  const setNowForCierre = () => {
+    setValue("fechaHoraCierre", toLocalDatetimeString(), { shouldValidate: true });
+  };
+
+  const setPresetForCierre = (h: number, m = 0) => {
+    setValue("fechaHoraCierre", setTimeOnDate(fechaCierreVal || fechaAperturaVal, h, m), { shouldValidate: true });
+  };
+
   const onSubmit = async (values: TurnoCajaFormValues) => {
     try {
       const targetCajaId = Number(defaultCajaId || turnoToEdit?.caja?.id || values.cajaId);
       if (!targetCajaId) {
-        toast.error("No se pudo identificar la caja asociada.");
+        toast.error("Debe seleccionar la caja asignada.");
         return;
       }
 
@@ -209,136 +324,320 @@ export function TurnoCajaFormDialog({
   };
 
   const isLoading = createMutation.isPending || updateMutation.isPending || isSubmitting;
+  const calculatedDuration = calculateDiffDuration(
+    fechaAperturaVal,
+    isClosing ? (fechaCierreVal || toLocalDatetimeString()) : fechaCierreVal
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg p-6">
-        <DialogHeader className="space-y-1">
-          <DialogTitle className="flex items-center gap-2 text-xl">
-            <div
-              className={cn(
-                "flex size-9 items-center justify-center rounded-lg",
-                isClosing
-                  ? "bg-amber-500/10 text-amber-600"
-                  : "bg-primary/10 text-primary"
-              )}
-            >
-              {isClosing ? <LogOut className="size-5" /> : <Clock className="size-5" />}
-            </div>
-            <span>
-              {isClosing
-                ? "Cerrar Turno de Caja"
-                : isEditing
-                ? "Editar Turno de Caja"
-                : "Apertura de Turno"}
-            </span>
-          </DialogTitle>
-          <DialogDescription className="text-xs text-muted-foreground">
-            {isClosing
-              ? "Confirme la fecha y hora de cierre para registrar el término de este turno."
+      <DialogContent className="sm:max-w-xl p-0 overflow-hidden border-border/60 shadow-2xl">
+        {/* Encabezado con Temática de Color Dinámica */}
+        <div
+          className={cn(
+            "p-6 pb-5 border-b",
+            isClosing
+              ? "bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent border-amber-500/20"
               : isEditing
-              ? "Modifique la información del turno de caja."
-              : "Seleccione el cajero responsable y confirme el horario de apertura."}
-          </DialogDescription>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-2">
-          {/* Indicador de campos obligatorios */}
-          <div className="flex items-center justify-between text-xs text-muted-foreground bg-muted/40 px-3 py-1.5 rounded-md border border-border/40">
-            <span>Configuración del Turno</span>
-            <span className="text-destructive font-medium">* Requeridos</span>
-          </div>
-
-          {/* Cajero / Empleado Responsable Autocomplete */}
-          <div className="space-y-1.5">
-            <Label htmlFor="empleadoId" className="text-xs flex items-center gap-1">
-              Cajero / Empleado Responsable <span className="text-destructive">*</span>
-            </Label>
-            <Autocomplete
-              id="empleadoId"
-              value={selectedEmpleadoId ? String(selectedEmpleadoId) : ""}
-              onValueChange={handleEmpleadoChange}
-              options={empleadoOptions}
-              placeholder="Buscar por código, nombre o DNI de cajero..."
-              emptyText="No se encontraron cajeros/empleados registrados"
-              allowCustomValue={false}
-              isLoading={isLoadingEmpleados}
-              disabled={isLoading || isClosing}
-              error={Boolean(errors.empleadoId)}
-            />
-            {errors.empleadoId && (
-              <p className="text-[11px] text-destructive font-medium">
-                {errors.empleadoId.message}
-              </p>
-            )}
-          </div>
-
-          {/* Fecha y Hora de Apertura */}
-          <div className="space-y-1.5">
-            <Label htmlFor="fechaHoraApertura" className="text-xs flex items-center gap-1">
-              Fecha y Hora de Apertura <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="fechaHoraApertura"
-              type="datetime-local"
-              value={fechaAperturaVal}
-              onChange={(e) =>
-                setValue("fechaHoraApertura", e.target.value, {
-                  shouldValidate: true,
-                })
-              }
-              className={cn(
-                "h-9 text-sm font-mono",
-                errors.fechaHoraApertura && "border-destructive focus-visible:ring-destructive"
-              )}
-              aria-invalid={Boolean(errors.fechaHoraApertura)}
-              disabled={isLoading || isClosing}
-            />
-            {errors.fechaHoraApertura && (
-              <p className="text-[11px] text-destructive font-medium">
-                {errors.fechaHoraApertura.message}
-              </p>
-            )}
-          </div>
-
-          {/* Fecha y Hora de Cierre (Si es Cierre o Edición) */}
-          {(isClosing || isEditing || fechaCierreVal) && (
-            <div className="space-y-1.5 pt-2 border-t border-border/40">
-              <Label htmlFor="fechaHoraCierre" className="text-xs flex items-center gap-1">
-                Fecha y Hora de Cierre {isClosing && <span className="text-destructive">*</span>}
-              </Label>
-              <Input
-                id="fechaHoraCierre"
-                type="datetime-local"
-                value={fechaCierreVal || ""}
-                onChange={(e) => {
-                  setValue("fechaHoraCierre", e.target.value);
-                  if (e.target.value) {
-                    setValue("estado", EstadoTurnoCaja.Cerrado);
-                  }
-                }}
+              ? "bg-gradient-to-r from-blue-500/15 via-blue-500/5 to-transparent border-blue-500/20"
+              : "bg-gradient-to-r from-primary/15 via-primary/5 to-transparent border-primary/20"
+          )}
+        >
+          <DialogHeader className="space-y-1.5">
+            <div className="flex items-center gap-3">
+              <div
                 className={cn(
-                  "h-9 text-sm font-mono",
-                  errors.fechaHoraCierre && "border-destructive focus-visible:ring-destructive"
+                  "flex size-11 items-center justify-center rounded-2xl border shadow-xs shrink-0",
+                  isClosing
+                    ? "bg-amber-500 text-white border-amber-600 shadow-amber-500/20"
+                    : isEditing
+                    ? "bg-blue-600 text-white border-blue-700 shadow-blue-500/20"
+                    : "bg-primary text-primary-foreground border-primary/80 shadow-primary/20"
                 )}
-                aria-invalid={Boolean(errors.fechaHoraCierre)}
-                disabled={isLoading}
+              >
+                {isClosing ? (
+                  <LogOut className="size-5.5" />
+                ) : isEditing ? (
+                  <Pencil className="size-5.5" />
+                ) : (
+                  <Clock className="size-5.5" />
+                )}
+              </div>
+
+              <div>
+                <DialogTitle className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
+                  <span>
+                    {isClosing
+                      ? "Cierre de Turno de Caja"
+                      : isEditing
+                      ? "Modificar Parámetros del Turno"
+                      : "Apertura de Turno de Caja"}
+                  </span>
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+                  {isClosing
+                    ? "Registre la fecha y hora final para consolidar y cerrar la jornada de la caja."
+                    : isEditing
+                    ? "Modifique los responsables o el horario programado para este turno."
+                    : "Asigne la caja registradora y el cajero responsable para iniciar la atención."}
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+        </div>
+
+        {/* Tarjeta de Resumen en modo Cierre */}
+        {isClosing && turnoToEdit && (
+          <div className="mx-6 mt-5 p-4 rounded-xl border border-amber-500/30 bg-amber-500/[0.07] space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                <Info className="size-4" />
+                Resumen de la Jornada Actual
+              </span>
+              <Badge
+                variant="outline"
+                className="bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/40 text-[10px] font-semibold"
+              >
+                #Turno-{turnoToEdit.id}
+              </Badge>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 text-xs pt-1">
+              <div className="bg-background/70 p-2 rounded-lg border border-amber-500/20">
+                <span className="text-[10px] text-muted-foreground block font-medium">Caja Registradora</span>
+                <span className="font-bold text-foreground">
+                  {turnoToEdit.caja?.codigo} - {turnoToEdit.caja?.nombre}
+                </span>
+              </div>
+
+              <div className="bg-background/70 p-2 rounded-lg border border-amber-500/20">
+                <span className="text-[10px] text-muted-foreground block font-medium">Cajero Responsable</span>
+                <span className="font-bold text-foreground truncate block">
+                  {turnoToEdit.empleado?.nombreCompleto || "Sin asignar"}
+                </span>
+              </div>
+
+              <div className="col-span-2 bg-background/70 p-2 rounded-lg border border-amber-500/20 flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] text-muted-foreground block font-medium">Apertura Inicial</span>
+                  <span className="font-mono font-semibold text-foreground">
+                    {formatDisplayDate(turnoToEdit.fechaHoraApertura)}
+                  </span>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] text-muted-foreground block font-medium">Tiempo Transcurrido</span>
+                  <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                    {calculatedDuration}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Formulario Principal */}
+        <form onSubmit={handleSubmit(onSubmit)} className="p-6 pt-4 space-y-4">
+          {/* SECCIÓN 1: ASIGNACIÓN DE CAJA Y RESPONSABLE */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between pb-1 border-b border-border/40">
+              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <Vault className="size-3.5 text-primary" />
+                1. Asignación Operativa
+              </span>
+              <span className="text-[10px] font-medium text-destructive">* Campos requeridos</span>
+            </div>
+
+            {/* Selector de Caja si no está fija */}
+            {!defaultCajaId && (
+              <div className="space-y-1.5">
+                <Label htmlFor="cajaId" className="text-xs font-semibold flex items-center gap-1">
+                  Caja Registradora <span className="text-destructive">*</span>
+                </Label>
+                <Autocomplete
+                  id="cajaId"
+                  value={selectedCajaId ? String(selectedCajaId) : ""}
+                  onValueChange={handleCajaChange}
+                  options={cajaOptions}
+                  placeholder="Seleccione la caja registradora..."
+                  emptyText="No se encontraron cajas registradas"
+                  allowCustomValue={false}
+                  isLoading={isLoadingCajas}
+                  disabled={isLoading || isClosing || isEditing}
+                  error={Boolean(errors.cajaId)}
+                />
+                {errors.cajaId && (
+                  <p className="text-[11px] text-destructive font-medium flex items-center gap-1">
+                    <AlertCircle className="size-3" />
+                    {errors.cajaId.message}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Cajero / Empleado Responsable Autocomplete */}
+            <div className="space-y-1.5">
+              <Label htmlFor="empleadoId" className="text-xs font-semibold flex items-center gap-1">
+                Cajero / Empleado Responsable <span className="text-destructive">*</span>
+              </Label>
+              <Autocomplete
+                id="empleadoId"
+                value={selectedEmpleadoId ? String(selectedEmpleadoId) : ""}
+                onValueChange={handleEmpleadoChange}
+                options={empleadoOptions}
+                placeholder="Buscar por código, nombre o DNI de cajero..."
+                emptyText="No se encontraron cajeros/empleados registrados"
+                allowCustomValue={false}
+                isLoading={isLoadingEmpleados}
+                disabled={isLoading || isClosing}
+                error={Boolean(errors.empleadoId)}
               />
-              {errors.fechaHoraCierre && (
-                <p className="text-[11px] text-destructive font-medium">
-                  {errors.fechaHoraCierre.message}
+              {errors.empleadoId && (
+                <p className="text-[11px] text-destructive font-medium flex items-center gap-1">
+                  <AlertCircle className="size-3" />
+                  {errors.empleadoId.message}
                 </p>
               )}
             </div>
-          )}
+          </div>
 
-          <DialogFooter className="pt-4 border-t gap-2 sm:gap-0">
+          {/* SECCIÓN 2: HORARIO Y JORNADA */}
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center justify-between pb-1 border-b border-border/40">
+              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <Calendar className="size-3.5 text-primary" />
+                2. Horario del Turno
+              </span>
+              {calculatedDuration && (
+                <span className="text-[11px] font-mono font-medium text-primary flex items-center gap-1">
+                  <Timer className="size-3" />
+                  {calculatedDuration}
+                </span>
+              )}
+            </div>
+
+            {/* Fecha y Hora de Apertura */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="fechaHoraApertura" className="text-xs font-semibold flex items-center gap-1">
+                  Fecha y Hora de Apertura <span className="text-destructive">*</span>
+                </Label>
+                {!isClosing && (
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setPresetForApertura(8, 0)}
+                      className="text-[10px] font-semibold text-muted-foreground hover:text-primary transition-colors cursor-pointer bg-muted/60 hover:bg-muted px-1.5 py-0.5 rounded"
+                    >
+                      08:00 AM
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPresetForApertura(14, 0)}
+                      className="text-[10px] font-semibold text-muted-foreground hover:text-primary transition-colors cursor-pointer bg-muted/60 hover:bg-muted px-1.5 py-0.5 rounded"
+                    >
+                      02:00 PM
+                    </button>
+                    <button
+                      type="button"
+                      onClick={setNowForApertura}
+                      className="text-[10px] font-semibold text-primary hover:underline cursor-pointer bg-primary/10 px-2 py-0.5 rounded flex items-center gap-1"
+                    >
+                      <Clock className="size-2.5" />
+                      Ahora
+                    </button>
+                  </div>
+                )}
+              </div>
+              <Input
+                id="fechaHoraApertura"
+                type="datetime-local"
+                value={fechaAperturaVal}
+                onChange={(e) =>
+                  setValue("fechaHoraApertura", e.target.value, {
+                    shouldValidate: true,
+                  })
+                }
+                className={cn(
+                  "h-9.5 text-sm font-mono bg-background",
+                  errors.fechaHoraApertura && "border-destructive focus-visible:ring-destructive"
+                )}
+                aria-invalid={Boolean(errors.fechaHoraApertura)}
+                disabled={isLoading || isClosing}
+              />
+              {errors.fechaHoraApertura && (
+                <p className="text-[11px] text-destructive font-medium flex items-center gap-1">
+                  <AlertCircle className="size-3" />
+                  {errors.fechaHoraApertura.message}
+                </p>
+              )}
+            </div>
+
+            {/* Fecha y Hora de Cierre (Si es Cierre o Edición) */}
+            {(isClosing || isEditing || fechaCierreVal) && (
+              <div className="space-y-1.5 pt-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="fechaHoraCierre" className="text-xs font-semibold flex items-center gap-1 text-foreground">
+                    Fecha y Hora de Cierre {isClosing && <span className="text-destructive">*</span>}
+                  </Label>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setPresetForCierre(16, 0)}
+                      className="text-[10px] font-semibold text-muted-foreground hover:text-primary transition-colors cursor-pointer bg-muted/60 hover:bg-muted px-1.5 py-0.5 rounded"
+                    >
+                      04:00 PM
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPresetForCierre(20, 0)}
+                      className="text-[10px] font-semibold text-muted-foreground hover:text-primary transition-colors cursor-pointer bg-muted/60 hover:bg-muted px-1.5 py-0.5 rounded"
+                    >
+                      08:00 PM
+                    </button>
+                    <button
+                      type="button"
+                      onClick={setNowForCierre}
+                      className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 hover:underline cursor-pointer bg-amber-500/10 px-2 py-0.5 rounded flex items-center gap-1"
+                    >
+                      <Clock className="size-2.5" />
+                      Ahora
+                    </button>
+                  </div>
+                </div>
+                <Input
+                  id="fechaHoraCierre"
+                  type="datetime-local"
+                  value={fechaCierreVal || ""}
+                  onChange={(e) => {
+                    setValue("fechaHoraCierre", e.target.value);
+                    if (e.target.value) {
+                      setValue("estado", EstadoTurnoCaja.Cerrado);
+                    }
+                  }}
+                  className={cn(
+                    "h-9.5 text-sm font-mono bg-background",
+                    errors.fechaHoraCierre && "border-destructive focus-visible:ring-destructive"
+                  )}
+                  aria-invalid={Boolean(errors.fechaHoraCierre)}
+                  disabled={isLoading}
+                />
+                {errors.fechaHoraCierre && (
+                  <p className="text-[11px] text-destructive font-medium flex items-center gap-1">
+                    <AlertCircle className="size-3" />
+                    {errors.fechaHoraCierre.message}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="pt-5 border-t gap-2 sm:gap-0">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
-              className="h-9 text-xs sm:text-sm cursor-pointer"
+              className="h-9.5 text-xs sm:text-sm cursor-pointer"
             >
               Cancelar
             </Button>
@@ -346,17 +645,21 @@ export function TurnoCajaFormDialog({
               type="submit"
               disabled={isLoading}
               className={cn(
-                "h-9 gap-2 text-xs sm:text-sm cursor-pointer",
-                isClosing && "bg-amber-600 hover:bg-amber-700 text-white"
+                "h-9.5 px-4 gap-2 text-xs sm:text-sm font-semibold cursor-pointer shadow-sm transition-all",
+                isClosing
+                  ? "bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20"
+                  : isEditing
+                  ? "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20"
+                  : "bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/20"
               )}
             >
               {isLoading && <Loader2 className="size-4 animate-spin" />}
               <span>
                 {isClosing
-                  ? "Confirmar Cierre"
+                  ? "Confirmar Cierre de Turno"
                   : isEditing
-                  ? "Guardar Cambios"
-                  : "Abrir Turno"}
+                  ? "Guardar Modificaciones"
+                  : "Abrir Turno de Caja"}
               </span>
             </Button>
           </DialogFooter>

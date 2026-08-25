@@ -21,6 +21,8 @@ export type {
 } from "./turno-caja/types/turno-caja.types";
 export { EstadoTurnoCaja } from "./turno-caja/types/turno-caja.types";
 export * from "./turno-caja/hooks/use-turnos-caja";
+export * from "./turno-caja/components/turno-caja-module-view";
+export * from "./turno-caja/components/turno-caja-list";
 
 export type {
   AperturaCajaResponse,

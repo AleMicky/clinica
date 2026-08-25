@@ -1,9 +1,5 @@
-import { EmpleadoPageForm } from "@/modules/recursos-humanos/empleado";
-
-export const metadata = {
-  title: "Nuevo Empleado | Clínica",
-};
+import { redirect } from "next/navigation";
 
 export default function NuevoEmpleadoPage() {
-  return <EmpleadoPageForm />;
+  redirect("/recursos-humanos/empleados");
 }

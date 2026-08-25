@@ -1,11 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { EmpleadoHeader } from "./empleado-header";
 import { EmpleadoMetricsCards, type EmpleadoMetrics } from "./empleado-metrics";
 import { EmpleadoList } from "./empleado-list";
+import { EmpleadoFormDialog } from "./empleado-form-dialog";
 import { EmpleadoDeleteDialog } from "./empleado-delete-dialog";
 import { EmpleadoAsignacionesDrawer } from "./empleado-asignaciones-drawer";
 import { useDeleteEmpleado, useEmpleados } from "../hooks/use-empleados";
@@ -16,7 +16,10 @@ import {
 } from "../types/empleado.types";
 
 export function EmpleadoModuleView() {
-  const router = useRouter();
+  // Form Dialog state (Create / Edit modal)
+  const [formDialogOpen, setFormDialogOpen] = React.useState(false);
+  const [empleadoToEdit, setEmpleadoToEdit] =
+    React.useState<EmpleadoResponse | null>(null);
 
   // Delete dialog confirmation state
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
@@ -89,11 +92,13 @@ export function EmpleadoModuleView() {
   };
 
   const handleOpenAdd = () => {
-    router.push("/recursos-humanos/empleados/nuevo");
+    setEmpleadoToEdit(null);
+    setFormDialogOpen(true);
   };
 
   const handleOpenEdit = (empleado: EmpleadoResponse) => {
-    router.push(`/recursos-humanos/empleados/${empleado.id}/editar`);
+    setEmpleadoToEdit(empleado);
+    setFormDialogOpen(true);
   };
 
   const handleOpenAsignaciones = (empleado: EmpleadoResponse) => {
@@ -124,7 +129,7 @@ export function EmpleadoModuleView() {
     }
   };
 
-  // Convert for drawer compatibility if needed
+  // Convert for drawer compatibility
   const drawerEmpleadoItem = React.useMemo(() => {
     if (!selectedEmpleadoForAsignaciones) return null;
     const emp = selectedEmpleadoForAsignaciones;
@@ -173,7 +178,7 @@ export function EmpleadoModuleView() {
       {/* Tarjetas de Métricas en Vivo */}
       <EmpleadoMetricsCards metrics={metrics} />
 
-      {/* Listado Principal de Empleados (Formato Lista igual a Admisiones, Usuarios, Personas y Pacientes) */}
+      {/* Listado Principal de Empleados */}
       <EmpleadoList
         empleados={filteredEmpleados}
         isLoading={isLoading}
@@ -190,6 +195,14 @@ export function EmpleadoModuleView() {
         onDelete={handleOpenDelete}
         onManageAsignaciones={handleOpenAsignaciones}
         onRefresh={() => refetch()}
+      />
+
+      {/* Modal: Crear / Editar Empleado */}
+      <EmpleadoFormDialog
+        open={formDialogOpen}
+        onOpenChange={setFormDialogOpen}
+        empleadoToEdit={empleadoToEdit}
+        onSuccessCallback={() => refetch()}
       />
 
       {/* Drawer: Gestión de Asignaciones (Áreas y Cargos) */}

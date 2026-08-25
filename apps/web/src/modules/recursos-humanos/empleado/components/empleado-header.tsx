@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Briefcase, Plus, RefreshCw } from "lucide-react";
 
@@ -11,14 +10,8 @@ interface EmpleadoHeaderProps {
 }
 
 export function EmpleadoHeader({ onAddClick, onRefresh }: EmpleadoHeaderProps) {
-  const router = useRouter();
-
   const handleAddClick = () => {
-    if (onAddClick) {
-      onAddClick();
-    } else {
-      router.push("/recursos-humanos/empleados/nuevo");
-    }
+    onAddClick?.();
   };
 
   return (

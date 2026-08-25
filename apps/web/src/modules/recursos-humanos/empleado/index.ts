@@ -9,4 +9,4 @@ export * from "./components/empleado-list";
 export * from "./components/empleado-delete-dialog";
 export * from "./components/empleado-asignaciones-drawer";
 export * from "./components/empleado-module-view";
-export * from "./components/empleado-page-form";
+export * from "./components/empleado-form-dialog";

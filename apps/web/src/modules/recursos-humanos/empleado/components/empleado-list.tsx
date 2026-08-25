@@ -8,8 +8,6 @@ import {
   Edit,
   Trash2,
   Users,
-  Briefcase,
-  Calendar,
   Phone,
   ShieldCheck,
   History,
