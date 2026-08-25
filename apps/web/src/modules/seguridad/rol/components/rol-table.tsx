@@ -16,6 +16,7 @@ interface RolTableProps {
   onPageChange: (page: number) => void;
   onEdit: (rol: RolResponse) => void;
   onDelete: (rol: RolResponse) => void;
+  onManageMenu?: (rol: RolResponse) => void;
 }
 
 export function RolTable({
@@ -26,6 +27,7 @@ export function RolTable({
   onPageChange,
   onEdit,
   onDelete,
+  onManageMenu,
 }: RolTableProps) {
   const items = data?.items ?? [];
   const page = data?.page ?? 1;
@@ -73,6 +75,7 @@ export function RolTable({
               rol={rol}
               onEdit={onEdit}
               onDelete={onDelete}
+              onManageMenu={onManageMenu}
             />
           ))}
         </div>

@@ -8,6 +8,7 @@ import type { RolResponse } from "../types/rol.types";
 import { RolDeleteDialog } from "./rol-delete-dialog";
 import { RolFormDialog } from "./rol-form-dialog";
 import { RolHeader } from "./rol-header";
+import { RolOpcionMenuDialog } from "./rol-opcion-menu-dialog";
 import { RolTable } from "./rol-table";
 
 export function RolModuleView() {
@@ -17,6 +18,7 @@ export function RolModuleView() {
 
   const [formOpen, setFormOpen] = React.useState(false);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
+  const [menuOpen, setMenuOpen] = React.useState(false);
   const [selectedRol, setSelectedRol] = React.useState<RolResponse | null>(null);
 
   const { data, isLoading } = useRoles({
@@ -47,6 +49,11 @@ export function RolModuleView() {
     setDeleteOpen(true);
   };
 
+  const handleOpenMenu = (rol: RolResponse) => {
+    setSelectedRol(rol);
+    setMenuOpen(true);
+  };
+
   const handleConfirmDelete = async () => {
     if (!selectedRol) return;
     try {
@@ -54,10 +61,13 @@ export function RolModuleView() {
       toast.success("Rol eliminado exitosamente");
       setDeleteOpen(false);
       setSelectedRol(null);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as {
+        response?: { data?: { detail?: string; message?: string } };
+      };
       const errorMessage =
-        error?.response?.data?.detail ||
-        error?.response?.data?.message ||
+        err?.response?.data?.detail ||
+        err?.response?.data?.message ||
         "No se pudo eliminar el rol.";
       toast.error(errorMessage);
     }
@@ -75,12 +85,19 @@ export function RolModuleView() {
         onPageChange={setPage}
         onEdit={handleOpenEdit}
         onDelete={handleOpenDelete}
+        onManageMenu={handleOpenMenu}
       />
 
       <RolFormDialog
         open={formOpen}
         onOpenChange={setFormOpen}
         rolToEdit={selectedRol}
+      />
+
+      <RolOpcionMenuDialog
+        open={menuOpen}
+        onOpenChange={setMenuOpen}
+        rol={selectedRol}
       />
 
       <RolDeleteDialog

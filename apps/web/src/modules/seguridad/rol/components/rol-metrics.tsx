@@ -1,6 +1,6 @@
 "use client";
 
-import { Key, Lock, ShieldCheck, Users } from "lucide-react";
+import { Key, Lock, ShieldCheck } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { RolMetrics } from "../types/rol.types";
 

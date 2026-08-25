@@ -91,10 +91,13 @@ export function RolFormDialog({
 
       onOpenChange(false);
       onSuccessCallback?.();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as {
+        response?: { data?: { detail?: string; message?: string } };
+      };
       const errorMessage =
-        error?.response?.data?.detail ||
-        error?.response?.data?.message ||
+        err?.response?.data?.detail ||
+        err?.response?.data?.message ||
         "Ocurrió un error al procesar la solicitud.";
       toast.error(errorMessage);
     }

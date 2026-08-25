@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Edit, Lock, MoreHorizontal, Shield, Trash2 } from "lucide-react";
+import { Edit, FolderTree, Lock, MoreHorizontal, Shield, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
@@ -18,6 +19,7 @@ interface RolCardProps {
   rol: RolResponse;
   onEdit: (rol: RolResponse) => void;
   onDelete: (rol: RolResponse) => void;
+  onManageMenu?: (rol: RolResponse) => void;
 }
 
 export function getRoleColorTheme(name: string) {
@@ -62,7 +64,7 @@ export function getRoleColorTheme(name: string) {
   };
 }
 
-export function RolCard({ rol, onEdit, onDelete }: RolCardProps) {
+export function RolCard({ rol, onEdit, onDelete, onManageMenu }: RolCardProps) {
   const esProtegido = rol.name.toUpperCase() === "ADMINISTRADOR";
   const theme = getRoleColorTheme(rol.name);
 
@@ -91,18 +93,30 @@ export function RolCard({ rol, onEdit, onDelete }: RolCardProps) {
               <span className="sr-only">Opciones</span>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              {onManageMenu && (
+                <DropdownMenuItem
+                  onClick={() => onManageMenu(rol)}
+                  className="text-xs"
+                >
+                  <FolderTree className="mr-2 size-3.5 text-primary" />
+                  Opciones de Menú
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={() => onEdit(rol)} className="text-xs">
                 <Edit className="mr-2 size-3.5" />
-                Editar
+                Editar Rol
               </DropdownMenuItem>
               {!esProtegido && (
-                <DropdownMenuItem
-                  onClick={() => onDelete(rol)}
-                  className="text-xs text-destructive focus:text-destructive"
-                >
-                  <Trash2 className="mr-2 size-3.5" />
-                  Eliminar
-                </DropdownMenuItem>
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => onDelete(rol)}
+                    className="text-xs text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="mr-2 size-3.5" />
+                    Eliminar
+                  </DropdownMenuItem>
+                </>
               )}
             </DropdownMenuContent>
           </DropdownMenu>
@@ -127,15 +141,30 @@ export function RolCard({ rol, onEdit, onDelete }: RolCardProps) {
             </Badge>
           )}
 
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-5 text-[10px] px-1.5 text-primary hover:text-primary hover:bg-primary/10"
-            onClick={() => onEdit(rol)}
-          >
-            <Edit className="size-3 mr-0.5" />
-            Editar
-          </Button>
+          <div className="flex items-center gap-1">
+            {onManageMenu && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-5 text-[10px] px-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 gap-0.5"
+                onClick={() => onManageMenu(rol)}
+                title="Configurar opciones de menú accesibles"
+              >
+                <FolderTree className="size-2.5" />
+                Menú
+              </Button>
+            )}
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-5 text-[10px] px-1.5 text-primary hover:text-primary hover:bg-primary/10"
+              onClick={() => onEdit(rol)}
+            >
+              <Edit className="size-3 mr-0.5" />
+              Editar
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
