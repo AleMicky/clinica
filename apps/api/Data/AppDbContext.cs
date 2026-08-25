@@ -20,6 +20,7 @@ using Clinica.Api.Modules.RecursosHumanos.Empleado.Entity;
 using Clinica.Api.Modules.RecursosHumanos.Especialidad.Entity;
 using Clinica.Api.Modules.RecursosHumanos.Medico.Entity;
 using Clinica.Api.Modules.RecursosHumanos.TipoArea.Entity;
+using Clinica.Api.Modules.Seguridad.OpcionMenu.Entity;
 using Clinica.Api.Modules.Seguridad.Personas.Entity;
 using Clinica.Api.Modules.Seguridad.Roles.Entity;
 using Clinica.Api.Modules.Seguridad.Usuarios.Entity;
@@ -79,6 +80,7 @@ public class AppDbContext(
     public DbSet<MovimientoCaja> MovimientosCaja => Set<MovimientoCaja>();
     public DbSet<Cobro> Cobros => Set<Cobro>();
     public DbSet<CobroDetalle> CobroDetalles => Set<CobroDetalle>();
+    public DbSet<OpcionMenu> OpcionesMenu => Set<OpcionMenu>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

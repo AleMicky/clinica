@@ -53,9 +53,7 @@ public sealed class TurnoCajaService(AppDbContext dbContext)
             totalItems);
     }
 
-    public async Task<TurnoCajaResponse> ObtenerAsync(
-        int id,
-        CancellationToken cancellationToken = default)
+    public async Task<TurnoCajaResponse> ObtenerAsync(int id, CancellationToken cancellationToken = default)
     {
         var entity = await BuildQuery()
             .AsNoTracking()
@@ -64,15 +62,12 @@ public sealed class TurnoCajaService(AppDbContext dbContext)
                 x => x.Id == id,
                 cancellationToken);
 
-        if (entity is null)
-            throw CreateNotFoundException(id);
-
-        return MapToResponse(entity);
+        return entity is null ? throw CreateNotFoundException(id) : MapToResponse(entity);
     }
+    
+    
 
-    public async Task<TurnoCajaResponse> CrearAsync(
-        CreateTurnoCajaRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<TurnoCajaResponse> CrearAsync(CreateTurnoCajaRequest request, CancellationToken cancellationToken = default)
     {
         await ValidarFksAsync(
             request.CajaId,

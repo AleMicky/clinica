@@ -26,6 +26,7 @@ import {
   ArrowLeftRight,
   Calculator,
   CreditCard,
+  ListTree,
   type LucideIcon,
 } from "lucide-react"
 
@@ -143,6 +144,12 @@ export const seguridadNav: NavGroup = {
       href: "/seguridad/roles",
       icon: Key,
       description: "Asignación de roles y matriz de permisos",
+    },
+    {
+      title: "Opciones de Menú",
+      href: "/seguridad/opciones-menu",
+      icon: ListTree,
+      description: "Estructura de navegación, accesos y módulos",
     },
     {
       title: "Auditoría de Sistema",

@@ -8,6 +8,7 @@ export const ROUTES = {
     PERSONAS: "/seguridad/personas",
     USUARIOS: "/seguridad/usuarios",
     ROLES: "/seguridad/roles",
+    OPCIONES_MENU: "/seguridad/opciones-menu",
     AUDITORIA: "/seguridad/auditoria",
     SESIONES: "/seguridad/sesiones",
   },

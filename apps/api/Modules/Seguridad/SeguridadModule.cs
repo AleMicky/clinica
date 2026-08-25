@@ -1,10 +1,10 @@
 using Clinica.Api.Modules.Seguridad.Auth;
+using Clinica.Api.Modules.Seguridad.OpcionMenu.Endpoints;
+using Clinica.Api.Modules.Seguridad.OpcionMenu.Services;
 using Clinica.Api.Modules.Seguridad.Personas.Endpoints;
 using Clinica.Api.Modules.Seguridad.Personas.Services;
-using Clinica.Api.Modules.Seguridad.Roles;
 using Clinica.Api.Modules.Seguridad.Roles.Endpoints;
 using Clinica.Api.Modules.Seguridad.Roles.Services;
-using Clinica.Api.Modules.Seguridad.Usuarios;
 using Clinica.Api.Modules.Seguridad.Usuarios.Endpoints;
 using Clinica.Api.Modules.Seguridad.Usuarios.Services;
 
@@ -19,6 +19,8 @@ public static class SeguridadModule
         services.AddScoped<UsuarioService>();
         services.AddScoped<AuthService>();
         services.AddScoped<PersonaService>();
+        services.AddScoped<OpcionMenuService>();
+
 
         return services;
     }
@@ -30,6 +32,7 @@ public static class SeguridadModule
         app.MapUsuarioEndpoints();
         app.MapAuthEndpoints();
         app.MapPersonaEndpoints();
+        app.MapOpcionMenuEndpoints();
 
         return app;
     }
