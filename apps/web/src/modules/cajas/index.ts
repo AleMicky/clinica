@@ -33,6 +33,8 @@ export type {
 export * from "./apertura-caja/hooks/use-aperturas-caja";
 export * from "./apertura-caja/components/apertura-caja-form-dialog";
 export * from "./apertura-caja/components/apertura-caja-delete-dialog";
+export * from "./apertura-caja/components/apertura-caja-module-view";
+export * from "./apertura-caja/components/apertura-caja-list";
 
 export type {
   MovimientoCajaResponse,

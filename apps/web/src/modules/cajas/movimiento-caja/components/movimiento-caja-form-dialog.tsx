@@ -101,20 +101,23 @@ export function MovimientoCajaFormDialog({
   const tipoVal = watch("tipo");
   const fechaHoraVal = watch("fechaHora");
 
-  const turnosList = Array.isArray(turnosData?.items)
-    ? turnosData.items
-    : Array.isArray(turnosData)
-    ? turnosData
-    : [];
+  const turnosList = React.useMemo(() => {
+    return Array.isArray(turnosData?.items)
+      ? turnosData.items
+      : Array.isArray(turnosData)
+      ? turnosData
+      : [];
+  }, [turnosData]);
 
   const turnoOptions: AutocompleteOption[] = React.useMemo(() => {
     return turnosList.map((t) => {
-      const cajaLabel = t.caja ? `${t.caja.codigo} - ${t.caja.nombre}` : `Turno #${t.id}`;
-      const empleadoLabel = t.empleado ? ` (${t.empleado.nombreCompleto})` : "";
+      const cName = t.caja?.nombre || "Caja";
+      const cCode = t.caja?.codigo || "CAJA";
+      const empName = t.empleado?.nombreCompleto || `Cajero #${t.empleado?.id || t.id}`;
       return {
         value: String(t.id),
-        label: `${cajaLabel}${empleadoLabel}`,
-        description: `Estado: ${t.estado === 1 ? "Abierto" : "Cerrado"}`,
+        label: empName,
+        description: `${cCode} · ${cName} • Turno #${t.id}`,
       };
     });
   }, [turnosList]);
@@ -132,10 +135,8 @@ export function MovimientoCajaFormDialog({
           observacion: movimientoToEdit.observacion || "",
         });
       } else {
-        // Auto select first open turn if available
-        const defaultTurno = turnosList.find((t) => t.estado === 1) || turnosList[0];
         reset({
-          turnoCajaId: defaultTurno ? defaultTurno.id : 0,
+          turnoCajaId: 0,
           tipo: TipoMovimientoCaja.Ingreso,
           fechaHora: toLocalDatetimeString(),
           monto: 0,
@@ -145,7 +146,7 @@ export function MovimientoCajaFormDialog({
         });
       }
     }
-  }, [open, movimientoToEdit, turnosList, reset]);
+  }, [open, movimientoToEdit, reset]);
 
   const onSubmit = async (values: MovimientoCajaFormValues) => {
     try {

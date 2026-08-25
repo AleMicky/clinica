@@ -43,7 +43,7 @@ export function ArqueoCajaDeleteDialog({
               {new Date(arqueo.fechaHora).toLocaleString("es-ES")}
             </strong>{" "}
             con un contado total de{" "}
-            <strong className="text-foreground">S/ {Number(arqueo.totalContado).toFixed(2)}</strong>?
+            <strong className="text-foreground">Bs. {Number(arqueo.totalContado || 0).toLocaleString("es-BO", { minimumFractionDigits: 2 })}</strong>?
           </DialogDescription>
         </DialogHeader>
 

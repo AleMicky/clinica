@@ -162,17 +162,21 @@ export function TurnoCajaFormDialog({
   const fechaAperturaVal = watch("fechaHoraApertura");
   const fechaCierreVal = watch("fechaHoraCierre");
 
-  const empleadosList: EmpleadoResponse[] = Array.isArray(empleadosData?.items)
-    ? empleadosData.items
-    : Array.isArray(empleadosData)
-    ? (empleadosData as unknown as EmpleadoResponse[])
-    : [];
+  const empleadosList: EmpleadoResponse[] = React.useMemo(() => {
+    return Array.isArray(empleadosData?.items)
+      ? empleadosData.items
+      : Array.isArray(empleadosData)
+      ? (empleadosData as unknown as EmpleadoResponse[])
+      : [];
+  }, [empleadosData]);
 
-  const cajasList: CajaResponse[] = Array.isArray(cajasData?.items)
-    ? cajasData.items
-    : Array.isArray(cajasData)
-    ? (cajasData as unknown as CajaResponse[])
-    : [];
+  const cajasList: CajaResponse[] = React.useMemo(() => {
+    return Array.isArray(cajasData?.items)
+      ? cajasData.items
+      : Array.isArray(cajasData)
+      ? (cajasData as unknown as CajaResponse[])
+      : [];
+  }, [cajasData]);
 
   // Mapeo de opciones Autocomplete para Empleados / Cajeros
   const empleadoOptions: AutocompleteOption[] = React.useMemo(() => {

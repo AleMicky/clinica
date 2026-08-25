@@ -1,30 +1,26 @@
 "use client";
 
 import * as React from "react";
+import {
+  Calculator,
+  Edit,
+  Trash2,
+  Calendar,
+  Clock,
+  User,
+  Vault,
+  ShieldCheck,
+  CheckCircle2,
+  AlertTriangle,
+  FileText,
+  CreditCard,
+  Coins,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  SearchInput,
-  DataTablePagination,
-} from "@/components/shared";
-import {
-  MoreVertical,
-  Pencil,
-  Trash2,
-  Calculator,
-  RefreshCw,
-  Calendar,
-  Layers,
-} from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SearchInput, DataTablePagination } from "@/components/shared";
+import { cn } from "@/lib/utils";
 import type { ArqueoCajaResponse } from "../types/arqueo-caja.types";
 
 interface ArqueoCajaListProps {
@@ -34,26 +30,39 @@ interface ArqueoCajaListProps {
   currentPage: number;
   pageSize: number;
   searchTerm: string;
+  selectedFilter: "TODOS" | "CUADRADOS" | "DIFERENCIA";
+  onFilterChange: (filter: "TODOS" | "CUADRADOS" | "DIFERENCIA") => void;
   onSearchChange: (term: string) => void;
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
   onEdit: (arqueo: ArqueoCajaResponse) => void;
   onDelete: (arqueo: ArqueoCajaResponse) => void;
-  onRefresh?: () => void;
 }
 
-function formatDate(dateStr?: string | null): string {
-  if (!dateStr) return "-";
+function formatDatetime(dateStr?: string | null): string {
+  if (!dateStr) return "—";
   const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return "-";
+  if (isNaN(d.getTime())) return "—";
   return d.toLocaleString("es-ES", {
-    dateStyle: "short",
-    timeStyle: "short",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
+function getInitials(name?: string | null): string {
+  if (!name) return "C";
+  const parts = name.trim().split(" ");
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  }
+  return (parts[0][0] || "C").toUpperCase();
+}
+
 function formatCurrency(val?: number | null): string {
-  return `S/ ${Number(val || 0).toFixed(2)}`;
+  return `Bs. ${Number(val || 0).toLocaleString("es-BO", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 export function ArqueoCajaList({
@@ -63,239 +72,285 @@ export function ArqueoCajaList({
   currentPage,
   pageSize,
   searchTerm,
+  selectedFilter,
+  onFilterChange,
   onSearchChange,
   onPageChange,
   onPageSizeChange,
   onEdit,
   onDelete,
-  onRefresh,
 }: ArqueoCajaListProps) {
+  const totalPages = Math.ceil(totalItems / pageSize) || 1;
+
+  const tabs: Array<{
+    key: "TODOS" | "CUADRADOS" | "DIFERENCIA";
+    label: string;
+    activeClasses: string;
+  }> = [
+    {
+      key: "TODOS",
+      label: "Todos los Arqueos",
+      activeClasses: "bg-primary text-primary-foreground shadow-xs",
+    },
+    {
+      key: "CUADRADOS",
+      label: "Cuadres Exactos",
+      activeClasses: "bg-emerald-600 text-white shadow-xs",
+    },
+    {
+      key: "DIFERENCIA",
+      label: "Con Diferencias",
+      activeClasses: "bg-amber-600 text-white shadow-xs",
+    },
+  ];
+
   return (
-    <div className="flex flex-col h-full rounded-xl border border-border/60 bg-card p-3 shadow-2xs space-y-2.5">
-      {/* Cabecera y Buscador */}
-      <div className="flex items-center justify-between gap-2 pb-1 border-b border-border/40">
-        <div className="flex items-center gap-1.5 min-w-0">
-          <Calculator className="size-4 text-primary shrink-0" />
-          <h2 className="text-xs font-bold text-foreground uppercase tracking-wider truncate">
-            Historial de Arqueos
-          </h2>
-          <span className="text-[10px] font-mono font-semibold px-1.5 py-0.2 rounded-full bg-muted text-muted-foreground">
-            {totalItems}
-          </span>
+    <div className="space-y-3 w-full">
+      {/* Barra de Filtros y Búsqueda */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 px-0.5">
+        {/* Badges de Filtro Interactivo */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+          {tabs.map((t) => {
+            const isActive = selectedFilter === t.key;
+            return (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => onFilterChange(t.key)}
+                className={cn(
+                  "inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer select-none",
+                  isActive
+                    ? t.activeClasses
+                    : "bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+              >
+                <span>{t.label}</span>
+              </button>
+            );
+          })}
         </div>
 
-        {onRefresh && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onRefresh}
-            disabled={isLoading}
-            className="size-7 text-muted-foreground hover:text-foreground cursor-pointer shrink-0"
-            title="Actualizar arqueos"
-          >
-            <RefreshCw className={`size-3.5 ${isLoading ? "animate-spin" : ""}`} />
-          </Button>
-        )}
+        {/* Buscador */}
+        <div className="w-full sm:w-72">
+          <SearchInput
+            value={searchTerm}
+            onChange={onSearchChange}
+            placeholder="Buscar por cajero, caja, turno, ID..."
+            className="h-8 text-xs bg-background"
+          />
+        </div>
       </div>
 
-      {/* Buscador */}
-      <div className="w-full">
-        <SearchInput
-          value={searchTerm}
-          onChange={onSearchChange}
-          placeholder="Buscar por observaciones, caja o turno..."
-          className="h-7.5 text-xs bg-muted/30 shadow-none border-border/60 focus:bg-background"
-        />
-      </div>
-
-      {/* Lista de Arqueos con Scroll */}
-      <div className="flex-1 overflow-y-auto max-h-[calc(100vh-270px)] min-h-[300px] space-y-1.5 pr-0.5 scrollbar-thin">
-        {isLoading ? (
-          <div className="space-y-1.5">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div
-                key={i}
-                className="p-3 rounded-lg border border-border/40 bg-card/60 space-y-2"
-              >
-                <div className="flex items-center justify-between">
-                  <Skeleton className="h-3.5 w-24" />
-                  <Skeleton className="h-3.5 w-16" />
-                </div>
-                <Skeleton className="h-4 w-40" />
+      {/* Listado en Formato Tarjetas */}
+      {isLoading ? (
+        <div className="space-y-2">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div
+              key={i}
+              className="p-4 rounded-xl border border-border/60 bg-card space-y-3 shadow-2xs"
+            >
+              <div className="flex items-center justify-between gap-4">
+                <Skeleton className="h-5 w-48 rounded-md" />
+                <Skeleton className="h-6 w-28 rounded-md" />
               </div>
-            ))}
+              <Skeleton className="h-4 w-72 rounded-md" />
+            </div>
+          ))}
+        </div>
+      ) : arqueos.length === 0 ? (
+        <div className="flex flex-col items-center justify-center p-10 text-center rounded-2xl border-2 border-dashed border-border/70 bg-card/50 space-y-3">
+          <div className="size-12 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center border border-amber-500/20">
+            <Calculator className="size-6" />
           </div>
-        ) : arqueos.length === 0 ? (
-          <div className="py-12 text-center border border-dashed border-border/60 rounded-lg bg-muted/10 space-y-1.5">
-            <Calculator className="size-7 text-muted-foreground/40 mx-auto" />
-            <p className="font-semibold text-xs text-foreground">No se encontraron arqueos</p>
-            <p className="text-[10px] max-w-[240px] mx-auto text-muted-foreground">
+          <div className="space-y-1">
+            <h3 className="text-sm font-bold text-foreground">
+              No se encontraron arqueos de caja
+            </h3>
+            <p className="text-xs text-muted-foreground max-w-sm">
               {searchTerm
-                ? "Intente ajustar los términos de búsqueda."
-                : "Haga clic en 'Nuevo Arqueo' para registrar una conciliación de caja."}
+                ? `No hay resultados para la búsqueda "${searchTerm}".`
+                : "No hay arqueos o conciliaciones registradas bajo el filtro seleccionado."}
             </p>
           </div>
-        ) : (
-          <div className="space-y-1.5">
-            {arqueos.map((arq) => {
-              const diff = Number(arq.diferencia);
-              const isCuadrado = Math.abs(diff) < 0.01;
-              const cajaCodigo = arq.turnoCaja?.caja?.codigo || "CAJA";
-              const cajaNombre = arq.turnoCaja?.caja?.nombre || `Turno #${arq.turnoCaja?.id || "-"}`;
-              const cajeroNombre = arq.turnoCaja?.empleado?.nombreCompleto;
+        </div>
+      ) : (
+        <div className="space-y-2.5">
+          {arqueos.map((arq) => {
+            const turno = arq.turnoCaja;
+            const cajero = turno?.empleado?.nombreCompleto || "Cajero no asignado";
+            const caja = turno?.caja?.nombre || "Caja Principal";
+            const cajaCodigo = turno?.caja?.codigo || "CAJA";
+            const initials = getInitials(cajero);
+            const diferenciaNum = Number(arq.diferencia || 0);
 
-              return (
-                <div
-                  key={arq.id}
-                  className={`group p-2.5 rounded-lg border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 ${
-                    isCuadrado
-                      ? "border-border/50 bg-card hover:border-emerald-500/40 hover:bg-muted/30"
-                      : "border-amber-500/30 bg-amber-500/[0.02] hover:border-amber-500/50 hover:bg-amber-500/[0.05]"
-                  }`}
-                >
-                  {/* Bloque Izquierdo: Icono + Caja + Cajero + Fechas */}
-                  <div className="flex items-start gap-2.5 min-w-0 flex-1">
-                    <div
-                      className={`size-7.5 rounded-lg flex items-center justify-center shrink-0 border mt-0.5 ${
-                        isCuadrado
-                          ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-                          : "bg-amber-500/10 text-amber-600 border-amber-500/20"
-                      }`}
-                    >
-                      <Calculator className="size-3.5" />
-                    </div>
+            const isExacto = Math.abs(diferenciaNum) < 0.001;
+            const isFaltante = diferenciaNum < -0.001;
+            const isSobrante = diferenciaNum > 0.001;
 
-                    <div className="min-w-0 flex-1 space-y-0.5">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="font-mono font-bold text-[10px] px-1 py-0.2 rounded border bg-primary/10 text-primary border-primary/20">
-                          {cajaCodigo}
-                        </span>
-
-                        <span className="font-bold text-xs text-foreground truncate">
-                          {cajaNombre}
-                        </span>
-
-                        {cajeroNombre && (
-                          <span className="text-[10px] text-muted-foreground truncate max-w-[160px]">
-                            • {cajeroNombre}
-                          </span>
-                        )}
-
-                        {arq.detalles && arq.detalles.length > 0 && (
-                          <span className="inline-flex items-center gap-0.5 text-[9px] text-muted-foreground font-mono bg-muted/60 px-1 py-0.2 rounded">
-                            <Layers className="size-2.5" />
-                            <span>{arq.detalles.length} métodos</span>
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Metadatos y Fecha */}
-                      <div className="flex items-center gap-2 text-[10.5px] text-muted-foreground flex-wrap pt-0.5">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="size-3 text-muted-foreground/70 shrink-0" />
-                          <span>{formatDate(arq.fechaHora)}</span>
-                        </span>
-
-                        {arq.observacion && (
-                          <>
-                            <span className="text-muted-foreground/40">•</span>
-                            <span className="truncate max-w-[220px] text-muted-foreground/80 italic">
-                              "{arq.observacion}"
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    </div>
+            return (
+              <div
+                key={arq.id}
+                className={cn(
+                  "group p-4 rounded-xl border transition-all shadow-2xs flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-card",
+                  isExacto
+                    ? "hover:border-emerald-500/50 hover:bg-emerald-500/[0.02] border-border/60"
+                    : isFaltante
+                    ? "border-rose-500/30 hover:border-rose-500/50 bg-rose-500/[0.015]"
+                    : "border-amber-500/30 hover:border-amber-500/50 bg-amber-500/[0.015]"
+                )}
+              >
+                {/* Bloque Izquierdo: Avatar + Cajero + Caja + Fecha */}
+                <div className="flex items-start gap-3 min-w-0 flex-1">
+                  <div
+                    className={cn(
+                      "size-10 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 border mt-0.5 transition-colors",
+                      isExacto
+                        ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/20 group-hover:bg-emerald-600 group-hover:text-white"
+                        : isFaltante
+                        ? "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/20 group-hover:bg-rose-600 group-hover:text-white"
+                        : "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/20 group-hover:bg-amber-600 group-hover:text-white"
+                    )}
+                  >
+                    {initials}
                   </div>
 
-                  {/* Bloque Central: Montos (Esperado, Contado, Diferencia) */}
-                  <div className="flex items-center gap-3 text-xs font-mono shrink-0 px-2 py-1 rounded-md bg-muted/30 border border-border/40">
-                    <div>
-                      <p className="text-[9px] text-muted-foreground uppercase font-sans">Esperado</p>
-                      <p className="font-medium text-foreground">{formatCurrency(arq.totalEsperado)}</p>
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-bold text-xs sm:text-sm text-foreground group-hover:text-primary transition-colors">
+                        {cajero}
+                      </span>
+
+                      <span className="text-[10px] font-mono font-bold bg-primary/10 text-primary px-1.5 py-0.5 rounded border border-primary/20">
+                        {cajaCodigo} · {caja}
+                      </span>
+
+                      {turno?.id && (
+                        <span className="text-[10px] font-mono text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded border border-border/40">
+                          #Turno-{turno.id}
+                        </span>
+                      )}
+
+                      {/* Badge de Conciliación */}
+                      {isExacto ? (
+                        <Badge
+                          variant="outline"
+                          className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 text-[10px] py-0.2 px-2 font-semibold flex items-center gap-1"
+                        >
+                          <CheckCircle2 className="size-3" />
+                          <span>Cuadre Exacto</span>
+                        </Badge>
+                      ) : isFaltante ? (
+                        <Badge
+                          variant="outline"
+                          className="bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/30 text-[10px] py-0.2 px-2 font-semibold flex items-center gap-1"
+                        >
+                          <AlertTriangle className="size-3" />
+                          <span>Faltante en Caja</span>
+                        </Badge>
+                      ) : (
+                        <Badge
+                          variant="outline"
+                          className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30 text-[10px] py-0.2 px-2 font-semibold flex items-center gap-1"
+                        >
+                          <AlertTriangle className="size-3" />
+                          <span>Sobrante en Caja</span>
+                        </Badge>
+                      )}
                     </div>
-                    <div>
-                      <p className="text-[9px] text-muted-foreground uppercase font-sans">Contado</p>
-                      <p className="font-medium text-foreground">{formatCurrency(arq.totalContado)}</p>
+
+                    <div className="flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap">
+                      <span className="flex items-center gap-1 font-mono">
+                        <Clock className="size-3 text-amber-600 shrink-0" />
+                        <span>{formatDatetime(arq.fechaHora)}</span>
+                      </span>
+
+                      <span className="text-muted-foreground/40">•</span>
+
+                      <span>
+                        {arq.detalles?.length || 0} método{(arq.detalles?.length || 0) !== 1 ? "s" : ""} arqueado{(arq.detalles?.length || 0) !== 1 ? "s" : ""}
+                      </span>
                     </div>
-                    <div>
-                      <p className="text-[9px] text-muted-foreground uppercase font-sans">Diferencia</p>
-                      <p
-                        className={`font-bold ${
-                          isCuadrado
-                            ? "text-emerald-600 dark:text-emerald-400"
-                            : diff > 0
-                            ? "text-blue-600"
-                            : "text-rose-600"
-                        }`}
-                      >
-                        {formatCurrency(diff)}
+
+                    {arq.observacion && (
+                      <p className="text-[11px] text-muted-foreground italic line-clamp-1 pt-0.5">
+                        "{arq.observacion}"
                       </p>
-                    </div>
-                  </div>
-
-                  {/* Bloque Derecho: Badge Estado & Acciones */}
-                  <div className="flex items-center justify-between sm:justify-end gap-1.5 shrink-0 pt-1.5 sm:pt-0 border-t sm:border-t-0 border-border/30">
-                    <Badge
-                      variant={isCuadrado ? "default" : "secondary"}
-                      className={`text-[9px] font-semibold px-1.5 py-0.2 rounded ${
-                        isCuadrado
-                          ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30"
-                          : "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30"
-                      }`}
-                    >
-                      {isCuadrado ? "Cuadrado" : "Con Diferencia"}
-                    </Badge>
-
-                    <div className="flex items-center gap-1">
-                      <Button
-                        type="button"
-                        size="icon"
-                        variant="outline"
-                        onClick={() => onEdit(arq)}
-                        className="size-6.5 text-muted-foreground hover:text-foreground cursor-pointer"
-                        title="Editar arqueo"
-                      >
-                        <Pencil className="size-3 text-blue-600" />
-                      </Button>
-
-                      <DropdownMenu>
-                        <DropdownMenuTrigger className="size-6.5 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground inline-flex items-center justify-center transition-colors border border-border/50 cursor-pointer">
-                          <MoreVertical className="size-3" />
-                          <span className="sr-only">Opciones</span>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-32 text-xs">
-                          <DropdownMenuLabel className="text-[10px]">Arqueo</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => onEdit(arq)}
-                            className="gap-2 cursor-pointer text-xs"
-                          >
-                            <Pencil className="size-3 text-blue-600" />
-                            <span>Editar</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => onDelete(arq)}
-                            className="gap-2 text-destructive focus:text-destructive cursor-pointer text-xs"
-                          >
-                            <Trash2 className="size-3" />
-                            <span>Eliminar</span>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
+                    )}
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
 
-      {/* Paginación Compacta */}
+                {/* Bloque Central / Derecho: Desglose de Totales & Acciones */}
+                <div className="flex items-center justify-between lg:justify-end gap-4 shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-border/40">
+                  {/* Totales Conciliados */}
+                  <div className="grid grid-cols-3 gap-3 text-left lg:text-right text-xs">
+                    <div className="space-y-0.5">
+                      <span className="text-[9.5px] uppercase font-bold text-muted-foreground block tracking-wider">
+                        Esperado
+                      </span>
+                      <span className="font-mono font-semibold text-foreground text-xs sm:text-sm">
+                        {formatCurrency(arq.totalEsperado)}
+                      </span>
+                    </div>
+
+                    <div className="space-y-0.5">
+                      <span className="text-[9.5px] uppercase font-bold text-muted-foreground block tracking-wider">
+                        Contado
+                      </span>
+                      <span className="font-mono font-bold text-foreground text-xs sm:text-sm">
+                        {formatCurrency(arq.totalContado)}
+                      </span>
+                    </div>
+
+                    <div className="space-y-0.5">
+                      <span className="text-[9.5px] uppercase font-bold text-muted-foreground block tracking-wider">
+                        Diferencia
+                      </span>
+                      <span
+                        className={cn(
+                          "font-mono font-black text-xs sm:text-sm",
+                          isExacto
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : isFaltante
+                            ? "text-rose-600 dark:text-rose-400"
+                            : "text-amber-600 dark:text-amber-400"
+                        )}
+                      >
+                        {diferenciaNum > 0 ? `+${formatCurrency(diferenciaNum)}` : formatCurrency(diferenciaNum)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Acciones */}
+                  <div className="flex items-center gap-1 pl-2 border-l border-border/40">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onEdit(arq)}
+                      className="size-7.5 text-muted-foreground hover:text-foreground hover:bg-accent cursor-pointer rounded-lg"
+                      title="Editar arqueo"
+                    >
+                      <Edit className="size-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onDelete(arq)}
+                      className="size-7.5 text-destructive/70 hover:text-destructive hover:bg-destructive/10 cursor-pointer rounded-lg"
+                      title="Eliminar arqueo"
+                    >
+                      <Trash2 className="size-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Paginación Condicional: Solo si hay más de 10 registros */}
       {totalItems > 10 && (
-        <div className="pt-1 border-t border-border/40">
+        <div className="pt-2">
           <DataTablePagination
             currentPage={currentPage}
             pageSize={pageSize}

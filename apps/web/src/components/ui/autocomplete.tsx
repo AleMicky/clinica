@@ -44,16 +44,21 @@ export function Autocomplete({
 
   // Synchronize input query with external value prop change
   React.useEffect(() => {
-    if (!value) {
+    if (!value || value === "0") {
       setQuery("");
       return;
     }
     const selectedOpt = options.find(
-      (opt) => opt.value.toLowerCase() === value.toLowerCase()
+      (opt) => opt.value.toLowerCase() === String(value).toLowerCase()
     );
-    const nextQuery = selectedOpt ? selectedOpt.label : value;
-    setQuery((prev) => (prev !== nextQuery ? nextQuery : prev));
-  }, [value, options]);
+    if (selectedOpt) {
+      setQuery(selectedOpt.label);
+    } else if (allowCustomValue) {
+      setQuery(value);
+    } else {
+      setQuery("");
+    }
+  }, [value, options, allowCustomValue]);
 
   // Handle clicking outside the popover container
   React.useEffect(() => {
@@ -109,19 +114,12 @@ export function Autocomplete({
     return options.filter(
       (opt) =>
         opt.label.toLowerCase().includes(q) ||
-        opt.value.toLowerCase().includes(q) ||
-        (opt.description && opt.description.toLowerCase().includes(q))
+        (opt.description && opt.description.toLowerCase().includes(q)) ||
+        opt.value.toLowerCase() === q
     );
   }, [options, query]);
 
   const handleSelectOption = (option: AutocompleteOption) => {
-    if (option.value.toLowerCase() === (value || "").toLowerCase()) {
-      // Toggle off / deseleccionar si ya estaba seleccionado
-      setQuery("");
-      onValueChange("");
-      setIsOpen(false);
-      return;
-    }
     setQuery(option.label);
     onValueChange(option.value);
     setIsOpen(false);

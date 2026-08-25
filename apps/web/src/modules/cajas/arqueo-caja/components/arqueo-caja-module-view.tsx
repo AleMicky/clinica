@@ -18,6 +18,9 @@ export function ArqueoCajaModuleView() {
   const [pageSize, setPageSize] = React.useState(10);
   const [searchTerm, setSearchTerm] = React.useState("");
   const [debouncedSearch, setDebouncedSearch] = React.useState("");
+  const [selectedFilter, setSelectedFilter] = React.useState<
+    "TODOS" | "CUADRADOS" | "DIFERENCIA"
+  >("TODOS");
 
   const [formDialogOpen, setFormDialogOpen] = React.useState(false);
   const [arqueoToEdit, setArqueoToEdit] =
@@ -48,19 +51,30 @@ export function ArqueoCajaModuleView() {
 
   const deleteMutation = useDeleteArqueoCaja();
 
-  const arqueos = Array.isArray(apiData?.items)
+  const allArqueos = Array.isArray(apiData?.items)
     ? apiData.items
     : Array.isArray(apiData)
     ? (apiData as unknown as ArqueoCajaResponse[])
     : [];
-  const totalItems = apiData?.totalItems ?? arqueos.length;
+  const totalItems = apiData?.totalItems ?? allArqueos.length;
+
+  // Filtrado local por pestañas
+  const filteredArqueos = React.useMemo(() => {
+    if (selectedFilter === "CUADRADOS") {
+      return allArqueos.filter((a) => Math.abs(Number(a.diferencia)) < 0.001);
+    }
+    if (selectedFilter === "DIFERENCIA") {
+      return allArqueos.filter((a) => Math.abs(Number(a.diferencia)) >= 0.001);
+    }
+    return allArqueos;
+  }, [allArqueos, selectedFilter]);
 
   const metrics = React.useMemo(() => {
     let exactos = 0;
     let diferencias = 0;
 
-    arqueos.forEach((a) => {
-      if (Math.abs(Number(a.diferencia)) < 0.01) {
+    allArqueos.forEach((a) => {
+      if (Math.abs(Number(a.diferencia)) < 0.001) {
         exactos++;
       } else {
         diferencias++;
@@ -72,7 +86,7 @@ export function ArqueoCajaModuleView() {
       totalConCuadreExacto: exactos,
       totalConDiferencia: diferencias,
     };
-  }, [arqueos, totalItems]);
+  }, [allArqueos, totalItems]);
 
   const handleOpenCreateModal = () => {
     setArqueoToEdit(null);
@@ -112,17 +126,32 @@ export function ArqueoCajaModuleView() {
 
   return (
     <div className="flex flex-col gap-3 w-full animate-in fade-in-50 duration-300">
-      <ArqueoCajaHeader onNewArqueoClick={handleOpenCreateModal} />
+      <ArqueoCajaHeader
+        onNewArqueoClick={handleOpenCreateModal}
+        onRefresh={() => refetch()}
+      />
 
-      <ArqueoCajaMetrics metrics={metrics} isLoading={isLoading} />
+      <ArqueoCajaMetrics
+        metrics={metrics}
+        selectedFilter={selectedFilter}
+        onFilterChange={(f) => {
+          setSelectedFilter(f);
+          setCurrentPage(1);
+        }}
+      />
 
       <ArqueoCajaList
-        arqueos={arqueos}
+        arqueos={filteredArqueos}
         isLoading={isLoading}
         totalItems={totalItems}
         currentPage={currentPage}
         pageSize={pageSize}
         searchTerm={searchTerm}
+        selectedFilter={selectedFilter}
+        onFilterChange={(f) => {
+          setSelectedFilter(f);
+          setCurrentPage(1);
+        }}
         onSearchChange={setSearchTerm}
         onPageChange={setCurrentPage}
         onPageSizeChange={(size) => {
@@ -131,7 +160,6 @@ export function ArqueoCajaModuleView() {
         }}
         onEdit={handleEdit}
         onDelete={handlePromptDelete}
-        onRefresh={() => refetch()}
       />
 
       <ArqueoCajaFormDialog

@@ -4,7 +4,23 @@ import * as React from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Calculator, Loader2, Plus, Trash2 } from "lucide-react";
+import {
+  Calculator,
+  Loader2,
+  Plus,
+  Trash2,
+  Calendar,
+  Clock,
+  User,
+  Vault,
+  Pencil,
+  AlertCircle,
+  FileText,
+  CheckCircle2,
+  AlertTriangle,
+  CreditCard,
+  Coins,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -24,13 +40,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { Autocomplete, type AutocompleteOption } from "@/components/ui/autocomplete";
 import { cn } from "@/lib/utils";
 
 import { useTurnosCaja } from "../../turno-caja/hooks/use-turnos-caja";
 import { useMetodosPago } from "@/modules/parametros/metodo-pago/hooks/use-metodos-pago";
 import { useMonedas } from "@/modules/parametros/moneda/hooks/use-monedas";
-
 import {
   arqueoCajaSchema,
   type ArqueoCajaFormValues,
@@ -59,6 +75,10 @@ function toLocalDatetimeString(dateInput?: string | Date | null): string {
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
+function formatCurrency(val?: number | null): string {
+  return `Bs. ${Number(val || 0).toLocaleString("es-BO", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
 export function ArqueoCajaFormDialog({
   open,
   onOpenChange,
@@ -67,7 +87,7 @@ export function ArqueoCajaFormDialog({
 }: ArqueoCajaFormDialogProps) {
   const isEditing = Boolean(arqueoToEdit);
 
-  // Real dependencies from API
+  // Queries
   const { data: turnosData, isLoading: isLoadingTurnos } = useTurnosCaja(
     { page: 1, pageSize: 100 },
     open
@@ -83,21 +103,29 @@ export function ArqueoCajaFormDialog({
   const createMutation = useCreateArqueoCaja();
   const updateMutation = useUpdateArqueoCaja();
 
-  const turnosList = Array.isArray(turnosData?.items)
-    ? turnosData.items
-    : Array.isArray(turnosData)
-    ? turnosData
-    : [];
-  const metodosList = Array.isArray(metodosData?.items)
-    ? metodosData.items
-    : Array.isArray(metodosData)
-    ? metodosData
-    : [];
-  const monedasList = Array.isArray(monedasData?.items)
-    ? monedasData.items
-    : Array.isArray(monedasData)
-    ? monedasData
-    : [];
+  const turnosList = React.useMemo(() => {
+    return Array.isArray(turnosData?.items)
+      ? turnosData.items
+      : Array.isArray(turnosData)
+      ? turnosData
+      : [];
+  }, [turnosData]);
+
+  const metodosList = React.useMemo(() => {
+    return Array.isArray(metodosData?.items)
+      ? metodosData.items
+      : Array.isArray(metodosData)
+      ? metodosData
+      : [];
+  }, [metodosData]);
+
+  const monedasList = React.useMemo(() => {
+    return Array.isArray(monedasData?.items)
+      ? monedasData.items
+      : Array.isArray(monedasData)
+      ? monedasData
+      : [];
+  }, [monedasData]);
 
   const defaultMonedaId = monedasList.length > 0 ? monedasList[0].id : 1;
   const defaultMetodoId = metodosList.length > 0 ? metodosList[0].id : 1;
@@ -136,17 +164,23 @@ export function ArqueoCajaFormDialog({
   const fechaHoraVal = watch("fechaHora");
   const detallesWatch = watch("detalles");
 
+  // Options para Turnos con nombre limpio del cajero
   const turnoOptions: AutocompleteOption[] = React.useMemo(() => {
     return turnosList.map((t) => {
-      const cajaLabel = t.caja ? `${t.caja.codigo} - ${t.caja.nombre}` : `Turno #${t.id}`;
-      const empleadoLabel = t.empleado ? ` (${t.empleado.nombreCompleto})` : "";
+      const cName = t.caja?.nombre || "Caja";
+      const cCode = t.caja?.codigo || "CAJA";
+      const empName = t.empleado?.nombreCompleto || `Cajero #${t.empleado?.id || t.id}`;
       return {
         value: String(t.id),
-        label: `${cajaLabel}${empleadoLabel}`,
-        description: `Estado: ${t.estado === 1 ? "Abierto" : "Cerrado"}`,
+        label: empName,
+        description: `${cCode} · ${cName} • Turno #${t.id}`,
       };
     });
   }, [turnosList]);
+
+  const selectedTurno = React.useMemo(() => {
+    return turnosList.find((t) => t.id === selectedTurnoId) || arqueoToEdit?.turnoCaja || null;
+  }, [turnosList, selectedTurnoId, arqueoToEdit]);
 
   React.useEffect(() => {
     if (open) {
@@ -156,7 +190,7 @@ export function ArqueoCajaFormDialog({
           fechaHora: toLocalDatetimeString(arqueoToEdit.fechaHora),
           observacion: arqueoToEdit.observacion || "",
           detalles:
-            arqueoToEdit.detalles.length > 0
+            arqueoToEdit.detalles && arqueoToEdit.detalles.length > 0
               ? arqueoToEdit.detalles.map((d) => ({
                   metodoPagoId: d.metodoPagoId || defaultMetodoId,
                   monedaId: d.monedaId || defaultMonedaId,
@@ -173,9 +207,8 @@ export function ArqueoCajaFormDialog({
                 ],
         });
       } else {
-        const defaultTurno = turnosList.find((t) => t.estado === 1) || turnosList[0];
         reset({
-          turnoCajaId: defaultTurno ? defaultTurno.id : 0,
+          turnoCajaId: 0,
           fechaHora: toLocalDatetimeString(),
           observacion: "",
           detalles: [
@@ -189,9 +222,9 @@ export function ArqueoCajaFormDialog({
         });
       }
     }
-  }, [open, arqueoToEdit, turnosList, defaultMetodoId, defaultMonedaId, reset]);
+  }, [open, arqueoToEdit, defaultMetodoId, defaultMonedaId, reset]);
 
-  // Cálculos de resumen en tiempo real
+  // Totales calculados en tiempo real
   const totalEsperadoCalc = (detallesWatch || []).reduce(
     (acc, item) => acc + (Number(item?.montoEsperado) || 0),
     0
@@ -201,17 +234,38 @@ export function ArqueoCajaFormDialog({
     0
   );
   const diferenciaCalc = totalContadoCalc - totalEsperadoCalc;
+  const isExacto = Math.abs(diferenciaCalc) < 0.001;
+  const isFaltante = diferenciaCalc < -0.001;
+
+  const handleTurnoChange = React.useCallback(
+    (val: string) => {
+      setValue("turnoCajaId", Number(val), { shouldValidate: true });
+    },
+    [setValue]
+  );
+
+  const setNowForFechaHora = () => {
+    setValue("fechaHora", toLocalDatetimeString(), { shouldValidate: true });
+  };
+
+  const handleAddDetalleRow = () => {
+    append({
+      metodoPagoId: defaultMetodoId,
+      monedaId: defaultMonedaId,
+      montoEsperado: 0,
+      montoContado: 0,
+    });
+  };
 
   const onSubmit = async (values: ArqueoCajaFormValues) => {
     try {
-      const fechaHoraIso = new Date(values.fechaHora).toISOString();
       const payload = {
         turnoCajaId: Number(values.turnoCajaId),
-        fechaHora: fechaHoraIso,
+        fechaHora: new Date(values.fechaHora).toISOString(),
         observacion: values.observacion?.trim() || null,
         detalles: values.detalles.map((d) => ({
-          metodoPagoId: Number(d.metodoPagoId || defaultMetodoId),
-          monedaId: Number(d.monedaId || defaultMonedaId),
+          metodoPagoId: Number(d.metodoPagoId),
+          monedaId: Number(d.monedaId),
           montoEsperado: Number(d.montoEsperado || 0),
           montoContado: Number(d.montoContado || 0),
         })),
@@ -225,244 +279,371 @@ export function ArqueoCajaFormDialog({
         toast.success("Arqueo de caja actualizado correctamente.");
       } else {
         await createMutation.mutateAsync(payload);
-        toast.success("Arqueo de caja registrado correctamente.");
+        toast.success("Arqueo de caja conciliado y registrado exitosamente.");
       }
 
       onSuccessCallback?.();
       onOpenChange(false);
-    } catch (error: unknown) {
-      const err = error as { response?: { data?: { detail?: string; title?: string } }; message?: string };
-      const message =
-        err?.response?.data?.detail ||
-        err?.response?.data?.title ||
-        err?.message ||
-        "Ocurrió un error al guardar el arqueo de caja.";
-      toast.error(message);
+    } catch (error: any) {
+      const errorMsg =
+        error?.response?.data?.detail ||
+        error?.response?.data?.message ||
+        error?.message ||
+        "Ocurrió un error al procesar el arqueo de caja.";
+      toast.error(errorMsg);
     }
   };
 
   const isLoading =
-    createMutation.isPending ||
-    updateMutation.isPending ||
-    isSubmitting ||
-    isLoadingTurnos ||
-    isLoadingMetodos ||
-    isLoadingMonedas;
+    createMutation.isPending || updateMutation.isPending || isSubmitting;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[620px] p-6">
-        <DialogHeader className="space-y-1">
-          <DialogTitle className="flex items-center gap-2 text-xl">
-            <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <Calculator className="size-5" />
+      <DialogContent className="sm:max-w-2xl p-0 overflow-hidden border-border/60 shadow-2xl">
+        {/* Header con temática */}
+        <div
+          className={cn(
+            "p-6 pb-5 border-b",
+            isEditing
+              ? "bg-gradient-to-r from-blue-500/15 via-blue-500/5 to-transparent border-blue-500/20"
+              : "bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent border-amber-500/20"
+          )}
+        >
+          <DialogHeader className="space-y-1.5">
+            <div className="flex items-center gap-3">
+              <div
+                className={cn(
+                  "flex size-11 items-center justify-center rounded-2xl border shadow-xs shrink-0",
+                  isEditing
+                    ? "bg-blue-600 text-white border-blue-700 shadow-blue-500/20"
+                    : "bg-amber-500 text-white border-amber-600 shadow-amber-500/20"
+                )}
+              >
+                {isEditing ? <Pencil className="size-5.5" /> : <Calculator className="size-5.5" />}
+              </div>
+
+              <div>
+                <div className="flex items-center gap-2">
+                  <DialogTitle className="text-xl font-bold tracking-tight text-foreground">
+                    {isEditing ? "Modificar Arqueo de Caja" : "Conciliación de Arqueo de Caja"}
+                  </DialogTitle>
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "text-[10px] font-semibold px-2 py-0.5 rounded-full",
+                      isEditing
+                        ? "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/30"
+                        : "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30"
+                    )}
+                  >
+                    {isEditing ? "Edición" : "Nuevo Arqueo"}
+                  </Badge>
+                </div>
+                <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+                  Declare los montos físicos contados por método de pago para conciliar el turno.
+                </DialogDescription>
+              </div>
             </div>
-            <span>{isEditing ? "Editar Arqueo de Caja" : "Nuevo Arqueo y Conciliación"}</span>
-          </DialogTitle>
-          <DialogDescription className="text-xs text-muted-foreground">
-            {isEditing
-              ? "Modifique los montos contados físicamente por método de pago."
-              : "Ingrese el conteo físico de caja por método de pago para calcular diferencias con el sistema."}
-          </DialogDescription>
-        </DialogHeader>
+          </DialogHeader>
+        </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-2">
-          {/* Indicador de campos obligatorios */}
-          <div className="flex items-center justify-between text-xs text-muted-foreground bg-muted/40 px-3 py-1.5 rounded-md border border-border/40">
-            <span>Configuración de Arqueo</span>
-            <span className="text-destructive font-medium">* Requeridos</span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {/* Turno de Caja */}
+        {/* Formulario */}
+        <form onSubmit={handleSubmit(onSubmit)} className="p-6 pt-4 space-y-4 max-h-[75vh] overflow-y-auto">
+          {/* Fila 1: Selector de Turno y Fecha */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="turnoCajaId" className="text-xs flex items-center gap-1">
+              <Label htmlFor="turnoCajaId" className="text-xs font-semibold flex items-center gap-1">
                 Turno de Caja <span className="text-destructive">*</span>
               </Label>
               <Autocomplete
                 id="turnoCajaId"
                 value={selectedTurnoId ? String(selectedTurnoId) : ""}
-                onValueChange={(val) =>
-                  setValue("turnoCajaId", Number(val), { shouldValidate: true })
-                }
+                onValueChange={handleTurnoChange}
                 options={turnoOptions}
-                placeholder="Seleccionar turno..."
-                emptyText="No hay turnos disponibles"
+                placeholder="Seleccione el cajero o turno..."
+                emptyText="No se encontraron turnos de caja"
                 allowCustomValue={false}
                 isLoading={isLoadingTurnos}
-                disabled={isSubmitting}
+                disabled={isLoading || isEditing}
                 error={Boolean(errors.turnoCajaId)}
               />
               {errors.turnoCajaId && (
-                <p className="text-[11px] text-destructive font-medium">
+                <p className="text-[11px] text-destructive font-medium flex items-center gap-1">
+                  <AlertCircle className="size-3" />
                   {errors.turnoCajaId.message}
                 </p>
               )}
             </div>
 
-            {/* Fecha y Hora de Conteo */}
             <div className="space-y-1.5">
-              <Label htmlFor="fechaHora" className="text-xs flex items-center gap-1">
-                Fecha y Hora de Conteo <span className="text-destructive">*</span>
-              </Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="fechaHora" className="text-xs font-semibold flex items-center gap-1">
+                  Fecha y Hora <span className="text-destructive">*</span>
+                </Label>
+                <button
+                  type="button"
+                  onClick={setNowForFechaHora}
+                  className="text-[10px] font-semibold text-primary hover:underline cursor-pointer bg-primary/10 px-2 py-0.5 rounded flex items-center gap-1"
+                >
+                  <Clock className="size-2.5" />
+                  Ahora
+                </button>
+              </div>
               <Input
                 id="fechaHora"
                 type="datetime-local"
                 value={fechaHoraVal}
-                onChange={(e) =>
-                  setValue("fechaHora", e.target.value, { shouldValidate: true })
-                }
+                onChange={(e) => setValue("fechaHora", e.target.value, { shouldValidate: true })}
                 className={cn(
-                  "h-9 text-xs font-mono",
+                  "h-9.5 text-xs font-mono bg-background",
                   errors.fechaHora && "border-destructive focus-visible:ring-destructive"
                 )}
-                disabled={isSubmitting}
+                disabled={isLoading}
               />
-              {errors.fechaHora && (
-                <p className="text-[11px] text-destructive font-medium">
-                  {errors.fechaHora.message}
-                </p>
-              )}
             </div>
           </div>
 
-          {/* Desglose por Método de Pago */}
-          <div className="space-y-2 pt-1 border-t border-border/40">
-            <div className="flex items-center justify-between">
-              <Label className="text-xs font-semibold text-foreground flex items-center gap-1">
-                Desglose por Método de Pago <span className="text-destructive">*</span>
-              </Label>
+          {/* Tarjeta de Resumen del Turno */}
+          {selectedTurno && (
+            <div className="rounded-xl border border-amber-500/25 bg-amber-500/[0.04] p-3 flex items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="size-9 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-300 flex items-center justify-center font-bold shrink-0 border border-amber-500/30">
+                  <Vault className="size-4.5" />
+                </div>
+                <div className="min-w-0">
+                  <span className="font-bold text-foreground truncate block">
+                    {selectedTurno.caja?.nombre || "Caja Principal"} ({selectedTurno.caja?.codigo || "CAJA"})
+                  </span>
+                  <span className="text-[11px] text-muted-foreground truncate block">
+                    Cajero: <strong className="text-foreground">{selectedTurno.empleado?.nombreCompleto || "Asignado"}</strong>
+                  </span>
+                </div>
+              </div>
+
+              <Badge
+                variant="outline"
+                className="bg-background text-amber-800 dark:text-amber-300 border-amber-500/30 text-[10px] font-mono shrink-0"
+              >
+                Turno #{selectedTurno.id}
+              </Badge>
+            </div>
+          )}
+
+          {/* SECCIÓN DETALLES: ARQUEO POR MÉTODO DE PAGO */}
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center justify-between pb-1 border-b border-border/50">
+              <span className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
+                <Coins className="size-3.5 text-amber-600" />
+                Desglose por Métodos de Pago
+              </span>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() =>
-                  append({
-                    metodoPagoId: defaultMetodoId,
-                    monedaId: defaultMonedaId,
-                    montoEsperado: 0,
-                    montoContado: 0,
-                  })
-                }
-                className="h-7 text-[11px] gap-1 px-2.5 cursor-pointer"
-                disabled={isSubmitting}
+                onClick={handleAddDetalleRow}
+                className="h-7 text-xs font-semibold gap-1 text-primary hover:text-primary cursor-pointer border-dashed"
               >
                 <Plus className="size-3" />
                 <span>Agregar Método</span>
               </Button>
             </div>
 
-            <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1 scrollbar-thin">
-              {fields.map((field, index) => (
+            {fields.map((field, index) => {
+              const diffRow =
+                (Number(detallesWatch?.[index]?.montoContado) || 0) -
+                (Number(detallesWatch?.[index]?.montoEsperado) || 0);
+
+              return (
                 <div
                   key={field.id}
-                  className="grid grid-cols-12 gap-2 items-center p-2 rounded-lg border border-border/60 bg-muted/20 text-xs"
+                  className="p-3 rounded-xl border border-border/60 bg-card hover:border-border transition-all space-y-2.5"
                 >
-                  <div className="col-span-5">
-                    <Select
-                      value={String(detallesWatch?.[index]?.metodoPagoId || defaultMetodoId)}
-                      onValueChange={(val) =>
-                        setValue(`detalles.${index}.metodoPagoId`, Number(val), {
-                          shouldValidate: true,
-                        })
-                      }
-                      disabled={isSubmitting}
-                    >
-                      <SelectTrigger className="h-8 text-xs bg-background">
-                        <SelectValue placeholder="Método Pago" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {metodosList.map((m) => (
-                          <SelectItem key={m.id} value={String(m.id)}>
-                            {m.nombre}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="col-span-3">
-                    <Input
-                      type="number"
-                      step="0.01"
-                      placeholder="Esperado"
-                      {...register(`detalles.${index}.montoEsperado`, { valueAsNumber: true })}
-                      className="h-8 text-xs font-mono bg-background"
-                      disabled={isSubmitting}
-                    />
-                  </div>
-
-                  <div className="col-span-3">
-                    <Input
-                      type="number"
-                      step="0.01"
-                      placeholder="Contado"
-                      {...register(`detalles.${index}.montoContado`, { valueAsNumber: true })}
-                      className="h-8 text-xs font-mono font-semibold bg-background text-emerald-600 dark:text-emerald-400"
-                      disabled={isSubmitting}
-                    />
-                  </div>
-
-                  <div className="col-span-1 text-right">
-                    {fields.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => remove(index)}
-                        className="size-7 text-destructive hover:bg-destructive/10 cursor-pointer"
-                        disabled={isSubmitting}
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5 items-end">
+                    {/* Método de Pago */}
+                    <div className="space-y-1 sm:col-span-1">
+                      <Label className="text-[11px] font-semibold text-muted-foreground">Método</Label>
+                      <Select
+                        value={String(watch(`detalles.${index}.metodoPagoId`))}
+                        onValueChange={(val) =>
+                          setValue(`detalles.${index}.metodoPagoId`, Number(val), { shouldValidate: true })
+                        }
+                        disabled={isLoadingMetodos || isLoading}
                       >
-                        <Trash2 className="size-3.5" />
-                      </Button>
-                    )}
+                        <SelectTrigger className="h-8.5 text-xs bg-background">
+                          <SelectValue placeholder="Método" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {metodosList.map((m) => (
+                            <SelectItem key={m.id} value={String(m.id)} className="text-xs">
+                              {m.nombre}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Moneda */}
+                    <div className="space-y-1 sm:col-span-1">
+                      <Label className="text-[11px] font-semibold text-muted-foreground">Moneda</Label>
+                      <Select
+                        value={String(watch(`detalles.${index}.monedaId`))}
+                        onValueChange={(val) =>
+                          setValue(`detalles.${index}.monedaId`, Number(val), { shouldValidate: true })
+                        }
+                        disabled={isLoadingMonedas || isLoading}
+                      >
+                        <SelectTrigger className="h-8.5 text-xs bg-background font-mono">
+                          <SelectValue placeholder="Moneda" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {monedasList.map((mon) => (
+                            <SelectItem key={mon.id} value={String(mon.id)} className="text-xs">
+                              {mon.codigo} ({mon.simbolo})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Monto Esperado */}
+                    <div className="space-y-1 sm:col-span-1">
+                      <Label className="text-[11px] font-semibold text-muted-foreground">Esperado (Sistema)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        {...register(`detalles.${index}.montoEsperado`, { valueAsNumber: true })}
+                        className="h-8.5 text-xs font-mono bg-background"
+                        disabled={isLoading}
+                      />
+                    </div>
+
+                    {/* Monto Contado + Delete */}
+                    <div className="space-y-1 sm:col-span-1 flex items-end gap-1.5">
+                      <div className="flex-1 space-y-1">
+                        <Label className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
+                          Contado (Físico)
+                        </Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          {...register(`detalles.${index}.montoContado`, { valueAsNumber: true })}
+                          className="h-8.5 text-xs font-mono font-bold bg-background text-emerald-600 dark:text-emerald-400"
+                          disabled={isLoading}
+                        />
+                      </div>
+
+                      {fields.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => remove(index)}
+                          className="size-8.5 text-destructive/70 hover:text-destructive hover:bg-destructive/10 cursor-pointer shrink-0 rounded-lg"
+                          title="Quitar fila"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Diferencia por fila */}
+                  <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-border/30 font-mono">
+                    <span className="text-muted-foreground">Diferencia método:</span>
+                    <span
+                      className={cn(
+                        "font-bold",
+                        Math.abs(diffRow) < 0.001
+                          ? "text-emerald-600 dark:text-emerald-400"
+                          : diffRow < 0
+                          ? "text-rose-600 dark:text-rose-400"
+                          : "text-amber-600 dark:text-amber-400"
+                      )}
+                    >
+                      {diffRow > 0 ? `+${formatCurrency(diffRow)} (Sobrante)` : diffRow < 0 ? `${formatCurrency(diffRow)} (Faltante)` : "Bs. 0.00 (Cuadre exacto)"}
+                    </span>
                   </div>
                 </div>
-              ))}
-            </div>
-            {errors.detalles && (
-              <p className="text-[11px] text-destructive font-medium">
-                {errors.detalles.message}
-              </p>
-            )}
+              );
+            })}
           </div>
 
-          {/* Resumen de totales calculado en vivo */}
-          <div className="p-2.5 rounded-lg bg-card border border-border/80 grid grid-cols-3 gap-2 text-xs font-mono">
-            <div className="p-1.5 rounded bg-muted/40 text-center">
-              <span className="text-[10px] text-muted-foreground uppercase font-sans block">Total Esperado</span>
-              <strong className="text-foreground font-bold">S/ {totalEsperadoCalc.toFixed(2)}</strong>
+          {/* TARJETA TOTALES Y CONCILIACIÓN */}
+          <div className="rounded-xl border p-4 bg-muted/25 space-y-3">
+            <div className="grid grid-cols-3 gap-3 text-center text-xs">
+              <div className="bg-background p-2.5 rounded-lg border border-border/50 space-y-0.5">
+                <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">
+                  Total Esperado
+                </span>
+                <span className="text-sm sm:text-base font-mono font-bold text-foreground">
+                  {formatCurrency(totalEsperadoCalc)}
+                </span>
+              </div>
+
+              <div className="bg-background p-2.5 rounded-lg border border-border/50 space-y-0.5">
+                <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">
+                  Total Contado
+                </span>
+                <span className="text-sm sm:text-base font-mono font-bold text-foreground">
+                  {formatCurrency(totalContadoCalc)}
+                </span>
+              </div>
+
+              <div
+                className={cn(
+                  "p-2.5 rounded-lg border space-y-0.5",
+                  isExacto
+                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400"
+                    : isFaltante
+                    ? "bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-400"
+                    : "bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-400"
+                )}
+              >
+                <span className="text-[10px] uppercase font-bold tracking-wider block">
+                  Diferencia Global
+                </span>
+                <span className="text-sm sm:text-base font-mono font-black">
+                  {diferenciaCalc > 0 ? `+${formatCurrency(diferenciaCalc)}` : formatCurrency(diferenciaCalc)}
+                </span>
+              </div>
             </div>
-            <div className="p-1.5 rounded bg-muted/40 text-center">
-              <span className="text-[10px] text-muted-foreground uppercase font-sans block">Total Contado</span>
-              <strong className="text-foreground font-bold">S/ {totalContadoCalc.toFixed(2)}</strong>
-            </div>
-            <div
-              className={cn(
-                "p-1.5 rounded text-center border",
-                Math.abs(diferenciaCalc) < 0.01
-                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400"
-                  : diferenciaCalc > 0
-                  ? "bg-blue-500/10 border-blue-500/30 text-blue-700 dark:text-blue-400"
-                  : "bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-400"
+
+            {/* Aviso Contextual */}
+            <div className="flex items-center gap-2 text-xs">
+              {isExacto ? (
+                <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-medium">
+                  <CheckCircle2 className="size-4" />
+                  <span>El arqueo cuadra exactamente con el total del sistema.</span>
+                </div>
+              ) : isFaltante ? (
+                <div className="flex items-center gap-1.5 text-rose-700 dark:text-rose-400 font-medium">
+                  <AlertTriangle className="size-4" />
+                  <span>Existe un faltante en el efectivo contado. Deberá justificar la diferencia.</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400 font-medium">
+                  <AlertTriangle className="size-4" />
+                  <span>Existe un sobrante en el efectivo contado.</span>
+                </div>
               )}
-            >
-              <span className="text-[10px] uppercase font-sans block">Diferencia</span>
-              <strong className="font-bold">S/ {diferenciaCalc.toFixed(2)}</strong>
             </div>
           </div>
 
-          {/* Observación */}
+          {/* Observaciones */}
           <div className="space-y-1.5">
-            <Label htmlFor="observacion" className="text-xs flex items-center gap-1">
-              Observaciones <span className="text-xs text-muted-foreground font-normal">(Opcional)</span>
+            <Label htmlFor="observacion" className="text-xs font-semibold flex items-center gap-1 text-muted-foreground">
+              <FileText className="size-3.5" />
+              Observaciones y Justificación de Arqueo
             </Label>
             <Textarea
               id="observacion"
-              placeholder="Ej: Conciliación física realizada al término de jornada sin discrepancias..."
-              className="min-h-[55px] text-xs resize-none"
-              disabled={isSubmitting}
+              placeholder="Justificación de sobrantes/faltantes, billetes observados o notas de cierre..."
+              rows={2}
+              className="text-xs resize-none bg-background"
               {...register("observacion")}
+              disabled={isLoading}
             />
           </div>
 
@@ -472,17 +653,22 @@ export function ArqueoCajaFormDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
-              className="h-9 text-xs sm:text-sm cursor-pointer"
+              className="h-9.5 text-xs sm:text-sm cursor-pointer"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
               disabled={isLoading}
-              className="h-9 gap-2 text-xs sm:text-sm cursor-pointer"
+              className={cn(
+                "h-9.5 px-4 gap-2 text-xs sm:text-sm font-semibold cursor-pointer shadow-sm transition-all",
+                isEditing
+                  ? "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20"
+                  : "bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20"
+              )}
             >
               {isLoading && <Loader2 className="size-4 animate-spin" />}
-              <span>{isEditing ? "Guardar Cambios" : "Confirmar Arqueo"}</span>
+              <span>{isEditing ? "Guardar Modificaciones" : "Conciliar y Guardar Arqueo"}</span>
             </Button>
           </DialogFooter>
         </form>

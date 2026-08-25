@@ -7,6 +7,7 @@ using Clinica.Api.Modules.Cajas.TurnoCaja.Entity;
 using Clinica.Api.Modules.Parametros.Correlativo.Dtos;
 using Clinica.Api.Modules.Parametros.Correlativo.Services;
 using Clinica.Api.Modules.Ventas.Venta.Enums;
+using Clinica.Api.Shared.Abstractions;
 using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
@@ -19,7 +20,8 @@ namespace Clinica.Api.Modules.Cajas.Cobro.Services;
 public sealed class CobroService(
     AppDbContext dbContext,
     CorrelativoService correlativoService,
-    CobroDetalleService cobroDetalleService
+    CobroDetalleService cobroDetalleService,
+    ICurrentUserService currentUserService
 )
 {
     private AppDbContext DbContext { get; } = dbContext;
@@ -31,9 +33,40 @@ public sealed class CobroService(
         EstadoCobro? estado = null,
         CancellationToken cancellationToken = default)
     {
+        var usuarioId = currentUserService.UserId;
+
+        if (usuarioId is null)
+            throw new UnauthorizedAccessException();
+
         var query = BuildQuery()
             .AsNoTracking()
             .Where(x => x.Activo);
+
+        // Si NO es ADMIN, solo ve los cobros del turno de caja asignado a su empleado
+        if (!currentUserService.IsInRole("ADMINISTRADOR"))
+        {
+            var empleadoId = await dbContext.Users
+                .Where(u => u.Id == usuarioId.Value)
+                .Join(
+                    dbContext.Empleados,
+                    usuario => usuario.PersonaId,
+                    empleado => empleado.PersonaId,
+                    (usuario, empleado) => empleado.Id
+                )
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (empleadoId == 0)
+            {
+                return new PagedResult<CobroResponse>(
+                    [],
+                    pagination.ValidPage,
+                    pagination.ValidPageSize,
+                    0);
+            }
+
+            // Filtro a través de la relación con TurnoCaja
+            query = query.Where(x => x.TurnoCaja.EmpleadoId == empleadoId);
+        }
 
         if (estado.HasValue)
         {
@@ -48,8 +81,7 @@ public sealed class CobroService(
 
         var totalItems = await query.CountAsync(cancellationToken);
 
-        var offset = (pagination.ValidPage - 1)
-                     * pagination.ValidPageSize;
+        var offset = (pagination.ValidPage - 1) * pagination.ValidPageSize;
 
         var entities = await ApplyOrder(query)
             .Skip(offset)
@@ -62,7 +94,6 @@ public sealed class CobroService(
             pagination.ValidPageSize,
             totalItems);
     }
-
     public async Task<CobroResponse> ObtenerAsync(
         int id,
         CancellationToken cancellationToken = default)
@@ -290,7 +321,7 @@ public sealed class CobroService(
             throw new NotFoundException("Caja", request.CajaId);
         }
 
-       /* var turnoCaja = await DbContext
+        var turnoCaja = await DbContext
             .Set<TurnoCajaEntity>()
             .FirstOrDefaultAsync(
                 x => x.CajaId == request.CajaId &&
@@ -301,7 +332,7 @@ public sealed class CobroService(
         if (turnoCaja is null)
         {
             throw new ConflictException($"La caja '{caja.Nombre}' no tiene un turno abierto.");
-        }*/
+        }
 
         var existeCobroPendiente = await Entities
             .AnyAsync(x => x.VentaPagadorId == ventaPagador.Id &&
@@ -329,7 +360,7 @@ public sealed class CobroService(
         var cobro = new CobroEntity
         {
             Numero = correlativo.NumeroFormateado,
-          //  TurnoCajaId = turnoCaja.Id,
+           TurnoCajaId = turnoCaja.Id,
             VentaPagadorId = ventaPagador.Id,
             FechaHora = fechaHora,
             Total = 0m,

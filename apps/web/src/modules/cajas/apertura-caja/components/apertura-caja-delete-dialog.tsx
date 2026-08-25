@@ -35,7 +35,7 @@ export function AperturaCajaDeleteDialog({
           <AlertDialogTitle>¿Eliminar apertura de caja?</AlertDialogTitle>
           <AlertDialogDescription>
             Esta acción eliminará el registro del saldo inicial de{" "}
-            <strong>S/ {Number(apertura?.montoInicial || 0).toFixed(2)}</strong>.
+            <strong>Bs. {Number(apertura?.montoInicial || 0).toLocaleString("es-BO", { minimumFractionDigits: 2 })}</strong>.
             Esta acción no se puede deshacer.
           </AlertDialogDescription>
         </AlertDialogHeader>
