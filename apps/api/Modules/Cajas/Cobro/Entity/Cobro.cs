@@ -8,10 +8,13 @@ namespace Clinica.Api.Modules.Cajas.Cobro.Entity;
 public sealed class Cobro : AuditableEntity
 {
     public string Numero { get; set; } = string.Empty;
+    
     public int TurnoCajaId { get; set; }
     public TurnoCajaEntity TurnoCaja { get; set; } = null!;
+    
     public int VentaPagadorId { get; set; }
     public VentaPagador VentaPagador { get; set; } = null!;
+    
     public DateTime FechaHora { get; set; }
     public decimal Total { get; set; }
     public EstadoCobro Estado { get; set; }

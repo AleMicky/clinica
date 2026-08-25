@@ -1,4 +1,3 @@
-using Clinica.Api.Modules.Cajas.AperturaCaja.Entity;
 using Clinica.Api.Modules.Cajas.ArqueoCaja.Entity;
 using Clinica.Api.Modules.Cajas.Caja.Entity;
 using Clinica.Api.Modules.Cajas.CierreCaja.Entity;
@@ -73,7 +72,6 @@ public class AppDbContext(
     public DbSet<Correlativo>  Correlativo => Set<Correlativo>();
     public DbSet<Caja> Cajas => Set<Caja>();
     public DbSet<TurnoCaja> TurnosCaja => Set<TurnoCaja>();
-    public DbSet<AperturaCaja> AperturasCaja => Set<AperturaCaja>();
     public DbSet<CierreCaja> CierresCaja => Set<CierreCaja>();
     public DbSet<ArqueoCaja> ArqueosCaja => Set<ArqueoCaja>();
     public DbSet<DetalleArqueoCaja> DetalleArqueosCaja => Set<DetalleArqueoCaja>();

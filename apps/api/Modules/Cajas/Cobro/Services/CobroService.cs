@@ -41,8 +41,7 @@ public sealed class CobroService(
         var query = BuildQuery()
             .AsNoTracking()
             .Where(x => x.Activo);
-
-        // Si NO es ADMIN, solo ve los cobros del turno de caja asignado a su empleado
+        
         if (!currentUserService.IsInRole("ADMINISTRADOR"))
         {
             var empleadoId = await dbContext.Users
@@ -507,8 +506,7 @@ public sealed class CobroService(
         };
     }
 
-    private static CajaInfo? MapCajaInfo(
-        Clinica.Api.Modules.Cajas.Caja.Entity.Caja? caja)
+    private static CajaInfo? MapCajaInfo(Clinica.Api.Modules.Cajas.Caja.Entity.Caja? caja)
     {
         if (caja is null)
             return null;
@@ -542,8 +540,7 @@ public sealed class CobroService(
         };
     }
 
-    private static VentaPagadorInfo? MapVentaPagadorInfo(
-        VentaPagadorEntity? pagador)
+    private static VentaPagadorInfo? MapVentaPagadorInfo(VentaPagadorEntity? pagador)
     {
         if (pagador is null)
             return null;

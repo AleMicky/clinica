@@ -29,11 +29,6 @@
 
   <ItemGroup>
     <Folder Include="Modules\Almacen\" />
-    <Folder Include="Modules\Cajas\AperturaCaja\Dtos\" />
-    <Folder Include="Modules\Cajas\AperturaCaja\Endpoints\" />
-    <Folder Include="Modules\Cajas\AperturaCaja\Mappers\" />
-    <Folder Include="Modules\Cajas\AperturaCaja\Services\" />
-    <Folder Include="Modules\Cajas\AperturaCaja\Validators\" />
     <Folder Include="Modules\Cajas\ArqueoCaja\Dtos\" />
     <Folder Include="Modules\Cajas\ArqueoCaja\Endpoints\" />
     <Folder Include="Modules\Cajas\ArqueoCaja\Mappers\" />

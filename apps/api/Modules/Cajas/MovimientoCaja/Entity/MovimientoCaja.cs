@@ -8,14 +8,9 @@ public sealed class MovimientoCaja : AuditableEntity
     public TurnoCaja.Entity.TurnoCaja TurnoCaja { get; set; } = null!;
 
     public TipoMovimientoCaja Tipo { get; set; }
-
     public DateTime FechaHora { get; set; }
-
     public decimal Monto { get; set; }
-
     public string Concepto { get; set; } = string.Empty;
-
     public string? Referencia { get; set; }
-
     public string? Observacion { get; set; }
 }

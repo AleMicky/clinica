@@ -14,7 +14,6 @@ namespace Clinica.Api.Modules.Cajas.TurnoCaja.Services;
 public sealed class TurnoCajaService(AppDbContext dbContext)
 {
     private AppDbContext DbContext { get; } = dbContext;
-
     private DbSet<TurnoCajaEntity> Entities => DbContext.Set<TurnoCajaEntity>();
 
     public async Task<PagedResult<TurnoCajaResponse>> ListarAsync(
