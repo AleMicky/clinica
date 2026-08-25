@@ -20,6 +20,7 @@ public static class SeguridadModule
         services.AddScoped<AuthService>();
         services.AddScoped<PersonaService>();
         services.AddScoped<OpcionMenuService>();
+        services.AddScoped<RolOpcionMenuService>();
 
 
         return services;
@@ -33,6 +34,7 @@ public static class SeguridadModule
         app.MapAuthEndpoints();
         app.MapPersonaEndpoints();
         app.MapOpcionMenuEndpoints();
+        app.MapRolOpcionMenuEndpoints();
 
         return app;
     }

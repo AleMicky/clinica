@@ -81,6 +81,7 @@ public class AppDbContext(
     public DbSet<Cobro> Cobros => Set<Cobro>();
     public DbSet<CobroDetalle> CobroDetalles => Set<CobroDetalle>();
     public DbSet<OpcionMenu> OpcionesMenu => Set<OpcionMenu>();
+    public DbSet<RolOpcionMenu> RolesOpcionesMenu => Set<RolOpcionMenu>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
