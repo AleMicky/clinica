@@ -215,10 +215,21 @@ export interface AdmisionQueryParams {
   fechaHasta?: string;
 }
 
+export type EstadoAdmisionTab = EstadoAdmision | "TODOS";
+
+export interface AdmisionCounts {
+  todos: number;
+  registradas: number;
+  confirmadas: number;
+  enviadasVenta: number;
+  canceladas: number;
+}
+
 export interface AdmisionMetrics {
   totalHoy: number;
   registradas: number;
   confirmadas: number;
   enviadasVenta: number;
+  canceladas?: number;
   montoTotalHoy: number;
 }

@@ -18,8 +18,10 @@ import {
 import {
   EstadoAdmision,
   EstadoAdmisionLabels,
+  type AdmisionCounts,
   type AdmisionMetrics,
   type AdmisionResponse,
+  type EstadoAdmisionTab,
 } from "../types/admision.types";
 
 export function AdmisionModuleView() {
@@ -51,9 +53,7 @@ export function AdmisionModuleView() {
   const [currentPage, setCurrentPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(10);
   const [searchTerm, setSearchTerm] = React.useState("");
-  const [selectedEstadoTab, setSelectedEstadoTab] = React.useState<EstadoAdmision>(
-    EstadoAdmision.Registrada
-  );
+  const [selectedEstadoTab, setSelectedEstadoTab] = React.useState<EstadoAdmisionTab>("TODOS");
 
   // Fetch de React Query para la lista filtrada
   const {
@@ -64,7 +64,7 @@ export function AdmisionModuleView() {
     page: currentPage,
     pageSize: pageSize,
     search: searchTerm.trim() || undefined,
-    estado: selectedEstadoTab,
+    estado: selectedEstadoTab === "TODOS" ? undefined : selectedEstadoTab,
   });
 
   // Fetch para métricas globales del día
@@ -80,7 +80,7 @@ export function AdmisionModuleView() {
     setCurrentPage(1);
   };
 
-  const handleEstadoTabChange = (tab: EstadoAdmision) => {
+  const handleEstadoTabChange = (tab: EstadoAdmisionTab) => {
     setSelectedEstadoTab(tab);
     setCurrentPage(1);
   };
@@ -104,6 +104,17 @@ export function AdmisionModuleView() {
   const enviadasVenta = allAdmisionesList.filter(
     (a) => a.estado === EstadoAdmision.EnviadaVenta
   ).length;
+  const canceladas = allAdmisionesList.filter(
+    (a) => a.estado === EstadoAdmision.Cancelada
+  ).length;
+
+  const counts: AdmisionCounts = {
+    todos: totalHoy,
+    registradas,
+    confirmadas,
+    enviadasVenta,
+    canceladas,
+  };
 
   const montoTotalHoy = allAdmisionesList.reduce((acc, a) => {
     const total =
@@ -117,6 +128,7 @@ export function AdmisionModuleView() {
     registradas,
     confirmadas,
     enviadasVenta,
+    canceladas,
     montoTotalHoy,
   };
 
@@ -243,6 +255,7 @@ export function AdmisionModuleView() {
         pageSize={pageSize}
         searchTerm={searchTerm}
         selectedEstadoTab={selectedEstadoTab}
+        counts={counts}
         onEstadoTabChange={handleEstadoTabChange}
         onSearchChange={handleSearchChange}
         onPageChange={setCurrentPage}

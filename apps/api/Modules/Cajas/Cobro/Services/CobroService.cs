@@ -290,7 +290,7 @@ public sealed class CobroService(
             throw new NotFoundException("Caja", request.CajaId);
         }
 
-        var turnoCaja = await DbContext
+       /* var turnoCaja = await DbContext
             .Set<TurnoCajaEntity>()
             .FirstOrDefaultAsync(
                 x => x.CajaId == request.CajaId &&
@@ -301,7 +301,7 @@ public sealed class CobroService(
         if (turnoCaja is null)
         {
             throw new ConflictException($"La caja '{caja.Nombre}' no tiene un turno abierto.");
-        }
+        }*/
 
         var existeCobroPendiente = await Entities
             .AnyAsync(x => x.VentaPagadorId == ventaPagador.Id &&
@@ -329,7 +329,7 @@ public sealed class CobroService(
         var cobro = new CobroEntity
         {
             Numero = correlativo.NumeroFormateado,
-            TurnoCajaId = turnoCaja.Id,
+          //  TurnoCajaId = turnoCaja.Id,
             VentaPagadorId = ventaPagador.Id,
             FechaHora = fechaHora,
             Total = 0m,

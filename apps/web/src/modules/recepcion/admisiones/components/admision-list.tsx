@@ -24,7 +24,9 @@ import {
   formatConvenioNombre,
   formatPacienteDocumento,
   formatPacienteNombre,
+  type AdmisionCounts,
   type AdmisionResponse,
+  type EstadoAdmisionTab,
 } from "../types/admision.types";
 import { AdmisionStatusBadge } from "./admision-status-badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -36,8 +38,9 @@ interface AdmisionListProps {
   currentPage: number;
   pageSize: number;
   searchTerm: string;
-  selectedEstadoTab?: EstadoAdmision;
-  onEstadoTabChange?: (tab: EstadoAdmision) => void;
+  selectedEstadoTab?: EstadoAdmisionTab;
+  counts?: AdmisionCounts;
+  onEstadoTabChange?: (tab: EstadoAdmisionTab) => void;
   onSearchChange: (term: string) => void;
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
@@ -53,7 +56,8 @@ export function AdmisionList({
   currentPage,
   pageSize,
   searchTerm,
-  selectedEstadoTab = EstadoAdmision.Registrada,
+  selectedEstadoTab = "TODOS",
+  counts,
   onEstadoTabChange,
   onSearchChange,
   onPageChange,
@@ -63,15 +67,42 @@ export function AdmisionList({
   onDelete,
 }: AdmisionListProps) {
   const tabs: Array<{
-    key: EstadoAdmision;
+    key: EstadoAdmisionTab;
     label: string;
+    count?: number;
     activeClasses: string;
   }> = [
-      { key: EstadoAdmision.Registrada, label: "Registradas", activeClasses: "bg-blue-600 text-white shadow-xs" },
-      { key: EstadoAdmision.Confirmada, label: "Confirmadas", activeClasses: "bg-emerald-600 text-white shadow-xs" },
-      { key: EstadoAdmision.EnviadaVenta, label: "Enviadas a Venta", activeClasses: "bg-purple-600 text-white shadow-xs" },
-      { key: EstadoAdmision.Cancelada, label: "Canceladas", activeClasses: "bg-rose-600 text-white shadow-xs" },
-    ];
+    {
+      key: "TODOS",
+      label: "Todos",
+      count: counts?.todos,
+      activeClasses: "bg-primary text-primary-foreground shadow-xs",
+    },
+    {
+      key: EstadoAdmision.Registrada,
+      label: "Registradas",
+      count: counts?.registradas,
+      activeClasses: "bg-blue-600 text-white shadow-xs",
+    },
+    {
+      key: EstadoAdmision.Confirmada,
+      label: "Confirmadas",
+      count: counts?.confirmadas,
+      activeClasses: "bg-emerald-600 text-white shadow-xs",
+    },
+    {
+      key: EstadoAdmision.EnviadaVenta,
+      label: "Enviadas a Venta",
+      count: counts?.enviadasVenta,
+      activeClasses: "bg-purple-600 text-white shadow-xs",
+    },
+    {
+      key: EstadoAdmision.Cancelada,
+      label: "Canceladas",
+      count: counts?.canceladas,
+      activeClasses: "bg-rose-600 text-white shadow-xs",
+    },
+  ];
 
   return (
     <div className="space-y-2.5 w-full">
@@ -86,12 +117,24 @@ export function AdmisionList({
                 key={t.key.toString()}
                 type="button"
                 onClick={() => onEstadoTabChange?.(t.key)}
-                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer select-none ${isActive
-                  ? t.activeClasses
-                  : "bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground"
-                  }`}
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer select-none ${
+                  isActive
+                    ? t.activeClasses
+                    : "bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
               >
                 <span>{t.label}</span>
+                {typeof t.count === "number" && (
+                  <span
+                    className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold font-mono transition-colors ${
+                      isActive
+                        ? "bg-white/20 text-white"
+                        : "bg-background text-muted-foreground border border-border/50"
+                    }`}
+                  >
+                    {t.count}
+                  </span>
+                )}
               </button>
             );
           })}
