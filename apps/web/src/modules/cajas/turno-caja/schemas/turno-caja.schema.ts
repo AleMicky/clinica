@@ -10,8 +10,21 @@ export const turnoCajaSchema = z.object({
   fechaHoraApertura: z
     .string()
     .min(1, "La fecha y hora de apertura es obligatoria."),
+  montoInicial: z
+    .number()
+    .min(0, "El monto inicial no puede ser negativo."),
+  observacionApertura: z
+    .string()
+    .max(500, "La observación de apertura no puede exceder 500 caracteres.")
+    .optional()
+    .nullable(),
   fechaHoraCierre: z
     .string()
+    .optional()
+    .nullable(),
+  observacionCierre: z
+    .string()
+    .max(500, "La observación de cierre no puede exceder 500 caracteres.")
     .optional()
     .nullable(),
   estado: z

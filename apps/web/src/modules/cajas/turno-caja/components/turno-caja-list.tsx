@@ -29,6 +29,9 @@ import {
   Hourglass,
   Plus,
   FilterX,
+  Coins,
+  FileText,
+  MessageSquare,
 } from "lucide-react";
 import {
   EstadoTurnoCaja,
@@ -74,6 +77,13 @@ function formatDate(dateStr?: string | null): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function formatCurrency(amount?: number | null): string {
+  return `Bs. ${Number(amount || 0).toLocaleString("es-BO", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 }
 
 function calculateDuration(startStr?: string, endStr?: string | null): string {
@@ -377,7 +387,7 @@ export function TurnoCajaList({
 
                     {/* Información Principal */}
                     <div className="min-w-0 flex-1 space-y-1.5">
-                      {/* Fila 1: Caja + ID + Estado Badge */}
+                      {/* Fila 1: Caja + ID + Estado Badge + Monto Inicial */}
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-mono font-bold text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-md border border-primary/20 flex items-center gap-1.5">
                           <Vault className="size-3" />
@@ -392,7 +402,13 @@ export function TurnoCajaList({
                           #Turno-{turno.id}
                         </span>
 
-                        <div className="ml-auto sm:ml-0 flex items-center gap-2">
+                        <div className="ml-auto sm:ml-0 flex items-center gap-2 flex-wrap">
+                          {/* Badge Monto Inicial */}
+                          <span className="inline-flex items-center gap-1 text-[11px] font-mono font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                            <Coins className="size-3 text-emerald-600 dark:text-emerald-400" />
+                            <span>Inicial: {formatCurrency(turno.montoInicial)}</span>
+                          </span>
+
                           <Badge
                             variant="outline"
                             className={`text-[10px] font-semibold px-2.5 py-0.5 rounded-full ${
@@ -462,6 +478,32 @@ export function TurnoCajaList({
                           )}
                         </div>
                       </div>
+
+                      {/* Fila 4: Observaciones (si existen) */}
+                      {(turno.observacionApertura || turno.observacionCierre) && (
+                        <div className="flex flex-wrap items-center gap-2 pt-1">
+                          {turno.observacionApertura && (
+                            <span
+                              className="inline-flex items-center gap-1 text-[11px] text-muted-foreground bg-muted/40 px-2 py-0.5 rounded border border-border/40 max-w-md truncate"
+                              title={`Observación Apertura: ${turno.observacionApertura}`}
+                            >
+                              <FileText className="size-3 text-primary/70 shrink-0" />
+                              <strong className="font-medium text-foreground/80">Apertura:</strong>
+                              <span className="truncate">{turno.observacionApertura}</span>
+                            </span>
+                          )}
+                          {turno.observacionCierre && (
+                            <span
+                              className="inline-flex items-center gap-1 text-[11px] text-muted-foreground bg-muted/40 px-2 py-0.5 rounded border border-border/40 max-w-md truncate"
+                              title={`Observación Cierre: ${turno.observacionCierre}`}
+                            >
+                              <MessageSquare className="size-3 text-amber-600 dark:text-amber-400 shrink-0" />
+                              <strong className="font-medium text-foreground/80">Cierre:</strong>
+                              <span className="truncate">{turno.observacionCierre}</span>
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
 
