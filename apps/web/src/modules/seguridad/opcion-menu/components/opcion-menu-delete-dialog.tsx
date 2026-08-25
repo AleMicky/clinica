@@ -69,7 +69,7 @@ export function OpcionMenuDeleteDialog({
             </p>
           )}
           <p className="text-[11px] text-amber-600 dark:text-amber-400 bg-amber-500/10 p-2 rounded-lg border border-amber-500/20">
-            ⚠️ <strong>Importante:</strong> Si esta opción contiene submenús o accesos hijos asociados, el sistema no permitirá eliminarla hasta que los submenús sean reasignados o eliminados.
+            ⚠️ <strong>Importante:</strong> Si esta opción contiene submenús o está asignada a uno o más roles, no se permitirá su eliminación hasta que sea desvinculada.
           </p>
         </div>
 

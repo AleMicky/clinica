@@ -22,7 +22,9 @@ public static class OpcionMenuSeed
                 x => x.Codigo,
                 StringComparer.OrdinalIgnoreCase);
 
-        var pendientes = seedOpciones.ToList();
+        var pendientes = seedOpciones
+            .Where(x => !porCodigo.ContainsKey(x.Codigo))
+            .ToList();
 
         var huboCambios = false;
 
@@ -32,12 +34,6 @@ public static class OpcionMenuSeed
 
             foreach (var seed in pendientes.ToList())
             {
-                if (porCodigo.ContainsKey(seed.Codigo))
-                {
-                    pendientes.Remove(seed);
-                    continue;
-                }
-
                 int? padreId = null;
 
                 if (!string.IsNullOrWhiteSpace(seed.CodigoPadre))
@@ -77,7 +73,7 @@ public static class OpcionMenuSeed
                 huboCambios = true;
             }
 
-            if (insertadosEnIteracion == 0)
+            if (insertadosEnIteracion == 0 && pendientes.Count > 0)
             {
                 var faltantes = string.Join(
                     ", ",

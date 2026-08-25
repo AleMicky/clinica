@@ -307,6 +307,18 @@ public sealed class OpcionMenuService(AppDbContext dbContext)
             throw new ConflictException(
                 "No se puede eliminar la opción de menú porque tiene opciones hijas.");
         }
+
+        var tieneRolesAsignados = await dbContext.RolesOpcionesMenu
+            .AsNoTracking()
+            .AnyAsync(
+                x => x.OpcionMenuId == opcionMenuId,
+                cancellationToken);
+
+        if (tieneRolesAsignados)
+        {
+            throw new ConflictException(
+                "No se puede eliminar la opción de menú porque está asignada a uno o más roles.");
+        }
     }
 
     private static IReadOnlyCollection<OpcionMenuTreeResponse> ConstruirArbol(
