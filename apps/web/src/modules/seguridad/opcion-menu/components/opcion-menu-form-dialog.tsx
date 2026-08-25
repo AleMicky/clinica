@@ -10,6 +10,7 @@ import {
   Search,
   Sparkles,
   Layers,
+  RotateCcw,
 } from "lucide-react";
 import {
   Dialog,
@@ -55,6 +56,21 @@ interface OpcionMenuFormDialogProps {
   allOptions?: OpcionMenuResponse[];
 }
 
+/**
+ * Calcula automáticamente el siguiente número de orden para un nivel de menú
+ */
+function getNextOrderForParent(
+  targetParentId: number | null,
+  options: OpcionMenuResponse[]
+): number {
+  const siblings = options.filter(
+    (item) => (item.padreId ?? null) === targetParentId
+  );
+  if (siblings.length === 0) return 1;
+  const maxOrder = Math.max(...siblings.map((item) => Number(item.orden) || 0), 0);
+  return maxOrder + 1;
+}
+
 export function OpcionMenuFormDialog({
   open,
   onOpenChange,
@@ -81,9 +97,9 @@ export function OpcionMenuFormDialog({
       codigo: "",
       nombre: "",
       ruta: "",
-      icono: "Shield",
+      icono: "Folder",
       padreId: null,
-      orden: 0,
+      orden: 1,
     },
   });
 
@@ -92,6 +108,7 @@ export function OpcionMenuFormDialog({
   const currentRuta = watch("ruta");
   const currentCodigo = watch("codigo");
   const currentPadreId = watch("padreId");
+  const currentOrden = watch("orden");
 
   // Filter out self when editing
   const availableParents = React.useMemo(() => {
@@ -115,32 +132,53 @@ export function OpcionMenuFormDialog({
     );
   }, [iconSearch]);
 
-  // Reset form on open/change
+  // Reset form on open/change with automatic order calculation
   React.useEffect(() => {
     if (open) {
       if (opcionToEdit) {
         setValue("codigo", opcionToEdit.codigo || "");
         setValue("nombre", opcionToEdit.nombre || "");
         setValue("ruta", opcionToEdit.ruta || "");
-        setValue("icono", opcionToEdit.icono || "Shield");
+        setValue("icono", opcionToEdit.icono || "Folder");
         setValue(
           "padreId",
           "padreId" in opcionToEdit ? opcionToEdit.padreId ?? null : null
         );
-        setValue("orden", opcionToEdit.orden ?? 0);
+        setValue("orden", opcionToEdit.orden ?? 1);
       } else {
+        const initialParent = defaultParentId ?? null;
+        const autoOrder = getNextOrderForParent(initialParent, allOptions);
         reset({
           codigo: "",
           nombre: "",
           ruta: "",
-          icono: "Folder",
-          padreId: defaultParentId ?? null,
-          orden: 0,
+          icono: initialParent ? "FileText" : "Folder",
+          padreId: initialParent,
+          orden: autoOrder,
         });
       }
       setIconSearch("");
     }
-  }, [open, opcionToEdit, defaultParentId, setValue, reset]);
+  }, [open, opcionToEdit, defaultParentId, allOptions, setValue, reset]);
+
+  // Handler when user selects a different parent
+  const handleParentChange = (val: string | null) => {
+    const newParentId = !val || val === "root" ? null : Number(val);
+    setValue("padreId", newParentId);
+
+    // Auto-calculate order on parent change if creating new
+    if (!isEditing) {
+      const nextOrder = getNextOrderForParent(newParentId, allOptions);
+      setValue("orden", nextOrder);
+    }
+  };
+
+  // Quick reset to auto order
+  const handleRecalculateOrder = () => {
+    const nextOrder = getNextOrderForParent(currentPadreId ?? null, allOptions);
+    setValue("orden", nextOrder);
+    toast.info(`Orden recalculado a ${nextOrder}`);
+  };
 
   const onSubmit = async (values: OpcionMenuFormValues) => {
     try {
@@ -174,12 +212,18 @@ export function OpcionMenuFormDialog({
     }
   };
 
+  // Find selected parent object to display its name cleanly (not its raw ID)
+  const selectedParentObject = React.useMemo(() => {
+    if (!currentPadreId) return null;
+    return allOptions.find((item) => item.id === Number(currentPadreId)) || null;
+  }, [currentPadreId, allOptions]);
+
   const isSaving =
     isSubmitting || createMutation.isPending || updateMutation.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[620px] max-h-[90vh] overflow-y-auto p-0 gap-0 rounded-2xl border border-border/80 shadow-2xl bg-card">
+      <DialogContent className="sm:max-w-2xl w-full max-h-[90vh] overflow-y-auto p-0 gap-0 rounded-2xl border border-border/80 shadow-2xl bg-card">
         {/* Header */}
         <DialogHeader className="p-5 bg-gradient-to-r from-card via-card to-primary/5 border-b border-border/60">
           <div className="flex items-center gap-3">
@@ -212,6 +256,11 @@ export function OpcionMenuFormDialog({
               </Label>
               <Input
                 {...register("codigo")}
+                value={currentCodigo || ""}
+                onChange={(e) => {
+                  const upper = e.target.value.toUpperCase();
+                  setValue("codigo", upper, { shouldValidate: true });
+                }}
                 placeholder="EJ: SEG_OPCIONES"
                 className="h-8.5 text-xs font-mono uppercase bg-background"
               />
@@ -243,20 +292,21 @@ export function OpcionMenuFormDialog({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Padre ID */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">
-                Menú Padre (Jerarquía)
-              </Label>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-semibold">
+                  Menú Padre (Jerarquía)
+                </Label>
+              </div>
               <Select
                 value={currentPadreId ? String(currentPadreId) : "root"}
-                onValueChange={(val) => {
-                  setValue(
-                    "padreId",
-                    val === "root" || !val ? null : Number(val)
-                  );
-                }}
+                onValueChange={handleParentChange}
               >
-                <SelectTrigger className="h-8.5 text-xs bg-background cursor-pointer">
-                  <SelectValue placeholder="Seleccionar menú padre..." />
+                <SelectTrigger className="h-8.5 text-xs bg-background cursor-pointer w-full">
+                  <SelectValue placeholder="Seleccionar menú padre...">
+                    {selectedParentObject
+                      ? `${selectedParentObject.padreId ? "└─ " : "📁 "}${selectedParentObject.nombre} (${selectedParentObject.codigo})`
+                      : "-- Módulo Principal / Raíz (Sin Padre) --"}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent className="max-h-56">
                   <SelectItem
@@ -282,17 +332,30 @@ export function OpcionMenuFormDialog({
               )}
             </div>
 
-            {/* Orden */}
+            {/* Orden Automático */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">
-                Orden de Despliegue
-              </Label>
-              <Input
-                type="number"
-                min={0}
-                {...register("orden", { valueAsNumber: true })}
-                className="h-8.5 text-xs font-mono bg-background"
-              />
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-semibold">
+                  Orden de Despliegue
+                </Label>
+                <button
+                  type="button"
+                  onClick={handleRecalculateOrder}
+                  className="text-[10px] text-primary hover:underline flex items-center gap-1 cursor-pointer font-medium"
+                  title="Calcular siguiente orden automáticamente"
+                >
+                  <RotateCcw className="size-2.5" />
+                  <span>Auto #{getNextOrderForParent(currentPadreId ?? null, allOptions)}</span>
+                </button>
+              </div>
+              <div className="relative">
+                <Input
+                  type="number"
+                  min={0}
+                  {...register("orden", { valueAsNumber: true })}
+                  className="h-8.5 text-xs font-mono bg-background"
+                />
+              </div>
               {errors.orden && (
                 <p className="text-[11px] text-destructive font-medium">
                   {errors.orden.message}
@@ -387,15 +450,20 @@ export function OpcionMenuFormDialog({
           </div>
 
           {/* Live Preview Card */}
-          <div className="bg-muted/30 border border-border/60 rounded-xl p-3 space-y-1.5">
+          <div className="bg-muted/30 border border-border/60 rounded-xl p-3.5 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
                 <Layers className="size-3 text-primary" />
                 Previsualización en Barra Lateral
               </span>
-              <span className="text-[9px] text-muted-foreground font-mono">
-                Simulación UI
-              </span>
+              <div className="flex items-center gap-1.5">
+                <Badge variant="outline" className="text-[9px] font-medium bg-background/80">
+                  {selectedParentObject ? `📁 En: ${selectedParentObject.nombre}` : "⭐ Módulo Raíz"}
+                </Badge>
+                <span className="text-[9px] text-muted-foreground font-mono">
+                  (Orden #{currentOrden})
+                </span>
+              </div>
             </div>
 
             <div className="bg-card border border-border/80 rounded-lg p-2.5 flex items-center justify-between gap-3 shadow-2xs">

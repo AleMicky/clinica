@@ -110,6 +110,10 @@ export function OpcionMenuModuleView() {
 
   const handleViewAudit = (item: OpcionMenuResponse | OpcionMenuTreeResponse) => {
     const fullItem = allItems.find((x) => x.id === item.id);
+    const parentItem = fullItem?.padreId
+      ? allItems.find((x) => x.id === fullItem.padreId)
+      : null;
+
     setAuditInfo({
       title: "Auditoría de Opción de Menú",
       entityName: item.nombre,
@@ -121,11 +125,13 @@ export function OpcionMenuModuleView() {
       updatedBy: fullItem?.modificadoPor || null,
       extraDetails: [
         { label: "Ruta", value: item.ruta || "Sin ruta" },
-        { label: "Icono", value: item.icono || "Shield" },
+        { label: "Icono", value: item.icono || "Folder" },
         { label: "Orden", value: item.orden },
         {
-          label: "Jerarquía",
-          value: fullItem?.padreId ? `Submenú de ID #${fullItem.padreId}` : "Módulo Raíz",
+          label: "Menú Padre",
+          value: parentItem
+            ? `${parentItem.nombre} (${parentItem.codigo})`
+            : "Módulo Principal / Raíz",
         },
       ],
     });
