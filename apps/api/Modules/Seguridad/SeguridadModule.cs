@@ -35,6 +35,7 @@ public static class SeguridadModule
         app.MapPersonaEndpoints();
         app.MapOpcionMenuEndpoints();
         app.MapRolOpcionMenuEndpoints();
+        app.MapMenuUsuarioEndpoints();
 
         return app;
     }

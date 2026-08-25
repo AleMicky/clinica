@@ -169,5 +169,5 @@ await RecursosHumanosSeed.SeedAsync(app.Services);
 await ServiciosSeed.SeedAsync(app.Services);
 await TarifarioSeed.SeedAsync(app.Services);
 await EspecialidadSeed.SeedAsync(app.Services);
-
+await OpcionMenuSeed.SeedAsync(app.Services);
 app.Run();

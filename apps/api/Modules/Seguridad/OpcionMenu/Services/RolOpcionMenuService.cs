@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Clinica.Api.Data;
 using Clinica.Api.Modules.Seguridad.OpcionMenu.Dtos;
 using Clinica.Api.Modules.Seguridad.OpcionMenu.Entity;
@@ -5,26 +6,17 @@ using Clinica.Api.Modules.Seguridad.OpcionMenu.Mappers;
 using Clinica.Api.Modules.Seguridad.Roles.Entity;
 using Clinica.Api.Shared.Exceptions;
 using Microsoft.EntityFrameworkCore;
-using OpcionMenuEntity =
-    Clinica.Api.Modules.Seguridad.OpcionMenu.Entity.OpcionMenu;
+using OpcionMenuEntity = Clinica.Api.Modules.Seguridad.OpcionMenu.Entity.OpcionMenu;
 
 namespace Clinica.Api.Modules.Seguridad.OpcionMenu.Services;
 
-public sealed class RolOpcionMenuService(
-    AppDbContext dbContext)
+public sealed class RolOpcionMenuService(AppDbContext dbContext)
 {
-    public async Task<RolOpcionMenuResponse> CrearAsync(
-        int rolId,
-        CreateRolOpcionMenuRequest request,
+    public async Task<RolOpcionMenuResponse> CrearAsync(int rolId, CreateRolOpcionMenuRequest request,
         CancellationToken cancellationToken = default)
     {
-        await ValidarRolAsync(
-            rolId,
-            cancellationToken);
-
-        await ValidarOpcionAsync(
-            request.OpcionMenuId,
-            cancellationToken);
+        await ValidarRolAsync(rolId, cancellationToken);
+        await ValidarOpcionAsync(request.OpcionMenuId, cancellationToken);
 
         var relacionExistente = await dbContext.RolesOpcionesMenu
             .FirstOrDefaultAsync(
@@ -43,8 +35,7 @@ public sealed class RolOpcionMenuService(
 
             relacionExistente.Activo = true;
 
-            await dbContext.SaveChangesAsync(
-                cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
 
             var reactivada = await dbContext.RolesOpcionesMenu
                 .AsNoTracking()
@@ -53,8 +44,7 @@ public sealed class RolOpcionMenuService(
                     x => x.Id == relacionExistente.Id,
                     cancellationToken);
 
-            return RolOpcionMenuMapper.ToResponse(
-                reactivada);
+            return RolOpcionMenuMapper.ToResponse(reactivada);
         }
 
         var entity = new RolOpcionMenu
@@ -80,14 +70,10 @@ public sealed class RolOpcionMenuService(
             creada);
     }
 
-    public async Task AsignarAsync(
-        int rolId,
-        AsignarRolOpcionMenuRequest request,
+    public async Task AsignarAsync(int rolId, AsignarRolOpcionMenuRequest request,
         CancellationToken cancellationToken = default)
     {
-        await ValidarRolAsync(
-            rolId,
-            cancellationToken);
+        await ValidarRolAsync( rolId, cancellationToken);
 
         var ids = request.OpcionMenuIds
             .Distinct()
@@ -131,9 +117,7 @@ public sealed class RolOpcionMenuService(
             cancellationToken);
     }
 
-    public async Task<RolOpcionesMenuResponse> ObtenerAsync(
-        int rolId,
-        CancellationToken cancellationToken = default)
+    public async Task<RolOpcionesMenuResponse> ObtenerAsync(int rolId, CancellationToken cancellationToken = default)
     {
         var rol = await dbContext.Roles
             .AsNoTracking()
@@ -171,8 +155,7 @@ public sealed class RolOpcionMenuService(
         };
     }
 
-    public async Task<
-            IReadOnlyCollection<RolOpcionMenuTreeResponse>>
+    public async Task<IReadOnlyCollection<RolOpcionMenuTreeResponse>>
         ObtenerArbolAsync(
             int rolId,
             CancellationToken cancellationToken = default)
@@ -224,6 +207,8 @@ public sealed class RolOpcionMenuService(
         await dbContext.SaveChangesAsync(
             cancellationToken);
     }
+    
+    
 
     private async Task ValidarRolAsync(
         int rolId,
@@ -241,6 +226,62 @@ public sealed class RolOpcionMenuService(
                 nameof(Rol),
                 rolId);
         }
+    }
+    public async Task<IReadOnlyCollection<RolOpcionMenuTreeResponse>>
+        ObtenerMenuUsuarioAsync(
+            ClaimsPrincipal user,
+            CancellationToken cancellationToken = default)
+    {
+        var userIdValue =
+            user.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? user.FindFirstValue("sub");
+
+        if (string.IsNullOrWhiteSpace(userIdValue) ||
+            !int.TryParse(userIdValue, out var userId))
+        {
+            throw new UnauthorizedAccessException(
+                "No se pudo identificar al usuario autenticado.");
+        }
+
+        var usuarioExiste = await dbContext.Users
+            .AsNoTracking()
+            .AnyAsync(
+                x => x.Id == userId,
+                cancellationToken);
+
+        if (!usuarioExiste)
+        {
+            throw new NotFoundException(
+                "Usuario",
+                userId);
+        }
+
+        var rolIds = await dbContext.UserRoles
+            .AsNoTracking()
+            .Where(x => x.UserId == userId)
+            .Select(x => x.RoleId)
+            .ToListAsync(cancellationToken);
+
+        if (rolIds.Count == 0)
+        {
+            return [];
+        }
+
+        var opciones = await dbContext.RolesOpcionesMenu
+            .AsNoTracking()
+            .Where(x =>
+                rolIds.Contains(x.RolId) &&
+                x.Activo &&
+                x.OpcionMenu.Activo)
+            .Select(x => x.OpcionMenu)
+            .Distinct()
+            .OrderBy(x => x.Orden)
+            .ThenBy(x => x.Nombre)
+            .ToListAsync(cancellationToken);
+
+        return ConstruirArbol(
+            opciones,
+            null);
     }
 
     private async Task ValidarOpcionAsync(
@@ -315,4 +356,6 @@ public sealed class RolOpcionMenuService(
             })
             .ToList();
     }
+    
+    
 }
