@@ -13,9 +13,9 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 
-// Mapa de títulos conocidos para convertir slugs en títulos legibles
 const titleMap: Record<string, string> = {
   dashboard: "Inicio",
+  analytics: "Analítica",
   recepcion: "Recepción",
   pacientes: "Pacientes",
   admisiones: "Admisiones",
@@ -32,10 +32,12 @@ const titleMap: Record<string, string> = {
   personas: "Personas",
   usuarios: "Usuarios",
   roles: "Roles y Permisos",
+  "opciones-menu": "Opciones de Menú",
   auditoria: "Auditoría de Sistema",
   sesiones: "Sesiones Activas",
   "recursos-humanos": "Recursos Humanos",
   empleados: "Personal / Empleados",
+  "asignaciones-empleado": "Asignaciones",
   cargos: "Cargos y Puestos",
   especialidades: "Especialidades",
   "tipos-area": "Tipos de Área",
@@ -50,6 +52,9 @@ const titleMap: Record<string, string> = {
   general: "Configuración General",
   cajas: "Gestión de Cajas",
   turnos: "Turnos de Caja",
+  movimientos: "Movimientos",
+  arqueos: "Arqueos",
+  cobros: "Cobros",
 };
 
 export function AppBreadcrumbs() {

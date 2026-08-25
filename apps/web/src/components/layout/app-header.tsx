@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation";
 import { User, KeyRound, LogOut, LoaderCircle, Shield } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
-import { AppBreadcrumbs } from "@/components/layout/app-breadcrumbs";
-import { ThemeToggle } from "@/components/layout/theme-toggle";
-import { NotificationsPopover } from "@/components/layout/notifications-popover";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { AppBreadcrumbs } from "./app-breadcrumbs";
+import { ThemeToggle } from "./theme-toggle";
+import { NotificationsPopover } from "./notifications-popover";
 import {
   DropdownMenu,
   DropdownMenuContent,

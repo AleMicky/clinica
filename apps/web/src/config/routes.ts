@@ -1,7 +1,22 @@
 export const ROUTES = {
+  AUTH: {
+    LOGIN: "/login",
+  },
   HOME: {
     DASHBOARD: "/dashboard",
     ANALYTICS: "/dashboard/analytics",
+    PERFIL: "/dashboard/perfil",
+  },
+  RECEPCION: {
+    ROOT: "/recepcion",
+    PACIENTES: "/recepcion/pacientes",
+    ADMISIONES: "/recepcion/admisiones",
+  },
+  SERVICIOS: {
+    ROOT: "/servicios",
+    CATEGORIAS: "/servicios/categorias",
+    TARIFARIOS: "/servicios/tarifarios",
+    CONVENIOS: "/servicios/convenios",
   },
   SEGURIDAD: {
     ROOT: "/seguridad",
@@ -39,9 +54,13 @@ export const ROUTES = {
     MOVIMIENTOS: "/cajas/movimientos",
     ARQUEOS: "/cajas/arqueos",
   },
+  VENTAS: {
+    ROOT: "/ventas",
+  },
   COBROS: {
     ROOT: "/cobros",
   },
-} as const
+} as const;
 
-export type AppRoutes = typeof ROUTES
+export type AppRoutes = typeof ROUTES;
+
