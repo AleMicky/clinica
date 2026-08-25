@@ -39,11 +39,6 @@
     <Folder Include="Modules\Cajas\Caja\Mappers\" />
     <Folder Include="Modules\Cajas\Caja\Services\" />
     <Folder Include="Modules\Cajas\Caja\Validators\" />
-    <Folder Include="Modules\Cajas\CierreCaja\Dtos\" />
-    <Folder Include="Modules\Cajas\CierreCaja\Endpoints\" />
-    <Folder Include="Modules\Cajas\CierreCaja\Mappers\" />
-    <Folder Include="Modules\Cajas\CierreCaja\Services\" />
-    <Folder Include="Modules\Cajas\CierreCaja\Validators\" />
     <Folder Include="Modules\Cajas\Cobro\Dtos\" />
     <Folder Include="Modules\Cajas\Cobro\Endpoints\" />
     <Folder Include="Modules\Cajas\Cobro\Mappers\" />
