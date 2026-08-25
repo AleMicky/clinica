@@ -2,7 +2,7 @@ import { VentaModuleView } from "@/modules/ventas";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Ventas y Facturación | MediServ",
+  title: "Ventas y Facturación | Atenea Servicios",
   description: "Módulo de gestión de ventas, comprobantes y distribución de pagadores.",
 };
 

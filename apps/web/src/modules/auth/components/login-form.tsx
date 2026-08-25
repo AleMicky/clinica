@@ -77,8 +77,8 @@ export function LoginForm() {
                     <Receipt className="size-5" />
                 </div>
                 <div>
-                    <h1 className="text-lg font-bold">MediServ</h1>
-                    <p className="text-xs text-muted-foreground">Venta y Facturación de Servicios</p>
+                    <h1 className="text-lg font-bold">Atenea Servicios</h1>
+                    <p className="text-xs text-muted-foreground">Sistema de Ventas de Servicios</p>
                 </div>
             </div>
 

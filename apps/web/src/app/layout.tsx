@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MediServ - Sistema de Gestión Clínica",
-  description: "Plataforma integral de gestión hospitalaria y médica",
+  title: "Atenea Servicios - Sistema de Ventas de Servicios",
+  description: "Plataforma integral de ventas y facturación de servicios",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

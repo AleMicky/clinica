@@ -17,8 +17,8 @@ export default function LoginPage() {
                         <Receipt className="size-6" />
                     </div>
                     <div>
-                        <h1 className="text-xl font-bold tracking-tight">MediServ</h1>
-                        <p className="text-xs text-slate-400 font-medium">Venta y Facturación de Servicios Clínicos</p>
+                        <h1 className="text-xl font-bold tracking-tight">Atenea Servicios</h1>
+                        <p className="text-xs text-slate-400 font-medium">Sistema de Ventas de Servicios</p>
                     </div>
                 </div>
 
@@ -83,7 +83,7 @@ export default function LoginPage() {
 
                 {/* Footer Info */}
                 <div className="relative z-10 flex items-center justify-between text-xs text-slate-400 pt-6 border-t border-white/10">
-                    <span>© {new Date().getFullYear()} MediServ. Todos los derechos reservados.</span>
+                    <span>© {new Date().getFullYear()} Atenea Servicios. Todos los derechos reservados.</span>
                     <span className="flex items-center gap-1.5 text-slate-400">
                         <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
                         Caja y Recepción operativas

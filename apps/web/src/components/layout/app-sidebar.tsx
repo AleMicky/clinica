@@ -186,10 +186,10 @@ export function AppSidebar({ variant = "inset", ...props }: React.ComponentProps
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-bold tracking-tight text-sidebar-foreground">
-                MediServ
+                Atenea Servicios
               </span>
               <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                Sistema Clínico
+                Sistema de Ventas
               </span>
             </div>
           </Link>
