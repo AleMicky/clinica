@@ -9,6 +9,8 @@ public abstract record DevolucionCobroRequest
 {
     public required int CobroId { get; init; }
     public required int TurnoCajaId { get; init; }
+    public required int MetodoPagoId { get; init; }
+    public required int MonedaId { get; init; }
     public required DateTime FechaHora { get; init; }
     public required decimal Monto { get; init; }
     public required string Motivo { get; init; }
@@ -24,6 +26,8 @@ public sealed record DevolucionCobroResponse : AuditableResponse
     public string Numero { get; init; } = string.Empty;
     public CobroInfo? Cobro { get; init; }
     public TurnoCajaInfo? TurnoCaja { get; init; }
+    public MetodoPagoInfo? MetodoPago { get; init; }
+    public MonedaInfo? Moneda { get; init; }
     public DateTime FechaHora { get; init; }
     public decimal Monto { get; init; }
     public string Motivo { get; init; } = string.Empty;
@@ -36,4 +40,19 @@ public sealed record CobroInfo
     public DateTime FechaHora { get; init; }
     public decimal Total { get; init; }
     public EstadoCobro Estado { get; init; }
+}
+
+public sealed record MetodoPagoInfo
+{
+    public int Id { get; init; }
+    public string Codigo { get; init; } = string.Empty;
+    public string Nombre { get; init; } = string.Empty;
+}
+
+public sealed record MonedaInfo
+{
+    public int Id { get; init; }
+    public string Codigo { get; init; } = string.Empty;
+    public string Nombre { get; init; } = string.Empty;
+    public string? Simbolo { get; init; }
 }

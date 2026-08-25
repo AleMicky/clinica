@@ -17,6 +17,14 @@ public abstract class DevolucionCobroRequestValidator<TRequest>
             .GreaterThan(0)
             .WithMessage("El turno de caja es obligatorio.");
 
+        RuleFor(x => x.MetodoPagoId)
+            .GreaterThan(0)
+            .WithMessage("El método de pago es obligatorio.");
+
+        RuleFor(x => x.MonedaId)
+            .GreaterThan(0)
+            .WithMessage("La moneda es obligatoria.");
+
         RuleFor(x => x.FechaHora)
             .NotEqual(default(DateTime))
             .WithMessage("La fecha y hora de la devolución son obligatorias.");

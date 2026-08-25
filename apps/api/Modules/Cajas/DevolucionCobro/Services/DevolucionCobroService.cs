@@ -80,6 +80,8 @@ public sealed class DevolucionCobroService(
         await ValidarFksAsync(
             request.CobroId,
             request.TurnoCajaId,
+            request.MetodoPagoId,
+            request.MonedaId,
             cancellationToken);
 
         var entity = MapToNewEntity(request);
@@ -124,6 +126,8 @@ public sealed class DevolucionCobroService(
         await ValidarFksAsync(
             request.CobroId,
             request.TurnoCajaId,
+            request.MetodoPagoId,
+            request.MonedaId,
             cancellationToken);
 
         MapToExistingEntity(request, entity);
@@ -155,7 +159,9 @@ public sealed class DevolucionCobroService(
         return Entities
             .Include(x => x.Cobro)
             .Include(x => x.TurnoCaja).ThenInclude(t => t.Caja)
-            .Include(x => x.TurnoCaja).ThenInclude(t => t.Empleado).ThenInclude(e => e.Persona);
+            .Include(x => x.TurnoCaja).ThenInclude(t => t.Empleado).ThenInclude(e => e.Persona)
+            .Include(x => x.MetodoPago)
+            .Include(x => x.Moneda);
     }
 
     private IQueryable<DevolucionCobroEntity> ApplyOrder(
@@ -191,6 +197,8 @@ public sealed class DevolucionCobroService(
             Numero = entity.Numero,
             Cobro = MapCobroInfo(entity.Cobro),
             TurnoCaja = MapTurnoCajaInfo(entity.TurnoCaja),
+            MetodoPago = MapMetodoPagoInfo(entity.MetodoPago),
+            Moneda = MapMonedaInfo(entity.Moneda),
             FechaHora = entity.FechaHora,
             Monto = entity.Monto,
             Motivo = entity.Motivo,
@@ -223,6 +231,8 @@ public sealed class DevolucionCobroService(
     private async Task ValidarFksAsync(
         int cobroId,
         int turnoCajaId,
+        int metodoPagoId,
+        int monedaId,
         CancellationToken cancellationToken)
     {
         var existeCobro = await DbContext.Set<CobroEntity>()
@@ -240,6 +250,22 @@ public sealed class DevolucionCobroService(
 
         if (!existeTurno)
             throw new NotFoundException("TurnoCaja", turnoCajaId);
+
+        var existeMetodoPago = await DbContext.Set<Clinica.Api.Modules.Parametros.MetodoPago.Entity.MetodoPago>()
+            .AnyAsync(
+                x => x.Id == metodoPagoId && x.Activo,
+                cancellationToken);
+
+        if (!existeMetodoPago)
+            throw new NotFoundException("MetodoPago", metodoPagoId);
+
+        var existeMoneda = await DbContext.Set<Clinica.Api.Modules.Parametros.Moneda.Entity.Moneda>()
+            .AnyAsync(
+                x => x.Id == monedaId && x.Activo,
+                cancellationToken);
+
+        if (!existeMoneda)
+            throw new NotFoundException("Moneda", monedaId);
     }
 
     private static void Normalizar(DevolucionCobroEntity entity)
@@ -273,7 +299,10 @@ public sealed class DevolucionCobroService(
             Caja = MapCajaInfo(turno.Caja),
             Empleado = MapEmpleadoInfo(turno.Empleado),
             FechaHoraApertura = turno.FechaHoraApertura,
+            MontoInicial = turno.MontoInicial,
+            ObservacionApertura = turno.ObservacionApertura,
             FechaHoraCierre = turno.FechaHoraCierre,
+            ObservacionCierre = turno.ObservacionCierre,
             Estado = turno.Estado
         };
     }
@@ -311,6 +340,35 @@ public sealed class DevolucionCobroService(
             Id = empleado.Id,
             CodigoEmpleado = empleado.CodigoEmpleado,
             NombreCompleto = nombreCompleto
+        };
+    }
+
+    private static MetodoPagoInfo? MapMetodoPagoInfo(
+        Clinica.Api.Modules.Parametros.MetodoPago.Entity.MetodoPago? metodoPago)
+    {
+        if (metodoPago is null)
+            return null;
+
+        return new MetodoPagoInfo
+        {
+            Id = metodoPago.Id,
+            Codigo = metodoPago.Codigo,
+            Nombre = metodoPago.Nombre
+        };
+    }
+
+    private static MonedaInfo? MapMonedaInfo(
+        Clinica.Api.Modules.Parametros.Moneda.Entity.Moneda? moneda)
+    {
+        if (moneda is null)
+            return null;
+
+        return new MonedaInfo
+        {
+            Id = moneda.Id,
+            Codigo = moneda.Codigo,
+            Nombre = moneda.Nombre,
+            Simbolo = moneda.Simbolo
         };
     }
 

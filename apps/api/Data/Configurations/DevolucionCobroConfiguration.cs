@@ -23,6 +23,12 @@ public sealed class DevolucionCobroConfiguration
         builder.Property(x => x.TurnoCajaId)
             .IsRequired();
 
+        builder.Property(x => x.MetodoPagoId)
+            .IsRequired();
+
+        builder.Property(x => x.MonedaId)
+            .IsRequired();
+
         builder.Property(x => x.FechaHora)
             .IsRequired();
 
@@ -40,6 +46,8 @@ public sealed class DevolucionCobroConfiguration
 
         builder.HasIndex(x => x.CobroId);
         builder.HasIndex(x => x.TurnoCajaId);
+        builder.HasIndex(x => x.MetodoPagoId);
+        builder.HasIndex(x => x.MonedaId);
 
         builder.HasOne(x => x.Cobro)
             .WithMany()
@@ -49,6 +57,16 @@ public sealed class DevolucionCobroConfiguration
         builder.HasOne(x => x.TurnoCaja)
             .WithMany()
             .HasForeignKey(x => x.TurnoCajaId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(x => x.MetodoPago)
+            .WithMany()
+            .HasForeignKey(x => x.MetodoPagoId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(x => x.Moneda)
+            .WithMany()
+            .HasForeignKey(x => x.MonedaId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }
