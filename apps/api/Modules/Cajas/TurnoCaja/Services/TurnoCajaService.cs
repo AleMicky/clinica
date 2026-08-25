@@ -20,27 +20,19 @@ public sealed class TurnoCajaService(AppDbContext dbContext)
     public async Task<PagedResult<TurnoCajaResponse>> ListarAsync(
         PaginationRequest pagination,
         string? search,
-        int? cajaId,
         CancellationToken cancellationToken = default)
     {
         var query = BuildQuery()
             .AsNoTracking()
             .Where(x => x.Activo);
 
-        if (cajaId.HasValue)
-            query = query.Where(x => x.CajaId == cajaId.Value);
-
         var normalizedSearch = string.IsNullOrWhiteSpace(search)
             ? null
             : search.Trim();
 
         query = ApplySearch(query, normalizedSearch);
-
         var totalItems = await query.CountAsync(cancellationToken);
-
-        var offset = (pagination.ValidPage - 1)
-                     * pagination.ValidPageSize;
-
+        var offset = (pagination.ValidPage - 1) * pagination.ValidPageSize;
         var entities = await ApplyOrder(query)
             .Skip(offset)
             .Take(pagination.ValidPageSize)
