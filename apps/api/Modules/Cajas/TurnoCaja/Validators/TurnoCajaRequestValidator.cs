@@ -22,6 +22,14 @@ public abstract class TurnoCajaRequestValidator<TRequest>
             .NotEqual(default(DateTime))
             .WithMessage("La fecha y hora de apertura son obligatorias.");
 
+        RuleFor(x => x.MontoInicial)
+            .GreaterThanOrEqualTo(0)
+            .WithMessage("El monto inicial no puede ser negativo.");
+
+        RuleFor(x => x.ObservacionApertura)
+            .MaximumLength(500)
+            .WithMessage("La observación de apertura no puede exceder 500 caracteres.");
+
         RuleFor(x => x.FechaHoraCierre)
             .GreaterThanOrEqualTo(x => x.FechaHoraApertura)
             .WithMessage("La fecha y hora de cierre no puede ser anterior a la apertura.")
@@ -35,6 +43,10 @@ public abstract class TurnoCajaRequestValidator<TRequest>
         RuleFor(x => x.Estado)
             .IsInEnum()
             .WithMessage("El estado del turno no es válido.");
+
+        RuleFor(x => x.ObservacionCierre)
+            .MaximumLength(500)
+            .WithMessage("La observación de cierre no puede exceder 500 caracteres.");
     }
 }
 

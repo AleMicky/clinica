@@ -14,12 +14,20 @@ public sealed class TurnoCaja : AuditableEntity
 
     public int EmpleadoId { get; set; }
     public Empleado Empleado { get; set; } = null!;
-
+    
+    // APERTURA
     public DateTime FechaHoraApertura { get; set; }
+
+    public decimal MontoInicial { get; set; }
+
+    public string? ObservacionApertura { get; set; }
+
+    // CIERRE
     public DateTime? FechaHoraCierre { get; set; }
 
+    public string? ObservacionCierre { get; set; }
     public EstadoTurnoCaja Estado { get; set; }
-    
+     
     public ICollection<CobroEntity> Cobros { get; set; } = [];
     public ICollection<MovimientoCajaEntity> Movimientos { get; set; } = [];
     public ICollection<ArqueoCajaEntity> Arqueos { get; set; } = [];

@@ -8,7 +8,10 @@ public abstract record TurnoCajaRequest
     public required int CajaId { get; init; }
     public required int EmpleadoId { get; init; }
     public required DateTime FechaHoraApertura { get; init; }
+    public required decimal MontoInicial { get; init; }
+    public string? ObservacionApertura { get; init; }
     public DateTime? FechaHoraCierre { get; init; }
+    public string? ObservacionCierre { get; init; }
     public required EstadoTurnoCaja Estado { get; init; }
 }
 
@@ -22,7 +25,10 @@ public sealed record TurnoCajaResponse : AuditableResponse
     public CajaInfo? Caja { get; init; }
     public EmpleadoInfo? Empleado { get; init; }
     public DateTime FechaHoraApertura { get; init; }
+    public decimal MontoInicial { get; init; }
+    public string? ObservacionApertura { get; init; }
     public DateTime? FechaHoraCierre { get; init; }
+    public string? ObservacionCierre { get; init; }
     public EstadoTurnoCaja Estado { get; init; }
 }
 
@@ -46,6 +52,9 @@ public sealed record TurnoCajaInfo
     public CajaInfo? Caja { get; init; }
     public EmpleadoInfo? Empleado { get; init; }
     public DateTime FechaHoraApertura { get; init; }
+    public decimal MontoInicial { get; init; }
+    public string? ObservacionApertura { get; init; }
     public DateTime? FechaHoraCierre { get; init; }
+    public string? ObservacionCierre { get; init; }
     public EstadoTurnoCaja Estado { get; init; }
 }

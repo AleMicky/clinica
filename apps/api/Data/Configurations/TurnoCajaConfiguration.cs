@@ -26,7 +26,16 @@ public sealed class TurnoCajaConfiguration
         builder.Property(x => x.FechaHoraApertura)
             .IsRequired();
 
+        builder.Property(x => x.MontoInicial)
+            .HasPrecision(18, 2);
+
+        builder.Property(x => x.ObservacionApertura)
+            .HasMaxLength(500);
+
         builder.Property(x => x.FechaHoraCierre);
+
+        builder.Property(x => x.ObservacionCierre)
+            .HasMaxLength(500);
 
         builder.Property(x => x.Estado)
             .IsRequired();
