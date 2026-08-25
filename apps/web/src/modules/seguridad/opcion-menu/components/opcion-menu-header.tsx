@@ -2,40 +2,28 @@
 
 import * as React from "react";
 import { Button } from "@/components/ui/button";
-import {
-  ListTree,
-  Plus,
-  RefreshCw,
-  Table as TableIcon,
-  FolderTree,
-} from "lucide-react";
-
-export type ViewMode = "tree" | "table";
+import { ListTree, Plus, RefreshCw } from "lucide-react";
 
 interface OpcionMenuHeaderProps {
-  viewMode: ViewMode;
-  onViewModeChange: (mode: ViewMode) => void;
   onNew: () => void;
   onRefresh?: () => void;
   isRefreshing?: boolean;
 }
 
 export function OpcionMenuHeader({
-  viewMode,
-  onViewModeChange,
   onNew,
   onRefresh,
   isRefreshing = false,
 }: OpcionMenuHeaderProps) {
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-card via-card to-primary/5 px-4 py-3 rounded-xl border border-border/70 shadow-2xs">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-card via-card to-primary/5 px-4 py-3 rounded-xl border border-border/70 shadow-2xs">
       <div className="flex items-center gap-3">
-        <div className="size-10 rounded-xl bg-gradient-to-br from-primary/20 via-primary/10 to-blue-500/20 text-primary flex items-center justify-center border border-primary/20 shadow-2xs shrink-0">
-          <ListTree className="size-5" />
+        <div className="size-9 rounded-xl bg-gradient-to-br from-primary/20 via-primary/10 to-blue-500/20 text-primary flex items-center justify-center border border-primary/20 shadow-2xs shrink-0">
+          <ListTree className="size-4.5" />
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-lg font-bold text-foreground tracking-tight">
+            <h1 className="text-base font-bold text-foreground tracking-tight">
               Opciones de Menú
             </h1>
             <span className="text-[10px] font-semibold bg-primary/10 text-primary px-2 py-0.5 rounded-full border border-primary/20">
@@ -43,41 +31,12 @@ export function OpcionMenuHeader({
             </span>
           </div>
           <p className="text-xs text-muted-foreground line-clamp-1">
-            Administración jerárquica de la navegación, accesos directos, módulos e iconos del sistema.
+            Estructura jerárquica de navegación, módulos, accesos directos e iconos.
           </p>
         </div>
       </div>
 
-      <div className="flex items-center gap-2.5 self-end md:self-auto flex-wrap shrink-0">
-        {/* Toggle View Mode */}
-        <div className="flex items-center bg-muted/60 p-0.5 rounded-lg border border-border/60">
-          <Button
-            type="button"
-            variant={viewMode === "tree" ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => onViewModeChange("tree")}
-            className={`h-7 px-2.5 text-xs font-medium gap-1.5 cursor-pointer rounded-md ${
-              viewMode === "tree" ? "shadow-2xs bg-background text-foreground" : "text-muted-foreground"
-            }`}
-          >
-            <FolderTree className="size-3.5" />
-            <span>Árbol</span>
-          </Button>
-
-          <Button
-            type="button"
-            variant={viewMode === "table" ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => onViewModeChange("table")}
-            className={`h-7 px-2.5 text-xs font-medium gap-1.5 cursor-pointer rounded-md ${
-              viewMode === "table" ? "shadow-2xs bg-background text-foreground" : "text-muted-foreground"
-            }`}
-          >
-            <TableIcon className="size-3.5" />
-            <span>Tabla</span>
-          </Button>
-        </div>
-
+      <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
         {onRefresh && (
           <Button
             variant="outline"

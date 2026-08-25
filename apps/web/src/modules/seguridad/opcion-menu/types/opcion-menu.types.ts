@@ -55,10 +55,3 @@ export interface PagedResult<T> {
   hasPreviousPage?: boolean;
   hasNextPage?: boolean;
 }
-
-export interface OpcionMenuMetrics {
-  totalOpciones: number;
-  modulosPrincipales: number;
-  submenus: number;
-  inactivas: number;
-}

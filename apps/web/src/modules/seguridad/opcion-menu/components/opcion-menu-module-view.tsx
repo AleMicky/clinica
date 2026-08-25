@@ -9,9 +9,8 @@ import {
   useOpcionesMenu,
   useOpcionesMenuTree,
 } from "../hooks/use-opcion-menu";
-import { OpcionMenuHeader, type ViewMode } from "./opcion-menu-header";
+import { OpcionMenuHeader } from "./opcion-menu-header";
 import { OpcionMenuTreeView } from "./opcion-menu-tree-view";
-import { OpcionMenuTable } from "./opcion-menu-table";
 import { OpcionMenuFormDialog } from "./opcion-menu-form-dialog";
 import { OpcionMenuDeleteDialog } from "./opcion-menu-delete-dialog";
 import { AuditDialog, type AuditInfo } from "@/components/shared/audit-dialog";
@@ -21,11 +20,6 @@ import type {
 } from "../types/opcion-menu.types";
 
 export function OpcionMenuModuleView() {
-  const [viewMode, setViewMode] = React.useState<ViewMode>("tree");
-  const [search, setSearch] = React.useState("");
-  const [page, setPage] = React.useState(1);
-  const pageSize = 15;
-
   // Dialogs state
   const [formOpen, setFormOpen] = React.useState(false);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
@@ -39,25 +33,18 @@ export function OpcionMenuModuleView() {
 
   // Queries
   const {
-    data: pagedData,
-    isLoading: isPagedLoading,
-    refetch: refetchPaged,
-    isRefetching: isPagedRefetching,
-  } = useOpcionesMenu({
-    page,
-    pageSize,
-    search: search ? search : undefined,
-  });
-
-  const {
     data: treeData,
     isLoading: isTreeLoading,
     refetch: refetchTree,
     isRefetching: isTreeRefetching,
   } = useOpcionesMenuTree();
 
-  // Fetch all options for parents
-  const { data: allOptionsData, refetch: refetchAll } = useOpcionesMenu({
+  // Fetch all options for parents selection and flat lookup
+  const {
+    data: allOptionsData,
+    refetch: refetchAll,
+    isRefetching: isAllRefetching,
+  } = useOpcionesMenu({
     page: 1,
     pageSize: 300,
   });
@@ -70,14 +57,8 @@ export function OpcionMenuModuleView() {
   const allItems = allOptionsData?.items || [];
 
   const handleRefresh = () => {
-    refetchPaged();
     refetchTree();
     refetchAll();
-  };
-
-  const handleSearchChange = (val: string) => {
-    setSearch(val);
-    setPage(1);
   };
 
   const handleOpenCreate = () => {
@@ -93,7 +74,6 @@ export function OpcionMenuModuleView() {
   };
 
   const handleOpenEdit = (item: OpcionMenuResponse | OpcionMenuTreeResponse) => {
-    // Find full response if tree item
     const fullItem = allItems.find((x) => x.id === item.id) || item;
     setSelectedOpcion(fullItem);
     setDefaultParentId(null);
@@ -168,47 +148,30 @@ export function OpcionMenuModuleView() {
     }
   };
 
-  const isRefreshing = isPagedRefetching || isTreeRefetching;
+  const isRefreshing = isTreeRefetching || isAllRefetching;
 
   return (
     <div className="flex flex-col gap-4 w-full">
-      {/* 1. Module Header with view toggle */}
+      {/* 1. Module Header */}
       <OpcionMenuHeader
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
         onNew={handleOpenCreate}
         onRefresh={handleRefresh}
         isRefreshing={isRefreshing}
       />
 
-      {/* 2. Main View Mode (Tree or Table) */}
-      {viewMode === "tree" ? (
-        <OpcionMenuTreeView
-          treeData={treeData || []}
-          flatData={allItems}
-          isLoading={isTreeLoading}
-          onAddChild={handleAddChild}
-          onEdit={handleOpenEdit}
-          onToggleStatus={handleToggleStatus}
-          onDelete={handleOpenDelete}
-          onViewAudit={handleViewAudit}
-        />
-      ) : (
-        <OpcionMenuTable
-          data={pagedData}
-          allOptions={allItems}
-          isLoading={isPagedLoading}
-          search={search}
-          onSearchChange={handleSearchChange}
-          onPageChange={setPage}
-          onEdit={handleOpenEdit}
-          onToggleStatus={handleToggleStatus}
-          onDelete={handleOpenDelete}
-          onViewAudit={handleViewAudit}
-        />
-      )}
+      {/* 2. Hierarchical Tree Explorer */}
+      <OpcionMenuTreeView
+        treeData={treeData || []}
+        flatData={allItems}
+        isLoading={isTreeLoading}
+        onAddChild={handleAddChild}
+        onEdit={handleOpenEdit}
+        onToggleStatus={handleToggleStatus}
+        onDelete={handleOpenDelete}
+        onViewAudit={handleViewAudit}
+      />
 
-      {/* 4. Form Dialog (Create / Edit) */}
+      {/* 3. Form Dialog (Create / Edit) */}
       <OpcionMenuFormDialog
         open={formOpen}
         onOpenChange={setFormOpen}
@@ -217,7 +180,7 @@ export function OpcionMenuModuleView() {
         allOptions={allItems}
       />
 
-      {/* 5. Delete Confirmation Dialog */}
+      {/* 4. Delete Confirmation Dialog */}
       <OpcionMenuDeleteDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
@@ -226,7 +189,7 @@ export function OpcionMenuModuleView() {
         isLoading={deleteMutation.isPending}
       />
 
-      {/* 6. Shared Audit Dialog */}
+      {/* 5. Shared Audit Dialog */}
       <AuditDialog
         open={auditOpen}
         onOpenChange={setAuditOpen}
