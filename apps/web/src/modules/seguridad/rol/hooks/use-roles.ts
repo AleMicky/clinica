@@ -9,6 +9,7 @@ import {
   updateRol,
 } from "../api/rol.api";
 import { rolKeys } from "../api/rol.key";
+import { opcionMenuKeys } from "@/modules/seguridad/opcion-menu/api/opcion-menu.key";
 import type {
   CreateRolRequest,
   RolQueryParams,
@@ -37,6 +38,7 @@ export function useCreateRol() {
     mutationFn: (data: CreateRolRequest) => createRol(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: rolKeys.all });
+      queryClient.invalidateQueries({ queryKey: opcionMenuKeys.all });
     },
   });
 }
@@ -50,6 +52,7 @@ export function useUpdateRol() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: rolKeys.all });
       queryClient.invalidateQueries({ queryKey: rolKeys.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: opcionMenuKeys.all });
     },
   });
 }
@@ -61,6 +64,7 @@ export function useDeleteRol() {
     mutationFn: (id: number) => deleteRol(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: rolKeys.all });
+      queryClient.invalidateQueries({ queryKey: opcionMenuKeys.all });
     },
   });
 }

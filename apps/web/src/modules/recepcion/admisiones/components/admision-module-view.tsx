@@ -158,8 +158,12 @@ export function AdmisionModuleView() {
         `Estado de la admisión #${selectedAdmisionForStatus.numero} actualizado a "${EstadoAdmisionLabels[targetEstado]}".`
       );
       refetch();
-    } catch {
-      toast.error("No se pudo actualizar el estado de la admisión.");
+    } catch (error: any) {
+      const msg =
+        error?.response?.data?.detail ||
+        error?.message ||
+        "No se pudo actualizar el estado de la admisión.";
+      toast.error(msg);
     }
   };
 
@@ -191,8 +195,12 @@ export function AdmisionModuleView() {
         `Admisión #${admision.numero} marcada como "${EstadoAdmisionLabels[targetEstado]}".`
       );
       refetch();
-    } catch {
-      toast.error("No se pudo actualizar el estado de la admisión.");
+    } catch (error: any) {
+      const msg =
+        error?.response?.data?.detail ||
+        error?.message ||
+        "No se pudo actualizar el estado de la admisión.";
+      toast.error(msg);
     } finally {
       setStatusChangeCandidate(null);
       setConfirmStatusDialogOpen(false);
@@ -206,8 +214,12 @@ export function AdmisionModuleView() {
       await deleteMutation.mutateAsync(admisionToDeleteId);
       toast.success("Admisión cancelada correctamente.");
       refetch();
-    } catch {
-      toast.error("Ocurrió un error al cancelar la admisión.");
+    } catch (error: any) {
+      const msg =
+        error?.response?.data?.detail ||
+        error?.message ||
+        "Ocurrió un error al cancelar la admisión.";
+      toast.error(msg);
     } finally {
       setAdmisionToDeleteId(null);
       setDeleteDialogOpen(false);

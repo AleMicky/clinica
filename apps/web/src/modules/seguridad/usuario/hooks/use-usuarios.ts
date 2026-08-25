@@ -9,6 +9,7 @@ import {
   updateUsuario,
 } from "../api/usuario.api";
 import { usuarioKeys } from "../api/usuario.key";
+import { opcionMenuKeys } from "@/modules/seguridad/opcion-menu/api/opcion-menu.key";
 import type {
   CreateUsuarioRequest,
   UpdateUsuarioRequest,
@@ -37,6 +38,7 @@ export function useCreateUsuario() {
     mutationFn: (data: CreateUsuarioRequest) => createUsuario(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: usuarioKeys.all });
+      queryClient.invalidateQueries({ queryKey: opcionMenuKeys.all });
     },
   });
 }
@@ -50,6 +52,7 @@ export function useUpdateUsuario() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: usuarioKeys.all });
       queryClient.invalidateQueries({ queryKey: usuarioKeys.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: opcionMenuKeys.all });
     },
   });
 }
@@ -61,6 +64,7 @@ export function useDeleteUsuario() {
     mutationFn: (id: number) => deleteUsuario(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: usuarioKeys.all });
+      queryClient.invalidateQueries({ queryKey: opcionMenuKeys.all });
     },
   });
 }

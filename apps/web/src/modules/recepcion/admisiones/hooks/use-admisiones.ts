@@ -46,8 +46,8 @@ export function useCreateAdmision() {
   return useMutation({
     mutationFn: (data: CreateAdmisionRequest) => createAdmision(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: admisionKeys.all, refetchType: "all" });
-      queryClient.invalidateQueries({ queryKey: ["ventas"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: admisionKeys.all });
+      queryClient.invalidateQueries({ queryKey: ["ventas"] });
     },
   });
 }
@@ -58,9 +58,9 @@ export function useCreateAdmisionConPaciente() {
   return useMutation({
     mutationFn: (data: CreateAdmisionConPacienteRequest) => createAdmisionConPaciente(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: admisionKeys.all, refetchType: "all" });
-      queryClient.invalidateQueries({ queryKey: ["pacientes"], refetchType: "all" });
-      queryClient.invalidateQueries({ queryKey: ["ventas"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: admisionKeys.all });
+      queryClient.invalidateQueries({ queryKey: ["pacientes"] });
+      queryClient.invalidateQueries({ queryKey: ["ventas"] });
     },
   });
 }
@@ -72,9 +72,9 @@ export function useUpdateAdmision() {
     mutationFn: ({ id, data }: { id: number; data: UpdateAdmisionRequest }) =>
       updateAdmision(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: admisionKeys.all, refetchType: "all" });
-      queryClient.invalidateQueries({ queryKey: admisionKeys.detail(variables.id), refetchType: "all" });
-      queryClient.invalidateQueries({ queryKey: ["ventas"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: admisionKeys.all });
+      queryClient.invalidateQueries({ queryKey: admisionKeys.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: ["ventas"] });
     },
   });
 }
@@ -85,8 +85,8 @@ export function useDeleteAdmision() {
   return useMutation({
     mutationFn: (id: number) => deleteAdmision(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: admisionKeys.all, refetchType: "all" });
-      queryClient.invalidateQueries({ queryKey: ["ventas"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: admisionKeys.all });
+      queryClient.invalidateQueries({ queryKey: ["ventas"] });
     },
   });
 }
@@ -98,10 +98,10 @@ export function useCambiarEstadoAdmision() {
     mutationFn: ({ id, data }: { id: number; data: CambiarEstadoRequest }) =>
       cambiarEstadoAdmision(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: admisionKeys.all, refetchType: "all" });
-      queryClient.invalidateQueries({ queryKey: admisionKeys.detail(variables.id), refetchType: "all" });
-      queryClient.invalidateQueries({ queryKey: ["ventas"], refetchType: "all" });
-      queryClient.invalidateQueries({ queryKey: ["cajas"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: admisionKeys.all });
+      queryClient.invalidateQueries({ queryKey: admisionKeys.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: ["ventas"] });
+      queryClient.invalidateQueries({ queryKey: ["cajas"] });
     },
   });
 }

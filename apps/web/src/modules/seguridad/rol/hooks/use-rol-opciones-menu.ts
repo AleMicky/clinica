@@ -9,6 +9,7 @@ import {
   quitarRolOpcionMenu,
 } from "../api/rol-opcion-menu.api";
 import { rolOpcionMenuKeys } from "../api/rol-opcion-menu.key";
+import { opcionMenuKeys } from "@/modules/seguridad/opcion-menu/api/opcion-menu.key";
 import type {
   AsignarRolOpcionMenuRequest,
   CreateRolOpcionMenuRequest,
@@ -49,6 +50,7 @@ export function useAsignarRolOpcionesMenu() {
       queryClient.invalidateQueries({
         queryKey: rolOpcionMenuKeys.tree(variables.rolId),
       });
+      queryClient.invalidateQueries({ queryKey: opcionMenuKeys.all });
     },
   });
 }
@@ -69,6 +71,7 @@ export function useCrearRolOpcionMenu() {
       queryClient.invalidateQueries({
         queryKey: rolOpcionMenuKeys.byRol(variables.rolId),
       });
+      queryClient.invalidateQueries({ queryKey: opcionMenuKeys.all });
     },
   });
 }
@@ -89,6 +92,7 @@ export function useQuitarRolOpcionMenu() {
       queryClient.invalidateQueries({
         queryKey: rolOpcionMenuKeys.byRol(variables.rolId),
       });
+      queryClient.invalidateQueries({ queryKey: opcionMenuKeys.all });
     },
   });
 }
