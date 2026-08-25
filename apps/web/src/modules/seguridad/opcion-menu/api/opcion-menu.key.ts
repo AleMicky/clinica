@@ -6,4 +6,5 @@ export const opcionMenuKeys = {
   tree: () => [...opcionMenuKeys.all, "tree"] as const,
   details: () => [...opcionMenuKeys.all, "detail"] as const,
   detail: (id: number) => [...opcionMenuKeys.details(), id] as const,
+  usuario: () => [...opcionMenuKeys.all, "usuario"] as const,
 };

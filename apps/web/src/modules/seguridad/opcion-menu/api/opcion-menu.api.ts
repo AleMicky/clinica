@@ -25,6 +25,13 @@ export async function getOpcionesMenuTree(): Promise<OpcionMenuTreeResponse[]> {
   return response.data;
 }
 
+export async function getMenuUsuario(): Promise<OpcionMenuTreeResponse[]> {
+  const response = await apiClient.get<OpcionMenuTreeResponse[]>(
+    "/menu/usuario"
+  );
+  return response.data;
+}
+
 export async function getOpcionMenuById(id: number): Promise<OpcionMenuResponse> {
   const response = await apiClient.get<OpcionMenuResponse>(
     `/opciones-menu/${id}`

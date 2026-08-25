@@ -5,6 +5,7 @@ import {
   activarOpcionMenu,
   createOpcionMenu,
   deleteOpcionMenu,
+  getMenuUsuario,
   getOpcionMenuById,
   getOpcionesMenu,
   getOpcionesMenuTree,
@@ -29,6 +30,15 @@ export function useOpcionesMenuTree() {
   return useQuery({
     queryKey: opcionMenuKeys.tree(),
     queryFn: () => getOpcionesMenuTree(),
+  });
+}
+
+export function useMenuUsuario(enabled = true) {
+  return useQuery({
+    queryKey: opcionMenuKeys.usuario(),
+    queryFn: () => getMenuUsuario(),
+    enabled,
+    staleTime: 1000 * 60 * 5, // 5 minutes cache
   });
 }
 
