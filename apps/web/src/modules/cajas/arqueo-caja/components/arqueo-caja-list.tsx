@@ -3,18 +3,13 @@
 import * as React from "react";
 import {
   Calculator,
-  Edit,
+  Pencil,
   Trash2,
-  Calendar,
   Clock,
-  User,
-  Vault,
-  ShieldCheck,
   CheckCircle2,
   AlertTriangle,
-  FileText,
-  CreditCard,
   Coins,
+  Vault,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -62,7 +57,10 @@ function getInitials(name?: string | null): string {
 }
 
 function formatCurrency(val?: number | null): string {
-  return `Bs. ${Number(val || 0).toLocaleString("es-BO", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `Bs. ${Number(val || 0).toLocaleString("es-BO", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 }
 
 export function ArqueoCajaList({
@@ -80,8 +78,6 @@ export function ArqueoCajaList({
   onEdit,
   onDelete,
 }: ArqueoCajaListProps) {
-  const totalPages = Math.ceil(totalItems / pageSize) || 1;
-
   const tabs: Array<{
     key: "TODOS" | "CUADRADOS" | "DIFERENCIA";
     label: string;
@@ -135,7 +131,7 @@ export function ArqueoCajaList({
           <SearchInput
             value={searchTerm}
             onChange={onSearchChange}
-            placeholder="Buscar por cajero, caja, turno, ID..."
+            placeholder="Buscar por cajero, caja, turno..."
             className="h-8 text-xs bg-background"
           />
         </div>
@@ -185,7 +181,6 @@ export function ArqueoCajaList({
 
             const isExacto = Math.abs(diferenciaNum) < 0.001;
             const isFaltante = diferenciaNum < -0.001;
-            const isSobrante = diferenciaNum > 0.001;
 
             return (
               <div
@@ -220,13 +215,21 @@ export function ArqueoCajaList({
                         {cajero}
                       </span>
 
-                      <span className="text-[10px] font-mono font-bold bg-primary/10 text-primary px-1.5 py-0.5 rounded border border-primary/20">
+                      <span className="text-[10px] font-mono font-bold bg-primary/10 text-primary px-1.5 py-0.5 rounded border border-primary/20 flex items-center gap-1">
+                        <Vault className="size-2.5" />
                         {cajaCodigo} · {caja}
                       </span>
 
                       {turno?.id && (
                         <span className="text-[10px] font-mono text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded border border-border/40">
                           #Turno-{turno.id}
+                        </span>
+                      )}
+
+                      {turno?.montoInicial !== undefined && turno?.montoInicial > 0 && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-mono font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                          <Coins className="size-2.5 text-emerald-600 dark:text-emerald-400" />
+                          Fondo: {formatCurrency(turno.montoInicial)}
                         </span>
                       )}
 
@@ -273,13 +276,13 @@ export function ArqueoCajaList({
 
                     {arq.observacion && (
                       <p className="text-[11px] text-muted-foreground italic line-clamp-1 pt-0.5">
-                        "{arq.observacion}"
+                        &quot;{arq.observacion}&quot;
                       </p>
                     )}
                   </div>
                 </div>
 
-                {/* Bloque Central / Derecho: Desglose de Totales & Acciones */}
+                {/* Bloque Derecho: Desglose de Totales & Acciones */}
                 <div className="flex items-center justify-between lg:justify-end gap-4 shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-border/40">
                   {/* Totales Conciliados */}
                   <div className="grid grid-cols-3 gap-3 text-left lg:text-right text-xs">
@@ -329,7 +332,7 @@ export function ArqueoCajaList({
                       className="size-7.5 text-muted-foreground hover:text-foreground hover:bg-accent cursor-pointer rounded-lg"
                       title="Editar arqueo"
                     >
-                      <Edit className="size-3.5" />
+                      <Pencil className="size-3.5" />
                     </Button>
                     <Button
                       variant="ghost"
@@ -348,7 +351,7 @@ export function ArqueoCajaList({
         </div>
       )}
 
-      {/* Paginación Condicional: Solo si hay más de 10 registros */}
+      {/* Paginación: Solo si hay más de 10 registros */}
       {totalItems > 10 && (
         <div className="pt-2">
           <DataTablePagination
@@ -357,6 +360,7 @@ export function ArqueoCajaList({
             totalItems={totalItems}
             onPageChange={onPageChange}
             onPageSizeChange={onPageSizeChange}
+            itemLabel="arqueos"
           />
         </div>
       )}

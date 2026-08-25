@@ -9,16 +9,13 @@ import {
   Loader2,
   Plus,
   Trash2,
-  Calendar,
   Clock,
-  User,
   Vault,
   Pencil,
   AlertCircle,
   FileText,
   CheckCircle2,
   AlertTriangle,
-  CreditCard,
   Coins,
 } from "lucide-react";
 import {
@@ -75,8 +72,24 @@ function toLocalDatetimeString(dateInput?: string | Date | null): string {
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
+function formatDatetime(dateStr?: string | null): string {
+  if (!dateStr) return "-";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return "-";
+  return d.toLocaleString("es-ES", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 function formatCurrency(val?: number | null): string {
-  return `Bs. ${Number(val || 0).toLocaleString("es-BO", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `Bs. ${Number(val || 0).toLocaleString("es-BO", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 }
 
 export function ArqueoCajaFormDialog({
@@ -284,11 +297,15 @@ export function ArqueoCajaFormDialog({
 
       onSuccessCallback?.();
       onOpenChange(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as {
+        response?: { data?: { detail?: string; message?: string } };
+        message?: string;
+      };
       const errorMsg =
-        error?.response?.data?.detail ||
-        error?.response?.data?.message ||
-        error?.message ||
+        err?.response?.data?.detail ||
+        err?.response?.data?.message ||
+        err?.message ||
         "Ocurrió un error al procesar el arqueo de caja.";
       toast.error(errorMsg);
     }
@@ -405,27 +422,50 @@ export function ArqueoCajaFormDialog({
 
           {/* Tarjeta de Resumen del Turno */}
           {selectedTurno && (
-            <div className="rounded-xl border border-amber-500/25 bg-amber-500/[0.04] p-3 flex items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="size-9 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-300 flex items-center justify-center font-bold shrink-0 border border-amber-500/30">
-                  <Vault className="size-4.5" />
+            <div className="rounded-xl border border-amber-500/25 bg-amber-500/[0.04] p-3.5 space-y-2 text-xs">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="size-9 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-300 flex items-center justify-center font-bold shrink-0 border border-amber-500/30">
+                    <Vault className="size-4.5" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="font-bold text-foreground truncate block">
+                      {selectedTurno.caja?.nombre || "Caja Principal"} ({selectedTurno.caja?.codigo || "CAJA"})
+                    </span>
+                    <span className="text-[11px] text-muted-foreground truncate block">
+                      Cajero: <strong className="text-foreground">{selectedTurno.empleado?.nombreCompleto || "Asignado"}</strong>
+                    </span>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <span className="font-bold text-foreground truncate block">
-                    {selectedTurno.caja?.nombre || "Caja Principal"} ({selectedTurno.caja?.codigo || "CAJA"})
-                  </span>
-                  <span className="text-[11px] text-muted-foreground truncate block">
-                    Cajero: <strong className="text-foreground">{selectedTurno.empleado?.nombreCompleto || "Asignado"}</strong>
-                  </span>
-                </div>
+
+                <Badge
+                  variant="outline"
+                  className="bg-background text-amber-800 dark:text-amber-300 border-amber-500/30 text-[10px] font-mono shrink-0"
+                >
+                  Turno #{selectedTurno.id}
+                </Badge>
               </div>
 
-              <Badge
-                variant="outline"
-                className="bg-background text-amber-800 dark:text-amber-300 border-amber-500/30 text-[10px] font-mono shrink-0"
-              >
-                Turno #{selectedTurno.id}
-              </Badge>
+              {/* Datos adicionales de apertura del turno */}
+              <div className="grid grid-cols-2 gap-2 pt-1 border-t border-amber-500/20 text-[11px]">
+                <div className="flex items-center gap-1.5 text-muted-foreground">
+                  <Clock className="size-3 text-muted-foreground/70" />
+                  <span>Apertura:</span>
+                  <span className="font-mono font-medium text-foreground">
+                    {formatDatetime(selectedTurno.fechaHoraApertura)}
+                  </span>
+                </div>
+
+                {selectedTurno.montoInicial !== undefined && (
+                  <div className="flex items-center justify-end gap-1.5 text-muted-foreground">
+                    <Coins className="size-3 text-emerald-600 dark:text-emerald-400" />
+                    <span>Fondo Inicial:</span>
+                    <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                      {formatCurrency(selectedTurno.montoInicial)}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 

@@ -55,10 +55,10 @@ public sealed class TurnoCajaService(AppDbContext dbContext)
 
         return entity is null ? throw CreateNotFoundException(id) : MapToResponse(entity);
     }
-    
-    
 
-    public async Task<TurnoCajaResponse> CrearAsync(CreateTurnoCajaRequest request, CancellationToken cancellationToken = default)
+
+    public async Task<TurnoCajaResponse> CrearAsync(CreateTurnoCajaRequest request,
+        CancellationToken cancellationToken = default)
     {
         await ValidarFksAsync(
             request.CajaId,
@@ -67,6 +67,11 @@ public sealed class TurnoCajaService(AppDbContext dbContext)
 
         await ValidarUnicoAbiertoAsync(
             request.CajaId,
+            null,
+            cancellationToken);
+
+        await ValidarEmpleadoSinTurnoAbiertoAsync(
+            request.EmpleadoId,
             null,
             cancellationToken);
 
@@ -79,6 +84,109 @@ public sealed class TurnoCajaService(AppDbContext dbContext)
         await CargarNavegacionesAsync(entity, cancellationToken);
 
         return MapToResponse(entity);
+    }
+
+    public async Task<TurnoCajaResponse> AbrirAsync(AbrirTurnoCajaRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (request.MontoInicial < 0)
+        {
+            throw new BusinessException(
+                "El monto inicial no puede ser negativo.");
+        }
+
+        await ValidarFksAsync(request.CajaId, request.EmpleadoId, cancellationToken);
+        await ValidarUnicoAbiertoAsync(request.CajaId, null, cancellationToken);
+        await ValidarEmpleadoSinTurnoAbiertoAsync(request.EmpleadoId, null, cancellationToken);
+
+        var entity = new TurnoCajaEntity
+        {
+            CajaId = request.CajaId,
+            EmpleadoId = request.EmpleadoId,
+            FechaHoraApertura = DateTime.UtcNow,
+            MontoInicial = request.MontoInicial,
+            ObservacionApertura = string.IsNullOrWhiteSpace(request.Observacion)
+                ? null
+                : request.Observacion.Trim(),
+            Estado = EstadoTurnoCaja.Abierto,
+            Activo = true
+        };
+
+        await Entities.AddAsync(entity, cancellationToken);
+        await DbContext.SaveChangesAsync(cancellationToken);
+        await CargarNavegacionesAsync(entity, cancellationToken);
+
+        return MapToResponse(entity);
+    }
+    
+    public async Task<TurnoCajaResponse> CerrarAsync(
+        int id,
+        CerrarTurnoCajaRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await BuildQuery()
+            .FirstOrDefaultAsync(
+                x => x.Id == id && x.Activo,
+                cancellationToken);
+
+        if (entity is null)
+            throw CreateNotFoundException(id);
+
+        if (entity.Estado == EstadoTurnoCaja.Cerrado)
+        {
+            throw new ConflictException("El turno de caja ya se encuentra cerrado.");
+        }
+
+        var tieneArqueo = await DbContext.ArqueosCaja
+            .AnyAsync(
+                x => x.TurnoCajaId == id && x.Activo,
+                cancellationToken);
+
+        if (!tieneArqueo)
+        {
+            throw new ConflictException("Debe realizar el arqueo antes de cerrar el turno.");
+        }
+
+        entity.FechaHoraCierre = DateTime.UtcNow;
+        entity.ObservacionCierre = string.IsNullOrWhiteSpace(request.Observacion)
+                ? null
+                : request.Observacion.Trim();
+        entity.Estado = EstadoTurnoCaja.Cerrado;
+        await DbContext.SaveChangesAsync(cancellationToken);
+        return MapToResponse(entity);
+    }
+    
+    public async Task<TurnoCajaResponse?> ObtenerTurnoAbiertoEmpleadoAsync(int empleadoId, CancellationToken cancellationToken = default)
+    {
+        var entity = await BuildQuery()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                x =>
+                    x.EmpleadoId == empleadoId &&
+                    x.Estado == EstadoTurnoCaja.Abierto &&
+                    x.Activo,
+                cancellationToken);
+
+        return entity is null
+            ? null
+            : MapToResponse(entity);
+    }
+    public async Task<TurnoCajaResponse?> ObtenerTurnoAbiertoCajaAsync(
+        int cajaId,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await BuildQuery()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                x =>
+                    x.CajaId == cajaId &&
+                    x.Estado == EstadoTurnoCaja.Abierto &&
+                    x.Activo,
+                cancellationToken);
+
+        return entity is null
+            ? null
+            : MapToResponse(entity);
     }
 
     public async Task<TurnoCajaResponse> ActualizarAsync(
@@ -105,17 +213,12 @@ public sealed class TurnoCajaService(AppDbContext dbContext)
             cancellationToken);
 
         MapToExistingEntity(request, entity);
-
         await DbContext.SaveChangesAsync(cancellationToken);
-
         await CargarNavegacionesAsync(entity, cancellationToken);
-
         return MapToResponse(entity);
     }
 
-    public async Task EliminarAsync(
-        int id,
-        CancellationToken cancellationToken = default)
+    public async Task EliminarAsync(int id, CancellationToken cancellationToken = default)
     {
         var entity = await Entities
             .FirstOrDefaultAsync(
@@ -128,6 +231,29 @@ public sealed class TurnoCajaService(AppDbContext dbContext)
         Entities.Remove(entity);
 
         await DbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task ValidarEmpleadoSinTurnoAbiertoAsync(
+        int empleadoId,
+        int? excludeId,
+        CancellationToken cancellationToken)
+    {
+        var query = Entities.Where(x =>
+            x.EmpleadoId == empleadoId &&
+            x.Estado == EstadoTurnoCaja.Abierto);
+
+        if (excludeId.HasValue)
+        {
+            query = query.Where(x => x.Id != excludeId.Value);
+        }
+
+        var existe = await query.AnyAsync(cancellationToken);
+
+        if (existe)
+        {
+            throw new ConflictException(
+                "El empleado ya tiene un turno de caja abierto.");
+        }
     }
 
     private IQueryable<TurnoCajaEntity> BuildQuery()

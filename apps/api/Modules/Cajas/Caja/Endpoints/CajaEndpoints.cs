@@ -15,15 +15,25 @@ public static class CajaEndpoints
             .WithTags("Cajas")
             .RequireAuthorization();
 
-        group.MapGet("/", ListarAsync).WithName("ListarCajas");
-        group.MapGet("/{id:int}", ObtenerAsync).WithName("ObtenerCaja");
+        group.MapGet("/", ListarAsync)
+            .WithName("ListarCajas");
+
+        group.MapGet("/{id:int}", ObtenerAsync)
+            .WithName("ObtenerCaja");
+
         group.MapPost("/", CrearAsync)
             .WithName("CrearCaja")
             .Validate<CreateCajaRequest>();
+
         group.MapPut("/{id:int}", ActualizarAsync)
             .WithName("ActualizarCaja")
             .Validate<UpdateCajaRequest>();
-        group.MapDelete("/{id:int}", EliminarAsync).WithName("EliminarCaja");
+
+        group.MapPatch("/{id:int}/activar", ActivarAsync)
+            .WithName("ActivarCaja");
+
+        group.MapPatch("/{id:int}/desactivar", DesactivarAsync)
+            .WithName("DesactivarCaja");
 
         return app;
     }
@@ -34,11 +44,12 @@ public static class CajaEndpoints
         CajaService service,
         CancellationToken cancellationToken)
     {
-        return Results.Ok(
-            await service.ListarAsync(
-                pagination,
-                search,
-                cancellationToken));
+        var result = await service.ListarAsync(
+            pagination,
+            search,
+            cancellationToken);
+
+        return Results.Ok(result);
     }
 
     private static async Task<IResult> ObtenerAsync(
@@ -46,17 +57,21 @@ public static class CajaEndpoints
         CajaService service,
         CancellationToken cancellationToken)
     {
-        return Results.Ok(
-            await service.ObtenerAsync(
-                id,
-                cancellationToken));
+        var result = await service.ObtenerAsync(
+            id,
+            cancellationToken);
+
+        return Results.Ok(result);
     }
 
     private static async Task<IResult> CrearAsync(
         CreateCajaRequest request,
-        CajaService service)
+        CajaService service,
+        CancellationToken cancellationToken)
     {
-        var result = await service.CrearAsync(request);
+        var result = await service.CrearAsync(
+            request,
+            cancellationToken);
 
         return Results.Created(
             $"/cajas/{result.Id}",
@@ -66,19 +81,38 @@ public static class CajaEndpoints
     private static async Task<IResult> ActualizarAsync(
         int id,
         UpdateCajaRequest request,
-        CajaService service)
+        CajaService service,
+        CancellationToken cancellationToken)
     {
-        return Results.Ok(
-            await service.ActualizarAsync(
-                id,
-                request));
+        var result = await service.ActualizarAsync(
+            id,
+            request,
+            cancellationToken);
+
+        return Results.Ok(result);
     }
 
-    private static async Task<IResult> EliminarAsync(
+    private static async Task<IResult> ActivarAsync(
         int id,
-        CajaService service)
+        CajaService service,
+        CancellationToken cancellationToken)
     {
-        await service.EliminarAsync(id);
+        await service.ActivarAsync(
+            id,
+            cancellationToken);
+
+        return Results.NoContent();
+    }
+
+    private static async Task<IResult> DesactivarAsync(
+        int id,
+        CajaService service,
+        CancellationToken cancellationToken)
+    {
+        await service.DesactivarAsync(
+            id,
+            cancellationToken);
+
         return Results.NoContent();
     }
 }

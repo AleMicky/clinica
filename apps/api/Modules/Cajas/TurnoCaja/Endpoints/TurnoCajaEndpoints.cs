@@ -15,15 +15,25 @@ public static class TurnoCajaEndpoints
             .WithTags("Turnos de Caja")
             .RequireAuthorization();
 
-        group.MapGet("/", ListarAsync).WithName("ListarTurnosCaja");
-        group.MapGet("/{id:int}", ObtenerAsync).WithName("ObtenerTurnoCaja");
-        group.MapPost("/", CrearAsync)
-            .WithName("CrearTurnoCaja")
-            .Validate<CreateTurnoCajaRequest>();
-        group.MapPut("/{id:int}", ActualizarAsync)
-            .WithName("ActualizarTurnoCaja")
-            .Validate<UpdateTurnoCajaRequest>();
-        group.MapDelete("/{id:int}", EliminarAsync).WithName("EliminarTurnoCaja");
+        group.MapGet("/", ListarAsync)
+            .WithName("ListarTurnosCaja");
+
+        group.MapGet("/{id:int}", ObtenerAsync)
+            .WithName("ObtenerTurnoCaja");
+
+        group.MapGet("/empleado/{empleadoId:int}/abierto", ObtenerAbiertoEmpleadoAsync)
+            .WithName("ObtenerTurnoCajaAbiertoEmpleado");
+
+        group.MapGet("/caja/{cajaId:int}/abierto", ObtenerAbiertoCajaAsync)
+            .WithName("ObtenerTurnoCajaAbiertoCaja");
+
+        group.MapPost("/abrir", AbrirAsync)
+            .WithName("AbrirTurnoCaja")
+            .Validate<AbrirTurnoCajaRequest>();
+
+        group.MapPost("/{id:int}/cerrar", CerrarAsync)
+            .WithName("CerrarTurnoCaja")
+            .Validate<CerrarTurnoCajaRequest>();
 
         return app;
     }
@@ -34,11 +44,12 @@ public static class TurnoCajaEndpoints
         TurnoCajaService service,
         CancellationToken cancellationToken)
     {
-        return Results.Ok(
-            await service.ListarAsync(
-                pagination,
-                search,
-                cancellationToken));
+        var result = await service.ListarAsync(
+            pagination,
+            search,
+            cancellationToken);
+
+        return Results.Ok(result);
     }
 
     private static async Task<IResult> ObtenerAsync(
@@ -46,39 +57,66 @@ public static class TurnoCajaEndpoints
         TurnoCajaService service,
         CancellationToken cancellationToken)
     {
-        return Results.Ok(
-            await service.ObtenerAsync(
-                id,
-                cancellationToken));
+        var result = await service.ObtenerAsync(
+            id,
+            cancellationToken);
+
+        return Results.Ok(result);
     }
 
-    private static async Task<IResult> CrearAsync(
-        CreateTurnoCajaRequest request,
-        TurnoCajaService service)
+    private static async Task<IResult> ObtenerAbiertoEmpleadoAsync(
+        int empleadoId,
+        TurnoCajaService service,
+        CancellationToken cancellationToken)
     {
-        var result = await service.CrearAsync(request);
+        var result = await service.ObtenerTurnoAbiertoEmpleadoAsync(
+            empleadoId,
+            cancellationToken);
+
+        return result is null
+            ? Results.NoContent()
+            : Results.Ok(result);
+    }
+
+    private static async Task<IResult> ObtenerAbiertoCajaAsync(
+        int cajaId,
+        TurnoCajaService service,
+        CancellationToken cancellationToken)
+    {
+        var result = await service.ObtenerTurnoAbiertoCajaAsync(
+            cajaId,
+            cancellationToken);
+
+        return result is null
+            ? Results.NoContent()
+            : Results.Ok(result);
+    }
+
+    private static async Task<IResult> AbrirAsync(
+        AbrirTurnoCajaRequest request,
+        TurnoCajaService service,
+        CancellationToken cancellationToken)
+    {
+        var result = await service.AbrirAsync(
+            request,
+            cancellationToken);
 
         return Results.Created(
             $"/turnos-caja/{result.Id}",
             result);
     }
 
-    private static async Task<IResult> ActualizarAsync(
+    private static async Task<IResult> CerrarAsync(
         int id,
-        UpdateTurnoCajaRequest request,
-        TurnoCajaService service)
+        CerrarTurnoCajaRequest request,
+        TurnoCajaService service,
+        CancellationToken cancellationToken)
     {
-        return Results.Ok(
-            await service.ActualizarAsync(
-                id,
-                request));
-    }
+        var result = await service.CerrarAsync(
+            id,
+            request,
+            cancellationToken);
 
-    private static async Task<IResult> EliminarAsync(
-        int id,
-        TurnoCajaService service)
-    {
-        await service.EliminarAsync(id);
-        return Results.NoContent();
+        return Results.Ok(result);
     }
 }

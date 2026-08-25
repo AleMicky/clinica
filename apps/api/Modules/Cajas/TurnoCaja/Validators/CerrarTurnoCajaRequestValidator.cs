@@ -1,6 +1,14 @@
+using Clinica.Api.Modules.Cajas.TurnoCaja.Dtos;
+using FluentValidation;
+
 namespace Clinica.Api.Modules.Cajas.TurnoCaja.Validators;
 
-public class CerrarTurnoCajaRequestValidator
+public sealed class CerrarTurnoCajaRequestValidator
+    : AbstractValidator<CerrarTurnoCajaRequest>
 {
-    
+    public CerrarTurnoCajaRequestValidator()
+    {
+        RuleFor(x => x.Observacion)
+            .MaximumLength(500);
+    }
 }

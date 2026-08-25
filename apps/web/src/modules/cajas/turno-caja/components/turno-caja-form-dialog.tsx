@@ -44,6 +44,8 @@ import {
   type TurnoCajaFormValues,
 } from "../schemas/turno-caja.schema";
 import {
+  useAbrirTurnoCaja,
+  useCerrarTurnoCaja,
   useCreateTurnoCaja,
   useUpdateTurnoCaja,
 } from "../hooks/use-turnos-caja";
@@ -151,7 +153,8 @@ export function TurnoCajaFormDialog({
     STATIC_QUERY_PARAMS
   );
 
-  const createMutation = useCreateTurnoCaja();
+  const abrirMutation = useAbrirTurnoCaja();
+  const cerrarMutation = useCerrarTurnoCaja();
   const updateMutation = useUpdateTurnoCaja();
 
   const {
@@ -323,18 +326,27 @@ export function TurnoCajaFormDialog({
         estado: finalEstado,
       };
 
-      if ((isEditing || isClosing) && turnoToEdit) {
+      if (isClosing && turnoToEdit) {
+        await cerrarMutation.mutateAsync({
+          id: turnoToEdit.id,
+          data: {
+            observacion: values.observacionCierre?.trim() || null,
+          },
+        });
+        toast.success(`Turno de caja cerrado correctamente.`);
+      } else if (isEditing && turnoToEdit) {
         await updateMutation.mutateAsync({
           id: turnoToEdit.id,
           data: payload,
         });
-        toast.success(
-          isClosing
-            ? `Turno de caja cerrado correctamente.`
-            : `Turno de caja actualizado correctamente.`
-        );
+        toast.success(`Turno de caja actualizado correctamente.`);
       } else {
-        await createMutation.mutateAsync(payload);
+        await abrirMutation.mutateAsync({
+          cajaId: targetCajaId,
+          empleadoId: Number(values.empleadoId),
+          montoInicial: Number(values.montoInicial || 0),
+          observacion: values.observacionApertura?.trim() || null,
+        });
         toast.success(`Turno de caja abierto correctamente.`);
       }
 
@@ -351,7 +363,11 @@ export function TurnoCajaFormDialog({
     }
   };
 
-  const isLoading = createMutation.isPending || updateMutation.isPending || isSubmitting;
+  const isLoading =
+    abrirMutation.isPending ||
+    cerrarMutation.isPending ||
+    updateMutation.isPending ||
+    isSubmitting;
   const calculatedDuration = calculateDiffDuration(
     fechaAperturaVal,
     isClosing ? (fechaCierreVal || toLocalDatetimeString()) : fechaCierreVal

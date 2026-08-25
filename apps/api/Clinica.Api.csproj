@@ -59,7 +59,6 @@
     <Folder Include="Modules\Cajas\TurnoCaja\Endpoints\" />
     <Folder Include="Modules\Cajas\TurnoCaja\Mappers\" />
     <Folder Include="Modules\Cajas\TurnoCaja\Services\" />
-    <Folder Include="Modules\Cajas\TurnoCaja\Validators\" />
     <Folder Include="Modules\Farmacia\" />
     <Folder Include="Modules\Parametros\Banco\Dtos\" />
     <Folder Include="Modules\Parametros\Banco\Endpoints\" />

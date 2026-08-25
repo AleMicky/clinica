@@ -1,6 +1,7 @@
 using Clinica.Api.Data;
 using Clinica.Api.Modules.Cajas.Caja.Dtos;
 using Clinica.Api.Modules.Cajas.Caja.Mappers;
+using Clinica.Api.Modules.Cajas.TurnoCaja.Entity;
 using Clinica.Api.Shared.Crud;
 using Clinica.Api.Shared.Exceptions;
 using Microsoft.EntityFrameworkCore;
@@ -26,7 +27,11 @@ public sealed class CajaService(AppDbContext dbContext)
         CreateCajaRequest request)
     {
         var entity = CajaMapper.ToEntity(request);
+
         Normalizar(entity, request);
+
+        entity.Activo = true;
+
         return entity;
     }
 
@@ -35,6 +40,7 @@ public sealed class CajaService(AppDbContext dbContext)
         CajaEntity entity)
     {
         CajaMapper.UpdateEntity(request, entity);
+
         Normalizar(entity, request);
     }
 
@@ -45,7 +51,8 @@ public sealed class CajaService(AppDbContext dbContext)
     }
 
     protected override IReadOnlyCollection<CajaResponse>
-        MapToResponseList(IEnumerable<CajaEntity> entities)
+        MapToResponseList(
+            IEnumerable<CajaEntity> entities)
     {
         return CajaMapper.ToResponse(entities);
     }
@@ -76,7 +83,9 @@ public sealed class CajaService(AppDbContext dbContext)
         var codigo = NormalizarCodigo(request.Codigo);
 
         var existe = await Entities.AnyAsync(
-            x => x.Id != id && x.Codigo == codigo,
+            x =>
+                x.Id != id &&
+                x.Codigo == codigo,
             cancellationToken);
 
         if (existe)
@@ -98,9 +107,60 @@ public sealed class CajaService(AppDbContext dbContext)
             x.Nombre.Contains(search));
     }
 
-    private static void Normalizar(
-        CajaEntity entity,
-        CajaRequest request)
+    public async Task ActivarAsync(
+        int id,
+        CancellationToken cancellationToken = default)
+    {
+        var caja = await Entities
+            .FirstOrDefaultAsync(
+                x => x.Id == id,
+                cancellationToken);
+
+        if (caja is null)
+            throw new NotFoundException("Caja", id);
+
+        if (caja.Activo)
+            return;
+
+        caja.Activo = true;
+
+        await DbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task DesactivarAsync( int id, CancellationToken cancellationToken = default)
+    {
+        var caja = await Entities
+            .FirstOrDefaultAsync(
+                x => x.Id == id,
+                cancellationToken);
+
+        if (caja is null)
+            throw new NotFoundException("Caja", id);
+
+        if (!caja.Activo)
+            return;
+
+        var tieneTurnoAbierto = await DbContext
+            .Set<TurnoCaja.Entity.TurnoCaja>()
+            .AnyAsync(
+                x =>
+                    x.CajaId == id &&
+                    x.Estado == EstadoTurnoCaja.Abierto &&
+                    x.Activo,
+                cancellationToken);
+
+        if (tieneTurnoAbierto)
+        {
+            throw new ConflictException(
+                "No se puede desactivar la caja porque tiene un turno abierto.");
+        }
+
+        caja.Activo = false;
+
+        await DbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private static void Normalizar(CajaEntity entity, CajaRequest request)
     {
         entity.Codigo = NormalizarCodigo(request.Codigo);
         entity.Nombre = request.Nombre.Trim();
@@ -109,11 +169,15 @@ public sealed class CajaService(AppDbContext dbContext)
 
     private static string NormalizarCodigo(string value)
     {
-        return value.Trim().ToUpperInvariant();
+        return value
+            .Trim()
+            .ToUpperInvariant();
     }
 
     private static string? NormalizarOpcional(string? value)
     {
-        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+        return string.IsNullOrWhiteSpace(value)
+            ? null
+            : value.Trim();
     }
 }

@@ -19,6 +19,22 @@ public sealed record CreateTurnoCajaRequest : TurnoCajaRequest;
 
 public sealed record UpdateTurnoCajaRequest : TurnoCajaRequest;
 
+public sealed class AbrirTurnoCajaRequest
+{
+    public int CajaId { get; set; }
+
+    public int EmpleadoId { get; set; }
+
+    public decimal MontoInicial { get; set; }
+
+    public string? Observacion { get; set; }
+}
+
+public sealed class CerrarTurnoCajaRequest
+{
+    public string? Observacion { get; set; }
+}
+
 public sealed record TurnoCajaResponse : AuditableResponse
 {
     public int Id { get; init; }

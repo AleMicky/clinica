@@ -169,7 +169,10 @@ public sealed partial class ArqueoCajaService
             Caja = MapCajaInfo(turno.Caja),
             Empleado = MapEmpleadoInfo(turno.Empleado),
             FechaHoraApertura = turno.FechaHoraApertura,
+            MontoInicial = turno.MontoInicial,
+            ObservacionApertura = turno.ObservacionApertura,
             FechaHoraCierre = turno.FechaHoraCierre,
+            ObservacionCierre = turno.ObservacionCierre,
             Estado = turno.Estado
         };
     }

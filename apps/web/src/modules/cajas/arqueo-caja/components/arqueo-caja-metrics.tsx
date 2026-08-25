@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Calculator, CheckCircle2, AlertTriangle, Scale } from "lucide-react";
+import { Calculator, CheckCircle2, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ArqueoCajaMetrics as ArqueoCajaMetricsType } from "../types/arqueo-caja.types";
 
@@ -62,32 +62,32 @@ export function ArqueoCajaMetrics({
             key={card.id}
             onClick={card.onClick}
             className={cn(
-              "relative p-3 rounded-xl border bg-card transition-all duration-200 shadow-2xs flex flex-col justify-between min-h-[78px] cursor-pointer",
+              "relative p-3.5 rounded-xl border bg-card transition-all duration-200 shadow-2xs flex flex-col justify-between min-h-[82px] cursor-pointer",
               card.active
                 ? "border-primary ring-2 ring-primary/20 shadow-xs"
-                : "border-border/70 hover:border-border hover:bg-muted/30"
+                : "border-border/60 hover:border-border hover:bg-muted/30"
             )}
           >
             <div className="flex items-center justify-between gap-2">
-              <span className="text-[11px] font-medium text-muted-foreground truncate">
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider truncate">
                 {card.label}
               </span>
               <div
                 className={cn(
-                  "size-7 rounded-lg flex items-center justify-center border shrink-0",
+                  "size-8 rounded-lg flex items-center justify-center border shrink-0",
                   card.bg,
                   card.color
                 )}
               >
-                <Icon className="size-3.5" />
+                <Icon className="size-4" />
               </div>
             </div>
 
             <div className="mt-1">
-              <div className="text-base sm:text-lg font-bold font-mono tracking-tight text-foreground">
+              <div className="text-xl font-bold font-mono tracking-tight text-foreground">
                 {card.value}
               </div>
-              <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+              <p className="text-[10.5px] text-muted-foreground truncate mt-0.5">
                 {card.subtext}
               </p>
             </div>
