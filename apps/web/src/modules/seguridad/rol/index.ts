@@ -11,8 +11,9 @@ export * from "./components/rol-header";
 export * from "./components/rol-metrics";
 export * from "./components/rol-card";
 export * from "./components/rol-table";
+export * from "./components/rol-master-list";
+export * from "./components/rol-detail-view";
 export * from "./components/rol-form-dialog";
 export * from "./components/rol-delete-dialog";
 export * from "./components/rol-opcion-menu-dialog";
 export * from "./components/rol-module-view";
-

@@ -6,20 +6,20 @@ import { toast } from "sonner";
 import { useDeleteRol, useRoles } from "../hooks/use-roles";
 import type { RolResponse } from "../types/rol.types";
 import { RolDeleteDialog } from "./rol-delete-dialog";
+import { RolDetailView } from "./rol-detail-view";
 import { RolFormDialog } from "./rol-form-dialog";
 import { RolHeader } from "./rol-header";
-import { RolOpcionMenuDialog } from "./rol-opcion-menu-dialog";
-import { RolTable } from "./rol-table";
+import { RolMasterList } from "./rol-master-list";
 
 export function RolModuleView() {
   const [search, setSearch] = React.useState("");
   const [page, setPage] = React.useState(1);
-  const pageSize = 10;
+  const pageSize = 15;
 
   const [formOpen, setFormOpen] = React.useState(false);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
-  const [menuOpen, setMenuOpen] = React.useState(false);
-  const [selectedRol, setSelectedRol] = React.useState<RolResponse | null>(null);
+  const [selectedRolId, setSelectedRolId] = React.useState<number | null>(null);
+  const [dialogRol, setDialogRol] = React.useState<RolResponse | null>(null);
 
   const { data, isLoading } = useRoles({
     page,
@@ -29,38 +29,50 @@ export function RolModuleView() {
 
   const deleteMutation = useDeleteRol();
 
+  const items = React.useMemo(() => data?.items ?? [], [data]);
+
+  // Derive active role without synchronous setState inside effects
+  const activeRol = React.useMemo(() => {
+    if (items.length === 0) return null;
+    if (selectedRolId !== null) {
+      const found = items.find((x) => x.id === selectedRolId);
+      if (found) return found;
+    }
+    return items[0];
+  }, [items, selectedRolId]);
+
+  const effectiveSelectedId = activeRol?.id ?? null;
+
   const handleSearchChange = (val: string) => {
     setSearch(val);
     setPage(1);
   };
 
   const handleOpenCreate = () => {
-    setSelectedRol(null);
+    setDialogRol(null);
     setFormOpen(true);
   };
 
   const handleOpenEdit = (rol: RolResponse) => {
-    setSelectedRol(rol);
+    setDialogRol(rol);
     setFormOpen(true);
   };
 
   const handleOpenDelete = (rol: RolResponse) => {
-    setSelectedRol(rol);
+    setDialogRol(rol);
     setDeleteOpen(true);
   };
 
-  const handleOpenMenu = (rol: RolResponse) => {
-    setSelectedRol(rol);
-    setMenuOpen(true);
-  };
-
   const handleConfirmDelete = async () => {
-    if (!selectedRol) return;
+    if (!dialogRol) return;
     try {
-      await deleteMutation.mutateAsync(selectedRol.id);
+      await deleteMutation.mutateAsync(dialogRol.id);
       toast.success("Rol eliminado exitosamente");
       setDeleteOpen(false);
-      setSelectedRol(null);
+      setDialogRol(null);
+      if (selectedRolId === dialogRol.id) {
+        setSelectedRolId(null);
+      }
     } catch (error: unknown) {
       const err = error as {
         response?: { data?: { detail?: string; message?: string } };
@@ -77,33 +89,46 @@ export function RolModuleView() {
     <div className="flex flex-col gap-4 w-full">
       <RolHeader onNew={handleOpenCreate} />
 
-      <RolTable
-        data={data}
-        isLoading={isLoading}
-        search={search}
-        onSearchChange={handleSearchChange}
-        onPageChange={setPage}
-        onEdit={handleOpenEdit}
-        onDelete={handleOpenDelete}
-        onManageMenu={handleOpenMenu}
-      />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+        {/* Master List (Left Pane) */}
+        <div className="lg:col-span-4 xl:col-span-4 w-full">
+          <RolMasterList
+            data={data}
+            isLoading={isLoading}
+            selectedRolId={effectiveSelectedId}
+            onSelectRol={(rol) => setSelectedRolId(rol.id)}
+            search={search}
+            onSearchChange={handleSearchChange}
+            page={page}
+            onPageChange={setPage}
+            onEdit={handleOpenEdit}
+            onDelete={handleOpenDelete}
+          />
+        </div>
 
+        {/* Detail & Menu Permissions View (Right Pane) */}
+        <div className="lg:col-span-8 xl:col-span-8 w-full">
+          <RolDetailView
+            key={activeRol?.id ?? "empty"}
+            rol={activeRol}
+            onEdit={handleOpenEdit}
+            onDelete={handleOpenDelete}
+          />
+        </div>
+      </div>
+
+      {/* Role Form Modal (Create / Edit) */}
       <RolFormDialog
         open={formOpen}
         onOpenChange={setFormOpen}
-        rolToEdit={selectedRol}
+        rolToEdit={dialogRol}
       />
 
-      <RolOpcionMenuDialog
-        open={menuOpen}
-        onOpenChange={setMenuOpen}
-        rol={selectedRol}
-      />
-
+      {/* Role Delete Confirmation Modal */}
       <RolDeleteDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
-        rol={selectedRol}
+        rol={dialogRol}
         onConfirm={handleConfirmDelete}
         isLoading={deleteMutation.isPending}
       />
