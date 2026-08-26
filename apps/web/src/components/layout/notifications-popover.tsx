@@ -15,6 +15,7 @@ import {
   AlertCircle,
   Wifi,
   WifiOff,
+  Volume2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useNotifications } from "@/providers/notification-provider";
+import { playNotificationSound } from "@/lib/sound/notification-sound";
 import {
   type Notification,
   NotificationType,
@@ -145,6 +147,16 @@ export function NotificationsPopover() {
                 <WifiOff className="h-3 w-3 text-muted-foreground/50" />
               )}
             </span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                void playNotificationSound();
+              }}
+              title="Probar sonido de notificación"
+              className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
+            >
+              <Volume2 className="h-3.5 w-3.5" />
+            </button>
           </div>
           {unreadCount > 0 && (
             <button
