@@ -14,7 +14,22 @@ export const usuarioSchema = z.object({
 
   password: z
     .string()
-    .optional(),
+    .optional()
+    .refine(
+      (val) => {
+        if (!val || val.length === 0) return true; // Opcional si se deja en blanco
+        return (
+          val.length >= 6 &&
+          /[0-9]/.test(val) &&
+          /[A-Z]/.test(val) &&
+          /[a-z]/.test(val)
+        );
+      },
+      {
+        message:
+          "La contraseña debe tener al menos 6 caracteres, una letra mayúscula, una minúscula y un número.",
+      }
+    ),
 
   activo: z.boolean(),
 

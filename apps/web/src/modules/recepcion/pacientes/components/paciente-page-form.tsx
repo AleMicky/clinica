@@ -24,6 +24,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CatalogoAutocomplete } from "@/components/ui/catalogo-autocomplete";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
@@ -79,6 +80,7 @@ export function PacientePageForm({ id }: PacientePageFormProps) {
   const extensionDocumentoValue: string = watch("extensionDocumento") || "";
   const generoValue: string = watch("genero") || "";
   const estadoCivilValue: string = watch("estadoCivil") || "";
+  const fechaNacimientoValue: string = watch("fechaNacimiento") || "";
 
   // Register custom autocompletes
   React.useEffect(() => {
@@ -86,6 +88,7 @@ export function PacientePageForm({ id }: PacientePageFormProps) {
     register("extensionDocumento");
     register("genero");
     register("estadoCivil");
+    register("fechaNacimiento");
   }, [register]);
 
   // Load existing paciente data in edit mode
@@ -383,11 +386,17 @@ export function PacientePageForm({ id }: PacientePageFormProps) {
                   <Label htmlFor="fechaNacimiento" className="text-xs font-medium flex items-center gap-0.5">
                     Fecha de Nacimiento <span className="text-destructive">*</span>
                   </Label>
-                  <Input
+                  <DatePicker
                     id="fechaNacimiento"
-                    type="date"
-                    className={cn("w-full h-8 text-xs", errors.fechaNacimiento && "border-destructive focus-visible:ring-destructive")}
-                    {...register("fechaNacimiento")}
+                    value={fechaNacimientoValue}
+                    onChange={(val) =>
+                      setValue("fechaNacimiento", val, { shouldValidate: true })
+                    }
+                    placeholder="DD/MM/AAAA"
+                    error={Boolean(errors.fechaNacimiento)}
+                    maxDate={new Date().toISOString().split("T")[0]}
+                    fromYear={1920}
+                    toYear={new Date().getFullYear()}
                   />
                   {errors.fechaNacimiento && (
                     <p className="text-[10px] text-destructive font-medium">{errors.fechaNacimiento.message}</p>

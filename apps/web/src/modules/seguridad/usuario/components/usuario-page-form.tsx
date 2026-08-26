@@ -17,6 +17,7 @@ import {
   AtSign,
   Mail,
   Shield,
+  ShieldCheck,
   Check,
   ShieldAlert,
 } from "lucide-react";
@@ -31,6 +32,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { CatalogoAutocomplete } from "@/components/ui/catalogo-autocomplete";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
@@ -99,6 +101,21 @@ export function UsuarioPageForm({ id }: UsuarioPageFormProps) {
   const generoValue: string = watch("genero") || "";
   const estadoCivilValue: string = watch("estadoCivil") || "";
   const activoValue: boolean = watch("activo") ?? true;
+  const fechaNacimientoValue: string = watch("fechaNacimiento") || "";
+  const passwordValue: string = watch("password") || "";
+
+  const passwordRequirements = React.useMemo(
+    () => [
+      { id: "length", label: "Mínimo 6 caracteres", met: passwordValue.length >= 6 },
+      { id: "uppercase", label: "Al menos una mayúscula (A-Z)", met: /[A-Z]/.test(passwordValue) },
+      { id: "lowercase", label: "Al menos una minúscula (a-z)", met: /[a-z]/.test(passwordValue) },
+      { id: "digit", label: "Al menos un número (0-9)", met: /[0-9]/.test(passwordValue) },
+    ],
+    [passwordValue]
+  );
+
+  const passedRequirementsCount = passwordRequirements.filter((r) => r.met).length;
+  const isPasswordValid = passedRequirementsCount === passwordRequirements.length;
 
   // Register custom autocompletes & fields
   React.useEffect(() => {
@@ -108,6 +125,7 @@ export function UsuarioPageForm({ id }: UsuarioPageFormProps) {
     register("estadoCivil");
     register("roles");
     register("activo");
+    register("fechaNacimiento");
   }, [register]);
 
   // Load existing user data in edit mode
@@ -432,13 +450,24 @@ export function UsuarioPageForm({ id }: UsuarioPageFormProps) {
                   <Label htmlFor="fechaNacimiento" className="text-xs font-medium">
                     Fecha de Nacimiento
                   </Label>
-                  <Input
+                  <DatePicker
                     id="fechaNacimiento"
-                    type="date"
+                    value={fechaNacimientoValue}
+                    onChange={(val) =>
+                      setValue("fechaNacimiento", val, { shouldValidate: true })
+                    }
+                    placeholder="DD/MM/AAAA"
                     disabled={isEditing}
-                    className={cn("w-full h-8 text-xs", errors.fechaNacimiento && "border-destructive focus-visible:ring-destructive")}
-                    {...register("fechaNacimiento")}
+                    error={Boolean(errors.fechaNacimiento)}
+                    maxDate={new Date().toISOString().split("T")[0]}
+                    fromYear={1920}
+                    toYear={new Date().getFullYear()}
                   />
+                  {errors.fechaNacimiento && (
+                    <p className="text-[10px] text-destructive font-medium">
+                      {errors.fechaNacimiento.message}
+                    </p>
+                  )}
                 </div>
 
                 {/* Género */}
@@ -567,16 +596,38 @@ export function UsuarioPageForm({ id }: UsuarioPageFormProps) {
 
                 {/* Contraseña (solo al crear) */}
                 {!isEditing && (
-                  <div className="space-y-1 sm:col-span-2 md:col-span-3 lg:col-span-12">
-                    <Label htmlFor="password" className="text-xs font-medium flex items-center gap-0.5">
-                      Contraseña Temporal
-                    </Label>
+                  <div className="space-y-2 sm:col-span-2 md:col-span-3 lg:col-span-12">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="password" className="text-xs font-medium flex items-center gap-1">
+                        <span>Contraseña de Acceso</span>
+                        <span className="text-muted-foreground font-normal text-[11px]">(Opcional)</span>
+                      </Label>
+                      {passwordValue.length > 0 && (
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "text-[10px] px-1.5 py-0 font-medium transition-colors",
+                            isPasswordValid
+                              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                              : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                          )}
+                        >
+                          {isPasswordValid
+                            ? "Cumple los requisitos"
+                            : `${passedRequirementsCount} de 4 requisitos`}
+                        </Badge>
+                      )}
+                    </div>
+
                     <div className="relative">
                       <Input
                         id="password"
                         type={showPassword ? "text" : "password"}
                         placeholder="••••••••"
-                        className="w-full h-8 text-xs pr-8"
+                        className={cn(
+                          "w-full h-8 text-xs pr-8 font-mono",
+                          errors.password && "border-destructive focus-visible:ring-destructive"
+                        )}
                         {...register("password")}
                       />
                       <Button
@@ -597,6 +648,65 @@ export function UsuarioPageForm({ id }: UsuarioPageFormProps) {
                         </span>
                       </Button>
                     </div>
+
+                    {/* Barra de progreso de fortaleza */}
+                    {passwordValue.length > 0 && (
+                      <div className="space-y-1 pt-0.5">
+                        <div className="grid grid-cols-4 gap-1.5">
+                          {[1, 2, 3, 4].map((step) => {
+                            const isMet = passedRequirementsCount >= step;
+                            return (
+                              <div
+                                key={step}
+                                className={cn(
+                                  "h-1 rounded-full transition-all duration-300",
+                                  isMet
+                                    ? isPasswordValid
+                                      ? "bg-emerald-500"
+                                      : "bg-amber-500"
+                                    : "bg-muted"
+                                )}
+                              />
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Lista de validación de Identity en tiempo real */}
+                    <div className="p-2.5 rounded-lg border border-border/60 bg-muted/20 space-y-1.5">
+                      <div className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1">
+                        <ShieldCheck className="size-3.5 text-primary" />
+                        <span>Requisitos de seguridad (Identity):</span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-0.5">
+                        {passwordRequirements.map((req) => (
+                          <div
+                            key={req.id}
+                            className={cn(
+                              "flex items-center gap-1.5 text-xs transition-colors",
+                              passwordValue.length === 0
+                                ? "text-muted-foreground"
+                                : req.met
+                                ? "text-emerald-600 dark:text-emerald-400 font-medium"
+                                : "text-muted-foreground"
+                            )}
+                          >
+                            {req.met && passwordValue.length > 0 ? (
+                              <Check className="size-3.5 text-emerald-500 shrink-0 stroke-[2.5]" />
+                            ) : (
+                              <div className="size-1.5 rounded-full bg-muted-foreground/40 shrink-0 ml-1 mr-1" />
+                            )}
+                            <span className="text-[11px]">{req.label}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {errors.password && (
+                      <p className="text-[10px] text-destructive font-medium">{errors.password.message}</p>
+                    )}
+
                     <p className="text-[10px] text-muted-foreground">
                       Opcional. Si se deja en blanco, el usuario podrá configurarla al iniciar sesión.
                     </p>
