@@ -7,15 +7,15 @@ import type { TurnoCajaMetrics as TurnoCajaMetricsType } from "../types/turno-ca
 interface TurnoCajaMetricsProps {
   metrics: TurnoCajaMetricsType;
   isLoading?: boolean;
-  activeStatusTab?: "TODOS" | "ABIERTOS" | "CERRADOS";
-  onSelectStatusTab?: (tab: "TODOS" | "ABIERTOS" | "CERRADOS") => void;
+  selectedFilter?: "TODOS" | "ABIERTOS" | "CERRADOS";
+  onFilterChange?: (tab: "TODOS" | "ABIERTOS" | "CERRADOS") => void;
 }
 
 export function TurnoCajaMetrics({
   metrics,
   isLoading = false,
-  activeStatusTab = "TODOS",
-  onSelectStatusTab,
+  selectedFilter = "TODOS",
+  onFilterChange,
 }: TurnoCajaMetricsProps) {
   const abiertosPct =
     metrics.totalTurnos > 0
@@ -31,9 +31,9 @@ export function TurnoCajaMetrics({
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
       {/* Total Turnos */}
       <div
-        onClick={() => onSelectStatusTab?.("TODOS")}
+        onClick={() => onFilterChange?.("TODOS")}
         className={`group relative overflow-hidden p-3.5 rounded-xl border transition-all cursor-pointer shadow-2xs ${
-          activeStatusTab === "TODOS"
+          selectedFilter === "TODOS"
             ? "border-primary/50 bg-primary/5 ring-1 ring-primary/20"
             : "border-border/60 bg-card hover:border-border hover:bg-muted/30"
         }`}
@@ -62,9 +62,9 @@ export function TurnoCajaMetrics({
 
       {/* Turnos Abiertos */}
       <div
-        onClick={() => onSelectStatusTab?.("ABIERTOS")}
+        onClick={() => onFilterChange?.("ABIERTOS")}
         className={`group relative overflow-hidden p-3.5 rounded-xl border transition-all cursor-pointer shadow-2xs ${
-          activeStatusTab === "ABIERTOS"
+          selectedFilter === "ABIERTOS"
             ? "border-emerald-500/50 bg-emerald-500/10 ring-1 ring-emerald-500/30"
             : "border-border/60 bg-card hover:border-emerald-500/40 hover:bg-emerald-500/5"
         }`}
@@ -101,9 +101,9 @@ export function TurnoCajaMetrics({
 
       {/* Turnos Cerrados */}
       <div
-        onClick={() => onSelectStatusTab?.("CERRADOS")}
+        onClick={() => onFilterChange?.("CERRADOS")}
         className={`group relative overflow-hidden p-3.5 rounded-xl border transition-all cursor-pointer shadow-2xs ${
-          activeStatusTab === "CERRADOS"
+          selectedFilter === "CERRADOS"
             ? "border-slate-500/50 bg-slate-500/10 ring-1 ring-slate-500/30"
             : "border-border/60 bg-card hover:border-slate-400/50 hover:bg-muted/30"
         }`}

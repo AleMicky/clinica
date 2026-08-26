@@ -9,11 +9,8 @@ import {
   LogOut,
   Loader2,
   Vault,
-  Calendar,
   User,
   Info,
-  Pencil,
-  Timer,
   AlertCircle,
   Coins,
   FileText,
@@ -40,53 +37,27 @@ import type { EmpleadoResponse } from "@/modules/recursos-humanos/empleado/types
 import { useCajas } from "@/modules/cajas/caja/hooks/use-cajas";
 import type { CajaResponse } from "@/modules/cajas/caja/types/caja.types";
 import {
-  turnoCajaSchema,
-  type TurnoCajaFormValues,
+  abrirTurnoCajaSchema,
+  cerrarTurnoCajaSchema,
+  type AbrirTurnoCajaFormValues,
+  type CerrarTurnoCajaFormValues,
 } from "../schemas/turno-caja.schema";
 import {
   useAbrirTurnoCaja,
   useCerrarTurnoCaja,
-  useCreateTurnoCaja,
-  useUpdateTurnoCaja,
 } from "../hooks/use-turnos-caja";
-import {
-  EstadoTurnoCaja,
-  type TurnoCajaResponse,
-} from "../types/turno-caja.types";
+import type { TurnoCajaResponse } from "../types/turno-caja.types";
 
 interface TurnoCajaFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  turnoToEdit?: TurnoCajaResponse | null;
+  turnoToClose?: TurnoCajaResponse | null;
   defaultCajaId?: number | null;
-  mode?: "create" | "edit" | "close";
+  mode?: "open" | "close";
   onSuccessCallback?: () => void;
 }
 
 const STATIC_QUERY_PARAMS = { page: 1, pageSize: 100 };
-
-function toLocalDatetimeString(dateInput?: string | Date | null): string {
-  const d = dateInput ? new Date(dateInput) : new Date();
-  if (isNaN(d.getTime())) return "";
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  const hours = String(d.getHours()).padStart(2, "0");
-  const minutes = String(d.getMinutes()).padStart(2, "0");
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
-}
-
-function setTimeOnDate(baseDateInput: string | Date | null | undefined, hours: number, minutes = 0): string {
-  const d = baseDateInput ? new Date(baseDateInput) : new Date();
-  if (isNaN(d.getTime())) return "";
-  d.setHours(hours, minutes, 0, 0);
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  const h = String(d.getHours()).padStart(2, "0");
-  const m = String(d.getMinutes()).padStart(2, "0");
-  return `${year}-${month}-${day}T${h}:${m}`;
-}
 
 function formatDisplayDate(dateStr?: string | null): string {
   if (!dateStr) return "-";
@@ -109,15 +80,13 @@ function formatCurrency(amount?: number | null): string {
   })}`;
 }
 
-function calculateDiffDuration(startStr?: string, endStr?: string | null): string {
+function calculateDuration(startStr?: string): string {
   if (!startStr) return "";
   const start = new Date(startStr);
-  const end = endStr ? new Date(endStr) : new Date();
-  if (isNaN(start.getTime()) || isNaN(end.getTime())) return "";
+  const now = new Date();
+  if (isNaN(start.getTime())) return "";
 
-  const diffMs = end.getTime() - start.getTime();
-  if (diffMs < 0) return "Cierre anterior a apertura (Inválido)";
-
+  const diffMs = Math.max(0, now.getTime() - start.getTime());
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
 
@@ -130,59 +99,46 @@ function calculateDiffDuration(startStr?: string, endStr?: string | null): strin
 export function TurnoCajaFormDialog({
   open,
   onOpenChange,
-  turnoToEdit,
+  turnoToClose,
   defaultCajaId,
-  mode = "create",
+  mode = "open",
   onSuccessCallback,
 }: TurnoCajaFormDialogProps) {
   const isClosing = mode === "close";
-  const isEditing = mode === "edit";
-  const isAlreadyClosed = turnoToEdit?.estado === EstadoTurnoCaja.Cerrado;
 
-  // Control de secciones
-  const showAssignmentAndOpening = !isClosing;
-  const showClosureSection = isClosing || (isEditing && isAlreadyClosed);
-
-  // Fetch Empleados
+  // Fetch Empleados & Cajas para apertura
   const { data: empleadosData, isLoading: isLoadingEmpleados } = useEmpleados(
     STATIC_QUERY_PARAMS
   );
-
-  // Fetch Cajas for selection when not bound to a specific defaultCajaId
   const { data: cajasData, isLoading: isLoadingCajas } = useCajas(
     STATIC_QUERY_PARAMS
   );
 
   const abrirMutation = useAbrirTurnoCaja();
   const cerrarMutation = useCerrarTurnoCaja();
-  const updateMutation = useUpdateTurnoCaja();
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    setValue,
-    watch,
-    formState: { errors, isSubmitting },
-  } = useForm<TurnoCajaFormValues>({
-    resolver: zodResolver(turnoCajaSchema),
+  // Formulario de Apertura
+  const openForm = useForm<AbrirTurnoCajaFormValues>({
+    resolver: zodResolver(abrirTurnoCajaSchema),
     defaultValues: {
       cajaId: defaultCajaId || 0,
       empleadoId: 0,
-      fechaHoraApertura: toLocalDatetimeString(),
       montoInicial: 0,
-      observacionApertura: "",
-      fechaHoraCierre: "",
-      observacionCierre: "",
-      estado: EstadoTurnoCaja.Abierto,
+      observacion: "",
     },
   });
 
-  const selectedCajaId = watch("cajaId");
-  const selectedEmpleadoId = watch("empleadoId");
-  const fechaAperturaVal = watch("fechaHoraApertura");
-  const fechaCierreVal = watch("fechaHoraCierre");
-  const montoInicialVal = watch("montoInicial");
+  // Formulario de Cierre
+  const closeForm = useForm<CerrarTurnoCajaFormValues>({
+    resolver: zodResolver(cerrarTurnoCajaSchema),
+    defaultValues: {
+      observacion: "",
+    },
+  });
+
+  const selectedCajaId = openForm.watch("cajaId");
+  const selectedEmpleadoId = openForm.watch("empleadoId");
+  const montoInicialVal = openForm.watch("montoInicial");
 
   const empleadosList: EmpleadoResponse[] = React.useMemo(() => {
     return Array.isArray(empleadosData?.items)
@@ -200,7 +156,7 @@ export function TurnoCajaFormDialog({
       : [];
   }, [cajasData]);
 
-  // Mapeo de opciones Autocomplete para Empleados / Cajeros
+  // Opciones Autocomplete para Cajeros
   const empleadoOptions: AutocompleteOption[] = React.useMemo(() => {
     return empleadosList.map((emp: EmpleadoResponse) => {
       const nombreCompleto = emp.persona
@@ -216,7 +172,7 @@ export function TurnoCajaFormDialog({
     });
   }, [empleadosList]);
 
-  // Mapeo de opciones Autocomplete para Cajas
+  // Opciones Autocomplete para Cajas
   const cajaOptions: AutocompleteOption[] = React.useMemo(() => {
     return cajasList.map((caja: CajaResponse) => ({
       value: String(caja.id),
@@ -227,138 +183,80 @@ export function TurnoCajaFormDialog({
 
   React.useEffect(() => {
     if (open) {
-      const nowStr = toLocalDatetimeString();
-      if (turnoToEdit) {
-        const cId = turnoToEdit.caja?.id || defaultCajaId || 0;
-        const eId = turnoToEdit.empleado?.id || 0;
-        reset({
-          cajaId: cId,
-          empleadoId: eId,
-          fechaHoraApertura: toLocalDatetimeString(turnoToEdit.fechaHoraApertura),
-          montoInicial: turnoToEdit.montoInicial ?? 0,
-          observacionApertura: turnoToEdit.observacionApertura || "",
-          fechaHoraCierre: isClosing
-            ? nowStr
-            : turnoToEdit.fechaHoraCierre
-            ? toLocalDatetimeString(turnoToEdit.fechaHoraCierre)
-            : "",
-          observacionCierre: turnoToEdit.observacionCierre || "",
-          estado: isClosing ? EstadoTurnoCaja.Cerrado : turnoToEdit.estado,
-        });
+      if (isClosing) {
+        closeForm.reset({ observacion: "" });
       } else {
-        reset({
+        openForm.reset({
           cajaId: defaultCajaId || 0,
           empleadoId: 0,
-          fechaHoraApertura: nowStr,
           montoInicial: 0,
-          observacionApertura: "",
-          fechaHoraCierre: "",
-          observacionCierre: "",
-          estado: EstadoTurnoCaja.Abierto,
+          observacion: "",
         });
       }
     }
-  }, [open, turnoToEdit, defaultCajaId, mode, isClosing, reset]);
-
-  const handleCajaChange = React.useCallback(
-    (val: string) => {
-      setValue("cajaId", Number(val), { shouldValidate: true });
-    },
-    [setValue]
-  );
-
-  const handleEmpleadoChange = React.useCallback(
-    (val: string) => {
-      setValue("empleadoId", Number(val), { shouldValidate: true });
-    },
-    [setValue]
-  );
-
-  const setNowForApertura = () => {
-    setValue("fechaHoraApertura", toLocalDatetimeString(), { shouldValidate: true });
-  };
-
-  const setPresetForApertura = (h: number, m = 0) => {
-    setValue("fechaHoraApertura", setTimeOnDate(fechaAperturaVal, h, m), { shouldValidate: true });
-  };
+  }, [open, isClosing, defaultCajaId, openForm, closeForm]);
 
   const setPresetMontoInicial = (monto: number) => {
-    setValue("montoInicial", monto, { shouldValidate: true });
+    openForm.setValue("montoInicial", monto, { shouldValidate: true });
   };
 
-  const setNowForCierre = () => {
-    setValue("fechaHoraCierre", toLocalDatetimeString(), { shouldValidate: true });
-  };
-
-  const setPresetForCierre = (h: number, m = 0) => {
-    setValue("fechaHoraCierre", setTimeOnDate(fechaCierreVal || fechaAperturaVal, h, m), { shouldValidate: true });
-  };
-
-  const onSubmit = async (values: TurnoCajaFormValues) => {
+  const handleOpenSubmit = async (values: AbrirTurnoCajaFormValues) => {
     try {
-      const targetCajaId = Number(defaultCajaId || turnoToEdit?.caja?.id || values.cajaId);
+      const targetCajaId = Number(defaultCajaId || values.cajaId);
       if (!targetCajaId) {
-        toast.error("Debe seleccionar la caja asignada.");
+        toast.error("Debe seleccionar una caja registradora válida.");
         return;
       }
 
-      const aperturaIso = new Date(values.fechaHoraApertura).toISOString();
-      const cierreIso = values.fechaHoraCierre
-        ? new Date(values.fechaHoraCierre).toISOString()
-        : isClosing
-        ? new Date().toISOString()
-        : null;
-
-      // Determinación automática del estado según si hay cierre o es acción de cierre
-      const finalEstado =
-        isClosing || Boolean(values.fechaHoraCierre)
-          ? EstadoTurnoCaja.Cerrado
-          : turnoToEdit?.estado ?? EstadoTurnoCaja.Abierto;
-
-      const payload = {
+      await abrirMutation.mutateAsync({
         cajaId: targetCajaId,
         empleadoId: Number(values.empleadoId),
-        fechaHoraApertura: aperturaIso,
         montoInicial: Number(values.montoInicial || 0),
-        observacionApertura: values.observacionApertura?.trim() || null,
-        fechaHoraCierre: cierreIso,
-        observacionCierre: values.observacionCierre?.trim() || null,
-        estado: finalEstado,
-      };
+        observacion: values.observacion?.trim() || null,
+      });
 
-      if (isClosing && turnoToEdit) {
-        await cerrarMutation.mutateAsync({
-          id: turnoToEdit.id,
-          data: {
-            observacion: values.observacionCierre?.trim() || null,
-          },
-        });
-        toast.success(`Turno de caja cerrado correctamente.`);
-      } else if (isEditing && turnoToEdit) {
-        await updateMutation.mutateAsync({
-          id: turnoToEdit.id,
-          data: payload,
-        });
-        toast.success(`Turno de caja actualizado correctamente.`);
-      } else {
-        await abrirMutation.mutateAsync({
-          cajaId: targetCajaId,
-          empleadoId: Number(values.empleadoId),
-          montoInicial: Number(values.montoInicial || 0),
-          observacion: values.observacionApertura?.trim() || null,
-        });
-        toast.success(`Turno de caja abierto correctamente.`);
-      }
-
+      toast.success("Turno de caja abierto correctamente.");
       onSuccessCallback?.();
       onOpenChange(false);
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { detail?: string; title?: string } }; message?: string };
+      const err = error as {
+        response?: { data?: { detail?: string; message?: string; title?: string } };
+        message?: string;
+      };
       const message =
         err?.response?.data?.detail ||
+        err?.response?.data?.message ||
         err?.response?.data?.title ||
         err?.message ||
-        "Ocurrió un error al guardar el turno de caja.";
+        "Error al abrir el turno de caja.";
+      toast.error(message);
+    }
+  };
+
+  const handleCloseSubmit = async (values: CerrarTurnoCajaFormValues) => {
+    if (!turnoToClose) return;
+    try {
+      await cerrarMutation.mutateAsync({
+        id: turnoToClose.id,
+        data: {
+          observacion: values.observacion?.trim() || null,
+        },
+      });
+
+      toast.success("Turno de caja cerrado correctamente.");
+      onSuccessCallback?.();
+      onOpenChange(false);
+    } catch (error: unknown) {
+      const err = error as {
+        response?: { data?: { detail?: string; message?: string; title?: string } };
+        message?: string;
+      };
+      const message =
+        err?.response?.data?.detail ||
+        err?.response?.data?.message ||
+        err?.response?.data?.title ||
+        err?.message ||
+        "Error al cerrar el turno de caja.";
       toast.error(message);
     }
   };
@@ -366,24 +264,18 @@ export function TurnoCajaFormDialog({
   const isLoading =
     abrirMutation.isPending ||
     cerrarMutation.isPending ||
-    updateMutation.isPending ||
-    isSubmitting;
-  const calculatedDuration = calculateDiffDuration(
-    fechaAperturaVal,
-    isClosing ? (fechaCierreVal || toLocalDatetimeString()) : fechaCierreVal
-  );
+    openForm.formState.isSubmitting ||
+    closeForm.formState.isSubmitting;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto p-0 border-border/60 shadow-2xl">
-        {/* Encabezado con Temática de Color Dinámica */}
+        {/* Encabezado */}
         <div
           className={cn(
             "p-6 pb-5 border-b sticky top-0 bg-background/95 backdrop-blur-xs z-10",
             isClosing
               ? "bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent border-amber-500/20"
-              : isEditing
-              ? "bg-gradient-to-r from-blue-500/15 via-blue-500/5 to-transparent border-blue-500/20"
               : "bg-gradient-to-r from-primary/15 via-primary/5 to-transparent border-primary/20"
           )}
         >
@@ -394,111 +286,133 @@ export function TurnoCajaFormDialog({
                   "flex size-11 items-center justify-center rounded-2xl border shadow-xs shrink-0",
                   isClosing
                     ? "bg-amber-500 text-white border-amber-600 shadow-amber-500/20"
-                    : isEditing
-                    ? "bg-blue-600 text-white border-blue-700 shadow-blue-500/20"
                     : "bg-primary text-primary-foreground border-primary/80 shadow-primary/20"
                 )}
               >
-                {isClosing ? (
-                  <LogOut className="size-5.5" />
-                ) : isEditing ? (
-                  <Pencil className="size-5.5" />
-                ) : (
-                  <Clock className="size-5.5" />
-                )}
+                {isClosing ? <LogOut className="size-5.5" /> : <Clock className="size-5.5" />}
               </div>
 
               <div>
                 <DialogTitle className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
-                  <span>
-                    {isClosing
-                      ? "Cierre de Turno de Caja"
-                      : isEditing
-                      ? "Modificar Parámetros del Turno"
-                      : "Apertura de Turno de Caja"}
-                  </span>
+                  <span>{isClosing ? "Cierre de Turno de Caja" : "Apertura de Turno de Caja"}</span>
                 </DialogTitle>
                 <DialogDescription className="text-xs text-muted-foreground mt-0.5">
                   {isClosing
-                    ? "Registre la fecha/hora final y observaciones para consolidar el cierre de jornada."
-                    : isEditing
-                    ? "Modifique los responsables, montos o el horario programado para este turno."
-                    : "Asigne la caja registradora, cajero y monto inicial para iniciar la atención."}
+                    ? "Verifique el estado del turno y registre la observación final para consolidar el cierre."
+                    : "Asigne la caja registradora, cajero y monto inicial para iniciar la jornada."}
                 </DialogDescription>
               </div>
             </div>
           </DialogHeader>
         </div>
 
-        {/* Tarjeta de Resumen en modo Cierre */}
-        {isClosing && turnoToEdit && (
-          <div className="mx-6 mt-5 p-4 rounded-xl border border-amber-500/30 bg-amber-500/[0.07] space-y-2.5">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
-                <Info className="size-4" />
-                Resumen de la Jornada Actual
-              </span>
-              <Badge
-                variant="outline"
-                className="bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/40 text-[10px] font-semibold"
-              >
-                #Turno-{turnoToEdit.id}
-              </Badge>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 text-xs pt-1">
-              <div className="bg-background/70 p-2 rounded-lg border border-amber-500/20">
-                <span className="text-[10px] text-muted-foreground block font-medium">Caja Registradora</span>
-                <span className="font-bold text-foreground">
-                  {turnoToEdit.caja?.codigo} - {turnoToEdit.caja?.nombre}
+        {/* MODAL MODO CIERRE */}
+        {isClosing && turnoToClose ? (
+          <form onSubmit={closeForm.handleSubmit(handleCloseSubmit)} className="p-6 space-y-4">
+            {/* Tarjeta Resumen de la Jornada */}
+            <div className="p-4 rounded-xl border border-amber-500/30 bg-amber-500/[0.07] space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                  <Info className="size-4" />
+                  Resumen de la Jornada Actual
                 </span>
+                <Badge
+                  variant="outline"
+                  className="bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/40 text-[10px] font-semibold"
+                >
+                  #Turno-{turnoToClose.id}
+                </Badge>
               </div>
 
-              <div className="bg-background/70 p-2 rounded-lg border border-amber-500/20">
-                <span className="text-[10px] text-muted-foreground block font-medium">Cajero Responsable</span>
-                <span className="font-bold text-foreground truncate block">
-                  {turnoToEdit.empleado?.nombreCompleto || "Sin asignar"}
-                </span>
-              </div>
-
-              <div className="bg-background/70 p-2 rounded-lg border border-amber-500/20">
-                <span className="text-[10px] text-muted-foreground block font-medium">Monto Inicial (Apertura)</span>
-                <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                  {formatCurrency(turnoToEdit.montoInicial)}
-                </span>
-              </div>
-
-              <div className="bg-background/70 p-2 rounded-lg border border-amber-500/20">
-                <span className="text-[10px] text-muted-foreground block font-medium">Tiempo Transcurrido</span>
-                <span className="font-mono font-bold text-foreground">
-                  {calculatedDuration || "-"}
-                </span>
-              </div>
-
-              <div className="col-span-2 bg-background/70 p-2 rounded-lg border border-amber-500/20 flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] text-muted-foreground block font-medium">Apertura Registrada</span>
-                  <span className="font-mono font-semibold text-foreground">
-                    {formatDisplayDate(turnoToEdit.fechaHoraApertura)}
+              <div className="grid grid-cols-2 gap-3 text-xs pt-1">
+                <div className="bg-background/70 p-2.5 rounded-lg border border-amber-500/20">
+                  <span className="text-[10px] text-muted-foreground block font-medium">Caja Registradora</span>
+                  <span className="font-bold text-foreground">
+                    {turnoToClose.caja?.codigo} - {turnoToClose.caja?.nombre}
                   </span>
                 </div>
-                {turnoToEdit.observacionApertura && (
-                  <div className="text-right max-w-[200px]">
-                    <span className="text-[10px] text-muted-foreground block font-medium">Obs. Apertura</span>
-                    <span className="text-[11px] text-muted-foreground italic truncate block" title={turnoToEdit.observacionApertura}>
-                      &quot;{turnoToEdit.observacionApertura}&quot;
+
+                <div className="bg-background/70 p-2.5 rounded-lg border border-amber-500/20">
+                  <span className="text-[10px] text-muted-foreground block font-medium">Cajero Responsable</span>
+                  <span className="font-bold text-foreground truncate block">
+                    {turnoToClose.empleado?.nombreCompleto || "Sin asignar"}
+                  </span>
+                </div>
+
+                <div className="bg-background/70 p-2.5 rounded-lg border border-amber-500/20">
+                  <span className="text-[10px] text-muted-foreground block font-medium">Monto Inicial</span>
+                  <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                    {formatCurrency(turnoToClose.montoInicial)}
+                  </span>
+                </div>
+
+                <div className="bg-background/70 p-2.5 rounded-lg border border-amber-500/20">
+                  <span className="text-[10px] text-muted-foreground block font-medium">Tiempo Transcurrido</span>
+                  <span className="font-mono font-bold text-foreground">
+                    {calculateDuration(turnoToClose.fechaHoraApertura) || "-"}
+                  </span>
+                </div>
+
+                <div className="col-span-2 bg-background/70 p-2.5 rounded-lg border border-amber-500/20 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] text-muted-foreground block font-medium">Apertura Registrada</span>
+                    <span className="font-mono font-semibold text-foreground">
+                      {formatDisplayDate(turnoToClose.fechaHoraApertura)}
                     </span>
                   </div>
-                )}
+                  {turnoToClose.observacionApertura && (
+                    <div className="text-right max-w-[200px]">
+                      <span className="text-[10px] text-muted-foreground block font-medium">Obs. Apertura</span>
+                      <span className="text-[11px] text-muted-foreground italic truncate block" title={turnoToClose.observacionApertura}>
+                        &quot;{turnoToClose.observacionApertura}&quot;
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        )}
 
-        {/* Formulario Principal */}
-        <form onSubmit={handleSubmit(onSubmit)} className="p-6 pt-4 space-y-4">
-          {/* SECCIÓN 1: ASIGNACIÓN DE CAJA Y RESPONSABLE (Oculto en Cierre) */}
-          {showAssignmentAndOpening && (
+            {/* Observación de Cierre */}
+            <div className="space-y-1.5 pt-1">
+              <Label htmlFor="closeObservacion" className="text-xs font-semibold flex items-center gap-1 text-foreground">
+                <MessageSquare className="size-3.5 text-amber-600" />
+                Observación de Cierre <span className="text-[10px] font-normal text-muted-foreground">(Opcional)</span>
+              </Label>
+              <Textarea
+                id="closeObservacion"
+                placeholder="Detalles sobre entrega de remesa, notas finales o novedades del turno..."
+                {...closeForm.register("observacion")}
+                rows={3}
+                maxLength={500}
+                className="text-xs bg-background resize-none"
+                disabled={isLoading}
+              />
+            </div>
+
+            <DialogFooter className="pt-4 border-t gap-2 sm:gap-0">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isLoading}
+                className="h-9.5 text-xs sm:text-sm cursor-pointer"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="h-9.5 px-4 gap-2 text-xs sm:text-sm font-semibold bg-amber-500 hover:bg-amber-600 text-white shadow-sm cursor-pointer"
+              >
+                {isLoading && <Loader2 className="size-4 animate-spin" />}
+                <span>Confirmar Cierre de Turno</span>
+              </Button>
+            </DialogFooter>
+          </form>
+        ) : (
+          /* MODAL MODO APERTURA */
+          <form onSubmit={openForm.handleSubmit(handleOpenSubmit)} className="p-6 space-y-4">
+            {/* SECCIÓN 1: ASIGNACIÓN DE CAJA Y RESPONSABLE */}
             <div className="space-y-3">
               <div className="flex items-center justify-between pb-1 border-b border-border/40">
                 <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
@@ -508,7 +422,7 @@ export function TurnoCajaFormDialog({
                 <span className="text-[10px] font-medium text-destructive">* Campos requeridos</span>
               </div>
 
-              {/* Selector de Caja si no está fija */}
+              {/* Selector de Caja */}
               {!defaultCajaId && (
                 <div className="space-y-1.5">
                   <Label htmlFor="cajaId" className="text-xs font-semibold flex items-center gap-1">
@@ -517,25 +431,25 @@ export function TurnoCajaFormDialog({
                   <Autocomplete
                     id="cajaId"
                     value={selectedCajaId ? String(selectedCajaId) : ""}
-                    onValueChange={handleCajaChange}
+                    onValueChange={(val) => openForm.setValue("cajaId", Number(val), { shouldValidate: true })}
                     options={cajaOptions}
                     placeholder="Seleccione la caja registradora..."
                     emptyText="No se encontraron cajas registradas"
                     allowCustomValue={false}
                     isLoading={isLoadingCajas}
-                    disabled={isLoading || isEditing}
-                    error={Boolean(errors.cajaId)}
+                    disabled={isLoading}
+                    error={Boolean(openForm.formState.errors.cajaId)}
                   />
-                  {errors.cajaId && (
+                  {openForm.formState.errors.cajaId && (
                     <p className="text-[11px] text-destructive font-medium flex items-center gap-1">
                       <AlertCircle className="size-3" />
-                      {errors.cajaId.message}
+                      {openForm.formState.errors.cajaId.message}
                     </p>
                   )}
                 </div>
               )}
 
-              {/* Cajero / Empleado Responsable Autocomplete */}
+              {/* Cajero / Empleado Responsable */}
               <div className="space-y-1.5">
                 <Label htmlFor="empleadoId" className="text-xs font-semibold flex items-center gap-1">
                   Cajero / Empleado Responsable <span className="text-destructive">*</span>
@@ -543,39 +457,31 @@ export function TurnoCajaFormDialog({
                 <Autocomplete
                   id="empleadoId"
                   value={selectedEmpleadoId ? String(selectedEmpleadoId) : ""}
-                  onValueChange={handleEmpleadoChange}
+                  onValueChange={(val) => openForm.setValue("empleadoId", Number(val), { shouldValidate: true })}
                   options={empleadoOptions}
                   placeholder="Buscar por código, nombre o DNI de cajero..."
                   emptyText="No se encontraron cajeros/empleados registrados"
                   allowCustomValue={false}
                   isLoading={isLoadingEmpleados}
                   disabled={isLoading}
-                  error={Boolean(errors.empleadoId)}
+                  error={Boolean(openForm.formState.errors.empleadoId)}
                 />
-                {errors.empleadoId && (
+                {openForm.formState.errors.empleadoId && (
                   <p className="text-[11px] text-destructive font-medium flex items-center gap-1">
                     <AlertCircle className="size-3" />
-                    {errors.empleadoId.message}
+                    {openForm.formState.errors.empleadoId.message}
                   </p>
                 )}
               </div>
             </div>
-          )}
 
-          {/* SECCIÓN 2: DATOS DE APERTURA (Oculto en Cierre) */}
-          {showAssignmentAndOpening && (
+            {/* SECCIÓN 2: MONTO INICIAL Y OBSERVACIONES */}
             <div className="space-y-3 pt-2">
               <div className="flex items-center justify-between pb-1 border-b border-border/40">
                 <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                   <Coins className="size-3.5 text-primary" />
-                  2. Apertura del Turno
+                  2. Fondo y Notas de Apertura
                 </span>
-                {calculatedDuration && !isAlreadyClosed && (
-                  <span className="text-[11px] font-mono font-medium text-primary flex items-center gap-1">
-                    <Timer className="size-3" />
-                    {calculatedDuration}
-                  </span>
-                )}
               </div>
 
               {/* Monto Inicial de Apertura */}
@@ -612,238 +518,61 @@ export function TurnoCajaFormDialog({
                     step="0.01"
                     min="0"
                     placeholder="0.00"
-                    {...register("montoInicial", { valueAsNumber: true })}
+                    {...openForm.register("montoInicial", { valueAsNumber: true })}
                     className={cn(
                       "h-9.5 pl-9 text-sm font-mono font-semibold bg-background",
-                      errors.montoInicial && "border-destructive focus-visible:ring-destructive"
+                      openForm.formState.errors.montoInicial && "border-destructive focus-visible:ring-destructive"
                     )}
-                    aria-invalid={Boolean(errors.montoInicial)}
                     disabled={isLoading}
                   />
                 </div>
-                {errors.montoInicial && (
+                {openForm.formState.errors.montoInicial && (
                   <p className="text-[11px] text-destructive font-medium flex items-center gap-1">
                     <AlertCircle className="size-3" />
-                    {errors.montoInicial.message}
-                  </p>
-                )}
-              </div>
-
-              {/* Fecha y Hora de Apertura */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="fechaHoraApertura" className="text-xs font-semibold flex items-center gap-1">
-                    Fecha y Hora de Apertura <span className="text-destructive">*</span>
-                  </Label>
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => setPresetForApertura(8, 0)}
-                      className="text-[10px] font-semibold text-muted-foreground hover:text-primary transition-colors cursor-pointer bg-muted/60 hover:bg-muted px-1.5 py-0.5 rounded"
-                    >
-                      08:00 AM
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPresetForApertura(14, 0)}
-                      className="text-[10px] font-semibold text-muted-foreground hover:text-primary transition-colors cursor-pointer bg-muted/60 hover:bg-muted px-1.5 py-0.5 rounded"
-                    >
-                      02:00 PM
-                    </button>
-                    <button
-                      type="button"
-                      onClick={setNowForApertura}
-                      className="text-[10px] font-semibold text-primary hover:underline cursor-pointer bg-primary/10 px-2 py-0.5 rounded flex items-center gap-1"
-                    >
-                      <Clock className="size-2.5" />
-                      Ahora
-                    </button>
-                  </div>
-                </div>
-                <Input
-                  id="fechaHoraApertura"
-                  type="datetime-local"
-                  value={fechaAperturaVal}
-                  onChange={(e) =>
-                    setValue("fechaHoraApertura", e.target.value, {
-                      shouldValidate: true,
-                    })
-                  }
-                  className={cn(
-                    "h-9.5 text-sm font-mono bg-background",
-                    errors.fechaHoraApertura && "border-destructive focus-visible:ring-destructive"
-                  )}
-                  aria-invalid={Boolean(errors.fechaHoraApertura)}
-                  disabled={isLoading}
-                />
-                {errors.fechaHoraApertura && (
-                  <p className="text-[11px] text-destructive font-medium flex items-center gap-1">
-                    <AlertCircle className="size-3" />
-                    {errors.fechaHoraApertura.message}
+                    {openForm.formState.errors.montoInicial.message}
                   </p>
                 )}
               </div>
 
               {/* Observación de Apertura */}
               <div className="space-y-1.5">
-                <Label htmlFor="observacionApertura" className="text-xs font-semibold flex items-center gap-1 text-muted-foreground">
-                  <FileText className="size-3" />
+                <Label htmlFor="observacion" className="text-xs font-semibold flex items-center gap-1 text-muted-foreground">
+                  <FileText className="size-3.5" />
                   Observación de Apertura <span className="text-[10px] font-normal text-muted-foreground">(Opcional)</span>
                 </Label>
                 <Textarea
-                  id="observacionApertura"
+                  id="observacion"
                   placeholder="Detalles sobre el fondo inicial o notas de inicio del turno..."
-                  {...register("observacionApertura")}
+                  {...openForm.register("observacion")}
                   rows={2}
                   maxLength={500}
-                  className={cn(
-                    "text-xs bg-background resize-none",
-                    errors.observacionApertura && "border-destructive focus-visible:ring-destructive"
-                  )}
+                  className="text-xs bg-background resize-none"
                   disabled={isLoading}
                 />
-                {errors.observacionApertura && (
-                  <p className="text-[11px] text-destructive font-medium flex items-center gap-1">
-                    <AlertCircle className="size-3" />
-                    {errors.observacionApertura.message}
-                  </p>
-                )}
               </div>
             </div>
-          )}
 
-          {/* SECCIÓN 3: CIERRE DEL TURNO (Solo visible cuando se va a cerrar o si el turno ya fue cerrado) */}
-          {showClosureSection && (
-            <div className="space-y-3 pt-2">
-              <div className="flex items-center justify-between pb-1 border-b border-border/40">
-                <span className="text-[11px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                  <LogOut className="size-3.5" />
-                  {isClosing ? "Datos de Cierre del Turno" : "3. Cierre del Turno"}
-                </span>
-                {isClosing && (
-                  <span className="text-[10px] font-medium text-amber-600 dark:text-amber-400">
-                    Completar datos de salida
-                  </span>
-                )}
-              </div>
-
-              {/* Fecha y Hora de Cierre */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="fechaHoraCierre" className="text-xs font-semibold flex items-center gap-1 text-foreground">
-                    Fecha y Hora de Cierre {isClosing && <span className="text-destructive">*</span>}
-                  </Label>
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => setPresetForCierre(16, 0)}
-                      className="text-[10px] font-semibold text-muted-foreground hover:text-primary transition-colors cursor-pointer bg-muted/60 hover:bg-muted px-1.5 py-0.5 rounded"
-                    >
-                      04:00 PM
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPresetForCierre(20, 0)}
-                      className="text-[10px] font-semibold text-muted-foreground hover:text-primary transition-colors cursor-pointer bg-muted/60 hover:bg-muted px-1.5 py-0.5 rounded"
-                    >
-                      08:00 PM
-                    </button>
-                    <button
-                      type="button"
-                      onClick={setNowForCierre}
-                      className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 hover:underline cursor-pointer bg-amber-500/10 px-2 py-0.5 rounded flex items-center gap-1"
-                    >
-                      <Clock className="size-2.5" />
-                      Ahora
-                    </button>
-                  </div>
-                </div>
-                <Input
-                  id="fechaHoraCierre"
-                  type="datetime-local"
-                  value={fechaCierreVal || ""}
-                  onChange={(e) => {
-                    setValue("fechaHoraCierre", e.target.value);
-                    if (e.target.value) {
-                      setValue("estado", EstadoTurnoCaja.Cerrado);
-                    }
-                  }}
-                  className={cn(
-                    "h-9.5 text-sm font-mono bg-background",
-                    errors.fechaHoraCierre && "border-destructive focus-visible:ring-destructive"
-                  )}
-                  aria-invalid={Boolean(errors.fechaHoraCierre)}
-                  disabled={isLoading}
-                />
-                {errors.fechaHoraCierre && (
-                  <p className="text-[11px] text-destructive font-medium flex items-center gap-1">
-                    <AlertCircle className="size-3" />
-                    {errors.fechaHoraCierre.message}
-                  </p>
-                )}
-              </div>
-
-              {/* Observación de Cierre */}
-              <div className="space-y-1.5">
-                <Label htmlFor="observacionCierre" className="text-xs font-semibold flex items-center gap-1 text-muted-foreground">
-                  <MessageSquare className="size-3" />
-                  Observación de Cierre <span className="text-[10px] font-normal text-muted-foreground">(Opcional)</span>
-                </Label>
-                <Textarea
-                  id="observacionCierre"
-                  placeholder="Detalles sobre el arqueo de salida, entrega de remesa o novedades al cierre..."
-                  {...register("observacionCierre")}
-                  rows={2}
-                  maxLength={500}
-                  className={cn(
-                    "text-xs bg-background resize-none",
-                    errors.observacionCierre && "border-destructive focus-visible:ring-destructive"
-                  )}
-                  disabled={isLoading}
-                />
-                {errors.observacionCierre && (
-                  <p className="text-[11px] text-destructive font-medium flex items-center gap-1">
-                    <AlertCircle className="size-3" />
-                    {errors.observacionCierre.message}
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
-
-          <DialogFooter className="pt-5 border-t gap-2 sm:gap-0 sticky bottom-0 bg-background/95 backdrop-blur-xs z-10">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isLoading}
-              className="h-9.5 text-xs sm:text-sm cursor-pointer"
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className={cn(
-                "h-9.5 px-4 gap-2 text-xs sm:text-sm font-semibold cursor-pointer shadow-sm transition-all",
-                isClosing
-                  ? "bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20"
-                  : isEditing
-                  ? "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20"
-                  : "bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/20"
-              )}
-            >
-              {isLoading && <Loader2 className="size-4 animate-spin" />}
-              <span>
-                {isClosing
-                  ? "Confirmar Cierre de Turno"
-                  : isEditing
-                  ? "Guardar Modificaciones"
-                  : "Abrir Turno de Caja"}
-              </span>
-            </Button>
-          </DialogFooter>
-        </form>
+            <DialogFooter className="pt-4 border-t gap-2 sm:gap-0">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isLoading}
+                className="h-9.5 text-xs sm:text-sm cursor-pointer"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="h-9.5 px-4 gap-2 text-xs sm:text-sm font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm cursor-pointer"
+              >
+                {isLoading && <Loader2 className="size-4 animate-spin" />}
+                <span>Abrir Turno de Caja</span>
+              </Button>
+            </DialogFooter>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   );

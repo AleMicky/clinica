@@ -16,8 +16,6 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Pencil,
-  Trash2,
   Clock,
   LogOut,
   RefreshCw,
@@ -59,9 +57,7 @@ interface TurnoCajaListProps {
   onSearchChange: (term: string) => void;
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
-  onEdit: (turno: TurnoCajaResponse) => void;
   onCloseTurno: (turno: TurnoCajaResponse) => void;
-  onDelete: (turno: TurnoCajaResponse) => void;
   onNewTurnoClick?: () => void;
   onRefresh?: () => void;
 }
@@ -127,9 +123,7 @@ export function TurnoCajaList({
   onSearchChange,
   onPageChange,
   onPageSizeChange,
-  onEdit,
   onCloseTurno,
-  onDelete,
   onNewTurnoClick,
   onRefresh,
 }: TurnoCajaListProps) {
@@ -254,7 +248,7 @@ export function TurnoCajaList({
         </div>
       </div>
 
-      {/* Listado de Turnos en Tarjetas UI/UX Premium */}
+      {/* Listado de Turnos en Tarjetas UI/UX */}
       <div className="space-y-2.5">
         {isLoading ? (
           <div className="space-y-2.5">
@@ -348,14 +342,13 @@ export function TurnoCajaList({
                       : "border-border/60 bg-card hover:border-primary/40 hover:bg-muted/15"
                   }`}
                 >
-                  {/* Indicador de barra lateral de estado activo */}
+                  {/* Indicador lateral de turno abierto */}
                   {isAbierto && (
                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500" />
                   )}
 
-                  {/* Bloque Izquierdo: Icono/Avatar + Detalles */}
+                  {/* Bloque Izquierdo: Avatar + Info */}
                   <div className="flex items-start gap-3.5 min-w-0 flex-1 pl-1">
-                    {/* Avatar de Cajero o Icono de Estado */}
                     <div className="relative shrink-0">
                       <div
                         className={`size-11 rounded-xl flex items-center justify-center font-bold text-xs shadow-xs border ${
@@ -373,7 +366,6 @@ export function TurnoCajaList({
                         )}
                       </div>
 
-                      {/* Badge flotante en el icono */}
                       <span
                         className={`absolute -bottom-1 -right-1 size-3.5 rounded-full border-2 border-card flex items-center justify-center ${
                           isAbierto ? "bg-emerald-500" : "bg-slate-400"
@@ -385,7 +377,6 @@ export function TurnoCajaList({
                       </span>
                     </div>
 
-                    {/* Información Principal */}
                     <div className="min-w-0 flex-1 space-y-1.5">
                       {/* Fila 1: Caja + ID + Estado Badge + Monto Inicial */}
                       <div className="flex items-center gap-2 flex-wrap">
@@ -430,7 +421,7 @@ export function TurnoCajaList({
                             )}
                           </Badge>
 
-                          {/* Duración Badge */}
+                          {/* Duración */}
                           {durationText && (
                             <span className="inline-flex items-center gap-1 text-[10px] font-mono font-medium text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-md border border-border/50">
                               <Hourglass className="size-2.5 text-muted-foreground/70" />
@@ -479,7 +470,7 @@ export function TurnoCajaList({
                         </div>
                       </div>
 
-                      {/* Fila 4: Observaciones (si existen) */}
+                      {/* Fila 4: Observaciones */}
                       {(turno.observacionApertura || turno.observacionCierre) && (
                         <div className="flex flex-wrap items-center gap-2 pt-1">
                           {turno.observacionApertura && (
@@ -507,44 +498,24 @@ export function TurnoCajaList({
                     </div>
                   </div>
 
-                  {/* Bloque Derecho: Botones de Acción */}
+                  {/* Bloque Derecho: Botón de Cierre de Turno */}
                   <div className="flex items-center justify-end gap-2 shrink-0 pt-2.5 md:pt-0 border-t md:border-t-0 border-border/40">
-                    {isAbierto && (
+                    {isAbierto ? (
                       <Button
                         type="button"
                         size="sm"
                         onClick={() => onCloseTurno(turno)}
-                        className="h-8 px-3 text-xs font-semibold gap-1.5 bg-amber-500 hover:bg-amber-600 text-white shadow-xs cursor-pointer transition-all"
+                        className="h-8 px-3.5 text-xs font-semibold gap-1.5 bg-amber-500 hover:bg-amber-600 text-white shadow-xs cursor-pointer transition-all"
                         title="Cerrar turno de caja"
                       >
                         <LogOut className="size-3.5" />
                         <span>Cerrar Turno</span>
                       </Button>
+                    ) : (
+                      <span className="text-xs text-muted-foreground font-mono px-2 py-1 bg-muted/40 rounded border border-border/40">
+                        Cerrado
+                      </span>
                     )}
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onEdit(turno)}
-                      className="h-8 px-3 text-xs font-semibold gap-1.5 border-border/80 hover:bg-accent hover:text-primary shadow-2xs cursor-pointer bg-background"
-                      title="Editar turno"
-                    >
-                      <Pencil className="size-3.5 text-muted-foreground" />
-                      <span>Editar</span>
-                    </Button>
-
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onDelete(turno)}
-                      className="h-8 px-2.5 text-xs font-semibold gap-1 text-destructive/80 hover:text-destructive hover:bg-destructive/10 cursor-pointer"
-                      title="Eliminar registro"
-                    >
-                      <Trash2 className="size-3.5" />
-                      <span className="hidden sm:inline">Eliminar</span>
-                    </Button>
                   </div>
                 </div>
               );
@@ -552,7 +523,7 @@ export function TurnoCajaList({
           </div>
         )}
 
-        {/* Paginación (Solo si hay más de 10 registros) */}
+        {/* Paginación */}
         {totalItems > 10 && (
           <div className="pt-2 px-0.5">
             <DataTablePagination

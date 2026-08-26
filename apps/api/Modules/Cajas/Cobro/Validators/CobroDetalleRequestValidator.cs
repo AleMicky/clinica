@@ -18,30 +18,27 @@ public sealed class CobroDetalleRequestValidator
 
         RuleFor(x => x.CuentaBancariaId)
             .GreaterThan(0)
-            .WithMessage("La cuenta bancaria no es válida.")
-            .When(x => x.CuentaBancariaId.HasValue);
+            .When(x => x.CuentaBancariaId.HasValue)
+            .WithMessage("La cuenta bancaria no es válida.");
 
         RuleFor(x => x.Monto)
             .GreaterThan(0)
-            .WithMessage("El monto del detalle debe ser mayor que cero.");
+            .WithMessage("El monto debe ser mayor a cero.");
 
         RuleFor(x => x.TipoCambio)
             .GreaterThan(0)
-            .WithMessage("El tipo de cambio debe ser mayor que cero.");
+            .WithMessage("El tipo de cambio debe ser mayor a cero.");
 
         RuleFor(x => x.Referencia)
             .MaximumLength(100)
-            .WithMessage("La referencia no puede superar los 100 caracteres.")
             .When(x => !string.IsNullOrWhiteSpace(x.Referencia));
 
         RuleFor(x => x.EntidadFinanciera)
-            .MaximumLength(100)
-            .WithMessage("La entidad financiera no puede superar los 100 caracteres.")
+            .MaximumLength(150)
             .When(x => !string.IsNullOrWhiteSpace(x.EntidadFinanciera));
 
         RuleFor(x => x.Observacion)
             .MaximumLength(500)
-            .WithMessage("La observación del detalle no puede superar los 500 caracteres.")
             .When(x => !string.IsNullOrWhiteSpace(x.Observacion));
     }
 }

@@ -17,21 +17,30 @@ public static class CobroEndpoints
             .WithTags("Cobros")
             .RequireAuthorization();
 
-        group.MapGet("/", ListarAsync).WithName("ListarCobros");
-        group.MapGet("/{id:int}", ObtenerAsync).WithName("ObtenerCobro");
-        group.MapPost("/", CrearAsync)
-            .WithName("CrearCobro")
-            .Validate<CreateCobroRequest>();
-        group.MapPut("/{id:int}", ActualizarAsync)
-            .WithName("ActualizarCobro")
-            .Validate<UpdateCobroRequest>();
+        group.MapGet("/", ListarAsync)
+            .WithName("ListarCobros");
+
+        group.MapGet("/{id:int}", ObtenerAsync)
+            .WithName("ObtenerCobro");
+
+        group.MapPost("/generar-desde-venta", GenerarDesdeVentaAsync)
+            .WithName("GenerarCobroDesdeVenta")
+            .Validate<GenerarCobroDesdeVentaRequest>();
+
+        group.MapPost("/{id:int}/confirmar", ConfirmarAsync)
+            .WithName("ConfirmarCobro")
+            .Validate<ConfirmarCobroRequest>();
+
         group.MapPost("/{id:int}/anular", AnularAsync)
             .WithName("AnularCobro")
             .Validate<AnularCobroRequest>();
-        group.MapDelete("/{id:int}", EliminarAsync).WithName("EliminarCobro");
 
         return app;
     }
+
+    // ============================================================
+    // LISTAR
+    // ============================================================
 
     private static async Task<IResult> ListarAsync(
         [AsParameters] PaginationRequest pagination,
@@ -40,31 +49,41 @@ public static class CobroEndpoints
         CobroService service,
         CancellationToken cancellationToken)
     {
-        return Results.Ok(
-            await service.ListarAsync(
-                pagination,
-                search,
-                estado,
-                cancellationToken));
+        var result = await service.ListarAsync(
+            pagination,
+            search,
+            estado,
+            cancellationToken);
+
+        return Results.Ok(result);
     }
+
+    // ============================================================
+    // OBTENER
+    // ============================================================
 
     private static async Task<IResult> ObtenerAsync(
         int id,
         CobroService service,
         CancellationToken cancellationToken)
     {
-        return Results.Ok(
-            await service.ObtenerAsync(
-                id,
-                cancellationToken));
+        var result = await service.ObtenerAsync(
+            id,
+            cancellationToken);
+
+        return Results.Ok(result);
     }
 
-    private static async Task<IResult> CrearAsync(
-        CreateCobroRequest request,
+    // ============================================================
+    // GENERAR DESDE VENTA
+    // ============================================================
+
+    private static async Task<IResult> GenerarDesdeVentaAsync(
+        GenerarCobroDesdeVentaRequest request,
         CobroService service,
         CancellationToken cancellationToken)
     {
-        var result = await service.CrearAsync(
+        var result = await service.GenerarDesdeVentaAsync(
             request,
             cancellationToken);
 
@@ -73,18 +92,27 @@ public static class CobroEndpoints
             result);
     }
 
-    private static async Task<IResult> ActualizarAsync(
+    // ============================================================
+    // CONFIRMAR
+    // ============================================================
+
+    private static async Task<IResult> ConfirmarAsync(
         int id,
-        UpdateCobroRequest request,
+        ConfirmarCobroRequest request,
         CobroService service,
         CancellationToken cancellationToken)
     {
-        return Results.Ok(
-            await service.ActualizarAsync(
-                id,
-                request,
-                cancellationToken));
+        var result = await service.ConfirmarAsync(
+            id,
+            request,
+            cancellationToken);
+
+        return Results.Ok(result);
     }
+
+    // ============================================================
+    // ANULAR
+    // ============================================================
 
     private static async Task<IResult> AnularAsync(
         int id,
@@ -92,21 +120,11 @@ public static class CobroEndpoints
         CobroService service,
         CancellationToken cancellationToken)
     {
-        return Results.Ok(
-            await service.AnularAsync(
-                id,
-                request.MotivoAnulacion,
-                cancellationToken));
-    }
-
-    private static async Task<IResult> EliminarAsync(
-        int id,
-        CobroService service,
-        CancellationToken cancellationToken)
-    {
-        await service.EliminarAsync(
+        var result = await service.AnularAsync(
             id,
+            request,
             cancellationToken);
-        return Results.NoContent();
+
+        return Results.Ok(result);
     }
 }

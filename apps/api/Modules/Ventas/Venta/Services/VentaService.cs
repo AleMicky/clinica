@@ -189,93 +189,114 @@ public sealed class VentaService(
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<VentaResponse> CambiarEstadoAsync(
-        int id,
-        CambiarEstadoVentaRequest request,
-        CancellationToken cancellationToken = default)
+   public async Task<VentaResponse> CambiarEstadoAsync(
+    int id,
+    CambiarEstadoVentaRequest request,
+    CancellationToken cancellationToken = default)
+{
+    await using var transaction =
+        await dbContext.Database.BeginTransactionAsync(
+            cancellationToken);
+
+    try
     {
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
-        try
-        {
-            var entity = await Entities
-                .Include(x => x.Detalles)
-                .Include(x => x.Pagadores)
-                .FirstOrDefaultAsync(
-                    x => x.Id == id && x.Activo,
-                    cancellationToken);
-
-            if (entity is null)
-                throw CreateNotFoundException(id);
-
-            if (!VentaTransiciones.EsValida(entity.Estado, request.EstadoDestino))
-            {
-                throw new ConflictException($"No se puede transitar de {entity.Estado} " + $"a {request.EstadoDestino}.");
-            }
-
-            // Los estados de pago no se cambian manualmente desde Ventas.
-            if (request.EstadoDestino is
-                EstadoVenta.ParcialmentePagada or
-                EstadoVenta.Pagada)
-            {
-                throw new ConflictException(
-                    $"El estado {request.EstadoDestino} " +
-                    $"se actualiza automáticamente desde el módulo de cobros.");
-            }
-
-            // ============================================
-            // ENVIAR LA VENTA A COBRO
-            // ============================================
-            if (request.EstadoDestino == EstadoVenta.PendienteCobro)
-            {
-                if (request.CajaId is null)
-                {
-                    throw new ConflictException("Debe seleccionar una caja para enviar la venta a cobro.");
-                }
-
-                var pagadores = entity.Pagadores
-                    .Where(x =>
-                        x.Activo &&
-                        x.Estado != EstadoVentaPagador.Anulado)
-                    .ToList();
-
-                if (pagadores.Count == 0)
-                {
-                    throw new ConflictException(
-                        "La venta no tiene pagadores activos.");
-                }
-
-                foreach (var pagador in pagadores)
-                {
-                    await cobroService.GenerarDesdeVentaAsync(
-                        new GenerarCobroDesdeVentaRequest
-                        {
-                            VentaPagadorId = pagador.Id,
-                            CajaId = request.CajaId.Value
-                        },
-                        cancellationToken);
-                }
-            }
-
-            // ============================================
-            // CAMBIAR ESTADO
-            // ============================================
-            entity.Estado = request.EstadoDestino;
-
-            // Guarda:
-            // - cambio de estado de Venta
-            // - Cobros generados desde Venta
-            await dbContext.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
-            return await ObtenerAsync(entity.Id, cancellationToken);
-        }
-        catch
-        {
-            await transaction.RollbackAsync(
+        var entity = await Entities
+            .Include(x => x.Detalles)
+            .Include(x => x.Pagadores)
+            .FirstOrDefaultAsync(
+                x => x.Id == id && x.Activo,
                 cancellationToken);
 
-            throw;
+        if (entity is null)
+            throw CreateNotFoundException(id);
+
+        if (!VentaTransiciones.EsValida(
+                entity.Estado,
+                request.EstadoDestino))
+        {
+            throw new ConflictException(
+                $"No se puede transitar de {entity.Estado} " +
+                $"a {request.EstadoDestino}.");
         }
+
+        // Estos estados únicamente los controla Cobros.
+        if (request.EstadoDestino is
+            EstadoVenta.ParcialmentePagada or
+            EstadoVenta.Pagada)
+        {
+            throw new ConflictException(
+                $"El estado {request.EstadoDestino} " +
+                "se actualiza automáticamente desde el módulo de cobros.");
+        }
+
+        // =====================================================
+        // ENVIAR A CAJA
+        // =====================================================
+
+        if (request.EstadoDestino ==
+            EstadoVenta.PendienteCobro)
+        {
+            if (!request.CajaId.HasValue ||
+                request.CajaId.Value <= 0)
+            {
+                throw new ConflictException(
+                    "Debe seleccionar una caja para enviar la venta a cobro.");
+            }
+
+            var pagadores = entity.Pagadores
+                .Where(x =>
+                    x.Activo &&
+                    x.Estado != EstadoVentaPagador.Anulado)
+                .ToList();
+
+            if (pagadores.Count == 0)
+            {
+                throw new ConflictException(
+                    "La venta no tiene pagadores activos.");
+            }
+
+            if (pagadores.All(
+                    x => x.Estado ==
+                         EstadoVentaPagador.Pagado))
+            {
+                throw new ConflictException(
+                    "Todos los pagadores de la venta ya se encuentran pagados.");
+            }
+
+            foreach (var pagador in pagadores)
+            {
+                if (pagador.Estado ==
+                    EstadoVentaPagador.Pagado)
+                {
+                    continue;
+                }
+
+                await cobroService.GenerarDesdeVentaAsync(
+                    new GenerarCobroDesdeVentaRequest
+                    {
+                        VentaPagadorId = pagador.Id,
+                        CajaId = request.CajaId.Value
+                    },
+                    cancellationToken);
+            }
+        }
+
+        // =====================================================
+        // CAMBIAR ESTADO VENTA
+        // =====================================================
+
+        entity.Estado = request.EstadoDestino;
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return await ObtenerAsync(entity.Id, cancellationToken);
     }
+    catch
+    {
+        await transaction.RollbackAsync(cancellationToken);
+
+        throw;
+    }
+}
 
     public async Task<VentaResponse> GenerarVentaDesdeAdmisionAsync(
         int admisionId,

@@ -3,24 +3,26 @@ using FluentValidation;
 
 namespace Clinica.Api.Modules.Cajas.Cobro.Validators;
 
-public abstract class CobroRequestValidator<TRequest>
-    : AbstractValidator<TRequest>
-    where TRequest : CobroRequest
+public sealed class GenerarCobroDesdeVentaRequestValidator
+    : AbstractValidator<GenerarCobroDesdeVentaRequest>
 {
-    protected CobroRequestValidator()
+    public GenerarCobroDesdeVentaRequestValidator()
     {
-        RuleFor(x => x.TurnoCajaId)
-            .GreaterThan(0)
-            .WithMessage("El turno de caja es obligatorio.");
-
         RuleFor(x => x.VentaPagadorId)
             .GreaterThan(0)
             .WithMessage("El pagador de la venta es obligatorio.");
 
-        RuleFor(x => x.FechaHora)
-            .NotEqual(default(DateTime))
-            .WithMessage("La fecha y hora del cobro son obligatorias.");
+        RuleFor(x => x.CajaId)
+            .GreaterThan(0)
+            .WithMessage("La caja es obligatoria.");
+    }
+}
 
+public sealed class ConfirmarCobroRequestValidator
+    : AbstractValidator<ConfirmarCobroRequest>
+{
+    public ConfirmarCobroRequestValidator()
+    {
         RuleFor(x => x.Observacion)
             .MaximumLength(500)
             .WithMessage("La observación no puede superar los 500 caracteres.")
@@ -28,18 +30,12 @@ public abstract class CobroRequestValidator<TRequest>
 
         RuleFor(x => x.Detalles)
             .NotEmpty()
-            .WithMessage("El cobro debe tener al menos un detalle de pago.");
+            .WithMessage("Debe registrar al menos una forma de pago.");
 
         RuleForEach(x => x.Detalles)
             .SetValidator(new CobroDetalleRequestValidator());
     }
 }
-
-public sealed class CreateCobroRequestValidator
-    : CobroRequestValidator<CreateCobroRequest>;
-
-public sealed class UpdateCobroRequestValidator
-    : CobroRequestValidator<UpdateCobroRequest>;
 
 public sealed class AnularCobroRequestValidator
     : AbstractValidator<AnularCobroRequest>
@@ -50,6 +46,7 @@ public sealed class AnularCobroRequestValidator
             .NotEmpty()
             .WithMessage("El motivo de anulación es obligatorio.")
             .MaximumLength(500)
-            .WithMessage("El motivo de anulación no puede superar los 500 caracteres.");
+            .WithMessage(
+                "El motivo de anulación no puede superar los 500 caracteres.");
     }
 }

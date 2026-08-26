@@ -55,28 +55,6 @@ export interface CerrarTurnoCajaRequest {
   observacion?: string | null;
 }
 
-export interface CreateTurnoCajaRequest {
-  cajaId: number;
-  empleadoId: number;
-  fechaHoraApertura?: string;
-  montoInicial: number;
-  observacionApertura?: string | null;
-  fechaHoraCierre?: string | null;
-  observacionCierre?: string | null;
-  estado?: EstadoTurnoCaja;
-}
-
-export interface UpdateTurnoCajaRequest {
-  cajaId: number;
-  empleadoId: number;
-  fechaHoraApertura?: string;
-  montoInicial: number;
-  observacionApertura?: string | null;
-  fechaHoraCierre?: string | null;
-  observacionCierre?: string | null;
-  estado?: EstadoTurnoCaja;
-}
-
 export interface TurnoCajaQueryParams {
   page?: number;
   pageSize?: number;
