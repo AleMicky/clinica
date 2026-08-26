@@ -34,6 +34,12 @@ public static class PacienteEndpoints
         group.MapDelete("/{id:int}", EliminarAsync)
             .WithName("EliminarPaciente");
 
+        group.MapPost(
+                "/importar-excel",
+                ImportarExcelAsync)
+            .WithName("ImportarPacientesExcel")
+            .DisableAntiforgery();
+
         return app;
     }
 
@@ -200,5 +206,31 @@ public static class PacienteEndpoints
             cancellationToken);
 
         return Results.NoContent();
+    }
+
+    private static async Task<IResult> ImportarExcelAsync(IFormFile archivo, IPacienteImportacionService service,
+        CancellationToken cancellationToken)
+    {
+        if (archivo is null || archivo.Length == 0)
+        {
+            return Results.BadRequest(new
+            {
+                message = "Debe seleccionar un archivo Excel."
+            });
+        }
+
+        var extension = Path.GetExtension(archivo.FileName);
+
+        if (!extension.Equals(".xlsx", StringComparison.OrdinalIgnoreCase))
+        {
+            return Results.BadRequest(new
+            {
+                message = "Solo se permiten archivos Excel .xlsx."
+            });
+        }
+
+        await using var stream = archivo.OpenReadStream();
+        var resultado = await service.ImportarAsync(stream, cancellationToken);
+        return Results.Ok(resultado);
     }
 }

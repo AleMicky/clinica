@@ -1,4 +1,5 @@
 using Clinica.Api.Shared.Abstractions;
+using Clinica.Api.Shared.Excel;
 using Clinica.Api.Shared.Json;
 using Clinica.Api.Shared.Middleware;
 using Clinica.Api.Shared.Persistence;
@@ -29,7 +30,7 @@ public static class SharedExtensions
         services.AddHttpContextAccessor();
         services.AddSingleton<ICurrentUserService, CurrentUserService>();
         services.AddSingleton<AuditSaveChangesInterceptor>();
-        
+        services.AddScoped<IExcelReader, ExcelReader>();
         services.AddValidatorsFromAssembly(
             typeof(SharedExtensions).Assembly,
             includeInternalTypes: true);

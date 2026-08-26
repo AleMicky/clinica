@@ -15,6 +15,7 @@ public static class RecepcionModule
         services.AddScoped<AdmisionService>();
         services.AddScoped<AdmisionDetalleService>();
         services.AddScoped<AdmisionPdfService>();
+        services.AddScoped<IPacienteImportacionService, PacienteImportacionService>();
 
         return services;
     }

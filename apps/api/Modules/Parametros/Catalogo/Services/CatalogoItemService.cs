@@ -1,6 +1,5 @@
 using Clinica.Api.Data;
 using Clinica.Api.Modules.Parametros.Catalogo.Dtos;
-using Clinica.Api.Modules.Parametros.Catalogo.Entity;
 using Clinica.Api.Modules.Parametros.Catalogo.Mappers;
 using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Pagination;
@@ -163,31 +162,23 @@ public sealed class CatalogoItemService(AppDbContext dbContext)
         return CatalogoItemMapper.ToResponse(entity);
     }
 
-    public async Task EliminarAsync(
-        int grupoId,
-        int itemId,
-        CancellationToken cancellationToken = default)
+    public async Task EliminarAsync(int grupoId, int itemId, CancellationToken cancellationToken = default)
     {
         await EnsureGrupoExistsAsync(grupoId, cancellationToken);
 
         var entity = await dbContext.CatalogosItems
             .FirstOrDefaultAsync(
-                x => x.CatalogoGrupoId == grupoId
-                     && x.Id == itemId
-                     && x.Activo,
+                x => x.CatalogoGrupoId == grupoId && x.Id == itemId,
                 cancellationToken);
 
         if (entity is null)
             throw new NotFoundException("CatalogoItem", itemId);
 
-        entity.Activo = false;
-
+        dbContext.CatalogosItems.Remove(entity);
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    private async Task EnsureGrupoExistsAsync(
-        int grupoId,
-        CancellationToken cancellationToken)
+    private async Task EnsureGrupoExistsAsync(int grupoId, CancellationToken cancellationToken)
     {
         var existe = await dbContext.CatalogosGrupos
             .AnyAsync(x => x.Id == grupoId && x.Activo, cancellationToken);
