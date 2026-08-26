@@ -50,11 +50,13 @@ const titleMap: Record<string, string> = {
   "tipo-cambio": "Tipo de Cambio",
   "unidades-medida": "Unidades de Medida",
   general: "Configuración General",
-  cajas: "Gestión de Cajas",
+  caja: "Cajas",
+  cajas: "Puntos de Caja",
   turnos: "Turnos de Caja",
   movimientos: "Movimientos",
   arqueos: "Arqueos",
   cobros: "Cobros",
+  nuevo: "Nuevo",
 };
 
 export function AppBreadcrumbs() {

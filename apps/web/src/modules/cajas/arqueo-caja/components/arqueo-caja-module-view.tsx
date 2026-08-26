@@ -80,7 +80,7 @@ export function ArqueoCajaModuleView() {
   }, [allArqueos, totalItems]);
 
   const handleOpenCreateModal = () => {
-    router.push("/arqueos/nuevo");
+    router.push("/caja/arqueos/nuevo");
   };
 
   const handleSelectArqueo = (arq: ArqueoCajaResponse) => {

@@ -205,7 +205,7 @@ public static class OpcionMenuSeed
             new(
                 "COBROS",
                 "Cobros",
-                "/cobros",
+                "/caja/cobros",
                 "CreditCard",
                 2,
                 "CAJA_VENTAS"),
@@ -213,7 +213,7 @@ public static class OpcionMenuSeed
             new(
                 "PUNTOS_CAJA",
                 "Puntos de Caja",
-                "/cajas",
+                "/caja/cajas",
                 "Vault",
                 3,
                 "CAJA_VENTAS"),
@@ -221,7 +221,7 @@ public static class OpcionMenuSeed
             new(
                 "TURNOS_CAJA",
                 "Turnos de Caja",
-                "/turnos",
+                "/caja/turnos",
                 "CalendarClock",
                 4,
                 "CAJA_VENTAS"),
@@ -229,7 +229,7 @@ public static class OpcionMenuSeed
             new(
                 "MOVIMIENTOS_CAJA",
                 "Movimientos",
-                "/movimientos",
+                "/caja/movimientos",
                 "ArrowLeftRight",
                 5,
                 "CAJA_VENTAS"),
@@ -237,7 +237,7 @@ public static class OpcionMenuSeed
             new(
                 "ARQUEOS_CIERRES",
                 "Arqueos y Cierres",
-                "/arqueos",
+                "/caja/arqueos",
                 "Calculator",
                 6,
                 "CAJA_VENTAS"),

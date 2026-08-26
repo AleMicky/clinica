@@ -48,24 +48,17 @@ export const ROUTES = {
     UNIDADES_MEDIDA: "/parametros/unidades-medida",
     GENERAL: "/parametros/general",
   },
-  CAJAS: {
-    ROOT: "/cajas",
-  },
-  TURNOS: {
-    ROOT: "/turnos",
-  },
-  MOVIMIENTOS: {
-    ROOT: "/movimientos",
-  },
-  ARQUEOS: {
-    ROOT: "/arqueos",
-    NUEVO: "/arqueos/nuevo",
+  CAJA: {
+    ROOT: "/caja",
+    CAJAS: "/caja/cajas",
+    TURNOS: "/caja/turnos",
+    MOVIMIENTOS: "/caja/movimientos",
+    ARQUEOS: "/caja/arqueos",
+    ARQUEOS_NUEVO: "/caja/arqueos/nuevo",
+    COBROS: "/caja/cobros",
   },
   VENTAS: {
     ROOT: "/ventas",
-  },
-  COBROS: {
-    ROOT: "/cobros",
   },
 } as const;
 
