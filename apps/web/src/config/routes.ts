@@ -50,10 +50,16 @@ export const ROUTES = {
   },
   CAJAS: {
     ROOT: "/cajas",
-    TURNOS: "/cajas/turnos",
-    MOVIMIENTOS: "/cajas/movimientos",
-    ARQUEOS: "/cajas/arqueos",
-    CONFIGURACION: "/cajas/configuracion",
+  },
+  TURNOS: {
+    ROOT: "/turnos",
+  },
+  MOVIMIENTOS: {
+    ROOT: "/movimientos",
+  },
+  ARQUEOS: {
+    ROOT: "/arqueos",
+    NUEVO: "/arqueos/nuevo",
   },
   VENTAS: {
     ROOT: "/ventas",

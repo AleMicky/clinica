@@ -126,10 +126,11 @@ public sealed class AuthService(
         }
     }
 
-    public async Task<LogoutResponse> LogoutAsync()
+    public Task<LogoutResponse> LogoutAsync()
     {
-        await signInManager.SignOutAsync();
-        return new LogoutResponse("Sesión cerrada exitosamente.");
+        return Task.FromResult(
+            new LogoutResponse("Sesión cerrada exitosamente.")
+        );
     }
 
     public async Task<RefreshTokenResponse> RefreshAsync(

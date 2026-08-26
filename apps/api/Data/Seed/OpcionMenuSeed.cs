@@ -211,36 +211,36 @@ public static class OpcionMenuSeed
                 "CAJA_VENTAS"),
 
             new(
-                "CAJAS",
-                "Cajas",
-                null,
+                "PUNTOS_CAJA",
+                "Puntos de Caja",
+                "/cajas",
                 "Vault",
                 3,
                 "CAJA_VENTAS"),
 
             new(
-                "PUNTOS_CAJA",
-                "Puntos de Caja",
-                "/cajas",
-                "Vault",
-                1,
-                "CAJAS"),
+                "TURNOS_CAJA",
+                "Turnos de Caja",
+                "/turnos",
+                "CalendarClock",
+                4,
+                "CAJA_VENTAS"),
 
             new(
                 "MOVIMIENTOS_CAJA",
                 "Movimientos",
-                "/cajas/movimientos",
+                "/movimientos",
                 "ArrowLeftRight",
-                2,
-                "CAJAS"),
+                5,
+                "CAJA_VENTAS"),
 
             new(
                 "ARQUEOS_CIERRES",
                 "Arqueos y Cierres",
-                "/cajas/arqueos",
+                "/arqueos",
                 "Calculator",
-                3,
-                "CAJAS"),
+                6,
+                "CAJA_VENTAS"),
 
 
             // =========================================================

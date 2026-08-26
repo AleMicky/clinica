@@ -279,7 +279,7 @@ export function TurnoCajaFormDialog({
 
   const handleGoToArqueo = () => {
     onOpenChange(false);
-    router.push("/cajas/arqueos/nuevo");
+    router.push("/arqueos/nuevo");
   };
 
   const isLoading =

@@ -291,7 +291,7 @@ export function ArqueoCajaPageForm({ defaultTurnoId }: ArqueoCajaPageFormProps) 
 
       await registrarMutation.mutateAsync(payload);
       toast.success("Arqueo de caja conciliado y registrado exitosamente.");
-      router.push("/cajas/arqueos");
+      router.push("/arqueos");
     } catch (error: unknown) {
       const err = error as {
         response?: { data?: { detail?: string; message?: string; title?: string } };
@@ -318,7 +318,7 @@ export function ArqueoCajaPageForm({ defaultTurnoId }: ArqueoCajaPageFormProps) 
             type="button"
             variant="ghost"
             size="icon"
-            onClick={() => router.push("/cajas/arqueos")}
+            onClick={() => router.push("/arqueos")}
             className="size-9 rounded-lg hover:bg-accent cursor-pointer shrink-0"
           >
             <ArrowLeft className="size-4" />
@@ -793,7 +793,7 @@ export function ArqueoCajaPageForm({ defaultTurnoId }: ArqueoCajaPageFormProps) 
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => router.push("/cajas/arqueos")}
+                  onClick={() => router.push("/arqueos")}
                   disabled={isLoading}
                   className="w-full h-8.5 text-xs cursor-pointer text-muted-foreground hover:text-foreground"
                 >
