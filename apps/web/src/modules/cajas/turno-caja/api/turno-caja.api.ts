@@ -3,6 +3,7 @@ import type {
   AbrirTurnoCajaRequest,
   CerrarTurnoCajaRequest,
   PagedResult,
+  ResumenCierreTurnoCajaResponse,
   TurnoCajaQueryParams,
   TurnoCajaResponse,
 } from "../types/turno-caja.types";
@@ -19,6 +20,15 @@ export async function getTurnosCaja(
 
 export async function getTurnoCajaById(id: number): Promise<TurnoCajaResponse> {
   const response = await apiClient.get<TurnoCajaResponse>(`/turnos-caja/${id}`);
+  return response.data;
+}
+
+export async function getResumenCierreTurnoCaja(
+  id: number
+): Promise<ResumenCierreTurnoCajaResponse> {
+  const response = await apiClient.get<ResumenCierreTurnoCajaResponse>(
+    `/turnos-caja/${id}/resumen-cierre`
+  );
   return response.data;
 }
 

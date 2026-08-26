@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -9,12 +10,16 @@ import {
   LogOut,
   Loader2,
   Vault,
-  User,
   Info,
   AlertCircle,
   Coins,
   FileText,
   MessageSquare,
+  CheckCircle2,
+  AlertTriangle,
+  ArrowRight,
+  ShieldCheck,
+  TrendingUp,
 } from "lucide-react";
 import {
   Dialog,
@@ -45,6 +50,7 @@ import {
 import {
   useAbrirTurnoCaja,
   useCerrarTurnoCaja,
+  useResumenCierreTurnoCaja,
 } from "../hooks/use-turnos-caja";
 import type { TurnoCajaResponse } from "../types/turno-caja.types";
 
@@ -64,7 +70,6 @@ function formatDisplayDate(dateStr?: string | null): string {
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return "-";
   return d.toLocaleString("es-ES", {
-    weekday: "short",
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -91,9 +96,9 @@ function calculateDuration(startStr?: string): string {
   const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
 
   if (diffHours === 0) {
-    return `${diffMinutes} minutos`;
+    return `${diffMinutes} min`;
   }
-  return `${diffHours} hora${diffHours > 1 ? "s" : ""} y ${diffMinutes} minuto${diffMinutes !== 1 ? "s" : ""}`;
+  return `${diffHours}h ${diffMinutes}m`;
 }
 
 export function TurnoCajaFormDialog({
@@ -104,6 +109,7 @@ export function TurnoCajaFormDialog({
   mode = "open",
   onSuccessCallback,
 }: TurnoCajaFormDialogProps) {
+  const router = useRouter();
   const isClosing = mode === "close";
 
   // Fetch Empleados & Cajas para apertura
@@ -112,6 +118,16 @@ export function TurnoCajaFormDialog({
   );
   const { data: cajasData, isLoading: isLoadingCajas } = useCajas(
     STATIC_QUERY_PARAMS
+  );
+
+  // Hook para obtener el resumen de cierre del backend (ObtenerResumenCierreAsync)
+  const {
+    data: resumenCierre,
+    isLoading: isLoadingResumen,
+    error: errorResumen,
+  } = useResumenCierreTurnoCaja(
+    turnoToClose?.id,
+    isClosing && Boolean(turnoToClose?.id && open)
   );
 
   const abrirMutation = useAbrirTurnoCaja();
@@ -261,44 +277,48 @@ export function TurnoCajaFormDialog({
     }
   };
 
+  const handleGoToArqueo = () => {
+    onOpenChange(false);
+    router.push("/cajas/arqueos/nuevo");
+  };
+
   const isLoading =
     abrirMutation.isPending ||
     cerrarMutation.isPending ||
-    openForm.formState.isSubmitting ||
-    closeForm.formState.isSubmitting;
+    (isClosing && isLoadingResumen);
+
+  const errorDetail = (errorResumen as { response?: { data?: { detail?: string; message?: string } } })
+    ?.response?.data?.detail ||
+    (errorResumen as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+    null;
+
+  const requiresArqueo = Boolean(errorResumen) || !resumenCierre;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto p-0 border-border/60 shadow-2xl">
-        {/* Encabezado */}
-        <div
-          className={cn(
-            "p-6 pb-5 border-b sticky top-0 bg-background/95 backdrop-blur-xs z-10",
-            isClosing
-              ? "bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent border-amber-500/20"
-              : "bg-gradient-to-r from-primary/15 via-primary/5 to-transparent border-primary/20"
-          )}
-        >
-          <DialogHeader className="space-y-1.5">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 gap-0 border-border/80 shadow-lg">
+        {/* Cabecera del Diálogo */}
+        <div className="p-5 pb-4 border-b border-border/60 bg-muted/20">
+          <DialogHeader>
             <div className="flex items-center gap-3">
               <div
                 className={cn(
-                  "flex size-11 items-center justify-center rounded-2xl border shadow-xs shrink-0",
+                  "size-10 rounded-xl flex items-center justify-center font-bold shadow-xs shrink-0",
                   isClosing
-                    ? "bg-amber-500 text-white border-amber-600 shadow-amber-500/20"
-                    : "bg-primary text-primary-foreground border-primary/80 shadow-primary/20"
+                    ? "bg-amber-600 text-white"
+                    : "bg-primary text-primary-foreground"
                 )}
               >
-                {isClosing ? <LogOut className="size-5.5" /> : <Clock className="size-5.5" />}
+                {isClosing ? <LogOut className="size-5" /> : <Vault className="size-5" />}
               </div>
 
               <div>
-                <DialogTitle className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
-                  <span>{isClosing ? "Cierre de Turno de Caja" : "Apertura de Turno de Caja"}</span>
+                <DialogTitle className="text-base font-bold text-foreground">
+                  {isClosing ? "Cierre Operativo y Consolidación de Turno" : "Apertura de Turno de Caja"}
                 </DialogTitle>
                 <DialogDescription className="text-xs text-muted-foreground mt-0.5">
                   {isClosing
-                    ? "Verifique el estado del turno y registre la observación final para consolidar el cierre."
+                    ? "Audite el resumen de conciliación antes de confirmar el cierre definitivo del turno."
                     : "Asigne la caja registradora, cajero y monto inicial para iniciar la jornada."}
                 </DialogDescription>
               </div>
@@ -308,110 +328,227 @@ export function TurnoCajaFormDialog({
 
         {/* MODAL MODO CIERRE */}
         {isClosing && turnoToClose ? (
-          <form onSubmit={closeForm.handleSubmit(handleCloseSubmit)} className="p-6 space-y-4">
-            {/* Tarjeta Resumen de la Jornada */}
-            <div className="p-4 rounded-xl border border-amber-500/30 bg-amber-500/[0.07] space-y-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
-                  <Info className="size-4" />
-                  Resumen de la Jornada Actual
-                </span>
-                <Badge
-                  variant="outline"
-                  className="bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/40 text-[10px] font-semibold"
-                >
-                  #Turno-{turnoToClose.id}
-                </Badge>
+          <form onSubmit={closeForm.handleSubmit(handleCloseSubmit)} className="p-5 space-y-4">
+            {/* Si está cargando el resumen */}
+            {isLoadingResumen ? (
+              <div className="p-8 text-center space-y-2">
+                <Loader2 className="size-8 animate-spin text-amber-600 mx-auto" />
+                <p className="text-xs font-semibold text-foreground">
+                  Obteniendo resumen contable de cierre...
+                </p>
               </div>
-
-              <div className="grid grid-cols-2 gap-3 text-xs pt-1">
-                <div className="bg-background/70 p-2.5 rounded-lg border border-amber-500/20">
-                  <span className="text-[10px] text-muted-foreground block font-medium">Caja Registradora</span>
-                  <span className="font-bold text-foreground">
-                    {turnoToClose.caja?.codigo} - {turnoToClose.caja?.nombre}
-                  </span>
-                </div>
-
-                <div className="bg-background/70 p-2.5 rounded-lg border border-amber-500/20">
-                  <span className="text-[10px] text-muted-foreground block font-medium">Cajero Responsable</span>
-                  <span className="font-bold text-foreground truncate block">
-                    {turnoToClose.empleado?.nombreCompleto || "Sin asignar"}
-                  </span>
-                </div>
-
-                <div className="bg-background/70 p-2.5 rounded-lg border border-amber-500/20">
-                  <span className="text-[10px] text-muted-foreground block font-medium">Monto Inicial</span>
-                  <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                    {formatCurrency(turnoToClose.montoInicial)}
-                  </span>
-                </div>
-
-                <div className="bg-background/70 p-2.5 rounded-lg border border-amber-500/20">
-                  <span className="text-[10px] text-muted-foreground block font-medium">Tiempo Transcurrido</span>
-                  <span className="font-mono font-bold text-foreground">
-                    {calculateDuration(turnoToClose.fechaHoraApertura) || "-"}
-                  </span>
-                </div>
-
-                <div className="col-span-2 bg-background/70 p-2.5 rounded-lg border border-amber-500/20 flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] text-muted-foreground block font-medium">Apertura Registrada</span>
-                    <span className="font-mono font-semibold text-foreground">
-                      {formatDisplayDate(turnoToClose.fechaHoraApertura)}
-                    </span>
+            ) : requiresArqueo ? (
+              /* ALERTA: DEBE REALIZAR ARQUEO ANTES DE CERRAR */
+              <div className="p-4 rounded-xl border border-amber-500/30 bg-amber-500/10 space-y-3">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="size-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <h3 className="text-xs font-bold text-amber-900 dark:text-amber-200">
+                      Arqueo de Caja Requerido para el Cierre
+                    </h3>
+                    <p className="text-xs text-amber-800 dark:text-amber-300">
+                      {errorDetail ||
+                        "Debe realizar el arqueo de caja y declarar el conteo físico antes de poder cerrar este turno."}
+                    </p>
                   </div>
-                  {turnoToClose.observacionApertura && (
-                    <div className="text-right max-w-[200px]">
-                      <span className="text-[10px] text-muted-foreground block font-medium">Obs. Apertura</span>
-                      <span className="text-[11px] text-muted-foreground italic truncate block" title={turnoToClose.observacionApertura}>
-                        &quot;{turnoToClose.observacionApertura}&quot;
+                </div>
+
+                <div className="pt-2 flex items-center justify-end">
+                  <Button
+                    type="button"
+                    onClick={handleGoToArqueo}
+                    className="h-8 px-3 text-xs font-semibold gap-1.5 bg-amber-600 hover:bg-amber-700 text-white cursor-pointer shadow-xs"
+                  >
+                    <span>Realizar Arqueo Ahora</span>
+                    <ArrowRight className="size-3.5" />
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              /* RESUMEN DE CIERRE DEL BACKEND (ObtenerResumenCierreAsync) */
+              <div className="space-y-3.5">
+                {/* Métricas Principales de Auditoría */}
+                <div className="rounded-xl border border-border/60 bg-muted/20 p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck className="size-4 text-primary" />
+                      <span className="text-xs font-bold text-foreground">
+                        Resumen de Arqueo #{resumenCierre.arqueoCajaId}
                       </span>
                     </div>
-                  )}
+
+                    <div className="flex items-center gap-1.5">
+                      <Clock className="size-3 text-muted-foreground" />
+                      <span className="text-[11px] font-mono text-muted-foreground">
+                        {formatDisplayDate(resumenCierre.fechaHoraArqueo)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* 4 Métricas de Balance */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
+                    <div className="p-2.5 rounded-lg bg-background border border-border/50 space-y-0.5">
+                      <span className="text-[10px] text-muted-foreground block font-medium uppercase">
+                        Fondo Inicial
+                      </span>
+                      <span className="font-mono font-bold text-foreground">
+                        {formatCurrency(resumenCierre.montoInicial)}
+                      </span>
+                    </div>
+
+                    <div className="p-2.5 rounded-lg bg-primary/10 border border-primary/20 space-y-0.5">
+                      <span className="text-[10px] text-primary block font-bold uppercase">
+                        Saldo Esperado
+                      </span>
+                      <span className="font-mono font-extrabold text-primary">
+                        {formatCurrency(resumenCierre.totalEsperado)}
+                      </span>
+                    </div>
+
+                    <div className="p-2.5 rounded-lg bg-background border border-border/50 space-y-0.5">
+                      <span className="text-[10px] text-muted-foreground block font-medium uppercase">
+                        Total Contado
+                      </span>
+                      <span className="font-mono font-bold text-foreground">
+                        {formatCurrency(resumenCierre.totalContado)}
+                      </span>
+                    </div>
+
+                    <div
+                      className={cn(
+                        "p-2.5 rounded-lg border space-y-0.5",
+                        Math.abs(Number(resumenCierre.diferencia)) < 0.001
+                          ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400"
+                          : Number(resumenCierre.diferencia) < 0
+                          ? "bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-400"
+                          : "bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-400"
+                      )}
+                    >
+                      <span className="text-[10px] block font-bold uppercase">
+                        Diferencia
+                      </span>
+                      <span className="font-mono font-black">
+                        {Number(resumenCierre.diferencia) > 0
+                          ? `+${formatCurrency(resumenCierre.diferencia)}`
+                          : formatCurrency(resumenCierre.diferencia)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Estado de Cuadre */}
+                  <div className="flex items-center gap-2 text-xs pt-1 border-t border-border/40">
+                    {Math.abs(Number(resumenCierre.diferencia)) < 0.001 ? (
+                      <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-medium">
+                        <CheckCircle2 className="size-4" />
+                        <span>Arqueo conciliado con cuadre exacto (100% verificado).</span>
+                      </div>
+                    ) : Number(resumenCierre.diferencia) < 0 ? (
+                      <div className="flex items-center gap-1.5 text-rose-700 dark:text-rose-400 font-medium">
+                        <AlertTriangle className="size-4" />
+                        <span>Existe un faltante de caja de {formatCurrency(Math.abs(Number(resumenCierre.diferencia)))}.</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400 font-medium">
+                        <AlertTriangle className="size-4" />
+                        <span>Existe un sobrante de caja de {formatCurrency(resumenCierre.diferencia)}.</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
+
+                {/* Desglose por Método de Pago */}
+                {Array.isArray(resumenCierre.detalles) && resumenCierre.detalles.length > 0 && (
+                  <div className="space-y-1.5">
+                    <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
+                      Desglose de Formas de Pago Auditadas
+                    </span>
+
+                    <div className="rounded-xl border border-border/50 divide-y divide-border/40 overflow-hidden bg-background">
+                      {resumenCierre.detalles.map((d) => (
+                        <div
+                          key={d.id}
+                          className="p-2.5 flex items-center justify-between text-xs hover:bg-muted/20"
+                        >
+                          <div className="space-y-0.5">
+                            <span className="font-semibold text-foreground block">
+                              {d.metodoPago?.nombre || `Método #${d.metodoPagoId}`}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground">
+                              {d.moneda?.nombre || "Boliviano"} ({d.moneda?.simbolo || "Bs."})
+                            </span>
+                          </div>
+
+                          <div className="text-right space-y-0.5 font-mono">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] text-muted-foreground">Contado:</span>
+                              <span className="font-bold text-foreground">
+                                {formatCurrency(d.montoContado)}
+                              </span>
+                            </div>
+                            <div className="text-[10px] text-muted-foreground">
+                              Esperado: {formatCurrency(d.montoEsperado)}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Observación previa de arqueo */}
+                {resumenCierre.observacionArqueo && (
+                  <div className="p-2.5 rounded-lg bg-muted/40 border border-border/40 text-xs">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase block">
+                      Nota de Arqueo:
+                    </span>
+                    <p className="text-muted-foreground italic mt-0.5">
+                      &quot;{resumenCierre.observacionArqueo}&quot;
+                    </p>
+                  </div>
+                )}
               </div>
-            </div>
+            )}
 
             {/* Observación de Cierre */}
             <div className="space-y-1.5 pt-1">
-              <Label htmlFor="closeObservacion" className="text-xs font-semibold flex items-center gap-1 text-foreground">
-                <MessageSquare className="size-3.5 text-amber-600" />
-                Observación de Cierre <span className="text-[10px] font-normal text-muted-foreground">(Opcional)</span>
+              <Label htmlFor="closeObservacion" className="text-xs font-semibold flex items-center gap-1.5 text-foreground">
+                <MessageSquare className="size-3.5 text-muted-foreground" />
+                Observación Final de Cierre <span className="text-[10px] font-normal text-muted-foreground">(Opcional)</span>
               </Label>
               <Textarea
                 id="closeObservacion"
-                placeholder="Detalles sobre entrega de remesa, notas finales o novedades del turno..."
+                placeholder="Detalles sobre entrega de remesa, custodia de efectivo o notas finales de entrega de turno..."
                 {...closeForm.register("observacion")}
-                rows={3}
+                rows={2}
                 maxLength={500}
                 className="text-xs bg-background resize-none"
-                disabled={isLoading}
+                disabled={isLoading || requiresArqueo}
               />
             </div>
 
-            <DialogFooter className="pt-4 border-t gap-2 sm:gap-0">
+            <DialogFooter className="pt-3 border-t gap-2 sm:gap-0">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
                 disabled={isLoading}
-                className="h-9.5 text-xs sm:text-sm cursor-pointer"
+                className="h-9 text-xs cursor-pointer"
               >
                 Cancelar
               </Button>
               <Button
                 type="submit"
-                disabled={isLoading}
-                className="h-9.5 px-4 gap-2 text-xs sm:text-sm font-semibold bg-amber-500 hover:bg-amber-600 text-white shadow-sm cursor-pointer"
+                disabled={isLoading || requiresArqueo}
+                className="h-9 px-4 gap-2 text-xs font-semibold bg-amber-600 hover:bg-amber-700 text-white shadow-xs cursor-pointer"
               >
                 {isLoading && <Loader2 className="size-4 animate-spin" />}
-                <span>Confirmar Cierre de Turno</span>
+                <span>Confirmar Cierre Definitivo de Turno</span>
               </Button>
             </DialogFooter>
           </form>
         ) : (
           /* MODAL MODO APERTURA */
-          <form onSubmit={openForm.handleSubmit(handleOpenSubmit)} className="p-6 space-y-4">
+          <form onSubmit={openForm.handleSubmit(handleOpenSubmit)} className="p-5 space-y-4">
             {/* SECCIÓN 1: ASIGNACIÓN DE CAJA Y RESPONSABLE */}
             <div className="space-y-3">
               <div className="flex items-center justify-between pb-1 border-b border-border/40">
@@ -476,7 +613,7 @@ export function TurnoCajaFormDialog({
             </div>
 
             {/* SECCIÓN 2: MONTO INICIAL Y OBSERVACIONES */}
-            <div className="space-y-3 pt-2">
+            <div className="space-y-3 pt-1">
               <div className="flex items-center justify-between pb-1 border-b border-border/40">
                 <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                   <Coins className="size-3.5 text-primary" />
@@ -552,20 +689,20 @@ export function TurnoCajaFormDialog({
               </div>
             </div>
 
-            <DialogFooter className="pt-4 border-t gap-2 sm:gap-0">
+            <DialogFooter className="pt-3 border-t gap-2 sm:gap-0">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
                 disabled={isLoading}
-                className="h-9.5 text-xs sm:text-sm cursor-pointer"
+                className="h-9 text-xs cursor-pointer"
               >
                 Cancelar
               </Button>
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="h-9.5 px-4 gap-2 text-xs sm:text-sm font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm cursor-pointer"
+                className="h-9 px-4 gap-2 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs cursor-pointer"
               >
                 {isLoading && <Loader2 className="size-4 animate-spin" />}
                 <span>Abrir Turno de Caja</span>

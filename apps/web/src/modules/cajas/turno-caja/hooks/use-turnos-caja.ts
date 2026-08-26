@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   abrirTurnoCaja,
   cerrarTurnoCaja,
+  getResumenCierreTurnoCaja,
   getTurnoCajaAbiertoCaja,
   getTurnoCajaAbiertoEmpleado,
   getTurnoCajaById,
@@ -29,6 +30,15 @@ export function useTurnoCaja(id: number, enabled = true) {
     queryKey: turnoCajaKeys.detail(id),
     queryFn: () => getTurnoCajaById(id),
     enabled: enabled && id > 0,
+  });
+}
+
+export function useResumenCierreTurnoCaja(id?: number | null, enabled = true) {
+  return useQuery({
+    queryKey: [...turnoCajaKeys.all, "resumen-cierre", id],
+    queryFn: () => getResumenCierreTurnoCaja(id!),
+    enabled: enabled && Boolean(id && id > 0),
+    retry: false,
   });
 }
 

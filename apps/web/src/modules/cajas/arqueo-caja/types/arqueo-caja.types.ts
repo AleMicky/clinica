@@ -10,6 +10,7 @@ export interface MonedaInfo {
   id: number;
   codigo: string;
   nombre: string;
+  simbolo?: string;
 }
 
 export interface ArqueoCajaDetalleRequest {

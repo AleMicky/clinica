@@ -1,3 +1,5 @@
+import type { ArqueoCajaDetalleResponse } from "../../arqueo-caja/types/arqueo-caja.types";
+
 export enum EstadoTurnoCaja {
   Abierto = 1,
   Cerrado = 2,
@@ -42,6 +44,19 @@ export interface TurnoCajaResponse {
   fechaModificacion?: string | null;
   creadoPor?: string | null;
   modificadoPor?: string | null;
+}
+
+export interface ResumenCierreTurnoCajaResponse {
+  turnoCajaId: number;
+  arqueoCajaId: number;
+  fechaHoraApertura: string;
+  fechaHoraArqueo: string;
+  montoInicial: number;
+  totalEsperado: number;
+  totalContado: number;
+  diferencia: number;
+  observacionArqueo?: string | null;
+  detalles: ArqueoCajaDetalleResponse[];
 }
 
 export interface AbrirTurnoCajaRequest {

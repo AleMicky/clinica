@@ -12,6 +12,7 @@ export * from "./caja/components/caja-module-view";
 
 export type {
   TurnoCajaResponse,
+  ResumenCierreTurnoCajaResponse,
   AbrirTurnoCajaRequest,
   CerrarTurnoCajaRequest,
   TurnoCajaQueryParams,
