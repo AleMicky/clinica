@@ -16,11 +16,8 @@ export type ApiErrorResponse = {
 
 export const apiClient: AxiosInstance = axios.create({
     baseURL: env.apiUrl,
-
     timeout: 15_000,
-
     withCredentials: true,
-
     headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
@@ -50,19 +47,14 @@ apiClient.interceptors.response.use(
         }
 
         const status = error.response.status;
-
         const requestUrl = error.config?.url ?? "";
-
-        const isAuthRequest =
-            requestUrl.includes("/auth/login") ||
+        const isAuthRequest = requestUrl.includes("/auth/login") ||
             requestUrl.includes("/auth/me") ||
             requestUrl.includes("/auth/logout");
 
         switch (status) {
             case 401:
                 console.warn("La sesión no es válida o ha expirado.");
-
-                // No redireccionar si el error proviene del propio módulo Auth
                 if (!isAuthRequest && typeof window !== "undefined") {
                     window.location.replace("/login");
                 }

@@ -4,7 +4,6 @@ import {
     QueryClient,
 } from "@tanstack/react-query";
 
-type QueryOrMutation = { meta?: Record<string, unknown> | undefined };
 
 function shouldSkip(meta: unknown): boolean {
     if (!meta || typeof meta !== "object") return false;
@@ -15,6 +14,7 @@ function shouldSkip(meta: unknown): boolean {
 export function makeQueryClient(
     onError?: (error: unknown) => void,
 ): QueryClient {
+
     const queryCache = new QueryCache({
         onError: (error, query) => {
             if (shouldSkip(query.meta)) return;
