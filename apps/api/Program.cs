@@ -170,4 +170,5 @@ await ServiciosSeed.SeedAsync(app.Services);
 await TarifarioSeed.SeedAsync(app.Services);
 await EspecialidadSeed.SeedAsync(app.Services);
 await OpcionMenuSeed.SeedAsync(app.Services);
+await RolOpcionMenuSeed.SeedAsync(app.Services);
 app.Run();

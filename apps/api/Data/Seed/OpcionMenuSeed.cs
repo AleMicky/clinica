@@ -14,6 +14,7 @@ public static class OpcionMenuSeed
 
         var seedOpciones = BuildSeedOpciones();
 
+        // 1. Obtener todas las opciones existentes en la base de datos
         var existentes = await dbContext.OpcionesMenu
             .ToListAsync();
 
@@ -22,15 +23,13 @@ public static class OpcionMenuSeed
                 x => x.Codigo,
                 StringComparer.OrdinalIgnoreCase);
 
-        var pendientes = seedOpciones
-            .Where(x => !porCodigo.ContainsKey(x.Codigo))
-            .ToList();
-
+        var pendientes = seedOpciones.ToList();
         var huboCambios = false;
 
+        // 2. Iterar e insertar/actualizar respetando la jerarquía (padre primero)
         while (pendientes.Count > 0)
         {
-            var insertadosEnIteracion = 0;
+            var procesadosEnIteracion = 0;
 
             foreach (var seed in pendientes.ToList())
             {
@@ -38,54 +37,105 @@ public static class OpcionMenuSeed
 
                 if (!string.IsNullOrWhiteSpace(seed.CodigoPadre))
                 {
-                    if (!porCodigo.TryGetValue(
-                            seed.CodigoPadre,
-                            out var padre))
+                    if (!porCodigo.TryGetValue(seed.CodigoPadre, out var padre))
                     {
+                        // Esperar a que el padre esté procesado en una iteración previa
                         continue;
                     }
 
                     padreId = padre.Id;
                 }
 
-                var entity = new OpcionMenu
+                if (porCodigo.TryGetValue(seed.Codigo, out var entidadExistente))
                 {
-                    PadreId = padreId,
-                    Codigo = seed.Codigo,
-                    Nombre = seed.Nombre,
-                    Ruta = seed.Ruta,
-                    Icono = seed.Icono,
-                    Orden = seed.Orden,
-                    Activo = true,
-                    FechaCreacion = DateTime.UtcNow
-                };
+                    // Actualizar si hubo cambios en la definición
+                    var modificado = false;
 
-                dbContext.OpcionesMenu.Add(entity);
+                    if (entidadExistente.Nombre != seed.Nombre)
+                    {
+                        entidadExistente.Nombre = seed.Nombre;
+                        modificado = true;
+                    }
 
-                await dbContext.SaveChangesAsync();
+                    if (entidadExistente.Ruta != seed.Ruta)
+                    {
+                        entidadExistente.Ruta = seed.Ruta;
+                        modificado = true;
+                    }
 
-                porCodigo[entity.Codigo] = entity;
+                    if (entidadExistente.Icono != seed.Icono)
+                    {
+                        entidadExistente.Icono = seed.Icono;
+                        modificado = true;
+                    }
+
+                    if (entidadExistente.Orden != seed.Orden)
+                    {
+                        entidadExistente.Orden = seed.Orden;
+                        modificado = true;
+                    }
+
+                    if (entidadExistente.PadreId != padreId)
+                    {
+                        entidadExistente.PadreId = padreId;
+                        modificado = true;
+                    }
+
+                    if (!entidadExistente.Activo)
+                    {
+                        entidadExistente.Activo = true;
+                        modificado = true;
+                    }
+
+                    if (modificado)
+                    {
+                        entidadExistente.FechaModificacion = DateTime.UtcNow;
+                        entidadExistente.ModificadoPor = "Seed";
+                        huboCambios = true;
+                    }
+                }
+                else
+                {
+                    // Insertar nueva opción
+                    var entity = new OpcionMenu
+                    {
+                        PadreId = padreId,
+                        Codigo = seed.Codigo,
+                        Nombre = seed.Nombre,
+                        Ruta = seed.Ruta,
+                        Icono = seed.Icono,
+                        Orden = seed.Orden,
+                        Activo = true,
+                        FechaCreacion = DateTime.UtcNow,
+                        CreadoPor = "Seed"
+                    };
+
+                    dbContext.OpcionesMenu.Add(entity);
+                    await dbContext.SaveChangesAsync();
+
+                    porCodigo[entity.Codigo] = entity;
+                    huboCambios = true;
+                }
 
                 pendientes.Remove(seed);
-
-                insertadosEnIteracion++;
-
-                huboCambios = true;
+                procesadosEnIteracion++;
             }
 
-            if (insertadosEnIteracion == 0 && pendientes.Count > 0)
+            if (procesadosEnIteracion == 0 && pendientes.Count > 0)
             {
                 var faltantes = string.Join(
                     ", ",
                     pendientes.Select(x => x.Codigo));
 
                 throw new InvalidOperationException(
-                    $"No se pudieron insertar las opciones de menú: {faltantes}. Verifique los códigos padre.");
+                    $"No se pudieron insertar o actualizar las opciones de menú: {faltantes}. Verifique los códigos padre.");
             }
         }
 
-        if (!huboCambios)
-            return;
+        if (huboCambios)
+        {
+            await dbContext.SaveChangesAsync();
+        }
     }
 
     private static List<SeedOpcionMenu> BuildSeedOpciones()
@@ -93,9 +143,8 @@ public static class OpcionMenuSeed
         return
         [
             // =========================================================
-            // PRINCIPAL
+            // 1. PRINCIPAL
             // =========================================================
-
             new(
                 "PRINCIPAL",
                 "Principal",
@@ -112,19 +161,9 @@ public static class OpcionMenuSeed
                 1,
                 "PRINCIPAL"),
 
-            new(
-                "ADMISIONES",
-                "Admisiones",
-                "/recepcion/admisiones",
-                "FileText",
-                2,
-                "PRINCIPAL"),
-
-
             // =========================================================
-            // CLÍNICA & SERVICIOS
+            // 2. CLÍNICA & SERVICIOS
             // =========================================================
-
             new(
                 "CLINICA_SERVICIOS",
                 "Clínica & Servicios",
@@ -134,27 +173,27 @@ public static class OpcionMenuSeed
                 null),
 
             new(
-                "RECEPCION",
-                "Recepción",
-                null,
-                "HeartPulse",
-                1,
-                "CLINICA_SERVICIOS"),
-
-            new(
                 "PACIENTES",
                 "Pacientes",
                 "/recepcion/pacientes",
                 "User",
                 1,
-                "RECEPCION"),
+                "CLINICA_SERVICIOS"),
+
+            new(
+                "ADMISIONES",
+                "Admisiones",
+                "/recepcion/admisiones",
+                "FileText",
+                2,
+                "CLINICA_SERVICIOS"),
 
             new(
                 "SERVICIOS",
                 "Servicios",
                 null,
                 "Stethoscope",
-                2,
+                3,
                 "CLINICA_SERVICIOS"),
 
             new(
@@ -181,11 +220,9 @@ public static class OpcionMenuSeed
                 3,
                 "SERVICIOS"),
 
-
             // =========================================================
-            // CAJA & VENTAS
+            // 3. CAJA & VENTAS
             // =========================================================
-
             new(
                 "CAJA_VENTAS",
                 "Caja & Ventas",
@@ -211,26 +248,18 @@ public static class OpcionMenuSeed
                 "CAJA_VENTAS"),
 
             new(
-                "CONFIGURACION_CAJA",
-                "Configuración",
-                null,
-                "Settings",
+                "ARQUEOS_CIERRES",
+                "Arqueos y Cierres",
+                "/caja/arqueos",
+                "Calculator",
                 3,
                 "CAJA_VENTAS"),
 
             new(
-                "PUNTOS_CAJA",
-                "Puntos de Caja",
-                "/caja/configuracion/cajas",
-                "Vault",
-                1,
-                "CONFIGURACION_CAJA"),
-
-            new(
-                "TURNOS_CAJA",
-                "Turnos de Caja",
+                "TUR-CA",
+                "Turno Cajas",
                 "/caja/turnos",
-                "CalendarClock",
+                "Wallet",
                 4,
                 "CAJA_VENTAS"),
 
@@ -243,18 +272,24 @@ public static class OpcionMenuSeed
                 "CAJA_VENTAS"),
 
             new(
-                "ARQUEOS_CIERRES",
-                "Arqueos y Cierres",
-                "/caja/arqueos",
-                "Calculator",
+                "CONF",
+                "Configuraciones",
+                null,
+                "Settings",
                 6,
                 "CAJA_VENTAS"),
 
+            new(
+                "PUNTOS_CAJA",
+                "Puntos de Caja",
+                "/caja/configuracion/cajas",
+                "Vault",
+                1,
+                "CONF"),
 
             // =========================================================
-            // GESTIÓN HUMANA
+            // 4. GESTIÓN HUMANA
             // =========================================================
-
             new(
                 "GESTION_HUMANA",
                 "Gestión Humana",
@@ -319,11 +354,17 @@ public static class OpcionMenuSeed
                 6,
                 "RECURSOS_HUMANOS"),
 
+            new(
+                "ASIGNACIONES_EMPLEADO",
+                "Asignaciones Empleado",
+                "/recursos-humanos/asignaciones-empleado",
+                "UserCog",
+                7,
+                "RECURSOS_HUMANOS"),
 
             // =========================================================
-            // CONFIGURACIÓN & SISTEMA
+            // 5. CONFIGURACIÓN & SISTEMA
             // =========================================================
-
             new(
                 "CONFIGURACION_SISTEMA",
                 "Configuración & Sistema",
