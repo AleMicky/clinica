@@ -7,9 +7,9 @@ import {
 type QueryOrMutation = { meta?: Record<string, unknown> | undefined };
 
 function shouldSkip(meta: unknown): boolean {
-    return Boolean(
-        meta && typeof meta === "object" && (meta as QueryOrMutation).meta?.skipGlobalError,
-    );
+    if (!meta || typeof meta !== "object") return false;
+    const m = meta as Record<string, unknown>;
+    return Boolean(m.skipGlobalError || (m.meta as Record<string, unknown> | undefined)?.skipGlobalError);
 }
 
 export function makeQueryClient(
