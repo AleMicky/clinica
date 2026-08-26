@@ -9,6 +9,7 @@ using Clinica.Api.Shared.Extensions;
 using Clinica.Api.Shared.Jwt;
 using Clinica.Api.Shared.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -120,9 +121,30 @@ builder.Services.Configure<ClinicaOptions>(
 builder.Services.AddShared();
 builder.Services.AddModules();
 
+//
+// HTTP LOGGING
+//
+builder.Services.AddHttpLogging(options =>
+{
+    options.LoggingFields =
+        HttpLoggingFields.RequestMethod |
+        HttpLoggingFields.RequestPath |
+        HttpLoggingFields.RequestQuery |
+        HttpLoggingFields.ResponseStatusCode;
+
+    options.CombineLogs = true;
+});
+
 QuestPDF.Settings.License = LicenseType.Community;
 
 var app = builder.Build();
+
+//
+// IMPORTANTE:
+// HttpLogging debe ir bastante arriba para poder capturar
+// las peticiones antes de otros middlewares.
+//
+app.UseHttpLogging();
 
 app.UseCors(CorsPolicy);
 
@@ -137,7 +159,10 @@ if (app.Environment.IsDevelopment())
         options
             .WithTitle("Clínica API")
             .WithPreferredScheme("Bearer")
-            .WithHttpBearerAuthentication(bearer => { bearer.Token = string.Empty; });
+            .WithHttpBearerAuthentication(bearer =>
+            {
+                bearer.Token = string.Empty;
+            });
     });
 }
 
@@ -171,4 +196,5 @@ await TarifarioSeed.SeedAsync(app.Services);
 await EspecialidadSeed.SeedAsync(app.Services);
 await OpcionMenuSeed.SeedAsync(app.Services);
 await RolOpcionMenuSeed.SeedAsync(app.Services);
+
 app.Run();
