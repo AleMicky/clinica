@@ -5,28 +5,25 @@ import { CheckCircle2, Clock, XCircle, AlertTriangle, ArrowLeftRight } from "luc
 import { EstadoCobro, type CobroResponse } from "../types/cobro.types";
 
 interface CobroStatusBadgeProps {
-  cobro: CobroResponse | { estado: EstadoCobro; total?: number; detalles?: unknown[] };
+  cobro: CobroResponse | { estado: EstadoCobro };
   className?: string;
 }
 
 export function CobroStatusBadge({ cobro, className }: CobroStatusBadgeProps) {
-  const { estado, total = 0, detalles = [] } = cobro;
-  const isPendingPayment = estado === EstadoCobro.Registrado && total === 0 && detalles.length === 0;
-
-  if (isPendingPayment) {
-    return (
-      <Badge
-        variant="outline"
-        className={`bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 gap-1 text-[10px] font-semibold ${className}`}
-      >
-        <Clock className="size-3" />
-        Por Cobrar
-      </Badge>
-    );
-  }
+  const { estado } = cobro;
 
   switch (estado) {
     case EstadoCobro.Registrado:
+      return (
+        <Badge
+          variant="outline"
+          className={`bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 gap-1 text-[10px] font-semibold ${className}`}
+        >
+          <Clock className="size-3" />
+          Por Cobrar
+        </Badge>
+      );
+    case EstadoCobro.Confirmado:
       return (
         <Badge
           variant="outline"
@@ -60,7 +57,7 @@ export function CobroStatusBadge({ cobro, className }: CobroStatusBadgeProps) {
       return (
         <Badge
           variant="outline"
-          className={`bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/30 gap-1 text-[10px] font-semibold ${className}`}
+          className={`bg-purple-500/15 text-purple-700 dark:text-purple-400 border-purple-500/30 gap-1 text-[10px] font-semibold ${className}`}
         >
           <AlertTriangle className="size-3" />
           Devuelto

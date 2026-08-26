@@ -20,9 +20,9 @@ export function CobroModuleView() {
   const [pageSize, setPageSize] = React.useState(10);
   const [searchTerm, setSearchTerm] = React.useState("");
   const [debouncedSearch, setDebouncedSearch] = React.useState("");
-  const [selectedEstadoTab, setSelectedEstadoTab] = React.useState<EstadoCobro>(
-    EstadoCobro.Registrado
-  );
+  const [selectedEstadoTab, setSelectedEstadoTab] = React.useState<
+    EstadoCobro | "TODOS"
+  >("TODOS");
 
   // Estado Master-Detail
   const [selectedCobroForDetail, setSelectedCobroForDetail] =
@@ -54,7 +54,7 @@ export function CobroModuleView() {
     page: currentPage,
     pageSize,
     search: debouncedSearch || undefined,
-    estado: selectedEstadoTab,
+    estado: selectedEstadoTab === "TODOS" ? undefined : selectedEstadoTab,
   });
 
   // Consulta para métricas globales
@@ -86,17 +86,11 @@ export function CobroModuleView() {
     allCobrosList.forEach((c) => {
       if (c.estado === EstadoCobro.Anulado) {
         anuladosCount++;
-      } else {
-        const isPending =
-          c.estado === EstadoCobro.Registrado &&
-          (c.total === 0 || (c.detalles && c.detalles.length === 0));
-
-        if (isPending) {
-          pendientesCobroCount++;
-        } else {
-          completadosCount++;
-          montoTotal += Number(c.total) || 0;
-        }
+      } else if (c.estado === EstadoCobro.Registrado) {
+        pendientesCobroCount++;
+      } else if (c.estado === EstadoCobro.Confirmado) {
+        completadosCount++;
+        montoTotal += Number(c.total) || 0;
       }
     });
 
@@ -136,7 +130,7 @@ export function CobroModuleView() {
     setAnularDialogOpen(true);
   };
 
-  const handleEstadoTabChange = (tab: EstadoCobro) => {
+  const handleEstadoTabChange = (tab: EstadoCobro | "TODOS") => {
     setSelectedEstadoTab(tab);
     setCurrentPage(1);
   };

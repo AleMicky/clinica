@@ -38,10 +38,10 @@ import {
   EstadoCobro,
   type CobroDetalleRequest,
   type CobroResponse,
-  type UpdateCobroRequest,
+  type ConfirmarCobroRequest,
 } from "../types/cobro.types";
 import { CobroStatusBadge } from "./cobro-status-badge";
-import { useCobro, useUpdateCobro } from "../hooks/use-cobros";
+import { useCobro, useConfirmarCobro } from "../hooks/use-cobros";
 import { useMetodosPago } from "@/modules/parametros/metodo-pago/hooks/use-metodos-pago";
 import { useMonedas } from "@/modules/parametros/moneda/hooks/use-monedas";
 import { useBancos } from "@/modules/parametros/banco/hooks/use-bancos";
@@ -52,19 +52,23 @@ interface CobroDetailCardProps {
   onAnular?: (cobro: CobroResponse) => void;
 }
 
+function formatCurrency(amount?: number | null): string {
+  return `Bs. ${Number(amount || 0).toLocaleString("es-BO", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
 export function CobroDetailCard({
   cobro: initialCobro,
   onSuccessCobro,
   onAnular,
 }: CobroDetailCardProps) {
   const cobroId = initialCobro?.id ?? 0;
-  const { data: fullCobro, isLoading: isLoadingFull } = useCobro(
-    cobroId,
-    cobroId > 0
-  );
+  const { data: fullCobro } = useCobro(cobroId, cobroId > 0);
   const cobro = fullCobro ?? initialCobro;
 
-  const updateCobroMutation = useUpdateCobro();
+  const confirmarCobroMutation = useConfirmarCobro();
 
   // Queries para selects
   const { data: metodosData, isLoading: isLoadingMetodos } = useMetodosPago({
@@ -99,7 +103,6 @@ export function CobroDetailCard({
       const defaultMetodoId = metodos[0]?.id ?? 1;
       const defaultMonedaId = monedaBase?.id ?? 1;
 
-      // Si no tiene detalles creados en el estado local, pre-cargar 1 línea con el monto objetivo
       if (detalles.length === 0) {
         setDetalles([
           {
@@ -116,7 +119,6 @@ export function CobroDetailCard({
       }
       setObservacion(cobro.observacion || "");
     } else if (cobro && cobro.detalles && cobro.detalles.length > 0) {
-      // Si ya tiene detalles guardados
       setDetalles(
         cobro.detalles.map((d) => ({
           metodoPagoId: d.metodoPagoId || d.metodoPago?.id || 1,
@@ -142,7 +144,7 @@ export function CobroDetailCard({
         <div>
           <h3 className="text-sm font-bold text-foreground">Terminal de Cobro</h3>
           <p className="text-xs text-muted-foreground max-w-xs mt-1">
-            Seleccione un cobro de la lista para procesar los métodos de pago, registrar transacciones y emitir comprobantes.
+            Seleccione un cobro de la lista para liquidar formas de pago y emitir comprobantes.
           </p>
         </div>
       </Card>
@@ -229,11 +231,8 @@ export function CobroDetailCard({
       return;
     }
 
-    const payload: UpdateCobroRequest = {
-      turnoCajaId: cobro.turnoCaja?.id || cobro.turnoCajaId || 1,
-      ventaPagadorId: cobro.ventaPagador?.id || cobro.ventaPagadorId || 1,
-      fechaHora: new Date().toISOString(),
-      observacion: observacion.trim() || undefined,
+    const payload: ConfirmarCobroRequest = {
+      observacion: observacion.trim() || null,
       detalles: detalles.map((d) => ({
         metodoPagoId: Number(d.metodoPagoId),
         monedaId: Number(d.monedaId),
@@ -247,20 +246,26 @@ export function CobroDetailCard({
     };
 
     try {
-      await updateCobroMutation.mutateAsync({
+      await confirmarCobroMutation.mutateAsync({
         id: cobro.id,
         data: payload,
       });
 
       toast.success(
-        `Cobro #${cobro.numero} procesado y registrado con éxito por Bs. ${totalIngresado.toFixed(2)}.`
+        `Cobro #${cobro.numero} confirmado y registrado con éxito por ${formatCurrency(totalIngresado)}.`
       );
       onSuccessCobro?.();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as {
+        response?: { data?: { detail?: string; message?: string; title?: string } };
+        message?: string;
+      };
       const msg =
-        error?.response?.data?.detail ||
-        error?.message ||
-        "No se pudo registrar el cobro.";
+        err?.response?.data?.detail ||
+        err?.response?.data?.message ||
+        err?.response?.data?.title ||
+        err?.message ||
+        "No se pudo confirmar el cobro.";
       toast.error(msg);
     }
   };
@@ -293,11 +298,11 @@ export function CobroDetailCard({
         <div className="flex items-start justify-between gap-2">
           <div>
             <h3 className="font-bold text-sm text-foreground flex items-center gap-1.5">
-              <Store className="size-4 text-indigo-600" />
+              <Store className="size-4 text-primary" />
               {cajaNombre}
             </h3>
             {cobro.ventaPagador?.convenioNombre && (
-              <p className="text-[11px] text-blue-600 font-medium flex items-center gap-1 mt-0.5">
+              <p className="text-[11px] text-blue-600 dark:text-blue-400 font-medium flex items-center gap-1 mt-0.5">
                 <Building2 className="size-3" />
                 Convenio: {cobro.ventaPagador.convenioNombre}
               </p>
@@ -308,7 +313,7 @@ export function CobroDetailCard({
               Monto a Cobrar
             </span>
             <span className="text-base font-extrabold text-primary font-mono">
-              Bs. {montoObjetivo.toFixed(2)}
+              {formatCurrency(montoObjetivo)}
             </span>
           </div>
         </div>
@@ -330,14 +335,14 @@ export function CobroDetailCard({
             </span>
           </div>
           <div className="flex items-center gap-1.5 text-muted-foreground">
-            <Hash className="size-3.5 text-indigo-600 shrink-0" />
+            <Hash className="size-3.5 text-primary shrink-0" />
             <span>
               Turno: <strong className="text-foreground">#{cobro.turnoCaja?.id || cobro.turnoCajaId || "-"}</strong>
             </span>
           </div>
           {cajeroNombre && (
             <div className="col-span-2 flex items-center gap-1.5 text-muted-foreground pt-1 border-t border-border/40 text-[11px]">
-              <CreditCard className="size-3.5 text-blue-600 shrink-0" />
+              <CreditCard className="size-3.5 text-primary shrink-0" />
               <span>
                 Cajero: <strong className="text-foreground">{cajeroNombre}</strong>
               </span>
@@ -367,7 +372,7 @@ export function CobroDetailCard({
               )}
               {cobro.ventaPagador.ventaTotal !== undefined && cobro.ventaPagador.ventaTotal > 0 && (
                 <span>
-                  Total Venta: <strong className="text-foreground font-mono">Bs. {cobro.ventaPagador.ventaTotal.toFixed(2)}</strong>
+                  Total Venta: <strong className="text-foreground font-mono">{formatCurrency(cobro.ventaPagador.ventaTotal)}</strong>
                 </span>
               )}
             </div>
@@ -405,7 +410,7 @@ export function CobroDetailCard({
                     Objetivo
                   </span>
                   <span className="text-xs font-bold text-foreground">
-                    Bs. {montoObjetivo.toFixed(2)}
+                    {formatCurrency(montoObjetivo)}
                   </span>
                 </div>
 
@@ -414,7 +419,7 @@ export function CobroDetailCard({
                     Ingresado
                   </span>
                   <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                    Bs. {totalIngresado.toFixed(2)}
+                    {formatCurrency(totalIngresado)}
                   </span>
                 </div>
 
@@ -430,10 +435,10 @@ export function CobroDetailCard({
                   </span>
                   <span className="text-xs font-extrabold">
                     {saldoPendiente > 0
-                      ? `Bs. ${saldoPendiente.toFixed(2)}`
+                      ? formatCurrency(saldoPendiente)
                       : vuelto > 0
-                      ? `Vuelto: Bs. ${vuelto.toFixed(2)}`
-                      : "✓ 0.00"}
+                      ? `Vuelto: ${formatCurrency(vuelto)}`
+                      : "Bs. 0.00"}
                   </span>
                 </div>
               </div>
@@ -465,7 +470,7 @@ export function CobroDetailCard({
               ) : detalles.length === 0 ? (
                 <div className="p-4 border border-dashed rounded-lg text-center text-xs text-muted-foreground space-y-1">
                   <AlertCircle className="size-4 text-amber-500 mx-auto" />
-                  <p>Haga click en "Agregar Pago" o "Pagar Total Efectivo"</p>
+                  <p>Haga click en &quot;Agregar Pago&quot; o &quot;Pagar Total Efectivo&quot;</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -674,13 +679,13 @@ export function CobroDetailCard({
                 type="submit"
                 size="sm"
                 disabled={
-                  updateCobroMutation.isPending ||
+                  confirmarCobroMutation.isPending ||
                   detalles.length === 0 ||
                   totalIngresado <= 0
                 }
                 className="h-8 text-xs font-semibold gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white ml-auto shadow-xs cursor-pointer"
               >
-                {updateCobroMutation.isPending ? (
+                {confirmarCobroMutation.isPending ? (
                   <Loader2 className="size-3.5 animate-spin" />
                 ) : (
                   <CheckCircle2 className="size-3.5" />
@@ -741,7 +746,7 @@ export function CobroDetailCard({
                           </span>
                           {det.tipoCambio !== 1 && (
                             <span className="text-[10px] text-muted-foreground">
-                              (TC: {det.tipoCambio} = Bs. {det.montoMonedaBase?.toFixed(2)})
+                              (TC: {det.tipoCambio} = {formatCurrency(det.montoMonedaBase)})
                             </span>
                           )}
                         </div>
@@ -762,7 +767,7 @@ export function CobroDetailCard({
                 Total Cobrado:
               </span>
               <span className="text-base font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
-                Bs. {Number(cobro.total).toFixed(2)}
+                {formatCurrency(cobro.total)}
               </span>
             </div>
 

@@ -3,18 +3,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   anularCobro,
-  createCobro,
-  deleteCobro,
+  confirmarCobro,
+  generarCobroDesdeVenta,
   getCobroById,
   getCobros,
-  updateCobro,
 } from "../api/cobro.api";
 import { cobroKeys } from "../api/cobro.key";
 import type {
   AnularCobroRequest,
   CobroQueryParams,
-  CreateCobroRequest,
-  UpdateCobroRequest,
+  ConfirmarCobroRequest,
+  GenerarCobroDesdeVentaRequest,
 } from "../types/cobro.types";
 
 export function useCobros(params?: CobroQueryParams, enabled = true) {
@@ -33,34 +32,36 @@ export function useCobro(id: number, enabled = true) {
   });
 }
 
-export function useCreateCobro() {
+export function useGenerarCobroDesdeVenta() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateCobroRequest) => createCobro(data),
+    mutationFn: (data: GenerarCobroDesdeVentaRequest) =>
+      generarCobroDesdeVenta(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: cobroKeys.all, refetchType: "all" });
       queryClient.invalidateQueries({ queryKey: ["ventas"], refetchType: "all" });
       queryClient.invalidateQueries({ queryKey: ["cajas"], refetchType: "all" });
       queryClient.invalidateQueries({ queryKey: ["movimientos-caja"], refetchType: "all" });
-      queryClient.invalidateQueries({ queryKey: ["admisiones"], refetchType: "all" });
     },
   });
 }
 
-export function useUpdateCobro() {
+export function useConfirmarCobro() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: UpdateCobroRequest }) =>
-      updateCobro(id, data),
+    mutationFn: ({ id, data }: { id: number; data: ConfirmarCobroRequest }) =>
+      confirmarCobro(id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: cobroKeys.all, refetchType: "all" });
-      queryClient.invalidateQueries({ queryKey: cobroKeys.detail(variables.id), refetchType: "all" });
+      queryClient.invalidateQueries({
+        queryKey: cobroKeys.detail(variables.id),
+        refetchType: "all",
+      });
       queryClient.invalidateQueries({ queryKey: ["ventas"], refetchType: "all" });
       queryClient.invalidateQueries({ queryKey: ["cajas"], refetchType: "all" });
       queryClient.invalidateQueries({ queryKey: ["movimientos-caja"], refetchType: "all" });
-      queryClient.invalidateQueries({ queryKey: ["admisiones"], refetchType: "all" });
     },
   });
 }
@@ -73,21 +74,10 @@ export function useAnularCobro() {
       anularCobro(id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: cobroKeys.all, refetchType: "all" });
-      queryClient.invalidateQueries({ queryKey: cobroKeys.detail(variables.id), refetchType: "all" });
-      queryClient.invalidateQueries({ queryKey: ["ventas"], refetchType: "all" });
-      queryClient.invalidateQueries({ queryKey: ["cajas"], refetchType: "all" });
-      queryClient.invalidateQueries({ queryKey: ["movimientos-caja"], refetchType: "all" });
-    },
-  });
-}
-
-export function useDeleteCobro() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: number) => deleteCobro(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: cobroKeys.all, refetchType: "all" });
+      queryClient.invalidateQueries({
+        queryKey: cobroKeys.detail(variables.id),
+        refetchType: "all",
+      });
       queryClient.invalidateQueries({ queryKey: ["ventas"], refetchType: "all" });
       queryClient.invalidateQueries({ queryKey: ["cajas"], refetchType: "all" });
       queryClient.invalidateQueries({ queryKey: ["movimientos-caja"], refetchType: "all" });

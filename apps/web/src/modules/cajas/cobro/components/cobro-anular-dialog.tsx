@@ -70,11 +70,12 @@ export function CobroAnularDialog({
       onOpenChange(false);
     } catch (error: unknown) {
       const err = error as {
-        response?: { data?: { detail?: string; title?: string } };
+        response?: { data?: { detail?: string; message?: string; title?: string } };
         message?: string;
       };
       const message =
         err?.response?.data?.detail ||
+        err?.response?.data?.message ||
         err?.response?.data?.title ||
         err?.message ||
         "Error al anular el cobro.";
@@ -93,21 +94,21 @@ export function CobroAnularDialog({
           <DialogDescription className="pt-1 text-xs">
             ¿Está seguro de que desea anular el cobro{" "}
             <strong className="text-foreground">N° {cobro.numero}</strong> por el monto de{" "}
-            <strong className="text-foreground">S/ {Number(cobro.total).toFixed(2)}</strong>?
+            <strong className="text-foreground">Bs. {Number(cobro.total).toLocaleString("es-BO", { minimumFractionDigits: 2 })}</strong>?
             Ingrese la justificación de anulación requerida.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-2">
           <div className="space-y-1.5">
-            <Label htmlFor="motivoAnulacion" className="required font-medium text-xs">
-              Motivo de Anulación
+            <Label htmlFor="motivoAnulacion" className="font-medium text-xs">
+              Motivo de Anulación <span className="text-destructive">*</span>
             </Label>
             <Textarea
               id="motivoAnulacion"
               placeholder="Ej: Cobro duplicado por error de digitación en ventanilla..."
               {...register("motivoAnulacion")}
-              className="min-h-[80px] text-xs resize-none"
+              className="min-h-[80px] text-xs resize-none bg-background"
               disabled={anularMutation.isPending}
             />
             {errors.motivoAnulacion && (
@@ -123,7 +124,7 @@ export function CobroAnularDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={anularMutation.isPending}
-              className="h-9 text-xs"
+              className="h-9 text-xs cursor-pointer"
             >
               Cancelar
             </Button>
@@ -131,7 +132,7 @@ export function CobroAnularDialog({
               type="submit"
               variant="destructive"
               disabled={anularMutation.isPending}
-              className="h-9 gap-2 text-xs"
+              className="h-9 gap-2 text-xs cursor-pointer"
             >
               {anularMutation.isPending && (
                 <Loader2 className="h-4 w-4 animate-spin" />

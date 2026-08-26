@@ -47,7 +47,8 @@ export * from "./arqueo-caja/components/arqueo-caja-module-view";
 
 export type {
   CobroResponse,
-  CreateCobroRequest,
+  ConfirmarCobroRequest,
+  GenerarCobroDesdeVentaRequest,
   AnularCobroRequest,
   CobroQueryParams,
   CobroMetrics,

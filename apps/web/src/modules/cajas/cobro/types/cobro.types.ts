@@ -2,10 +2,19 @@ import type { TurnoCajaInfo } from "../../turno-caja/types/turno-caja.types";
 
 export enum EstadoCobro {
   Registrado = 1,
-  Anulado = 2,
-  DevueltoParcial = 3,
-  Devuelto = 4,
+  Confirmado = 2,
+  Anulado = 3,
+  DevueltoParcial = 4,
+  Devuelto = 5,
 }
+
+export const EstadoCobroLabels: Record<EstadoCobro, string> = {
+  [EstadoCobro.Registrado]: "Por Cobrar",
+  [EstadoCobro.Confirmado]: "Cobrado",
+  [EstadoCobro.Anulado]: "Anulado",
+  [EstadoCobro.DevueltoParcial]: "Devuelto Parcial",
+  [EstadoCobro.Devuelto]: "Devuelto",
+};
 
 export interface CobroDetalleRequest {
   metodoPagoId: number;
@@ -80,25 +89,12 @@ export interface CobroResponse {
   fechaCreacion?: string;
 }
 
-export interface CreateCobroRequest {
-  turnoCajaId: number;
+export interface GenerarCobroDesdeVentaRequest {
   ventaPagadorId: number;
-  fechaHora: string;
-  observacion?: string | null;
-  detalles: CobroDetalleRequest[];
+  cajaId: number;
 }
 
-export const EstadoCobroLabels: Record<EstadoCobro, string> = {
-  [EstadoCobro.Registrado]: "Registrado",
-  [EstadoCobro.Anulado]: "Anulado",
-  [EstadoCobro.DevueltoParcial]: "Devuelto Parcial",
-  [EstadoCobro.Devuelto]: "Devuelto",
-};
-
-export interface UpdateCobroRequest {
-  turnoCajaId: number;
-  ventaPagadorId: number;
-  fechaHora: string;
+export interface ConfirmarCobroRequest {
   observacion?: string | null;
   detalles: CobroDetalleRequest[];
 }

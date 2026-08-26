@@ -19,7 +19,7 @@ import {
   Ban,
   Receipt,
   Building2,
-  Store,
+  Vault,
   Wallet,
   ArrowRight,
   User,
@@ -38,15 +38,22 @@ interface CobroListProps {
   currentPage: number;
   pageSize: number;
   searchTerm: string;
-  selectedEstadoTab?: EstadoCobro;
+  selectedEstadoTab?: EstadoCobro | "TODOS";
   selectedCobroId?: number | null;
-  onEstadoTabChange?: (tab: EstadoCobro) => void;
+  onEstadoTabChange?: (tab: EstadoCobro | "TODOS") => void;
   onSearchChange: (term: string) => void;
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
   onSelectCobro: (cobro: CobroResponse) => void;
   onAnular: (cobro: CobroResponse) => void;
   onRefresh?: () => void;
+}
+
+function formatCurrency(amount?: number | null): string {
+  return `Bs. ${Number(amount || 0).toLocaleString("es-BO", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 }
 
 export function CobroList({
@@ -56,7 +63,7 @@ export function CobroList({
   currentPage,
   pageSize,
   searchTerm,
-  selectedEstadoTab = EstadoCobro.Registrado,
+  selectedEstadoTab = "TODOS",
   selectedCobroId,
   onEstadoTabChange,
   onSearchChange,
@@ -66,12 +73,22 @@ export function CobroList({
   onAnular,
 }: CobroListProps) {
   const tabs: Array<{
-    key: EstadoCobro;
+    key: EstadoCobro | "TODOS";
     label: string;
     activeClasses: string;
   }> = [
     {
+      key: "TODOS",
+      label: "Todos",
+      activeClasses: "bg-primary text-primary-foreground shadow-xs",
+    },
+    {
       key: EstadoCobro.Registrado,
+      label: "Por Cobrar",
+      activeClasses: "bg-amber-600 text-white shadow-xs",
+    },
+    {
+      key: EstadoCobro.Confirmado,
       label: "Cobrados",
       activeClasses: "bg-emerald-600 text-white shadow-xs",
     },
@@ -79,16 +96,6 @@ export function CobroList({
       key: EstadoCobro.Anulado,
       label: "Anulados",
       activeClasses: "bg-rose-600 text-white shadow-xs",
-    },
-    {
-      key: EstadoCobro.DevueltoParcial,
-      label: "Dev. Parcial",
-      activeClasses: "bg-amber-600 text-white shadow-xs",
-    },
-    {
-      key: EstadoCobro.Devuelto,
-      label: "Devueltos",
-      activeClasses: "bg-purple-600 text-white shadow-xs",
     },
   ];
 
@@ -164,9 +171,7 @@ export function CobroList({
           <div className="space-y-1.5">
             {cobros.map((cobro) => {
               const isSelected = selectedCobroId === cobro.id;
-              const isPendingPayment =
-                cobro.estado === EstadoCobro.Registrado &&
-                (cobro.total === 0 || (cobro.detalles && cobro.detalles.length === 0));
+              const isPendingPayment = cobro.estado === EstadoCobro.Registrado;
 
               const cajaNombre =
                 cobro.turnoCaja?.caja?.nombre ||
@@ -193,7 +198,7 @@ export function CobroList({
                       className={`size-9 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 border mt-0.5 transition-colors ${
                         isPendingPayment
                           ? "bg-amber-500/10 text-amber-600 border-amber-500/20 group-hover:bg-amber-500 group-hover:text-white"
-                          : "bg-primary/10 text-primary border-primary/20 group-hover:bg-primary group-hover:text-primary-foreground"
+                          : "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 group-hover:bg-emerald-500 group-hover:text-white"
                       }`}
                     >
                       {isPendingPayment ? (
@@ -244,7 +249,7 @@ export function CobroList({
                         )}
 
                         <span className="flex items-center gap-1">
-                          <Store className="size-3 text-muted-foreground/70 shrink-0" />
+                          <Vault className="size-3 text-muted-foreground/70 shrink-0" />
                           <span>{cajaNombre}</span>
                         </span>
 
@@ -279,7 +284,7 @@ export function CobroList({
                       {isPendingPayment ? (
                         <>
                           <span className="text-xs font-extrabold text-amber-600 dark:text-amber-400 font-mono">
-                            Por cobrar: Bs. {pagadorMonto.toFixed(2)}
+                            Por cobrar: {formatCurrency(pagadorMonto)}
                           </span>
                           <span className="text-[10px] text-muted-foreground">
                             Pendiente en caja
@@ -288,11 +293,11 @@ export function CobroList({
                       ) : (
                         <>
                           <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
-                            Bs. {Number(cobro.total).toFixed(2)}
+                            {formatCurrency(cobro.total)}
                           </span>
                           {pagadorMonto > 0 && (
                             <span className="text-[10px] text-muted-foreground">
-                              Asignado: Bs. {pagadorMonto.toFixed(2)}
+                              Asignado: {formatCurrency(pagadorMonto)}
                             </span>
                           )}
                         </>
@@ -323,7 +328,8 @@ export function CobroList({
                             {isPendingPayment ? "Abrir y Cobrar" : "Ver Detalle"}
                           </DropdownMenuItem>
 
-                          {cobro.estado === EstadoCobro.Registrado && (
+                          {(cobro.estado === EstadoCobro.Registrado ||
+                            cobro.estado === EstadoCobro.Confirmado) && (
                             <>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
@@ -357,6 +363,7 @@ export function CobroList({
               totalItems={totalItems}
               onPageChange={onPageChange}
               onPageSizeChange={onPageSizeChange}
+              itemLabel="cobros"
             />
           </div>
         )}
