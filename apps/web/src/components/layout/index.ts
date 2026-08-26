@@ -4,3 +4,7 @@ export * from "./dashboard-layout";
 export * from "./app-breadcrumbs";
 export * from "./notifications-popover";
 export * from "./theme-toggle";
+export * from "./user-nav";
+export * from "./sidebar-search";
+export * from "./sidebar-states";
+export * from "./sidebar-nav";

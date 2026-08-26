@@ -125,7 +125,7 @@ export function AppBreadcrumbs() {
               <BreadcrumbSeparator className="text-muted-foreground/40">
                 <ChevronRight className="size-3" />
               </BreadcrumbSeparator>
-              <BreadcrumbItem className="truncate max-w-[140px] sm:max-w-[200px]">
+              <BreadcrumbItem className="truncate max-w-35 sm:max-w-50">
                 {item.isLast ? (
                   <BreadcrumbPage className="font-semibold text-foreground truncate">
                     {item.title}
