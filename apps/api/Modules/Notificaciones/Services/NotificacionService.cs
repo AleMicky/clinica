@@ -75,23 +75,9 @@ public class NotificacionService(
             .Where(x => x.UsuarioId == usuarioId)
             .OrderByDescending(x => x.FechaCreacion)
             .Take(cantidad)
-            .Select(x => new NotificacionResponse
-            {
-                Id = x.Id,
-                Titulo = x.Titulo,
-                Mensaje = x.Mensaje,
-                Tipo = (TipoNotificacion)Enum.Parse(typeof(TipoNotificacion), x.Tipo!), // Si EF Core no lo traduce, usa la Opción 2
-                Modulo = x.Modulo,
-                EntidadTipo = x.EntidadTipo,
-                EntidadId = x.EntidadId,
-                Url = x.Url,
-                Leida = x.Leida,
-                FechaLectura = x.FechaLectura,
-                FechaCreacion = x.FechaCreacion
-            })
             .ToListAsync(cancellationToken);
 
-        return notificaciones;
+        return notificaciones.Select(Map).ToList();
     }
 
     public Task<int> ObtenerCantidadNoLeidasAsync(string usuarioId, CancellationToken cancellationToken = default)

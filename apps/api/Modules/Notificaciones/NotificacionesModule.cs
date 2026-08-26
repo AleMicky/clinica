@@ -20,7 +20,6 @@ public static class NotificacionesModule
     public static IEndpointRouteBuilder MapNotificacionesModule(this IEndpointRouteBuilder app)
     {
         app.MapNotificacionEndpoints();
-        app.MapHub<NotificacionHub>("/hubs/notificaciones").RequireAuthorization();
 
         return app;
     }

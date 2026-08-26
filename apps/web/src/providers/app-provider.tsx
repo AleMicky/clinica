@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import { QueryProvider } from "@/providers/query-provider";
 import { AuthProvider } from "./auth-provider";
+import { NotificationProvider } from "./notification-provider";
 import { ThemeProvider } from "./theme-provider";
 
 type AppProviderProps = {
@@ -17,7 +18,9 @@ export function AppProvider({
         <QueryProvider>
             <ThemeProvider defaultTheme="system" storageKey="clinica-theme">
                 <AuthProvider>
-                    {children}
+                    <NotificationProvider>
+                        {children}
+                    </NotificationProvider>
                 </AuthProvider>
             </ThemeProvider>
         </QueryProvider>

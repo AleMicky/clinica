@@ -8,7 +8,7 @@ public static class NotificacionEndpoints
     public static IEndpointRouteBuilder MapNotificacionEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app
-            .MapGroup("/api/notificaciones")
+            .MapGroup("/notificaciones")
             .WithTags("Notificaciones")
             .RequireAuthorization();
 

@@ -1,16 +1,20 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import {
   Bell,
   Check,
   CheckCheck,
-  Trash2,
   Calendar,
   User,
   HeartPulse,
   Info,
-  X,
+  CheckCircle2,
+  AlertTriangle,
+  AlertCircle,
+  Wifi,
+  WifiOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,97 +23,82 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useNotifications } from "@/providers/notification-provider";
+import {
+  type Notification,
+  NotificationType,
+} from "@/modules/notification/types/notification";
 
-export interface NotificationItem {
-  id: string;
-  title: string;
-  description: string;
-  time: string;
-  read: boolean;
-  type: "cita" | "paciente" | "laboratorio" | "sistema";
+function formatRelativeTime(dateString: string): string {
+  try {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diffInSeconds < 60) return "hace un momento";
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    if (diffInMinutes < 60) return `hace ${diffInMinutes} min`;
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `hace ${diffInHours} h`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) return `hace ${diffInDays} d`;
+    return date.toLocaleDateString("es-ES", { day: "numeric", month: "short" });
+  } catch {
+    return "";
+  }
 }
 
-const initialNotifications: NotificationItem[] = [
-  {
-    id: "1",
-    title: "Nueva Cita Agendada",
-    description: "Dr. Carlos Rodríguez tiene consulta programada a las 10:30 AM",
-    time: "hace 5 min",
-    read: false,
-    type: "cita",
-  },
-  {
-    id: "2",
-    title: "Resultado de Laboratorio",
-    description: "Exámenes de hemograma completos para Juan Pérez",
-    time: "hace 30 min",
-    read: false,
-    type: "laboratorio",
-  },
-  {
-    id: "3",
-    title: "Expediente Actualizado",
-    description: "Se ingresaron nuevos antecedentes médicos a María López",
-    time: "hace 2 horas",
-    read: false,
-    type: "paciente",
-  },
-  {
-    id: "4",
-    title: "Mantenimiento del Sistema",
-    description: "Respaldo automático de base de datos completado con éxito",
-    time: "hace 1 día",
-    read: true,
-    type: "sistema",
-  },
-];
-
 export function NotificationsPopover() {
-  const [notifications, setNotifications] = React.useState<NotificationItem[]>(
-    initialNotifications
-  );
+  const router = useRouter();
+  const {
+    notifications,
+    unreadCount,
+    connected,
+    markAsRead,
+    markAllAsRead,
+  } = useNotifications();
+
   const [filter, setFilter] = React.useState<"all" | "unread">("all");
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const filteredNotifications = React.useMemo(() => {
+    if (filter === "unread") {
+      return notifications.filter((n) => !n.leida);
+    }
+    return notifications;
+  }, [notifications, filter]);
 
-  const filteredNotifications = notifications.filter((n) => {
-    if (filter === "unread") return !n.read;
-    return true;
-  });
-
-  const markAsRead = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
+  const handleNotificationClick = (notification: Notification) => {
+    if (!notification.leida) {
+      void markAsRead(notification);
+    }
+    if (notification.url) {
+      router.push(notification.url);
+    }
   };
 
-  const markAllAsRead = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  };
+  const getIcon = (notification: Notification) => {
+    const modulo = notification.modulo?.toLowerCase() ?? "";
 
-  const removeNotification = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
-  };
+    if (modulo.includes("cita") || modulo.includes("admision")) {
+      return <Calendar className="h-3.5 w-3.5 text-blue-500" />;
+    }
+    if (modulo.includes("paciente") || modulo.includes("persona")) {
+      return <User className="h-3.5 w-3.5 text-emerald-500" />;
+    }
+    if (modulo.includes("servicio") || modulo.includes("medico")) {
+      return <HeartPulse className="h-3.5 w-3.5 text-indigo-500" />;
+    }
 
-  const clearAll = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setNotifications([]);
-  };
-
-  const getIcon = (type: NotificationItem["type"]) => {
-    switch (type) {
-      case "cita":
-        return <Calendar className="h-3.5 w-3.5 text-blue-500" />;
-      case "paciente":
-        return <User className="h-3.5 w-3.5 text-emerald-500" />;
-      case "laboratorio":
-        return <HeartPulse className="h-3.5 w-3.5 text-rose-500" />;
-      case "sistema":
+    switch (Number(notification.tipo)) {
+      case NotificationType.Exito:
+        return <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />;
+      case NotificationType.Advertencia:
+        return <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />;
+      case NotificationType.Error:
+        return <AlertCircle className="h-3.5 w-3.5 text-rose-500" />;
+      case NotificationType.Informacion:
       default:
-        return <Info className="h-3.5 w-3.5 text-amber-500" />;
+        return <Info className="h-3.5 w-3.5 text-blue-500" />;
     }
   };
 
@@ -146,11 +135,24 @@ export function NotificationsPopover() {
                 {unreadCount}
               </Badge>
             )}
+            <span
+              title={connected ? "En tiempo real conectado" : "Desconectado"}
+              className="inline-flex items-center"
+            >
+              {connected ? (
+                <Wifi className="h-3 w-3 text-emerald-500" />
+              ) : (
+                <WifiOff className="h-3 w-3 text-muted-foreground/50" />
+              )}
+            </span>
           </div>
           {unreadCount > 0 && (
             <button
-              onClick={markAllAsRead}
-              className="text-[11px] font-medium text-primary hover:underline flex items-center gap-1"
+              onClick={(e) => {
+                e.stopPropagation();
+                void markAllAsRead();
+              }}
+              className="text-[11px] font-medium text-primary hover:underline flex items-center gap-1 cursor-pointer"
             >
               <CheckCheck className="h-3 w-3" />
               <span>Marcar todas leídas</span>
@@ -162,7 +164,7 @@ export function NotificationsPopover() {
         <div className="flex items-center gap-1 p-1 bg-muted/20 border-b border-border/40 text-xs">
           <button
             onClick={() => setFilter("all")}
-            className={`flex-1 py-1 px-2 rounded-md font-medium text-center transition-all ${
+            className={`flex-1 py-1 px-2 rounded-md font-medium text-center transition-all cursor-pointer ${
               filter === "all"
                 ? "bg-background text-foreground shadow-xs"
                 : "text-muted-foreground hover:text-foreground"
@@ -172,7 +174,7 @@ export function NotificationsPopover() {
           </button>
           <button
             onClick={() => setFilter("unread")}
-            className={`flex-1 py-1 px-2 rounded-md font-medium text-center transition-all ${
+            className={`flex-1 py-1 px-2 rounded-md font-medium text-center transition-all cursor-pointer ${
               filter === "unread"
                 ? "bg-background text-foreground shadow-xs"
                 : "text-muted-foreground hover:text-foreground"
@@ -183,72 +185,66 @@ export function NotificationsPopover() {
         </div>
 
         {/* LISTA DE NOTIFICACIONES */}
-        <div className="max-h-72 overflow-y-auto divide-y divide-border/30">
+        <div className="max-h-80 overflow-y-auto divide-y divide-border/30">
           {filteredNotifications.length === 0 ? (
             <div className="p-8 text-center text-xs text-muted-foreground flex flex-col items-center gap-2">
               <Bell className="h-8 w-8 text-muted-foreground/30" />
-              <p>No tienes notificaciones en este momento</p>
+              <p>
+                {filter === "unread"
+                  ? "No tienes notificaciones pendientes"
+                  : "No tienes notificaciones en este momento"}
+              </p>
             </div>
           ) : (
             filteredNotifications.map((n) => (
               <div
                 key={n.id}
-                className={`p-3 text-xs flex gap-3 transition-colors hover:bg-muted/40 relative group ${
-                  !n.read ? "bg-primary/5" : ""
+                onClick={() => handleNotificationClick(n)}
+                className={`p-3 text-xs flex gap-3 transition-colors hover:bg-muted/50 relative group cursor-pointer ${
+                  !n.leida ? "bg-primary/5" : ""
                 }`}
               >
-                <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-background border border-border/50 shadow-xs">
-                  {getIcon(n.type)}
+                <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-background border border-border/50 shadow-xs mt-0.5">
+                  {getIcon(n)}
                 </div>
 
                 <div className="flex-1 min-w-0 pr-6">
                   <div className="flex items-center justify-between gap-1 mb-0.5">
-                    <p className={`font-semibold truncate ${!n.read ? "text-foreground" : "text-muted-foreground"}`}>
-                      {n.title}
+                    <p
+                      className={`font-semibold truncate ${
+                        !n.leida ? "text-foreground font-medium" : "text-muted-foreground"
+                      }`}
+                    >
+                      {n.titulo}
                     </p>
-                    <span className="text-[10px] text-muted-foreground shrink-0">{n.time}</span>
+                    <span className="text-[10px] text-muted-foreground shrink-0">
+                      {formatRelativeTime(n.fechaCreacion)}
+                    </span>
                   </div>
                   <p className="text-muted-foreground text-[11px] line-clamp-2 leading-relaxed">
-                    {n.description}
+                    {n.mensaje}
                   </p>
                 </div>
 
-                {/* BOTONES DE ACCIÓN */}
-                <div className="absolute right-2 top-2.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {!n.read && (
+                {/* BOTÓN MARCAR COMO LEÍDA */}
+                {!n.leida && (
+                  <div className="absolute right-2 top-2.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
-                      onClick={(e) => markAsRead(n.id, e)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        void markAsRead(n);
+                      }}
                       title="Marcar como leída"
-                      className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground"
+                      className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer"
                     >
                       <Check className="h-3 w-3" />
                     </button>
-                  )}
-                  <button
-                    onClick={(e) => removeNotification(n.id, e)}
-                    title="Eliminar"
-                    className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
+                  </div>
+                )}
               </div>
             ))
           )}
         </div>
-
-        {/* FOOTER POPOVER */}
-        {notifications.length > 0 && (
-          <div className="p-2 border-t border-border/50 bg-muted/20 text-center">
-            <button
-              onClick={clearAll}
-              className="text-[11px] text-muted-foreground hover:text-destructive flex items-center justify-center gap-1 mx-auto transition-colors"
-            >
-              <Trash2 className="h-3 w-3" />
-              <span>Limpiar todas las notificaciones</span>
-            </button>
-          </div>
-        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

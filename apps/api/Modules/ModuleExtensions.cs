@@ -40,7 +40,7 @@ public static class ModuleExtensions
         api.MapServiciosModule();
         api.MapVentasModule();
         api.MapCajasModule();
-        app.MapNotificacionesModule();
+        api.MapNotificacionesModule();
 
         return app;
     }

@@ -115,9 +115,6 @@ builder.Services.Configure<ClinicaOptions>(builder.Configuration.GetSection(Clin
 builder.Services.AddShared();
 builder.Services.AddModules();
 
-// NUEVO
-builder.Services.AddNotificaciones();
-
 builder.Services.AddHttpLogging(options =>
 {
     options.LoggingFields = HttpLoggingFields.RequestMethod |
