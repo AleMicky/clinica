@@ -3,6 +3,7 @@ using Clinica.Api.Modules.Cajas.Caja.Entity;
 using Clinica.Api.Modules.Cajas.Cobro.Entity;
 using Clinica.Api.Modules.Cajas.MovimientoCaja.Entity;
 using Clinica.Api.Modules.Cajas.TurnoCaja.Entity;
+using Clinica.Api.Modules.Notificaciones.Entity;
 using Clinica.Api.Modules.Parametros.Banco.Entity;
 using Clinica.Api.Modules.Parametros.Catalogo.Entity;
 using Clinica.Api.Modules.Parametros.Correlativo.Entity;
@@ -78,7 +79,8 @@ public class AppDbContext(
     public DbSet<CobroDetalle> CobroDetalles => Set<CobroDetalle>();
     public DbSet<OpcionMenu> OpcionesMenu => Set<OpcionMenu>();
     public DbSet<RolOpcionMenu> RolesOpcionesMenu => Set<RolOpcionMenu>();
-
+    public DbSet<Notificacion> Notificaciones => Set<Notificacion>();
+    
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
