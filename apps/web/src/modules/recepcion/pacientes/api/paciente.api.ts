@@ -2,6 +2,7 @@ import { apiClient } from "@/lib/api/api-client";
 import type {
   CreatePacienteConvenioRequest,
   CreatePacienteRequest,
+  ExcelImportResult,
   PagedResult,
   PacienteConvenioResponse,
   PacienteQueryParams,
@@ -81,4 +82,31 @@ export async function deletePacienteConvenio(
   id: number
 ): Promise<void> {
   await apiClient.delete(`/pacientes/${pacienteId}/convenios/${id}`);
+}
+
+// Importación masiva desde Excel
+export async function importarPacientesExcel(
+  archivo: File
+): Promise<ExcelImportResult> {
+  const formData = new FormData();
+  formData.append("archivo", archivo);
+
+  const response = await apiClient.post<ExcelImportResult>(
+    "/pacientes/importar-excel",
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+  return response.data;
+}
+
+// Descarga de plantilla Excel oficial (.xlsx)
+export async function descargarPlantillaPacientesExcel(): Promise<Blob> {
+  const response = await apiClient.get<Blob>("/pacientes/plantilla-excel", {
+    responseType: "blob",
+  });
+  return response.data;
 }

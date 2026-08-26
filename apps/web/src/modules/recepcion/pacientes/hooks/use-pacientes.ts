@@ -9,6 +9,7 @@ import {
   getPacienteById,
   getPacienteConvenios,
   getPacientes,
+  importarPacientesExcel,
   updatePaciente,
   updatePacienteConvenio,
 } from "../api/paciente.api";
@@ -16,6 +17,7 @@ import { pacienteKeys } from "../api/paciente.key";
 import type {
   CreatePacienteConvenioRequest,
   CreatePacienteRequest,
+  ExcelImportResult,
   PacienteQueryParams,
   UpdatePacienteConvenioRequest,
   UpdatePacienteRequest,
@@ -136,6 +138,18 @@ export function useDeletePacienteConvenio() {
         queryKey: pacienteKeys.convenios(variables.pacienteId),
       });
       queryClient.invalidateQueries({ queryKey: pacienteKeys.all });
+    },
+  });
+}
+
+export function useImportarPacientesExcel() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (archivo: File) => importarPacientesExcel(archivo),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: pacienteKeys.all });
+      queryClient.invalidateQueries({ queryKey: ["admisiones"] });
     },
   });
 }

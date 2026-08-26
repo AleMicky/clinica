@@ -95,3 +95,18 @@ export interface PacienteMetrics {
   conTelefono: number;
   conConvenio: number;
 }
+
+export interface ExcelImportError {
+  row: number;
+  column?: string | null;
+  value?: string | null;
+  message: string;
+}
+
+export interface ExcelImportResult {
+  total: number;
+  importados: number;
+  omitidos: number;
+  errores: number;
+  errors: ExcelImportError[];
+}

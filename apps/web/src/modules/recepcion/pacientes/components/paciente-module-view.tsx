@@ -8,6 +8,7 @@ import { PacienteMetricsCards } from "./paciente-metrics";
 import { PacienteList } from "./paciente-list";
 import { PacienteDeleteDialog } from "./paciente-delete-dialog";
 import { PacienteConveniosDialog } from "./paciente-convenios-dialog";
+import { PacienteImportDialog } from "./paciente-import-dialog";
 import { usePacientes, useDeletePaciente } from "../hooks/use-pacientes";
 import type { PacienteMetrics, PacienteResponse } from "../types/paciente.types";
 
@@ -23,6 +24,9 @@ export function PacienteModuleView() {
   const [pacienteForConvenios, setPacienteForConvenios] = React.useState<PacienteResponse | null>(
     null
   );
+
+  // Import Excel dialog state
+  const [importDialogOpen, setImportDialogOpen] = React.useState(false);
 
   // Pagination & search parameters
   const [currentPage, setCurrentPage] = React.useState(1);
@@ -129,7 +133,11 @@ export function PacienteModuleView() {
   return (
     <div className="flex flex-col gap-3 w-full animate-in fade-in-50 duration-300">
       {/* Cabecera del Módulo */}
-      <PacienteHeader onAddClick={handleOpenAdd} onRefresh={() => refetch()} />
+      <PacienteHeader
+        onAddClick={handleOpenAdd}
+        onImportClick={() => setImportDialogOpen(true)}
+        onRefresh={() => refetch()}
+      />
 
       {/* Tarjetas de Métricas en Vivo */}
       <PacienteMetricsCards metrics={metrics} />
@@ -151,6 +159,13 @@ export function PacienteModuleView() {
         onDelete={handleOpenDelete}
         onManageConvenios={handleOpenConvenios}
         onRefresh={() => refetch()}
+      />
+
+      {/* Modal: Importación Masiva desde Excel */}
+      <PacienteImportDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        onSuccess={() => refetch()}
       />
 
       {/* Modal: Gestión de Convenios y Aseguradoras */}

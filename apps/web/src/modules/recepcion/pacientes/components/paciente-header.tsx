@@ -3,14 +3,15 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { User, Plus, RefreshCw } from "lucide-react";
+import { User, Plus, RefreshCw, FileSpreadsheet } from "lucide-react";
 
 interface PacienteHeaderProps {
   onAddClick?: () => void;
   onRefresh?: () => void;
+  onImportClick?: () => void;
 }
 
-export function PacienteHeader({ onAddClick, onRefresh }: PacienteHeaderProps) {
+export function PacienteHeader({ onAddClick, onRefresh, onImportClick }: PacienteHeaderProps) {
   const router = useRouter();
 
   const handleAddClick = () => {
@@ -53,6 +54,19 @@ export function PacienteHeader({ onAddClick, onRefresh }: PacienteHeaderProps) {
           >
             <RefreshCw className="size-3.5" />
             <span className="hidden md:inline">Actualizar</span>
+          </Button>
+        )}
+
+        {onImportClick && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onImportClick}
+            className="h-8 px-2.5 text-xs font-medium gap-1.5 border-border/80 hover:bg-emerald-500/10 hover:text-emerald-600 hover:border-emerald-500/30 dark:hover:text-emerald-400 transition-all cursor-pointer"
+            title="Importar pacientes desde Excel"
+          >
+            <FileSpreadsheet className="size-3.5 text-emerald-600 dark:text-emerald-400" />
+            <span className="hidden sm:inline">Importar Excel</span>
           </Button>
         )}
 
