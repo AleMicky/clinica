@@ -51,6 +51,7 @@ const titleMap: Record<string, string> = {
   "unidades-medida": "Unidades de Medida",
   general: "Configuración General",
   caja: "Cajas",
+  configuraciones: "Configuraciones",
   cajas: "Puntos de Caja",
   turnos: "Turnos de Caja",
   movimientos: "Movimientos",

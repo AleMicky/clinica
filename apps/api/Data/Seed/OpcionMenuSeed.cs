@@ -211,12 +211,20 @@ public static class OpcionMenuSeed
                 "CAJA_VENTAS"),
 
             new(
-                "PUNTOS_CAJA",
-                "Puntos de Caja",
-                "/caja/cajas",
-                "Vault",
+                "CONFIGURACION_CAJA",
+                "Configuración",
+                null,
+                "Settings",
                 3,
                 "CAJA_VENTAS"),
+
+            new(
+                "PUNTOS_CAJA",
+                "Puntos de Caja",
+                "/caja/configuracion/cajas",
+                "Vault",
+                1,
+                "CONFIGURACION_CAJA"),
 
             new(
                 "TURNOS_CAJA",

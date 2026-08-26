@@ -50,7 +50,10 @@ export const ROUTES = {
   },
   CAJA: {
     ROOT: "/caja",
-    CAJAS: "/caja/cajas",
+    CONFIGURACION: {
+      ROOT: "/caja/configuracion",
+      CAJAS: "/caja/configuracion/cajas",
+    },
     TURNOS: "/caja/turnos",
     MOVIMIENTOS: "/caja/movimientos",
     ARQUEOS: "/caja/arqueos",
