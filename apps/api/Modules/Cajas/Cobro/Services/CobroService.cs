@@ -12,6 +12,10 @@ using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
+using Clinica.Api.Modules.Notificaciones.Dtos;
+using Clinica.Api.Modules.Notificaciones.Enums;
+using Clinica.Api.Modules.Notificaciones.Services;
+using Clinica.Api.Modules.Seguridad.Usuarios.Entity;
 using CobroEntity = Clinica.Api.Modules.Cajas.Cobro.Entity.Cobro;
 using TurnoCajaEntity = Clinica.Api.Modules.Cajas.TurnoCaja.Entity.TurnoCaja;
 using VentaPagadorEntity = Clinica.Api.Modules.Ventas.Venta.Entity.VentaPagador;
@@ -22,16 +26,13 @@ public sealed class CobroService(
     AppDbContext dbContext,
     CorrelativoService correlativoService,
     CobroDetalleService cobroDetalleService,
-    ICurrentUserService currentUserService)
+    ICurrentUserService currentUserService,
+    INotificacionService notificacionService
+)
 {
     private AppDbContext DbContext { get; } = dbContext;
+    private DbSet<CobroEntity> Entities => DbContext.Set<CobroEntity>();
 
-    private DbSet<CobroEntity> Entities =>
-        DbContext.Set<CobroEntity>();
-
-    // ============================================================
-    // LISTAR
-    // ============================================================
 
     public async Task<PagedResult<CobroResponse>> ListarAsync(
         PaginationRequest pagination,
@@ -44,12 +45,9 @@ public sealed class CobroService(
         if (usuarioId is null)
             throw new UnauthorizedAccessException();
 
-        var query = BuildQuery()
-            .AsNoTracking();
-
-        var esAdministrador =
-            currentUserService.IsInRole("ADMINISTRADOR") ||
-            currentUserService.IsInRole("ADMIN_CAJA");
+        var query = BuildQuery().AsNoTracking();
+        var esAdministrador = currentUserService.IsInRole("ADMINISTRADOR") ||
+                              currentUserService.IsInRole("ADMIN_CAJA");
 
         if (!esAdministrador)
         {
@@ -79,21 +77,14 @@ public sealed class CobroService(
             query = query.Where(x => x.Estado == estado.Value);
         }
 
-        var normalizedSearch =
-            string.IsNullOrWhiteSpace(search)
-                ? null
-                : search.Trim();
+        var normalizedSearch = string.IsNullOrWhiteSpace(search)
+            ? null
+            : search.Trim();
 
-        query = ApplySearch(
-            query,
-            normalizedSearch);
+        query = ApplySearch(query, normalizedSearch);
+        var totalItems = await query.CountAsync(cancellationToken);
 
-        var totalItems =
-            await query.CountAsync(cancellationToken);
-
-        var offset =
-            (pagination.ValidPage - 1) *
-            pagination.ValidPageSize;
+        var offset = (pagination.ValidPage - 1) * pagination.ValidPageSize;
 
         var entities = await ApplyOrder(query)
             .Skip(offset)
@@ -107,13 +98,8 @@ public sealed class CobroService(
             totalItems);
     }
 
-    // ============================================================
-    // OBTENER
-    // ============================================================
 
-    public async Task<CobroResponse> ObtenerAsync(
-        int id,
-        CancellationToken cancellationToken = default)
+    public async Task<CobroResponse> ObtenerAsync(int id, CancellationToken cancellationToken = default)
     {
         var entity = await BuildQuery()
             .AsNoTracking()
@@ -127,12 +113,7 @@ public sealed class CobroService(
         return MapToResponse(entity);
     }
 
-    // ============================================================
-    // GENERAR DESDE VENTA
-    // ============================================================
-
-    public async Task<CobroResponse> GenerarDesdeVentaAsync(
-        GenerarCobroDesdeVentaRequest request,
+    public async Task<CobroResponse> GenerarDesdeVentaAsync(GenerarCobroDesdeVentaRequest request,
         CancellationToken cancellationToken = default)
     {
         var ventaPagador = await DbContext
@@ -146,21 +127,17 @@ public sealed class CobroService(
 
         if (ventaPagador is null)
         {
-            throw new NotFoundException(
-                "VentaPagador",
-                request.VentaPagadorId);
+            throw new NotFoundException("VentaPagador", request.VentaPagadorId);
         }
 
         if (ventaPagador.Estado == EstadoVentaPagador.Pagado)
         {
-            throw new ConflictException(
-                "El pagador ya se encuentra pagado.");
+            throw new ConflictException("El pagador ya se encuentra pagado.");
         }
 
         if (ventaPagador.Estado == EstadoVentaPagador.Anulado)
         {
-            throw new ConflictException(
-                "El pagador se encuentra anulado.");
+            throw new ConflictException("El pagador se encuentra anulado.");
         }
 
         var caja = await DbContext
@@ -174,13 +151,12 @@ public sealed class CobroService(
 
         if (caja is null)
         {
-            throw new NotFoundException(
-                "Caja",
-                request.CajaId);
+            throw new NotFoundException("Caja", request.CajaId);
         }
 
         var turnoCaja = await DbContext
             .Set<TurnoCajaEntity>()
+            .Include(x => x.Empleado)
             .FirstOrDefaultAsync(
                 x =>
                     x.CajaId == request.CajaId &&
@@ -194,6 +170,20 @@ public sealed class CobroService(
                 $"La caja '{caja.Nombre}' no tiene un turno abierto.");
         }
 
+        var usuarioId = await DbContext
+            .Set<Usuario>()
+            .Where(x =>
+                x.PersonaId == turnoCaja.Empleado.PersonaId &&
+                x.Activo)
+            .Select(x => x.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (usuarioId == 0)
+        {
+            throw new ConflictException(
+                "El empleado asignado al turno de caja no tiene un usuario activo.");
+        }
+
         var cobroPendiente = await Entities
             .AsNoTracking()
             .FirstOrDefaultAsync(
@@ -205,9 +195,7 @@ public sealed class CobroService(
 
         if (cobroPendiente is not null)
         {
-            return await ObtenerAsync(
-                cobroPendiente.Id,
-                cancellationToken);
+            return await ObtenerAsync(cobroPendiente.Id, cancellationToken);
         }
 
         var totalCobrado = await Entities
@@ -215,32 +203,26 @@ public sealed class CobroService(
                 x.VentaPagadorId == ventaPagador.Id &&
                 x.Activo &&
                 x.Estado == EstadoCobro.Confirmado)
-            .SumAsync(
-                x => x.Total,
-                cancellationToken);
+            .SumAsync(x => x.Total, cancellationToken);
 
         var saldoPendiente =
             ventaPagador.Monto - totalCobrado;
 
         if (saldoPendiente <= 0)
         {
-            throw new ConflictException(
-                "El pagador no tiene saldo pendiente.");
+            throw new ConflictException("El pagador no tiene saldo pendiente.");
         }
 
-        var fechaHora =
-            DateTime.UtcNow;
+        var fechaHora = DateTime.UtcNow;
 
-        var correlativo =
-            await correlativoService.GenerarAsync(
-                new GenerarCorrelativoRequest
-                {
-                    Codigo = "COB",
-                    Gestion = fechaHora.Year,
-                    Prefijo = "COB",
-                    Longitud = 6
-                },
-                cancellationToken);
+        var correlativo = await correlativoService.GenerarAsync(new GenerarCorrelativoRequest
+            {
+                Codigo = "COB",
+                Gestion = fechaHora.Year,
+                Prefijo = "COB",
+                Longitud = 6
+            },
+            cancellationToken);
 
         var cobro = new CobroEntity
         {
@@ -257,21 +239,23 @@ public sealed class CobroService(
             Detalles = []
         };
 
-        await Entities.AddAsync(
-            cobro,
-            cancellationToken);
+        await Entities.AddAsync(cobro, cancellationToken);
+        await DbContext.SaveChangesAsync(cancellationToken);
 
-        await DbContext.SaveChangesAsync(
-            cancellationToken);
+        await notificacionService.CrearAsync(new CrearNotificacionRequest
+        {
+            UsuarioId = usuarioId,
+            Titulo = "Nuevo cobro pendiente",
+            Mensaje = $"La venta {ventaPagador.Venta.Numero} tiene un cobro pendiente por Bs {saldoPendiente:N2}.",
+            Tipo = TipoNotificacion.Informacion,
+            Modulo = "CAJA",
+            EntidadTipo = "COBRO",
+            EntidadId = cobro.Id.ToString(),
+            Url = $"/caja/cobros/{cobro.Id}"
+        }, cancellationToken);
 
-        return await ObtenerAsync(
-            cobro.Id,
-            cancellationToken);
+        return await ObtenerAsync(cobro.Id, cancellationToken);
     }
-
-    // ============================================================
-    // CONFIRMAR
-    // ============================================================
 
     public async Task<CobroResponse> ConfirmarAsync(
         int id,
@@ -698,7 +682,7 @@ public sealed class CobroService(
             FechaHoraAnulacion = entity.FechaHoraAnulacion,
 
             Detalles = CobroDetalleMapper.MapDetalles(entity.Detalles
-                        .Where(x => x.Activo)),
+                .Where(x => x.Activo)),
 
             Activo = entity.Activo,
             FechaCreacion = entity.FechaCreacion,
@@ -795,7 +779,7 @@ public sealed class CobroService(
     {
         if (pagador is null)
             return null;
-        
+
         var paciente = pagador.Venta?.Paciente;
         var persona = paciente?.Persona;
         var pacienteNombre =

@@ -10,15 +10,27 @@ namespace Clinica.Api.Modules.Notificaciones.Services;
 
 public interface INotificacionService
 {
-    Task<NotificacionResponse> CrearAsync(CrearNotificacionRequest request,
+    Task<NotificacionResponse> CrearAsync(
+        CrearNotificacionRequest request,
         CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<NotificacionResponse>> ListarAsync(string usuarioId, int cantidad = 20,
+    Task<IReadOnlyList<NotificacionResponse>> ListarAsync(
+        int usuarioId,
+        int cantidad = 20,
         CancellationToken cancellationToken = default);
 
-    Task<int> ObtenerCantidadNoLeidasAsync(string usuarioId, CancellationToken cancellationToken = default);
-    Task MarcarComoLeidaAsync(int id, string usuarioId, CancellationToken cancellationToken = default);
-    Task MarcarTodasComoLeidasAsync(string usuarioId, CancellationToken cancellationToken = default);
+    Task<int> ObtenerCantidadNoLeidasAsync(
+        int usuarioId,
+        CancellationToken cancellationToken = default);
+
+    Task MarcarComoLeidaAsync(
+        int id,
+        int usuarioId,
+        CancellationToken cancellationToken = default);
+
+    Task MarcarTodasComoLeidasAsync(
+        int usuarioId,
+        CancellationToken cancellationToken = default);
 }
 
 public class NotificacionService(
@@ -30,7 +42,11 @@ public class NotificacionService(
         CrearNotificacionRequest request,
         CancellationToken cancellationToken = default)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(request.UsuarioId);
+        if (request.UsuarioId <= 0)
+        {
+            throw new ArgumentException("El UsuarioId debe ser válido.", nameof(request.UsuarioId));
+        }
+
         ArgumentException.ThrowIfNullOrWhiteSpace(request.Titulo);
         ArgumentException.ThrowIfNullOrWhiteSpace(request.Mensaje);
 
@@ -39,21 +55,19 @@ public class NotificacionService(
             UsuarioId = request.UsuarioId,
             Titulo = request.Titulo.Trim(),
             Mensaje = request.Mensaje.Trim(),
-            Tipo =  request.Tipo.ToString(),
+            Tipo = request.Tipo.ToString(),
             Modulo = request.Modulo,
             EntidadTipo = request.EntidadTipo,
             EntidadId = request.EntidadId,
             Url = request.Url,
-            Leida = false
+            Leida = false,
+            FechaLectura = null
         };
 
         dbContext.Notificaciones.Add(notificacion);
 
-        await dbContext.SaveChangesAsync(
-            cancellationToken);
-
+        await dbContext.SaveChangesAsync(cancellationToken);
         var response = Map(notificacion);
-
         await hubContext.Clients
             .Group($"usuario:{request.UsuarioId}")
             .SendAsync("NotificacionRecibida", response, cancellationToken);
@@ -61,45 +75,61 @@ public class NotificacionService(
         return response;
     }
 
-    public async Task<IReadOnlyList<NotificacionResponse>>
-        ListarAsync(
-            string usuarioId,
+    public async Task<IReadOnlyList<NotificacionResponse>> ListarAsync(
+            int usuarioId,
             int cantidad = 20,
             CancellationToken cancellationToken = default)
     {
+        if (usuarioId <= 0)
+        {
+            throw new ArgumentException("El UsuarioId debe ser válido.", nameof(usuarioId));
+        }
+
         cantidad = Math.Clamp(cantidad, 1, 100);
 
-        var notificaciones = await dbContext
-            .Notificaciones
-            .AsNoTracking()
-            .Where(x => x.UsuarioId == usuarioId)
-            .OrderByDescending(x => x.FechaCreacion)
-            .Take(cantidad)
-            .ToListAsync(cancellationToken);
+        var notificaciones =
+            await dbContext
+                .Notificaciones
+                .AsNoTracking()
+                .Where(x => x.UsuarioId == usuarioId)
+                .OrderByDescending(x => x.FechaCreacion)
+                .Take(cantidad)
+                .ToListAsync(cancellationToken);
 
-        return notificaciones.Select(Map).ToList();
+        return notificaciones
+            .Select(Map)
+            .ToList();
     }
 
-    public Task<int> ObtenerCantidadNoLeidasAsync(string usuarioId, CancellationToken cancellationToken = default)
+    public Task<int> ObtenerCantidadNoLeidasAsync(
+        int usuarioId,
+        CancellationToken cancellationToken = default)
     {
-        return dbContext.Notificaciones
+        if (usuarioId <= 0)
+        {
+            throw new ArgumentException(
+                "El UsuarioId debe ser válido.",
+                nameof(usuarioId));
+        }
+
+        return dbContext
+            .Notificaciones
             .AsNoTracking()
-            .CountAsync(
-                x =>
-                    x.UsuarioId == usuarioId &&
-                    !x.Leida,
-                cancellationToken);
+            .CountAsync(x => x.UsuarioId == usuarioId && !x.Leida, cancellationToken);
     }
 
-    public async Task MarcarComoLeidaAsync(int id, string usuarioId, CancellationToken cancellationToken = default)
+    public async Task MarcarComoLeidaAsync(
+        int id,
+        int usuarioId,
+        CancellationToken cancellationToken = default)
     {
-        var notificacion = await dbContext
-            .Notificaciones
-            .FirstOrDefaultAsync(
-                x =>
-                    x.Id == id &&
-                    x.UsuarioId == usuarioId,
-                cancellationToken);
+        if (usuarioId <= 0)
+        {
+            throw new ArgumentException("El UsuarioId debe ser válido.", nameof(usuarioId));
+        }
+
+        var notificacion = await dbContext.Notificaciones.FirstOrDefaultAsync(
+            x => x.Id == id && x.UsuarioId == usuarioId, cancellationToken);
 
         if (notificacion is null)
         {
@@ -107,44 +137,37 @@ public class NotificacionService(
         }
 
         if (notificacion.Leida)
+        {
             return;
+        }
 
         notificacion.Leida = true;
         notificacion.FechaLectura = DateTime.UtcNow;
-
         await dbContext.SaveChangesAsync(cancellationToken);
-
         await hubContext.Clients
             .Group($"usuario:{usuarioId}")
-            .SendAsync(
-                "NotificacionLeida",
-                id,
-                cancellationToken);
+            .SendAsync("NotificacionLeida", id, cancellationToken);
     }
 
-    public async Task MarcarTodasComoLeidasAsync(string usuarioId, CancellationToken cancellationToken = default)
+    public async Task MarcarTodasComoLeidasAsync(int usuarioId, CancellationToken cancellationToken = default)
     {
-        var fechaLectura = DateTime.UtcNow;
+        if (usuarioId <= 0)
+        {
+            throw new ArgumentException(
+                "El UsuarioId debe ser válido.",
+                nameof(usuarioId));
+        }
 
-        await dbContext.Notificaciones
-            .Where(x =>
-                x.UsuarioId == usuarioId &&
-                !x.Leida)
+        var fechaLectura = DateTime.UtcNow;
+        await dbContext.Notificaciones.Where(x => x.UsuarioId == usuarioId && !x.Leida)
             .ExecuteUpdateAsync(
-                setters => setters
-                    .SetProperty(
-                        x => x.Leida,
-                        true)
-                    .SetProperty(
-                        x => x.FechaLectura,
-                        fechaLectura),
+                setters => setters.SetProperty(x => x.Leida, true)
+                    .SetProperty(x => x.FechaLectura, fechaLectura),
                 cancellationToken);
 
         await hubContext.Clients
             .Group($"usuario:{usuarioId}")
-            .SendAsync(
-                "TodasNotificacionesLeidas",
-                cancellationToken);
+            .SendAsync("TodasNotificacionesLeidas", cancellationToken);
     }
 
     private static NotificacionResponse Map(Notificacion notificacion)
@@ -154,8 +177,8 @@ public class NotificacionService(
             Id = notificacion.Id,
             Titulo = notificacion.Titulo,
             Mensaje = notificacion.Mensaje,
-            Tipo = Enum.TryParse<TipoNotificacion>(notificacion.Tipo, true, out var tipoEnum) 
-                ? tipoEnum 
+            Tipo = Enum.TryParse<TipoNotificacion>(notificacion.Tipo, true, out var tipoEnum)
+                ? tipoEnum
                 : TipoNotificacion.Informacion,
             Modulo = notificacion.Modulo,
             EntidadTipo = notificacion.EntidadTipo,

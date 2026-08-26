@@ -4,7 +4,7 @@ namespace Clinica.Api.Modules.Notificaciones.Entity;
 
 public class Notificacion : AuditableEntity
 {
-    public string UsuarioId { get; set; } = default!;
+    public int UsuarioId { get; set; } = default!;
     public string Titulo { get; set; } = default!;
     public string Mensaje { get; set; } = default!;
     public string? Tipo { get; set; }

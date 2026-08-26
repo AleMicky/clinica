@@ -24,6 +24,7 @@ import {
     markNotificationAsRead,
 } from "@/modules/notification/api/notification.api";
 import { createNotificationConnection } from "@/lib/signalr/notification-connection";
+import { playNotificationSound } from "@/lib/sound/notification-sound";
 import { useAuth } from "./auth-provider";
 
 interface NotificationContextValue {
@@ -46,20 +47,34 @@ interface NotificationProviderProps {
 
 function showNotificationToast(notification: Notification) {
     const description = notification.mensaje;
+    const toastOptions = {
+        description,
+        duration: 5000,
+        action: notification.url
+            ? {
+                  label: "Ver",
+                  onClick: () => {
+                      if (typeof window !== "undefined") {
+                          window.location.href = notification.url!;
+                      }
+                  },
+              }
+            : undefined,
+    };
 
     switch (Number(notification.tipo)) {
         case NotificationType.Exito:
-            toast.success(notification.titulo, { description });
+            toast.success(notification.titulo, toastOptions);
             break;
         case NotificationType.Advertencia:
-            toast.warning(notification.titulo, { description });
+            toast.warning(notification.titulo, toastOptions);
             break;
         case NotificationType.Error:
-            toast.error(notification.titulo, { description });
+            toast.error(notification.titulo, toastOptions);
             break;
         case NotificationType.Informacion:
         default:
-            toast.info(notification.titulo, { description });
+            toast.info(notification.titulo, toastOptions);
             break;
     }
 }
@@ -139,6 +154,7 @@ export function NotificationProvider({
                 setUnreadCount((current) => current + 1);
             }
 
+            playNotificationSound();
             showNotificationToast(notification);
         });
 

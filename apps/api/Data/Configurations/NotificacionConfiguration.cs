@@ -15,7 +15,6 @@ public class NotificacionConfiguration
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.UsuarioId)
-            .HasMaxLength(450)
             .IsRequired();
 
         builder.Property(x => x.Titulo)
@@ -27,7 +26,7 @@ public class NotificacionConfiguration
             .IsRequired();
 
         builder.Property(x => x.Tipo)
-            .IsRequired();
+            .HasMaxLength(50);
 
         builder.Property(x => x.Modulo)
             .HasMaxLength(50);
@@ -42,7 +41,10 @@ public class NotificacionConfiguration
             .HasMaxLength(500);
 
         builder.Property(x => x.Leida)
-            .HasDefaultValue(false);
+            .HasDefaultValue(false)
+            .IsRequired();
+
+        builder.Property(x => x.FechaLectura);
 
         builder.HasIndex(x => x.UsuarioId);
 
@@ -55,7 +57,7 @@ public class NotificacionConfiguration
         builder.HasIndex(x => new
         {
             x.UsuarioId,
-            x.CreadoPor
+            x.FechaCreacion
         });
     }
 }

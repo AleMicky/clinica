@@ -4,16 +4,20 @@ namespace Clinica.Api.Shared.Extensions;
 
 public static class ClaimsPrincipalExtensions
 {
-    public static string GetUserId(this ClaimsPrincipal user)
+    public static int GetUserId(this ClaimsPrincipal user)
     {
-        var usuarioId =
-            user.FindFirstValue("sub")
-            ?? user.FindFirstValue(
-                ClaimTypes.NameIdentifier);
+        var value = user.FindFirstValue(
+                        ClaimTypes.NameIdentifier)
+                    ?? user.FindFirstValue("sub");
 
-        if (string.IsNullOrWhiteSpace(usuarioId))
+        if (string.IsNullOrWhiteSpace(value))
         {
-            throw new UnauthorizedAccessException("No fue posible determinar el usuario autenticado.");
+            throw new UnauthorizedAccessException("No se pudo determinar el usuario autenticado.");
+        }
+
+        if (!int.TryParse(value, out var usuarioId))
+        {
+            throw new UnauthorizedAccessException("El identificador del usuario no es válido.");
         }
 
         return usuarioId;

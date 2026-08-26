@@ -4,7 +4,7 @@ namespace Clinica.Api.Modules.Notificaciones.Dtos;
 
 public sealed record CrearNotificacionRequest
 {
-    public required string UsuarioId { get; init; }
+    public required int UsuarioId { get; init; }
     public required string Titulo { get; init; }
     public required string Mensaje { get; init; }
     public TipoNotificacion Tipo { get; init; } = TipoNotificacion.Informacion;
