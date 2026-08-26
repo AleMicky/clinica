@@ -16,15 +16,20 @@ public static class ArqueoCajaEndpoints
             .WithTags("Arqueos de Caja")
             .RequireAuthorization();
 
-        group.MapGet("/", ListarAsync).WithName("ListarArqueosCaja");
-        group.MapGet("/{id:int}", ObtenerAsync).WithName("ObtenerArqueoCaja");
-        group.MapPost("/", CrearAsync)
-            .WithName("CrearArqueoCaja")
-            .Validate<CreateArqueoCajaRequest>();
-        group.MapPut("/{id:int}", ActualizarAsync)
-            .WithName("ActualizarArqueoCaja")
-            .Validate<UpdateArqueoCajaRequest>();
-        group.MapDelete("/{id:int}", EliminarAsync).WithName("EliminarArqueoCaja");
+        group.MapGet("/", ListarAsync)
+            .WithName("ListarArqueosCaja");
+
+        group.MapGet("/{id:int}", ObtenerAsync)
+            .WithName("ObtenerArqueoCaja");
+
+        group.MapGet(
+                "/turnos/{turnoCajaId:int}/resumen",
+                ObtenerResumenAsync)
+            .WithName("ObtenerResumenArqueoCaja");
+
+        group.MapPost("/", RegistrarAsync)
+            .WithName("RegistrarArqueoCaja")
+            .Validate<RegistrarArqueoCajaRequest>();
 
         return app;
     }
@@ -35,11 +40,12 @@ public static class ArqueoCajaEndpoints
         ArqueoCajaService service,
         CancellationToken cancellationToken)
     {
-        return Results.Ok(
-            await service.ListarAsync(
-                pagination,
-                search,
-                cancellationToken));
+        var result = await service.ListarAsync(
+            pagination,
+            search,
+            cancellationToken);
+
+        return Results.Ok(result);
     }
 
     private static async Task<IResult> ObtenerAsync(
@@ -47,47 +53,37 @@ public static class ArqueoCajaEndpoints
         ArqueoCajaService service,
         CancellationToken cancellationToken)
     {
-        return Results.Ok(
-            await service.ObtenerAsync(
-                id,
-                cancellationToken));
+        var result = await service.ObtenerAsync(
+            id,
+            cancellationToken);
+
+        return Results.Ok(result);
     }
 
-    private static async Task<IResult> CrearAsync(
-        CreateArqueoCajaRequest request,
+    private static async Task<IResult> ObtenerResumenAsync(
+        int turnoCajaId,
         ArqueoCajaService service,
         CancellationToken cancellationToken)
     {
-        var result = await service.CrearAsync(
+        var result =
+            await service.ObtenerResumenAsync(
+                turnoCajaId,
+                cancellationToken);
+
+        return Results.Ok(result);
+    }
+
+    private static async Task<IResult> RegistrarAsync(
+        RegistrarArqueoCajaRequest request,
+        ArqueoCajaService service,
+        CancellationToken cancellationToken)
+    {
+        var result = await service.RegistrarAsync(
             request,
             cancellationToken);
 
         return Results.Created(
             $"{ApiRoutes.Prefix}/arqueos-caja/{result.Id}",
             result);
-    }
-
-    private static async Task<IResult> ActualizarAsync(
-        int id,
-        UpdateArqueoCajaRequest request,
-        ArqueoCajaService service,
-        CancellationToken cancellationToken)
-    {
-        return Results.Ok(
-            await service.ActualizarAsync(
-                id,
-                request,
-                cancellationToken));
-    }
-
-    private static async Task<IResult> EliminarAsync(
-        int id,
-        ArqueoCajaService service,
-        CancellationToken cancellationToken)
-    {
-        await service.EliminarAsync(
-            id,
-            cancellationToken);
-        return Results.NoContent();
     }
 }

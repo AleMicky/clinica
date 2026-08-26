@@ -40,4 +40,5 @@ public sealed record MonedaInfo
     public int Id { get; init; }
     public string Codigo { get; init; } = string.Empty;
     public string Nombre { get; init; } = string.Empty;
+    public string Simbolo { get; init; } = string.Empty;
 }

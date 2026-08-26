@@ -16,29 +16,20 @@ public sealed class ArqueoCajaDetalleRequestValidator
             .GreaterThan(0)
             .WithMessage("La moneda es obligatoria.");
 
-        RuleFor(x => x.MontoEsperado)
-            .GreaterThanOrEqualTo(0)
-            .WithMessage("El monto esperado no puede ser negativo.");
-
         RuleFor(x => x.MontoContado)
             .GreaterThanOrEqualTo(0)
             .WithMessage("El monto contado no puede ser negativo.");
     }
 }
 
-public abstract class ArqueoCajaRequestValidator<TRequest>
-    : AbstractValidator<TRequest>
-    where TRequest : ArqueoCajaRequest
+public sealed class RegistrarArqueoCajaRequestValidator
+    : AbstractValidator<RegistrarArqueoCajaRequest>
 {
-    protected ArqueoCajaRequestValidator()
+    public RegistrarArqueoCajaRequestValidator()
     {
         RuleFor(x => x.TurnoCajaId)
             .GreaterThan(0)
             .WithMessage("El turno de caja es obligatorio.");
-
-        RuleFor(x => x.FechaHora)
-            .NotEqual(default(DateTime))
-            .WithMessage("La fecha y hora del arqueo son obligatorias.");
 
         RuleFor(x => x.Observacion)
             .MaximumLength(500)
@@ -53,9 +44,3 @@ public abstract class ArqueoCajaRequestValidator<TRequest>
             .SetValidator(new ArqueoCajaDetalleRequestValidator());
     }
 }
-
-public sealed class CreateArqueoCajaRequestValidator
-    : ArqueoCajaRequestValidator<CreateArqueoCajaRequest>;
-
-public sealed class UpdateArqueoCajaRequestValidator
-    : ArqueoCajaRequestValidator<UpdateArqueoCajaRequest>;
