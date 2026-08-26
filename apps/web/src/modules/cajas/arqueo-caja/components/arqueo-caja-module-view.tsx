@@ -1,15 +1,16 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { useArqueosCaja } from "../hooks/use-arqueos-caja";
 import { ArqueoCajaHeader } from "./arqueo-caja-header";
 import { ArqueoCajaMetrics } from "./arqueo-caja-metrics";
 import { ArqueoCajaList } from "./arqueo-caja-list";
-import { ArqueoCajaFormDialog } from "./arqueo-caja-form-dialog";
 import { ArqueoCajaDetailDialog } from "./arqueo-caja-detail-dialog";
 import type { ArqueoCajaResponse } from "../types/arqueo-caja.types";
 
 export function ArqueoCajaModuleView() {
+  const router = useRouter();
   const [currentPage, setCurrentPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(10);
   const [searchTerm, setSearchTerm] = React.useState("");
@@ -18,7 +19,6 @@ export function ArqueoCajaModuleView() {
     "TODOS" | "CUADRADOS" | "DIFERENCIA"
   >("TODOS");
 
-  const [formDialogOpen, setFormDialogOpen] = React.useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = React.useState(false);
   const [selectedArqueo, setSelectedArqueo] =
     React.useState<ArqueoCajaResponse | null>(null);
@@ -80,7 +80,7 @@ export function ArqueoCajaModuleView() {
   }, [allArqueos, totalItems]);
 
   const handleOpenCreateModal = () => {
-    setFormDialogOpen(true);
+    router.push("/cajas/arqueos/nuevo");
   };
 
   const handleSelectArqueo = (arq: ArqueoCajaResponse) => {
@@ -123,12 +123,6 @@ export function ArqueoCajaModuleView() {
           setCurrentPage(1);
         }}
         onSelectArqueo={handleSelectArqueo}
-      />
-
-      <ArqueoCajaFormDialog
-        open={formDialogOpen}
-        onOpenChange={setFormDialogOpen}
-        onSuccessCallback={() => refetch()}
       />
 
       <ArqueoCajaDetailDialog

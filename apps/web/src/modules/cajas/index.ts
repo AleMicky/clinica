@@ -45,6 +45,8 @@ export type {
 } from "./arqueo-caja/types/arqueo-caja.types";
 export * from "./arqueo-caja/hooks/use-arqueos-caja";
 export * from "./arqueo-caja/components/arqueo-caja-module-view";
+export * from "./arqueo-caja/components/arqueo-caja-page-form";
+export * from "./arqueo-caja/components/arqueo-caja-detail-dialog";
 
 export type {
   CobroResponse,
