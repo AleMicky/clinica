@@ -2,9 +2,9 @@ import { apiClient } from "@/lib/api/api-client";
 import type {
   ArqueoCajaQueryParams,
   ArqueoCajaResponse,
-  CreateArqueoCajaRequest,
+  ArqueoCajaResumenResponse,
   PagedResult,
-  UpdateArqueoCajaRequest,
+  RegistrarArqueoCajaRequest,
 } from "../types/arqueo-caja.types";
 
 export async function getArqueosCaja(
@@ -26,8 +26,17 @@ export async function getArqueoCajaById(
   return response.data;
 }
 
-export async function createArqueoCaja(
-  request: CreateArqueoCajaRequest
+export async function getResumenArqueoCaja(
+  turnoCajaId: number
+): Promise<ArqueoCajaResumenResponse> {
+  const response = await apiClient.get<ArqueoCajaResumenResponse>(
+    `/arqueos-caja/turnos/${turnoCajaId}/resumen`
+  );
+  return response.data;
+}
+
+export async function registrarArqueoCaja(
+  request: RegistrarArqueoCajaRequest
 ): Promise<ArqueoCajaResponse> {
   const response = await apiClient.post<ArqueoCajaResponse>(
     "/arqueos-caja",
@@ -36,17 +45,5 @@ export async function createArqueoCaja(
   return response.data;
 }
 
-export async function updateArqueoCaja(
-  id: number,
-  request: UpdateArqueoCajaRequest
-): Promise<ArqueoCajaResponse> {
-  const response = await apiClient.put<ArqueoCajaResponse>(
-    `/arqueos-caja/${id}`,
-    request
-  );
-  return response.data;
-}
-
-export async function deleteArqueoCaja(id: number): Promise<void> {
-  await apiClient.delete(`/arqueos-caja/${id}`);
-}
+// Alias para compatibilidad
+export const createArqueoCaja = registrarArqueoCaja;

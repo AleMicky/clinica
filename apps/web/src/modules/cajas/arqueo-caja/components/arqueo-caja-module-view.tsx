@@ -1,16 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { toast } from "sonner";
-import {
-  useArqueosCaja,
-  useDeleteArqueoCaja,
-} from "../hooks/use-arqueos-caja";
+import { useArqueosCaja } from "../hooks/use-arqueos-caja";
 import { ArqueoCajaHeader } from "./arqueo-caja-header";
 import { ArqueoCajaMetrics } from "./arqueo-caja-metrics";
 import { ArqueoCajaList } from "./arqueo-caja-list";
 import { ArqueoCajaFormDialog } from "./arqueo-caja-form-dialog";
-import { ArqueoCajaDeleteDialog } from "./arqueo-caja-delete-dialog";
+import { ArqueoCajaDetailDialog } from "./arqueo-caja-detail-dialog";
 import type { ArqueoCajaResponse } from "../types/arqueo-caja.types";
 
 export function ArqueoCajaModuleView() {
@@ -23,11 +19,8 @@ export function ArqueoCajaModuleView() {
   >("TODOS");
 
   const [formDialogOpen, setFormDialogOpen] = React.useState(false);
-  const [arqueoToEdit, setArqueoToEdit] =
-    React.useState<ArqueoCajaResponse | null>(null);
-
-  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
-  const [arqueoToDelete, setArqueoToDelete] =
+  const [detailDialogOpen, setDetailDialogOpen] = React.useState(false);
+  const [selectedArqueo, setSelectedArqueo] =
     React.useState<ArqueoCajaResponse | null>(null);
 
   // Debounce search
@@ -48,8 +41,6 @@ export function ArqueoCajaModuleView() {
     pageSize,
     search: debouncedSearch || undefined,
   });
-
-  const deleteMutation = useDeleteArqueoCaja();
 
   const allArqueos = Array.isArray(apiData?.items)
     ? apiData.items
@@ -89,39 +80,12 @@ export function ArqueoCajaModuleView() {
   }, [allArqueos, totalItems]);
 
   const handleOpenCreateModal = () => {
-    setArqueoToEdit(null);
     setFormDialogOpen(true);
   };
 
-  const handleEdit = (arq: ArqueoCajaResponse) => {
-    setArqueoToEdit(arq);
-    setFormDialogOpen(true);
-  };
-
-  const handlePromptDelete = (arq: ArqueoCajaResponse) => {
-    setArqueoToDelete(arq);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!arqueoToDelete) return;
-    try {
-      await deleteMutation.mutateAsync(arqueoToDelete.id);
-      toast.success("Arqueo de caja eliminado correctamente.");
-      setDeleteDialogOpen(false);
-      setArqueoToDelete(null);
-      refetch();
-    } catch (error: unknown) {
-      const err = error as {
-        response?: { data?: { detail?: string } };
-        message?: string;
-      };
-      toast.error(
-        err.response?.data?.detail ||
-          err.message ||
-          "Error al eliminar el arqueo de caja."
-      );
-    }
+  const handleSelectArqueo = (arq: ArqueoCajaResponse) => {
+    setSelectedArqueo(arq);
+    setDetailDialogOpen(true);
   };
 
   return (
@@ -158,23 +122,19 @@ export function ArqueoCajaModuleView() {
           setPageSize(size);
           setCurrentPage(1);
         }}
-        onEdit={handleEdit}
-        onDelete={handlePromptDelete}
+        onSelectArqueo={handleSelectArqueo}
       />
 
       <ArqueoCajaFormDialog
         open={formDialogOpen}
         onOpenChange={setFormDialogOpen}
-        arqueoToEdit={arqueoToEdit}
         onSuccessCallback={() => refetch()}
       />
 
-      <ArqueoCajaDeleteDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        arqueo={arqueoToDelete}
-        onConfirm={handleConfirmDelete}
-        isLoading={deleteMutation.isPending}
+      <ArqueoCajaDetailDialog
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+        arqueo={selectedArqueo}
       />
     </div>
   );

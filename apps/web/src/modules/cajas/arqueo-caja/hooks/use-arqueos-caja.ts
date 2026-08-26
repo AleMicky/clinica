@@ -2,23 +2,18 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  createArqueoCaja,
-  deleteArqueoCaja,
   getArqueoCajaById,
   getArqueosCaja,
-  updateArqueoCaja,
+  getResumenArqueoCaja,
+  registrarArqueoCaja,
 } from "../api/arqueo-caja.api";
 import { arqueoCajaKeys } from "../api/arqueo-caja.key";
 import type {
   ArqueoCajaQueryParams,
-  CreateArqueoCajaRequest,
-  UpdateArqueoCajaRequest,
+  RegistrarArqueoCajaRequest,
 } from "../types/arqueo-caja.types";
 
-export function useArqueosCaja(
-  params?: ArqueoCajaQueryParams,
-  enabled = true
-) {
+export function useArqueosCaja(params?: ArqueoCajaQueryParams, enabled = true) {
   return useQuery({
     queryKey: arqueoCajaKeys.list(params as Record<string, unknown>),
     queryFn: () => getArqueosCaja(params),
@@ -34,44 +29,25 @@ export function useArqueoCaja(id: number, enabled = true) {
   });
 }
 
-export function useCreateArqueoCaja() {
+export function useResumenArqueoCaja(turnoCajaId: number, enabled = true) {
+  return useQuery({
+    queryKey: [...arqueoCajaKeys.all, "resumen", turnoCajaId],
+    queryFn: () => getResumenArqueoCaja(turnoCajaId),
+    enabled: enabled && turnoCajaId > 0,
+  });
+}
+
+export function useRegistrarArqueoCaja() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateArqueoCajaRequest) => createArqueoCaja(data),
+    mutationFn: (data: RegistrarArqueoCajaRequest) => registrarArqueoCaja(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: arqueoCajaKeys.all });
+      queryClient.invalidateQueries({ queryKey: ["turnos-caja"] });
+      queryClient.invalidateQueries({ queryKey: ["cajas"] });
     },
   });
 }
 
-export function useUpdateArqueoCaja() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: number;
-      data: UpdateArqueoCajaRequest;
-    }) => updateArqueoCaja(id, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: arqueoCajaKeys.all });
-      queryClient.invalidateQueries({
-        queryKey: arqueoCajaKeys.detail(variables.id),
-      });
-    },
-  });
-}
-
-export function useDeleteArqueoCaja() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: number) => deleteArqueoCaja(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: arqueoCajaKeys.all });
-    },
-  });
-}
+export const useCreateArqueoCaja = useRegistrarArqueoCaja;

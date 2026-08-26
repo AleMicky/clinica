@@ -3,13 +3,12 @@
 import * as React from "react";
 import {
   Calculator,
-  Pencil,
-  Trash2,
   Clock,
   CheckCircle2,
   AlertTriangle,
   Coins,
   Vault,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,14 +29,13 @@ interface ArqueoCajaListProps {
   onSearchChange: (term: string) => void;
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
-  onEdit: (arqueo: ArqueoCajaResponse) => void;
-  onDelete: (arqueo: ArqueoCajaResponse) => void;
+  onSelectArqueo: (arqueo: ArqueoCajaResponse) => void;
 }
 
 function formatDatetime(dateStr?: string | null): string {
-  if (!dateStr) return "—";
+  if (!dateStr) return "-";
   const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return "—";
+  if (isNaN(d.getTime())) return "-";
   return d.toLocaleString("es-ES", {
     day: "2-digit",
     month: "short",
@@ -75,8 +73,7 @@ export function ArqueoCajaList({
   onSearchChange,
   onPageChange,
   onPageSizeChange,
-  onEdit,
-  onDelete,
+  onSelectArqueo,
 }: ArqueoCajaListProps) {
   const tabs: Array<{
     key: "TODOS" | "CUADRADOS" | "DIFERENCIA";
@@ -185,8 +182,9 @@ export function ArqueoCajaList({
             return (
               <div
                 key={arq.id}
+                onClick={() => onSelectArqueo(arq)}
                 className={cn(
-                  "group p-4 rounded-xl border transition-all shadow-2xs flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-card",
+                  "group p-4 rounded-xl border transition-all shadow-2xs flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-card cursor-pointer",
                   isExacto
                     ? "hover:border-emerald-500/50 hover:bg-emerald-500/[0.02] border-border/60"
                     : isFaltante
@@ -323,25 +321,19 @@ export function ArqueoCajaList({
                     </div>
                   </div>
 
-                  {/* Acciones */}
-                  <div className="flex items-center gap-1 pl-2 border-l border-border/40">
+                  {/* Botón Ver Detalle */}
+                  <div className="pl-2 border-l border-border/40">
                     <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onEdit(arq)}
-                      className="size-7.5 text-muted-foreground hover:text-foreground hover:bg-accent cursor-pointer rounded-lg"
-                      title="Editar arqueo"
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSelectArqueo(arq);
+                      }}
+                      className="h-7.5 px-2.5 text-xs font-semibold gap-1.5 cursor-pointer rounded-lg"
                     >
-                      <Pencil className="size-3.5" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onDelete(arq)}
-                      className="size-7.5 text-destructive/70 hover:text-destructive hover:bg-destructive/10 cursor-pointer rounded-lg"
-                      title="Eliminar arqueo"
-                    >
-                      <Trash2 className="size-3.5" />
+                      <Eye className="size-3.5 text-primary" />
+                      <span>Ver</span>
                     </Button>
                   </div>
                 </div>

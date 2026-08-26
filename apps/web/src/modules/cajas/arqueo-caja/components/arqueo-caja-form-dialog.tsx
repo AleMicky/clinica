@@ -11,12 +11,13 @@ import {
   Trash2,
   Clock,
   Vault,
-  Pencil,
   AlertCircle,
   FileText,
   CheckCircle2,
   AlertTriangle,
   Coins,
+  RefreshCw,
+  TrendingUp,
 } from "lucide-react";
 import {
   Dialog,
@@ -45,31 +46,20 @@ import { useTurnosCaja } from "../../turno-caja/hooks/use-turnos-caja";
 import { useMetodosPago } from "@/modules/parametros/metodo-pago/hooks/use-metodos-pago";
 import { useMonedas } from "@/modules/parametros/moneda/hooks/use-monedas";
 import {
-  arqueoCajaSchema,
-  type ArqueoCajaFormValues,
+  registrarArqueoCajaSchema,
+  type RegistrarArqueoCajaFormValues,
 } from "../schemas/arqueo-caja.schema";
 import {
-  useCreateArqueoCaja,
-  useUpdateArqueoCaja,
+  useRegistrarArqueoCaja,
+  useResumenArqueoCaja,
 } from "../hooks/use-arqueos-caja";
-import type { ArqueoCajaResponse } from "../types/arqueo-caja.types";
+import { EstadoTurnoCaja, type TurnoCajaResponse } from "../../turno-caja/types/turno-caja.types";
 
 interface ArqueoCajaFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  arqueoToEdit?: ArqueoCajaResponse | null;
+  defaultTurnoId?: number | null;
   onSuccessCallback?: () => void;
-}
-
-function toLocalDatetimeString(dateInput?: string | Date | null): string {
-  const d = dateInput ? new Date(dateInput) : new Date();
-  if (isNaN(d.getTime())) return "";
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  const hours = String(d.getHours()).padStart(2, "0");
-  const minutes = String(d.getMinutes()).padStart(2, "0");
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
 function formatDatetime(dateStr?: string | null): string {
@@ -95,11 +85,9 @@ function formatCurrency(val?: number | null): string {
 export function ArqueoCajaFormDialog({
   open,
   onOpenChange,
-  arqueoToEdit,
+  defaultTurnoId,
   onSuccessCallback,
 }: ArqueoCajaFormDialogProps) {
-  const isEditing = Boolean(arqueoToEdit);
-
   // Queries
   const { data: turnosData, isLoading: isLoadingTurnos } = useTurnosCaja(
     { page: 1, pageSize: 100 },
@@ -113,16 +101,17 @@ export function ArqueoCajaFormDialog({
     { page: 1, pageSize: 100 }
   );
 
-  const createMutation = useCreateArqueoCaja();
-  const updateMutation = useUpdateArqueoCaja();
+  const registrarMutation = useRegistrarArqueoCaja();
 
   const turnosList = React.useMemo(() => {
-    return Array.isArray(turnosData?.items)
+    const list = Array.isArray(turnosData?.items)
       ? turnosData.items
       : Array.isArray(turnosData)
       ? turnosData
       : [];
-  }, [turnosData]);
+    // Filtrar preferentemente turnos abiertos para el arqueo
+    return list.filter((t: TurnoCajaResponse) => t.estado === EstadoTurnoCaja.Abierto || t.id === defaultTurnoId);
+  }, [turnosData, defaultTurnoId]);
 
   const metodosList = React.useMemo(() => {
     return Array.isArray(metodosData?.items)
@@ -151,11 +140,10 @@ export function ArqueoCajaFormDialog({
     setValue,
     watch,
     formState: { errors, isSubmitting },
-  } = useForm<ArqueoCajaFormValues>({
-    resolver: zodResolver(arqueoCajaSchema),
+  } = useForm<RegistrarArqueoCajaFormValues>({
+    resolver: zodResolver(registrarArqueoCajaSchema),
     defaultValues: {
-      turnoCajaId: 0,
-      fechaHora: toLocalDatetimeString(),
+      turnoCajaId: defaultTurnoId || 0,
       observacion: "",
       detalles: [
         {
@@ -168,74 +156,65 @@ export function ArqueoCajaFormDialog({
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, replace } = useFieldArray({
     control,
     name: "detalles",
   });
 
   const selectedTurnoId = watch("turnoCajaId");
-  const fechaHoraVal = watch("fechaHora");
   const detallesWatch = watch("detalles");
+
+  // Query resumen previo del turno
+  const { data: resumenData, isLoading: isLoadingResumen, refetch: refetchResumen } =
+    useResumenArqueoCaja(selectedTurnoId, Boolean(open && selectedTurnoId > 0));
 
   // Options para Turnos con nombre limpio del cajero
   const turnoOptions: AutocompleteOption[] = React.useMemo(() => {
-    return turnosList.map((t) => {
+    return turnosList.map((t: TurnoCajaResponse) => {
       const cName = t.caja?.nombre || "Caja";
       const cCode = t.caja?.codigo || "CAJA";
       const empName = t.empleado?.nombreCompleto || `Cajero #${t.empleado?.id || t.id}`;
       return {
         value: String(t.id),
         label: empName,
-        description: `${cCode} · ${cName} • Turno #${t.id}`,
+        description: `${cCode} · ${cName} • Turno #${t.id} (Abierto)`,
       };
     });
   }, [turnosList]);
 
   const selectedTurno = React.useMemo(() => {
-    return turnosList.find((t) => t.id === selectedTurnoId) || arqueoToEdit?.turnoCaja || null;
-  }, [turnosList, selectedTurnoId, arqueoToEdit]);
+    return turnosList.find((t: TurnoCajaResponse) => t.id === selectedTurnoId) || null;
+  }, [turnosList, selectedTurnoId]);
+
+  // Cuando cambia el resumen del backend, auto-cargar los métodos y montos esperados
+  React.useEffect(() => {
+    if (resumenData && Array.isArray(resumenData.detalles) && resumenData.detalles.length > 0) {
+      const mappedDetalles = resumenData.detalles.map((d) => ({
+        metodoPagoId: d.metodoPagoId,
+        monedaId: d.monedaId,
+        montoEsperado: Number(d.montoEsperado || 0),
+        montoContado: Number(d.montoEsperado || 0), // Prellenar con el monto esperado sugerido
+      }));
+      replace(mappedDetalles);
+    }
+  }, [resumenData, replace]);
 
   React.useEffect(() => {
     if (open) {
-      if (arqueoToEdit) {
-        reset({
-          turnoCajaId: arqueoToEdit.turnoCaja?.id || 0,
-          fechaHora: toLocalDatetimeString(arqueoToEdit.fechaHora),
-          observacion: arqueoToEdit.observacion || "",
-          detalles:
-            arqueoToEdit.detalles && arqueoToEdit.detalles.length > 0
-              ? arqueoToEdit.detalles.map((d) => ({
-                  metodoPagoId: d.metodoPagoId || defaultMetodoId,
-                  monedaId: d.monedaId || defaultMonedaId,
-                  montoEsperado: Number(d.montoEsperado || 0),
-                  montoContado: Number(d.montoContado || 0),
-                }))
-              : [
-                  {
-                    metodoPagoId: defaultMetodoId,
-                    monedaId: defaultMonedaId,
-                    montoEsperado: 0,
-                    montoContado: 0,
-                  },
-                ],
-        });
-      } else {
-        reset({
-          turnoCajaId: 0,
-          fechaHora: toLocalDatetimeString(),
-          observacion: "",
-          detalles: [
-            {
-              metodoPagoId: defaultMetodoId,
-              monedaId: defaultMonedaId,
-              montoEsperado: 0,
-              montoContado: 0,
-            },
-          ],
-        });
-      }
+      reset({
+        turnoCajaId: defaultTurnoId || 0,
+        observacion: "",
+        detalles: [
+          {
+            metodoPagoId: defaultMetodoId,
+            monedaId: defaultMonedaId,
+            montoEsperado: 0,
+            montoContado: 0,
+          },
+        ],
+      });
     }
-  }, [open, arqueoToEdit, defaultMetodoId, defaultMonedaId, reset]);
+  }, [open, defaultTurnoId, defaultMetodoId, defaultMonedaId, reset]);
 
   // Totales calculados en tiempo real
   const totalEsperadoCalc = (detallesWatch || []).reduce(
@@ -257,10 +236,6 @@ export function ArqueoCajaFormDialog({
     [setValue]
   );
 
-  const setNowForFechaHora = () => {
-    setValue("fechaHora", toLocalDatetimeString(), { shouldValidate: true });
-  };
-
   const handleAddDetalleRow = () => {
     append({
       metodoPagoId: defaultMetodoId,
@@ -270,159 +245,115 @@ export function ArqueoCajaFormDialog({
     });
   };
 
-  const onSubmit = async (values: ArqueoCajaFormValues) => {
+  const onSubmit = async (values: RegistrarArqueoCajaFormValues) => {
     try {
       const payload = {
         turnoCajaId: Number(values.turnoCajaId),
-        fechaHora: new Date(values.fechaHora).toISOString(),
         observacion: values.observacion?.trim() || null,
         detalles: values.detalles.map((d) => ({
           metodoPagoId: Number(d.metodoPagoId),
           monedaId: Number(d.monedaId),
-          montoEsperado: Number(d.montoEsperado || 0),
           montoContado: Number(d.montoContado || 0),
         })),
       };
 
-      if (isEditing && arqueoToEdit) {
-        await updateMutation.mutateAsync({
-          id: arqueoToEdit.id,
-          data: payload,
-        });
-        toast.success("Arqueo de caja actualizado correctamente.");
-      } else {
-        await createMutation.mutateAsync(payload);
-        toast.success("Arqueo de caja conciliado y registrado exitosamente.");
-      }
+      await registrarMutation.mutateAsync(payload);
+      toast.success("Arqueo de caja conciliado y registrado exitosamente.");
 
       onSuccessCallback?.();
       onOpenChange(false);
     } catch (error: unknown) {
       const err = error as {
-        response?: { data?: { detail?: string; message?: string } };
+        response?: { data?: { detail?: string; message?: string; title?: string } };
         message?: string;
       };
       const errorMsg =
         err?.response?.data?.detail ||
         err?.response?.data?.message ||
+        err?.response?.data?.title ||
         err?.message ||
         "Ocurrió un error al procesar el arqueo de caja.";
       toast.error(errorMsg);
     }
   };
 
-  const isLoading =
-    createMutation.isPending || updateMutation.isPending || isSubmitting;
+  const isLoading = registrarMutation.isPending || isSubmitting;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl p-0 overflow-hidden border-border/60 shadow-2xl">
-        {/* Header con temática */}
-        <div
-          className={cn(
-            "p-6 pb-5 border-b",
-            isEditing
-              ? "bg-gradient-to-r from-blue-500/15 via-blue-500/5 to-transparent border-blue-500/20"
-              : "bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent border-amber-500/20"
-          )}
-        >
+        {/* Header con temática y Saldo Esperado */}
+        <div className="p-6 pb-5 border-b bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent border-amber-500/20">
           <DialogHeader className="space-y-1.5">
-            <div className="flex items-center gap-3">
-              <div
-                className={cn(
-                  "flex size-11 items-center justify-center rounded-2xl border shadow-xs shrink-0",
-                  isEditing
-                    ? "bg-blue-600 text-white border-blue-700 shadow-blue-500/20"
-                    : "bg-amber-500 text-white border-amber-600 shadow-amber-500/20"
-                )}
-              >
-                {isEditing ? <Pencil className="size-5.5" /> : <Calculator className="size-5.5" />}
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="flex size-11 items-center justify-center rounded-2xl border shadow-xs shrink-0 bg-amber-500 text-white border-amber-600 shadow-amber-500/20">
+                  <Calculator className="size-5.5" />
+                </div>
+
+                <div>
+                  <div className="flex items-center gap-2">
+                    <DialogTitle className="text-xl font-bold tracking-tight text-foreground">
+                      Conciliación y Arqueo de Caja
+                    </DialogTitle>
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30"
+                    >
+                      Nuevo Arqueo
+                    </Badge>
+                  </div>
+                  <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+                    Declare los montos físicos contados en caja para conciliar los ingresos del turno.
+                  </DialogDescription>
+                </div>
               </div>
 
-              <div>
-                <div className="flex items-center gap-2">
-                  <DialogTitle className="text-xl font-bold tracking-tight text-foreground">
-                    {isEditing ? "Modificar Arqueo de Caja" : "Conciliación de Arqueo de Caja"}
-                  </DialogTitle>
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      "text-[10px] font-semibold px-2 py-0.5 rounded-full",
-                      isEditing
-                        ? "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/30"
-                        : "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30"
-                    )}
-                  >
-                    {isEditing ? "Edición" : "Nuevo Arqueo"}
-                  </Badge>
+              {/* Saldo Esperado Destacado en Header */}
+              {selectedTurnoId > 0 && (
+                <div className="hidden sm:flex flex-col items-end pr-1 text-right shrink-0">
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                    Saldo Esperado
+                  </span>
+                  <span className="text-base font-extrabold text-primary font-mono">
+                    {formatCurrency(totalEsperadoCalc)}
+                  </span>
                 </div>
-                <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-                  Declare los montos físicos contados por método de pago para conciliar el turno.
-                </DialogDescription>
-              </div>
+              )}
             </div>
           </DialogHeader>
         </div>
 
         {/* Formulario */}
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 pt-4 space-y-4 max-h-[75vh] overflow-y-auto">
-          {/* Fila 1: Selector de Turno y Fecha */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="turnoCajaId" className="text-xs font-semibold flex items-center gap-1">
-                Turno de Caja <span className="text-destructive">*</span>
-              </Label>
-              <Autocomplete
-                id="turnoCajaId"
-                value={selectedTurnoId ? String(selectedTurnoId) : ""}
-                onValueChange={handleTurnoChange}
-                options={turnoOptions}
-                placeholder="Seleccione el cajero o turno..."
-                emptyText="No se encontraron turnos de caja"
-                allowCustomValue={false}
-                isLoading={isLoadingTurnos}
-                disabled={isLoading || isEditing}
-                error={Boolean(errors.turnoCajaId)}
-              />
-              {errors.turnoCajaId && (
-                <p className="text-[11px] text-destructive font-medium flex items-center gap-1">
-                  <AlertCircle className="size-3" />
-                  {errors.turnoCajaId.message}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="fechaHora" className="text-xs font-semibold flex items-center gap-1">
-                  Fecha y Hora <span className="text-destructive">*</span>
-                </Label>
-                <button
-                  type="button"
-                  onClick={setNowForFechaHora}
-                  className="text-[10px] font-semibold text-primary hover:underline cursor-pointer bg-primary/10 px-2 py-0.5 rounded flex items-center gap-1"
-                >
-                  <Clock className="size-2.5" />
-                  Ahora
-                </button>
-              </div>
-              <Input
-                id="fechaHora"
-                type="datetime-local"
-                value={fechaHoraVal}
-                onChange={(e) => setValue("fechaHora", e.target.value, { shouldValidate: true })}
-                className={cn(
-                  "h-9.5 text-xs font-mono bg-background",
-                  errors.fechaHora && "border-destructive focus-visible:ring-destructive"
-                )}
-                disabled={isLoading}
-              />
-            </div>
+          {/* Fila: Selector de Turno */}
+          <div className="space-y-1.5">
+            <Label htmlFor="turnoCajaId" className="text-xs font-semibold flex items-center gap-1">
+              Turno de Caja Abierto <span className="text-destructive">*</span>
+            </Label>
+            <Autocomplete
+              id="turnoCajaId"
+              value={selectedTurnoId ? String(selectedTurnoId) : ""}
+              onValueChange={handleTurnoChange}
+              options={turnoOptions}
+              placeholder="Seleccione el cajero o turno abierto..."
+              emptyText="No se encontraron turnos de caja abiertos"
+              allowCustomValue={false}
+              isLoading={isLoadingTurnos}
+              disabled={isLoading || Boolean(defaultTurnoId)}
+              error={Boolean(errors.turnoCajaId)}
+            />
+            {errors.turnoCajaId && (
+              <p className="text-[11px] text-destructive font-medium flex items-center gap-1">
+                <AlertCircle className="size-3" />
+                {errors.turnoCajaId.message}
+              </p>
+            )}
           </div>
 
-          {/* Tarjeta de Resumen del Turno */}
+          {/* Tarjeta de Resumen del Turno con Saldo Esperado y Fondo Inicial */}
           {selectedTurno && (
-            <div className="rounded-xl border border-amber-500/25 bg-amber-500/[0.04] p-3.5 space-y-2 text-xs">
+            <div className="rounded-xl border border-amber-500/25 bg-amber-500/[0.04] p-3.5 space-y-2.5 text-xs">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="size-9 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-300 flex items-center justify-center font-bold shrink-0 border border-amber-500/30">
@@ -446,25 +377,40 @@ export function ArqueoCajaFormDialog({
                 </Badge>
               </div>
 
-              {/* Datos adicionales de apertura del turno */}
-              <div className="grid grid-cols-2 gap-2 pt-1 border-t border-amber-500/20 text-[11px]">
-                <div className="flex items-center gap-1.5 text-muted-foreground">
-                  <Clock className="size-3 text-muted-foreground/70" />
-                  <span>Apertura:</span>
-                  <span className="font-mono font-medium text-foreground">
-                    {formatDatetime(selectedTurno.fechaHoraApertura)}
+              {/* Indicadores Clave del Turno: Fondo, Saldo Esperado y Fecha */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2 border-t border-amber-500/20 text-xs">
+                {/* 1. Fondo Inicial */}
+                <div className="p-2 rounded-lg bg-background/80 border border-border/50 flex items-center justify-between sm:flex-col sm:items-start gap-1">
+                  <span className="text-[10px] font-semibold text-muted-foreground flex items-center gap-1">
+                    <Coins className="size-3 text-emerald-600 dark:text-emerald-400" />
+                    Fondo Inicial:
+                  </span>
+                  <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                    {formatCurrency(selectedTurno.montoInicial || 0)}
                   </span>
                 </div>
 
-                {selectedTurno.montoInicial !== undefined && (
-                  <div className="flex items-center justify-end gap-1.5 text-muted-foreground">
-                    <Coins className="size-3 text-emerald-600 dark:text-emerald-400" />
-                    <span>Fondo Inicial:</span>
-                    <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                      {formatCurrency(selectedTurno.montoInicial)}
-                    </span>
-                  </div>
-                )}
+                {/* 2. Saldo Esperado Total */}
+                <div className="p-2 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-between sm:flex-col sm:items-start gap-1">
+                  <span className="text-[10px] font-bold text-primary flex items-center gap-1">
+                    <TrendingUp className="size-3" />
+                    Saldo Esperado:
+                  </span>
+                  <span className="font-mono font-extrabold text-primary text-xs sm:text-sm">
+                    {formatCurrency(totalEsperadoCalc)}
+                  </span>
+                </div>
+
+                {/* 3. Fecha/Hora Apertura */}
+                <div className="p-2 rounded-lg bg-background/80 border border-border/50 flex items-center justify-between sm:flex-col sm:items-start gap-1">
+                  <span className="text-[10px] font-semibold text-muted-foreground flex items-center gap-1">
+                    <Clock className="size-3 text-amber-600" />
+                    Apertura:
+                  </span>
+                  <span className="font-mono text-[11px] font-medium text-foreground truncate">
+                    {formatDatetime(selectedTurno.fechaHoraApertura)}
+                  </span>
+                </div>
               </div>
             </div>
           )}
@@ -474,18 +420,36 @@ export function ArqueoCajaFormDialog({
             <div className="flex items-center justify-between pb-1 border-b border-border/50">
               <span className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
                 <Coins className="size-3.5 text-amber-600" />
-                Desglose por Métodos de Pago
+                Desglose Físico por Métodos de Pago
               </span>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleAddDetalleRow}
-                className="h-7 text-xs font-semibold gap-1 text-primary hover:text-primary cursor-pointer border-dashed"
-              >
-                <Plus className="size-3" />
-                <span>Agregar Método</span>
-              </Button>
+
+              <div className="flex items-center gap-1.5">
+                {selectedTurnoId > 0 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => refetchResumen()}
+                    disabled={isLoadingResumen}
+                    className="h-7 text-xs font-medium gap-1 text-muted-foreground hover:text-foreground cursor-pointer"
+                    title="Recalcular montos del sistema"
+                  >
+                    <RefreshCw className={cn("size-3", isLoadingResumen && "animate-spin")} />
+                    <span>Recalcular</span>
+                  </Button>
+                )}
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddDetalleRow}
+                  className="h-7 text-xs font-semibold gap-1 text-primary hover:text-primary cursor-pointer border-dashed"
+                >
+                  <Plus className="size-3" />
+                  <span>Agregar Fila</span>
+                </Button>
+              </div>
             </div>
 
             {fields.map((field, index) => {
@@ -545,24 +509,26 @@ export function ArqueoCajaFormDialog({
                       </Select>
                     </div>
 
-                    {/* Monto Esperado */}
+                    {/* Monto Esperado (Calculado por Sistema) */}
                     <div className="space-y-1 sm:col-span-1">
-                      <Label className="text-[11px] font-semibold text-muted-foreground">Esperado (Sistema)</Label>
+                      <Label className="text-[11px] font-semibold text-muted-foreground">
+                        Saldo Esperado (Sistema)
+                      </Label>
                       <Input
                         type="number"
                         step="0.01"
                         min="0"
+                        readOnly
                         {...register(`detalles.${index}.montoEsperado`, { valueAsNumber: true })}
-                        className="h-8.5 text-xs font-mono bg-background"
-                        disabled={isLoading}
+                        className="h-8.5 text-xs font-mono bg-muted/40 text-muted-foreground cursor-not-allowed font-semibold"
                       />
                     </div>
 
-                    {/* Monto Contado + Delete */}
+                    {/* Monto Contado (Físico declarado por cajero) + Delete */}
                     <div className="space-y-1 sm:col-span-1 flex items-end gap-1.5">
                       <div className="flex-1 space-y-1">
                         <Label className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
-                          Contado (Físico)
+                          Saldo Contado (Físico)
                         </Label>
                         <Input
                           type="number"
@@ -591,7 +557,7 @@ export function ArqueoCajaFormDialog({
 
                   {/* Diferencia por fila */}
                   <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-border/30 font-mono">
-                    <span className="text-muted-foreground">Diferencia método:</span>
+                    <span className="text-muted-foreground">Diferencia:</span>
                     <span
                       className={cn(
                         "font-bold",
@@ -613,18 +579,18 @@ export function ArqueoCajaFormDialog({
           {/* TARJETA TOTALES Y CONCILIACIÓN */}
           <div className="rounded-xl border p-4 bg-muted/25 space-y-3">
             <div className="grid grid-cols-3 gap-3 text-center text-xs">
-              <div className="bg-background p-2.5 rounded-lg border border-border/50 space-y-0.5">
-                <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">
-                  Total Esperado
+              <div className="bg-background p-2.5 rounded-lg border border-primary/20 space-y-0.5">
+                <span className="text-[10px] text-primary uppercase font-bold tracking-wider block">
+                  Saldo Esperado Total
                 </span>
-                <span className="text-sm sm:text-base font-mono font-bold text-foreground">
+                <span className="text-sm sm:text-base font-mono font-extrabold text-primary">
                   {formatCurrency(totalEsperadoCalc)}
                 </span>
               </div>
 
               <div className="bg-background p-2.5 rounded-lg border border-border/50 space-y-0.5">
                 <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">
-                  Total Contado
+                  Total Contado (Físico)
                 </span>
                 <span className="text-sm sm:text-base font-mono font-bold text-foreground">
                   {formatCurrency(totalContadoCalc)}
@@ -655,17 +621,17 @@ export function ArqueoCajaFormDialog({
               {isExacto ? (
                 <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-medium">
                   <CheckCircle2 className="size-4" />
-                  <span>El arqueo cuadra exactamente con el total del sistema.</span>
+                  <span>El arqueo cuadra exactamente con el saldo esperado del sistema.</span>
                 </div>
               ) : isFaltante ? (
                 <div className="flex items-center gap-1.5 text-rose-700 dark:text-rose-400 font-medium">
                   <AlertTriangle className="size-4" />
-                  <span>Existe un faltante en el efectivo contado. Deberá justificar la diferencia.</span>
+                  <span>Existe un faltante en el efectivo contado con respecto al saldo esperado. Deberá justificar la diferencia.</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400 font-medium">
                   <AlertTriangle className="size-4" />
-                  <span>Existe un sobrante en el efectivo contado.</span>
+                  <span>Existe un sobrante en el efectivo contado con respecto al saldo esperado.</span>
                 </div>
               )}
             </div>
@@ -679,7 +645,7 @@ export function ArqueoCajaFormDialog({
             </Label>
             <Textarea
               id="observacion"
-              placeholder="Justificación de sobrantes/faltantes, billetes observados o notas de cierre..."
+              placeholder="Justificación de sobrantes/faltantes o notas de conciliación de cierre..."
               rows={2}
               className="text-xs resize-none bg-background"
               {...register("observacion")}
@@ -699,16 +665,11 @@ export function ArqueoCajaFormDialog({
             </Button>
             <Button
               type="submit"
-              disabled={isLoading}
-              className={cn(
-                "h-9.5 px-4 gap-2 text-xs sm:text-sm font-semibold cursor-pointer shadow-sm transition-all",
-                isEditing
-                  ? "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20"
-                  : "bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20"
-              )}
+              disabled={isLoading || selectedTurnoId === 0}
+              className="h-9.5 px-4 gap-2 text-xs sm:text-sm font-semibold cursor-pointer shadow-sm bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20"
             >
               {isLoading && <Loader2 className="size-4 animate-spin" />}
-              <span>{isEditing ? "Guardar Modificaciones" : "Conciliar y Guardar Arqueo"}</span>
+              <span>Conciliar y Registrar Arqueo</span>
             </Button>
           </DialogFooter>
         </form>

@@ -37,8 +37,9 @@ export * from "./movimiento-caja/components/movimiento-caja-module-view";
 
 export type {
   ArqueoCajaResponse,
-  CreateArqueoCajaRequest,
-  UpdateArqueoCajaRequest,
+  RegistrarArqueoCajaRequest,
+  ArqueoCajaResumenResponse,
+  ArqueoCajaResumenDetalleResponse,
   ArqueoCajaQueryParams,
   ArqueoCajaMetrics,
 } from "./arqueo-caja/types/arqueo-caja.types";

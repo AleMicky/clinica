@@ -118,11 +118,9 @@ public sealed class ArqueoCajaService(AppDbContext dbContext)
                 x.MetodoPagoId,
                 MetodoPagoNombre = x.MetodoPago.Nombre,
                 MetodoPagoCodigo = x.MetodoPago.Codigo,
-
                 x.MonedaId,
                 MonedaNombre = x.Moneda.Nombre,
                 MonedaSimbolo = x.Moneda.Simbolo,
-
                 x.MontoMonedaBase
             })
             .ToListAsync(cancellationToken);

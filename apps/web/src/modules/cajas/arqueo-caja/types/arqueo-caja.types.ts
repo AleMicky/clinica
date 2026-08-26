@@ -1,17 +1,36 @@
 import type { TurnoCajaInfo } from "../../turno-caja/types/turno-caja.types";
 
+export interface MetodoPagoInfo {
+  id: number;
+  codigo: string;
+  nombre: string;
+}
+
+export interface MonedaInfo {
+  id: number;
+  codigo: string;
+  nombre: string;
+}
+
 export interface ArqueoCajaDetalleRequest {
   metodoPagoId: number;
   monedaId: number;
-  montoEsperado: number;
   montoContado: number;
+}
+
+export interface RegistrarArqueoCajaRequest {
+  turnoCajaId: number;
+  observacion?: string | null;
+  detalles: ArqueoCajaDetalleRequest[];
 }
 
 export interface ArqueoCajaDetalleResponse {
   id: number;
   arqueoCajaId: number;
   metodoPagoId: number;
+  metodoPago?: MetodoPagoInfo | null;
   monedaId: number;
+  moneda?: MonedaInfo | null;
   montoEsperado: number;
   montoContado: number;
   diferencia: number;
@@ -30,18 +49,19 @@ export interface ArqueoCajaResponse {
   fechaCreacion?: string;
 }
 
-export interface CreateArqueoCajaRequest {
-  turnoCajaId: number;
-  fechaHora: string;
-  observacion?: string | null;
-  detalles: ArqueoCajaDetalleRequest[];
+export interface ArqueoCajaResumenDetalleResponse {
+  metodoPagoId: number;
+  metodoPagoNombre: string;
+  monedaId: number;
+  monedaNombre: string;
+  monedaSimbolo: string;
+  montoEsperado: number;
 }
 
-export interface UpdateArqueoCajaRequest {
+export interface ArqueoCajaResumenResponse {
   turnoCajaId: number;
-  fechaHora: string;
-  observacion?: string | null;
-  detalles: ArqueoCajaDetalleRequest[];
+  totalEsperado: number;
+  detalles: ArqueoCajaResumenDetalleResponse[];
 }
 
 export interface ArqueoCajaQueryParams {
