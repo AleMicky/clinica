@@ -21,6 +21,9 @@ public static class TurnoCajaEndpoints
         group.MapGet("/{id:int}", ObtenerAsync)
             .WithName("ObtenerTurnoCaja");
 
+        group.MapGet("/{id:int}/resumen-cierre", ObtenerResumenCierreAsync)
+            .WithName("ObtenerResumenCierreTurnoCaja");
+
         group.MapGet("/empleado/{empleadoId:int}/abierto", ObtenerAbiertoEmpleadoAsync)
             .WithName("ObtenerTurnoCajaAbiertoEmpleado");
 
@@ -58,6 +61,18 @@ public static class TurnoCajaEndpoints
         CancellationToken cancellationToken)
     {
         var result = await service.ObtenerAsync(
+            id,
+            cancellationToken);
+
+        return Results.Ok(result);
+    }
+
+    private static async Task<IResult> ObtenerResumenCierreAsync(
+        int id,
+        TurnoCajaService service,
+        CancellationToken cancellationToken)
+    {
+        var result = await service.ObtenerResumenCierreAsync(
             id,
             cancellationToken);
 

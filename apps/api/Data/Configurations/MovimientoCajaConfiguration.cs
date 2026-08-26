@@ -22,7 +22,18 @@ public sealed class MovimientoCajaConfiguration
         builder.Property(x => x.FechaHora)
             .IsRequired();
 
+        builder.Property(x => x.MonedaId)
+            .IsRequired();
+
         builder.Property(x => x.Monto)
+            .HasPrecision(18, 2)
+            .IsRequired();
+
+        builder.Property(x => x.TipoCambio)
+            .HasPrecision(18, 6)
+            .IsRequired();
+
+        builder.Property(x => x.MontoMonedaBase)
             .HasPrecision(18, 2)
             .IsRequired();
 
@@ -38,9 +49,28 @@ public sealed class MovimientoCajaConfiguration
 
         builder.HasIndex(x => x.TurnoCajaId);
 
+        builder.HasIndex(x => x.MonedaId);
+
+        builder.HasIndex(x => new
+        {
+            x.TurnoCajaId,
+            x.Tipo
+        });
+
+        builder.HasIndex(x => new
+        {
+            x.TurnoCajaId,
+            x.MonedaId
+        });
+
         builder.HasOne(x => x.TurnoCaja)
             .WithMany()
             .HasForeignKey(x => x.TurnoCajaId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(x => x.Moneda)
+            .WithMany()
+            .HasForeignKey(x => x.MonedaId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -1,4 +1,5 @@
 using Clinica.Api.Data;
+using Clinica.Api.Modules.Cajas.ArqueoCaja.Dtos;
 using Clinica.Api.Modules.Cajas.TurnoCaja.Dtos;
 using Clinica.Api.Modules.Cajas.TurnoCaja.Entity;
 using Clinica.Api.Modules.Cajas.TurnoCaja.Mappers;
@@ -118,7 +119,7 @@ public sealed class TurnoCajaService(AppDbContext dbContext)
 
         return MapToResponse(entity);
     }
-    
+
     public async Task<TurnoCajaResponse> CerrarAsync(
         int id,
         CerrarTurnoCajaRequest request,
@@ -126,7 +127,9 @@ public sealed class TurnoCajaService(AppDbContext dbContext)
     {
         var entity = await BuildQuery()
             .FirstOrDefaultAsync(
-                x => x.Id == id && x.Activo,
+                x =>
+                    x.Id == id &&
+                    x.Activo,
                 cancellationToken);
 
         if (entity is null)
@@ -134,29 +137,76 @@ public sealed class TurnoCajaService(AppDbContext dbContext)
 
         if (entity.Estado == EstadoTurnoCaja.Cerrado)
         {
-            throw new ConflictException("El turno de caja ya se encuentra cerrado.");
+            throw new ConflictException(
+                "El turno de caja ya se encuentra cerrado.");
         }
 
-        var tieneArqueo = await DbContext.ArqueosCaja
+        var arqueo = await DbContext.ArqueosCaja
+            .AsNoTracking()
+            .Where(x =>
+                x.TurnoCajaId == id &&
+                x.Activo)
+            .OrderByDescending(x => x.FechaHora)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (arqueo is null)
+        {
+            throw new ConflictException(
+                "Debe realizar el arqueo antes de cerrar el turno.");
+        }
+
+        var existenMovimientosPosteriores = await DbContext
+            .Set<Clinica.Api.Modules.Cajas.MovimientoCaja.Entity.MovimientoCaja>()
+            .AsNoTracking()
             .AnyAsync(
-                x => x.TurnoCajaId == id && x.Activo,
+                x =>
+                    x.TurnoCajaId == id &&
+                    x.Activo &&
+                    x.FechaHora > arqueo.FechaHora,
                 cancellationToken);
 
-        if (!tieneArqueo)
+        if (existenMovimientosPosteriores)
         {
-            throw new ConflictException("Debe realizar el arqueo antes de cerrar el turno.");
+            throw new ConflictException(
+                "Existen movimientos de caja posteriores al arqueo. " +
+                "Debe realizar un nuevo arqueo antes de cerrar el turno.");
         }
 
-        entity.FechaHoraCierre = DateTime.UtcNow;
-        entity.ObservacionCierre = string.IsNullOrWhiteSpace(request.Observacion)
+        var existenCobrosPosteriores = await DbContext.Cobros
+            .AsNoTracking()
+            .AnyAsync(
+                x =>
+                    x.TurnoCajaId == id &&
+                    x.Activo &&
+                    x.FechaHora > arqueo.FechaHora,
+                cancellationToken);
+
+        if (existenCobrosPosteriores)
+        {
+            throw new ConflictException(
+                "Existen cobros posteriores al arqueo. " +
+                "Debe realizar un nuevo arqueo antes de cerrar el turno.");
+        }
+
+        entity.FechaHoraCierre =
+            DateTime.UtcNow;
+
+        entity.ObservacionCierre =
+            string.IsNullOrWhiteSpace(request.Observacion)
                 ? null
                 : request.Observacion.Trim();
-        entity.Estado = EstadoTurnoCaja.Cerrado;
-        await DbContext.SaveChangesAsync(cancellationToken);
+
+        entity.Estado =
+            EstadoTurnoCaja.Cerrado;
+
+        await DbContext.SaveChangesAsync(
+            cancellationToken);
+
         return MapToResponse(entity);
     }
-    
-    public async Task<TurnoCajaResponse?> ObtenerTurnoAbiertoEmpleadoAsync(int empleadoId, CancellationToken cancellationToken = default)
+
+    public async Task<TurnoCajaResponse?> ObtenerTurnoAbiertoEmpleadoAsync(int empleadoId,
+        CancellationToken cancellationToken = default)
     {
         var entity = await BuildQuery()
             .AsNoTracking()
@@ -171,6 +221,7 @@ public sealed class TurnoCajaService(AppDbContext dbContext)
             ? null
             : MapToResponse(entity);
     }
+
     public async Task<TurnoCajaResponse?> ObtenerTurnoAbiertoCajaAsync(
         int cajaId,
         CancellationToken cancellationToken = default)
@@ -188,7 +239,138 @@ public sealed class TurnoCajaService(AppDbContext dbContext)
             ? null
             : MapToResponse(entity);
     }
+    
+    public async Task<ResumenCierreTurnoCajaResponse> ObtenerResumenCierreAsync(
+    int id,
+    CancellationToken cancellationToken = default)
+{
+    var turno = await Entities
+        .AsNoTracking()
+        .FirstOrDefaultAsync(
+            x =>
+                x.Id == id &&
+                x.Activo,
+            cancellationToken);
 
+    if (turno is null)
+        throw CreateNotFoundException(id);
+
+    if (turno.Estado != EstadoTurnoCaja.Abierto)
+    {
+        throw new ConflictException(
+            "El turno de caja no se encuentra abierto.");
+    }
+
+    var arqueo = await DbContext.ArqueosCaja
+        .AsNoTracking()
+        .Include(x => x.Detalles)
+            .ThenInclude(x => x.MetodoPago)
+        .Include(x => x.Detalles)
+            .ThenInclude(x => x.Moneda)
+        .Where(x =>
+            x.TurnoCajaId == id &&
+            x.Activo)
+        .OrderByDescending(x => x.FechaHora)
+        .FirstOrDefaultAsync(cancellationToken);
+
+    if (arqueo is null)
+    {
+        throw new ConflictException(
+            "Debe realizar el arqueo antes de cerrar el turno.");
+    }
+
+    var existenMovimientosPosteriores = await DbContext
+        .Set<Clinica.Api.Modules.Cajas.MovimientoCaja.Entity.MovimientoCaja>()
+        .AsNoTracking()
+        .AnyAsync(
+            x =>
+                x.TurnoCajaId == id &&
+                x.Activo &&
+                x.FechaHora > arqueo.FechaHora,
+            cancellationToken);
+
+    if (existenMovimientosPosteriores)
+    {
+        throw new ConflictException(
+            "Existen movimientos posteriores al arqueo. " +
+            "Debe realizar nuevamente el arqueo.");
+    }
+
+    var existenCobrosPosteriores = await DbContext.Cobros
+        .AsNoTracking()
+        .AnyAsync(
+            x =>
+                x.TurnoCajaId == id &&
+                x.Activo &&
+                x.FechaHora > arqueo.FechaHora,
+            cancellationToken);
+
+    if (existenCobrosPosteriores)
+    {
+        throw new ConflictException(
+            "Existen cobros posteriores al arqueo. " +
+            "Debe realizar nuevamente el arqueo.");
+    }
+
+    return new ResumenCierreTurnoCajaResponse
+    {
+        TurnoCajaId = turno.Id,
+
+        ArqueoCajaId = arqueo.Id,
+
+        FechaHoraApertura = turno.FechaHoraApertura,
+
+        FechaHoraArqueo = arqueo.FechaHora,
+
+        MontoInicial = turno.MontoInicial,
+
+        TotalEsperado = arqueo.TotalEsperado,
+
+        TotalContado = arqueo.TotalContado,
+
+        Diferencia = arqueo.Diferencia,
+
+        ObservacionArqueo = arqueo.Observacion,
+
+        Detalles = arqueo.Detalles
+            .Where(x => x.Activo)
+            .Select(x => new ArqueoCajaDetalleResponse
+            {
+                Id = x.Id,
+                ArqueoCajaId = x.ArqueoCajaId,
+
+                MetodoPagoId = x.MetodoPagoId,
+
+                MetodoPago = new()
+                {
+                    Id = x.MetodoPago.Id,
+                    Codigo = x.MetodoPago.Codigo,
+                    Nombre = x.MetodoPago.Nombre
+                },
+
+                MonedaId = x.MonedaId,
+
+                Moneda = new()
+                {
+                    Id = x.Moneda.Id,
+                    Codigo = x.Moneda.Codigo,
+                    Nombre = x.Moneda.Nombre,
+                    Simbolo = x.Moneda.Simbolo
+                },
+
+                MontoEsperado = x.MontoEsperado,
+                MontoContado = x.MontoContado,
+                Diferencia = x.Diferencia,
+
+                Activo = x.Activo,
+                FechaCreacion = x.FechaCreacion,
+                FechaModificacion = x.FechaModificacion,
+                CreadoPor = x.CreadoPor,
+                ModificadoPor = x.ModificadoPor
+            })
+            .ToList()
+    };
+}
     public async Task<TurnoCajaResponse> ActualizarAsync(
         int id,
         UpdateTurnoCajaRequest request,

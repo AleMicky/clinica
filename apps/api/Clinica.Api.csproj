@@ -29,7 +29,6 @@
 
   <ItemGroup>
     <Folder Include="Modules\Almacen\" />
-    <Folder Include="Modules\Cajas\ArqueoCaja\Dtos\" />
     <Folder Include="Modules\Cajas\ArqueoCaja\Endpoints\" />
     <Folder Include="Modules\Cajas\ArqueoCaja\Mappers\" />
     <Folder Include="Modules\Cajas\ArqueoCaja\Services\" />

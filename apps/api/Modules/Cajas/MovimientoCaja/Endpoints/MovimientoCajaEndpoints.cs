@@ -1,5 +1,6 @@
 using Clinica.Api.Modules.Cajas.MovimientoCaja.Dtos;
 using Clinica.Api.Modules.Cajas.MovimientoCaja.Services;
+using Clinica.Api.Shared.Constants;
 using Clinica.Api.Shared.Pagination;
 using Clinica.Api.Shared.Validation;
 
@@ -15,15 +16,15 @@ public static class MovimientoCajaEndpoints
             .WithTags("Movimientos de Caja")
             .RequireAuthorization();
 
-        group.MapGet("/", ListarAsync).WithName("ListarMovimientosCaja");
-        group.MapGet("/{id:int}", ObtenerAsync).WithName("ObtenerMovimientoCaja");
-        group.MapPost("/", CrearAsync)
-            .WithName("CrearMovimientoCaja")
-            .Validate<CreateMovimientoCajaRequest>();
-        group.MapPut("/{id:int}", ActualizarAsync)
-            .WithName("ActualizarMovimientoCaja")
-            .Validate<UpdateMovimientoCajaRequest>();
-        group.MapDelete("/{id:int}", EliminarAsync).WithName("EliminarMovimientoCaja");
+        group.MapGet("/", ListarAsync)
+            .WithName("ListarMovimientosCaja");
+
+        group.MapGet("/{id:int}", ObtenerAsync)
+            .WithName("ObtenerMovimientoCaja");
+
+        group.MapPost("/", RegistrarAsync)
+            .WithName("RegistrarMovimientoCaja")
+            .Validate<RegistrarMovimientoCajaRequest>();
 
         return app;
     }
@@ -31,14 +32,17 @@ public static class MovimientoCajaEndpoints
     private static async Task<IResult> ListarAsync(
         [AsParameters] PaginationRequest pagination,
         string? search,
+        int? turnoCajaId,
         MovimientoCajaService service,
         CancellationToken cancellationToken)
     {
-        return Results.Ok(
-            await service.ListarAsync(
-                pagination,
-                search,
-                cancellationToken));
+        var result = await service.ListarAsync(
+            pagination,
+            search,
+            turnoCajaId,
+            cancellationToken);
+
+        return Results.Ok(result);
     }
 
     private static async Task<IResult> ObtenerAsync(
@@ -46,39 +50,24 @@ public static class MovimientoCajaEndpoints
         MovimientoCajaService service,
         CancellationToken cancellationToken)
     {
-        return Results.Ok(
-            await service.ObtenerAsync(
-                id,
-                cancellationToken));
+        var result = await service.ObtenerAsync(
+            id,
+            cancellationToken);
+
+        return Results.Ok(result);
     }
 
-    private static async Task<IResult> CrearAsync(
-        CreateMovimientoCajaRequest request,
-        MovimientoCajaService service)
+    private static async Task<IResult> RegistrarAsync(
+        RegistrarMovimientoCajaRequest request,
+        MovimientoCajaService service,
+        CancellationToken cancellationToken)
     {
-        var result = await service.CrearAsync(request);
+        var result = await service.RegistrarAsync(
+            request,
+            cancellationToken);
 
         return Results.Created(
-            $"/movimientos-caja/{result.Id}",
+            $"{ApiRoutes.Prefix}/movimientos-caja/{result.Id}",
             result);
-    }
-
-    private static async Task<IResult> ActualizarAsync(
-        int id,
-        UpdateMovimientoCajaRequest request,
-        MovimientoCajaService service)
-    {
-        return Results.Ok(
-            await service.ActualizarAsync(
-                id,
-                request));
-    }
-
-    private static async Task<IResult> EliminarAsync(
-        int id,
-        MovimientoCajaService service)
-    {
-        await service.EliminarAsync(id);
-        return Results.NoContent();
     }
 }

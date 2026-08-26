@@ -3,11 +3,10 @@ using FluentValidation;
 
 namespace Clinica.Api.Modules.Cajas.MovimientoCaja.Validators;
 
-public abstract class MovimientoCajaRequestValidator<TRequest>
-    : AbstractValidator<TRequest>
-    where TRequest : MovimientoCajaRequest
+public sealed class RegistrarMovimientoCajaRequestValidator
+    : AbstractValidator<RegistrarMovimientoCajaRequest>
 {
-    protected MovimientoCajaRequestValidator()
+    public RegistrarMovimientoCajaRequestValidator()
     {
         RuleFor(x => x.TurnoCajaId)
             .GreaterThan(0)
@@ -17,13 +16,17 @@ public abstract class MovimientoCajaRequestValidator<TRequest>
             .IsInEnum()
             .WithMessage("El tipo de movimiento no es válido.");
 
-        RuleFor(x => x.FechaHora)
-            .NotEqual(default(DateTime))
-            .WithMessage("La fecha y hora del movimiento son obligatorias.");
+        RuleFor(x => x.MonedaId)
+            .GreaterThan(0)
+            .WithMessage("La moneda es obligatoria.");
 
         RuleFor(x => x.Monto)
             .GreaterThan(0)
             .WithMessage("El monto del movimiento debe ser mayor que cero.");
+
+        RuleFor(x => x.TipoCambio)
+            .GreaterThan(0)
+            .WithMessage("El tipo de cambio debe ser mayor que cero.");
 
         RuleFor(x => x.Concepto)
             .NotEmpty()
@@ -42,9 +45,3 @@ public abstract class MovimientoCajaRequestValidator<TRequest>
             .When(x => !string.IsNullOrWhiteSpace(x.Observacion));
     }
 }
-
-public sealed class CreateMovimientoCajaRequestValidator
-    : MovimientoCajaRequestValidator<CreateMovimientoCajaRequest>;
-
-public sealed class UpdateMovimientoCajaRequestValidator
-    : MovimientoCajaRequestValidator<UpdateMovimientoCajaRequest>;
