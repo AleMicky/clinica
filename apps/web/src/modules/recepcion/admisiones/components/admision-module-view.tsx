@@ -137,6 +137,10 @@ export function AdmisionModuleView() {
     router.push("/recepcion/admisiones/nueva");
   };
 
+  const handleEdit = (admision: AdmisionResponse) => {
+    router.push(`/recepcion/admisiones/${admision.id}/editar`);
+  };
+
   const handleViewDetail = (admision: AdmisionResponse) => {
     setSelectedAdmisionForDetail(admision);
     setDetailSheetOpen(true);
@@ -261,6 +265,7 @@ export function AdmisionModuleView() {
         onPageChange={setCurrentPage}
         onPageSizeChange={handlePageSizeChange}
         onViewDetail={handleViewDetail}
+        onEdit={handleEdit}
         onDirectChangeStatus={handleRequestDirectChangeStatus}
         onDelete={handleOpenDelete}
       />
@@ -271,6 +276,7 @@ export function AdmisionModuleView() {
         onOpenChange={setDetailSheetOpen}
         admision={selectedAdmisionForDetail}
         onChangeStatusClick={handleOpenStatusDialog}
+        onEditClick={handleEdit}
       />
 
       {/* Modal: Cambio de Estado con Formulario */}

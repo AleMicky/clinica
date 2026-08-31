@@ -1,4 +1,5 @@
 using Clinica.Api.Modules.Recepcion.Admision.Dtos;
+using Clinica.Api.Modules.Recepcion.Admision.Enums;
 using Clinica.Api.Shared.Configuration;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
@@ -356,10 +357,10 @@ public sealed class AdmisionPdfDocument : IDocument
     {
         (string Label, string TextColor, string BackgroundColor) style = _admision.Estado switch
         {
-            Entity.EstadoAdmision.Registrada => ("REGISTRADA", Colors.Blue.Darken2, Colors.Blue.Lighten5),
-            Entity.EstadoAdmision.Confirmada => ("CONFIRMADA", Colors.Teal.Darken2, Colors.Teal.Lighten5),
-            Entity.EstadoAdmision.EnviadaVenta => ("ENVIADA A VENTA", Colors.Green.Darken2, Colors.Green.Lighten5),
-            Entity.EstadoAdmision.Cancelada => ("CANCELADA", Colors.Red.Darken2, Colors.Red.Lighten5),
+            EstadoAdmision.Registrada => ("REGISTRADA", Colors.Blue.Darken2, Colors.Blue.Lighten5),
+            EstadoAdmision.Confirmada => ("CONFIRMADA", Colors.Teal.Darken2, Colors.Teal.Lighten5),
+            EstadoAdmision.EnviadaVenta => ("ENVIADA A VENTA", Colors.Green.Darken2, Colors.Green.Lighten5),
+            EstadoAdmision.Cancelada => ("CANCELADA", Colors.Red.Darken2, Colors.Red.Lighten5),
             _ => (_admision.Estado.ToString().ToUpperInvariant(), TextDark, Colors.Grey.Lighten4),
         };
 

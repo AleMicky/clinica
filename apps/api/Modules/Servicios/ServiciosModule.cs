@@ -20,6 +20,7 @@ public static class ServiciosModule
         services.AddScoped<ServicioService>();
         services.AddScoped<TarifarioService>();
         services.AddScoped<TarifarioDetalleService>();
+        services.AddScoped<ITarifarioDetalleService, TarifarioDetalleService>();
 
         return services;
     }

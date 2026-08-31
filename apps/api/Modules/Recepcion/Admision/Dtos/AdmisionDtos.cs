@@ -1,4 +1,5 @@
 using Clinica.Api.Modules.Recepcion.Admision.Entity;
+using Clinica.Api.Modules.Recepcion.Admision.Enums;
 using Clinica.Api.Modules.RecursosHumanos.Empleado.Dtos;
 using Clinica.Api.Shared.Abstractions;
 

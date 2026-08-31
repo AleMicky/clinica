@@ -10,7 +10,48 @@ using TarifarioDetalleEntity = Clinica.Api.Modules.Servicios.Tarifas.Entity.Tari
 
 namespace Clinica.Api.Modules.Servicios.Tarifas.Services;
 
-public sealed class TarifarioDetalleService(AppDbContext dbContext)
+public interface ITarifarioDetalleService
+{
+    Task<PagedResult<TarifarioDetalleResponse>> ListarAsync(
+        int tarifarioId,
+        PaginationRequest pagination,
+        string? search,
+        CancellationToken cancellationToken = default);
+
+    Task<TarifarioDetalleResponse> ObtenerAsync(
+        int tarifarioId,
+        int detalleId,
+        CancellationToken cancellationToken = default);
+
+    Task<TarifarioDetalleResponse> CrearAsync(
+        int tarifarioId,
+        CreateTarifarioDetalleRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<TarifarioDetalleResponse> ActualizarAsync(
+        int tarifarioId,
+        int detalleId,
+        UpdateTarifarioDetalleRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task EliminarAsync(
+        int tarifarioId,
+        int detalleId,
+        CancellationToken cancellationToken = default);
+
+    Task<List<TarifarioDetalleResponse>> CrearCatalogoAsync(
+        int tarifarioId,
+        TarifarioDetalleCategoriaRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<decimal> ObtenerPrecioAsync(
+        int servicioId,
+        int? convenioId,
+        DateTime fecha,
+        CancellationToken cancellationToken = default);
+}
+
+public sealed class TarifarioDetalleService(AppDbContext dbContext) : ITarifarioDetalleService
 {
     public async Task<PagedResult<TarifarioDetalleResponse>> ListarAsync(
         int tarifarioId,
@@ -22,7 +63,7 @@ public sealed class TarifarioDetalleService(AppDbContext dbContext)
             tarifarioId,
             cancellationToken);
 
-        var query = dbContext.TarifarioDetalles
+        var query = dbContext.TarifariosDetalles
             .AsNoTracking()
             .Include(x => x.Servicio)
             .Where(x =>
@@ -73,7 +114,7 @@ public sealed class TarifarioDetalleService(AppDbContext dbContext)
             tarifarioId,
             cancellationToken);
 
-        var entity = await dbContext.TarifarioDetalles
+        var entity = await dbContext.TarifariosDetalles
             .AsNoTracking()
             .Include(x => x.Servicio)
             .FirstOrDefaultAsync(
@@ -103,7 +144,7 @@ public sealed class TarifarioDetalleService(AppDbContext dbContext)
             cancellationToken);
 
         // IMPORTANTE: no filtrar por Activo.
-        var existente = await dbContext.TarifarioDetalles
+        var existente = await dbContext.TarifariosDetalles
             .FirstOrDefaultAsync(
                 x => x.TarifarioId == tarifarioId &&
                      x.ServicioId == request.ServicioId,
@@ -136,17 +177,11 @@ public sealed class TarifarioDetalleService(AppDbContext dbContext)
         entity.TarifarioId = tarifarioId;
         entity.Activo = true;
 
-        await dbContext.TarifarioDetalles.AddAsync(
-            entity,
-            cancellationToken);
+        await dbContext.TarifariosDetalles.AddAsync(entity, cancellationToken);
 
-        await dbContext.SaveChangesAsync(
-            cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
 
-        return await ObtenerAsync(
-            tarifarioId,
-            entity.Id,
-            cancellationToken);
+        return await ObtenerAsync(tarifarioId, entity.Id, cancellationToken);
     }
 
     public async Task<TarifarioDetalleResponse> ActualizarAsync(
@@ -159,7 +194,7 @@ public sealed class TarifarioDetalleService(AppDbContext dbContext)
             tarifarioId,
             cancellationToken);
 
-        var entity = await dbContext.TarifarioDetalles
+        var entity = await dbContext.TarifariosDetalles
             .FirstOrDefaultAsync(
                 x => x.TarifarioId == tarifarioId
                      && x.Id == detalleId
@@ -168,16 +203,12 @@ public sealed class TarifarioDetalleService(AppDbContext dbContext)
 
         if (entity is null)
         {
-            throw new NotFoundException(
-                nameof(TarifarioDetalleEntity),
-                detalleId);
+            throw new NotFoundException(nameof(TarifarioDetalleEntity), detalleId);
         }
 
-        await EnsureServicioExistsAsync(
-            request.ServicioId,
-            cancellationToken);
+        await EnsureServicioExistsAsync(request.ServicioId, cancellationToken);
 
-        var existe = await dbContext.TarifarioDetalles.AnyAsync(
+        var existe = await dbContext.TarifariosDetalles.AnyAsync(
             x => x.TarifarioId == tarifarioId
                  && x.Id != detalleId
                  && x.ServicioId == request.ServicioId,
@@ -189,12 +220,8 @@ public sealed class TarifarioDetalleService(AppDbContext dbContext)
                 $"El servicio '{request.ServicioId}' ya tiene un precio en este tarifario.");
         }
 
-        TarifarioDetalleMapper.UpdateEntity(
-            request,
-            entity);
-
-        await dbContext.SaveChangesAsync(
-            cancellationToken);
+        TarifarioDetalleMapper.UpdateEntity(request, entity);
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         return await ObtenerAsync(
             tarifarioId,
@@ -202,14 +229,11 @@ public sealed class TarifarioDetalleService(AppDbContext dbContext)
             cancellationToken);
     }
 
-    public async Task EliminarAsync(
-        int tarifarioId,
-        int detalleId,
-        CancellationToken cancellationToken = default)
+    public async Task EliminarAsync(int tarifarioId, int detalleId, CancellationToken cancellationToken = default)
     {
         await EnsureTarifarioExistsAsync(tarifarioId, cancellationToken);
 
-        var entity = await dbContext.TarifarioDetalles
+        var entity = await dbContext.TarifariosDetalles
             .FirstOrDefaultAsync(
                 x => x.TarifarioId == tarifarioId
                      && x.Id == detalleId
@@ -220,7 +244,6 @@ public sealed class TarifarioDetalleService(AppDbContext dbContext)
             throw new NotFoundException("TarifarioDetalle", detalleId);
 
         entity.Activo = false;
-
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
@@ -243,14 +266,11 @@ public sealed class TarifarioDetalleService(AppDbContext dbContext)
 
         if (servicios.Count == 0)
         {
-            throw new BusinessException(
-                "No existen servicios activos en la categoría seleccionada.");
+            throw new BusinessException("No existen servicios activos en la categoría seleccionada.");
         }
 
-        // No filtrar por Activo: un detalle inactivo puede reactivarse en
-        // vez de insertarse, evitando colisionar con el índice único
-        // (TarifarioId, ServicioId) que no está filtrado por Activo.
-        var existentes = await dbContext.TarifarioDetalles
+
+        var existentes = await dbContext.TarifariosDetalles
             .Where(x =>
                 x.TarifarioId == tarifarioId &&
                 servicios.Contains(x.ServicioId))
@@ -284,7 +304,7 @@ public sealed class TarifarioDetalleService(AppDbContext dbContext)
                     Activo = true
                 };
 
-                await dbContext.TarifarioDetalles
+                await dbContext.TarifariosDetalles
                     .AddAsync(nuevo, cancellationToken);
 
                 afectados.Add(nuevo.Id);
@@ -299,7 +319,7 @@ public sealed class TarifarioDetalleService(AppDbContext dbContext)
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        var entities = await dbContext.TarifarioDetalles
+        var entities = await dbContext.TarifariosDetalles
             .AsNoTracking()
             .Include(x => x.Servicio)
             .Where(x => afectados.Contains(x.Id))
@@ -308,6 +328,54 @@ public sealed class TarifarioDetalleService(AppDbContext dbContext)
 
         return TarifarioDetalleMapper.ToResponse(entities);
     }
+
+
+    public async Task<decimal> ObtenerPrecioAsync(
+        int servicioId,
+        int? convenioId,
+        DateTime fecha,
+        CancellationToken cancellationToken = default)
+    {
+        var fechaActual = DateOnly.FromDateTime(fecha);
+
+        if (convenioId.HasValue)
+        {
+            var precioConvenio = await dbContext.TarifariosDetalles
+                .AsNoTracking()
+                .Where(x =>
+                    x.ServicioId == servicioId &&
+                    x.Tarifario.Activo &&
+                    x.Tarifario.FechaInicio <= fechaActual &&
+                    (x.Tarifario.FechaFin == null ||
+                     x.Tarifario.FechaFin >= fechaActual) &&
+                    x.Tarifario.Convenios.Any(c =>
+                        c.ConvenioId == convenioId.Value))
+                .Select(x => (decimal?)x.Precio)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (precioConvenio.HasValue)
+            {
+                return precioConvenio.Value;
+            }
+        }
+
+        var precioNormal = await dbContext.TarifariosDetalles
+            .AsNoTracking()
+            .Where(x =>
+                x.ServicioId == servicioId &&
+                x.Tarifario.Activo &&
+                x.Tarifario.Activo &&
+                x.Tarifario.FechaInicio <= fechaActual &&
+                (x.Tarifario.FechaFin == null ||
+                 x.Tarifario.FechaFin >= fechaActual))
+            .Select(x => (decimal?)x.Precio)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return !precioNormal.HasValue
+            ? throw new NotFoundException("Precio del servicio", servicioId)
+            : precioNormal.Value;
+    }
+
 
     private async Task EnsureTarifarioExistsAsync(
         int tarifarioId,

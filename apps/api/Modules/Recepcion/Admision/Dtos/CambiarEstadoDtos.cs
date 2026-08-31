@@ -1,4 +1,5 @@
 using Clinica.Api.Modules.Recepcion.Admision.Entity;
+using Clinica.Api.Modules.Recepcion.Admision.Enums;
 
 namespace Clinica.Api.Modules.Recepcion.Admision.Dtos;
 

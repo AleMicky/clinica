@@ -12,7 +12,7 @@ import { useConvenios } from "@/modules/servicios/convenio/hooks/use-convenio";
 import { useCategoriasServicio } from "@/modules/servicios/categoria-servicio/hooks/use-categoria-servicio";
 import type { ConvenioResponse } from "@/modules/servicios/convenio/types/convenio.types";
 import type { EmpleadoBaseInfo } from "@/modules/recursos-humanos/empleado/types/empleado.types";
-import { useCreateAdmision } from "../hooks/use-admisiones";
+import { useAdmision, useCreateAdmision, useUpdateAdmision } from "../hooks/use-admisiones";
 import { useAdmisionStore } from "../store/use-admision-store";
 import { MultiServicePickerModal } from "./multi-service-picker-modal";
 import { AdmisionPacienteSection } from "./admision-paciente-section";
@@ -20,11 +20,16 @@ import { AdmisionCoberturaSection } from "./admision-cobertura-section";
 import { AdmisionCarritoSection } from "./admision-carrito-section";
 import { toast } from "sonner";
 
-export function AdmisionPageForm() {
+interface AdmisionPageFormProps {
+  admisionId?: number;
+}
+
+export function AdmisionPageForm({ admisionId }: AdmisionPageFormProps) {
   const router = useRouter();
+  const isEditMode = Boolean(admisionId && admisionId > 0);
 
   // Zustand Store
-  const { detalles, removeDetalle, updateDetalle, clearDetalles } = useAdmisionStore();
+  const { detalles, setDetalles, removeDetalle, updateDetalle, clearDetalles } = useAdmisionStore();
 
   // API Queries & Mutations
   const { data: pacientesData, isLoading: isLoadingPacientes } = usePacientes({
@@ -38,6 +43,12 @@ export function AdmisionPageForm() {
   });
   const { data: empleadosData, isLoading: isLoadingEmpleados } = useEmpleadosPermitidos();
   const { data: categoriasData } = useCategoriasServicio({ pageSize: 100 });
+
+  // Si estamos en modo edición, consultar la admisión actual
+  const { data: existingAdmision, isLoading: isLoadingExistingAdmision } = useAdmision(
+    admisionId ?? 0,
+    isEditMode
+  );
 
   const categoriasList = categoriasData?.items ?? [];
   const medicosList = medicosData?.items ?? [];
@@ -53,8 +64,9 @@ export function AdmisionPageForm() {
   // Modales
   const [multiPickerOpen, setMultiPickerOpen] = React.useState<boolean>(false);
 
-  // Mutation estándar de Admisión (POST /admisiones)
+  // Mutations
   const createAdmisionMutation = useCreateAdmision();
+  const updateAdmisionMutation = useUpdateAdmision();
 
   // Estado del Paciente Seleccionado
   const [patientSearch, setPatientSearch] = React.useState("");
@@ -64,10 +76,10 @@ export function AdmisionPageForm() {
   const [recepcionistaId, setRecepcionistaId] = React.useState<string>("");
 
   React.useEffect(() => {
-    if (empleadosList.length === 1 && !recepcionistaId) {
+    if (!isEditMode && empleadosList.length === 1 && !recepcionistaId) {
       setRecepcionistaId(String(empleadosList[0].id));
     }
-  }, [empleadosList, recepcionistaId]);
+  }, [empleadosList, recepcionistaId, isEditMode]);
 
   // Consulta de Convenios específicos del Paciente Seleccionado (GET /api/v1/pacientes/{pacienteId}/convenios)
   const numericPacienteId = selectedPacienteId ? Number(selectedPacienteId) : 0;
@@ -83,23 +95,64 @@ export function AdmisionPageForm() {
     new Date().toISOString().slice(0, 16)
   );
   const [observacion, setObservacion] = React.useState<string>("");
+  const [hasInitializedEdit, setHasInitializedEdit] = React.useState(false);
 
-  // Pre-selección automática del convenio principal del paciente
+  // Pre-selección automática del convenio principal del paciente (solo en modo creación)
   React.useEffect(() => {
-    if (numericPacienteId && pacienteConveniosList.length > 0) {
+    if (!isEditMode && numericPacienteId && pacienteConveniosList.length > 0) {
       const principal = pacienteConveniosList.find((pc) => pc.esPrincipal && pc.activo) || pacienteConveniosList[0];
       if (principal && principal.convenioId) {
         setConvenioId(principal.convenioId.toString());
         return;
       }
     }
-    setConvenioId("particular");
-  }, [numericPacienteId, pacienteConveniosList]);
+    if (!isEditMode && !numericPacienteId) {
+      setConvenioId("particular");
+    }
+  }, [numericPacienteId, pacienteConveniosList, isEditMode]);
 
-  // Limpiar el carrito al cargar la página
+  // Limpiar el carrito al cargar la página si es modo creación
   React.useEffect(() => {
-    clearDetalles();
-  }, [clearDetalles]);
+    if (!isEditMode) {
+      clearDetalles();
+    }
+  }, [clearDetalles, isEditMode]);
+
+  // Cargar datos de la admisión existente si estamos en modo edición
+  React.useEffect(() => {
+    if (isEditMode && existingAdmision && !hasInitializedEdit) {
+      setSelectedPacienteId(String(existingAdmision.pacienteId));
+      if (existingAdmision.recepcionistaId) {
+        setRecepcionistaId(String(existingAdmision.recepcionistaId));
+      }
+      setConvenioId(
+        existingAdmision.convenioId ? String(existingAdmision.convenioId) : "particular"
+      );
+      if (existingAdmision.fechaHora) {
+        setFechaHora(
+          new Date(existingAdmision.fechaHora).toISOString().slice(0, 16)
+        );
+      }
+      setObservacion(existingAdmision.observacion || "");
+
+      // Mapear los detalles existentes al store del carrito
+      if (existingAdmision.detalles && existingAdmision.detalles.length > 0) {
+        const loadedDetalles = existingAdmision.detalles.map((d) => ({
+          id: String(d.id || Math.random()),
+          servicioId: d.servicioId || d.servicio?.id || 0,
+          servicioCodigo: d.servicio?.codigo,
+          servicioNombre: d.servicioNombre || d.servicio?.nombre || "Servicio",
+          medicoId: d.medicoId ?? d.medico?.id ?? undefined,
+          cantidad: d.cantidad || 1,
+          precioUnitario: d.precioUnitario || 0,
+          descuento: d.descuento || 0,
+        }));
+        setDetalles(loadedDetalles);
+      }
+
+      setHasInitializedEdit(true);
+    }
+  }, [isEditMode, existingAdmision, hasInitializedEdit, setDetalles]);
 
   // Filtrado de Pacientes por DNI, Nombre o N° Historia Clínica
   const pacientesList = pacientesData?.items ?? [];
@@ -116,8 +169,8 @@ export function AdmisionPageForm() {
 
   const selectedPaciente = pacientesList.find((p) => p.id.toString() === selectedPacienteId);
 
-  // Paso 3 (Carrito) HABILITADO SOLO SI EXISTE UN PACIENTE SELECCIONADO
-  const isPatientValid = Boolean(selectedPacienteId && selectedPaciente);
+  // Carrito habilitado si existe paciente o está en modo edición
+  const isPatientValid = Boolean(selectedPacienteId && (selectedPaciente || isEditMode));
 
   // Totales
   const totalSubtotal = detalles.reduce(
@@ -127,13 +180,13 @@ export function AdmisionPageForm() {
   const totalDescuentos = detalles.reduce((acc, d) => acc + Number(d.descuento || 0), 0);
   const grandTotal = Math.max(0, totalSubtotal - totalDescuentos);
 
-  const isSubmitting = createAdmisionMutation.isPending;
+  const isSubmitting = createAdmisionMutation.isPending || updateAdmisionMutation.isPending;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!isPatientValid || !selectedPacienteId) {
-      toast.error("Debe buscar y seleccionar un paciente antes de guardar la admisión.");
+      toast.error("Debe seleccionar un paciente antes de guardar la admisión.");
       return;
     }
 
@@ -165,14 +218,32 @@ export function AdmisionPageForm() {
     };
 
     try {
-      const res = await createAdmisionMutation.mutateAsync(payload);
-      toast.success(`¡Admisión #${res.numero || res.id} registrada exitosamente!`);
+      if (isEditMode && admisionId) {
+        await updateAdmisionMutation.mutateAsync({ id: admisionId, data: payload });
+        toast.success(`¡Admisión #${existingAdmision?.numero || admisionId} actualizada exitosamente!`);
+      } else {
+        const res = await createAdmisionMutation.mutateAsync(payload);
+        toast.success(`¡Admisión #${res.numero || res.id} registrada exitosamente!`);
+      }
       clearDetalles();
       router.push("/recepcion/admisiones");
-    } catch {
-      toast.error("Error al registrar la admisión en el servidor.");
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.detail ||
+        err?.message ||
+        "Error al procesar la admisión en el servidor.";
+      toast.error(msg);
     }
   };
+
+  if (isEditMode && isLoadingExistingAdmision) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[350px] gap-3">
+        <Loader2 className="size-8 animate-spin text-primary" />
+        <p className="text-sm font-medium text-muted-foreground">Cargando datos de la admisión...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-3 w-full px-3 sm:px-5 pb-8 animate-in fade-in-50 duration-300">
@@ -201,14 +272,18 @@ export function AdmisionPageForm() {
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <h1 className="text-sm sm:text-base font-bold tracking-tight text-foreground truncate">
-                Nueva Admisión Médica
+                {isEditMode
+                  ? `Editar Admisión #${existingAdmision?.numero || admisionId}`
+                  : "Nueva Admisión Médica"}
               </h1>
               <Badge variant="secondary" className="text-[9px] bg-primary/10 text-primary border-primary/20 font-semibold px-1.5 py-0 h-4.5 shrink-0">
-                Paso a Paso
+                {isEditMode ? "Modo Edición" : "Paso a Paso"}
               </Badge>
             </div>
             <p className="text-[11px] text-muted-foreground truncate">
-              Búsqueda de paciente, asignación de cobertura, recepcionista y prestaciones.
+              {isEditMode
+                ? "Modifique prestaciones, coberturas, agregue servicios o actualice el profesional asignado."
+                : "Búsqueda de paciente, asignación de cobertura, recepcionista y prestaciones."}
             </p>
           </div>
         </div>
@@ -239,7 +314,7 @@ export function AdmisionPageForm() {
             ) : (
               <>
                 <CheckCircle2 className="size-3.5" />
-                <span>Guardar Admisión</span>
+                <span>{isEditMode ? "Actualizar Admisión" : "Guardar Admisión"}</span>
               </>
             )}
           </Button>

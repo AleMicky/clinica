@@ -67,10 +67,7 @@ public sealed class ServicioService(AppDbContext dbContext)
                      && x.Activo,
                 cancellationToken);
 
-        if (entity is null)
-            throw new NotFoundException("Servicio", servicioId);
-
-        return ServicioMapper.ToResponse(entity);
+        return entity is null ? throw new NotFoundException("Servicio", servicioId) : ServicioMapper.ToResponse(entity);
     }
 
 
@@ -111,7 +108,7 @@ public sealed class ServicioService(AppDbContext dbContext)
                 Descripcion = s.Descripcion,
 
                 Precio = targetTarifarioId > 0
-                    ? dbContext.TarifarioDetalles
+                    ? dbContext.TarifariosDetalles
                         .Where(td =>
                             td.TarifarioId == targetTarifarioId &&
                             td.ServicioId == s.Id &&

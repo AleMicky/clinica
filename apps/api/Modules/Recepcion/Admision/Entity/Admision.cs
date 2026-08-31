@@ -1,3 +1,4 @@
+using Clinica.Api.Modules.Recepcion.Admision.Enums;
 using Clinica.Api.Modules.Recepcion.Pacientes.Entity;
 using Clinica.Api.Modules.RecursosHumanos.Empleado.Entity;
 using Clinica.Api.Modules.Servicios.Convenios.Entity;

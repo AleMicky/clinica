@@ -26,6 +26,7 @@ export interface SelectedServiceCartItem {
 
 interface AdmisionStoreState {
   detalles: ServiceItemState[];
+  setDetalles: (detalles: ServiceItemState[]) => void;
   setServicesFromPicker: (items: SelectedServiceCartItem[]) => void;
   addServicesFromPicker: (items: SelectedServiceCartItem[]) => void;
   removeDetalle: (id: string) => void;
@@ -36,6 +37,10 @@ interface AdmisionStoreState {
 
 export const useAdmisionStore = create<AdmisionStoreState>((set, get) => ({
   detalles: [],
+
+  setDetalles: (detalles) => {
+    set({ detalles });
+  },
 
   setServicesFromPicker: (items) => {
     set((state) => {

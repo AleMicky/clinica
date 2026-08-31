@@ -23,6 +23,7 @@ import {
   Loader2,
   ShieldCheck,
   Phone,
+  Pencil,
 } from "lucide-react";
 import {
   EstadoAdmision,
@@ -42,6 +43,7 @@ interface AdmisionDetailSheetProps {
   onOpenChange: (open: boolean) => void;
   admision: AdmisionResponse | null;
   onChangeStatusClick?: (admision: AdmisionResponse) => void;
+  onEditClick?: (admision: AdmisionResponse) => void;
 }
 
 export function AdmisionDetailSheet({
@@ -49,6 +51,7 @@ export function AdmisionDetailSheet({
   onOpenChange,
   admision,
   onChangeStatusClick,
+  onEditClick,
 }: AdmisionDetailSheetProps) {
   const [isDownloadingPdf, setIsDownloadingPdf] = React.useState(false);
   const [isOpeningPdf, setIsOpeningPdf] = React.useState(false);
@@ -446,6 +449,21 @@ export function AdmisionDetailSheet({
           </Button>
 
           <div className="flex items-center gap-2">
+            {admision.estado === EstadoAdmision.Registrada && onEditClick && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  onOpenChange(false);
+                  onEditClick(admision);
+                }}
+                className="h-9 px-3 text-xs font-semibold gap-1.5 cursor-pointer border-amber-500/30 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10"
+              >
+                <Pencil className="size-3.5" />
+                Editar
+              </Button>
+            )}
+
             {onChangeStatusClick && (
               <Button
                 variant="outline"

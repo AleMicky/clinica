@@ -1,4 +1,4 @@
-namespace Clinica.Api.Modules.Recepcion.Admision.Entity;
+namespace Clinica.Api.Modules.Recepcion.Admision.Enums;
 
 public enum EstadoAdmision
 {

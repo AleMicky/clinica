@@ -1,5 +1,6 @@
 using Clinica.Api.Modules.Recepcion.Admision.Dtos;
 using Clinica.Api.Modules.Recepcion.Admision.Entity;
+using Clinica.Api.Modules.Recepcion.Admision.Enums;
 using Clinica.Api.Modules.Recepcion.Admision.Services;
 using Clinica.Api.Shared.Pagination;
 using Clinica.Api.Shared.Validation;

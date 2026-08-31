@@ -189,7 +189,7 @@ public sealed class TarifarioService(AppDbContext dbContext)
         TarifarioEntity entity,
         CancellationToken cancellationToken)
     {
-        var tieneDetalles = await DbContext.TarifarioDetalles
+        var tieneDetalles = await DbContext.TarifariosDetalles
             .AnyAsync(x => x.TarifarioId == entity.Id, cancellationToken);
 
         if (tieneDetalles)

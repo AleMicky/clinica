@@ -18,6 +18,7 @@ import {
   Send,
   ShieldCheck,
   History,
+  Pencil,
 } from "lucide-react";
 import {
   EstadoAdmision,
@@ -45,6 +46,7 @@ interface AdmisionListProps {
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
   onViewDetail: (admision: AdmisionResponse) => void;
+  onEdit?: (admision: AdmisionResponse) => void;
   onDirectChangeStatus?: (admision: AdmisionResponse, nuevoEstado: EstadoAdmision) => void;
   onDelete: (id: number) => void;
 }
@@ -63,6 +65,7 @@ export function AdmisionList({
   onPageChange,
   onPageSizeChange,
   onViewDetail,
+  onEdit,
   onDirectChangeStatus,
   onDelete,
 }: AdmisionListProps) {
@@ -373,6 +376,24 @@ export function AdmisionList({
                         <Eye className="size-3 text-primary" />
                         <span>Ver Ficha</span>
                       </Button>
+
+                      {/* Botón Editar Visible (Solo en estado Registrada) */}
+                      {adm.estado === EstadoAdmision.Registrada && onEdit && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEdit(adm);
+                          }}
+                          className="h-7 px-2.5 text-[11px] font-semibold gap-1 border-amber-500/30 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10 shadow-2xs cursor-pointer transition-all"
+                          title="Editar Admisión y Servicios"
+                        >
+                          <Pencil className="size-3" />
+                          <span>Editar</span>
+                        </Button>
+                      )}
 
                       {/* Botón Cancelar Visible */}
                       {adm.estado !== EstadoAdmision.Cancelada && (

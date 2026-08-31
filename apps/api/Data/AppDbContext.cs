@@ -65,7 +65,7 @@ public class AppDbContext(
     public DbSet<ConvenioTarifario> ConveniosTarifarios => Set<ConvenioTarifario>();
     public DbSet<Servicio> Servicio => Set<Servicio>();
     public DbSet<Tarifario> Tarifarios => Set<Tarifario>();
-    public DbSet<TarifarioDetalle> TarifarioDetalles => Set<TarifarioDetalle>();
+    public DbSet<TarifarioDetalle> TarifariosDetalles => Set<TarifarioDetalle>();
     public DbSet<Venta> Ventas => Set<Venta>();
     public DbSet<VentaDetalle> VentaDetalles => Set<VentaDetalle>();
     public DbSet<VentaPagador> VentaPagadores => Set<VentaPagador>();
