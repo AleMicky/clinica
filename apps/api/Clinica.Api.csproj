@@ -59,6 +59,11 @@
     <Folder Include="Modules\Almacenes\TipoMovimientoInventario\Mappers\" />
     <Folder Include="Modules\Almacenes\TipoMovimientoInventario\Services\" />
     <Folder Include="Modules\Almacenes\TipoMovimientoInventario\Validators\" />
+    <Folder Include="Modules\Almacenes\TransferenciaAlmacen\Dtos\" />
+    <Folder Include="Modules\Almacenes\TransferenciaAlmacen\Endpoints\" />
+    <Folder Include="Modules\Almacenes\TransferenciaAlmacen\Mappers\" />
+    <Folder Include="Modules\Almacenes\TransferenciaAlmacen\Services\" />
+    <Folder Include="Modules\Almacenes\TransferenciaAlmacen\Validators\" />
     <Folder Include="Modules\Cajas\ArqueoCaja\Endpoints\" />
     <Folder Include="Modules\Cajas\ArqueoCaja\Mappers\" />
     <Folder Include="Modules\Cajas\ArqueoCaja\Services\" />
