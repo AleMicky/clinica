@@ -29,7 +29,21 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Modules\Almacen\" />
+    <Folder Include="Modules\Almacenes\Almacen\Dtos\" />
+    <Folder Include="Modules\Almacenes\Almacen\Endpoints\" />
+    <Folder Include="Modules\Almacenes\Almacen\Mappers\" />
+    <Folder Include="Modules\Almacenes\Almacen\Services\" />
+    <Folder Include="Modules\Almacenes\Almacen\Validators\" />
+    <Folder Include="Modules\Almacenes\Lote\Dtos\" />
+    <Folder Include="Modules\Almacenes\Lote\Endpoints\" />
+    <Folder Include="Modules\Almacenes\Lote\Mappers\" />
+    <Folder Include="Modules\Almacenes\Lote\Services\" />
+    <Folder Include="Modules\Almacenes\Lote\Validators\" />
+    <Folder Include="Modules\Almacenes\Producto\Dtos\" />
+    <Folder Include="Modules\Almacenes\Producto\Endpoints\" />
+    <Folder Include="Modules\Almacenes\Producto\Mappers\" />
+    <Folder Include="Modules\Almacenes\Producto\Services\" />
+    <Folder Include="Modules\Almacenes\Producto\Validators\" />
     <Folder Include="Modules\Cajas\ArqueoCaja\Endpoints\" />
     <Folder Include="Modules\Cajas\ArqueoCaja\Mappers\" />
     <Folder Include="Modules\Cajas\ArqueoCaja\Services\" />

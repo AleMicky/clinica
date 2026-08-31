@@ -1,3 +1,4 @@
+using Clinica.Api.Modules.Almacenes;
 using Clinica.Api.Modules.Cajas;
 using Clinica.Api.Modules.Notificaciones;
 using Clinica.Api.Modules.Parametros.Catalogo;
@@ -16,6 +17,7 @@ public static class ModuleExtensions
     public static IServiceCollection AddModules(
         this IServiceCollection services)
     {
+        services.AddAlmacenesModule();
         services.AddSeguridadModule();
         services.AddParametrosModule();
         services.AddRecursosHumanosModule();
@@ -33,6 +35,7 @@ public static class ModuleExtensions
     {
         var api = app.MapGroup(ApiRoutes.Prefix);
 
+        api.MapAlmacenesModule();
         api.MapSeguridadModule();
         api.MapParametrosModule();
         api.MapRecursosHumanosModule();

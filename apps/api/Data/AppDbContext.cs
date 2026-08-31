@@ -1,3 +1,7 @@
+using Clinica.Api.Modules.Almacenes.Almacen.Entity;
+using Clinica.Api.Modules.Almacenes.CategoriaProducto.Entity;
+using Clinica.Api.Modules.Almacenes.Lote.Entity;
+using Clinica.Api.Modules.Almacenes.Producto.Entity;
 using Clinica.Api.Modules.Cajas.ArqueoCaja.Entity;
 using Clinica.Api.Modules.Cajas.Caja.Entity;
 using Clinica.Api.Modules.Cajas.Cobro.Entity;
@@ -38,6 +42,10 @@ public class AppDbContext(
     DbContextOptions<AppDbContext> options)
     : IdentityDbContext<Usuario, Rol, int>(options)
 {
+    public DbSet<Almacen> Almacenes => Set<Almacen>();
+    public DbSet<CategoriaProducto> CategoriasProducto => Set<CategoriaProducto>();
+    public DbSet<Producto> Productos => Set<Producto>();
+    public DbSet<Lote> Lotes => Set<Lote>();
     public DbSet<CatalogoGrupo> CatalogosGrupos => Set<CatalogoGrupo>();
     public DbSet<CatalogoItem> CatalogosItems => Set<CatalogoItem>();
     public DbSet<UnidadesMedida> UnidadesMedida => Set<UnidadesMedida>();

@@ -1,6 +1,6 @@
 using Clinica.Api.Shared.Abstractions;
 
-namespace Clinica.Api.Modules.Almacenes.Almacen.CategoriaProducto.Entity;
+namespace Clinica.Api.Modules.Almacenes.CategoriaProducto.Entity;
 
 public sealed class CategoriaProducto : AuditableEntity
 {
