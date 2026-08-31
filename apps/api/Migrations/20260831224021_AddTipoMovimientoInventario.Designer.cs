@@ -4,6 +4,7 @@ using Clinica.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Clinica.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260831224021_AddTipoMovimientoInventario")]
+    partial class AddTipoMovimientoInventario
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -237,129 +240,6 @@ namespace Clinica.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("Lotes", (string)null);
-                });
-
-            modelBuilder.Entity("Clinica.Api.Modules.Almacenes.MovimientoInventario.Entity.MovimientoInventario", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("Activo")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<int>("AlmacenId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("CreadoPor")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("FechaCreacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("FechaModificacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("FechaMovimiento")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ModificadoPor")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Numero")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("Observacion")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<int?>("ReferenciaId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ReferenciaTipo")
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
-                    b.Property<int>("TipoMovimientoInventarioId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AlmacenId");
-
-                    b.HasIndex("Numero")
-                        .IsUnique();
-
-                    b.HasIndex("TipoMovimientoInventarioId");
-
-                    b.ToTable("MovimientosInventario", (string)null);
-                });
-
-            modelBuilder.Entity("Clinica.Api.Modules.Almacenes.MovimientoInventario.Entity.MovimientoInventarioDetalle", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("Activo")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<decimal>("Cantidad")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("CostoTotal")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("CostoUnitario")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("CreadoPor")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("FechaCreacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("FechaModificacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("LoteId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ModificadoPor")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("MovimientoInventarioId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ProductoId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("LoteId");
-
-                    b.HasIndex("MovimientoInventarioId");
-
-                    b.HasIndex("ProductoId");
-
-                    b.ToTable("MovimientosInventarioDetalles", (string)null);
                 });
 
             modelBuilder.Entity("Clinica.Api.Modules.Almacenes.Producto.Entity.Producto", b =>
@@ -3240,51 +3120,6 @@ namespace Clinica.Api.Migrations
                     b.Navigation("Producto");
                 });
 
-            modelBuilder.Entity("Clinica.Api.Modules.Almacenes.MovimientoInventario.Entity.MovimientoInventario", b =>
-                {
-                    b.HasOne("Clinica.Api.Modules.Almacenes.Almacen.Entity.Almacen", "Almacen")
-                        .WithMany()
-                        .HasForeignKey("AlmacenId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Clinica.Api.Modules.Almacenes.TipoMovimientoInventario.Entity.TipoMovimientoInventario", "TipoMovimientoInventario")
-                        .WithMany()
-                        .HasForeignKey("TipoMovimientoInventarioId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Almacen");
-
-                    b.Navigation("TipoMovimientoInventario");
-                });
-
-            modelBuilder.Entity("Clinica.Api.Modules.Almacenes.MovimientoInventario.Entity.MovimientoInventarioDetalle", b =>
-                {
-                    b.HasOne("Clinica.Api.Modules.Almacenes.Lote.Entity.Lote", "Lote")
-                        .WithMany()
-                        .HasForeignKey("LoteId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Clinica.Api.Modules.Almacenes.MovimientoInventario.Entity.MovimientoInventario", "MovimientoInventario")
-                        .WithMany("Detalles")
-                        .HasForeignKey("MovimientoInventarioId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Clinica.Api.Modules.Almacenes.Producto.Entity.Producto", "Producto")
-                        .WithMany()
-                        .HasForeignKey("ProductoId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Lote");
-
-                    b.Navigation("MovimientoInventario");
-
-                    b.Navigation("Producto");
-                });
-
             modelBuilder.Entity("Clinica.Api.Modules.Almacenes.Producto.Entity.Producto", b =>
                 {
                     b.HasOne("Clinica.Api.Modules.Almacenes.CategoriaProducto.Entity.CategoriaProducto", "CategoriaProducto")
@@ -3937,11 +3772,6 @@ namespace Clinica.Api.Migrations
             modelBuilder.Entity("Clinica.Api.Modules.Almacenes.CategoriaProducto.Entity.CategoriaProducto", b =>
                 {
                     b.Navigation("Subcategorias");
-                });
-
-            modelBuilder.Entity("Clinica.Api.Modules.Almacenes.MovimientoInventario.Entity.MovimientoInventario", b =>
-                {
-                    b.Navigation("Detalles");
                 });
 
             modelBuilder.Entity("Clinica.Api.Modules.Cajas.ArqueoCaja.Entity.ArqueoCaja", b =>
