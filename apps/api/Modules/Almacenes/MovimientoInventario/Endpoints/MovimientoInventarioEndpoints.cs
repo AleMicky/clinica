@@ -32,6 +32,13 @@ public static class MovimientoInventarioEndpoints
         group.MapDelete("/{id:int}", EliminarAsync)
             .WithName("EliminarMovimientoInventario");
 
+        group.MapPost("/{id:int}/confirmar", ConfirmarAsync)
+            .WithName("ConfirmarMovimientoInventario");
+
+        group.MapPost("/{id:int}/anular", AnularAsync)
+            .WithName("AnularMovimientoInventario")
+            .Validate<AnularMovimientoInventarioRequest>();
+
         return app;
     }
 
@@ -100,5 +107,29 @@ public static class MovimientoInventarioEndpoints
             cancellationToken);
 
         return Results.NoContent();
+    }
+
+    private static async Task<IResult> ConfirmarAsync(
+        int id,
+        IMovimientoInventarioService service,
+        CancellationToken cancellationToken)
+    {
+        return Results.Ok(
+            await service.ConfirmarAsync(
+                id,
+                cancellationToken));
+    }
+
+    private static async Task<IResult> AnularAsync(
+        int id,
+        AnularMovimientoInventarioRequest request,
+        IMovimientoInventarioService service,
+        CancellationToken cancellationToken)
+    {
+        return Results.Ok(
+            await service.AnularAsync(
+                id,
+                request,
+                cancellationToken));
     }
 }

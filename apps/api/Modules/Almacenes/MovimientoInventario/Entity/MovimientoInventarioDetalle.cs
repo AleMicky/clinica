@@ -19,8 +19,6 @@ public sealed class MovimientoInventarioDetalle : AuditableEntity
     public LoteEntity? Lote { get; set; }
 
     public decimal Cantidad { get; set; }
-
     public decimal? CostoUnitario { get; set; }
-
-    public decimal? CostoTotal { get; set; }
+    public decimal CostoTotal => Cantidad * (CostoUnitario ?? 0);
 }

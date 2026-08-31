@@ -20,9 +20,6 @@ public sealed class MovimientoInventarioDetalleConfiguration
         builder.Property(x => x.CostoUnitario)
             .HasPrecision(18, 2);
 
-        builder.Property(x => x.CostoTotal)
-            .HasPrecision(18, 2);
-
         builder.HasOne(x => x.Producto)
             .WithMany()
             .HasForeignKey(x => x.ProductoId)

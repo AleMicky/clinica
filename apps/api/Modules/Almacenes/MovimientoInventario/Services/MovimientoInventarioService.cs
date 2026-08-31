@@ -1,5 +1,6 @@
 using Clinica.Api.Data;
 using Clinica.Api.Modules.Almacenes.MovimientoInventario.Dtos;
+using Clinica.Api.Modules.Almacenes.MovimientoInventario.Enums;
 using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
@@ -37,6 +38,15 @@ public interface IMovimientoInventarioService
 
     Task EliminarAsync(
         int id,
+        CancellationToken cancellationToken = default);
+
+    Task<MovimientoInventarioResponse> ConfirmarAsync(
+        int id,
+        CancellationToken cancellationToken = default);
+
+    Task<MovimientoInventarioResponse> AnularAsync(
+        int id,
+        AnularMovimientoInventarioRequest request,
         CancellationToken cancellationToken = default);
 }
 
@@ -183,6 +193,12 @@ public sealed class MovimientoInventarioService(AppDbContext dbContext)
             throw new NotFoundException(nameof(MovimientoEntity), id);
         }
 
+        if (entity.Estado != EstadoMovimientoInventario.Borrador)
+        {
+            throw new ConflictException(
+                "No se puede editar un movimiento que no esté en estado Borrador.");
+        }
+
         await ValidarEncabezadoAsync(
             request.TipoMovimientoInventarioId,
             request.AlmacenId,
@@ -220,6 +236,12 @@ public sealed class MovimientoInventarioService(AppDbContext dbContext)
             throw new NotFoundException(nameof(MovimientoEntity), id);
         }
 
+        if (entity.Estado != EstadoMovimientoInventario.Borrador)
+        {
+            throw new ConflictException(
+                "No se puede eliminar un movimiento que no esté en estado Borrador. Anúlalo en su lugar.");
+        }
+
         entity.Activo = false;
         foreach (var detalle in entity.Detalles)
         {
@@ -227,6 +249,73 @@ public sealed class MovimientoInventarioService(AppDbContext dbContext)
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<MovimientoInventarioResponse> ConfirmarAsync(
+        int id,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await dbContext.MovimientosInventario
+            .Include(x => x.Detalles)
+            .FirstOrDefaultAsync(x => x.Id == id && x.Activo, cancellationToken);
+
+        if (entity is null)
+        {
+            throw new NotFoundException(nameof(MovimientoEntity), id);
+        }
+
+        if (entity.Estado == EstadoMovimientoInventario.Confirmado)
+        {
+            throw new ConflictException("El movimiento de inventario ya está confirmado.");
+        }
+
+        if (entity.Estado == EstadoMovimientoInventario.Anulado)
+        {
+            throw new ConflictException("No se puede confirmar un movimiento anulado.");
+        }
+
+        entity.Estado = EstadoMovimientoInventario.Confirmado;
+        entity.FechaConfirmacion = DateTime.UtcNow;
+        entity.FechaAnulacion = null;
+        entity.MotivoAnulacion = null;
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return await ObtenerAsync(id, cancellationToken);
+    }
+
+    public async Task<MovimientoInventarioResponse> AnularAsync(
+        int id,
+        AnularMovimientoInventarioRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await dbContext.MovimientosInventario
+            .Include(x => x.Detalles)
+            .FirstOrDefaultAsync(x => x.Id == id && x.Activo, cancellationToken);
+
+        if (entity is null)
+        {
+            throw new NotFoundException(nameof(MovimientoEntity), id);
+        }
+
+        if (entity.Estado == EstadoMovimientoInventario.Anulado)
+        {
+            throw new ConflictException("El movimiento de inventario ya está anulado.");
+        }
+
+        if (entity.Estado == EstadoMovimientoInventario.Borrador)
+        {
+            throw new ConflictException(
+                "Un movimiento en estado Borrador debe eliminarse en lugar de anularse.");
+        }
+
+        entity.Estado = EstadoMovimientoInventario.Anulado;
+        entity.FechaAnulacion = DateTime.UtcNow;
+        entity.MotivoAnulacion = request.MotivoAnulacion.Trim();
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return await ObtenerAsync(id, cancellationToken);
     }
 
     private async Task ValidarEncabezadoAsync(
@@ -334,10 +423,7 @@ public sealed class MovimientoInventarioService(AppDbContext dbContext)
             ProductoId = request.ProductoId,
             LoteId = request.LoteId,
             Cantidad = request.Cantidad,
-            CostoUnitario = request.CostoUnitario,
-            CostoTotal = request.CostoUnitario.HasValue
-                ? request.CostoUnitario.Value * request.Cantidad
-                : null
+            CostoUnitario = request.CostoUnitario
         };
     }
 

@@ -67,3 +67,16 @@ public sealed class CreateMovimientoInventarioRequestValidator
 
 public sealed class UpdateMovimientoInventarioRequestValidator
     : MovimientoInventarioRequestValidator<UpdateMovimientoInventarioRequest>;
+
+public sealed class AnularMovimientoInventarioRequestValidator
+    : AbstractValidator<AnularMovimientoInventarioRequest>
+{
+    public AnularMovimientoInventarioRequestValidator()
+    {
+        RuleFor(x => x.MotivoAnulacion)
+            .NotEmpty()
+            .WithMessage("El motivo de anulación es obligatorio.")
+            .MaximumLength(500)
+            .WithMessage("El motivo de anulación no puede superar los 500 caracteres.");
+    }
+}

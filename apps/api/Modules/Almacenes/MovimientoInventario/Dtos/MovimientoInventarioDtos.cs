@@ -1,3 +1,4 @@
+using Clinica.Api.Modules.Almacenes.MovimientoInventario.Enums;
 using Clinica.Api.Shared.Abstractions;
 
 namespace Clinica.Api.Modules.Almacenes.MovimientoInventario.Dtos;
@@ -29,6 +30,11 @@ public sealed record CreateMovimientoInventarioRequest : MovimientoInventarioReq
 
 public sealed record UpdateMovimientoInventarioRequest : MovimientoInventarioRequest;
 
+public sealed record AnularMovimientoInventarioRequest
+{
+    public required string MotivoAnulacion { get; init; }
+}
+
 public sealed record MovimientoInventarioDetalleResponse
 {
     public int Id { get; init; }
@@ -38,7 +44,7 @@ public sealed record MovimientoInventarioDetalleResponse
     public string? LoteNumero { get; init; }
     public decimal Cantidad { get; init; }
     public decimal? CostoUnitario { get; init; }
-    public decimal? CostoTotal { get; init; }
+    public decimal CostoTotal { get; init; }
 }
 
 public sealed record MovimientoInventarioResponse : AuditableResponse
@@ -54,10 +60,16 @@ public sealed record MovimientoInventarioResponse : AuditableResponse
 
     public DateTime FechaMovimiento { get; init; }
 
+    public EstadoMovimientoInventario Estado { get; init; }
+
     public string? ReferenciaTipo { get; init; }
     public int? ReferenciaId { get; init; }
 
     public string? Observacion { get; init; }
+
+    public DateTime? FechaConfirmacion { get; init; }
+    public DateTime? FechaAnulacion { get; init; }
+    public string? MotivoAnulacion { get; init; }
 
     public IReadOnlyCollection<MovimientoInventarioDetalleResponse> Detalles { get; init; } = [];
 }

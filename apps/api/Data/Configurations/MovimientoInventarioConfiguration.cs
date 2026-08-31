@@ -1,4 +1,5 @@
 using Clinica.Api.Modules.Almacenes.MovimientoInventario.Entity;
+using Clinica.Api.Modules.Almacenes.MovimientoInventario.Enums;
 using Clinica.Api.Shared.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -20,10 +21,17 @@ public sealed class MovimientoInventarioConfiguration
         builder.Property(x => x.FechaMovimiento)
             .IsRequired();
 
+        builder.Property(x => x.Estado)
+            .IsRequired()
+            .HasDefaultValue(EstadoMovimientoInventario.Borrador);
+
         builder.Property(x => x.ReferenciaTipo)
             .HasMaxLength(30);
 
         builder.Property(x => x.Observacion)
+            .HasMaxLength(500);
+
+        builder.Property(x => x.MotivoAnulacion)
             .HasMaxLength(500);
 
         builder.HasIndex(x => x.Numero)

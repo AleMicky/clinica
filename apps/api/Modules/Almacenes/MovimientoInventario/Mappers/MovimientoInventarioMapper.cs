@@ -23,6 +23,10 @@ public static partial class MovimientoInventarioMapper
     [MapperIgnoreTarget(nameof(MovimientoInventarioEntity.Detalles))]
     [MapperIgnoreTarget(nameof(MovimientoInventarioEntity.TipoMovimientoInventario))]
     [MapperIgnoreTarget(nameof(MovimientoInventarioEntity.Almacen))]
+    [MapperIgnoreTarget(nameof(MovimientoInventarioEntity.Estado))]
+    [MapperIgnoreTarget(nameof(MovimientoInventarioEntity.FechaConfirmacion))]
+    [MapperIgnoreTarget(nameof(MovimientoInventarioEntity.FechaAnulacion))]
+    [MapperIgnoreTarget(nameof(MovimientoInventarioEntity.MotivoAnulacion))]
     public static partial MovimientoInventarioEntity ToEntity(
         CreateMovimientoInventarioRequest request);
 
@@ -31,4 +35,7 @@ public static partial class MovimientoInventarioMapper
     [MapperIgnoreSource(nameof(MovimientoInventarioDetalleEntity.MovimientoInventario))]
     public static partial MovimientoInventarioDetalleResponse ToResponse(
         MovimientoInventarioDetalleEntity entity);
+
+    public static partial List<MovimientoInventarioDetalleResponse> ToResponse(
+        IEnumerable<MovimientoInventarioDetalleEntity> entities);
 }
