@@ -256,6 +256,35 @@ public sealed class RolOpcionMenuService(AppDbContext dbContext)
                 userId);
         }
 
+        var esAdmin = user.IsInRole("ADMINISTRADOR") || user.IsInRole("ADMIN");
+
+        if (!esAdmin)
+        {
+            esAdmin = await dbContext.UserRoles
+                .AsNoTracking()
+                .Where(x => x.UserId == userId)
+                .Join(
+                    dbContext.Roles,
+                    ur => ur.RoleId,
+                    r => r.Id,
+                    (ur, r) => r.NormalizedName)
+                .AnyAsync(name => name == "ADMINISTRADOR" || name == "ADMIN", cancellationToken);
+        }
+
+        if (esAdmin)
+        {
+            var todasLasOpciones = await dbContext.OpcionesMenu
+                .AsNoTracking()
+                .Where(x => x.Activo)
+                .OrderBy(x => x.Orden)
+                .ThenBy(x => x.Nombre)
+                .ToListAsync(cancellationToken);
+
+            return ConstruirArbol(
+                todasLasOpciones,
+                null);
+        }
+
         var rolIds = await dbContext.UserRoles
             .AsNoTracking()
             .Where(x => x.UserId == userId)
