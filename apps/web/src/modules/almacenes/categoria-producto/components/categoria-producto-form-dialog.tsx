@@ -18,13 +18,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 import {
@@ -42,6 +35,7 @@ interface CategoriaProductoFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   categoriaToEdit?: CategoriaProductoResponse | null;
+  defaultParentId?: number | null;
   onSuccessCallback?: () => void;
 }
 
@@ -49,6 +43,7 @@ export function CategoriaProductoFormDialog({
   open,
   onOpenChange,
   categoriaToEdit,
+  defaultParentId = null,
   onSuccessCallback,
 }: CategoriaProductoFormDialogProps) {
   const isEditing = Boolean(categoriaToEdit);
@@ -56,22 +51,13 @@ export function CategoriaProductoFormDialog({
   const createMutation = useCreateCategoriaProducto();
   const updateMutation = useUpdateCategoriaProducto();
 
-  // Fetch all categories for the parent selector
-  const { data: categoriasData } = useCategoriasProducto({ pageSize: 200 });
-  const categoriasPadre = React.useMemo(() => {
-    const all = categoriasData?.items ?? [];
-    // Exclude the category being edited (can't be parent of itself)
-    if (categoriaToEdit) {
-      return all.filter((c) => c.id !== categoriaToEdit.id);
-    }
-    return all;
-  }, [categoriasData, categoriaToEdit]);
+  // Fetch categories to resolve parent category name for visual feedback
+  const { data: categoriasData } = useCategoriasProducto({ pageSize: 500 });
 
   const {
     register,
     handleSubmit,
     reset,
-    setValue,
     watch,
     formState: { errors, isSubmitting },
   } = useForm<CategoriaProductoFormValues>({
@@ -80,11 +66,17 @@ export function CategoriaProductoFormDialog({
       codigo: "",
       nombre: "",
       descripcion: "",
-      categoriaPadreId: null,
+      categoriaPadreId: defaultParentId,
     },
   });
 
   const selectedPadreId = watch("categoriaPadreId");
+
+  const parentCategoryName = React.useMemo(() => {
+    if (!selectedPadreId) return null;
+    const found = categoriasData?.items?.find((c) => c.id === selectedPadreId);
+    return found ? `${found.codigo} — ${found.nombre}` : null;
+  }, [selectedPadreId, categoriasData]);
 
   React.useEffect(() => {
     if (open) {
@@ -100,11 +92,11 @@ export function CategoriaProductoFormDialog({
           codigo: "",
           nombre: "",
           descripcion: "",
-          categoriaPadreId: null,
+          categoriaPadreId: defaultParentId ?? null,
         });
       }
     }
-  }, [open, categoriaToEdit, reset]);
+  }, [open, categoriaToEdit, defaultParentId, reset]);
 
   const onSubmit = async (values: CategoriaProductoFormValues) => {
     try {
@@ -169,6 +161,17 @@ export function CategoriaProductoFormDialog({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Contexto visual si tiene categoría padre asignada */}
+              {parentCategoryName && (
+                <div className="sm:col-span-2 flex items-center gap-2 p-2.5 rounded-lg bg-muted/40 border border-border/50 text-xs">
+                  <span className="text-muted-foreground">Categoría Padre:</span>
+                  <span className="font-semibold text-foreground flex items-center gap-1">
+                    <FolderTree className="size-3.5 text-primary" />
+                    {parentCategoryName}
+                  </span>
+                </div>
+              )}
+
               {/* Código */}
               <div className="space-y-1.5">
                 <Label htmlFor="codigo" className="text-xs flex items-center gap-1">
@@ -206,34 +209,6 @@ export function CategoriaProductoFormDialog({
                 />
                 {errors.nombre && (
                   <p className="text-[11px] text-destructive font-medium">{errors.nombre.message}</p>
-                )}
-              </div>
-
-              {/* Categoría Padre */}
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="categoriaPadreId" className="text-xs">
-                  Categoría Padre
-                </Label>
-                <Select
-                  value={selectedPadreId ? String(selectedPadreId) : "none"}
-                  onValueChange={(val) =>
-                    setValue("categoriaPadreId", val === "none" ? null : Number(val))
-                  }
-                >
-                  <SelectTrigger className="text-sm h-9">
-                    <SelectValue placeholder="Sin categoría padre (raíz)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Sin categoría padre (raíz)</SelectItem>
-                    {categoriasPadre.map((cat) => (
-                      <SelectItem key={cat.id} value={String(cat.id)}>
-                        {cat.codigo} — {cat.nombre}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.categoriaPadreId && (
-                  <p className="text-[11px] text-destructive font-medium">{errors.categoriaPadreId.message}</p>
                 )}
               </div>
 

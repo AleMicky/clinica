@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { CategoriaProductoHeader } from "./categoria-producto-header";
-import { CategoriaProductoList } from "./categoria-producto-list";
+import { CategoriaProductoTree } from "./categoria-producto-tree";
 import { CategoriaProductoFormDialog } from "./categoria-producto-form-dialog";
 import { CategoriaProductoDeleteDialog } from "./categoria-producto-delete-dialog";
 import { useCategoriasProducto } from "../hooks/use-categoria-producto";
@@ -10,39 +10,31 @@ import type { CategoriaProductoResponse } from "../types/categoria-producto.type
 import { AuditDialog, type AuditInfo } from "@/components/shared";
 
 export function CategoriaProductoModuleView() {
-  // Search, pagination state
-  const [searchTerm, setSearchTerm] = React.useState("");
-  const [page, setPage] = React.useState(1);
-  const [pageSize, setPageSize] = React.useState(10);
-
+  // Query all categories to construct full tree hierarchy
   const {
     data: categoriasData,
     isLoading,
     refetch,
   } = useCategoriasProducto({
-    page,
-    pageSize,
-    search: searchTerm.trim() || undefined,
+    pageSize: 1000,
   });
 
   const categorias = categoriasData?.items ?? [];
 
-  const handleSearchChange = (term: string) => {
-    setSearchTerm(term);
-    setPage(1);
-  };
-
   // Form Dialog state
   const [formOpen, setFormOpen] = React.useState(false);
   const [categoriaToEdit, setCategoriaToEdit] = React.useState<CategoriaProductoResponse | null>(null);
+  const [defaultParentId, setDefaultParentId] = React.useState<number | null>(null);
 
-  const handleOpenAdd = () => {
+  const handleOpenAdd = (padreId?: number | null) => {
     setCategoriaToEdit(null);
+    setDefaultParentId(padreId ?? null);
     setFormOpen(true);
   };
 
   const handleOpenEdit = (categoria: CategoriaProductoResponse) => {
     setCategoriaToEdit(categoria);
+    setDefaultParentId(categoria.categoriaPadreId ?? null);
     setFormOpen(true);
   };
 
@@ -81,7 +73,7 @@ export function CategoriaProductoModuleView() {
         ...(categoria.descripcion
           ? [{ label: "Descripción", value: categoria.descripcion }]
           : []),
-        { label: "Subcategorías", value: String(categoria.cantidadSubcategorias) },
+        { label: "Subcategorías", value: String(categoria.cantidadSubcategorias ?? 0) },
       ],
     });
     setAuditDialogOpen(true);
@@ -91,19 +83,9 @@ export function CategoriaProductoModuleView() {
     <div className="flex flex-col gap-3.5 w-full">
       <CategoriaProductoHeader />
 
-      <CategoriaProductoList
+      <CategoriaProductoTree
         categorias={categorias}
         isLoading={isLoading}
-        totalItems={categoriasData?.totalItems ?? 0}
-        currentPage={page}
-        pageSize={pageSize}
-        searchTerm={searchTerm}
-        onSearchChange={handleSearchChange}
-        onPageChange={setPage}
-        onPageSizeChange={(size) => {
-          setPageSize(size);
-          setPage(1);
-        }}
         onAddCategoria={handleOpenAdd}
         onEdit={handleOpenEdit}
         onDelete={handleOpenDelete}
@@ -116,6 +98,7 @@ export function CategoriaProductoModuleView() {
         open={formOpen}
         onOpenChange={setFormOpen}
         categoriaToEdit={categoriaToEdit}
+        defaultParentId={defaultParentId}
         onSuccessCallback={() => refetch()}
       />
 

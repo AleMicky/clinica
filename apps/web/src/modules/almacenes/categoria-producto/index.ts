@@ -4,6 +4,7 @@ export * from "./api/categoria-producto.api";
 export * from "./api/categoria-producto.key";
 export * from "./hooks/use-categoria-producto";
 export * from "./components/categoria-producto-header";
+export * from "./components/categoria-producto-tree";
 export * from "./components/categoria-producto-list";
 export * from "./components/categoria-producto-form-dialog";
 export * from "./components/categoria-producto-delete-dialog";
