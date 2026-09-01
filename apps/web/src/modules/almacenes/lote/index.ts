@@ -6,3 +6,4 @@ export * from "./hooks/use-lote";
 export * from "./components/lote-list";
 export * from "./components/lote-form-dialog";
 export * from "./components/lote-delete-dialog";
+export * from "./components/lote-autocomplete";

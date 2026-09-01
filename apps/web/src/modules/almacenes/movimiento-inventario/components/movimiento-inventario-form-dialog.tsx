@@ -11,7 +11,6 @@ import {
   Package,
   Warehouse,
   Calendar,
-  DollarSign,
   Loader2,
   FileSpreadsheet,
   AlertCircle,
@@ -45,6 +44,7 @@ import type { MovimientoInventarioResponse } from "../types/movimiento-inventari
 import { AlmacenAutocomplete } from "../../almacen";
 import { TipoMovimientoInventarioAutocomplete } from "../../tipo-movimiento-inventario";
 import { ProductoAutocomplete } from "../../producto";
+import { LoteAutocomplete } from "../../lote";
 
 interface MovimientoInventarioFormDialogProps {
   open: boolean;
@@ -241,7 +241,7 @@ export function MovimientoInventarioFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl max-h-[92vh] flex flex-col p-6 overflow-hidden">
+      <DialogContent className="sm:max-w-6xl md:max-w-7xl w-[96vw] max-w-[96vw] max-h-[92vh] flex flex-col p-6 overflow-hidden">
         {/* Modal Header */}
         <DialogHeader className="pb-3 border-b border-border/40 shrink-0">
           <div className="flex items-center justify-between">
@@ -467,121 +467,153 @@ export function MovimientoInventarioFormDialog({
               )}
 
               {/* Table Container */}
-              <div className="rounded-xl border border-border/60 overflow-x-auto bg-card shadow-2xs">
-                <table className="w-full text-left text-xs border-collapse">
+              <div className="w-full overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse min-w-[760px]">
                   <thead>
-                    <tr className="border-b border-border/60 bg-muted/40 text-muted-foreground font-semibold">
-                      <th className="px-3 py-2 w-10 text-center">#</th>
-                      <th className="px-3 py-2 min-w-64">Producto *</th>
-                      <th className="px-3 py-2 w-28">Cantidad *</th>
-                      <th className="px-3 py-2 w-32">Costo Unit.</th>
-                      <th className="px-3 py-2 w-28 text-right">Subtotal</th>
-                      <th className="px-3 py-2 w-12 text-center"></th>
+                    <tr className="border-b border-border/40 bg-muted/20 text-muted-foreground font-semibold">
+                      <th className="px-2.5 py-2 w-8 text-center">#</th>
+                      <th className="px-2.5 py-2 min-w-56">Producto *</th>
+                      <th className="px-2.5 py-2 w-44 min-w-36">Lote</th>
+                      <th className="px-2.5 py-2 w-24 min-w-20">Cantidad *</th>
+                      <th className="px-2.5 py-2 w-28 min-w-24">Costo Unit.</th>
+                      <th className="px-2.5 py-2 w-24 text-right">Subtotal</th>
+                      <th className="px-2 py-2 w-10 text-center"></th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border/30">
-                    {fields.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={6}
-                          className="px-3 py-8 text-center text-muted-foreground text-xs"
-                        >
-                          <div className="flex flex-col items-center justify-center gap-2">
-                            <FileSpreadsheet className="size-6 text-muted-foreground/60" />
-                            <span className="font-medium">No hay productos agregados al movimiento</span>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              onClick={handleAddRow}
-                              className="h-7 text-xs gap-1 text-primary border-primary/30 hover:bg-primary/5"
-                            >
-                              <Plus className="size-3" />
-                              <span>Agregar Primer Producto</span>
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ) : (
-                      fields.map((field, idx) => {
-                        const currentQty = Number(watch(`detalles.${idx}.cantidad`)) || 0;
-                        const currentCost = Number(watch(`detalles.${idx}.costoUnitario`)) || 0;
-                        const subtotal = currentQty * currentCost;
-
-                        return (
-                          <tr key={field.id} className="hover:bg-muted/20 transition-colors">
-                            <td className="px-3 py-2 text-center text-muted-foreground font-mono text-[11px]">
-                              {idx + 1}
-                            </td>
-                            <td className="px-3 py-2">
-                              <Controller
-                                name={`detalles.${idx}.productoId`}
-                                control={control}
-                                render={({ field: pField }) => (
-                                  <ProductoAutocomplete
-                                    value={pField.value}
-                                    onValueChange={(val, prod) => {
-                                      pField.onChange(val || 0);
-                                      if (prod) {
-                                        setValue(
-                                          `detalles.${idx}.productoNombre`,
-                                          prod.nombre
-                                        );
-                                      }
-                                    }}
-                                    placeholder="Buscar por código o nombre..."
-                                  />
-                                )}
-                              />
-                            </td>
-                            <td className="px-3 py-2">
-                              <Input
-                                type="number"
-                                step="any"
-                                min="0.01"
-                                {...register(`detalles.${idx}.cantidad`, {
-                                  valueAsNumber: true,
-                                })}
-                                className="h-8 text-xs font-mono"
-                              />
-                            </td>
-                            <td className="px-3 py-2">
-                              <Input
-                                type="number"
-                                step="any"
-                                min="0"
-                                {...register(`detalles.${idx}.costoUnitario`, {
-                                  setValueAs: (v) => (v === "" ? 0 : Number(v)),
-                                })}
-                                placeholder="0.00"
-                                className="h-8 text-xs font-mono"
-                              />
-                            </td>
-                            <td className="px-3 py-2 text-right font-mono font-semibold text-foreground">
-                              ${subtotal.toLocaleString("es-ES", {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              })}
-                            </td>
-                            <td className="px-3 py-2 text-center">
+                  <tbody className="divide-y divide-border/20">
+                      {fields.length === 0 ? (
+                        <tr>
+                          <td
+                            colSpan={7}
+                            className="px-3 py-8 text-center text-muted-foreground text-xs"
+                          >
+                            <div className="flex flex-col items-center justify-center gap-2">
+                              <FileSpreadsheet className="size-6 text-muted-foreground/60" />
+                              <span className="font-medium">No hay productos agregados al movimiento</span>
                               <Button
                                 type="button"
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => remove(idx)}
-                                disabled={fields.length === 1}
-                                className="size-7 text-muted-foreground hover:text-destructive cursor-pointer disabled:opacity-30 transition-colors"
+                                size="sm"
+                                variant="outline"
+                                onClick={handleAddRow}
+                                className="h-7 text-xs gap-1 text-primary border-primary/30 hover:bg-primary/5 cursor-pointer"
                               >
-                                <Trash2 className="size-3.5" />
+                                <Plus className="size-3" />
+                                <span>Agregar Primer Producto</span>
                               </Button>
-                            </td>
-                          </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : (
+                        fields.map((field, idx) => {
+                          const currentProductId = Number(watch(`detalles.${idx}.productoId`)) || 0;
+                          const currentQty = Number(watch(`detalles.${idx}.cantidad`)) || 0;
+                          const currentCost = Number(watch(`detalles.${idx}.costoUnitario`)) || 0;
+                          const subtotal = currentQty * currentCost;
+
+                          return (
+                            <tr key={field.id} className="hover:bg-muted/15 transition-colors">
+                              <td className="px-2.5 py-1.5 text-center text-muted-foreground font-mono text-[11px]">
+                                {idx + 1}
+                              </td>
+                              <td className="px-2.5 py-1.5">
+                                <Controller
+                                  name={`detalles.${idx}.productoId`}
+                                  control={control}
+                                  render={({ field: pField }) => (
+                                    <ProductoAutocomplete
+                                      value={pField.value}
+                                      onValueChange={(val, prod) => {
+                                        pField.onChange(val || 0);
+                                        if (prod) {
+                                          setValue(
+                                            `detalles.${idx}.productoNombre`,
+                                            prod.nombre
+                                          );
+                                        } else {
+                                          setValue(`detalles.${idx}.productoNombre`, "");
+                                        }
+                                        // Reset lote when product changes
+                                        setValue(`detalles.${idx}.loteId`, null);
+                                      }}
+                                      placeholder="Buscar producto..."
+                                    />
+                                  )}
+                                />
+                              </td>
+                              <td className="px-2.5 py-1.5">
+                                <Controller
+                                  name={`detalles.${idx}.loteId`}
+                                  control={control}
+                                  render={({ field: lField }) => (
+                                    <LoteAutocomplete
+                                      productoId={currentProductId}
+                                      value={lField.value}
+                                      onValueChange={(val, lote) => {
+                                        lField.onChange(val || null);
+                                        if (
+                                          lote?.costoUnitario !== null &&
+                                          lote?.costoUnitario !== undefined &&
+                                          Number(lote.costoUnitario) > 0
+                                        ) {
+                                          setValue(
+                                            `detalles.${idx}.costoUnitario`,
+                                            Number(lote.costoUnitario)
+                                          );
+                                        }
+                                      }}
+                                      placeholder="Seleccionar lote..."
+                                    />
+                                  )}
+                                />
+                              </td>
+                              <td className="px-2.5 py-1.5">
+                                <Input
+                                  type="number"
+                                  step="any"
+                                  min="0.01"
+                                  {...register(`detalles.${idx}.cantidad`, {
+                                    valueAsNumber: true,
+                                  })}
+                                  className="h-7.5 text-xs font-mono"
+                                />
+                              </td>
+                              <td className="px-2.5 py-1.5">
+                                <Input
+                                  type="number"
+                                  step="any"
+                                  min="0"
+                                  {...register(`detalles.${idx}.costoUnitario`, {
+                                    setValueAs: (v) => (v === "" ? 0 : Number(v)),
+                                  })}
+                                  placeholder="0.00"
+                                  className="h-7.5 text-xs font-mono"
+                                />
+                              </td>
+                              <td className="px-2.5 py-1.5 text-right font-mono font-semibold text-foreground whitespace-nowrap">
+                                Bs. {subtotal.toLocaleString("es-ES", {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                })}
+                              </td>
+                              <td className="px-2 py-1.5 text-center">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => remove(idx)}
+                                  disabled={fields.length === 1}
+                                  className="size-7 text-muted-foreground hover:text-destructive cursor-pointer disabled:opacity-30 transition-colors"
+                                >
+                                  <Trash2 className="size-3.5" />
+                                </Button>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
 
               {/* Total Calculation Card */}
               <div className="flex flex-wrap items-center justify-between p-3.5 rounded-xl bg-muted/40 border border-border/40 text-xs shadow-2xs">
@@ -602,7 +634,7 @@ export function MovimientoInventarioFormDialog({
                     Costo Total Estimado:
                   </span>
                   <span className="text-sm font-bold font-mono text-primary">
-                    ${totalCosto.toLocaleString("es-ES", {
+                    Bs. {totalCosto.toLocaleString("es-ES", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}

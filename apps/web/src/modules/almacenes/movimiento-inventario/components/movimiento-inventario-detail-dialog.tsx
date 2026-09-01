@@ -279,11 +279,11 @@ export function MovimientoInventarioDetailDialog({
                         </td>
                         <td className="px-2.5 py-1.5 text-right font-mono text-muted-foreground text-[11px]">
                           {item.costoUnitario !== null && item.costoUnitario !== undefined
-                            ? `$${Number(item.costoUnitario).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                            ? `Bs. ${Number(item.costoUnitario).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                             : "-"}
                         </td>
                         <td className="px-2.5 py-1.5 text-right font-mono font-bold text-foreground">
-                          ${Number(item.costoTotal).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          Bs. {Number(item.costoTotal).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
                       </tr>
                     ))}
@@ -304,7 +304,7 @@ export function MovimientoInventarioDetailDialog({
                     Costo Total:
                   </span>
                   <span className="text-xs font-bold font-mono text-primary">
-                    ${totalCostoGeneral.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    Bs. {totalCostoGeneral.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
               </div>

@@ -7,6 +7,7 @@ export * from "./components/movimiento-inventario-header";
 export * from "./components/movimiento-inventario-metrics";
 export * from "./components/movimiento-inventario-list";
 export * from "./components/movimiento-inventario-form-dialog";
+export * from "./components/movimiento-inventario-form-view";
 export * from "./components/movimiento-inventario-detail-dialog";
 export * from "./components/movimiento-inventario-confirm-dialog";
 export * from "./components/movimiento-inventario-anular-dialog";
