@@ -1,6 +1,7 @@
 using Clinica.Api.Modules.Almacenes.Almacen.Entity;
 using Clinica.Api.Modules.Almacenes.CategoriaProducto.Entity;
 using Clinica.Api.Modules.Almacenes.Existencia.Entity;
+using Clinica.Api.Modules.Almacenes.InventarioFisico.Entity;
 using Clinica.Api.Modules.Almacenes.Lote.Entity;
 using Clinica.Api.Modules.Almacenes.MovimientoInventario.Entity;
 using Clinica.Api.Modules.Almacenes.Producto.Entity;
@@ -56,6 +57,8 @@ public class AppDbContext(
     public DbSet<MovimientoInventarioDetalle> MovimientosInventarioDetalles => Set<MovimientoInventarioDetalle>();
     public DbSet<TransferenciaAlmacen> TransferenciasAlmacen => Set<TransferenciaAlmacen>();
     public DbSet<TransferenciaAlmacenDetalle> TransferenciasAlmacenDetalles => Set<TransferenciaAlmacenDetalle>();
+    public DbSet<InventarioFisico> InventariosFisicos => Set<InventarioFisico>();
+    public DbSet<InventarioFisicoDetalle> InventariosFisicosDetalles => Set<InventarioFisicoDetalle>();
     public DbSet<CatalogoGrupo> CatalogosGrupos => Set<CatalogoGrupo>();
     public DbSet<CatalogoItem> CatalogosItems => Set<CatalogoItem>();
     public DbSet<UnidadesMedida> UnidadesMedida => Set<UnidadesMedida>();

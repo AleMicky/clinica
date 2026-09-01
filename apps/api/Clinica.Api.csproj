@@ -39,6 +39,11 @@
     <Folder Include="Modules\Almacenes\Existencia\Mappers\" />
     <Folder Include="Modules\Almacenes\Existencia\Services\" />
     <Folder Include="Modules\Almacenes\Existencia\Validators\" />
+    <Folder Include="Modules\Almacenes\InventarioFisico\Dtos\" />
+    <Folder Include="Modules\Almacenes\InventarioFisico\Endpoints\" />
+    <Folder Include="Modules\Almacenes\InventarioFisico\Mappers\" />
+    <Folder Include="Modules\Almacenes\InventarioFisico\Services\" />
+    <Folder Include="Modules\Almacenes\InventarioFisico\Validators\" />
     <Folder Include="Modules\Almacenes\Lote\Dtos\" />
     <Folder Include="Modules\Almacenes\Lote\Endpoints\" />
     <Folder Include="Modules\Almacenes\Lote\Mappers\" />
