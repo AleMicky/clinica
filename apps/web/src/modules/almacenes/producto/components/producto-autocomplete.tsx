@@ -103,7 +103,7 @@ export function ProductoAutocomplete({
   };
 
   return (
-    <div ref={containerRef} className="relative w-full">
+    <div ref={containerRef} className={cn("relative w-full", isOpen && "z-50", className)}>
       <div className="relative flex items-center">
         <input
           ref={inputRef}

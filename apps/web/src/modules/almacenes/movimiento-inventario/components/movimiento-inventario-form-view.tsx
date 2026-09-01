@@ -243,7 +243,7 @@ export function MovimientoInventarioFormView({
   return (
     <div className="flex flex-col gap-4 w-full">
       {/* Top Header Card */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-card border border-border/60 rounded-xl p-4 shadow-2xs">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-card rounded-xl p-4 shadow-2xs">
         <div className="flex items-center gap-3">
           <Button
             type="button"
@@ -316,8 +316,8 @@ export function MovimientoInventarioFormView({
         className="flex flex-col gap-4"
       >
         {/* Section 1: Cabecera */}
-        <Card className="border-border/60 shadow-2xs">
-          <CardHeader className="p-4 pb-3 border-b border-border/40">
+        <Card className="shadow-2xs border-0 bg-card overflow-visible">
+          <CardHeader className="p-4 pb-1">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Warehouse className="size-4 text-primary" />
@@ -330,7 +330,7 @@ export function MovimientoInventarioFormView({
               </span>
             </div>
           </CardHeader>
-          <CardContent className="p-4 flex flex-col gap-4">
+          <CardContent className="p-4 pt-2 flex flex-col gap-4 overflow-visible">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Número */}
               <div className="flex flex-col gap-1.5">
@@ -469,8 +469,8 @@ export function MovimientoInventarioFormView({
         </Card>
 
         {/* Section 2: Detalle de Productos */}
-        <Card className="border-border/60 shadow-2xs">
-          <CardHeader className="p-4 pb-3 border-b border-border/40">
+        <Card className="shadow-2xs border-0 bg-card overflow-visible">
+          <CardHeader className="p-4 pb-1">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <Package className="size-4 text-primary" />
@@ -493,7 +493,7 @@ export function MovimientoInventarioFormView({
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="p-4 flex flex-col gap-3">
+          <CardContent className="p-4 pt-2 flex flex-col gap-3 overflow-visible">
             {errors.detalles && typeof errors.detalles.message === "string" && (
               <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-center gap-2">
                 <AlertCircle className="size-4 shrink-0" />
@@ -501,21 +501,21 @@ export function MovimientoInventarioFormView({
               </div>
             )}
 
-            {/* Table Container - sin overflow-x-auto para que los selects y desplegables no se corten */}
-            <div className="w-full">
+            {/* Table Container - limpio sin bordes cortantes y con overflow-visible */}
+            <div className="w-full overflow-visible">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-border/40 text-muted-foreground font-semibold bg-muted/20">
-                    <th className="px-3 py-2.5 w-10 text-center">#</th>
-                    <th className="px-3 py-2.5 min-w-[260px]">Producto *</th>
-                    <th className="px-3 py-2.5 min-w-[180px] w-56">Lote</th>
-                    <th className="px-3 py-2.5 w-28 min-w-[90px]">Cantidad *</th>
-                    <th className="px-3 py-2.5 w-32 min-w-[100px]">Costo Unit.</th>
-                    <th className="px-3 py-2.5 w-28 text-right">Subtotal</th>
-                    <th className="px-2 py-2.5 w-10 text-center"></th>
+                  <tr className="text-muted-foreground font-semibold">
+                    <th className="px-3 py-2 w-10 text-center">#</th>
+                    <th className="px-3 py-2 min-w-[260px]">Producto *</th>
+                    <th className="px-3 py-2 min-w-[180px] w-56">Lote</th>
+                    <th className="px-3 py-2 w-28 min-w-[90px]">Cantidad *</th>
+                    <th className="px-3 py-2 w-32 min-w-[100px]">Costo Unit.</th>
+                    <th className="px-3 py-2 w-28 text-right">Subtotal</th>
+                    <th className="px-2 py-2 w-10 text-center"></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border/20">
+                <tbody>
                     {fields.length === 0 ? (
                       <tr>
                         <td
@@ -546,7 +546,7 @@ export function MovimientoInventarioFormView({
                         const subtotal = currentQty * currentCost;
 
                         return (
-                          <tr key={field.id} className="hover:bg-muted/15 transition-colors">
+                          <tr key={field.id} className="hover:bg-muted/20 transition-colors rounded-lg">
                             <td className="px-3 py-2 text-center text-muted-foreground font-mono text-[11px]">
                               {idx + 1}
                             </td>
@@ -650,8 +650,8 @@ export function MovimientoInventarioFormView({
                 </table>
               </div>
 
-            {/* Total Calculation Footer Card */}
-            <div className="flex flex-wrap items-center justify-between p-4 rounded-xl bg-muted/30 border border-border/50 text-xs shadow-2xs">
+            {/* Total Calculation Footer */}
+            <div className="flex flex-wrap items-center justify-between p-4 rounded-xl bg-muted/30 text-xs shadow-2xs">
               <div className="flex items-center gap-5 text-muted-foreground">
                 <span>
                   Total Líneas:{" "}
