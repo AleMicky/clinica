@@ -65,8 +65,11 @@ export const ROUTES = {
   },
   ALMACENES: {
     ROOT: "/almacenes",
+    ALMACEN: "/almacenes/almacen",
     CATEGORIAS_PRODUCTO: "/almacenes/categorias-producto",
     PRODUCTOS: "/almacenes/productos",
+    TIPOS_MOVIMIENTO: "/almacenes/tipos-movimiento",
+    EXISTENCIAS: "/almacenes/existencias",
   },
 } as const;
 

@@ -58,6 +58,12 @@ const titleMap: Record<string, string> = {
   arqueos: "Arqueos",
   cobros: "Cobros",
   nuevo: "Nuevo",
+  almacenes: "Almacenes",
+  almacen: "Almacenes",
+  "categorias-producto": "Categorías de Producto",
+  productos: "Productos",
+  "tipos-movimiento": "Tipos de Movimiento",
+  existencias: "Existencias / Stock",
 };
 
 export function AppBreadcrumbs() {
