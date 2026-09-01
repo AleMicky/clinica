@@ -9,8 +9,6 @@ import {
   ArrowDownLeft,
   ArrowUpRight,
   Loader2,
-  Tag,
-  AlignLeft,
 } from "lucide-react";
 
 import {
@@ -74,8 +72,11 @@ export function TipoMovimientoInventarioFormDialog({
     },
   });
 
+  const [keepOpen, setKeepOpen] = React.useState(false);
+
   React.useEffect(() => {
     if (open) {
+      setKeepOpen(false);
       if (tipoToEdit) {
         reset({
           codigo: tipoToEdit.codigo,
@@ -109,6 +110,8 @@ export function TipoMovimientoInventarioFormDialog({
         toast.success(
           `Tipo de movimiento "${values.codigo}" actualizado correctamente.`
         );
+        onSuccessCallback?.();
+        onOpenChange(false);
       } else {
         await createMutation.mutateAsync({
           codigo: values.codigo.toUpperCase(),
@@ -119,9 +122,20 @@ export function TipoMovimientoInventarioFormDialog({
         toast.success(
           `Tipo de movimiento "${values.codigo}" creado correctamente.`
         );
+        onSuccessCallback?.();
+
+        if (keepOpen) {
+          // Mantener la naturaleza seleccionada para agilizar el ingreso consecutivo
+          reset({
+            codigo: "",
+            nombre: "",
+            descripcion: "",
+            naturaleza: values.naturaleza,
+          });
+        } else {
+          onOpenChange(false);
+        }
       }
-      onSuccessCallback?.();
-      onOpenChange(false);
     } catch (error: any) {
       const errorMsg =
         error?.response?.data?.message ||
@@ -295,26 +309,43 @@ export function TipoMovimientoInventarioFormDialog({
             )}
           </div>
 
-          <DialogFooter className="gap-2 pt-2 border-t border-border/40">
+          <DialogFooter className="pt-2 border-t border-border/40 flex flex-col-reverse sm:flex-row sm:justify-between items-center gap-2">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
-              className="h-8 text-xs cursor-pointer"
+              className="h-8 text-xs cursor-pointer w-full sm:w-auto"
             >
               Cancelar
             </Button>
-            <Button
-              type="submit"
-              size="sm"
-              disabled={isLoading}
-              className="h-8 text-xs gap-1.5 cursor-pointer shadow-2xs"
-            >
-              {isLoading && <Loader2 className="size-3.5 animate-spin" />}
-              <span>{isEditing ? "Guardar Cambios" : "Crear Tipo"}</span>
-            </Button>
+
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+              {!isEditing && (
+                <Button
+                  type="submit"
+                  variant="secondary"
+                  size="sm"
+                  disabled={isLoading}
+                  onClick={() => setKeepOpen(true)}
+                  className="h-8 text-xs cursor-pointer w-full sm:w-auto"
+                >
+                  {isLoading && keepOpen && <Loader2 className="size-3.5 animate-spin mr-1.5" />}
+                  Guardar y agregar otro
+                </Button>
+              )}
+              <Button
+                type="submit"
+                size="sm"
+                disabled={isLoading}
+                onClick={() => setKeepOpen(false)}
+                className="h-8 text-xs gap-1.5 cursor-pointer shadow-2xs w-full sm:w-auto"
+              >
+                {isLoading && !keepOpen && <Loader2 className="size-3.5 animate-spin" />}
+                <span>{isEditing ? "Guardar Cambios" : "Guardar y Cerrar"}</span>
+              </Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>
