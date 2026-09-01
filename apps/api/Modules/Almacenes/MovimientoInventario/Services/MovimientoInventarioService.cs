@@ -1,6 +1,8 @@
 using Clinica.Api.Data;
+using Clinica.Api.Modules.Almacenes.Existencia.Services;
 using Clinica.Api.Modules.Almacenes.MovimientoInventario.Dtos;
 using Clinica.Api.Modules.Almacenes.MovimientoInventario.Enums;
+using Clinica.Api.Modules.Almacenes.TipoMovimientoInventario.Enums;
 using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
@@ -50,7 +52,10 @@ public interface IMovimientoInventarioService
         CancellationToken cancellationToken = default);
 }
 
-public sealed class MovimientoInventarioService(AppDbContext dbContext)
+public sealed class MovimientoInventarioService(
+    AppDbContext dbContext,
+    IExistenciaService existenciaService
+)
     : IMovimientoInventarioService
 {
     public async Task<PagedResult<MovimientoInventarioResponse>> ListarAsync(
@@ -122,9 +127,9 @@ public sealed class MovimientoInventarioService(AppDbContext dbContext)
             .Include(x => x.TipoMovimientoInventario)
             .Include(x => x.Almacen)
             .Include(x => x.Detalles)
-                .ThenInclude(d => d.Producto)
+            .ThenInclude(d => d.Producto)
             .Include(x => x.Detalles)
-                .ThenInclude(d => d.Lote)
+            .ThenInclude(d => d.Lote)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (movimiento is null || !movimiento.Activo)
@@ -251,27 +256,75 @@ public sealed class MovimientoInventarioService(AppDbContext dbContext)
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<MovimientoInventarioResponse> ConfirmarAsync(
-        int id,
-        CancellationToken cancellationToken = default)
+    public async Task<MovimientoInventarioResponse> ConfirmarAsync(int id, CancellationToken cancellationToken = default)
     {
         var entity = await dbContext.MovimientosInventario
+            .Include(x => x.TipoMovimientoInventario)
             .Include(x => x.Detalles)
-            .FirstOrDefaultAsync(x => x.Id == id && x.Activo, cancellationToken);
+            .FirstOrDefaultAsync(
+                x => x.Id == id && x.Activo,
+                cancellationToken);
 
         if (entity is null)
         {
             throw new NotFoundException(nameof(MovimientoEntity), id);
         }
 
-        if (entity.Estado == EstadoMovimientoInventario.Confirmado)
+        switch (entity.Estado)
         {
-            throw new ConflictException("El movimiento de inventario ya está confirmado.");
+            case EstadoMovimientoInventario.Confirmado:
+                throw new ConflictException("El movimiento de inventario ya está confirmado.");
+
+            case EstadoMovimientoInventario.Anulado:
+                throw new ConflictException("No se puede confirmar un movimiento anulado.");
+
+            case EstadoMovimientoInventario.Borrador:
+                break;
+
+            default:
+                throw new BusinessException($"El estado '{entity.Estado}' no permite confirmar el movimiento.");
         }
 
-        if (entity.Estado == EstadoMovimientoInventario.Anulado)
+        if (entity.TipoMovimientoInventario is null)
         {
-            throw new ConflictException("No se puede confirmar un movimiento anulado.");
+            throw new BusinessException("El movimiento no tiene un tipo de movimiento válido.");
+        }
+
+        var detallesActivos = entity.Detalles
+            .Where(x => x.Activo)
+            .ToList();
+
+        if (detallesActivos.Count == 0)
+        {
+            throw new BusinessException("El movimiento no tiene detalles activos.");
+        }
+
+        foreach (var detalle in detallesActivos)
+        {
+            switch (entity.TipoMovimientoInventario.Naturaleza)
+            {
+                case NaturalezaMovimiento.Entrada:
+                    await existenciaService.AumentarStockAsync(
+                        entity.AlmacenId,
+                        detalle.ProductoId,
+                        detalle.LoteId,
+                        detalle.Cantidad,
+                        cancellationToken);
+                    break;
+
+                case NaturalezaMovimiento.Salida:
+                    await existenciaService.DisminuirStockAsync(
+                        entity.AlmacenId,
+                        detalle.ProductoId,
+                        detalle.LoteId,
+                        detalle.Cantidad,
+                        cancellationToken);
+                    break;
+
+                default:
+                    throw new BusinessException(
+                        "El tipo de movimiento no tiene una naturaleza válida.");
+            }
         }
 
         entity.Estado = EstadoMovimientoInventario.Confirmado;
@@ -290,23 +343,65 @@ public sealed class MovimientoInventarioService(AppDbContext dbContext)
         CancellationToken cancellationToken = default)
     {
         var entity = await dbContext.MovimientosInventario
+            .Include(x => x.TipoMovimientoInventario)
             .Include(x => x.Detalles)
-            .FirstOrDefaultAsync(x => x.Id == id && x.Activo, cancellationToken);
+            .FirstOrDefaultAsync(
+                x => x.Id == id && x.Activo,
+                cancellationToken);
 
         if (entity is null)
         {
-            throw new NotFoundException(nameof(MovimientoEntity), id);
+            throw new NotFoundException(
+                nameof(MovimientoEntity),
+                id);
         }
 
-        if (entity.Estado == EstadoMovimientoInventario.Anulado)
+        switch (entity.Estado)
         {
-            throw new ConflictException("El movimiento de inventario ya está anulado.");
+            case EstadoMovimientoInventario.Anulado:
+                throw new ConflictException("El movimiento de inventario ya está anulado.");
+            case EstadoMovimientoInventario.Borrador:
+                throw new ConflictException("Un movimiento en estado Borrador debe eliminarse en lugar de anularse.");
+            case EstadoMovimientoInventario.Confirmado:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
         }
 
-        if (entity.Estado == EstadoMovimientoInventario.Borrador)
+        foreach (var detalle in entity.Detalles.Where(x => x.Activo))
         {
-            throw new ConflictException(
-                "Un movimiento en estado Borrador debe eliminarse en lugar de anularse.");
+            switch (entity.TipoMovimientoInventario.Naturaleza)
+            {
+                // Si originalmente ENTRÓ,
+                // al anular debemos SACARLO.
+                case NaturalezaMovimiento.Entrada:
+
+                    await existenciaService.DisminuirStockAsync(
+                        entity.AlmacenId,
+                        detalle.ProductoId,
+                        detalle.LoteId,
+                        detalle.Cantidad,
+                        cancellationToken);
+
+                    break;
+
+                // Si originalmente SALIÓ,
+                // al anular debemos DEVOLVERLO.
+                case NaturalezaMovimiento.Salida:
+
+                    await existenciaService.AumentarStockAsync(
+                        entity.AlmacenId,
+                        detalle.ProductoId,
+                        detalle.LoteId,
+                        detalle.Cantidad,
+                        cancellationToken);
+
+                    break;
+
+                default:
+                    throw new BusinessException(
+                        "Naturaleza de movimiento no soportada.");
+            }
         }
 
         entity.Estado = EstadoMovimientoInventario.Anulado;
@@ -456,9 +551,9 @@ public sealed class MovimientoInventarioService(AppDbContext dbContext)
             TipoMovimientoNombre = nombreTipo,
             AlmacenNombre = nombreAlmacen,
             Detalles = (detalles ?? [])
-                .Where(x => x.Activo)
-                .Select(x => MapearDetalle(x))
-                .ToList()
+            .Where(x => x.Activo)
+            .Select(x => MapearDetalle(x))
+            .ToList()
         };
     }
 

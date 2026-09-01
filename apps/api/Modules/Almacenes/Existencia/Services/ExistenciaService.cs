@@ -36,6 +36,20 @@ public interface IExistenciaService
     Task EliminarAsync(
         int id,
         CancellationToken cancellationToken = default);
+
+    Task AumentarStockAsync(
+        int almacenId,
+        int productoId,
+        int? loteId,
+        decimal cantidad,
+        CancellationToken cancellationToken = default);
+
+    Task DisminuirStockAsync(
+        int almacenId,
+        int productoId,
+        int? loteId,
+        decimal cantidad,
+        CancellationToken cancellationToken = default);
 }
 
 public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaService
@@ -202,6 +216,90 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
 
         entity.Activo = false;
         await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task AumentarStockAsync(
+        int almacenId,
+        int productoId,
+        int? loteId,
+        decimal cantidad,
+        CancellationToken cancellationToken = default)
+    {
+        if (cantidad <= 0)
+        {
+            throw new BusinessException(
+                "La cantidad debe ser mayor que cero.");
+        }
+
+        await ValidarReferenciasAsync(
+            almacenId,
+            productoId,
+            loteId,
+            cancellationToken);
+
+        var existencia = await dbContext.Existencias
+            .FirstOrDefaultAsync(
+                x => x.AlmacenId == almacenId &&
+                     x.ProductoId == productoId &&
+                     x.LoteId == loteId &&
+                     x.Activo,
+                cancellationToken);
+
+        if (existencia is null)
+        {
+            existencia = new ExistenciaEntity
+            {
+                AlmacenId = almacenId,
+                ProductoId = productoId,
+                LoteId = loteId,
+                Cantidad = cantidad,
+                CantidadReservada = 0
+            };
+
+            dbContext.Existencias.Add(existencia);
+
+            return;
+        }
+
+        existencia.Cantidad += cantidad;
+    }
+
+    public async Task DisminuirStockAsync(
+        int almacenId,
+        int productoId,
+        int? loteId,
+        decimal cantidad,
+        CancellationToken cancellationToken = default)
+    {
+        if (cantidad <= 0)
+        {
+            throw new BusinessException(
+                "La cantidad debe ser mayor que cero.");
+        }
+
+        var existencia = await dbContext.Existencias
+            .FirstOrDefaultAsync(
+                x => x.AlmacenId == almacenId &&
+                     x.ProductoId == productoId &&
+                     x.LoteId == loteId &&
+                     x.Activo,
+                cancellationToken);
+
+        if (existencia is null)
+        {
+            throw new BusinessException(
+                "No existe stock para el producto seleccionado.");
+        }
+
+        if (existencia.CantidadDisponible < cantidad)
+        {
+            throw new BusinessException(
+                $"Stock insuficiente para el producto {productoId}. " +
+                $"Disponible: {existencia.CantidadDisponible}, " +
+                $"solicitado: {cantidad}.");
+        }
+
+        existencia.Cantidad -= cantidad;
     }
 
     private async Task ValidarReferenciasAsync(
