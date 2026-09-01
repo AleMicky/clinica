@@ -14,7 +14,7 @@ public sealed class TipoMovimientoInventarioConfiguration
         builder.ToTable("TiposMovimientoInventario");
 
         builder.Property(x => x.Codigo)
-            .HasMaxLength(10)
+            .HasMaxLength(50)
             .IsRequired();
 
         builder.Property(x => x.Nombre)

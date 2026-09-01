@@ -13,7 +13,7 @@ public abstract class TipoMovimientoInventarioRequestValidator<TRequest>
         RuleFor(x => x.Codigo)
             .NotEmpty()
             .WithMessage("El código es obligatorio.")
-            .MaximumLength(10)
+            .MaximumLength(50)
             .WithMessage("El código no puede superar los 10 caracteres.");
 
         RuleFor(x => x.Nombre)

@@ -5,7 +5,7 @@ export const tipoMovimientoInventarioSchema = z.object({
   codigo: z
     .string()
     .min(1, "El código es requerido")
-    .max(10, "El código no debe exceder 10 caracteres")
+    .max(50, "El código no debe exceder 50 caracteres")
     .toUpperCase(),
   nombre: z
     .string()

@@ -44,7 +44,7 @@ export function GlobalApiErrorAlertDialog({
                             </span>
                         )}
                     </AlertDialogTitle>
-                    <AlertDialogDescription className="text-left">
+                    <AlertDialogDescription className="text-left text-xs whitespace-pre-line leading-relaxed text-foreground/80 bg-muted/30 p-2.5 rounded-lg border border-border/50 max-h-60 overflow-y-auto">
                         {description}
                     </AlertDialogDescription>
                 </AlertDialogHeader>
