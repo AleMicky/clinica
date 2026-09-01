@@ -203,10 +203,11 @@ export function OpcionMenuFormDialog({
       }
 
       onOpenChange(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { detail?: string; message?: string } } };
       const errorMessage =
-        error?.response?.data?.detail ||
-        error?.response?.data?.message ||
+        err?.response?.data?.detail ||
+        err?.response?.data?.message ||
         "Ocurrió un error al guardar la opción de menú.";
       toast.error(errorMessage);
     }

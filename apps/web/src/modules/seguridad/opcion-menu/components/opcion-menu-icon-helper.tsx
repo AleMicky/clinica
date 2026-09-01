@@ -3,19 +3,14 @@
 import * as React from "react";
 import {
   Activity,
-  Archive,
   ArrowLeftRight,
-  BarChart,
   BarChart3,
   Bell,
-  BookOpen,
   Boxes,
   Briefcase,
   Building2,
   Calculator,
   Calendar,
-  CheckCircle,
-  CheckSquare,
   CircleDot,
   ClipboardList,
   Clock,
@@ -23,18 +18,14 @@ import {
   CreditCard,
   Database,
   FileCheck,
-  FileSpreadsheet,
   FileText,
   Folder,
   FolderKanban,
   FolderTree,
-  Gauge,
-  Grid,
   Handshake,
   HeartPulse,
   History,
   Home,
-  Inbox,
   Key,
   Landmark,
   Layers,
@@ -43,9 +34,7 @@ import {
   ListTree,
   Lock,
   Menu,
-  MessageSquare,
   Network,
-  Package,
   PieChart,
   Receipt,
   Scale,
@@ -58,11 +47,9 @@ import {
   SlidersHorizontal,
   Sparkles,
   Stethoscope,
-  Table,
   Tag,
   Tags,
   TrendingUp,
-  Truck,
   User,
   UserCheck,
   UserCog,
@@ -170,11 +157,8 @@ export function MenuIcon({
   className = "size-4",
   fallbackIcon = CircleDot,
 }: MenuIconProps) {
-  if (!name) {
-    const Fallback = fallbackIcon;
-    return <Fallback className={className} />;
-  }
-
   const IconComponent = getMenuLucideIcon(name);
-  return <IconComponent className={className} />;
+  const FinalIcon = name ? IconComponent : fallbackIcon;
+  return React.createElement(FinalIcon, { className });
 }
+

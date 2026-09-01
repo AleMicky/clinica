@@ -99,10 +99,11 @@ export function OpcionMenuModuleView() {
         await activarMutation.mutateAsync(item.id);
         toast.success(`"${item.nombre}" se ha activado.`);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { detail?: string; message?: string } } };
       const msg =
-        error?.response?.data?.detail ||
-        error?.response?.data?.message ||
+        err?.response?.data?.detail ||
+        err?.response?.data?.message ||
         "No se pudo cambiar el estado de la opción.";
       toast.error(msg);
     }
@@ -145,10 +146,11 @@ export function OpcionMenuModuleView() {
       toast.success("Opción de menú eliminada con éxito.");
       setDeleteOpen(false);
       setSelectedOpcion(null);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { detail?: string; message?: string } } };
       const msg =
-        error?.response?.data?.detail ||
-        error?.response?.data?.message ||
+        err?.response?.data?.detail ||
+        err?.response?.data?.message ||
         "No se pudo eliminar la opción de menú.";
       toast.error(msg);
     }

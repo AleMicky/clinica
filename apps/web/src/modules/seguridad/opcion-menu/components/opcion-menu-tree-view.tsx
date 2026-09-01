@@ -33,7 +33,6 @@ import type { OpcionMenuResponse, OpcionMenuTreeResponse } from "../types/opcion
 interface TreeNodeItemProps {
   node: OpcionMenuTreeResponse;
   level?: number;
-  isLast?: boolean;
   expandedMap: Record<number, boolean>;
   onToggleExpand: (id: number) => void;
   onAddChild: (parentNode: OpcionMenuTreeResponse) => void;
@@ -48,7 +47,6 @@ interface TreeNodeItemProps {
 function TreeNodeItem({
   node,
   level = 0,
-  isLast = false,
   expandedMap,
   onToggleExpand,
   onAddChild,
@@ -256,12 +254,11 @@ function TreeNodeItem({
       {/* Recursive Children */}
       {hasChildren && isExpanded && (
         <div className="space-y-1.5 mt-1.5">
-          {node.hijos.map((child, idx) => (
+          {node.hijos.map((child) => (
             <TreeNodeItem
               key={child.id}
               node={child}
               level={level + 1}
-              isLast={idx === node.hijos.length - 1}
               expandedMap={expandedMap}
               onToggleExpand={onToggleExpand}
               onAddChild={onAddChild}
@@ -394,12 +391,11 @@ export function OpcionMenuTreeView({
 
       {/* Tree list */}
       <div className="space-y-2 mt-1">
-        {treeData.map((node, idx) => (
+        {treeData.map((node) => (
           <TreeNodeItem
             key={node.id}
             node={node}
             level={0}
-            isLast={idx === treeData.length - 1}
             expandedMap={expandedMap}
             onToggleExpand={handleToggleSingle}
             onAddChild={onAddChild}
