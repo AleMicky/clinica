@@ -204,34 +204,35 @@ export function CategoriaProductoTree({
           onClick={() => setSelectedCategory(node)}
           style={{ paddingLeft: `${node.depth * 1.25 + 0.5}rem` }}
           className={cn(
-            "group relative flex items-center justify-between gap-2 py-2 pr-2.5 rounded-lg text-xs cursor-pointer transition-all duration-150",
+            "group relative flex items-center justify-between gap-2 py-1.5 pr-2 rounded-lg text-xs cursor-pointer transition-all duration-150 border border-transparent",
             isSelected
-              ? "bg-primary/10 text-primary font-medium"
-              : "text-foreground hover:bg-muted/60"
+              ? "bg-primary/10 text-primary border-primary/20 font-medium"
+              : "text-foreground hover:bg-muted/50"
           )}
         >
           <div className="flex items-center gap-1.5 min-w-0 flex-1">
-            {/* Expand / Collapse Icon */}
+            {/* Expand / Collapse Button */}
             {hasChildren ? (
               <button
                 type="button"
                 onClick={(e) => toggleExpand(node.id, e)}
-                className="size-5 flex items-center justify-center rounded hover:bg-muted text-muted-foreground hover:text-foreground shrink-0 cursor-pointer transition-transform"
+                className="size-5 flex items-center justify-center rounded hover:bg-muted text-muted-foreground hover:text-foreground shrink-0 cursor-pointer transition-colors"
+                aria-label={isExpanded ? "Contraer subcategorías" : "Expandir subcategorías"}
               >
                 {isExpanded ? (
-                  <ChevronDown className="size-3.5" />
+                  <ChevronDown className="size-3.5 text-muted-foreground" />
                 ) : (
-                  <ChevronRight className="size-3.5" />
+                  <ChevronRight className="size-3.5 text-muted-foreground" />
                 )}
               </button>
             ) : (
               <div className="size-5 flex items-center justify-center shrink-0">
-                <span className="size-1.5 rounded-full bg-muted-foreground/30" />
+                <span className="size-1 rounded-full bg-border" />
               </div>
             )}
 
-            {/* Folder / File Icon */}
-            <div className="shrink-0 text-muted-foreground">
+            {/* Folder / Category Icon */}
+            <div className="shrink-0">
               {hasChildren ? (
                 isExpanded ? (
                   <FolderOpen className={cn("size-3.5", isSelected ? "text-primary" : "text-amber-500")} />
@@ -239,16 +240,16 @@ export function CategoriaProductoTree({
                   <Folder className={cn("size-3.5", isSelected ? "text-primary" : "text-amber-500/80")} />
                 )
               ) : (
-                <Folder className={cn("size-3.5 opacity-70", isSelected && "text-primary opacity-100")} />
+                <Folder className={cn("size-3.5", isSelected ? "text-primary" : "text-muted-foreground/60")} />
               )}
             </div>
 
             {/* Code Badge */}
             <span
               className={cn(
-                "font-mono text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 tracking-tight",
+                "font-mono text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 tracking-tight transition-colors",
                 isSelected
-                  ? "bg-primary text-primary-foreground"
+                  ? "bg-primary text-primary-foreground shadow-2xs"
                   : "bg-muted text-muted-foreground group-hover:text-foreground"
               )}
             >
@@ -256,26 +257,30 @@ export function CategoriaProductoTree({
             </span>
 
             {/* Name */}
-            <span className="truncate text-xs">{node.nombre}</span>
+            <span className="truncate text-xs text-foreground/90">{node.nombre}</span>
 
-            {/* Subcategories count badge */}
+            {/* Subcategories count pill */}
             {hasChildren && (
-              <Badge
-                variant="secondary"
-                className="text-[9px] px-1.5 py-0 h-4 font-mono font-normal ml-auto shrink-0 bg-muted/80 text-muted-foreground"
+              <span
+                className={cn(
+                  "text-[9px] px-1.5 py-0.2 rounded-full font-mono shrink-0 transition-colors",
+                  isSelected
+                    ? "bg-primary/20 text-primary"
+                    : "bg-muted text-muted-foreground"
+                )}
               >
-                {node.children.length}
-              </Badge>
+                {node.children.length} {node.children.length === 1 ? "sub" : "subs"}
+              </span>
             )}
           </div>
 
-          {/* Quick Hover Action to Add Subcategory */}
-          <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 transition-opacity shrink-0">
-            <TooltipProvider delay={300}>
+          {/* Quick Action to Add Subcategory on Hover */}
+          <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 transition-opacity shrink-0">
+            <TooltipProvider delay={200}>
               <Tooltip>
                 <TooltipTrigger
                   type="button"
-                  className="size-6 inline-flex items-center justify-center rounded-md hover:bg-background/80 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                  className="size-6 inline-flex items-center justify-center rounded-md bg-background border border-border/60 hover:border-primary hover:text-primary text-muted-foreground transition-colors cursor-pointer shadow-2xs"
                   onClick={(e) => {
                     e.stopPropagation();
                     onAddCategoria?.(node.id);
@@ -285,7 +290,7 @@ export function CategoriaProductoTree({
                   <Plus className="size-3" />
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-[11px]">
-                  Añadir subcategoría
+                  Añadir subcategoría aquí
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -297,7 +302,7 @@ export function CategoriaProductoTree({
           <div className="relative flex flex-col mt-0.5">
             {/* Guide line */}
             <div
-              className="absolute left-0 top-0 bottom-2 border-l border-border/40"
+              className="absolute left-0 top-0 bottom-2 border-l border-border/40 pointer-events-none"
               style={{ left: `${node.depth * 1.25 + 1.1}rem` }}
             />
             {node.children.map((child) => renderTreeNode(child))}
@@ -432,23 +437,23 @@ export function CategoriaProductoTree({
       {/* RIGHT COLUMN: Detail & Inspector Card */}
       <div className="lg:col-span-5 flex flex-col gap-3">
         {selectedCategory ? (
-          <div className="bg-card border border-border/60 rounded-xl p-4 shadow-2xs flex flex-col gap-4 sticky top-4">
+          <div className="bg-card border border-border/60 rounded-xl p-4 shadow-2xs flex flex-col gap-3.5 sticky top-4">
             {/* Detail Header */}
             <div className="flex items-start justify-between gap-3 border-b border-border/40 pb-3">
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="size-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
-                  <Layers className="size-5" />
+                <div className="size-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+                  <Layers className="size-4.5" />
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className="font-mono text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">
+                    <span className="font-mono text-[11px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded">
                       {selectedCategory.codigo}
                     </span>
-                    <Badge variant="outline" className="text-[10px] py-0">
+                    <Badge variant="outline" className="text-[10px] py-0 px-1.5">
                       {selectedCategory.categoriaPadreNombre ? "Subcategoría" : "Categoría Raíz"}
                     </Badge>
                   </div>
-                  <h3 className="text-sm font-semibold text-foreground truncate mt-1">
+                  <h3 className="text-sm font-semibold text-foreground truncate mt-0.5">
                     {selectedCategory.nombre}
                   </h3>
                 </div>
@@ -522,7 +527,7 @@ export function CategoriaProductoTree({
                 <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider block">
                   Descripción
                 </span>
-                <div className="p-2.5 rounded-lg bg-background border border-border/40 min-h-[50px] text-[11px] text-muted-foreground leading-relaxed">
+                <div className="p-2.5 rounded-lg bg-background border border-border/40 min-h-[44px] text-[11px] text-muted-foreground leading-relaxed">
                   {selectedCategory.descripcion || (
                     <span className="italic text-muted-foreground/60">Sin descripción asignada.</span>
                   )}
@@ -530,31 +535,30 @@ export function CategoriaProductoTree({
               </div>
 
               {/* Stats & Metadata */}
-              <div className="grid grid-cols-2 gap-2 pt-1">
-                <div className="p-2.5 rounded-lg bg-muted/20 border border-border/40 space-y-0.5">
+              <div className="grid grid-cols-2 gap-2 pt-0.5">
+                <div className="p-2 rounded-lg bg-muted/20 border border-border/40 space-y-0.5">
                   <span className="text-[10px] text-muted-foreground">Subcategorías</span>
-                  <div className="text-base font-bold text-foreground">
+                  <div className="text-sm font-bold text-foreground">
                     {selectedCategory.cantidadSubcategorias ?? 0}
                   </div>
                 </div>
-                <div className="p-2.5 rounded-lg bg-muted/20 border border-border/40 space-y-0.5">
-                  <span className="text-[10px] text-muted-foreground">ID Interno</span>
-                  <div className="text-base font-bold font-mono text-foreground">
+                <div className="p-2 rounded-lg bg-muted/20 border border-border/40 space-y-0.5">
+                  <span className="text-[10px] text-muted-foreground">ID Registro</span>
+                  <div className="text-sm font-bold font-mono text-foreground">
                     #{selectedCategory.id}
                   </div>
                 </div>
               </div>
 
               {/* Quick actions bar */}
-              <div className="pt-2 border-t border-border/40 flex flex-col gap-2">
+              <div className="pt-2 border-t border-border/40 flex flex-col gap-1.5">
                 <Button
                   onClick={() => onAddCategoria?.(selectedCategory.id)}
-                  variant="outline"
                   size="sm"
-                  className="w-full text-xs gap-1.5 h-8 cursor-pointer justify-start border-dashed hover:border-primary hover:text-primary"
+                  className="w-full text-xs gap-1.5 h-8 cursor-pointer justify-center shadow-2xs font-medium"
                 >
-                  <Plus className="size-3.5 text-primary" />
-                  <span>Añadir subcategoría dentro de "{selectedCategory.nombre}"</span>
+                  <Plus className="size-3.5" />
+                  <span>Añadir subcategoría aquí</span>
                 </Button>
 
                 {onViewAudit && (
@@ -562,7 +566,7 @@ export function CategoriaProductoTree({
                     onClick={() => onViewAudit(selectedCategory)}
                     variant="ghost"
                     size="sm"
-                    className="w-full text-xs text-muted-foreground hover:text-foreground gap-1.5 h-7 cursor-pointer justify-start"
+                    className="w-full text-[11px] text-muted-foreground hover:text-foreground gap-1.5 h-7 cursor-pointer justify-center"
                   >
                     <Clock className="size-3 text-muted-foreground" />
                     <span>Ver historial de auditoría</span>
@@ -572,14 +576,14 @@ export function CategoriaProductoTree({
             </div>
           </div>
         ) : (
-          <div className="bg-card border border-border/60 rounded-xl p-8 shadow-2xs flex flex-col items-center justify-center text-center gap-3 text-muted-foreground min-h-[300px]">
-            <div className="p-3 rounded-full bg-muted/50 text-muted-foreground">
-              <Info className="size-6" />
+          <div className="bg-card border border-border/60 rounded-xl p-8 shadow-2xs flex flex-col items-center justify-center text-center gap-2.5 text-muted-foreground min-h-[260px]">
+            <div className="p-2.5 rounded-full bg-muted/50 text-muted-foreground">
+              <Info className="size-5" />
             </div>
             <div>
               <p className="text-xs font-semibold text-foreground">Ninguna categoría seleccionada</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5 max-w-[240px]">
-                Selecciona una categoría del árbol a la izquierda para ver sus detalles y subniveles.
+              <p className="text-[11px] text-muted-foreground mt-0.5 max-w-[220px]">
+                Selecciona una categoría del árbol para gestionarla o crear subniveles.
               </p>
             </div>
           </div>

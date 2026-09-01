@@ -63,8 +63,11 @@ export function AlmacenFormDialog({
     },
   });
 
+  const [keepOpen, setKeepOpen] = React.useState(false);
+
   React.useEffect(() => {
     if (open) {
+      setKeepOpen(false);
       if (almacenToEdit) {
         reset({
           codigo: almacenToEdit.codigo,
@@ -96,6 +99,8 @@ export function AlmacenFormDialog({
           },
         });
         toast.success(`Almacén ${values.codigo} actualizado correctamente.`);
+        onSuccessCallback?.();
+        onOpenChange(false);
       } else {
         await createMutation.mutateAsync({
           codigo: values.codigo,
@@ -104,9 +109,19 @@ export function AlmacenFormDialog({
           ubicacion: values.ubicacion || null,
         });
         toast.success(`Almacén ${values.codigo} creado correctamente.`);
+        onSuccessCallback?.();
+
+        if (keepOpen) {
+          reset({
+            codigo: "",
+            nombre: "",
+            descripcion: "",
+            ubicacion: "",
+          });
+        } else {
+          onOpenChange(false);
+        }
       }
-      onSuccessCallback?.();
-      onOpenChange(false);
     } catch (error: any) {
       const errorMsg =
         error?.response?.data?.message ||
@@ -224,20 +239,40 @@ export function AlmacenFormDialog({
             </div>
           </div>
 
-          <DialogFooter className="pt-4 border-t gap-2 sm:gap-0">
+          <DialogFooter className="pt-4 border-t flex flex-col-reverse sm:flex-row sm:justify-between items-center gap-2">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
-              className="text-xs"
+              className="text-xs w-full sm:w-auto"
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={isLoading} className="text-xs gap-1.5">
-              {isLoading && <Loader2 className="size-3.5 animate-spin" />}
-              {isEditing ? "Guardar Cambios" : "Crear Almacén"}
-            </Button>
+
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+              {!isEditing && (
+                <Button
+                  type="submit"
+                  variant="secondary"
+                  disabled={isLoading}
+                  onClick={() => setKeepOpen(true)}
+                  className="text-xs w-full sm:w-auto"
+                >
+                  {isLoading && keepOpen && <Loader2 className="size-3.5 animate-spin mr-1.5" />}
+                  Guardar y agregar otro
+                </Button>
+              )}
+              <Button
+                type="submit"
+                disabled={isLoading}
+                onClick={() => setKeepOpen(false)}
+                className="text-xs gap-1.5 w-full sm:w-auto"
+              >
+                {isLoading && !keepOpen && <Loader2 className="size-3.5 animate-spin" />}
+                {isEditing ? "Guardar Cambios" : "Guardar y Cerrar"}
+              </Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>

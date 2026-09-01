@@ -78,8 +78,11 @@ export function CategoriaProductoFormDialog({
     return found ? `${found.codigo} — ${found.nombre}` : null;
   }, [selectedPadreId, categoriasData]);
 
+  const [keepOpen, setKeepOpen] = React.useState(false);
+
   React.useEffect(() => {
     if (open) {
+      setKeepOpen(false);
       if (categoriaToEdit) {
         reset({
           codigo: categoriaToEdit.codigo,
@@ -113,12 +116,24 @@ export function CategoriaProductoFormDialog({
           data: payload,
         });
         toast.success(`Categoría ${values.codigo} actualizada correctamente.`);
+        onSuccessCallback?.();
+        onOpenChange(false);
       } else {
         await createMutation.mutateAsync(payload);
         toast.success(`Categoría ${values.codigo} creada correctamente.`);
+        onSuccessCallback?.();
+
+        if (keepOpen) {
+          reset({
+            codigo: "",
+            nombre: "",
+            descripcion: "",
+            categoriaPadreId: defaultParentId ?? null,
+          });
+        } else {
+          onOpenChange(false);
+        }
       }
-      onSuccessCallback?.();
-      onOpenChange(false);
     } catch (error: any) {
       const errorMsg =
         error?.response?.data?.message ||
@@ -231,20 +246,40 @@ export function CategoriaProductoFormDialog({
             </div>
           </div>
 
-          <DialogFooter className="pt-4 border-t gap-2 sm:gap-0">
+          <DialogFooter className="pt-4 border-t flex flex-col-reverse sm:flex-row sm:justify-between items-center gap-2">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
-              className="text-xs"
+              className="text-xs w-full sm:w-auto"
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={isLoading} className="text-xs gap-1.5">
-              {isLoading && <Loader2 className="size-3.5 animate-spin" />}
-              {isEditing ? "Guardar Cambios" : "Crear Categoría"}
-            </Button>
+
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+              {!isEditing && (
+                <Button
+                  type="submit"
+                  variant="secondary"
+                  disabled={isLoading}
+                  onClick={() => setKeepOpen(true)}
+                  className="text-xs w-full sm:w-auto"
+                >
+                  {isLoading && keepOpen && <Loader2 className="size-3.5 animate-spin mr-1.5" />}
+                  Guardar y agregar otra
+                </Button>
+              )}
+              <Button
+                type="submit"
+                disabled={isLoading}
+                onClick={() => setKeepOpen(false)}
+                className="text-xs gap-1.5 w-full sm:w-auto"
+              >
+                {isLoading && !keepOpen && <Loader2 className="size-3.5 animate-spin" />}
+                {isEditing ? "Guardar Cambios" : "Guardar y Cerrar"}
+              </Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>

@@ -4,7 +4,7 @@ import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Scale, Loader2, Tag, FileText } from "lucide-react";
+import { Scale, Loader2, Tag } from "lucide-react";
 
 import {
   Dialog,
@@ -82,8 +82,11 @@ export function UnidadMedidaFormDialog({
 
   const categoriaValue = watch("categoria");
 
+  const [keepOpen, setKeepOpen] = React.useState(false);
+
   React.useEffect(() => {
     if (open) {
+      setKeepOpen(false);
       if (unidadToEdit) {
         reset({
           codigo: unidadToEdit.codigo,
@@ -116,6 +119,8 @@ export function UnidadMedidaFormDialog({
           },
         });
         toast.success(`Unidad ${values.codigo} actualizada correctamente.`);
+        onSuccessCallback?.();
+        onOpenChange(false);
       } else {
         await createUnidadMutation.mutateAsync({
           codigo: values.codigo,
@@ -124,9 +129,20 @@ export function UnidadMedidaFormDialog({
           categoria: values.categoria,
         });
         toast.success(`Unidad ${values.codigo} creada correctamente.`);
+        onSuccessCallback?.();
+
+        if (keepOpen) {
+          // Mantener la categoría actual para facilitar agregar múltiples de la misma categoría
+          reset({
+            codigo: "",
+            nombre: "",
+            simbolo: "",
+            categoria: values.categoria,
+          });
+        } else {
+          onOpenChange(false);
+        }
       }
-      onSuccessCallback?.();
-      onOpenChange(false);
     } catch (error: any) {
       const errorMsg =
         error?.response?.data?.message ||
@@ -252,25 +268,43 @@ export function UnidadMedidaFormDialog({
                   <p className="text-[11px] text-destructive font-medium">{errors.nombre.message}</p>
                 )}
               </div>
-
-
             </div>
           </div>
 
-          <DialogFooter className="pt-4 border-t gap-2 sm:gap-0">
+          <DialogFooter className="pt-4 border-t flex flex-col-reverse sm:flex-row sm:justify-between items-center gap-2">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
-              className="text-xs"
+              className="text-xs w-full sm:w-auto"
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={isLoading} className="text-xs gap-1.5">
-              {isLoading && <Loader2 className="size-3.5 animate-spin" />}
-              {isEditing ? "Guardar Cambios" : "Crear Unidad"}
-            </Button>
+
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+              {!isEditing && (
+                <Button
+                  type="submit"
+                  variant="secondary"
+                  disabled={isLoading}
+                  onClick={() => setKeepOpen(true)}
+                  className="text-xs w-full sm:w-auto"
+                >
+                  {isLoading && keepOpen && <Loader2 className="size-3.5 animate-spin mr-1.5" />}
+                  Guardar y agregar otra
+                </Button>
+              )}
+              <Button
+                type="submit"
+                disabled={isLoading}
+                onClick={() => setKeepOpen(false)}
+                className="text-xs gap-1.5 w-full sm:w-auto"
+              >
+                {isLoading && !keepOpen && <Loader2 className="size-3.5 animate-spin" />}
+                {isEditing ? "Guardar Cambios" : "Guardar y Cerrar"}
+              </Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>
