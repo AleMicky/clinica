@@ -23,7 +23,8 @@ public sealed class MovimientoInventarioConfiguration
 
         builder.Property(x => x.Estado)
             .IsRequired()
-            .HasDefaultValue(EstadoMovimientoInventario.Borrador);
+            .HasDefaultValue(EstadoMovimientoInventario.Borrador)
+            .HasSentinel(0);
 
         builder.Property(x => x.ReferenciaTipo)
             .HasMaxLength(30);

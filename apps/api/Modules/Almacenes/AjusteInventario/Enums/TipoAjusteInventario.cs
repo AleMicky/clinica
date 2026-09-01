@@ -1,6 +1,7 @@
 namespace Clinica.Api.Modules.Almacenes.AjusteInventario.Enums;
 
-public class TipoAjusteInventario
+public enum TipoAjusteInventario
 {
-    
+    Positivo = 1,
+    Negativo = 2
 }

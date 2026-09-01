@@ -1,7 +1,11 @@
+using Clinica.Api.Modules.Almacenes.AjusteInventario.Endpoints;
+using Clinica.Api.Modules.Almacenes.AjusteInventario.Services;
 using Clinica.Api.Modules.Almacenes.Almacen.Endpoints;
 using Clinica.Api.Modules.Almacenes.Almacen.Services;
 using Clinica.Api.Modules.Almacenes.CategoriaProducto.Endpoints;
 using Clinica.Api.Modules.Almacenes.CategoriaProducto.Services;
+using Clinica.Api.Modules.Almacenes.ConsumoInterno.Endpoints;
+using Clinica.Api.Modules.Almacenes.ConsumoInterno.Services;
 using Clinica.Api.Modules.Almacenes.Existencia.Endpoints;
 using Clinica.Api.Modules.Almacenes.Existencia.Services;
 using Clinica.Api.Modules.Almacenes.InventarioFisico.Endpoints;
@@ -12,6 +16,8 @@ using Clinica.Api.Modules.Almacenes.MovimientoInventario.Endpoints;
 using Clinica.Api.Modules.Almacenes.MovimientoInventario.Services;
 using Clinica.Api.Modules.Almacenes.Producto.Endpoints;
 using Clinica.Api.Modules.Almacenes.Producto.Services;
+using Clinica.Api.Modules.Almacenes.ReservaStock.Endpoints;
+using Clinica.Api.Modules.Almacenes.ReservaStock.Services;
 using Clinica.Api.Modules.Almacenes.TipoMovimientoInventario.Endpoints;
 using Clinica.Api.Modules.Almacenes.TipoMovimientoInventario.Services;
 using Clinica.Api.Modules.Almacenes.TransferenciaAlmacen.Endpoints;
@@ -33,6 +39,9 @@ public static class AlmacenesModule
         services.AddScoped<IMovimientoInventarioService, MovimientoInventarioService>();
         services.AddScoped<ITransferenciaAlmacenService, TransferenciaAlmacenService>();
         services.AddScoped<IInventarioFisicoService, InventarioFisicoService>();
+        services.AddScoped<IAjusteInventarioService, AjusteInventarioService>();
+        services.AddScoped<IReservaStockService, ReservaStockService>();
+        services.AddScoped<IConsumoInternoService, ConsumoInternoService>();
 
         return services;
     }
@@ -49,6 +58,9 @@ public static class AlmacenesModule
         app.MapMovimientoInventarioEndpoints();
         app.MapTransferenciaAlmacenEndpoints();
         app.MapInventarioFisicoEndpoints();
+        app.MapAjusteInventarioEndpoints();
+        app.MapReservaStockEndpoints();
+        app.MapConsumoInternoEndpoints();
 
         return app;
     }

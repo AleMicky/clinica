@@ -29,11 +29,21 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Modules\Almacenes\AjusteInventario\Dtos\" />
+    <Folder Include="Modules\Almacenes\AjusteInventario\Endpoints\" />
+    <Folder Include="Modules\Almacenes\AjusteInventario\Mappers\" />
+    <Folder Include="Modules\Almacenes\AjusteInventario\Services\" />
+    <Folder Include="Modules\Almacenes\AjusteInventario\Validators\" />
     <Folder Include="Modules\Almacenes\Almacen\Dtos\" />
     <Folder Include="Modules\Almacenes\Almacen\Endpoints\" />
     <Folder Include="Modules\Almacenes\Almacen\Mappers\" />
     <Folder Include="Modules\Almacenes\Almacen\Services\" />
     <Folder Include="Modules\Almacenes\Almacen\Validators\" />
+    <Folder Include="Modules\Almacenes\ConsumoInterno\Dtos\" />
+    <Folder Include="Modules\Almacenes\ConsumoInterno\Endpoints\" />
+    <Folder Include="Modules\Almacenes\ConsumoInterno\Mappers\" />
+    <Folder Include="Modules\Almacenes\ConsumoInterno\Services\" />
+    <Folder Include="Modules\Almacenes\ConsumoInterno\Validators\" />
     <Folder Include="Modules\Almacenes\Existencia\Dtos\" />
     <Folder Include="Modules\Almacenes\Existencia\Entity\" />
     <Folder Include="Modules\Almacenes\Existencia\Mappers\" />
@@ -59,6 +69,11 @@
     <Folder Include="Modules\Almacenes\Producto\Mappers\" />
     <Folder Include="Modules\Almacenes\Producto\Services\" />
     <Folder Include="Modules\Almacenes\Producto\Validators\" />
+    <Folder Include="Modules\Almacenes\ReservaStock\Dtos\" />
+    <Folder Include="Modules\Almacenes\ReservaStock\Endpoints\" />
+    <Folder Include="Modules\Almacenes\ReservaStock\Mappers\" />
+    <Folder Include="Modules\Almacenes\ReservaStock\Services\" />
+    <Folder Include="Modules\Almacenes\ReservaStock\Validators\" />
     <Folder Include="Modules\Almacenes\TipoMovimientoInventario\Dtos\" />
     <Folder Include="Modules\Almacenes\TipoMovimientoInventario\Endpoints\" />
     <Folder Include="Modules\Almacenes\TipoMovimientoInventario\Mappers\" />
@@ -117,6 +132,7 @@
     <Folder Include="Modules\Recepcion\Directorio\Dtos\" />
     <Folder Include="Modules\Recepcion\Directorio\Endpoints\" />
     <Folder Include="Modules\Recepcion\Directorio\Entity\" />
+    <Folder Include="Modules\Recepcion\Directorio\Enums\" />
     <Folder Include="Modules\Recepcion\Directorio\Mappers\" />
     <Folder Include="Modules\Recepcion\Directorio\Services\" />
     <Folder Include="Modules\Recepcion\Directorio\Validators\" />

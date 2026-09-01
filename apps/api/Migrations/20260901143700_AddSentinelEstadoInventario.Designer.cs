@@ -4,6 +4,7 @@ using Clinica.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Clinica.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260901143700_AddSentinelEstadoInventario")]
+    partial class AddSentinelEstadoInventario
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -258,131 +261,6 @@ namespace Clinica.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("CategoriasProducto", (string)null);
-                });
-
-            modelBuilder.Entity("Clinica.Api.Modules.Almacenes.ConsumoInterno.Entity.ConsumoInterno", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("Activo")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<int>("AlmacenId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("AreaId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("CreadoPor")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("Estado")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(1);
-
-                    b.Property<DateTime>("Fecha")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("FechaCreacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("FechaModificacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ModificadoPor")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int?>("MovimientoInventarioId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Numero")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("Observacion")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<int?>("ReferenciaId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ReferenciaTipo")
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AlmacenId");
-
-                    b.HasIndex("AreaId");
-
-                    b.HasIndex("MovimientoInventarioId");
-
-                    b.HasIndex("Numero")
-                        .IsUnique();
-
-                    b.ToTable("ConsumosInterno", (string)null);
-                });
-
-            modelBuilder.Entity("Clinica.Api.Modules.Almacenes.ConsumoInterno.Entity.ConsumoInternoDetalle", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("Activo")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<decimal>("Cantidad")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("ConsumoInternoId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("CreadoPor")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("FechaCreacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("FechaModificacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("LoteId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ModificadoPor")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("ProductoId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ConsumoInternoId");
-
-                    b.HasIndex("LoteId");
-
-                    b.HasIndex("ProductoId");
-
-                    b.ToTable("ConsumosInternoDetalles", (string)null);
                 });
 
             modelBuilder.Entity("Clinica.Api.Modules.Almacenes.Existencia.Entity.Existencia", b =>
@@ -3913,58 +3791,6 @@ namespace Clinica.Api.Migrations
                     b.Navigation("CategoriaPadre");
                 });
 
-            modelBuilder.Entity("Clinica.Api.Modules.Almacenes.ConsumoInterno.Entity.ConsumoInterno", b =>
-                {
-                    b.HasOne("Clinica.Api.Modules.Almacenes.Almacen.Entity.Almacen", "Almacen")
-                        .WithMany()
-                        .HasForeignKey("AlmacenId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Clinica.Api.Modules.RecursosHumanos.Area.Entity.Area", "Area")
-                        .WithMany()
-                        .HasForeignKey("AreaId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Clinica.Api.Modules.Almacenes.MovimientoInventario.Entity.MovimientoInventario", "MovimientoInventario")
-                        .WithMany()
-                        .HasForeignKey("MovimientoInventarioId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("Almacen");
-
-                    b.Navigation("Area");
-
-                    b.Navigation("MovimientoInventario");
-                });
-
-            modelBuilder.Entity("Clinica.Api.Modules.Almacenes.ConsumoInterno.Entity.ConsumoInternoDetalle", b =>
-                {
-                    b.HasOne("Clinica.Api.Modules.Almacenes.ConsumoInterno.Entity.ConsumoInterno", "ConsumoInterno")
-                        .WithMany("Detalles")
-                        .HasForeignKey("ConsumoInternoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Clinica.Api.Modules.Almacenes.Lote.Entity.Lote", "Lote")
-                        .WithMany()
-                        .HasForeignKey("LoteId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Clinica.Api.Modules.Almacenes.Producto.Entity.Producto", "Producto")
-                        .WithMany()
-                        .HasForeignKey("ProductoId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("ConsumoInterno");
-
-                    b.Navigation("Lote");
-
-                    b.Navigation("Producto");
-                });
-
             modelBuilder.Entity("Clinica.Api.Modules.Almacenes.Existencia.Entity.Existencia", b =>
                 {
                     b.HasOne("Clinica.Api.Modules.Almacenes.Almacen.Entity.Almacen", "Almacen")
@@ -4833,11 +4659,6 @@ namespace Clinica.Api.Migrations
             modelBuilder.Entity("Clinica.Api.Modules.Almacenes.CategoriaProducto.Entity.CategoriaProducto", b =>
                 {
                     b.Navigation("Subcategorias");
-                });
-
-            modelBuilder.Entity("Clinica.Api.Modules.Almacenes.ConsumoInterno.Entity.ConsumoInterno", b =>
-                {
-                    b.Navigation("Detalles");
                 });
 
             modelBuilder.Entity("Clinica.Api.Modules.Almacenes.InventarioFisico.Entity.InventarioFisico", b =>

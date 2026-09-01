@@ -23,7 +23,8 @@ public sealed class TransferenciaAlmacenConfiguration
 
         builder.Property(x => x.Estado)
             .IsRequired()
-            .HasDefaultValue(EstadoTransferenciaAlmacen.Borrador);
+            .HasDefaultValue(EstadoTransferenciaAlmacen.Borrador)
+            .HasSentinel(0);
 
         builder.Property(x => x.Observacion)
             .HasMaxLength(500);

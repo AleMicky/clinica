@@ -26,7 +26,8 @@ public sealed class InventarioFisicoConfiguration
 
         builder.Property(x => x.Estado)
             .IsRequired()
-            .HasDefaultValue(EstadoInventarioFisico.Borrador);
+            .HasDefaultValue(EstadoInventarioFisico.Borrador)
+            .HasSentinel(0);
 
         builder.Property(x => x.Observacion)
             .HasMaxLength(500);

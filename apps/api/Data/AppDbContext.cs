@@ -1,10 +1,13 @@
+using Clinica.Api.Modules.Almacenes.AjusteInventario.Entity;
 using Clinica.Api.Modules.Almacenes.Almacen.Entity;
 using Clinica.Api.Modules.Almacenes.CategoriaProducto.Entity;
+using Clinica.Api.Modules.Almacenes.ConsumoInterno.Entity;
 using Clinica.Api.Modules.Almacenes.Existencia.Entity;
 using Clinica.Api.Modules.Almacenes.InventarioFisico.Entity;
 using Clinica.Api.Modules.Almacenes.Lote.Entity;
 using Clinica.Api.Modules.Almacenes.MovimientoInventario.Entity;
 using Clinica.Api.Modules.Almacenes.Producto.Entity;
+using Clinica.Api.Modules.Almacenes.ReservaStock.Entity;
 using Clinica.Api.Modules.Almacenes.TipoMovimientoInventario.Entity;
 using Clinica.Api.Modules.Almacenes.TransferenciaAlmacen.Entity;
 using Clinica.Api.Modules.Cajas.ArqueoCaja.Entity;
@@ -47,6 +50,8 @@ public class AppDbContext(
     DbContextOptions<AppDbContext> options)
     : IdentityDbContext<Usuario, Rol, int>(options)
 {
+    public DbSet<AjusteInventario> AjustesInventario => Set<AjusteInventario>();
+    public DbSet<AjusteInventarioDetalle> AjustesInventarioDetalles => Set<AjusteInventarioDetalle>();
     public DbSet<Almacen> Almacenes => Set<Almacen>();
     public DbSet<CategoriaProducto> CategoriasProducto => Set<CategoriaProducto>();
     public DbSet<Producto> Productos => Set<Producto>();
@@ -59,6 +64,10 @@ public class AppDbContext(
     public DbSet<TransferenciaAlmacenDetalle> TransferenciasAlmacenDetalles => Set<TransferenciaAlmacenDetalle>();
     public DbSet<InventarioFisico> InventariosFisicos => Set<InventarioFisico>();
     public DbSet<InventarioFisicoDetalle> InventariosFisicosDetalles => Set<InventarioFisicoDetalle>();
+    public DbSet<ReservaStock> ReservasStock => Set<ReservaStock>();
+    public DbSet<ReservaStockDetalle> ReservasStockDetalles => Set<ReservaStockDetalle>();
+    public DbSet<ConsumoInterno> ConsumosInterno => Set<ConsumoInterno>();
+    public DbSet<ConsumoInternoDetalle> ConsumosInternoDetalles => Set<ConsumoInternoDetalle>();
     public DbSet<CatalogoGrupo> CatalogosGrupos => Set<CatalogoGrupo>();
     public DbSet<CatalogoItem> CatalogosItems => Set<CatalogoItem>();
     public DbSet<UnidadesMedida> UnidadesMedida => Set<UnidadesMedida>();
