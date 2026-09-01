@@ -21,10 +21,10 @@ public sealed class TransferenciaAlmacen : AuditableEntity
     public DateTime? FechaDespacho { get; set; }
     public DateTime? FechaRecepcion { get; set; }
 
-    public Guid? SolicitadoPorId { get; set; }
-    public Guid? AprobadoPorId { get; set; }
-    public Guid? DespachadoPorId { get; set; }
-    public Guid? RecibidoPorId { get; set; }
+    public int? SolicitadoPorId { get; set; }
+    public int? AprobadoPorId { get; set; }
+    public int? DespachadoPorId { get; set; }
+    public int? RecibidoPorId { get; set; }
 
     public string? Observacion { get; set; }
 
