@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { TipoMovimientoInventarioHeader } from "./tipo-movimiento-inventario-header";
+import { TipoMovimientoInventarioMetrics } from "./tipo-movimiento-inventario-metrics";
 import { TipoMovimientoInventarioList } from "./tipo-movimiento-inventario-list";
 import { TipoMovimientoInventarioFormDialog } from "./tipo-movimiento-inventario-form-dialog";
 import { TipoMovimientoInventarioDeleteDialog } from "./tipo-movimiento-inventario-delete-dialog";
@@ -124,6 +125,12 @@ export function TipoMovimientoInventarioModuleView() {
     <div className="flex flex-col gap-3.5 w-full">
       <TipoMovimientoInventarioHeader
         totalItems={tiposData?.totalItems ?? 0}
+      />
+
+      <TipoMovimientoInventarioMetrics
+        tipos={tiposMovimiento}
+        totalItems={tiposData?.totalItems ?? 0}
+        isLoading={isLoading}
       />
 
       <TipoMovimientoInventarioList

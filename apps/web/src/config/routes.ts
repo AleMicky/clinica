@@ -70,6 +70,7 @@ export const ROUTES = {
     PRODUCTOS: "/almacenes/productos",
     TIPOS_MOVIMIENTO: "/almacenes/tipos-movimiento",
     EXISTENCIAS: "/almacenes/existencias",
+    MOVIMIENTOS: "/almacenes/movimientos",
   },
 } as const;
 

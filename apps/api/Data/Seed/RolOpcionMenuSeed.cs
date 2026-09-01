@@ -148,13 +148,22 @@ public static class RolOpcionMenuSeed
             ["FARMACIA"] =
             [
                 "INICIO",
-                "MI_PERFIL"
+                "MI_PERFIL",
+                "PRODUCTOS",
+                "MOVIMIENTOS_INVENTARIO",
+                "EXISTENCIAS"
             ],
 
             ["ALMACEN"] =
             [
                 "INICIO",
-                "MI_PERFIL"
+                "MI_PERFIL",
+                "ALMACEN_PUNTOS",
+                "CATEGORIAS_PRODUCTO",
+                "PRODUCTOS",
+                "TIPOS_MOVIMIENTO",
+                "MOVIMIENTOS_INVENTARIO",
+                "EXISTENCIAS"
             ]
         };
     }

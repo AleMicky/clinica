@@ -14,6 +14,7 @@ import {
   Clock,
   RefreshCw,
   SlidersHorizontal,
+  Download,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -100,6 +101,34 @@ export function TipoMovimientoInventarioList({
     else if (val === "salidas") onNaturalezaChange?.(NaturalezaMovimiento.Salida);
   };
 
+  const handleExportCsv = () => {
+    if (!tiposMovimiento || tiposMovimiento.length === 0) return;
+    const headers = ["ID", "Código", "Nombre", "Descripción", "Naturaleza", "Fecha Creación"];
+    const rows = tiposMovimiento.map((t) => [
+      t.id,
+      `"${t.codigo.replace(/"/g, '""')}"`,
+      `"${t.nombre.replace(/"/g, '""')}"`,
+      `"${(t.descripcion || "").replace(/"/g, '""')}"`,
+      t.naturaleza === NaturalezaMovimiento.Entrada ? "Entrada" : "Salida",
+      t.fechaCreacion ? `"${t.fechaCreacion}"` : "",
+    ]);
+
+    const csvContent =
+      "data:text/csv;charset=utf-8,\uFEFF" +
+      [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute(
+      "download",
+      `tipos_movimiento_${new Date().toISOString().split("T")[0]}.csv`
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="flex flex-col gap-3 bg-card border border-border/60 rounded-xl p-3.5 shadow-2xs">
       {/* List Top Bar */}
@@ -115,6 +144,19 @@ export function TipoMovimientoInventarioList({
         </div>
 
         <div className="flex items-center gap-1.5 self-end sm:self-auto">
+          {tiposMovimiento.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportCsv}
+              className="h-7 px-2 text-xs font-normal gap-1 cursor-pointer border-border/60 text-muted-foreground hover:text-foreground"
+              title="Exportar a CSV"
+            >
+              <Download className="size-3.5" />
+              <span className="text-[11px] hidden sm:inline">Exportar CSV</span>
+            </Button>
+          )}
+
           {onRefresh && (
             <Button
               variant="outline"

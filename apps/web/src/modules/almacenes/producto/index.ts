@@ -9,5 +9,6 @@ export * from "./components/producto-table";
 export * from "./components/producto-master-list";
 export * from "./components/producto-detail-lotes-view";
 export * from "./components/producto-form-dialog";
+export * from "./components/producto-autocomplete";
 export * from "./components/producto-delete-dialog";
 export * from "./components/producto-module-view";

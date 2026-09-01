@@ -7,4 +7,5 @@ export * from "./components/almacen-header";
 export * from "./components/almacen-list";
 export * from "./components/almacen-form-dialog";
 export * from "./components/almacen-delete-dialog";
+export * from "./components/almacen-autocomplete";
 export * from "./components/almacen-module-view";

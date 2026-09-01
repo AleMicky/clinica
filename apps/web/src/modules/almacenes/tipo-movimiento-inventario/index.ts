@@ -4,6 +4,8 @@ export * from "./api/tipo-movimiento-inventario.api";
 export * from "./api/tipo-movimiento-inventario.key";
 export * from "./hooks/use-tipo-movimiento-inventario";
 export * from "./components/tipo-movimiento-inventario-header";
+export * from "./components/tipo-movimiento-inventario-metrics";
+export * from "./components/tipo-movimiento-inventario-autocomplete";
 export * from "./components/tipo-movimiento-inventario-list";
 export * from "./components/tipo-movimiento-inventario-form-dialog";
 export * from "./components/tipo-movimiento-inventario-delete-dialog";

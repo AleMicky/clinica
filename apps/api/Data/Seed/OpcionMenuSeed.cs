@@ -363,14 +363,81 @@ public static class OpcionMenuSeed
                 "RECURSOS_HUMANOS"),
 
             // =========================================================
-            // 5. CONFIGURACIÓN & SISTEMA
+            // 5. LOGÍSTICA & ALMACENES
+            // =========================================================
+            new(
+                "LOGISTICA_ALMACENES",
+                "Logística & Almacenes",
+                null,
+                null,
+                5,
+                null),
+
+            new(
+                "ALMACENES_MODULO",
+                "Almacenes e Inventarios",
+                null,
+                "Warehouse",
+                1,
+                "LOGISTICA_ALMACENES"),
+
+            new(
+                "ALMACEN_PUNTOS",
+                "Almacenes",
+                "/almacenes/almacen",
+                "Warehouse",
+                1,
+                "ALMACENES_MODULO"),
+
+            new(
+                "CATEGORIAS_PRODUCTO",
+                "Categorías de Producto",
+                "/almacenes/categorias-producto",
+                "Layers",
+                2,
+                "ALMACENES_MODULO"),
+
+            new(
+                "PRODUCTOS",
+                "Productos",
+                "/almacenes/productos",
+                "Package",
+                3,
+                "ALMACENES_MODULO"),
+
+            new(
+                "TIPOS_MOVIMIENTO",
+                "Tipos de Movimiento",
+                "/almacenes/tipos-movimiento",
+                "ArrowLeftRight",
+                4,
+                "ALMACENES_MODULO"),
+
+            new(
+                "MOVIMIENTOS_INVENTARIO",
+                "Movimientos de Inventario",
+                "/almacenes/movimientos",
+                "ArrowDownUp",
+                5,
+                "ALMACENES_MODULO"),
+
+            new(
+                "EXISTENCIAS",
+                "Existencias / Stock",
+                "/almacenes/existencias",
+                "Boxes",
+                6,
+                "ALMACENES_MODULO"),
+
+            // =========================================================
+            // 6. CONFIGURACIÓN & SISTEMA
             // =========================================================
             new(
                 "CONFIGURACION_SISTEMA",
                 "Configuración & Sistema",
                 null,
                 null,
-                5,
+                6,
                 null),
 
             new(
