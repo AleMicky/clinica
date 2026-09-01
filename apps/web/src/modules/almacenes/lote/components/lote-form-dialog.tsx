@@ -209,7 +209,7 @@ export function LoteFormDialog({
           {/* Costo Unitario */}
           <div className="space-y-1.5">
             <Label htmlFor="costoUnitario" className="text-xs flex items-center gap-1">
-              <DollarSign className="size-3 text-emerald-500" /> Costo Unitario (Opcional)
+              <DollarSign className="size-3 text-emerald-500" /> Costo Unitario en Bs. (Opcional)
             </Label>
             <Input
               id="costoUnitario"

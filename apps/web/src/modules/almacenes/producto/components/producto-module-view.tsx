@@ -209,7 +209,7 @@ export function ProductoModuleView() {
           ? [{ label: "Vencimiento", value: lote.fechaVencimiento }]
           : []),
         ...(lote.costoUnitario !== null && lote.costoUnitario !== undefined
-          ? [{ label: "Costo Unitario", value: `$${Number(lote.costoUnitario).toFixed(2)}` }]
+          ? [{ label: "Costo Unitario", value: `Bs. ${Number(lote.costoUnitario).toFixed(2)}` }]
           : []),
       ],
     });

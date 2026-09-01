@@ -101,81 +101,70 @@ export function ProductoDetailLotesView({
   }
 
   return (
-    <div className="flex flex-col h-full bg-card rounded-xl border border-border/60 shadow-2xs overflow-hidden">
+    <div className="flex flex-col h-full bg-card rounded-xl border border-border/40 shadow-2xs overflow-hidden">
       {/* 1. Header Card: Selected Product Info */}
-      <div className="p-4 sm:p-5 border-b border-border/40 bg-muted/10">
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-          <div className="flex items-start gap-3.5 min-w-0 flex-1">
-            <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20 shadow-2xs">
-              <Boxes className="size-5" />
+      <div className="p-3.5 border-b border-border/30 bg-muted/5">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+          <div className="flex items-start gap-2.5 min-w-0 flex-1">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary border border-primary/20 shadow-2xs">
+              <Boxes className="size-4.5" />
             </div>
 
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-mono text-xs font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="font-mono text-xs font-bold text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.2 rounded">
                   {producto.codigo}
                 </span>
-                <h2 className="text-base font-bold text-foreground truncate">
+                <h2 className="text-sm font-bold text-foreground truncate">
                   {producto.nombre}
                 </h2>
                 <div className="flex items-center gap-1">
                   {producto.controlaLote && (
                     <Badge
                       variant="outline"
-                      className="text-[10px] px-1.5 py-0 border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-400 gap-1 font-medium"
+                      className="text-[9px] px-1 py-0 border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-400 gap-0.5 font-medium"
                     >
-                      <Layers className="size-2.5" /> Lote
+                      <Layers className="size-2" /> Lote
                     </Badge>
                   )}
                   {producto.controlaVencimiento && (
                     <Badge
                       variant="outline"
-                      className="text-[10px] px-1.5 py-0 border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400 gap-1 font-medium"
+                      className="text-[9px] px-1 py-0 border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400 gap-0.5 font-medium"
                     >
-                      <CalendarClock className="size-2.5" /> Vence
+                      <CalendarClock className="size-2" /> Vence
                     </Badge>
                   )}
                 </div>
               </div>
 
               {/* Categoría & Unidad de Medida */}
-              <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1.5">
-                  <Tag className="size-3.5 text-primary" />
-                  <span className="font-medium text-foreground">
+              <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Tag className="size-3 text-primary" />
+                  <span className="font-medium text-foreground text-[11px]">
                     {producto.categoriaProductoNombre || "Sin categoría"}
                   </span>
                 </span>
                 <span>•</span>
-                <span className="flex items-center gap-1.5">
-                  <Scale className="size-3.5 text-primary" />
-                  <span>
-                    {producto.unidadMedidaNombre}{" "}
+                <span className="flex items-center gap-1">
+                  <Scale className="size-3 text-primary" />
+                  <span className="font-medium text-foreground text-[11px]">
+                    {producto.unidadMedidaNombre || "Sin unidad"}{" "}
                     {producto.unidadMedidaSimbolo && `(${producto.unidadMedidaSimbolo})`}
                   </span>
                 </span>
-              </div>
-
-              {/* Stock Range Cards */}
-              <div className="flex items-center gap-2.5 mt-3">
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-background border border-border/50 text-xs">
-                  <TrendingDown className="size-3.5 text-amber-500" />
-                  <span className="text-muted-foreground text-[11px]">Mín:</span>
-                  <span className="font-mono font-bold text-foreground">{producto.stockMinimo}</span>
-                </div>
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-background border border-border/50 text-xs">
-                  <TrendingUp className="size-3.5 text-emerald-500" />
-                  <span className="text-muted-foreground text-[11px]">Máx:</span>
-                  <span className="font-mono font-bold text-foreground">
-                    {producto.stockMaximo !== null && producto.stockMaximo !== undefined
-                      ? producto.stockMaximo
-                      : "Sin límite"}
+                <span>•</span>
+                <div className="flex items-center gap-1 text-[11px]">
+                  <span>Stk Mín:</span>
+                  <span className="font-mono font-semibold text-foreground">
+                    {producto.stockMinimo}
                   </span>
                 </div>
               </div>
 
               {producto.descripcion && (
-                <div className="mt-3 p-2.5 rounded-lg bg-background/80 border border-border/40 text-xs text-muted-foreground leading-relaxed">
+                <div className="mt-2 p-2 rounded-md bg-background/80 border border-border/30 text-[11px] text-muted-foreground leading-relaxed">
                   {producto.descripcion}
                 </div>
               )}
@@ -183,18 +172,18 @@ export function ProductoDetailLotesView({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-1.5 shrink-0 self-start">
+          <div className="flex items-center gap-1 shrink-0 self-start">
             <TooltipProvider delay={200}>
               <Tooltip>
                 <TooltipTrigger
                   render={
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
                       onClick={() => onViewAuditProducto(producto)}
-                      className="h-8 px-2.5 gap-1.5 text-xs text-muted-foreground hover:text-foreground cursor-pointer border-border/60"
+                      className="h-7 px-2 gap-1 text-[11px] text-muted-foreground hover:text-foreground cursor-pointer"
                     >
-                      <History className="size-3.5" />
+                      <History className="size-3" />
                       <span>Auditoría</span>
                     </Button>
                   }
@@ -211,9 +200,9 @@ export function ProductoDetailLotesView({
                       variant="outline"
                       size="sm"
                       onClick={() => onEditProducto(producto)}
-                      className="h-8 px-2.5 gap-1.5 text-xs cursor-pointer border-border/60"
+                      className="h-7 px-2 gap-1 text-[11px] cursor-pointer border-border/40"
                     >
-                      <Edit2 className="size-3.5" />
+                      <Edit2 className="size-3" />
                       <span>Editar</span>
                     </Button>
                   }
@@ -230,9 +219,9 @@ export function ProductoDetailLotesView({
                       variant="outline"
                       size="sm"
                       onClick={() => onDeleteProducto(producto)}
-                      className="h-8 px-2.5 gap-1.5 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30 cursor-pointer"
+                      className="h-7 px-2 gap-1 text-[11px] text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30 cursor-pointer"
                     >
-                      <Trash2 className="size-3.5" />
+                      <Trash2 className="size-3" />
                       <span>Eliminar</span>
                     </Button>
                   }
@@ -247,11 +236,11 @@ export function ProductoDetailLotesView({
       </div>
 
       {/* 2. Detail Section: Management of Lotes */}
-      <div className="p-4 sm:p-5 flex-1 overflow-y-auto space-y-3.5">
+      <div className="p-3.5 flex-1 overflow-y-auto space-y-2.5">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <div className="p-1 rounded-md bg-primary/10 text-primary">
-              <Layers className="size-3.5" />
+              <Layers className="size-3" />
             </div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
               Lotes Registrados

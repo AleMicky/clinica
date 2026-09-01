@@ -244,7 +244,7 @@ export function LoteList({
                   </TableCell>
                   <TableCell className="py-2 text-xs font-mono font-semibold text-foreground">
                     {lote.costoUnitario !== null && lote.costoUnitario !== undefined ? (
-                      <span>${Number(lote.costoUnitario).toFixed(2)}</span>
+                      <span>Bs. {Number(lote.costoUnitario).toFixed(2)}</span>
                     ) : (
                       <span className="text-muted-foreground/60 font-normal">—</span>
                     )}
