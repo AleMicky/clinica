@@ -130,15 +130,17 @@ export function TipoMovimientoInventarioList({
   };
 
   return (
-    <div className="flex flex-col gap-3 bg-card border border-border/60 rounded-xl p-3.5 shadow-2xs">
+    <div className="flex flex-col gap-2.5 bg-card border border-border/40 rounded-xl p-3 shadow-2xs">
       {/* List Top Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2 border-b border-border/40">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-border/30">
         <div className="flex items-center gap-2">
-          <ArrowLeftRight className="size-4 text-primary" />
+          <div className="p-1 rounded-md bg-primary/10 text-primary">
+            <ArrowLeftRight className="size-3.5" />
+          </div>
           <h2 className="text-xs font-semibold text-foreground uppercase tracking-wider">
-            Tipos de Movimiento Registrados
+            Tipos de Movimiento
           </h2>
-          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-mono">
+          <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-mono">
             {totalItems}
           </Badge>
         </div>
@@ -146,10 +148,10 @@ export function TipoMovimientoInventarioList({
         <div className="flex items-center gap-1.5 self-end sm:self-auto">
           {tiposMovimiento.length > 0 && (
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
               onClick={handleExportCsv}
-              className="h-7 px-2 text-xs font-normal gap-1 cursor-pointer border-border/60 text-muted-foreground hover:text-foreground"
+              className="h-7 px-2 text-xs font-normal gap-1 cursor-pointer text-muted-foreground hover:text-foreground"
               title="Exportar a CSV"
             >
               <Download className="size-3.5" />
@@ -159,11 +161,11 @@ export function TipoMovimientoInventarioList({
 
           {onRefresh && (
             <Button
-              variant="outline"
+              variant="ghost"
               size="icon"
               onClick={onRefresh}
               disabled={isLoading}
-              className="size-7 cursor-pointer border-border/60"
+              className="size-7 cursor-pointer text-muted-foreground hover:text-foreground"
               title="Recargar datos"
               aria-label="Recargar datos"
             >
@@ -185,29 +187,29 @@ export function TipoMovimientoInventarioList({
       </div>
 
       {/* Filter Tabs & Search Bar */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2.5">
+      <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2">
         <Tabs
           value={currentTab}
           onValueChange={handleTabChange}
           className="w-full md:w-auto shrink-0"
         >
-          <TabsList className="h-8 p-0.5 bg-muted/60 grid grid-cols-3 w-full md:w-80">
+          <TabsList className="h-7.5 p-0.5 bg-muted/60 grid grid-cols-3 w-full md:w-72">
             <TabsTrigger
               value="all"
-              className="text-[11px] h-7 px-2.5 data-[state=active]:bg-background data-[state=active]:shadow-2xs cursor-pointer"
+              className="text-[11px] h-6.5 px-2 data-[state=active]:bg-background data-[state=active]:shadow-2xs cursor-pointer"
             >
               Todos
             </TabsTrigger>
             <TabsTrigger
               value="entradas"
-              className="text-[11px] h-7 px-2.5 data-[state=active]:bg-background data-[state=active]:shadow-2xs cursor-pointer gap-1.5 text-emerald-600 dark:text-emerald-400"
+              className="text-[11px] h-6.5 px-2 data-[state=active]:bg-background data-[state=active]:shadow-2xs cursor-pointer gap-1 text-emerald-600 dark:text-emerald-400"
             >
               <ArrowDownLeft className="size-3" />
               Entradas
             </TabsTrigger>
             <TabsTrigger
               value="salidas"
-              className="text-[11px] h-7 px-2.5 data-[state=active]:bg-background data-[state=active]:shadow-2xs cursor-pointer gap-1.5 text-amber-600 dark:text-amber-400"
+              className="text-[11px] h-6.5 px-2 data-[state=active]:bg-background data-[state=active]:shadow-2xs cursor-pointer gap-1 text-amber-600 dark:text-amber-400"
             >
               <ArrowUpRight className="size-3" />
               Salidas
@@ -216,18 +218,18 @@ export function TipoMovimientoInventarioList({
         </Tabs>
 
         <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2 size-3.5 text-muted-foreground" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
           <Input
             placeholder="Buscar por código, nombre o descripción..."
             value={searchTerm}
             onChange={(e) => onSearchChange?.(e.target.value)}
-            className="pl-8 text-xs h-8 bg-muted/30 border-border/60 focus:bg-background w-full"
+            className="pl-8 text-xs h-7.5 bg-muted/20 border-border/40 focus:bg-background w-full"
           />
         </div>
       </div>
 
       {/* List Container */}
-      <div className="flex flex-col gap-1.5 overflow-y-auto max-h-[calc(100vh-270px)] min-h-0 pr-0.5">
+      <div className="flex flex-col gap-1 overflow-y-auto max-h-[calc(100vh-270px)] min-h-0 pr-0.5">
         {isLoading ? (
           Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="p-3 rounded-lg border border-border/40 space-y-2">
@@ -276,29 +278,29 @@ export function TipoMovimientoInventarioList({
             return (
               <div
                 key={tipo.id}
-                className="group border border-border/50 hover:border-border bg-background/70 hover:bg-muted/30 rounded-lg px-3.5 py-2.5 transition-all flex items-center justify-between gap-3 shadow-2xs hover:shadow-xs"
+                className="group border border-border/30 hover:border-border/60 bg-card/60 hover:bg-muted/30 rounded-lg px-3 py-2 transition-all flex items-center justify-between gap-2.5 shadow-2xs"
               >
                 {/* Visual Nature Badge & Code & Details */}
-                <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="flex items-center gap-2.5 min-w-0 flex-1">
                   <div
                     className={cn(
-                      "flex size-8 shrink-0 items-center justify-center rounded-md border text-xs font-semibold",
+                      "flex size-7 shrink-0 items-center justify-center rounded-md border text-xs font-semibold",
                       isEntrada
-                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
-                        : "bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400"
+                        ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400"
+                        : "bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400"
                     )}
                     title={isEntrada ? "Entrada de Inventario" : "Salida de Inventario"}
                   >
                     {isEntrada ? (
-                      <ArrowDownLeft className="size-4" />
+                      <ArrowDownLeft className="size-3.5" />
                     ) : (
-                      <ArrowUpRight className="size-4" />
+                      <ArrowUpRight className="size-3.5" />
                     )}
                   </div>
 
                   <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-mono text-[11px] font-bold text-foreground bg-muted/80 px-1.5 py-0.5 rounded border border-border/40 shrink-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="font-mono text-[10px] font-bold text-foreground bg-muted/60 px-1.5 py-0.2 rounded border border-border/30 shrink-0">
                         {tipo.codigo}
                       </span>
                       <span className="font-medium text-xs text-foreground truncate">
@@ -307,10 +309,10 @@ export function TipoMovimientoInventarioList({
                       <Badge
                         variant="outline"
                         className={cn(
-                          "text-[10px] px-1.5 py-0 font-normal shrink-0",
+                          "text-[9px] px-1 py-0 font-normal shrink-0",
                           isEntrada
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
-                            : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800"
+                            ? "bg-emerald-50/60 text-emerald-700 border-emerald-300/40 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40"
+                            : "bg-amber-50/60 text-amber-700 border-amber-300/40 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/40"
                         )}
                       >
                         {isEntrada ? "Entrada (+)" : "Salida (-)"}
@@ -318,11 +320,11 @@ export function TipoMovimientoInventarioList({
                     </div>
 
                     {tipo.descripcion ? (
-                      <p className="text-[11px] text-muted-foreground truncate">
+                      <p className="text-[10px] text-muted-foreground truncate">
                         {tipo.descripcion}
                       </p>
                     ) : (
-                      <p className="text-[10px] text-muted-foreground/60 italic">
+                      <p className="text-[10px] text-muted-foreground/50 italic">
                         Sin descripción adicional
                       </p>
                     )}
@@ -330,17 +332,17 @@ export function TipoMovimientoInventarioList({
                 </div>
 
                 {/* Audit & Action buttons */}
-                <div className="flex items-center gap-1.5 shrink-0">
+                <div className="flex items-center gap-1 shrink-0">
                   {onViewAudit && (
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => onViewAudit(tipo)}
-                      className="h-6 px-2 text-[10px] text-muted-foreground/80 hover:text-foreground bg-muted/40 hover:bg-muted border border-border/40 gap-1 cursor-pointer"
+                      className="h-6 px-1.5 text-[10px] text-muted-foreground hover:text-foreground cursor-pointer"
                       title="Ver Auditoría Completa"
                     >
                       <Clock className="size-3 text-muted-foreground" />
-                      <span className="hidden sm:inline">
+                      <span className="hidden sm:inline text-[10px]">
                         {formattedCreated || "Auditoría"}
                       </span>
                     </Button>
@@ -385,16 +387,18 @@ export function TipoMovimientoInventarioList({
       </div>
 
       {/* Pagination Footer */}
-      {totalItems > 10 && (
-        <DataTablePagination
-          totalItems={totalItems}
-          currentPage={currentPage}
-          pageSize={pageSize}
-          onPageChange={onPageChange || (() => {})}
-          onPageSizeChange={onPageSizeChange}
-          isLoading={isLoading}
-          itemLabel="tipos de movimiento"
-        />
+      {(totalItems > pageSize || totalItems > 10) && (
+        <div className="pt-2 border-t border-border/30">
+          <DataTablePagination
+            totalItems={totalItems}
+            currentPage={currentPage}
+            pageSize={pageSize}
+            onPageChange={onPageChange || (() => {})}
+            onPageSizeChange={onPageSizeChange}
+            isLoading={isLoading}
+            itemLabel="tipos de movimiento"
+          />
+        </div>
       )}
     </div>
   );

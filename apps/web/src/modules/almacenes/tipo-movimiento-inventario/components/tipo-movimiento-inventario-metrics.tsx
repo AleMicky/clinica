@@ -40,55 +40,55 @@ export function TipoMovimientoInventarioMetrics({
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
       {/* Total Card */}
-      <div className="flex items-center justify-between p-3 rounded-xl border border-border/60 bg-card/80 shadow-2xs hover:border-border transition-colors">
+      <div className="flex items-center justify-between px-3 py-2 rounded-lg border border-border/30 bg-card/60">
         <div className="space-y-0.5">
-          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
             Total Registrados
           </p>
-          <p className="text-xl font-bold tracking-tight text-foreground">
+          <p className="text-base font-bold tracking-tight text-foreground">
             {totalItems}
           </p>
         </div>
-        <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary border border-primary/20">
-          <Layers className="size-4.5" />
+        <div className="flex size-7 items-center justify-center rounded-md bg-primary/10 text-primary">
+          <Layers className="size-3.5" />
         </div>
       </div>
 
       {/* Entradas Card */}
-      <div className="flex items-center justify-between p-3 rounded-xl border border-emerald-500/20 bg-emerald-50/20 dark:bg-emerald-950/10 shadow-2xs hover:border-emerald-500/30 transition-colors">
+      <div className="flex items-center justify-between px-3 py-2 rounded-lg border border-border/30 bg-card/60">
         <div className="space-y-0.5">
           <div className="flex items-center gap-1.5">
             <span className="size-1.5 rounded-full bg-emerald-500" />
-            <p className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
+            <p className="text-[10px] font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
               Entradas (+ Stock)
             </p>
           </div>
-          <p className="text-xl font-bold tracking-tight text-emerald-950 dark:text-emerald-200">
+          <p className="text-base font-bold tracking-tight text-emerald-950 dark:text-emerald-200">
             {entradasCount}
           </p>
         </div>
-        <div className="flex size-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-          <ArrowDownLeft className="size-4.5" />
+        <div className="flex size-7 items-center justify-center rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+          <ArrowDownLeft className="size-3.5" />
         </div>
       </div>
 
       {/* Salidas Card */}
-      <div className="flex items-center justify-between p-3 rounded-xl border border-amber-500/20 bg-amber-50/20 dark:bg-amber-950/10 shadow-2xs hover:border-amber-500/30 transition-colors">
+      <div className="flex items-center justify-between px-3 py-2 rounded-lg border border-border/30 bg-card/60">
         <div className="space-y-0.5">
           <div className="flex items-center gap-1.5">
             <span className="size-1.5 rounded-full bg-amber-500" />
-            <p className="text-[11px] font-medium text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+            <p className="text-[10px] font-medium text-amber-700 dark:text-amber-400 uppercase tracking-wider">
               Salidas (- Stock)
             </p>
           </div>
-          <p className="text-xl font-bold tracking-tight text-amber-950 dark:text-amber-200">
+          <p className="text-base font-bold tracking-tight text-amber-950 dark:text-amber-200">
             {salidasCount}
           </p>
         </div>
-        <div className="flex size-9 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-          <ArrowUpRight className="size-4.5" />
+        <div className="flex size-7 items-center justify-center rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400">
+          <ArrowUpRight className="size-3.5" />
         </div>
       </div>
     </div>
