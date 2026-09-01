@@ -178,9 +178,6 @@ export function ExistenciaModuleView() {
         open={formOpen}
         onOpenChange={setFormOpen}
         existenciaToEdit={existenciaToEdit}
-        almacenes={almacenes}
-        productos={productos}
-        lotes={lotes}
         onSuccessCallback={() => refetch()}
       />
 

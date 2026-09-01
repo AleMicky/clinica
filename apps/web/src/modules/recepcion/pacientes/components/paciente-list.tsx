@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   History,
   Building2,
+  RefreshCw,
 } from "lucide-react";
 import type { PacienteResponse, PacientePersonaResponse } from "../types/paciente.types";
 
@@ -90,6 +91,7 @@ export function PacienteList({
   onEdit,
   onDelete,
   onManageConvenios,
+  onRefresh,
 }: PacienteListProps) {
   const tabs: Array<{
     key: "TODOS" | "ACTIVOS" | "INACTIVOS";
@@ -126,14 +128,29 @@ export function PacienteList({
           })}
         </div>
 
-        {/* Buscador */}
-        <div className="w-full md:w-64">
-          <SearchInput
-            value={searchTerm}
-            onChange={onSearchChange}
-            placeholder="Buscar por HC, nombre, CI, teléfono..."
-            className="h-8 text-xs bg-background shadow-2xs"
-          />
+        {/* Buscador y Botón Recargar */}
+        <div className="flex items-center gap-1.5 w-full md:w-auto">
+          <div className="w-full md:w-64">
+            <SearchInput
+              value={searchTerm}
+              onChange={onSearchChange}
+              placeholder="Buscar por HC, nombre, CI, teléfono..."
+              className="h-8 text-xs bg-background shadow-2xs"
+            />
+          </div>
+          {onRefresh && (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={onRefresh}
+              disabled={isLoading}
+              title="Recargar pacientes"
+              className="h-8 w-8 shrink-0 bg-background border-border/80 hover:bg-accent text-muted-foreground hover:text-foreground cursor-pointer shadow-2xs"
+            >
+              <RefreshCw className={`size-3.5 ${isLoading ? "animate-spin text-primary" : ""}`} />
+            </Button>
+          )}
         </div>
       </div>
 
@@ -363,17 +380,15 @@ export function PacienteList({
         )}
 
         {/* PAGINACIÓN */}
-        {totalItems > 10 && (
-          <div className="pt-2 px-1">
-            <DataTablePagination
-              currentPage={currentPage}
-              pageSize={pageSize}
-              totalItems={totalItems}
-              onPageChange={onPageChange}
-              onPageSizeChange={onPageSizeChange}
-            />
-          </div>
-        )}
+        <div className="pt-2 px-1">
+          <DataTablePagination
+            currentPage={currentPage}
+            pageSize={pageSize}
+            totalItems={totalItems}
+            onPageChange={onPageChange}
+            onPageSizeChange={onPageSizeChange}
+          />
+        </div>
       </div>
     </div>
   );
