@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
 import { usePacientes, usePacienteConvenios } from "../../pacientes/hooks/use-pacientes";
+import type { PacienteResponse } from "../../pacientes/types/paciente.types";
 import { useMedicos } from "@/modules/recursos-humanos/medico/hooks/use-medicos";
 import { useEmpleadosPermitidos } from "@/modules/recursos-humanos/empleado/hooks/use-empleados";
 import { useConvenios } from "@/modules/servicios/convenio/hooks/use-convenio";
@@ -121,13 +122,19 @@ export function AdmisionPageForm({ admisionId }: AdmisionPageFormProps) {
   // Cargar datos de la admisión existente si estamos en modo edición
   React.useEffect(() => {
     if (isEditMode && existingAdmision && !hasInitializedEdit) {
-      setSelectedPacienteId(String(existingAdmision.pacienteId));
-      if (existingAdmision.recepcionistaId) {
-        setRecepcionistaId(String(existingAdmision.recepcionistaId));
+      const pId = existingAdmision.paciente?.id || existingAdmision.pacienteId;
+      if (pId) {
+        setSelectedPacienteId(String(pId));
       }
-      setConvenioId(
-        existingAdmision.convenioId ? String(existingAdmision.convenioId) : "particular"
-      );
+
+      const rId = existingAdmision.recepcionista?.id || existingAdmision.recepcionistaId;
+      if (rId) {
+        setRecepcionistaId(String(rId));
+      }
+
+      const cId = existingAdmision.convenio?.id || existingAdmision.convenioId;
+      setConvenioId(cId ? String(cId) : "particular");
+
       if (existingAdmision.fechaHora) {
         setFechaHora(
           new Date(existingAdmision.fechaHora).toISOString().slice(0, 16)
@@ -140,7 +147,7 @@ export function AdmisionPageForm({ admisionId }: AdmisionPageFormProps) {
         const loadedDetalles = existingAdmision.detalles.map((d) => ({
           id: String(d.id || Math.random()),
           servicioId: d.servicioId || d.servicio?.id || 0,
-          servicioCodigo: d.servicio?.codigo,
+          servicioCodigo: d.servicio?.codigo || undefined,
           servicioNombre: d.servicioNombre || d.servicio?.nombre || "Servicio",
           medicoId: d.medicoId ?? d.medico?.id ?? undefined,
           cantidad: d.cantidad || 1,
@@ -167,7 +174,15 @@ export function AdmisionPageForm({ admisionId }: AdmisionPageFormProps) {
     });
   }, [pacientesList, patientSearch]);
 
-  const selectedPaciente = pacientesList.find((p) => p.id.toString() === selectedPacienteId);
+  const selectedPaciente = React.useMemo(() => {
+    if (!selectedPacienteId) return undefined;
+    const foundInList = pacientesList.find((p) => p.id.toString() === selectedPacienteId);
+    if (foundInList) return foundInList;
+    if (existingAdmision?.paciente && String(existingAdmision.paciente.id) === selectedPacienteId) {
+      return existingAdmision.paciente as unknown as PacienteResponse;
+    }
+    return undefined;
+  }, [pacientesList, selectedPacienteId, existingAdmision?.paciente]);
 
   // Carrito habilitado si existe paciente o está en modo edición
   const isPatientValid = Boolean(selectedPacienteId && (selectedPaciente || isEditMode));

@@ -1,5 +1,6 @@
 using Clinica.Api.Modules.Almacenes.AjusteInventario.Entity;
 using Clinica.Api.Modules.Almacenes.Almacen.Entity;
+using Clinica.Api.Modules.Almacenes.BajaInventario.Entity;
 using Clinica.Api.Modules.Almacenes.CategoriaProducto.Entity;
 using Clinica.Api.Modules.Almacenes.ConsumoInterno.Entity;
 using Clinica.Api.Modules.Almacenes.Existencia.Entity;
@@ -68,6 +69,8 @@ public class AppDbContext(
     public DbSet<ReservaStockDetalle> ReservasStockDetalles => Set<ReservaStockDetalle>();
     public DbSet<ConsumoInterno> ConsumosInterno => Set<ConsumoInterno>();
     public DbSet<ConsumoInternoDetalle> ConsumosInternoDetalles => Set<ConsumoInternoDetalle>();
+    public DbSet<BajaInventario> BajasInventario => Set<BajaInventario>();
+    public DbSet<BajaInventarioDetalle> BajasInventarioDetalles => Set<BajaInventarioDetalle>();
     public DbSet<CatalogoGrupo> CatalogosGrupos => Set<CatalogoGrupo>();
     public DbSet<CatalogoItem> CatalogosItems => Set<CatalogoItem>();
     public DbSet<UnidadesMedida> UnidadesMedida => Set<UnidadesMedida>();

@@ -2,6 +2,8 @@ using Clinica.Api.Modules.Almacenes.AjusteInventario.Endpoints;
 using Clinica.Api.Modules.Almacenes.AjusteInventario.Services;
 using Clinica.Api.Modules.Almacenes.Almacen.Endpoints;
 using Clinica.Api.Modules.Almacenes.Almacen.Services;
+using Clinica.Api.Modules.Almacenes.BajaInventario.Endpoints;
+using Clinica.Api.Modules.Almacenes.BajaInventario.Services;
 using Clinica.Api.Modules.Almacenes.CategoriaProducto.Endpoints;
 using Clinica.Api.Modules.Almacenes.CategoriaProducto.Services;
 using Clinica.Api.Modules.Almacenes.ConsumoInterno.Endpoints;
@@ -42,6 +44,7 @@ public static class AlmacenesModule
         services.AddScoped<IAjusteInventarioService, AjusteInventarioService>();
         services.AddScoped<IReservaStockService, ReservaStockService>();
         services.AddScoped<IConsumoInternoService, ConsumoInternoService>();
+        services.AddScoped<IBajaInventarioService, BajaInventarioService>();
 
         return services;
     }
@@ -61,6 +64,7 @@ public static class AlmacenesModule
         app.MapAjusteInventarioEndpoints();
         app.MapReservaStockEndpoints();
         app.MapConsumoInternoEndpoints();
+        app.MapBajaInventarioEndpoints();
 
         return app;
     }

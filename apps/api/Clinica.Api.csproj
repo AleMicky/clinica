@@ -39,6 +39,11 @@
     <Folder Include="Modules\Almacenes\Almacen\Mappers\" />
     <Folder Include="Modules\Almacenes\Almacen\Services\" />
     <Folder Include="Modules\Almacenes\Almacen\Validators\" />
+    <Folder Include="Modules\Almacenes\BajaInventario\Dtos\" />
+    <Folder Include="Modules\Almacenes\BajaInventario\Endpoints\" />
+    <Folder Include="Modules\Almacenes\BajaInventario\Mappers\" />
+    <Folder Include="Modules\Almacenes\BajaInventario\Services\" />
+    <Folder Include="Modules\Almacenes\BajaInventario\Validators\" />
     <Folder Include="Modules\Almacenes\ConsumoInterno\Dtos\" />
     <Folder Include="Modules\Almacenes\ConsumoInterno\Endpoints\" />
     <Folder Include="Modules\Almacenes\ConsumoInterno\Mappers\" />
