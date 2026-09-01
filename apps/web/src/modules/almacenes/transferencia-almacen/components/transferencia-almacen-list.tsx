@@ -528,7 +528,7 @@ export function TransferenciaAlmacenList({
                     </td>
                     <td className="px-2.5 py-1.5">
                       <div className="flex items-center gap-1 text-muted-foreground text-xs">
-                        <Warehouse className="size-3 text-muted-foreground/70 shrink-0 text-primary" />
+                        <Warehouse className="size-3 text-primary shrink-0" />
                         <span className="truncate">{transf.almacenDestinoNombre || "-"}</span>
                       </div>
                     </td>

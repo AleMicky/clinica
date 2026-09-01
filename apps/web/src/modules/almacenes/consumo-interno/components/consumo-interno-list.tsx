@@ -466,7 +466,7 @@ export function ConsumoInternoList({
                       </div>
                     </td>
                     <td className="px-2.5 py-1.5">
-                      <div className="flex items-center gap-1 text-muted-foreground text-xs font-medium text-foreground">
+                      <div className="flex items-center gap-1 text-xs font-medium text-foreground">
                         <Building2 className="size-3 text-teal-600 shrink-0" />
                         <span className="truncate">{consumo.areaNombre || "-"}</span>
                       </div>

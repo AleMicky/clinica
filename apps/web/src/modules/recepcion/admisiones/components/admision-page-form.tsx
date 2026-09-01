@@ -253,7 +253,7 @@ export function AdmisionPageForm({ admisionId }: AdmisionPageFormProps) {
 
   if (isEditMode && isLoadingExistingAdmision) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[350px] gap-3">
+      <div className="flex flex-col items-center justify-center min-h-87.5 gap-3">
         <Loader2 className="size-8 animate-spin text-primary" />
         <p className="text-sm font-medium text-muted-foreground">Cargando datos de la admisión...</p>
       </div>
