@@ -73,6 +73,9 @@ export const ROUTES = {
     MOVIMIENTOS: "/almacenes/movimientos",
     TRANSFERENCIAS: "/almacenes/transferencias",
     INVENTARIOS_FISICOS: "/almacenes/inventarios-fisicos",
+    AJUSTES: "/almacenes/ajustes",
+    BAJAS: "/almacenes/bajas",
+    CONSUMOS: "/almacenes/consumos",
   },
 } as const;
 

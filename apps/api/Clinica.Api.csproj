@@ -34,6 +34,8 @@
     <Folder Include="Modules\Almacenes\AjusteInventario\Mappers\" />
     <Folder Include="Modules\Almacenes\AjusteInventario\Services\" />
     <Folder Include="Modules\Almacenes\AjusteInventario\Validators\" />
+    <Folder Include="Modules\Almacenes\AlertasStock\Endpoints\" />
+    <Folder Include="Modules\Almacenes\AlertasStock\Services\" />
     <Folder Include="Modules\Almacenes\Almacen\Dtos\" />
     <Folder Include="Modules\Almacenes\Almacen\Endpoints\" />
     <Folder Include="Modules\Almacenes\Almacen\Mappers\" />
@@ -59,6 +61,9 @@
     <Folder Include="Modules\Almacenes\InventarioFisico\Mappers\" />
     <Folder Include="Modules\Almacenes\InventarioFisico\Services\" />
     <Folder Include="Modules\Almacenes\InventarioFisico\Validators\" />
+    <Folder Include="Modules\Almacenes\Kardex\Dtos\" />
+    <Folder Include="Modules\Almacenes\Kardex\Endpoints\" />
+    <Folder Include="Modules\Almacenes\Kardex\Services\" />
     <Folder Include="Modules\Almacenes\Lote\Dtos\" />
     <Folder Include="Modules\Almacenes\Lote\Endpoints\" />
     <Folder Include="Modules\Almacenes\Lote\Mappers\" />
