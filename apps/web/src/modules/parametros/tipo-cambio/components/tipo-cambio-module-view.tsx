@@ -6,7 +6,7 @@ import { TipoCambioHeader } from "./tipo-cambio-header";
 import { TipoCambioMetricsCards } from "./tipo-cambio-metrics";
 import { TipoCambioTable, type TipoCambioItem } from "./tipo-cambio-table";
 import { TipoCambioFormDialog } from "./tipo-cambio-form-dialog";
-import { TipoCambioDeleteDialog } from "./tipo-cambio-delete-dialog";
+import { ConfirmDeleteDialog } from "@/components/shared";
 import {
   useTiposCambio,
   useDeleteTipoCambio,
@@ -155,10 +155,12 @@ export function TipoCambioModuleView() {
         tipoCambioToEdit={tipoCambioToEdit}
         onSuccessCallback={() => refetch()}
       />
-      <TipoCambioDeleteDialog
+      <ConfirmDeleteDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        tipoCambio={itemToDelete}
+        title="¿Eliminar tipo de cambio?"
+        itemName={itemToDelete ? `${itemToDelete.monedaOrigenCodigo || itemToDelete.monedaOrigenId} → ${itemToDelete.monedaDestinoCodigo || itemToDelete.monedaDestinoId} (${itemToDelete.fecha})` : undefined}
+        confirmLabel="Eliminar Registro"
         onConfirm={handleConfirmDelete}
         isLoading={deleteMutation.isPending}
       />

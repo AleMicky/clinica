@@ -6,7 +6,7 @@ import { MonedaHeader } from "./moneda-header";
 import { MonedaMetricsCards } from "./moneda-metrics";
 import { MonedaTable, type MonedaItem } from "./moneda-table";
 import { MonedaFormDialog } from "./moneda-form-dialog";
-import { MonedaDeleteDialog } from "./moneda-delete-dialog";
+import { ConfirmDeleteDialog } from "@/components/shared";
 import {
   useMonedas,
   useUpdateMoneda,
@@ -164,10 +164,12 @@ export function MonedaModuleView() {
         monedaToEdit={monedaToEdit}
         onSuccessCallback={() => refetch()}
       />
-      <MonedaDeleteDialog
+      <ConfirmDeleteDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        moneda={monedaToDelete}
+        title="¿Eliminar la divisa seleccionada?"
+        itemName={monedaToDelete ? `${monedaToDelete.nombre} (${monedaToDelete.codigo})` : undefined}
+        confirmLabel="Eliminar Moneda"
         onConfirm={handleConfirmDelete}
         isLoading={deleteMonedaMutation.isPending}
       />

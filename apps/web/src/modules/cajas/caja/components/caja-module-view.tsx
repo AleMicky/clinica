@@ -7,7 +7,7 @@ import { CajaHeader } from "./caja-header";
 import { CajaMetrics } from "./caja-metrics";
 import { CajaList } from "./caja-list";
 import { CajaFormDialog } from "./caja-form-dialog";
-import { CajaDeleteDialog } from "./caja-delete-dialog";
+import { ConfirmDeleteDialog } from "@/components/shared";
 import type { CajaResponse } from "../types/caja.types";
 
 export function CajaModuleView() {
@@ -155,10 +155,12 @@ export function CajaModuleView() {
       />
 
       {/* Modal de Confirmación de Eliminación */}
-      <CajaDeleteDialog
+      <ConfirmDeleteDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        caja={cajaToDelete}
+        title="¿Eliminar la caja seleccionada?"
+        itemName={cajaToDelete ? `${cajaToDelete.nombre} (${cajaToDelete.codigo})` : undefined}
+        confirmLabel="Eliminar Caja"
         onConfirm={handleConfirmDelete}
         isLoading={deleteMutation.isPending}
       />

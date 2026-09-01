@@ -6,7 +6,7 @@ import { BancoHeader } from "./banco-header";
 import { BancoMetricsCards } from "./banco-metrics";
 import { BancoTable } from "./banco-table";
 import { BancoFormDialog } from "./banco-form-dialog";
-import { BancoDeleteDialog } from "./banco-delete-dialog";
+import { ConfirmDeleteDialog } from "@/components/shared";
 import { BancoCuentasSheet } from "./banco-cuentas-sheet";
 import { useBancos, useDeleteBanco } from "../hooks/use-bancos";
 import type { BancoMetrics, BancoResponse } from "../types/banco.types";
@@ -130,10 +130,12 @@ export function BancoModuleView() {
         onSuccessCallback={() => refetch()}
       />
 
-      <BancoDeleteDialog
+      <ConfirmDeleteDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        banco={bancoToDelete}
+        title="¿Eliminar el banco seleccionado?"
+        itemName={bancoToDelete ? `${bancoToDelete.nombre} (${bancoToDelete.codigo})` : undefined}
+        confirmLabel="Eliminar Banco"
         onConfirm={handleConfirmDelete}
         isLoading={deleteBancoMutation.isPending}
       />

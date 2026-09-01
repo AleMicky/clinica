@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { CargoHeader } from "./cargo-header";
 import { CargoMetricsCards, type CargoMetrics } from "./cargo-metrics";
 import { CargoList } from "./cargo-list";
-import { CargoDeleteDialog } from "./cargo-delete-dialog";
+import { ConfirmDeleteDialog } from "@/components/shared";
 import { useDeleteCargo, useCargos } from "../hooks/use-cargos";
 import type { CargoResponse } from "../types/cargo.types";
 
@@ -131,10 +131,12 @@ export function CargoModuleView() {
       />
 
       {/* Modal: Confirmación de Eliminación */}
-      <CargoDeleteDialog
+      <ConfirmDeleteDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        cargo={cargoToDelete}
+        title="¿Eliminar el cargo seleccionado?"
+        itemName={cargoToDelete ? `${cargoToDelete.nombre} (${cargoToDelete.codigo})` : undefined}
+        confirmLabel="Eliminar Cargo"
         onConfirm={handleConfirmDelete}
         isLoading={deleteMutation.isPending}
       />

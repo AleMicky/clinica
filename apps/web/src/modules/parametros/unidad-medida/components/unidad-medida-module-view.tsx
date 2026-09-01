@@ -6,7 +6,7 @@ import { UnidadMedidaHeader } from "./unidad-medida-header";
 import { UnidadMedidaMetricsCards } from "./unidad-medida-metrics";
 import { UnidadMedidaTable, type UnidadMedidaItem } from "./unidad-medida-table";
 import { UnidadMedidaFormDialog } from "./unidad-medida-form-dialog";
-import { UnidadMedidaDeleteDialog } from "./unidad-medida-delete-dialog";
+import { ConfirmDeleteDialog } from "@/components/shared";
 import { useUnidadesMedida, useDeleteUnidadMedida } from "../hooks/use-unidades-medida";
 import type { UnidadMedidaMetrics, UnidadMedidaResponse } from "../types/unidad-medida.types";
 
@@ -153,10 +153,12 @@ export function UnidadMedidaModuleView() {
         unidadToEdit={unidadToEdit}
         onSuccessCallback={() => refetch()}
       />
-      <UnidadMedidaDeleteDialog
+      <ConfirmDeleteDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        unidad={unidadToDelete}
+        title="¿Eliminar la unidad de medida?"
+        itemName={unidadToDelete ? `${unidadToDelete.nombre} (${unidadToDelete.codigo})` : undefined}
+        confirmLabel="Eliminar Unidad"
         onConfirm={handleConfirmDelete}
         isLoading={deleteUnidadMutation.isPending}
       />

@@ -7,11 +7,7 @@ import {
   Trash2,
   Star,
   RefreshCw,
-  Inbox,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -29,7 +25,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { StatusBadge, DataTablePagination, SearchInput } from "@/components/shared";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  StatusBadge,
+  DataTablePagination,
+  DataTableToolbar,
+  TableSkeletonRows,
+  EmptyState,
+} from "@/components/shared";
 import { cn } from "@/lib/utils";
 
 export interface MonedaItem {
@@ -79,33 +83,16 @@ export function MonedaTable({
 
   return (
     <div className="space-y-3 w-full">
-      {/* Compact Toolbar Controls */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
-        <div className="flex flex-1 items-center gap-2">
-          <SearchInput
-            placeholder="Buscar por código ISO o nombre..."
-            value={searchTerm}
-            onChange={onSearchChange}
-            className="w-full sm:w-72 h-8 text-xs"
-          />
-        </div>
-
-        <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
-          {onRefresh && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onRefresh}
-              disabled={isLoading}
-              title="Recargar datos"
-              className="h-8 px-2.5 text-xs gap-1.5 cursor-pointer"
-            >
-              <RefreshCw className={cn("size-3.5", isLoading && "animate-spin")} />
-              <span className="hidden sm:inline">Actualizar</span>
-            </Button>
-          )}
-        </div>
-      </div>
+      {/* Centralized Toolbar */}
+      <DataTableToolbar
+        searchValue={searchTerm}
+        onSearchChange={onSearchChange}
+        searchPlaceholder="Buscar por código ISO o nombre..."
+        totalCount={totalItems}
+        filteredCount={monedas.length}
+        onRefresh={onRefresh}
+        isRefreshing={isLoading}
+      />
 
       {/* Cardless Compact Bordered Table Container */}
       <div className="rounded-lg border bg-card overflow-hidden shadow-2xs">
@@ -123,41 +110,14 @@ export function MonedaTable({
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              Array.from({ length: 5 }).map((_, idx) => (
-                <TableRow key={idx} className="h-10">
-                  <TableCell className="pl-4 py-2">
-                    <Skeleton className="h-4 w-12 rounded" />
-                  </TableCell>
-                  <TableCell className="py-2">
-                    <Skeleton className="h-4 w-8 rounded" />
-                  </TableCell>
-                  <TableCell className="py-2">
-                    <Skeleton className="h-4 w-36 rounded" />
-                  </TableCell>
-                  <TableCell className="py-2">
-                    <Skeleton className="h-4 w-16 rounded" />
-                  </TableCell>
-                  <TableCell className="py-2">
-                    <Skeleton className="h-5 w-20 rounded-full" />
-                  </TableCell>
-                  <TableCell className="py-2">
-                    <Skeleton className="h-5 w-16 rounded-full" />
-                  </TableCell>
-                  <TableCell className="text-right pr-4 py-2">
-                    <Skeleton className="h-7 w-7 rounded-md ml-auto" />
-                  </TableCell>
-                </TableRow>
-              ))
+              <TableSkeletonRows rows={5} columns={7} />
             ) : monedas.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="h-32 text-center text-muted-foreground text-xs py-8">
-                  <div className="flex flex-col items-center justify-center gap-1.5">
-                    <Inbox className="size-8 text-muted-foreground/50 stroke-1" />
-                    <p className="font-medium text-foreground text-sm">No se encontraron monedas</p>
-                    <p className="text-xs text-muted-foreground">
-                      No hay divisas coincidentes con los criterios de búsqueda.
-                    </p>
-                  </div>
+                <TableCell colSpan={7} className="p-4">
+                  <EmptyState
+                    title="No se encontraron monedas"
+                    description="No hay divisas coincidentes con los criterios de búsqueda."
+                  />
                 </TableCell>
               </TableRow>
             ) : (

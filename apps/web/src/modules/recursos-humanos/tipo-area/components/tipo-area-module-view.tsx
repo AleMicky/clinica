@@ -9,7 +9,7 @@ import {
   type TipoAreaMetrics,
 } from "./tipo-area-metrics";
 import { TipoAreaList } from "./tipo-area-list";
-import { TipoAreaDeleteDialog } from "./tipo-area-delete-dialog";
+import { ConfirmDeleteDialog } from "@/components/shared";
 import {
   useDeleteTipoArea,
   useTiposArea,
@@ -141,10 +141,12 @@ export function TipoAreaModuleView() {
       />
 
       {/* Modal: Confirmación de Eliminación */}
-      <TipoAreaDeleteDialog
+      <ConfirmDeleteDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        tipoArea={tipoAreaToDelete}
+        title="¿Eliminar el tipo de área seleccionado?"
+        itemName={tipoAreaToDelete ? `${tipoAreaToDelete.nombre} (${tipoAreaToDelete.codigo})` : undefined}
+        confirmLabel="Eliminar Tipo de Área"
         onConfirm={handleConfirmDelete}
         isLoading={deleteMutation.isPending}
       />

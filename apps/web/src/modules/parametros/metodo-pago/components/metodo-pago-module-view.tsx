@@ -6,7 +6,7 @@ import { MetodoPagoHeader } from "./metodo-pago-header";
 import { MetodoPagoMetricsCards } from "./metodo-pago-metrics";
 import { MetodoPagoTable } from "./metodo-pago-table";
 import { MetodoPagoFormDialog } from "./metodo-pago-form-dialog";
-import { MetodoPagoDeleteDialog } from "./metodo-pago-delete-dialog";
+import { ConfirmDeleteDialog } from "@/components/shared";
 import {
   useDeleteMetodoPago,
   useMetodosPago,
@@ -121,10 +121,12 @@ export function MetodoPagoModuleView() {
         onSuccess={() => refetch()}
       />
 
-      <MetodoPagoDeleteDialog
+      <ConfirmDeleteDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        metodo={metodoToDelete}
+        title="¿Eliminar método de pago?"
+        itemName={metodoToDelete?.nombre}
+        confirmLabel="Eliminar Método"
         onConfirm={handleConfirmDelete}
         isLoading={deleteMutation.isPending}
       />

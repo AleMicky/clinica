@@ -8,4 +8,3 @@ export * from "./components/metodo-pago-header";
 export * from "./components/metodo-pago-metrics";
 export * from "./components/metodo-pago-table";
 export * from "./components/metodo-pago-form-dialog";
-export * from "./components/metodo-pago-delete-dialog";
