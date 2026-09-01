@@ -88,27 +88,47 @@ export function ExistenciaList({
   onViewAudit,
 }: ExistenciaListProps) {
   return (
-    <div className="flex flex-col gap-3 bg-card border border-border/60 rounded-xl p-3.5 shadow-2xs">
-      {/* Top Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2 border-b border-border/40">
-        <div className="flex items-center gap-2">
-          <Boxes className="size-4 text-primary" />
-          <h2 className="text-xs font-semibold text-foreground uppercase tracking-wider">
-            Stock de Productos por Almacén
-          </h2>
-          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-mono">
-            {totalItems}
-          </Badge>
+    <div className="flex flex-col gap-3 w-full">
+      {/* Controls: Search, Filter & Actions */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1">
+          {/* Almacen Filter */}
+          <select
+            value={selectedAlmacenId ?? ""}
+            onChange={(e) => {
+              const val = e.target.value;
+              onAlmacenChange?.(val ? Number(val) : null);
+            }}
+            className="h-8 px-2.5 text-xs rounded-md border border-border/60 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary w-full sm:w-56 cursor-pointer"
+          >
+            <option value="">Todos los almacenes</option>
+            {almacenes.map((alm) => (
+              <option key={alm.id} value={alm.id}>
+                {alm.nombre} ({alm.codigo})
+              </option>
+            ))}
+          </select>
+
+          {/* Search */}
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-2 size-3.5 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por código de producto, nombre o almacén..."
+              value={searchTerm}
+              onChange={(e) => onSearchChange?.(e.target.value)}
+              className="pl-8 text-xs h-8 bg-background border-border/60 focus:bg-background w-full"
+            />
+          </div>
         </div>
 
-        <div className="flex items-center gap-1.5 self-end sm:self-auto">
+        <div className="flex items-center gap-1.5 self-end sm:self-auto shrink-0">
           {onRefresh && (
             <Button
               variant="outline"
               size="icon"
               onClick={onRefresh}
               disabled={isLoading}
-              className="size-7 cursor-pointer border-border/60"
+              className="size-8 cursor-pointer border-border/60"
               title="Recargar datos"
               aria-label="Recargar datos"
             >
@@ -120,48 +140,17 @@ export function ExistenciaList({
             <Button
               onClick={onAddExistencia}
               size="sm"
-              className="h-7 px-2.5 text-xs font-medium gap-1 cursor-pointer shadow-2xs"
+              className="h-8 px-3 text-xs font-medium gap-1.5 cursor-pointer shadow-2xs"
             >
               <Plus className="size-3.5" />
-              <span className="text-[11px]">Nueva Existencia</span>
+              <span className="text-xs">Nueva Existencia</span>
             </Button>
           )}
         </div>
       </div>
 
-      {/* Filter Row */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-        {/* Almacen Filter */}
-        <select
-          value={selectedAlmacenId ?? ""}
-          onChange={(e) => {
-            const val = e.target.value;
-            onAlmacenChange?.(val ? Number(val) : null);
-          }}
-          className="h-8 px-2.5 text-xs rounded-md border border-border/60 bg-muted/30 text-foreground focus:outline-none focus:ring-1 focus:ring-primary w-full sm:w-56 cursor-pointer"
-        >
-          <option value="">Todos los almacenes</option>
-          {almacenes.map((alm) => (
-            <option key={alm.id} value={alm.id}>
-              {alm.nombre} ({alm.codigo})
-            </option>
-          ))}
-        </select>
-
-        {/* Search */}
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2 size-3.5 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por código de producto, nombre o almacén..."
-            value={searchTerm}
-            onChange={(e) => onSearchChange?.(e.target.value)}
-            className="pl-8 text-xs h-8 bg-muted/30 border-border/60 focus:bg-background w-full"
-          />
-        </div>
-      </div>
-
       {/* List Container */}
-      <div className="flex flex-col gap-1.5 overflow-y-auto max-h-[calc(100vh-280px)] min-h-0 pr-0.5">
+      <div className="flex flex-col gap-2 w-full">
         {isLoading ? (
           Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="p-3 rounded-lg border border-border/40 space-y-2">
@@ -212,7 +201,7 @@ export function ExistenciaList({
             return (
               <div
                 key={item.id}
-                className="group border border-border/50 hover:border-border bg-background/70 hover:bg-muted/30 rounded-lg px-3.5 py-2.5 transition-all flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs hover:shadow-xs"
+                className="group border border-border/60 hover:border-primary/40 bg-card hover:bg-muted/20 rounded-lg px-3.5 py-2.5 transition-all flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs hover:shadow-xs"
               >
                 {/* Left: Product & Warehouse info */}
                 <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -245,10 +234,10 @@ export function ExistenciaList({
                         <span>{item.almacenNombre || `Almacén #${item.almacenId}`}</span>
                       </span>
 
-                      {item.loteNumero && (
+                      {(item.loteNumero || (item as any).numeroLote || (item.loteId ? `#${item.loteId}` : null)) && (
                         <span className="inline-flex items-center gap-1 bg-muted/40 px-1.5 py-0.5 rounded border border-border/30">
                           <Tag className="size-3 text-muted-foreground" />
-                          <span>Lote: {item.loteNumero}</span>
+                          <span>Lote: {item.loteNumero || (item as any).numeroLote || `#${item.loteId}`}</span>
                         </span>
                       )}
                     </div>

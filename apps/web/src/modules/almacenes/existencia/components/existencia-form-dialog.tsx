@@ -11,6 +11,7 @@ import {
   Package,
   Tag,
   Calculator,
+  Info,
 } from "lucide-react";
 
 import {
@@ -34,6 +35,7 @@ import {
 import {
   useCreateExistencia,
   useUpdateExistencia,
+  useExistencias,
 } from "../hooks/use-existencia";
 import type { ExistenciaResponse } from "../types/existencia.types";
 import { AlmacenAutocomplete } from "../../almacen";
@@ -54,6 +56,7 @@ export function ExistenciaFormDialog({
   onSuccessCallback,
 }: ExistenciaFormDialogProps) {
   const isEditing = Boolean(existenciaToEdit);
+  const [keepOpen, setKeepOpen] = React.useState(false);
 
   const createMutation = useCreateExistencia();
   const updateMutation = useUpdateExistencia();
@@ -77,10 +80,33 @@ export function ExistenciaFormDialog({
     },
   });
 
+  const selectedAlmacenId = watch("almacenId");
   const selectedProductoId = watch("productoId");
+  const selectedLoteId = watch("loteId");
   const watchedCantidad = watch("cantidad") || 0;
   const watchedReservada = watch("cantidadReservada") || 0;
   const calculatedDisponible = Math.max(0, watchedCantidad - watchedReservada);
+
+  const { data: existenciasData } = useExistencias(
+    !isEditing && selectedAlmacenId && selectedProductoId
+      ? {
+          almacenId: Number(selectedAlmacenId),
+          productoId: Number(selectedProductoId),
+          pageSize: 100,
+        }
+      : undefined
+  );
+
+  const existingRecord = React.useMemo(() => {
+    if (isEditing || !existenciasData?.items) return null;
+    return (
+      existenciasData.items.find((item) => {
+        const itemLoteId = item.loteId || null;
+        const formLoteId = selectedLoteId ? Number(selectedLoteId) : null;
+        return itemLoteId === formLoteId;
+      }) || null
+    );
+  }, [isEditing, existenciasData, selectedLoteId]);
 
   React.useEffect(() => {
     if (open) {
@@ -118,6 +144,8 @@ export function ExistenciaFormDialog({
           },
         });
         toast.success("Existencia actualizada correctamente.");
+        onSuccessCallback?.();
+        onOpenChange(false);
       } else {
         await createMutation.mutateAsync({
           almacenId: Number(values.almacenId),
@@ -127,9 +155,20 @@ export function ExistenciaFormDialog({
           cantidadReservada: Number(values.cantidadReservada),
         });
         toast.success("Existencia registrada exitosamente.");
+        onSuccessCallback?.();
+
+        if (keepOpen) {
+          reset({
+            almacenId: values.almacenId,
+            productoId: 0,
+            loteId: null,
+            cantidad: 0,
+            cantidadReservada: 0,
+          });
+        } else {
+          onOpenChange(false);
+        }
       }
-      onSuccessCallback?.();
-      onOpenChange(false);
     } catch (error: any) {
       const errorMsg =
         error?.response?.data?.message ||
@@ -235,15 +274,33 @@ export function ExistenciaFormDialog({
                 render={({ field }) => (
                   <LoteAutocomplete
                     productoId={selectedProductoId}
+                    almacenId={selectedAlmacenId}
                     value={field.value}
                     onValueChange={(val) => field.onChange(val || null)}
-                    disabled={isLoading || !selectedProductoId}
+                    disabled={isLoading || !selectedProductoId || isEditing}
                     error={Boolean(errors.loteId)}
                     placeholder="Seleccionar lote del producto..."
                   />
                 )}
               />
             </div>
+
+            {/* Aviso si ya existe stock previo para este producto/lote */}
+            {existingRecord && (
+              <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 text-xs flex items-start gap-2">
+                <Info className="size-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <p className="font-semibold text-foreground">
+                    Existencia actual registrada en este almacén:
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Físico: <span className="font-mono font-bold text-foreground">{existingRecord.cantidad}</span> | 
+                    Reservado: <span className="font-mono font-bold text-foreground">{existingRecord.cantidadReservada}</span> | 
+                    Disponible: <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{existingRecord.cantidadDisponible}</span>
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Cantidades */}
@@ -325,26 +382,47 @@ export function ExistenciaFormDialog({
             </div>
           </div>
 
-          <DialogFooter className="gap-2 pt-2 border-t border-border/40">
+          <DialogFooter className="pt-4 border-t flex flex-col-reverse sm:flex-row sm:justify-between items-center gap-2">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
-              className="h-8 text-xs cursor-pointer"
+              className="h-8 text-xs cursor-pointer w-full sm:w-auto"
             >
               Cancelar
             </Button>
-            <Button
-              type="submit"
-              size="sm"
-              disabled={isLoading}
-              className="h-8 text-xs gap-1.5 cursor-pointer shadow-2xs font-medium"
-            >
-              {isLoading && <Loader2 className="size-3.5 animate-spin" />}
-              <span>{isEditing ? "Actualizar Stock" : "Registrar Stock"}</span>
-            </Button>
+
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+              {!isEditing && (
+                <Button
+                  type="submit"
+                  variant="secondary"
+                  size="sm"
+                  disabled={isLoading}
+                  onClick={() => setKeepOpen(true)}
+                  className="h-8 text-xs cursor-pointer w-full sm:w-auto"
+                >
+                  {isLoading && keepOpen && (
+                    <Loader2 className="size-3.5 animate-spin mr-1.5" />
+                  )}
+                  Guardar y agregar otro
+                </Button>
+              )}
+              <Button
+                type="submit"
+                size="sm"
+                disabled={isLoading}
+                onClick={() => setKeepOpen(false)}
+                className="h-8 text-xs gap-1.5 cursor-pointer shadow-2xs font-medium w-full sm:w-auto"
+              >
+                {isLoading && !keepOpen && (
+                  <Loader2 className="size-3.5 animate-spin" />
+                )}
+                <span>{isEditing ? "Guardar Cambios" : "Guardar y Cerrar"}</span>
+              </Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>

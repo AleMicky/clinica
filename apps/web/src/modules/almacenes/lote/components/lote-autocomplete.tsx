@@ -1,29 +1,34 @@
 "use client";
 
 import * as React from "react";
-import { Layers, Check, ChevronsUpDown, Loader2, X } from "lucide-react";
+import { Layers, Check, ChevronsUpDown, Loader2, X, PackageCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLotes } from "../hooks/use-lote";
+import { useExistencias } from "../../existencia/hooks/use-existencia";
 import type { LoteResponse } from "../types/lote.types";
 
 export interface LoteAutocompleteProps {
   productoId?: number | null;
+  almacenId?: number | null;
   value?: number | string | null;
   onValueChange: (value: number | null, lote?: LoteResponse | null) => void;
   placeholder?: string;
   disabled?: boolean;
   error?: boolean;
+  showStock?: boolean;
   className?: string;
   id?: string;
 }
 
 export function LoteAutocomplete({
   productoId,
+  almacenId,
   value,
   onValueChange,
   placeholder = "Seleccionar lote...",
   disabled = false,
   error = false,
+  showStock = true,
   className,
   id,
 }: LoteAutocompleteProps) {
@@ -41,6 +46,33 @@ export function LoteAutocomplete({
       enabled: Boolean(productoId && productoId > 0),
     }
   );
+
+  const { data: existenciasData } = useExistencias(
+    productoId && productoId > 0
+      ? {
+          productoId,
+          almacenId: almacenId && almacenId > 0 ? almacenId : undefined,
+          pageSize: 100,
+        }
+      : undefined
+  );
+
+  const existenciasPorLote = React.useMemo(() => {
+    const map = new Map<number, { cantidad: number; disponible: number; reservada: number }>();
+    if (!existenciasData?.items) return map;
+
+    for (const ex of existenciasData.items) {
+      if (ex.loteId) {
+        const current = map.get(ex.loteId) || { cantidad: 0, disponible: 0, reservada: 0 };
+        map.set(ex.loteId, {
+          cantidad: current.cantidad + ex.cantidad,
+          disponible: current.disponible + ex.cantidadDisponible,
+          reservada: current.reservada + ex.cantidadReservada,
+        });
+      }
+    }
+    return map;
+  }, [existenciasData]);
 
   const lotes = React.useMemo(() => data?.items ?? [], [data]);
 
@@ -196,6 +228,8 @@ export function LoteAutocomplete({
                   })
                 : null;
 
+              const loteStock = existenciasPorLote.get(lote.id);
+
               return (
                 <div
                   key={lote.id}
@@ -207,10 +241,12 @@ export function LoteAutocomplete({
                   )}
                 >
                   <div className="flex flex-col min-w-0">
-                    <span className="font-mono font-semibold text-foreground">
-                      {lote.numeroLote}
-                    </span>
-                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-mono font-semibold text-foreground">
+                        {lote.numeroLote}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground flex-wrap">
                       {expDate && <span>Vence: {expDate}</span>}
                       {lote.costoUnitario !== null &&
                         lote.costoUnitario !== undefined && (
@@ -218,7 +254,23 @@ export function LoteAutocomplete({
                         )}
                     </div>
                   </div>
-                  {isSelected && <Check className="size-3.5 text-primary shrink-0" />}
+
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {showStock && loteStock !== undefined && (
+                      <span
+                        className={cn(
+                          "font-mono text-[10px] px-1.5 py-0.5 rounded font-bold border",
+                          loteStock.disponible > 0
+                            ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
+                            : "bg-muted text-muted-foreground border-border/50"
+                        )}
+                        title={`Físico: ${loteStock.cantidad} | Reservado: ${loteStock.reservada} | Disponible: ${loteStock.disponible}`}
+                      >
+                        Stock: {loteStock.disponible.toLocaleString()}
+                      </span>
+                    )}
+                    {isSelected && <Check className="size-3.5 text-primary shrink-0" />}
+                  </div>
                 </div>
               );
             })
