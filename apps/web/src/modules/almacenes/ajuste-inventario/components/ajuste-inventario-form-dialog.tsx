@@ -54,20 +54,13 @@ import {
 } from "../types/ajuste-inventario.types";
 import { AlmacenAutocomplete } from "../../almacen";
 import { ProductoAutocomplete } from "../../producto";
+import { LoteAutocomplete } from "../../lote";
 
 interface AjusteInventarioFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   ajusteToEdit?: AjusteInventarioResponse | null;
   onSuccessCallback?: () => void;
-}
-
-function generateDefaultNumero() {
-  const d = new Date();
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-  return `AJU-${year}${month}-${randomSuffix}`;
 }
 
 export function AjusteInventarioFormDialog({
@@ -114,6 +107,7 @@ export function AjusteInventarioFormDialog({
 
   const watchedDetalles = watch("detalles") || [];
   const watchedTipo = watch("tipo");
+  const selectedAlmacenId = watch("almacenId");
 
   const totalCantidad = watchedDetalles.reduce(
     (acc, curr) => acc + (Number(curr.cantidad) || 0),
@@ -147,7 +141,7 @@ export function AjusteInventarioFormDialog({
       }
     } else {
       reset({
-        numero: generateDefaultNumero(),
+        numero: "",
         almacenId: 0,
         tipo: TipoAjusteInventario.Positivo,
         fecha: new Date().toISOString().slice(0, 16),
@@ -189,7 +183,7 @@ export function AjusteInventarioFormDialog({
     }
 
     const payload = {
-      numero: values.numero.trim(),
+      numero: values.numero?.trim() || (isEditing && ajusteToEdit ? ajusteToEdit.numero : ""),
       almacenId: Number(values.almacenId),
       tipo: Number(values.tipo) as TipoAjusteInventario,
       fecha: new Date(values.fecha).toISOString(),
@@ -208,10 +202,10 @@ export function AjusteInventarioFormDialog({
           id: ajusteToEdit.id,
           data: payload,
         });
-        toast.success(`Ajuste "${payload.numero}" actualizado.`);
+        toast.success(`Ajuste actualizado.`);
       } else {
         await createMutation.mutateAsync(payload);
-        toast.success(`Ajuste "${payload.numero}" guardado como borrador.`);
+        toast.success(`Ajuste registrado como borrador.`);
       }
       onSuccessCallback?.();
       onOpenChange(false);
@@ -269,25 +263,7 @@ export function AjusteInventarioFormDialog({
         >
           {/* Section 1: General Info */}
           <div className="p-3.5 rounded-xl bg-muted/30 border border-border/60 flex flex-col gap-3.5 shadow-2xs">
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-              {/* Número */}
-              <div className="flex flex-col gap-1">
-                <Label htmlFor="numero" className="text-xs font-medium">
-                  N° Ajuste <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="numero"
-                  {...register("numero")}
-                  placeholder="AJU-2026-0001"
-                  className="h-8 text-xs font-mono font-semibold"
-                />
-                {errors.numero && (
-                  <span className="text-[10px] text-destructive">
-                    {errors.numero.message}
-                  </span>
-                )}
-              </div>
-
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {/* Tipo de Ajuste */}
               <div className="flex flex-col gap-1">
                 <Label htmlFor="tipo" className="text-xs font-medium">
@@ -296,30 +272,59 @@ export function AjusteInventarioFormDialog({
                 <Controller
                   name="tipo"
                   control={control}
-                  render={({ field }) => (
-                    <Select
-                      value={String(field.value)}
-                      onValueChange={(val) => field.onChange(Number(val))}
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Seleccionar tipo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={String(TipoAjusteInventario.Positivo)}>
-                          <span className="flex items-center gap-1.5 text-emerald-600">
-                            <ArrowDownLeft className="size-3" />
-                            Positivo (Ingreso / Sobrante)
-                          </span>
-                        </SelectItem>
-                        <SelectItem value={String(TipoAjusteInventario.Negativo)}>
-                          <span className="flex items-center gap-1.5 text-amber-600">
-                            <ArrowUpRight className="size-3" />
-                            Negativo (Salida / Merma / Pérdida)
-                          </span>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
+                  render={({ field }) => {
+                    const tipoOptions = [
+                      {
+                        value: String(TipoAjusteInventario.Positivo),
+                        label: "Positivo (Ingreso / Sobrante)",
+                        icon: ArrowDownLeft,
+                        color: "text-emerald-600",
+                      },
+                      {
+                        value: String(TipoAjusteInventario.Negativo),
+                        label: "Negativo (Salida / Pérdida)",
+                        icon: ArrowUpRight,
+                        color: "text-amber-600",
+                      },
+                    ];
+                    const selected = tipoOptions.find(
+                      (o) => o.value === String(field.value)
+                    );
+                    const SelectedIcon = selected?.icon;
+
+                    return (
+                      <Select
+                        value={String(field.value)}
+                        onValueChange={(val) => field.onChange(Number(val))}
+                      >
+                        <SelectTrigger className="w-full h-8 text-xs">
+                          <SelectValue placeholder="Seleccionar tipo">
+                            {selected && (
+                              <span className="flex items-center gap-1.5 truncate">
+                                {SelectedIcon && (
+                                  <SelectedIcon className={`size-3 shrink-0 ${selected.color}`} />
+                                )}
+                                <span className="truncate">{selected.label}</span>
+                              </span>
+                            )}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {tipoOptions.map((opt) => {
+                            const IconComponent = opt.icon;
+                            return (
+                              <SelectItem key={opt.value} value={opt.value}>
+                                <span className="flex items-center gap-1.5">
+                                  <IconComponent className={`size-3 shrink-0 ${opt.color}`} />
+                                  <span>{opt.label}</span>
+                                </span>
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                    );
+                  }}
                 />
                 {errors.tipo && (
                   <span className="text-[10px] text-destructive">
@@ -384,7 +389,7 @@ export function AjusteInventarioFormDialog({
               <Input
                 id="motivo"
                 {...register("motivo")}
-                placeholder="Ej. Regularización de stock físico, rotura accidental, error de tipeo..."
+                placeholder="Ej. Regularización de stock físico, rotura accidental, error de conteo..."
                 className="h-8 text-xs"
               />
               {errors.motivo && (
@@ -410,16 +415,16 @@ export function AjusteInventarioFormDialog({
           </div>
 
           {/* Section 2: Items Table */}
-          <div className="flex flex-col gap-2.5">
+          <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Package className="size-4 text-primary" />
+                <Package className="size-3.5 text-primary" />
                 <span className="text-xs font-bold text-foreground uppercase tracking-wider">
                   2. Artículos del Ajuste
                 </span>
                 <Badge
                   variant="secondary"
-                  className="text-[10px] h-5 px-1.5 font-mono"
+                  className="text-[10px] h-4.5 px-1.5 font-mono"
                 >
                   {fields.length} {fields.length === 1 ? "artículo" : "artículos"}
                 </Badge>
@@ -429,7 +434,7 @@ export function AjusteInventarioFormDialog({
                 size="sm"
                 variant="outline"
                 onClick={handleAddRow}
-                className="h-7 text-xs gap-1.5 text-primary border-primary/30 hover:bg-primary/5 cursor-pointer shadow-2xs"
+                className="h-6.5 text-xs px-2.5 gap-1 text-primary border-primary/30 hover:bg-primary/5 cursor-pointer shadow-2xs"
               >
                 <Plus className="size-3" />
                 <span>Agregar Producto</span>
@@ -437,35 +442,36 @@ export function AjusteInventarioFormDialog({
             </div>
 
             {errors.detalles && typeof errors.detalles.message === "string" && (
-              <div className="p-2.5 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-center gap-2">
-                <AlertCircle className="size-4 shrink-0" />
+              <div className="p-2 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-center gap-1.5">
+                <AlertCircle className="size-3.5 shrink-0" />
                 <span>{errors.detalles.message}</span>
               </div>
             )}
 
             {/* Table */}
-            <div className="rounded-xl border border-border/60 overflow-x-auto bg-card shadow-2xs">
+            <div className="rounded-lg border border-border/60 overflow-x-auto bg-card shadow-2xs">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-border/60 bg-muted/40 text-muted-foreground font-semibold">
-                    <th className="px-3 py-2 w-10 text-center">#</th>
-                    <th className="px-3 py-2 min-w-72">Producto *</th>
-                    <th className="px-3 py-2 w-36">
-                      Cantidad a {watchedTipo === TipoAjusteInventario.Positivo ? "Ingresar (+)" : "Descontar (-)"} *
+                  <tr className="border-b border-border/60 bg-muted/40 text-muted-foreground font-semibold text-[11px]">
+                    <th className="px-2.5 py-1.5 w-8 text-center">#</th>
+                    <th className="px-2.5 py-1.5 min-w-56">Producto *</th>
+                    <th className="px-2.5 py-1.5 w-40">Lote (Opcional)</th>
+                    <th className="px-2.5 py-1.5 w-36 text-center">
+                      Cant. {watchedTipo === TipoAjusteInventario.Positivo ? "(+)" : "(-)"} *
                     </th>
-                    <th className="px-3 py-2 w-12 text-center"></th>
+                    <th className="px-2 py-1.5 w-9 text-center"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/30">
                   {fields.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={4}
-                        className="px-3 py-8 text-center text-muted-foreground text-xs"
+                        colSpan={5}
+                        className="px-3 py-6 text-center text-muted-foreground text-xs"
                       >
-                        <div className="flex flex-col items-center justify-center gap-2">
-                          <FileSpreadsheet className="size-6 text-muted-foreground/60" />
-                          <span className="font-medium">
+                        <div className="flex flex-col items-center justify-center gap-1.5">
+                          <FileSpreadsheet className="size-5 text-muted-foreground/60" />
+                          <span className="font-medium text-xs">
                             No hay productos agregados al ajuste
                           </span>
                           <Button
@@ -473,7 +479,7 @@ export function AjusteInventarioFormDialog({
                             size="sm"
                             variant="outline"
                             onClick={handleAddRow}
-                            className="h-7 text-xs gap-1 text-primary border-primary/30 hover:bg-primary/5"
+                            className="h-6.5 text-xs px-2 gap-1 text-primary border-primary/30 hover:bg-primary/5"
                           >
                             <Plus className="size-3" />
                             <span>Agregar Primer Producto</span>
@@ -482,70 +488,91 @@ export function AjusteInventarioFormDialog({
                       </td>
                     </tr>
                   ) : (
-                    fields.map((field, idx) => (
-                      <tr
-                        key={field.id}
-                        className="hover:bg-muted/20 transition-colors"
-                      >
-                        <td className="px-3 py-2 text-center text-muted-foreground font-mono text-[11px]">
-                          {idx + 1}
-                        </td>
-                        <td className="px-3 py-2">
-                          <Controller
-                            name={`detalles.${idx}.productoId`}
-                            control={control}
-                            render={({ field: pField }) => (
-                              <ProductoAutocomplete
-                                value={pField.value}
-                                onValueChange={(val, prod) => {
-                                  pField.onChange(val || 0);
-                                  if (prod) {
-                                    setValue(
-                                      `detalles.${idx}.productoNombre`,
-                                      prod.nombre
-                                    );
+                    fields.map((field, idx) => {
+                      const currentProdId = watch(`detalles.${idx}.productoId`);
+                      return (
+                        <tr
+                          key={field.id}
+                          className="hover:bg-muted/20 transition-colors"
+                        >
+                          <td className="px-2.5 py-1 text-center text-muted-foreground font-mono text-[11px]">
+                            {idx + 1}
+                          </td>
+                          <td className="px-2.5 py-1">
+                            <Controller
+                              name={`detalles.${idx}.productoId`}
+                              control={control}
+                              render={({ field: pField }) => (
+                                <ProductoAutocomplete
+                                  value={pField.value}
+                                  onValueChange={(val, prod) => {
+                                    pField.onChange(val || 0);
+                                    if (prod) {
+                                      setValue(
+                                        `detalles.${idx}.productoNombre`,
+                                        prod.nombre
+                                      );
+                                    }
+                                    setValue(`detalles.${idx}.loteId`, null);
+                                  }}
+                                  placeholder="Buscar por código o nombre..."
+                                />
+                              )}
+                            />
+                          </td>
+                          <td className="px-2.5 py-1">
+                            <Controller
+                              name={`detalles.${idx}.loteId`}
+                              control={control}
+                              render={({ field: lField }) => (
+                                <LoteAutocomplete
+                                  productoId={currentProdId}
+                                  almacenId={selectedAlmacenId}
+                                  value={lField.value}
+                                  onValueChange={(val) =>
+                                    lField.onChange(val || null)
                                   }
-                                }}
-                                placeholder="Buscar por código o nombre..."
-                              />
-                            )}
-                          />
-                        </td>
-                        <td className="px-3 py-2">
-                          <Input
-                            type="number"
-                            step="any"
-                            min="0.01"
-                            {...register(`detalles.${idx}.cantidad`, {
-                              valueAsNumber: true,
-                            })}
-                            className="h-8 text-xs font-mono"
-                          />
-                        </td>
-                        <td className="px-3 py-2 text-center">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => remove(idx)}
-                            disabled={fields.length === 1}
-                            className="size-7 text-muted-foreground hover:text-destructive cursor-pointer disabled:opacity-30 transition-colors"
-                          >
-                            <Trash2 className="size-3.5" />
-                          </Button>
-                        </td>
-                      </tr>
-                    ))
+                                  placeholder="Sin lote / Seleccionar..."
+                                />
+                              )}
+                            />
+                          </td>
+                          <td className="px-2.5 py-1">
+                            <Input
+                              type="number"
+                              step="any"
+                              min="0.01"
+                              {...register(`detalles.${idx}.cantidad`, {
+                                valueAsNumber: true,
+                              })}
+                              className="h-7 text-xs font-mono text-center"
+                            />
+                          </td>
+                          <td className="px-2 py-1 text-center">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => remove(idx)}
+                              disabled={fields.length === 1}
+                              className="size-6 text-muted-foreground hover:text-destructive cursor-pointer disabled:opacity-30 transition-colors"
+                            >
+                              <Trash2 className="size-3.5" />
+                            </Button>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
             </div>
 
             {/* Totals */}
-            <div className="flex justify-end p-2.5 rounded-lg bg-muted/40 border border-border/40 text-xs gap-4 font-mono">
+            <div className="flex justify-end py-1.5 px-3 rounded-lg bg-muted/40 border border-border/40 text-xs gap-4 font-mono">
               <div>
-                <span className="text-muted-foreground">Total Unidades: </span>
-                <span className="font-bold text-foreground">
+                <span className="text-muted-foreground text-[11px]">Total Unidades: </span>
+                <span className="font-bold text-primary text-xs">
                   {totalCantidad.toLocaleString("es-ES")}
                 </span>
               </div>
