@@ -14,7 +14,6 @@ import {
   Loader2,
   FileSpreadsheet,
   AlertCircle,
-  Hash,
   Layers,
 } from "lucide-react";
 
@@ -54,14 +53,6 @@ interface MovimientoInventarioFormDialogProps {
   onSuccessCallback?: () => void;
 }
 
-function generateDefaultNumero() {
-  const d = new Date();
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-  return `MOV-${year}${month}-${randomSuffix}`;
-}
-
 export function MovimientoInventarioFormDialog({
   open,
   onOpenChange,
@@ -89,7 +80,6 @@ export function MovimientoInventarioFormDialog({
   } = useForm<MovimientoInventarioFormValues>({
     resolver: zodResolver(movimientoInventarioSchema),
     defaultValues: {
-      numero: "",
       tipoMovimientoInventarioId: 0,
       almacenId: 0,
       fechaMovimiento: new Date().toISOString().slice(0, 16),
@@ -131,7 +121,6 @@ export function MovimientoInventarioFormDialog({
           : new Date().toISOString().slice(0, 16);
 
         reset({
-          numero: target.numero,
           tipoMovimientoInventarioId: target.tipoMovimientoInventarioId,
           almacenId: target.almacenId,
           fechaMovimiento: formattedDate,
@@ -152,7 +141,6 @@ export function MovimientoInventarioFormDialog({
       }
     } else {
       reset({
-        numero: generateDefaultNumero(),
         tipoMovimientoInventarioId: 0,
         almacenId: 0,
         fechaMovimiento: new Date().toISOString().slice(0, 16),
@@ -197,7 +185,6 @@ export function MovimientoInventarioFormDialog({
     }
 
     const payload = {
-      numero: values.numero.trim(),
       tipoMovimientoInventarioId: Number(values.tipoMovimientoInventarioId),
       almacenId: Number(values.almacenId),
       fechaMovimiento: new Date(values.fechaMovimiento).toISOString(),
@@ -221,10 +208,12 @@ export function MovimientoInventarioFormDialog({
           id: movimientoToEdit.id,
           data: payload,
         });
-        toast.success(`Movimiento "${payload.numero}" actualizado correctamente.`);
+        toast.success(
+          `Movimiento "${movimientoToEdit.numero}" actualizado correctamente.`
+        );
       } else {
         await createMutation.mutateAsync(payload);
-        toast.success(`Movimiento "${payload.numero}" guardado como borrador.`);
+        toast.success("Movimiento guardado como borrador.");
       }
       onSuccessCallback?.();
       onOpenChange(false);
@@ -283,25 +272,6 @@ export function MovimientoInventarioFormDialog({
           {/* Section 1: General Info */}
           <div className="p-3.5 rounded-xl bg-muted/30 border border-border/60 flex flex-col gap-3.5 shadow-2xs">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {/* Número de Comprobante */}
-              <div className="flex flex-col gap-1">
-                <Label htmlFor="numero" className="text-xs font-medium flex items-center gap-1">
-                  <Hash className="size-3 text-muted-foreground" />
-                  N° Comprobante <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="numero"
-                  {...register("numero")}
-                  placeholder="MOV-2026-0001"
-                  className="h-8 text-xs font-mono"
-                />
-                {errors.numero && (
-                  <span className="text-[10px] text-destructive">
-                    {errors.numero.message}
-                  </span>
-                )}
-              </div>
-
               {/* Tipo de Movimiento */}
               <div className="flex flex-col gap-1">
                 <Label className="text-xs font-medium flex items-center gap-1">
@@ -351,9 +321,7 @@ export function MovimientoInventarioFormDialog({
                   </span>
                 )}
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {/* Fecha y Hora */}
               <div className="flex flex-col gap-1">
                 <Label
@@ -375,7 +343,9 @@ export function MovimientoInventarioFormDialog({
                   </span>
                 )}
               </div>
+            </div>
 
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Tipo de Referencia */}
               <div className="flex flex-col gap-1">
                 <Label htmlFor="referenciaTipo" className="text-xs font-medium">

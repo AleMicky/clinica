@@ -17,11 +17,7 @@ export const movimientoInventarioDetalleSchema = z.object({
 });
 
 export const movimientoInventarioSchema = z.object({
-  numero: z
-    .string()
-    .trim()
-    .min(1, "El número de comprobante es obligatorio")
-    .max(50, "El número no puede exceder 50 caracteres"),
+  numero: z.string().optional(),
   tipoMovimientoInventarioId: z
     .number()
     .min(1, "Debe seleccionar un tipo de movimiento válido"),

@@ -12,7 +12,7 @@ export interface MovimientoInventarioDetalleRequest {
 }
 
 export interface MovimientoInventarioRequest {
-  numero: string;
+  numero?: string;
   tipoMovimientoInventarioId: number;
   almacenId: number;
   fechaMovimiento: string;
