@@ -13,7 +13,6 @@ public sealed record BajaInventarioDetalleRequest
 
 public abstract record BajaInventarioRequest
 {
-    public required string Numero { get; init; }
     public required int AlmacenId { get; init; }
     public required TipoBajaInventario Tipo { get; init; }
     public required DateTime Fecha { get; init; }

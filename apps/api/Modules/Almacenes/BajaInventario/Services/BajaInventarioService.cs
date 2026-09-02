@@ -1,6 +1,8 @@
 using Clinica.Api.Data;
 using Clinica.Api.Modules.Almacenes.BajaInventario.Dtos;
 using Clinica.Api.Modules.Almacenes.BajaInventario.Enums;
+using Clinica.Api.Modules.Parametros.Correlativo.Dtos;
+using Clinica.Api.Modules.Parametros.Correlativo.Services;
 using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
@@ -50,7 +52,7 @@ public interface IBajaInventarioService
         CancellationToken cancellationToken = default);
 }
 
-public sealed class BajaInventarioService(AppDbContext dbContext)
+public sealed class BajaInventarioService(AppDbContext dbContext, ICorrelativoService correlativoService)
     : IBajaInventarioService
 {
     public async Task<PagedResult<BajaInventarioResponse>> ListarAsync(
@@ -125,9 +127,9 @@ public sealed class BajaInventarioService(AppDbContext dbContext)
             .AsNoTracking()
             .Include(x => x.Almacen)
             .Include(x => x.Detalles)
-                .ThenInclude(d => d.Producto)
+            .ThenInclude(d => d.Producto)
             .Include(x => x.Detalles)
-                .ThenInclude(d => d.Lote)
+            .ThenInclude(d => d.Lote)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (baja is null || !baja.Activo)
@@ -153,14 +155,21 @@ public sealed class BajaInventarioService(AppDbContext dbContext)
 
         await ValidarEncabezadoAsync(
             request.AlmacenId,
-            request.Numero,
             idExcluido: null,
             cancellationToken);
 
         await ValidarDetallesAsync(request.Detalles, cancellationToken);
 
+        var correlativo = await correlativoService.GenerarAsync(new GenerarCorrelativoRequest
+        {
+            Codigo = "BAJ",
+            Gestion = DateTime.Now.Year,
+            Prefijo = "BAJ",
+            Longitud = 6
+        }, cancellationToken);
+
         var entity = BajaMapper.ToEntity(request);
-        entity.Numero = NormalizarNumero(request.Numero);
+        entity.Numero = correlativo.NumeroFormateado;
         entity.Motivo = request.Motivo.Trim();
         entity.Observacion = Limpiar(request.Observacion);
 
@@ -204,7 +213,6 @@ public sealed class BajaInventarioService(AppDbContext dbContext)
 
         await ValidarEncabezadoAsync(
             request.AlmacenId,
-            request.Numero,
             idExcluido: id,
             cancellationToken);
 
@@ -215,7 +223,6 @@ public sealed class BajaInventarioService(AppDbContext dbContext)
         entity.Fecha = request.Fecha;
         entity.Motivo = request.Motivo.Trim();
         entity.Observacion = Limpiar(request.Observacion);
-        entity.Numero = NormalizarNumero(request.Numero);
 
         ReemplazarDetalles(entity, request.Detalles);
 
@@ -321,7 +328,6 @@ public sealed class BajaInventarioService(AppDbContext dbContext)
 
     private async Task ValidarEncabezadoAsync(
         int almacenId,
-        string numero,
         int? idExcluido,
         CancellationToken cancellationToken)
     {
@@ -333,20 +339,6 @@ public sealed class BajaInventarioService(AppDbContext dbContext)
         if (!existeAlmacen)
         {
             throw new NotFoundException(nameof(AlmacenEntity), almacenId);
-        }
-
-        var numeroNormalizado = NormalizarNumero(numero);
-
-        var existeNumero = await dbContext.BajasInventario
-            .AnyAsync(
-                x => x.Numero == numeroNormalizado &&
-                     (!idExcluido.HasValue || x.Id != idExcluido.Value),
-                cancellationToken);
-
-        if (existeNumero)
-        {
-            throw new ConflictException(
-                $"Ya existe una baja de inventario con el número '{numeroNormalizado}'.");
         }
     }
 
@@ -438,9 +430,9 @@ public sealed class BajaInventarioService(AppDbContext dbContext)
         {
             AlmacenNombre = nombreAlmacen,
             Detalles = (detalles ?? [])
-                .Where(x => x.Activo)
-                .Select(x => MapearDetalle(x))
-                .ToList()
+            .Where(x => x.Activo)
+            .Select(x => MapearDetalle(x))
+            .ToList()
         };
     }
 
@@ -455,15 +447,8 @@ public sealed class BajaInventarioService(AppDbContext dbContext)
         };
     }
 
-    private static string NormalizarNumero(string value)
-    {
-        return value.Trim().ToUpperInvariant();
-    }
-
     private static string? Limpiar(string? value)
     {
-        return string.IsNullOrWhiteSpace(value)
-            ? null
-            : value.Trim();
+        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 }
