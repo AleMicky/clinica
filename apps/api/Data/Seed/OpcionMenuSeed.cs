@@ -403,14 +403,73 @@ public static class OpcionMenuSeed
                 "OPERACIONES_ALMACEN"),
 
             // =========================================================
-            // 5. GESTIÓN HUMANA
+            // 5. COMPRAS
+            // =========================================================
+            new(
+                "COMPRAS",
+                "Compras",
+                null,
+                null,
+                5,
+                null),
+
+            new(
+                "PROVEEDORES",
+                "Proveedores",
+                "/compras/proveedores",
+                "Building2",
+                1,
+                "COMPRAS"),
+
+            new(
+                "SOLICITUDES_COMPRA",
+                "Solicitudes de Compra",
+                "/compras/solicitudes-compra",
+                "ClipboardList",
+                2,
+                "COMPRAS"),
+
+            new(
+                "COTIZACIONES_COMPRA",
+                "Cotizaciones de Compra",
+                "/compras/cotizaciones-compra",
+                "Receipt",
+                3,
+                "COMPRAS"),
+
+            new(
+                "ORDENES_COMPRA",
+                "Órdenes de Compra",
+                "/compras/ordenes-compra",
+                "FileText",
+                4,
+                "COMPRAS"),
+
+            new(
+                "RECEPCIONES_COMPRA",
+                "Recepciones de Compra",
+                "/compras/recepciones-compra",
+                "PackageCheck",
+                5,
+                "COMPRAS"),
+
+            new(
+                "DEVOLUCIONES_PROVEEDOR",
+                "Devoluciones a Proveedor",
+                "/compras/devoluciones-proveedor",
+                "ArrowLeftRight",
+                6,
+                "COMPRAS"),
+
+            // =========================================================
+            // 6. GESTIÓN HUMANA
             // =========================================================
             new(
                 "GESTION_HUMANA",
                 "Gestión Humana",
                 null,
                 null,
-                5,
+                6,
                 null),
 
             new(
@@ -486,14 +545,14 @@ public static class OpcionMenuSeed
                 "ESTRUCTURA_ORGANIZACIONAL"),
 
             // =========================================================
-            // 6. CONFIGURACIÓN & SISTEMA
+            // 7. CONFIGURACIÓN & SISTEMA
             // =========================================================
             new(
                 "CONFIGURACION_SISTEMA",
                 "Configuración & Sistema",
                 null,
                 null,
-                6,
+                7,
                 null),
 
             new(
