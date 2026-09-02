@@ -280,7 +280,7 @@ export function TransferenciaAlmacenList({
       {/* Top Header & Tabs */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2 pb-2 border-b border-border/40">
         <div className="flex items-center gap-1.5">
-          <GitCompareArrows className="size-3.5 text-primary" />
+          <GitCompareArrows className="size-3.5 text-indigo-600 dark:text-indigo-400" />
           <h2 className="text-xs font-semibold text-foreground uppercase tracking-wider">
             Listado de Transferencias
           </h2>
@@ -355,7 +355,7 @@ export function TransferenciaAlmacenList({
             <Button
               size="sm"
               onClick={onAddTransferencia}
-              className="h-6.5 px-2.5 text-[11px] bg-primary hover:bg-primary/90 text-primary-foreground gap-1 shadow-2xs cursor-pointer font-medium"
+              className="h-6.5 px-2.5 text-[11px] bg-indigo-600 hover:bg-indigo-700 text-white gap-1 shadow-2xs cursor-pointer font-medium"
             >
               <Plus className="size-2.5" />
               <span>Nueva Transferencia</span>
@@ -437,7 +437,7 @@ export function TransferenciaAlmacenList({
               <th className="px-2.5 py-2 w-32">Fecha Solicitud</th>
               <th className="px-2.5 py-2 w-28">Estado</th>
               <th className="px-2.5 py-2 w-20 text-center">Items</th>
-              <th className="px-2.5 py-2 w-12 text-right">Acciones</th>
+              <th className="px-2.5 py-2 w-36 text-right">Acciones</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border/30">
@@ -463,7 +463,7 @@ export function TransferenciaAlmacenList({
                     <Skeleton className="h-3.5 w-8 mx-auto" />
                   </td>
                   <td className="px-2.5 py-2 text-right">
-                    <Skeleton className="h-5 w-5 rounded ml-auto" />
+                    <Skeleton className="h-5 w-16 rounded ml-auto" />
                   </td>
                 </tr>
               ))
@@ -486,7 +486,7 @@ export function TransferenciaAlmacenList({
                       <Button
                         size="sm"
                         onClick={onAddTransferencia}
-                        className="mt-1 h-6.5 text-[11px] bg-primary hover:bg-primary/90 text-primary-foreground gap-1"
+                        className="mt-1 h-6.5 text-[11px] bg-indigo-600 hover:bg-indigo-700 text-white gap-1 font-medium shadow-2xs cursor-pointer"
                       >
                         <Plus className="size-2.5" />
                         <span>Nueva Transferencia</span>
@@ -545,105 +545,174 @@ export function TransferenciaAlmacenList({
                       className="px-2.5 py-1.5 text-right"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          className="inline-flex size-6 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
-                          aria-label={`Acciones de ${transf.numero}`}
-                        >
-                          <MoreVertical className="size-3" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-44 text-xs">
-                          <DropdownMenuItem
-                            onClick={() => onViewDetail?.(transf)}
-                            className="gap-1.5 cursor-pointer text-xs"
+                      <div className="flex items-center justify-end gap-1">
+                        {/* Direct Action Button with distinctive colors */}
+                        {isBorrador && onSolicitar && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => onSolicitar(transf)}
+                            className="h-6 px-2 text-[10px] bg-blue-600 hover:bg-blue-700 text-white gap-1 font-medium shadow-2xs cursor-pointer"
+                            title="Solicitar Aprobación"
                           >
-                            <Eye className="size-3 text-blue-500" />
-                            <span>Ver Detalle y Guía</span>
-                          </DropdownMenuItem>
+                            <Send className="size-2.5" />
+                            <span>Solicitar</span>
+                          </Button>
+                        )}
 
-                          {isBorrador && onEdit && (
+                        {isSolicitado && onAprobar && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => onAprobar(transf)}
+                            className="h-6 px-2 text-[10px] bg-indigo-600 hover:bg-indigo-700 text-white gap-1 font-medium shadow-2xs cursor-pointer"
+                            title="Aprobar Transferencia"
+                          >
+                            <CheckCircle2 className="size-2.5" />
+                            <span>Aprobar</span>
+                          </Button>
+                        )}
+
+                        {isAprobado && onDespachar && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => onDespachar(transf)}
+                            className="h-6 px-2 text-[10px] bg-purple-600 hover:bg-purple-700 text-white gap-1 font-medium shadow-2xs cursor-pointer"
+                            title="Despachar Mercadería"
+                          >
+                            <Truck className="size-2.5" />
+                            <span>Despachar</span>
+                          </Button>
+                        )}
+
+                        {isDespachado && onRecibir && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => onRecibir(transf)}
+                            className="h-6 px-2 text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white gap-1 font-medium shadow-2xs cursor-pointer"
+                            title="Recibir Mercadería"
+                          >
+                            <PackageCheck className="size-2.5" />
+                            <span>Recibir</span>
+                          </Button>
+                        )}
+
+                        {isFinalizado && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onViewDetail?.(transf)}
+                            className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground gap-1 font-medium cursor-pointer"
+                            title="Ver Detalle"
+                          >
+                            <Eye className="size-2.5" />
+                            <span>Ver</span>
+                          </Button>
+                        )}
+
+                        <DropdownMenu>
+                          <DropdownMenuTrigger
+                            className="inline-flex size-6 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
+                            aria-label={`Acciones de ${transf.numero}`}
+                          >
+                            <MoreVertical className="size-3" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48 text-xs">
                             <DropdownMenuItem
-                              onClick={() => onEdit(transf)}
+                              onClick={() => onViewDetail?.(transf)}
                               className="gap-1.5 cursor-pointer text-xs"
                             >
-                              <Edit className="size-3 text-amber-500" />
-                              <span>Editar Borrador</span>
+                              <Eye className="size-3 text-blue-500" />
+                              <span>Ver Detalle y Guía</span>
                             </DropdownMenuItem>
-                          )}
 
-                          {isBorrador && onSolicitar && (
-                            <DropdownMenuItem
-                              onClick={() => onSolicitar(transf)}
-                              className="gap-1.5 text-blue-600 focus:text-blue-600 cursor-pointer text-xs"
-                            >
-                              <Send className="size-3 text-blue-500" />
-                              <span>Solicitar Envío</span>
-                            </DropdownMenuItem>
-                          )}
-
-                          {isSolicitado && onAprobar && (
-                            <DropdownMenuItem
-                              onClick={() => onAprobar(transf)}
-                              className="gap-1.5 text-indigo-600 focus:text-indigo-600 cursor-pointer text-xs"
-                            >
-                              <CheckCircle2 className="size-3 text-indigo-500" />
-                              <span>Aprobar Transferencia</span>
-                            </DropdownMenuItem>
-                          )}
-
-                          {isAprobado && onDespachar && (
-                            <DropdownMenuItem
-                              onClick={() => onDespachar(transf)}
-                              className="gap-1.5 text-purple-600 focus:text-purple-600 cursor-pointer text-xs"
-                            >
-                              <Truck className="size-3 text-purple-500" />
-                              <span>Despachar Stock</span>
-                            </DropdownMenuItem>
-                          )}
-
-                          {isDespachado && onRecibir && (
-                            <DropdownMenuItem
-                              onClick={() => onRecibir(transf)}
-                              className="gap-1.5 text-emerald-600 focus:text-emerald-600 cursor-pointer text-xs"
-                            >
-                              <PackageCheck className="size-3 text-emerald-500" />
-                              <span>Recibir Mercancía</span>
-                            </DropdownMenuItem>
-                          )}
-
-                          {!isFinalizado && onCancelar && (
-                            <DropdownMenuItem
-                              onClick={() => onCancelar(transf)}
-                              className="gap-1.5 text-rose-600 focus:text-rose-600 cursor-pointer text-xs"
-                            >
-                              <Ban className="size-3 text-rose-500" />
-                              <span>Cancelar</span>
-                            </DropdownMenuItem>
-                          )}
-
-                          {isBorrador && onDelete && (
-                            <>
-                              <DropdownMenuSeparator />
+                            {isBorrador && onEdit && (
                               <DropdownMenuItem
-                                onClick={() => onDelete(transf)}
-                                className="gap-1.5 text-destructive focus:text-destructive cursor-pointer text-xs"
+                                onClick={() => onEdit(transf)}
+                                className="gap-1.5 cursor-pointer text-xs text-amber-600 dark:text-amber-400 focus:text-amber-700 focus:bg-amber-50 dark:focus:bg-amber-950/40"
                               >
-                                <Trash2 className="size-3" />
-                                <span>Eliminar Borrador</span>
+                                <Edit className="size-3 text-amber-500" />
+                                <span>Editar Borrador</span>
                               </DropdownMenuItem>
-                            </>
-                          )}
+                            )}
 
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => onViewAudit?.(transf)}
-                            className="gap-1.5 text-muted-foreground cursor-pointer text-xs"
-                          >
-                            <ShieldCheck className="size-3" />
-                            <span>Ver Auditoría</span>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                            {isBorrador && onSolicitar && (
+                              <DropdownMenuItem
+                                onClick={() => onSolicitar(transf)}
+                                className="gap-1.5 text-blue-600 dark:text-blue-400 focus:text-blue-700 focus:bg-blue-50 dark:focus:bg-blue-950/40 cursor-pointer text-xs font-medium"
+                              >
+                                <Send className="size-3 text-blue-500" />
+                                <span>Solicitar Envío</span>
+                              </DropdownMenuItem>
+                            )}
+
+                            {isSolicitado && onAprobar && (
+                              <DropdownMenuItem
+                                onClick={() => onAprobar(transf)}
+                                className="gap-1.5 text-indigo-600 dark:text-indigo-400 focus:text-indigo-700 focus:bg-indigo-50 dark:focus:bg-indigo-950/40 cursor-pointer text-xs font-medium"
+                              >
+                                <CheckCircle2 className="size-3 text-indigo-500" />
+                                <span>Aprobar Transferencia</span>
+                              </DropdownMenuItem>
+                            )}
+
+                            {isAprobado && onDespachar && (
+                              <DropdownMenuItem
+                                onClick={() => onDespachar(transf)}
+                                className="gap-1.5 text-purple-600 dark:text-purple-400 focus:text-purple-700 focus:bg-purple-50 dark:focus:bg-purple-950/40 cursor-pointer text-xs font-medium"
+                              >
+                                <Truck className="size-3 text-purple-500" />
+                                <span>Despachar Stock</span>
+                              </DropdownMenuItem>
+                            )}
+
+                            {isDespachado && onRecibir && (
+                              <DropdownMenuItem
+                                onClick={() => onRecibir(transf)}
+                                className="gap-1.5 text-emerald-600 dark:text-emerald-400 focus:text-emerald-700 focus:bg-emerald-50 dark:focus:bg-emerald-950/40 cursor-pointer text-xs font-medium"
+                              >
+                                <PackageCheck className="size-3 text-emerald-500" />
+                                <span>Recibir Mercancía</span>
+                              </DropdownMenuItem>
+                            )}
+
+                            {!isFinalizado && onCancelar && (
+                              <DropdownMenuItem
+                                onClick={() => onCancelar(transf)}
+                                className="gap-1.5 text-rose-600 dark:text-rose-400 focus:text-rose-700 focus:bg-rose-50 dark:focus:bg-rose-950/40 cursor-pointer text-xs"
+                              >
+                                <Ban className="size-3 text-rose-500" />
+                                <span>Cancelar</span>
+                              </DropdownMenuItem>
+                            )}
+
+                            {isBorrador && onDelete && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => onDelete(transf)}
+                                  className="gap-1.5 text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer text-xs"
+                                >
+                                  <Trash2 className="size-3" />
+                                  <span>Eliminar Borrador</span>
+                                </DropdownMenuItem>
+                              </>
+                            )}
+
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => onViewAudit?.(transf)}
+                              className="gap-1.5 text-muted-foreground cursor-pointer text-xs"
+                            >
+                              <ShieldCheck className="size-3" />
+                              <span>Ver Auditoría</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </td>
                   </tr>
                 );

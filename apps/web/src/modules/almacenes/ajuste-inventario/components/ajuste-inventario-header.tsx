@@ -18,7 +18,7 @@ export function AjusteInventarioHeader({
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 bg-card border border-border/60 rounded-lg p-3 shadow-2xs">
       <div className="flex items-center gap-2.5">
-        <div className="size-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0 shadow-2xs">
+        <div className="size-8 rounded-lg bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-600 dark:text-teal-400 shrink-0 shadow-2xs">
           <SlidersHorizontal className="size-4" />
         </div>
         <div>
@@ -28,7 +28,7 @@ export function AjusteInventarioHeader({
             </h1>
             <Badge
               variant="outline"
-              className="text-[10px] h-4.5 px-1.5 font-semibold text-primary border-primary/30 bg-primary/5"
+              className="text-[10px] h-4.5 px-1.5 font-semibold text-teal-600 dark:text-teal-400 border-teal-500/30 bg-teal-500/10"
             >
               {totalItems} {totalItems === 1 ? "registro" : "registros"}
             </Badge>

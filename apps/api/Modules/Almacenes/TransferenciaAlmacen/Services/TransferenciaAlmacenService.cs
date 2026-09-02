@@ -3,6 +3,8 @@ using Clinica.Api.Modules.Almacenes.MovimientoInventario.Services;
 using Clinica.Api.Modules.Almacenes.TransferenciaAlmacen.Dtos;
 using Clinica.Api.Shared.Abstractions;
 using Clinica.Api.Modules.Almacenes.TransferenciaAlmacen.Enums;
+using Clinica.Api.Modules.Parametros.Correlativo.Dtos;
+using Clinica.Api.Modules.Parametros.Correlativo.Services;
 using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
@@ -71,6 +73,7 @@ public interface ITransferenciaAlmacenService
 public sealed class TransferenciaAlmacenService(
     AppDbContext dbContext,
     ICurrentUserService currentUserService,
+    ICorrelativoService correlativoService,
     IMovimientoInventarioService movimientoInventarioService)
     : ITransferenciaAlmacenService
 {
@@ -171,20 +174,28 @@ public sealed class TransferenciaAlmacenService(
     {
         if (request.Detalles.Count == 0)
         {
-            throw new BusinessException(
-                "La transferencia debe tener al menos un detalle.");
+            throw new BusinessException("La transferencia debe tener al menos un detalle.");
         }
 
         await ValidarEncabezadoAsync(
             request.AlmacenOrigenId,
             request.AlmacenDestinoId,
-            request.Numero,
             idExcluido: null,
             cancellationToken);
 
         await ValidarDetallesAsync(request.Detalles, cancellationToken);
+        
+        var correlativo = await correlativoService.GenerarAsync(new GenerarCorrelativoRequest
+        {
+            Codigo = "TRA",
+            Gestion = DateTime.Now.Year,
+            Prefijo = "TRA",
+            Longitud = 6
+        }, cancellationToken);
+        
 
         var entity = TransferenciaMapper.ToEntity(request);
+        entity.Numero = correlativo.NumeroFormateado;
         NormalizarEncabezado(entity, request);
 
         dbContext.TransferenciasAlmacen.Add(entity);
@@ -206,8 +217,7 @@ public sealed class TransferenciaAlmacenService(
     {
         if (request.Detalles.Count == 0)
         {
-            throw new BusinessException(
-                "La transferencia debe tener al menos un detalle.");
+            throw new BusinessException("La transferencia debe tener al menos un detalle.");
         }
 
         var entity = await dbContext.TransferenciasAlmacen
@@ -221,14 +231,12 @@ public sealed class TransferenciaAlmacenService(
 
         if (entity.Estado != EstadoTransferenciaAlmacen.Borrador)
         {
-            throw new ConflictException(
-                "No se puede editar una transferencia que no esté en estado Borrador.");
+            throw new ConflictException("No se puede editar una transferencia que no esté en estado Borrador.");
         }
 
         await ValidarEncabezadoAsync(
             request.AlmacenOrigenId,
             request.AlmacenDestinoId,
-            request.Numero,
             idExcluido: id,
             cancellationToken);
 
@@ -238,7 +246,6 @@ public sealed class TransferenciaAlmacenService(
         entity.AlmacenDestinoId = request.AlmacenDestinoId;
         entity.FechaSolicitud = request.FechaSolicitud;
         entity.Observacion = Limpiar(request.Observacion);
-        entity.Numero = NormalizarNumero(request.Numero);
 
         ReemplazarDetalles(entity, request.Detalles);
 
@@ -262,8 +269,7 @@ public sealed class TransferenciaAlmacenService(
 
         if (entity.Estado != EstadoTransferenciaAlmacen.Borrador)
         {
-            throw new ConflictException(
-                "No se puede eliminar una transferencia que no esté en estado Borrador. Cancélala en su lugar.");
+            throw new ConflictException("No se puede eliminar una transferencia que no esté en estado Borrador. Cancélala en su lugar.");
         }
 
         entity.Activo = false;
@@ -402,7 +408,6 @@ public sealed class TransferenciaAlmacenService(
     private async Task ValidarEncabezadoAsync(
         int almacenOrigenId,
         int almacenDestinoId,
-        string numero,
         int? idExcluido,
         CancellationToken cancellationToken)
     {
@@ -426,20 +431,7 @@ public sealed class TransferenciaAlmacenService(
             throw new BusinessException(
                 "El almacén de origen y destino deben ser distintos.");
         }
-
-        var numeroNormalizado = NormalizarNumero(numero);
-
-        var existeNumero = await dbContext.TransferenciasAlmacen
-            .AnyAsync(
-                x => x.Numero == numeroNormalizado &&
-                     (!idExcluido.HasValue || x.Id != idExcluido.Value),
-                cancellationToken);
-
-        if (existeNumero)
-        {
-            throw new ConflictException(
-                $"Ya existe una transferencia con el número '{numeroNormalizado}'.");
-        }
+        
     }
 
     private async Task ValidarDetallesAsync(
@@ -621,15 +613,9 @@ public sealed class TransferenciaAlmacenService(
         TransferenciaEntity entity,
         TransferenciaAlmacenRequest request)
     {
-        entity.Numero = NormalizarNumero(request.Numero);
         entity.Observacion = Limpiar(request.Observacion);
     }
-
-    private static string NormalizarNumero(string value)
-    {
-        return value.Trim().ToUpperInvariant();
-    }
-
+    
     private int? ObtenerUsuarioActual()
     {
         var userId = currentUserService.UserId;

@@ -223,7 +223,7 @@ export function TransferenciaAlmacenFormDialog({
         <DialogHeader className="pb-3 border-b border-border/40 shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="size-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-2xs">
+              <div className="size-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-2xs">
                 <GitCompareArrows className="size-5" />
               </div>
               <div>
@@ -386,7 +386,7 @@ export function TransferenciaAlmacenFormDialog({
                 size="sm"
                 variant="outline"
                 onClick={handleAddRow}
-                className="h-6.5 text-xs px-2.5 gap-1 text-primary border-primary/30 hover:bg-primary/5 cursor-pointer shadow-2xs"
+                className="h-6.5 text-xs px-2.5 gap-1 text-indigo-600 dark:text-indigo-400 border-indigo-500/30 hover:bg-indigo-500/5 cursor-pointer shadow-2xs"
               >
                 <Plus className="size-3" />
                 <span>Agregar Producto</span>
@@ -407,8 +407,8 @@ export function TransferenciaAlmacenFormDialog({
                   <tr className="border-b border-border/60 bg-muted/40 text-muted-foreground font-semibold text-[11px]">
                     <th className="px-2.5 py-1.5 w-8 text-center">#</th>
                     <th className="px-2.5 py-1.5 min-w-56">Producto *</th>
-                    <th className="px-2.5 py-1.5 w-40">Lote (Opcional)</th>
-                    <th className="px-2.5 py-1.5 w-32 text-center">Cant. Solicitada *</th>
+                    <th className="px-2.5 py-1.5 w-36">Lote (Opcional)</th>
+                    <th className="px-2.5 py-1.5 w-28 text-center">Cant. Solicitada *</th>
                     <th className="px-2 py-1.5 w-9 text-center"></th>
                   </tr>
                 </thead>
@@ -429,7 +429,7 @@ export function TransferenciaAlmacenFormDialog({
                             size="sm"
                             variant="outline"
                             onClick={handleAddRow}
-                            className="h-6.5 text-xs px-2 gap-1 text-primary border-primary/30 hover:bg-primary/5"
+                            className="h-6.5 text-xs px-2 gap-1 text-indigo-600 dark:text-indigo-400 border-indigo-500/30 hover:bg-indigo-500/5"
                           >
                             <Plus className="size-3" />
                             <span>Agregar Primer Producto</span>
@@ -485,9 +485,9 @@ export function TransferenciaAlmacenFormDialog({
                                   productoId={currentProdId}
                                   almacenId={selectedAlmacenOrigenId}
                                   value={lField.value}
-                                  onValueChange={(val) => {
-                                    lField.onChange(val || null);
-                                  }}
+                                  onValueChange={(val) =>
+                                    lField.onChange(val || null)
+                                  }
                                   placeholder="Sin lote / Seleccionar..."
                                 />
                               )}
@@ -531,8 +531,8 @@ export function TransferenciaAlmacenFormDialog({
                   Líneas: <strong className="text-foreground font-sans">{totalItemsCount}</strong>
                 </span>
                 <span>
-                  Total Solicitado:{" "}
-                  <strong className="text-primary font-bold">
+                  Total Unidades Solicitadas:{" "}
+                  <strong className="text-indigo-600 dark:text-indigo-400 font-bold">
                     {totalCantidad.toLocaleString("es-ES")}
                   </strong>
                 </span>
@@ -559,7 +559,7 @@ export function TransferenciaAlmacenFormDialog({
             form="transferencia-almacen-form"
             size="sm"
             disabled={isSaving}
-            className="h-8 px-4 text-xs bg-primary hover:bg-primary/90 text-primary-foreground font-medium gap-1.5 cursor-pointer shadow-2xs"
+            className="h-8 px-4 text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-medium gap-1.5 cursor-pointer shadow-2xs"
           >
             {isSaving ? (
               <>

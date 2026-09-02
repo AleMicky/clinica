@@ -108,6 +108,7 @@ export function AjusteInventarioFormDialog({
   const watchedTipo = watch("tipo");
   const selectedAlmacenId = watch("almacenId");
 
+  const totalItemsCount = watchedDetalles.length;
   const totalCantidad = watchedDetalles.reduce(
     (acc, curr) => acc + (Number(curr.cantidad) || 0),
     0
@@ -225,7 +226,7 @@ export function AjusteInventarioFormDialog({
         <DialogHeader className="pb-3 border-b border-border/40 shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="size-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-2xs">
+              <div className="size-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-600 dark:text-teal-400 shadow-2xs">
                 <SlidersHorizontal className="size-5" />
               </div>
               <div>
@@ -430,7 +431,7 @@ export function AjusteInventarioFormDialog({
                 size="sm"
                 variant="outline"
                 onClick={handleAddRow}
-                className="h-6.5 text-xs px-2.5 gap-1 text-primary border-primary/30 hover:bg-primary/5 cursor-pointer shadow-2xs"
+                className="h-6.5 text-xs px-2.5 gap-1 text-teal-600 dark:text-teal-400 border-teal-500/30 hover:bg-teal-500/5 cursor-pointer shadow-2xs"
               >
                 <Plus className="size-3" />
                 <span>Agregar Producto</span>
@@ -451,10 +452,8 @@ export function AjusteInventarioFormDialog({
                   <tr className="border-b border-border/60 bg-muted/40 text-muted-foreground font-semibold text-[11px]">
                     <th className="px-2.5 py-1.5 w-8 text-center">#</th>
                     <th className="px-2.5 py-1.5 min-w-56">Producto *</th>
-                    <th className="px-2.5 py-1.5 w-40">Lote (Opcional)</th>
-                    <th className="px-2.5 py-1.5 w-36 text-center">
-                      Cant. {watchedTipo === TipoAjusteInventario.Positivo ? "(+)" : "(-)"} *
-                    </th>
+                    <th className="px-2.5 py-1.5 w-36">Lote (Opcional)</th>
+                    <th className="px-2.5 py-1.5 w-28 text-center">Cantidad *</th>
                     <th className="px-2 py-1.5 w-9 text-center"></th>
                   </tr>
                 </thead>
@@ -475,7 +474,7 @@ export function AjusteInventarioFormDialog({
                             size="sm"
                             variant="outline"
                             onClick={handleAddRow}
-                            className="h-6.5 text-xs px-2 gap-1 text-primary border-primary/30 hover:bg-primary/5"
+                            className="h-6.5 text-xs px-2 gap-1 text-teal-600 dark:text-teal-400 border-teal-500/30 hover:bg-teal-500/5"
                           >
                             <Plus className="size-3" />
                             <span>Agregar Primer Producto</span>
@@ -507,6 +506,11 @@ export function AjusteInventarioFormDialog({
                                       setValue(
                                         `detalles.${idx}.productoNombre`,
                                         prod.nombre
+                                      );
+                                    } else {
+                                      setValue(
+                                        `detalles.${idx}.productoNombre`,
+                                        ""
                                       );
                                     }
                                     setValue(`detalles.${idx}.loteId`, null);
@@ -564,12 +568,17 @@ export function AjusteInventarioFormDialog({
               </table>
             </div>
 
-            {/* Totals */}
-            <div className="flex justify-end py-1.5 px-3 rounded-lg bg-muted/40 border border-border/40 text-xs gap-4 font-mono">
-              <div>
-                <span className="text-muted-foreground text-[11px]">Total Unidades: </span>
-                <span className="font-bold text-primary text-xs">
-                  {totalCantidad.toLocaleString("es-ES")}
+            {/* Totals Summary */}
+            <div className="flex flex-wrap items-center justify-between py-1.5 px-3 rounded-lg bg-muted/40 border border-border/40 text-xs font-mono gap-3">
+              <div className="flex items-center gap-4 text-muted-foreground text-[11px]">
+                <span>
+                  Líneas: <strong className="text-foreground font-sans">{totalItemsCount}</strong>
+                </span>
+                <span>
+                  Total Unidades:{" "}
+                  <strong className="text-teal-600 dark:text-teal-400 font-bold">
+                    {totalCantidad.toLocaleString("es-ES")}
+                  </strong>
                 </span>
               </div>
             </div>
@@ -594,7 +603,7 @@ export function AjusteInventarioFormDialog({
             form="ajuste-form"
             size="sm"
             disabled={isSaving}
-            className="h-8 px-4 text-xs bg-primary hover:bg-primary/90 text-primary-foreground font-medium gap-1.5 cursor-pointer shadow-2xs"
+            className="h-8 px-4 text-xs bg-teal-600 hover:bg-teal-700 text-white font-medium gap-1.5 cursor-pointer shadow-2xs"
           >
             {isSaving ? (
               <>

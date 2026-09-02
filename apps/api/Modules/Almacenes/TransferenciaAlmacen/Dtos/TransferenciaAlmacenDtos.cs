@@ -12,7 +12,6 @@ public sealed record TransferenciaAlmacenDetalleRequest
 
 public abstract record TransferenciaAlmacenRequest
 {
-    public required string Numero { get; init; }
     public required int AlmacenOrigenId { get; init; }
     public required int AlmacenDestinoId { get; init; }
     public required DateTime FechaSolicitud { get; init; }

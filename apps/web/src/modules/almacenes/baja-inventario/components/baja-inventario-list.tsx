@@ -458,7 +458,7 @@ export function BajaInventarioList({
               <th className="px-2.5 py-2 w-32">Fecha</th>
               <th className="px-2.5 py-2 w-24">Estado</th>
               <th className="px-2.5 py-2 w-20 text-center">Items</th>
-              <th className="px-2.5 py-2 w-12 text-right">Acciones</th>
+              <th className="px-2.5 py-2 w-36 text-right">Acciones</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border/30">
@@ -487,7 +487,7 @@ export function BajaInventarioList({
                     <Skeleton className="h-3.5 w-8 mx-auto" />
                   </td>
                   <td className="px-2.5 py-2 text-right">
-                    <Skeleton className="h-5 w-5 rounded ml-auto" />
+                    <Skeleton className="h-5 w-16 rounded ml-auto" />
                   </td>
                 </tr>
               ))
@@ -510,7 +510,7 @@ export function BajaInventarioList({
                       <Button
                         size="sm"
                         onClick={onAddBaja}
-                        className="mt-1 h-6.5 text-[11px] bg-rose-600 hover:bg-rose-700 text-white gap-1"
+                        className="mt-1 h-6.5 text-[11px] bg-rose-600 hover:bg-rose-700 text-white gap-1 cursor-pointer font-medium"
                       >
                         <Plus className="size-2.5" />
                         <span>Nueva Baja</span>
@@ -562,75 +562,118 @@ export function BajaInventarioList({
                       className="px-2.5 py-1.5 text-right"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          className="inline-flex size-6 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
-                          aria-label={`Acciones de ${baja.numero}`}
-                        >
-                          <MoreVertical className="size-3" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-44 text-xs">
-                          <DropdownMenuItem
-                            onClick={() => onViewDetail?.(baja)}
-                            className="gap-1.5 cursor-pointer text-xs"
+                      <div className="flex items-center justify-end gap-1">
+                        {/* Direct Action Button with distinctive colors */}
+                        {isBorrador && onConfirm && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => onConfirm(baja)}
+                            className="h-6 px-2 text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white gap-1 font-medium shadow-2xs cursor-pointer"
+                            title="Confirmar y aplicar baja"
                           >
-                            <Eye className="size-3 text-blue-500" />
-                            <span>Ver Comprobante</span>
-                          </DropdownMenuItem>
+                            <CheckCircle2 className="size-2.5" />
+                            <span>Confirmar</span>
+                          </Button>
+                        )}
 
-                          {isBorrador && onEdit && (
+                        {isConfirmado && onAnular && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => onAnular(baja)}
+                            className="h-6 px-2 text-[10px] bg-rose-600 hover:bg-rose-700 text-white gap-1 font-medium shadow-2xs cursor-pointer"
+                            title="Anular baja"
+                          >
+                            <Ban className="size-2.5" />
+                            <span>Anular</span>
+                          </Button>
+                        )}
+
+                        {isAnulado && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onViewDetail?.(baja)}
+                            className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground gap-1 font-medium cursor-pointer"
+                            title="Ver Detalle"
+                          >
+                            <Eye className="size-2.5" />
+                            <span>Ver</span>
+                          </Button>
+                        )}
+
+                        <DropdownMenu>
+                          <DropdownMenuTrigger
+                            className="inline-flex size-6 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
+                            aria-label={`Acciones de ${baja.numero}`}
+                          >
+                            <MoreVertical className="size-3" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48 text-xs">
                             <DropdownMenuItem
-                              onClick={() => onEdit(baja)}
+                              onClick={() => onViewDetail?.(baja)}
                               className="gap-1.5 cursor-pointer text-xs"
                             >
-                              <Edit className="size-3 text-amber-500" />
-                              <span>Editar Borrador</span>
+                              <Eye className="size-3 text-blue-500" />
+                              <span>Ver Comprobante</span>
                             </DropdownMenuItem>
-                          )}
 
-                          {isBorrador && onConfirm && (
-                            <DropdownMenuItem
-                              onClick={() => onConfirm(baja)}
-                              className="gap-1.5 text-emerald-600 focus:text-emerald-600 cursor-pointer text-xs"
-                            >
-                              <CheckCircle2 className="size-3 text-emerald-500" />
-                              <span>Confirmar Baja</span>
-                            </DropdownMenuItem>
-                          )}
-
-                          {isConfirmado && onAnular && (
-                            <DropdownMenuItem
-                              onClick={() => onAnular(baja)}
-                              className="gap-1.5 text-rose-600 focus:text-rose-600 cursor-pointer text-xs"
-                            >
-                              <Ban className="size-3 text-rose-500" />
-                              <span>Anular</span>
-                            </DropdownMenuItem>
-                          )}
-
-                          {isBorrador && onDelete && (
-                            <>
-                              <DropdownMenuSeparator />
+                            {isBorrador && onEdit && (
                               <DropdownMenuItem
-                                onClick={() => onDelete(baja)}
-                                className="gap-1.5 text-destructive focus:text-destructive cursor-pointer text-xs"
+                                onClick={() => onEdit(baja)}
+                                className="gap-1.5 cursor-pointer text-xs text-amber-600 dark:text-amber-400 focus:text-amber-700 focus:bg-amber-50 dark:focus:bg-amber-950/40"
                               >
-                                <Trash2 className="size-3" />
-                                <span>Eliminar Borrador</span>
+                                <Edit className="size-3 text-amber-500" />
+                                <span>Editar Borrador</span>
                               </DropdownMenuItem>
-                            </>
-                          )}
+                            )}
 
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => onViewAudit?.(baja)}
-                            className="gap-1.5 text-muted-foreground cursor-pointer text-xs"
-                          >
-                            <ShieldCheck className="size-3" />
-                            <span>Ver Auditoría</span>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                            {isBorrador && onConfirm && (
+                              <DropdownMenuItem
+                                onClick={() => onConfirm(baja)}
+                                className="gap-1.5 text-emerald-600 dark:text-emerald-400 focus:text-emerald-700 focus:bg-emerald-50 dark:focus:bg-emerald-950/40 cursor-pointer text-xs font-medium"
+                              >
+                                <CheckCircle2 className="size-3 text-emerald-500" />
+                                <span>Confirmar Baja</span>
+                              </DropdownMenuItem>
+                            )}
+
+                            {isConfirmado && onAnular && (
+                              <DropdownMenuItem
+                                onClick={() => onAnular(baja)}
+                                className="gap-1.5 text-rose-600 dark:text-rose-400 focus:text-rose-700 focus:bg-rose-50 dark:focus:bg-rose-950/40 cursor-pointer text-xs font-medium"
+                              >
+                                <Ban className="size-3 text-rose-500" />
+                                <span>Anular</span>
+                              </DropdownMenuItem>
+                            )}
+
+                            {isBorrador && onDelete && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => onDelete(baja)}
+                                  className="gap-1.5 text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer text-xs"
+                                >
+                                  <Trash2 className="size-3" />
+                                  <span>Eliminar Borrador</span>
+                                </DropdownMenuItem>
+                              </>
+                            )}
+
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => onViewAudit?.(baja)}
+                              className="gap-1.5 text-muted-foreground cursor-pointer text-xs"
+                            >
+                              <ShieldCheck className="size-3" />
+                              <span>Ver Auditoría</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </td>
                   </tr>
                 );
