@@ -63,6 +63,7 @@ public interface IMovimientoInventarioService
         CancellationToken cancellationToken = default);
 
     Task CrearIntegracionAsync(MovimientoInventarioIntegracionRequest request,
+        bool confirmar = false,
         CancellationToken cancellationToken = default);
 }
 
@@ -185,8 +186,11 @@ public sealed class MovimientoInventarioService(
         return await ObtenerAsync(entity.Id, cancellationToken);
     }
 
-    public async Task CrearIntegracionAsync(MovimientoInventarioIntegracionRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task CrearIntegracionAsync(
+        MovimientoInventarioIntegracionRequest request,
+        bool confirmar = false,
+        CancellationToken cancellationToken = default
+    )
     {
         if (request.Detalles.Count == 0)
         {
@@ -235,6 +239,11 @@ public sealed class MovimientoInventarioService(
 
         // Se guarda en la base de datos (por defecto queda en estado Borrador)
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        if (confirmar)
+        {
+            await ConfirmarAsync(entity.Id, cancellationToken);
+        }
     }
 
     public async Task<MovimientoInventarioResponse> ActualizarAsync(int id, UpdateMovimientoInventarioRequest request,
@@ -453,7 +462,8 @@ public sealed class MovimientoInventarioService(
         return await ObtenerAsync(id, cancellationToken);
     }
 
-    public async Task GenerarMovimientoSalidaTransferenciaAsync(int transferenciaId,
+    public async Task GenerarMovimientoSalidaTransferenciaAsync(
+        int transferenciaId,
         CancellationToken cancellationToken = default)
     {
         var transferencia = await dbContext.TransferenciasAlmacen

@@ -310,7 +310,7 @@ public sealed class ConsumoInternoService(
         };
 
         
-        await movimientoInventarioService.CrearIntegracionAsync(requestIntegracion, cancellationToken);
+        await movimientoInventarioService.CrearIntegracionAsync(requestIntegracion,false, cancellationToken);
         
         entity.Estado = EstadoConsumoInterno.Confirmado;
         await dbContext.SaveChangesAsync(cancellationToken);

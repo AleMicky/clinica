@@ -49,7 +49,6 @@ public sealed record MovimientoInventarioIntegracionRequest
     public required int AlmacenId { get; init; }
     public required DateTime Fecha { get; init; }
     public string? Observacion { get; init; }
-
     public string? TipoReferencia { get; init; }
     public int? ReferenciaId { get; init; }
     public IReadOnlyCollection<MovimientoInventarioDetalleRequest> Detalles { get; init; } = [];

@@ -1,6 +1,8 @@
 using Clinica.Api.Data;
 using Clinica.Api.Modules.Almacenes.BajaInventario.Dtos;
 using Clinica.Api.Modules.Almacenes.BajaInventario.Enums;
+using Clinica.Api.Modules.Almacenes.MovimientoInventario.Dtos;
+using Clinica.Api.Modules.Almacenes.MovimientoInventario.Services;
 using Clinica.Api.Modules.Parametros.Correlativo.Dtos;
 using Clinica.Api.Modules.Parametros.Correlativo.Services;
 using Clinica.Api.Shared.Exceptions;
@@ -52,7 +54,10 @@ public interface IBajaInventarioService
         CancellationToken cancellationToken = default);
 }
 
-public sealed class BajaInventarioService(AppDbContext dbContext, ICorrelativoService correlativoService)
+public sealed class BajaInventarioService(
+    AppDbContext dbContext,
+    ICorrelativoService correlativoService,
+    IMovimientoInventarioService movimientoInventarioService)
     : IBajaInventarioService
 {
     public async Task<PagedResult<BajaInventarioResponse>> ListarAsync(
@@ -272,15 +277,53 @@ public sealed class BajaInventarioService(AppDbContext dbContext, ICorrelativoSe
             throw new NotFoundException(nameof(BajaEntity), id);
         }
 
-        if (entity.Estado == EstadoBajaInventario.Confirmado)
+        switch (entity.Estado)
         {
-            throw new ConflictException("La baja de inventario ya está confirmada.");
+            case EstadoBajaInventario.Confirmado:
+                throw new ConflictException("La baja de inventario ya está confirmada.");
+            case EstadoBajaInventario.Anulado:
+                throw new ConflictException("No se puede confirmar una baja anulada.");
+            case EstadoBajaInventario.Borrador:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
         }
 
-        if (entity.Estado == EstadoBajaInventario.Anulado)
+        var detallesActivos = entity.Detalles.Where(x => x.Activo).ToList();
+
+        if (detallesActivos.Count == 0)
         {
-            throw new ConflictException("No se puede confirmar una baja anulada.");
+            throw new BusinessException("El consumo interno no tiene detalles activos.");
         }
+
+        var detallesMovimiento = detallesActivos.Select(d => new MovimientoInventarioDetalleRequest
+        {
+            ProductoId = d.ProductoId,
+            LoteId = d.LoteId,
+            Cantidad = d.Cantidad,
+        }).ToList();
+
+        var (tipoMovimiento, observacion) = entity.Tipo switch
+        {
+            TipoBajaInventario.Vencimiento => ("VENCIMIENTO", $"Baja por fecha de vencimiento - Ref: {entity.Numero}"),
+            TipoBajaInventario.Danio => ("DAÑO", $"Producto dañado en almacén - Ref: {entity.Numero}"),
+            TipoBajaInventario.Merma => ("MERMA", $"Ajuste por merma de inventario - Ref: {entity.Numero}"),
+            _ => ("VENCIMIENTO", $"Baja por fecha de vencimiento - Ref: {entity.Numero}"),
+        };
+
+        // 2. Construir el request de integración
+        var requestIntegracion = new MovimientoInventarioIntegracionRequest
+        {
+            TipoMovimiento = tipoMovimiento,
+            AlmacenId = entity.AlmacenId,
+            Fecha = DateTime.UtcNow,
+            TipoReferencia = "BAJA_INVENTARIO",
+            ReferenciaId = entity.Id,
+            Observacion = observacion,
+            Detalles = detallesMovimiento
+        };
+
+        await movimientoInventarioService.CrearIntegracionAsync(requestIntegracion, true, cancellationToken);
 
         entity.Estado = EstadoBajaInventario.Confirmado;
         entity.FechaConfirmacion = DateTime.UtcNow;
