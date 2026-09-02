@@ -1,7 +1,7 @@
 using Clinica.Api.Modules.Almacenes;
 using Clinica.Api.Modules.Cajas;
 using Clinica.Api.Modules.Notificaciones;
-using Clinica.Api.Modules.Parametros.Catalogo;
+using Clinica.Api.Modules.Parametros;
 using Clinica.Api.Modules.Recepcion;
 using Clinica.Api.Modules.RecursosHumanos;
 using Clinica.Api.Modules.Seguridad;

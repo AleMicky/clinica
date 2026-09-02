@@ -24,7 +24,7 @@ namespace Clinica.Api.Modules.Cajas.Cobro.Services;
 
 public sealed class CobroService(
     AppDbContext dbContext,
-    CorrelativoService correlativoService,
+    ICorrelativoService correlativoService,
     CobroDetalleService cobroDetalleService,
     ICurrentUserService currentUserService,
     INotificacionService notificacionService

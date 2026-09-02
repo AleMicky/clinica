@@ -26,7 +26,7 @@ namespace Clinica.Api.Modules.Ventas.Venta.Services;
 
 public sealed class VentaService(
     AppDbContext dbContext,
-    CorrelativoService correlativoService,
+    ICorrelativoService correlativoService,
     CobroService cobroService
 )
 {

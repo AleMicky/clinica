@@ -3,6 +3,9 @@ using Clinica.Api.Modules.Almacenes.Existencia.Services;
 using Clinica.Api.Modules.Almacenes.MovimientoInventario.Dtos;
 using Clinica.Api.Modules.Almacenes.MovimientoInventario.Enums;
 using Clinica.Api.Modules.Almacenes.TipoMovimientoInventario.Enums;
+using Clinica.Api.Modules.Almacenes.TransferenciaAlmacen.Enums;
+using Clinica.Api.Modules.Parametros.Correlativo.Dtos;
+using Clinica.Api.Modules.Parametros.Correlativo.Services;
 using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
@@ -50,20 +53,24 @@ public interface IMovimientoInventarioService
         int id,
         AnularMovimientoInventarioRequest request,
         CancellationToken cancellationToken = default);
+
+    Task GenerarMovimientoSalidaTransferenciaAsync(
+        int transferenciaId,
+        CancellationToken cancellationToken = default);
+
+    Task GenerarMovimientoEntradaTransferenciaAsync(
+        int transferenciaId,
+        CancellationToken cancellationToken = default);
 }
 
 public sealed class MovimientoInventarioService(
     AppDbContext dbContext,
-    IExistenciaService existenciaService
-)
-    : IMovimientoInventarioService
+    IExistenciaService existenciaService,
+    ICorrelativoService correlativoService
+) : IMovimientoInventarioService
 {
-    public async Task<PagedResult<MovimientoInventarioResponse>> ListarAsync(
-        int? tipoMovimientoInventarioId,
-        int? almacenId,
-        string? search,
-        PaginationRequest pagination,
-        CancellationToken cancellationToken = default)
+    public async Task<PagedResult<MovimientoInventarioResponse>> ListarAsync(int? tipoMovimientoInventarioId,
+        int? almacenId, string? search, PaginationRequest pagination, CancellationToken cancellationToken = default)
     {
         var query = dbContext
             .MovimientosInventario
@@ -117,9 +124,7 @@ public sealed class MovimientoInventarioService(
             totalItems);
     }
 
-    public async Task<MovimientoInventarioResponse> ObtenerAsync(
-        int id,
-        CancellationToken cancellationToken = default)
+    public async Task<MovimientoInventarioResponse> ObtenerAsync(int id, CancellationToken cancellationToken = default)
     {
         var movimiento = await dbContext
             .MovimientosInventario
@@ -144,14 +149,12 @@ public sealed class MovimientoInventarioService(
             movimiento.Detalles);
     }
 
-    public async Task<MovimientoInventarioResponse> CrearAsync(
-        CreateMovimientoInventarioRequest request,
+    public async Task<MovimientoInventarioResponse> CrearAsync(CreateMovimientoInventarioRequest request,
         CancellationToken cancellationToken = default)
     {
         if (request.Detalles.Count == 0)
         {
-            throw new BusinessException(
-                "El movimiento de inventario debe tener al menos un detalle.");
+            throw new BusinessException("El movimiento de inventario debe tener al menos un detalle.");
         }
 
         await ValidarEncabezadoAsync(
@@ -178,9 +181,7 @@ public sealed class MovimientoInventarioService(
         return await ObtenerAsync(entity.Id, cancellationToken);
     }
 
-    public async Task<MovimientoInventarioResponse> ActualizarAsync(
-        int id,
-        UpdateMovimientoInventarioRequest request,
+    public async Task<MovimientoInventarioResponse> ActualizarAsync(int id, UpdateMovimientoInventarioRequest request,
         CancellationToken cancellationToken = default)
     {
         if (request.Detalles.Count == 0)
@@ -220,7 +221,6 @@ public sealed class MovimientoInventarioService(
         entity.ReferenciaId = request.ReferenciaId;
         entity.Observacion = Limpiar(request.Observacion);
         NormalizarNumero(entity, request.Numero);
-
         ReemplazarDetalles(entity, request.Detalles);
 
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -228,9 +228,7 @@ public sealed class MovimientoInventarioService(
         return await ObtenerAsync(id, cancellationToken);
     }
 
-    public async Task EliminarAsync(
-        int id,
-        CancellationToken cancellationToken = default)
+    public async Task EliminarAsync(int id, CancellationToken cancellationToken = default)
     {
         var entity = await dbContext.MovimientosInventario
             .Include(x => x.Detalles)
@@ -256,7 +254,8 @@ public sealed class MovimientoInventarioService(
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<MovimientoInventarioResponse> ConfirmarAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<MovimientoInventarioResponse> ConfirmarAsync(int id,
+        CancellationToken cancellationToken = default)
     {
         var entity = await dbContext.MovimientosInventario
             .Include(x => x.TipoMovimientoInventario)
@@ -331,15 +330,11 @@ public sealed class MovimientoInventarioService(
         entity.FechaConfirmacion = DateTime.UtcNow;
         entity.FechaAnulacion = null;
         entity.MotivoAnulacion = null;
-
         await dbContext.SaveChangesAsync(cancellationToken);
-
         return await ObtenerAsync(id, cancellationToken);
     }
 
-    public async Task<MovimientoInventarioResponse> AnularAsync(
-        int id,
-        AnularMovimientoInventarioRequest request,
+    public async Task<MovimientoInventarioResponse> AnularAsync(int id, AnularMovimientoInventarioRequest request,
         CancellationToken cancellationToken = default)
     {
         var entity = await dbContext.MovimientosInventario
@@ -399,19 +394,126 @@ public sealed class MovimientoInventarioService(
                     break;
 
                 default:
-                    throw new BusinessException(
-                        "Naturaleza de movimiento no soportada.");
+                    throw new BusinessException("Naturaleza de movimiento no soportada.");
             }
         }
 
         entity.Estado = EstadoMovimientoInventario.Anulado;
         entity.FechaAnulacion = DateTime.UtcNow;
         entity.MotivoAnulacion = request.MotivoAnulacion.Trim();
-
         await dbContext.SaveChangesAsync(cancellationToken);
-
         return await ObtenerAsync(id, cancellationToken);
     }
+
+    public async Task GenerarMovimientoSalidaTransferenciaAsync(int transferenciaId,
+        CancellationToken cancellationToken = default)
+    {
+        var transferencia = await dbContext.TransferenciasAlmacen
+                                .Include(x => x.Detalles)
+                                .FirstOrDefaultAsync(x => x.Id == transferenciaId && x.Activo, cancellationToken)
+                            ?? throw new NotFoundException("TransferenciaAlmacen", transferenciaId);
+
+        if (transferencia.Estado != EstadoTransferenciaAlmacen.Despachada)
+            throw new BusinessException("Solo una transferencia despachada puede generar el movimiento de salida.");
+
+
+        var correlativo = await correlativoService.GenerarAsync(new GenerarCorrelativoRequest
+        {
+            Codigo = "MOV",
+            Gestion = DateTime.Now.Year,
+            Prefijo = "MOV",
+            Longitud = 6
+        }, cancellationToken);
+
+        var tipoMovimiento = await dbContext.TiposMovimientoInventario
+                                 .FirstOrDefaultAsync(
+                                     x => x.Codigo == "TRANSFERENCIA_SALIDA" && x.Activo, cancellationToken)
+                             ?? throw new BusinessException("No existe el tipo de movimiento TRANSFERENCIA_SALIDA.");
+
+        var movimiento = new MovimientoEntity
+        {
+            Numero = correlativo.NumeroFormateado,
+            TipoMovimientoInventarioId = tipoMovimiento.Id,
+            AlmacenId = transferencia.AlmacenOrigenId,
+            FechaMovimiento = DateTime.UtcNow,
+            ReferenciaTipo = "TRANSFERENCIA_ALMACEN",
+            ReferenciaId = transferencia.Id,
+            Estado = EstadoMovimientoInventario.Borrador,
+            Observacion = $"Salida por transferencia {transferencia.Numero}"
+        };
+
+        foreach (var detalle in transferencia.Detalles.Where(x => x.Activo))
+        {
+            movimiento.Detalles.Add(new MovimientoDetalleEntity
+            {
+                ProductoId = detalle.ProductoId,
+                LoteId = detalle.LoteId,
+                Cantidad = detalle.CantidadDespachada
+            });
+        }
+
+        dbContext.MovimientosInventario.Add(movimiento);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await ConfirmarAsync(movimiento.Id, cancellationToken);
+    }
+
+    public async Task GenerarMovimientoEntradaTransferenciaAsync(int transferenciaId,
+        CancellationToken cancellationToken = default)
+    {
+        var transferencia = await dbContext.TransferenciasAlmacen
+                                .Include(x => x.Detalles)
+                                .FirstOrDefaultAsync(
+                                    x => x.Id == transferenciaId && x.Activo,
+                                    cancellationToken)
+                            ?? throw new NotFoundException("TransferenciaAlmacen", transferenciaId);
+
+        if (transferencia.Estado != EstadoTransferenciaAlmacen.Recibida)
+        {
+            throw new BusinessException("Solo una transferencia recibida puede generar la entrada.");
+        }
+
+        var correlativo = await correlativoService.GenerarAsync(
+            new GenerarCorrelativoRequest
+            {
+                Codigo = "MOV",
+                Gestion = DateTime.Now.Year,
+                Prefijo = "MOV",
+                Longitud = 6
+            },
+            cancellationToken);
+
+        var tipoMovimiento = await dbContext.TiposMovimientoInventario
+                                 .FirstOrDefaultAsync(x => x.Codigo == "TRANSFERENCIA_ENTRADA" && x.Activo,
+                                     cancellationToken)
+                             ?? throw new BusinessException("No existe el tipo de movimiento TRANSFERENCIA_ENTRADA.");
+
+        var movimiento = new MovimientoEntity
+        {
+            Numero = correlativo.NumeroFormateado,
+            TipoMovimientoInventarioId = tipoMovimiento.Id,
+            AlmacenId = transferencia.AlmacenDestinoId,
+            FechaMovimiento = DateTime.UtcNow,
+            ReferenciaTipo = "TRANSFERENCIA_ALMACEN",
+            ReferenciaId = transferencia.Id,
+            Estado = EstadoMovimientoInventario.Borrador,
+            Observacion = $"Entrada por transferencia {transferencia.Numero}"
+        };
+
+        foreach (var detalle in transferencia.Detalles.Where(x => x.Activo))
+        {
+            movimiento.Detalles.Add(new MovimientoDetalleEntity
+            {
+                ProductoId = detalle.ProductoId,
+                LoteId = detalle.LoteId,
+                Cantidad = detalle.CantidadRecibida
+            });
+        }
+
+        dbContext.MovimientosInventario.Add(movimiento);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await ConfirmarAsync(movimiento.Id, cancellationToken);
+    }
+
 
     private async Task ValidarEncabezadoAsync(
         int tipoMovimientoInventarioId,
@@ -485,8 +587,7 @@ public sealed class MovimientoInventarioService(
         {
             if (detalle.Cantidad <= 0)
             {
-                throw new BusinessException(
-                    "La cantidad de cada detalle debe ser mayor que cero.");
+                throw new BusinessException("La cantidad de cada detalle debe ser mayor que cero.");
             }
 
             if (!productosActivos.Contains(detalle.ProductoId))
@@ -504,8 +605,7 @@ public sealed class MovimientoInventarioService(
 
             if (detalle.CostoUnitario.HasValue && detalle.CostoUnitario.Value < 0)
             {
-                throw new BusinessException(
-                    "El costo unitario no puede ser negativo.");
+                throw new BusinessException("El costo unitario no puede ser negativo.");
             }
         }
     }

@@ -11,7 +11,6 @@ using Clinica.Api.Modules.RecursosHumanos.Empleado.Entity;
 using Clinica.Api.Modules.RecursosHumanos.Medico.Entity;
 using Clinica.Api.Modules.Servicios.Convenios.Entity;
 using Clinica.Api.Modules.Servicios.Servicios.Entity;
-using Clinica.Api.Modules.Servicios.Tarifas.Services;
 using Clinica.Api.Modules.Ventas.Venta.Services;
 using Clinica.Api.Shared.Abstractions;
 using Clinica.Api.Shared.Exceptions;
@@ -26,9 +25,8 @@ namespace Clinica.Api.Modules.Recepcion.Admision.Services;
 public sealed class AdmisionService(
     AppDbContext dbContext,
     VentaService ventaService,
-    CorrelativoService correlativoService,
-    ICurrentUserService currentUserService,
-    ITarifarioDetalleService tarifarioDetalleService
+    ICorrelativoService correlativoService,
+    ICurrentUserService currentUserService
 )
 {
     private DbSet<AdmisionEntity> Admisiones => dbContext.Set<AdmisionEntity>();

@@ -16,7 +16,7 @@ namespace Clinica.Api.Modules.Cajas.DevolucionCobro.Services;
 
 public sealed class DevolucionCobroService(
     AppDbContext dbContext,
-    CorrelativoService correlativoService
+    ICorrelativoService correlativoService
 )
 {
     private AppDbContext DbContext { get; } = dbContext;

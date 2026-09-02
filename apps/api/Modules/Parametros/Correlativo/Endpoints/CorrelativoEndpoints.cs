@@ -23,7 +23,7 @@ public static class CorrelativoEndpoints
     private static async Task<IResult> ListarAsync(
         string? codigo,
         int? gestion,
-        CorrelativoService service,
+        ICorrelativoService service,
         CancellationToken cancellationToken)
     {
         return Results.Ok(
@@ -35,7 +35,7 @@ public static class CorrelativoEndpoints
 
     private static async Task<IResult> ObtenerAsync(
         int id,
-        CorrelativoService service,
+        ICorrelativoService service,
         CancellationToken cancellationToken)
     {
         return Results.Ok(
@@ -46,7 +46,7 @@ public static class CorrelativoEndpoints
 
     private static async Task<IResult> GenerarAsync(
         GenerarCorrelativoRequest request,
-        CorrelativoService service,
+        ICorrelativoService service,
         CancellationToken cancellationToken)
     {
         return Results.Ok(

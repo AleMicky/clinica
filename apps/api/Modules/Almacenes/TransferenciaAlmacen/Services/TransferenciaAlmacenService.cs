@@ -1,4 +1,5 @@
 using Clinica.Api.Data;
+using Clinica.Api.Modules.Almacenes.MovimientoInventario.Services;
 using Clinica.Api.Modules.Almacenes.TransferenciaAlmacen.Dtos;
 using Clinica.Api.Shared.Abstractions;
 using Clinica.Api.Modules.Almacenes.TransferenciaAlmacen.Enums;
@@ -8,7 +9,8 @@ using Microsoft.EntityFrameworkCore;
 using AlmacenEntity = Clinica.Api.Modules.Almacenes.Almacen.Entity.Almacen;
 using LoteEntity = Clinica.Api.Modules.Almacenes.Lote.Entity.Lote;
 using ProductoEntity = Clinica.Api.Modules.Almacenes.Producto.Entity.Producto;
-using TransferenciaDetalleEntity = Clinica.Api.Modules.Almacenes.TransferenciaAlmacen.Entity.TransferenciaAlmacenDetalle;
+using TransferenciaDetalleEntity =
+    Clinica.Api.Modules.Almacenes.TransferenciaAlmacen.Entity.TransferenciaAlmacenDetalle;
 using TransferenciaEntity = Clinica.Api.Modules.Almacenes.TransferenciaAlmacen.Entity.TransferenciaAlmacen;
 using TransferenciaMapper = Clinica.Api.Modules.Almacenes.TransferenciaAlmacen.Mappers.TransferenciaAlmacenMapper;
 
@@ -68,7 +70,8 @@ public interface ITransferenciaAlmacenService
 
 public sealed class TransferenciaAlmacenService(
     AppDbContext dbContext,
-    ICurrentUserService currentUserService)
+    ICurrentUserService currentUserService,
+    IMovimientoInventarioService movimientoInventarioService)
     : ITransferenciaAlmacenService
 {
     public async Task<PagedResult<TransferenciaAlmacenResponse>> ListarAsync(
@@ -145,9 +148,9 @@ public sealed class TransferenciaAlmacenService(
             .Include(x => x.AlmacenOrigen)
             .Include(x => x.AlmacenDestino)
             .Include(x => x.Detalles)
-                .ThenInclude(d => d.Producto)
+            .ThenInclude(d => d.Producto)
             .Include(x => x.Detalles)
-                .ThenInclude(d => d.Lote)
+            .ThenInclude(d => d.Lote)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (entity is null || !entity.Activo)
@@ -337,6 +340,10 @@ public sealed class TransferenciaAlmacenService(
         entity.FechaDespacho = DateTime.UtcNow;
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        await movimientoInventarioService
+            .GenerarMovimientoSalidaTransferenciaAsync(
+                entity.Id,
+                cancellationToken);
 
         return await ObtenerAsync(id, cancellationToken);
     }
@@ -361,6 +368,11 @@ public sealed class TransferenciaAlmacenService(
         entity.FechaRecepcion = DateTime.UtcNow;
 
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        await movimientoInventarioService
+            .GenerarMovimientoEntradaTransferenciaAsync(
+                entity.Id,
+                cancellationToken);
 
         return await ObtenerAsync(id, cancellationToken);
     }
@@ -588,9 +600,9 @@ public sealed class TransferenciaAlmacenService(
             AlmacenOrigenNombre = nombreOrigen,
             AlmacenDestinoNombre = nombreDestino,
             Detalles = (detalles ?? [])
-                .Where(x => x.Activo)
-                .Select(x => MapearDetalle(x))
-                .ToList()
+            .Where(x => x.Activo)
+            .Select(x => MapearDetalle(x))
+            .ToList()
         };
     }
 

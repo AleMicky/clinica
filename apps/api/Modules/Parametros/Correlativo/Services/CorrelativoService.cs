@@ -10,7 +10,32 @@ using CorrelativoEntity = Clinica.Api.Modules.Parametros.Correlativo.Entity.Corr
 
 namespace Clinica.Api.Modules.Parametros.Correlativo.Services;
 
-public sealed class CorrelativoService(AppDbContext dbContext)
+public interface ICorrelativoService
+{
+    Task<List<CorrelativoResponse>> ListarAsync(
+        string? codigo,
+        int? gestion,
+        CancellationToken cancellationToken = default);
+
+    Task<CorrelativoResponse> ObtenerAsync(
+        int id,
+        CancellationToken cancellationToken = default);
+
+    Task<CorrelativoResponse> CrearAsync(
+        CreateCorrelativoRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<CorrelativoResponse> ActualizarAsync(
+        int id,
+        UpdateCorrelativoRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<CorrelativoResponse> GenerarAsync(
+        GenerarCorrelativoRequest request,
+        CancellationToken cancellationToken = default);
+}
+
+public sealed class CorrelativoService(AppDbContext dbContext) : ICorrelativoService
 {
     private const int LongitudDefault = 6;
 
@@ -57,11 +82,11 @@ public sealed class CorrelativoService(AppDbContext dbContext)
         CancellationToken cancellationToken = default)
     {
         return await dbContext.Correlativo
-            .AsNoTracking()
-            .Where(x => x.Id == id)
-            .Select(ToResponseProjection)
-            .FirstOrDefaultAsync(cancellationToken)
-            ?? throw new NotFoundException("Correlativo no encontrado.");
+                   .AsNoTracking()
+                   .Where(x => x.Id == id)
+                   .Select(ToResponseProjection)
+                   .FirstOrDefaultAsync(cancellationToken)
+               ?? throw new NotFoundException("Correlativo no encontrado.");
     }
 
     public async Task<CorrelativoResponse> CrearAsync(
@@ -98,10 +123,10 @@ public sealed class CorrelativoService(AppDbContext dbContext)
         CancellationToken cancellationToken = default)
     {
         var entity = await dbContext.Correlativo
-            .FirstOrDefaultAsync(
-                x => x.Id == id,
-                cancellationToken)
-            ?? throw new NotFoundException("Correlativo no encontrado.");
+                         .FirstOrDefaultAsync(
+                             x => x.Id == id,
+                             cancellationToken)
+                     ?? throw new NotFoundException("Correlativo no encontrado.");
 
         var codigo = NormalizarCodigo(request.Codigo);
         var gestion = request.Gestion ?? entity.Gestion;
@@ -348,8 +373,8 @@ public sealed class CorrelativoService(AppDbContext dbContext)
             NumeroFormateado = Formatear(entity)
         };
     }
-    
-    
+
+
     private static string Formatear(CorrelativoEntity entity)
     {
         var numero = entity.UltimoNumero

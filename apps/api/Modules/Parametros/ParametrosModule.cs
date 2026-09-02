@@ -11,7 +11,7 @@ using Clinica.Api.Modules.Parametros.Moneda.Services;
 using Clinica.Api.Modules.Parametros.UnidadesMedida.Endpoints;
 using Clinica.Api.Modules.Parametros.UnidadesMedida.Services;
 
-namespace Clinica.Api.Modules.Parametros.Catalogo;
+namespace Clinica.Api.Modules.Parametros;
 
 public static class ParametrosModule
 {
@@ -24,7 +24,7 @@ public static class ParametrosModule
         services.AddScoped<MonedaService>();
         services.AddScoped<TipoCambioService>();
         services.AddScoped<MetodoPagoService>();
-        services.AddScoped<CorrelativoService>();
+        services.AddScoped<ICorrelativoService, CorrelativoService>();
         services.AddScoped<BancoService>();
         services.AddScoped<CuentaBancariaService>();
 

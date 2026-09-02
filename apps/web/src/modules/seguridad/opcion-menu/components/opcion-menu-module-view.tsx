@@ -8,6 +8,7 @@ import {
   useInactivarOpcionMenu,
   useOpcionesMenu,
   useOpcionesMenuTree,
+  useUpdateOpcionMenu,
 } from "../hooks/use-opcion-menu";
 import { OpcionMenuHeader } from "./opcion-menu-header";
 import { OpcionMenuTreeView } from "./opcion-menu-tree-view";
@@ -50,6 +51,7 @@ export function OpcionMenuModuleView() {
   });
 
   // Mutations
+  const updateMutation = useUpdateOpcionMenu();
   const deleteMutation = useDeleteOpcionMenu();
   const activarMutation = useActivarOpcionMenu();
   const inactivarMutation = useInactivarOpcionMenu();
@@ -78,6 +80,44 @@ export function OpcionMenuModuleView() {
     setSelectedOpcion(fullItem);
     setDefaultParentId(null);
     setFormOpen(true);
+  };
+
+  const handleMoveNode = async (
+    item: OpcionMenuResponse | OpcionMenuTreeResponse,
+    newParentId: number | null,
+    newOrder: number
+  ) => {
+    try {
+      await updateMutation.mutateAsync({
+        id: item.id,
+        data: {
+          codigo: item.codigo,
+          nombre: item.nombre,
+          ruta: item.ruta || null,
+          icono: item.icono || null,
+          padreId: newParentId,
+          orden: newOrder,
+        },
+      });
+
+      const targetParent = newParentId
+        ? allItems.find((x) => x.id === newParentId)
+        : null;
+      const targetName = targetParent
+        ? `al grupo "${targetParent.nombre}"`
+        : "al Módulo Raíz (Sin Padre)";
+
+      toast.success(`"${item.nombre}" se movió ${targetName} con éxito.`);
+    } catch (error: unknown) {
+      const err = error as {
+        response?: { data?: { detail?: string; message?: string } };
+      };
+      const msg =
+        err?.response?.data?.detail ||
+        err?.response?.data?.message ||
+        "No se pudo mover la opción de menú.";
+      toast.error(msg);
+    }
   };
 
   const handleOpenDelete = (item: OpcionMenuResponse | OpcionMenuTreeResponse) => {
@@ -167,13 +207,14 @@ export function OpcionMenuModuleView() {
         isRefreshing={isRefreshing}
       />
 
-      {/* 2. Hierarchical Tree Explorer */}
+      {/* 2. Hierarchical Tree Explorer with in-tree move & DND */}
       <OpcionMenuTreeView
         treeData={treeData || []}
         flatData={allItems}
         isLoading={isTreeLoading}
         onAddChild={handleAddChild}
         onEdit={handleOpenEdit}
+        onMoveNode={handleMoveNode}
         onToggleStatus={handleToggleStatus}
         onDelete={handleOpenDelete}
         onViewAudit={handleViewAudit}
@@ -206,3 +247,4 @@ export function OpcionMenuModuleView() {
     </div>
   );
 }
+
