@@ -16,7 +16,6 @@ export interface AjusteInventarioDetalleRequest {
 }
 
 export interface AjusteInventarioRequest {
-  numero: string;
   almacenId: number;
   tipo: TipoAjusteInventario;
   fecha: string;
@@ -26,10 +25,10 @@ export interface AjusteInventarioRequest {
 }
 
 export interface CreateAjusteInventarioRequest
-  extends AjusteInventarioRequest {}
+  extends AjusteInventarioRequest { }
 
 export interface UpdateAjusteInventarioRequest
-  extends AjusteInventarioRequest {}
+  extends AjusteInventarioRequest { }
 
 export interface AnularAjusteInventarioRequest {
   motivoAnulacion: string;

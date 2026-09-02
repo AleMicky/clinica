@@ -6,7 +6,7 @@ export * from "./schemas/transferencia-almacen.schema";
 export * from "./components/transferencia-almacen-header";
 export * from "./components/transferencia-almacen-metrics";
 export * from "./components/transferencia-almacen-list";
-export * from "./components/transferencia-almacen-form-view";
+export * from "./components/transferencia-almacen-form-dialog";
 export * from "./components/transferencia-almacen-detail-dialog";
 export * from "./components/transferencia-almacen-solicitar-dialog";
 export * from "./components/transferencia-almacen-aprobar-dialog";

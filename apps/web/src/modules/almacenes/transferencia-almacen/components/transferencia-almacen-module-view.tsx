@@ -4,7 +4,7 @@ import * as React from "react";
 import { TransferenciaAlmacenHeader } from "./transferencia-almacen-header";
 import { TransferenciaAlmacenMetrics } from "./transferencia-almacen-metrics";
 import { TransferenciaAlmacenList } from "./transferencia-almacen-list";
-import { TransferenciaAlmacenFormView } from "./transferencia-almacen-form-view";
+import { TransferenciaAlmacenFormDialog } from "./transferencia-almacen-form-dialog";
 import { TransferenciaAlmacenDetailDialog } from "./transferencia-almacen-detail-dialog";
 import { TransferenciaAlmacenSolicitarDialog } from "./transferencia-almacen-solicitar-dialog";
 import { TransferenciaAlmacenAprobarDialog } from "./transferencia-almacen-aprobar-dialog";
@@ -20,8 +20,8 @@ import {
 import { AuditDialog, type AuditInfo } from "@/components/shared";
 
 export function TransferenciaAlmacenModuleView() {
-  // Navigation view mode: 'list' or 'form'
-  const [viewMode, setViewMode] = React.useState<"list" | "form">("list");
+  // Form Dialog (Create / Edit)
+  const [formOpen, setFormOpen] = React.useState(false);
   const [transferenciaToEdit, setTransferenciaToEdit] =
     React.useState<TransferenciaAlmacenResponse | null>(null);
 
@@ -74,26 +74,15 @@ export function TransferenciaAlmacenModuleView() {
     setPage(1);
   };
 
-  // Switch to Form Page (Create / Edit)
+  // Form Dialog handlers (Create / Edit)
   const handleOpenAdd = () => {
     setTransferenciaToEdit(null);
-    setViewMode("form");
+    setFormOpen(true);
   };
 
   const handleOpenEdit = (t: TransferenciaAlmacenResponse) => {
     setTransferenciaToEdit(t);
-    setViewMode("form");
-  };
-
-  const handleFormBack = () => {
-    setViewMode("list");
-    setTransferenciaToEdit(null);
-  };
-
-  const handleFormSuccess = () => {
-    setViewMode("list");
-    setTransferenciaToEdit(null);
-    refetch();
+    setFormOpen(true);
   };
 
   // Detail Dialog
@@ -223,16 +212,6 @@ export function TransferenciaAlmacenModuleView() {
     setAuditDialogOpen(true);
   };
 
-  if (viewMode === "form") {
-    return (
-      <TransferenciaAlmacenFormView
-        transferenciaToEdit={transferenciaToEdit}
-        onCancel={handleFormBack}
-        onSuccess={handleFormSuccess}
-      />
-    );
-  }
-
   return (
     <div className="flex flex-col gap-3.5 w-full">
       {/* Header */}
@@ -280,6 +259,14 @@ export function TransferenciaAlmacenModuleView() {
         onDelete={handleOpenDelete}
         onRefresh={() => refetch()}
         onViewAudit={handleViewAudit}
+      />
+
+      {/* Form Dialog */}
+      <TransferenciaAlmacenFormDialog
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        transferenciaToEdit={transferenciaToEdit}
+        onSuccessCallback={() => refetch()}
       />
 
       {/* Detail Dialog */}

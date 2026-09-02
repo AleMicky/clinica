@@ -4,7 +4,7 @@ import * as React from "react";
 import { MovimientoInventarioHeader } from "./movimiento-inventario-header";
 import { MovimientoInventarioMetrics } from "./movimiento-inventario-metrics";
 import { MovimientoInventarioList } from "./movimiento-inventario-list";
-import { MovimientoInventarioFormView } from "./movimiento-inventario-form-view";
+import { MovimientoInventarioFormDialog } from "./movimiento-inventario-form-dialog";
 import { MovimientoInventarioDetailDialog } from "./movimiento-inventario-detail-dialog";
 import { MovimientoInventarioConfirmDialog } from "./movimiento-inventario-confirm-dialog";
 import { MovimientoInventarioAnularDialog } from "./movimiento-inventario-anular-dialog";
@@ -17,8 +17,8 @@ import {
 import { AuditDialog, type AuditInfo } from "@/components/shared";
 
 export function MovimientoInventarioModuleView() {
-  // Navigation view mode: 'list' or 'form'
-  const [viewMode, setViewMode] = React.useState<"list" | "form">("list");
+  // Form Dialog (Create / Edit)
+  const [formOpen, setFormOpen] = React.useState(false);
   const [movimientoToEdit, setMovimientoToEdit] =
     React.useState<MovimientoInventarioResponse | null>(null);
 
@@ -75,26 +75,15 @@ export function MovimientoInventarioModuleView() {
     setPage(1);
   };
 
-  // Switch to Form Page (Create / Edit)
+  // Form Dialog handlers (Create / Edit)
   const handleOpenAdd = () => {
     setMovimientoToEdit(null);
-    setViewMode("form");
+    setFormOpen(true);
   };
 
   const handleOpenEdit = (mov: MovimientoInventarioResponse) => {
     setMovimientoToEdit(mov);
-    setViewMode("form");
-  };
-
-  const handleFormBack = () => {
-    setViewMode("list");
-    setMovimientoToEdit(null);
-  };
-
-  const handleFormSuccess = () => {
-    setViewMode("list");
-    setMovimientoToEdit(null);
-    refetch();
+    setFormOpen(true);
   };
 
   // Detail Dialog state
@@ -201,16 +190,6 @@ export function MovimientoInventarioModuleView() {
     setAuditDialogOpen(true);
   };
 
-  if (viewMode === "form") {
-    return (
-      <MovimientoInventarioFormView
-        movimientoToEdit={movimientoToEdit}
-        onCancel={handleFormBack}
-        onSuccess={handleFormSuccess}
-      />
-    );
-  }
-
   return (
     <div className="flex flex-col gap-3.5 w-full">
       {/* Header */}
@@ -255,6 +234,14 @@ export function MovimientoInventarioModuleView() {
         onDelete={handleOpenDelete}
         onRefresh={() => refetch()}
         onViewAudit={handleViewAudit}
+      />
+
+      {/* Form Dialog */}
+      <MovimientoInventarioFormDialog
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        movimientoToEdit={movimientoToEdit}
+        onSuccessCallback={() => refetch()}
       />
 
       {/* Detail Voucher Dialog */}

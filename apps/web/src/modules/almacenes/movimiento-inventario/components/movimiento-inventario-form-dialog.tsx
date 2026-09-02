@@ -5,7 +5,7 @@ import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import {
-  SlidersHorizontal,
+  ArrowLeftRight,
   Plus,
   Trash2,
   Package,
@@ -14,8 +14,8 @@ import {
   Loader2,
   FileSpreadsheet,
   AlertCircle,
-  ArrowDownLeft,
-  ArrowUpRight,
+  Hash,
+  Layers,
 } from "lucide-react";
 
 import {
@@ -31,53 +31,52 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 import {
-  ajusteInventarioSchema,
-  type AjusteInventarioFormValues,
-} from "../schemas/ajuste-inventario.schema";
+  movimientoInventarioSchema,
+  type MovimientoInventarioFormValues,
+} from "../schemas/movimiento-inventario.schema";
 import {
-  useCreateAjusteInventario,
-  useUpdateAjusteInventario,
-  useAjusteInventario,
-} from "../hooks/use-ajuste-inventario";
-import {
-  TipoAjusteInventario,
-  type AjusteInventarioResponse,
-} from "../types/ajuste-inventario.types";
+  useCreateMovimientoInventario,
+  useUpdateMovimientoInventario,
+  useMovimientoInventario,
+} from "../hooks/use-movimiento-inventario";
+import type { MovimientoInventarioResponse } from "../types/movimiento-inventario.types";
 import { AlmacenAutocomplete } from "../../almacen";
+import { TipoMovimientoInventarioAutocomplete } from "../../tipo-movimiento-inventario";
 import { ProductoAutocomplete } from "../../producto";
 import { LoteAutocomplete } from "../../lote";
 
-interface AjusteInventarioFormDialogProps {
+interface MovimientoInventarioFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  ajusteToEdit?: AjusteInventarioResponse | null;
+  movimientoToEdit?: MovimientoInventarioResponse | null;
   onSuccessCallback?: () => void;
 }
 
-export function AjusteInventarioFormDialog({
+function generateDefaultNumero() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+  return `MOV-${year}${month}-${randomSuffix}`;
+}
+
+export function MovimientoInventarioFormDialog({
   open,
   onOpenChange,
-  ajusteToEdit,
+  movimientoToEdit,
   onSuccessCallback,
-}: AjusteInventarioFormDialogProps) {
-  const isEditing = Boolean(ajusteToEdit);
+}: MovimientoInventarioFormDialogProps) {
+  const isEditing = Boolean(movimientoToEdit);
 
-  const { data: fullAjuste } = useAjusteInventario(
-    ajusteToEdit?.id ?? 0,
+  const { data: fullMovimiento } = useMovimientoInventario(
+    movimientoToEdit?.id ?? 0,
     open && isEditing
   );
 
-  const createMutation = useCreateAjusteInventario();
-  const updateMutation = useUpdateAjusteInventario();
+  const createMutation = useCreateMovimientoInventario();
+  const updateMutation = useUpdateMovimientoInventario();
 
   const {
     register,
@@ -87,13 +86,15 @@ export function AjusteInventarioFormDialog({
     watch,
     setValue,
     formState: { errors, isSubmitting },
-  } = useForm<AjusteInventarioFormValues>({
-    resolver: zodResolver(ajusteInventarioSchema),
+  } = useForm<MovimientoInventarioFormValues>({
+    resolver: zodResolver(movimientoInventarioSchema),
     defaultValues: {
+      numero: "",
+      tipoMovimientoInventarioId: 0,
       almacenId: 0,
-      tipo: TipoAjusteInventario.Positivo,
-      fecha: new Date().toISOString().slice(0, 16),
-      motivo: "",
+      fechaMovimiento: new Date().toISOString().slice(0, 16),
+      referenciaTipo: "",
+      referenciaId: null,
       observacion: "",
       detalles: [],
     },
@@ -105,44 +106,58 @@ export function AjusteInventarioFormDialog({
   });
 
   const watchedDetalles = watch("detalles") || [];
-  const watchedTipo = watch("tipo");
   const selectedAlmacenId = watch("almacenId");
 
+  // Summary calculations
+  const totalItemsCount = watchedDetalles.length;
   const totalCantidad = watchedDetalles.reduce(
     (acc, curr) => acc + (Number(curr.cantidad) || 0),
     0
   );
+  const totalCosto = watchedDetalles.reduce((acc, curr) => {
+    const qty = Number(curr.cantidad) || 0;
+    const cost = Number(curr.costoUnitario) || 0;
+    return acc + qty * cost;
+  }, 0);
 
   React.useEffect(() => {
     if (!open) return;
 
     if (isEditing) {
-      const target = fullAjuste || ajusteToEdit;
+      const target = fullMovimiento || movimientoToEdit;
       if (target) {
-        const formattedDate = target.fecha
-          ? new Date(target.fecha).toISOString().slice(0, 16)
+        const formattedDate = target.fechaMovimiento
+          ? new Date(target.fechaMovimiento).toISOString().slice(0, 16)
           : new Date().toISOString().slice(0, 16);
 
         reset({
+          numero: target.numero,
+          tipoMovimientoInventarioId: target.tipoMovimientoInventarioId,
           almacenId: target.almacenId,
-          tipo: target.tipo,
-          fecha: formattedDate,
-          motivo: target.motivo,
+          fechaMovimiento: formattedDate,
+          referenciaTipo: target.referenciaTipo || "",
+          referenciaId: target.referenciaId || null,
           observacion: target.observacion || "",
           detalles: (target.detalles || []).map((d) => ({
             productoId: d.productoId,
             productoNombre: d.productoNombre || "",
             loteId: d.loteId || null,
             cantidad: Number(d.cantidad),
+            costoUnitario:
+              d.costoUnitario !== null && d.costoUnitario !== undefined
+                ? Number(d.costoUnitario)
+                : null,
           })),
         });
       }
     } else {
       reset({
+        numero: generateDefaultNumero(),
+        tipoMovimientoInventarioId: 0,
         almacenId: 0,
-        tipo: TipoAjusteInventario.Positivo,
-        fecha: new Date().toISOString().slice(0, 16),
-        motivo: "",
+        fechaMovimiento: new Date().toISOString().slice(0, 16),
+        referenciaTipo: "",
+        referenciaId: null,
         observacion: "",
         detalles: [
           {
@@ -150,11 +165,12 @@ export function AjusteInventarioFormDialog({
             productoNombre: "",
             loteId: null,
             cantidad: 1,
+            costoUnitario: 0,
           },
         ],
       });
     }
-  }, [open, isEditing, fullAjuste, ajusteToEdit, reset]);
+  }, [open, isEditing, fullMovimiento, movimientoToEdit, reset]);
 
   const handleAddRow = () => {
     append({
@@ -162,12 +178,13 @@ export function AjusteInventarioFormDialog({
       productoNombre: "",
       loteId: null,
       cantidad: 1,
+      costoUnitario: 0,
     });
   };
 
-  const onSubmit = async (values: AjusteInventarioFormValues) => {
+  const onSubmit = async (values: MovimientoInventarioFormValues) => {
     if (values.detalles.length === 0) {
-      toast.error("Debe agregar al menos un producto al ajuste.");
+      toast.error("Debe agregar al menos un producto al movimiento.");
       return;
     }
 
@@ -180,28 +197,34 @@ export function AjusteInventarioFormDialog({
     }
 
     const payload = {
+      numero: values.numero.trim(),
+      tipoMovimientoInventarioId: Number(values.tipoMovimientoInventarioId),
       almacenId: Number(values.almacenId),
-      tipo: Number(values.tipo) as TipoAjusteInventario,
-      fecha: new Date(values.fecha).toISOString(),
-      motivo: values.motivo.trim(),
+      fechaMovimiento: new Date(values.fechaMovimiento).toISOString(),
+      referenciaTipo: values.referenciaTipo?.trim() || null,
+      referenciaId: values.referenciaId ? Number(values.referenciaId) : null,
       observacion: values.observacion?.trim() || null,
       detalles: values.detalles.map((d) => ({
         productoId: Number(d.productoId),
         loteId: d.loteId ? Number(d.loteId) : null,
         cantidad: Number(d.cantidad),
+        costoUnitario:
+          d.costoUnitario !== null && d.costoUnitario !== undefined
+            ? Number(d.costoUnitario)
+            : null,
       })),
     };
 
     try {
-      if (isEditing && ajusteToEdit) {
+      if (isEditing && movimientoToEdit) {
         await updateMutation.mutateAsync({
-          id: ajusteToEdit.id,
+          id: movimientoToEdit.id,
           data: payload,
         });
-        toast.success(`Ajuste actualizado.`);
+        toast.success(`Movimiento "${payload.numero}" actualizado correctamente.`);
       } else {
         await createMutation.mutateAsync(payload);
-        toast.success(`Ajuste registrado como borrador.`);
+        toast.success(`Movimiento "${payload.numero}" guardado como borrador.`);
       }
       onSuccessCallback?.();
       onOpenChange(false);
@@ -210,7 +233,7 @@ export function AjusteInventarioFormDialog({
         error?.response?.data?.message ||
         error?.response?.data?.detail ||
         error?.message ||
-        "Error al procesar el ajuste de inventario.";
+        "Ocurrió un error al procesar el movimiento de inventario.";
       toast.error(errorMsg);
     }
   };
@@ -226,18 +249,18 @@ export function AjusteInventarioFormDialog({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="size-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-2xs">
-                <SlidersHorizontal className="size-5" />
+                <ArrowLeftRight className="size-5" />
               </div>
               <div>
                 <DialogTitle className="text-base font-bold text-foreground">
                   {isEditing
-                    ? `Editar Ajuste: ${ajusteToEdit?.numero}`
-                    : "Nuevo Ajuste de Inventario"}
+                    ? `Editar Movimiento: ${movimientoToEdit?.numero}`
+                    : "Nuevo Movimiento de Inventario"}
                 </DialogTitle>
                 <DialogDescription className="text-xs text-muted-foreground">
                   {isEditing
-                    ? "Modifica los datos del borrador de ajuste"
-                    : "Registra un ajuste de stock positivo o negativo"}
+                    ? "Modifica los datos del comprobante y actualiza los detalles de stock."
+                    : "Registra los datos de cabecera e ingresa las líneas de artículos correspondientes."}
                 </DialogDescription>
               </div>
             </div>
@@ -253,78 +276,53 @@ export function AjusteInventarioFormDialog({
 
         {/* Scrollable Form Content */}
         <form
-          id="ajuste-form"
+          id="movimiento-inventario-form"
           onSubmit={handleSubmit(onSubmit)}
           className="flex-1 overflow-y-auto py-4 space-y-4 pr-1"
         >
           {/* Section 1: General Info */}
           <div className="p-3.5 rounded-xl bg-muted/30 border border-border/60 flex flex-col gap-3.5 shadow-2xs">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {/* Tipo de Ajuste */}
+              {/* Número de Comprobante */}
               <div className="flex flex-col gap-1">
-                <Label htmlFor="tipo" className="text-xs font-medium">
-                  Tipo de Ajuste <span className="text-destructive">*</span>
+                <Label htmlFor="numero" className="text-xs font-medium flex items-center gap-1">
+                  <Hash className="size-3 text-muted-foreground" />
+                  N° Comprobante <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="numero"
+                  {...register("numero")}
+                  placeholder="MOV-2026-0001"
+                  className="h-8 text-xs font-mono"
+                />
+                {errors.numero && (
+                  <span className="text-[10px] text-destructive">
+                    {errors.numero.message}
+                  </span>
+                )}
+              </div>
+
+              {/* Tipo de Movimiento */}
+              <div className="flex flex-col gap-1">
+                <Label className="text-xs font-medium flex items-center gap-1">
+                  <Layers className="size-3 text-muted-foreground" />
+                  Tipo de Movimiento <span className="text-destructive">*</span>
                 </Label>
                 <Controller
-                  name="tipo"
+                  name="tipoMovimientoInventarioId"
                   control={control}
-                  render={({ field }) => {
-                    const tipoOptions = [
-                      {
-                        value: String(TipoAjusteInventario.Positivo),
-                        label: "Positivo (Ingreso / Sobrante)",
-                        icon: ArrowDownLeft,
-                        color: "text-emerald-600",
-                      },
-                      {
-                        value: String(TipoAjusteInventario.Negativo),
-                        label: "Negativo (Salida / Pérdida)",
-                        icon: ArrowUpRight,
-                        color: "text-amber-600",
-                      },
-                    ];
-                    const selected = tipoOptions.find(
-                      (o) => o.value === String(field.value)
-                    );
-                    const SelectedIcon = selected?.icon;
-
-                    return (
-                      <Select
-                        value={String(field.value)}
-                        onValueChange={(val) => field.onChange(Number(val))}
-                      >
-                        <SelectTrigger className="w-full h-8 text-xs">
-                          <SelectValue placeholder="Seleccionar tipo">
-                            {selected && (
-                              <span className="flex items-center gap-1.5 truncate">
-                                {SelectedIcon && (
-                                  <SelectedIcon className={`size-3 shrink-0 ${selected.color}`} />
-                                )}
-                                <span className="truncate">{selected.label}</span>
-                              </span>
-                            )}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {tipoOptions.map((opt) => {
-                            const IconComponent = opt.icon;
-                            return (
-                              <SelectItem key={opt.value} value={opt.value}>
-                                <span className="flex items-center gap-1.5">
-                                  <IconComponent className={`size-3 shrink-0 ${opt.color}`} />
-                                  <span>{opt.label}</span>
-                                </span>
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
-                    );
-                  }}
+                  render={({ field }) => (
+                    <TipoMovimientoInventarioAutocomplete
+                      value={field.value}
+                      onValueChange={(val) => field.onChange(val || 0)}
+                      error={Boolean(errors.tipoMovimientoInventarioId)}
+                      placeholder="Seleccionar tipo..."
+                    />
+                  )}
                 />
-                {errors.tipo && (
+                {errors.tipoMovimientoInventarioId && (
                   <span className="text-[10px] text-destructive">
-                    {errors.tipo.message}
+                    {errors.tipoMovimientoInventarioId.message}
                   </span>
                 )}
               </div>
@@ -353,57 +351,70 @@ export function AjusteInventarioFormDialog({
                   </span>
                 )}
               </div>
+            </div>
 
-              {/* Fecha */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* Fecha y Hora */}
               <div className="flex flex-col gap-1">
                 <Label
-                  htmlFor="fecha"
+                  htmlFor="fechaMovimiento"
                   className="text-xs font-medium flex items-center gap-1"
                 >
                   <Calendar className="size-3 text-muted-foreground" />
-                  Fecha <span className="text-destructive">*</span>
+                  Fecha y Hora <span className="text-destructive">*</span>
                 </Label>
                 <Input
-                  id="fecha"
+                  id="fechaMovimiento"
                   type="datetime-local"
-                  {...register("fecha")}
+                  {...register("fechaMovimiento")}
                   className="h-8 text-xs"
                 />
-                {errors.fecha && (
+                {errors.fechaMovimiento && (
                   <span className="text-[10px] text-destructive">
-                    {errors.fecha.message}
+                    {errors.fechaMovimiento.message}
                   </span>
                 )}
               </div>
+
+              {/* Tipo de Referencia */}
+              <div className="flex flex-col gap-1">
+                <Label htmlFor="referenciaTipo" className="text-xs font-medium">
+                  Tipo Referencia / Origen
+                </Label>
+                <Input
+                  id="referenciaTipo"
+                  {...register("referenciaTipo")}
+                  placeholder="Ej. Factura, Orden de Compra"
+                  className="h-8 text-xs"
+                />
+              </div>
+
+              {/* ID de Referencia */}
+              <div className="flex flex-col gap-1">
+                <Label htmlFor="referenciaId" className="text-xs font-medium">
+                  N° ID / Código Referencia
+                </Label>
+                <Input
+                  id="referenciaId"
+                  type="number"
+                  {...register("referenciaId", {
+                    setValueAs: (v) => (v === "" ? null : Number(v)),
+                  })}
+                  placeholder="Ej. 1042"
+                  className="h-8 text-xs font-mono"
+                />
+              </div>
             </div>
 
-            {/* Motivo */}
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="motivo" className="text-xs font-medium">
-                Motivo del Ajuste <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="motivo"
-                {...register("motivo")}
-                placeholder="Ej. Regularización de stock físico, rotura accidental, error de conteo..."
-                className="h-8 text-xs"
-              />
-              {errors.motivo && (
-                <span className="text-[10px] text-destructive">
-                  {errors.motivo.message}
-                </span>
-              )}
-            </div>
-
-            {/* Observación */}
+            {/* Observaciones */}
             <div className="flex flex-col gap-1">
               <Label htmlFor="observacion" className="text-xs font-medium">
-                Observaciones adicionales
+                Observaciones o Justificación
               </Label>
               <Textarea
                 id="observacion"
                 {...register("observacion")}
-                placeholder="Detalles complementarios, autorización..."
+                placeholder="Ingresa detalles complementarios, justificación técnica o notas relevantes..."
                 rows={2}
                 className="text-xs resize-none"
               />
@@ -416,7 +427,7 @@ export function AjusteInventarioFormDialog({
               <div className="flex items-center gap-2">
                 <Package className="size-3.5 text-primary" />
                 <span className="text-xs font-bold text-foreground uppercase tracking-wider">
-                  2. Artículos del Ajuste
+                  2. Artículos del Movimiento
                 </span>
                 <Badge
                   variant="secondary"
@@ -451,10 +462,10 @@ export function AjusteInventarioFormDialog({
                   <tr className="border-b border-border/60 bg-muted/40 text-muted-foreground font-semibold text-[11px]">
                     <th className="px-2.5 py-1.5 w-8 text-center">#</th>
                     <th className="px-2.5 py-1.5 min-w-56">Producto *</th>
-                    <th className="px-2.5 py-1.5 w-40">Lote (Opcional)</th>
-                    <th className="px-2.5 py-1.5 w-36 text-center">
-                      Cant. {watchedTipo === TipoAjusteInventario.Positivo ? "(+)" : "(-)"} *
-                    </th>
+                    <th className="px-2.5 py-1.5 w-36">Lote (Opcional)</th>
+                    <th className="px-2.5 py-1.5 w-24 text-center">Cantidad *</th>
+                    <th className="px-2.5 py-1.5 w-28 text-center">Costo Unit.</th>
+                    <th className="px-2.5 py-1.5 w-28 text-right">Subtotal</th>
                     <th className="px-2 py-1.5 w-9 text-center"></th>
                   </tr>
                 </thead>
@@ -462,13 +473,13 @@ export function AjusteInventarioFormDialog({
                   {fields.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={5}
+                        colSpan={7}
                         className="px-3 py-6 text-center text-muted-foreground text-xs"
                       >
                         <div className="flex flex-col items-center justify-center gap-1.5">
                           <FileSpreadsheet className="size-5 text-muted-foreground/60" />
                           <span className="font-medium text-xs">
-                            No hay productos agregados al ajuste
+                            No hay productos agregados al movimiento
                           </span>
                           <Button
                             type="button"
@@ -486,6 +497,10 @@ export function AjusteInventarioFormDialog({
                   ) : (
                     fields.map((field, idx) => {
                       const currentProdId = watch(`detalles.${idx}.productoId`);
+                      const qty = Number(watch(`detalles.${idx}.cantidad`)) || 0;
+                      const cost = Number(watch(`detalles.${idx}.costoUnitario`)) || 0;
+                      const subtotal = qty * cost;
+
                       return (
                         <tr
                           key={field.id}
@@ -508,6 +523,11 @@ export function AjusteInventarioFormDialog({
                                         `detalles.${idx}.productoNombre`,
                                         prod.nombre
                                       );
+                                    } else {
+                                      setValue(
+                                        `detalles.${idx}.productoNombre`,
+                                        ""
+                                      );
                                     }
                                     setValue(`detalles.${idx}.loteId`, null);
                                   }}
@@ -525,9 +545,19 @@ export function AjusteInventarioFormDialog({
                                   productoId={currentProdId}
                                   almacenId={selectedAlmacenId}
                                   value={lField.value}
-                                  onValueChange={(val) =>
-                                    lField.onChange(val || null)
-                                  }
+                                  onValueChange={(val, lote) => {
+                                    lField.onChange(val || null);
+                                    if (
+                                      lote?.costoUnitario !== null &&
+                                      lote?.costoUnitario !== undefined &&
+                                      Number(lote.costoUnitario) > 0
+                                    ) {
+                                      setValue(
+                                        `detalles.${idx}.costoUnitario`,
+                                        Number(lote.costoUnitario)
+                                      );
+                                    }
+                                  }}
                                   placeholder="Sin lote / Seleccionar..."
                                 />
                               )}
@@ -543,6 +573,24 @@ export function AjusteInventarioFormDialog({
                               })}
                               className="h-7 text-xs font-mono text-center"
                             />
+                          </td>
+                          <td className="px-2.5 py-1">
+                            <Input
+                              type="number"
+                              step="any"
+                              min="0"
+                              {...register(`detalles.${idx}.costoUnitario`, {
+                                setValueAs: (v) => (v === "" ? 0 : Number(v)),
+                              })}
+                              placeholder="0.00"
+                              className="h-7 text-xs font-mono text-center"
+                            />
+                          </td>
+                          <td className="px-2.5 py-1 text-right font-mono font-semibold text-foreground text-xs whitespace-nowrap">
+                            Bs. {subtotal.toLocaleString("es-ES", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
                           </td>
                           <td className="px-2 py-1 text-center">
                             <Button
@@ -564,12 +612,26 @@ export function AjusteInventarioFormDialog({
               </table>
             </div>
 
-            {/* Totals */}
-            <div className="flex justify-end py-1.5 px-3 rounded-lg bg-muted/40 border border-border/40 text-xs gap-4 font-mono">
+            {/* Totals Summary */}
+            <div className="flex flex-wrap items-center justify-between py-1.5 px-3 rounded-lg bg-muted/40 border border-border/40 text-xs font-mono gap-3">
+              <div className="flex items-center gap-4 text-muted-foreground text-[11px]">
+                <span>
+                  Líneas: <strong className="text-foreground font-sans">{totalItemsCount}</strong>
+                </span>
+                <span>
+                  Unidades:{" "}
+                  <strong className="text-primary font-bold">
+                    {totalCantidad.toLocaleString("es-ES")}
+                  </strong>
+                </span>
+              </div>
               <div>
-                <span className="text-muted-foreground text-[11px]">Total Unidades: </span>
+                <span className="text-muted-foreground text-[11px]">Costo Estimado: </span>
                 <span className="font-bold text-primary text-xs">
-                  {totalCantidad.toLocaleString("es-ES")}
+                  Bs. {totalCosto.toLocaleString("es-ES", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
                 </span>
               </div>
             </div>
@@ -591,7 +653,7 @@ export function AjusteInventarioFormDialog({
 
           <Button
             type="submit"
-            form="ajuste-form"
+            form="movimiento-inventario-form"
             size="sm"
             disabled={isSaving}
             className="h-8 px-4 text-xs bg-primary hover:bg-primary/90 text-primary-foreground font-medium gap-1.5 cursor-pointer shadow-2xs"
@@ -602,7 +664,7 @@ export function AjusteInventarioFormDialog({
                 <span>Guardando...</span>
               </>
             ) : (
-              <span>{isEditing ? "Actualizar Ajuste" : "Guardar Borrador"}</span>
+              <span>{isEditing ? "Actualizar Movimiento" : "Guardar Borrador"}</span>
             )}
           </Button>
         </DialogFooter>

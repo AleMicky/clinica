@@ -5,7 +5,7 @@ import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import {
-  SlidersHorizontal,
+  GitCompareArrows,
   Plus,
   Trash2,
   Package,
@@ -14,8 +14,8 @@ import {
   Loader2,
   FileSpreadsheet,
   AlertCircle,
-  ArrowDownLeft,
-  ArrowUpRight,
+  Hash,
+  ArrowRight,
 } from "lucide-react";
 
 import {
@@ -31,53 +31,51 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 import {
-  ajusteInventarioSchema,
-  type AjusteInventarioFormValues,
-} from "../schemas/ajuste-inventario.schema";
+  transferenciaAlmacenSchema,
+  type TransferenciaAlmacenFormValues,
+} from "../schemas/transferencia-almacen.schema";
 import {
-  useCreateAjusteInventario,
-  useUpdateAjusteInventario,
-  useAjusteInventario,
-} from "../hooks/use-ajuste-inventario";
-import {
-  TipoAjusteInventario,
-  type AjusteInventarioResponse,
-} from "../types/ajuste-inventario.types";
+  useCreateTransferenciaAlmacen,
+  useUpdateTransferenciaAlmacen,
+  useTransferenciaAlmacen,
+} from "../hooks/use-transferencia-almacen";
+import type { TransferenciaAlmacenResponse } from "../types/transferencia-almacen.types";
 import { AlmacenAutocomplete } from "../../almacen";
 import { ProductoAutocomplete } from "../../producto";
 import { LoteAutocomplete } from "../../lote";
 
-interface AjusteInventarioFormDialogProps {
+interface TransferenciaAlmacenFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  ajusteToEdit?: AjusteInventarioResponse | null;
+  transferenciaToEdit?: TransferenciaAlmacenResponse | null;
   onSuccessCallback?: () => void;
 }
 
-export function AjusteInventarioFormDialog({
+function generateDefaultNumero() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+  return `TRA-${year}${month}-${randomSuffix}`;
+}
+
+export function TransferenciaAlmacenFormDialog({
   open,
   onOpenChange,
-  ajusteToEdit,
+  transferenciaToEdit,
   onSuccessCallback,
-}: AjusteInventarioFormDialogProps) {
-  const isEditing = Boolean(ajusteToEdit);
+}: TransferenciaAlmacenFormDialogProps) {
+  const isEditing = Boolean(transferenciaToEdit);
 
-  const { data: fullAjuste } = useAjusteInventario(
-    ajusteToEdit?.id ?? 0,
+  const { data: fullTransferencia } = useTransferenciaAlmacen(
+    transferenciaToEdit?.id ?? 0,
     open && isEditing
   );
 
-  const createMutation = useCreateAjusteInventario();
-  const updateMutation = useUpdateAjusteInventario();
+  const createMutation = useCreateTransferenciaAlmacen();
+  const updateMutation = useUpdateTransferenciaAlmacen();
 
   const {
     register,
@@ -87,13 +85,13 @@ export function AjusteInventarioFormDialog({
     watch,
     setValue,
     formState: { errors, isSubmitting },
-  } = useForm<AjusteInventarioFormValues>({
-    resolver: zodResolver(ajusteInventarioSchema),
+  } = useForm<TransferenciaAlmacenFormValues>({
+    resolver: zodResolver(transferenciaAlmacenSchema),
     defaultValues: {
-      almacenId: 0,
-      tipo: TipoAjusteInventario.Positivo,
-      fecha: new Date().toISOString().slice(0, 16),
-      motivo: "",
+      numero: "",
+      almacenOrigenId: 0,
+      almacenDestinoId: 0,
+      fechaSolicitud: new Date().toISOString().slice(0, 16),
       observacion: "",
       detalles: [],
     },
@@ -105,11 +103,11 @@ export function AjusteInventarioFormDialog({
   });
 
   const watchedDetalles = watch("detalles") || [];
-  const watchedTipo = watch("tipo");
-  const selectedAlmacenId = watch("almacenId");
+  const selectedAlmacenOrigenId = watch("almacenOrigenId");
 
+  const totalItemsCount = watchedDetalles.length;
   const totalCantidad = watchedDetalles.reduce(
-    (acc, curr) => acc + (Number(curr.cantidad) || 0),
+    (acc, curr) => acc + (Number(curr.cantidadSolicitada) || 0),
     0
   );
 
@@ -117,57 +115,57 @@ export function AjusteInventarioFormDialog({
     if (!open) return;
 
     if (isEditing) {
-      const target = fullAjuste || ajusteToEdit;
+      const target = fullTransferencia || transferenciaToEdit;
       if (target) {
-        const formattedDate = target.fecha
-          ? new Date(target.fecha).toISOString().slice(0, 16)
+        const formattedDate = target.fechaSolicitud
+          ? new Date(target.fechaSolicitud).toISOString().slice(0, 16)
           : new Date().toISOString().slice(0, 16);
 
         reset({
-          almacenId: target.almacenId,
-          tipo: target.tipo,
-          fecha: formattedDate,
-          motivo: target.motivo,
+          numero: target.numero,
+          almacenOrigenId: target.almacenOrigenId,
+          almacenDestinoId: target.almacenDestinoId,
+          fechaSolicitud: formattedDate,
           observacion: target.observacion || "",
           detalles: (target.detalles || []).map((d) => ({
             productoId: d.productoId,
             productoNombre: d.productoNombre || "",
             loteId: d.loteId || null,
-            cantidad: Number(d.cantidad),
+            cantidadSolicitada: Number(d.cantidadSolicitada),
           })),
         });
       }
     } else {
       reset({
-        almacenId: 0,
-        tipo: TipoAjusteInventario.Positivo,
-        fecha: new Date().toISOString().slice(0, 16),
-        motivo: "",
+        numero: generateDefaultNumero(),
+        almacenOrigenId: 0,
+        almacenDestinoId: 0,
+        fechaSolicitud: new Date().toISOString().slice(0, 16),
         observacion: "",
         detalles: [
           {
             productoId: 0,
             productoNombre: "",
             loteId: null,
-            cantidad: 1,
+            cantidadSolicitada: 1,
           },
         ],
       });
     }
-  }, [open, isEditing, fullAjuste, ajusteToEdit, reset]);
+  }, [open, isEditing, fullTransferencia, transferenciaToEdit, reset]);
 
   const handleAddRow = () => {
     append({
       productoId: 0,
       productoNombre: "",
       loteId: null,
-      cantidad: 1,
+      cantidadSolicitada: 1,
     });
   };
 
-  const onSubmit = async (values: AjusteInventarioFormValues) => {
+  const onSubmit = async (values: TransferenciaAlmacenFormValues) => {
     if (values.detalles.length === 0) {
-      toast.error("Debe agregar al menos un producto al ajuste.");
+      toast.error("Debe agregar al menos un producto a la transferencia.");
       return;
     }
 
@@ -180,28 +178,28 @@ export function AjusteInventarioFormDialog({
     }
 
     const payload = {
-      almacenId: Number(values.almacenId),
-      tipo: Number(values.tipo) as TipoAjusteInventario,
-      fecha: new Date(values.fecha).toISOString(),
-      motivo: values.motivo.trim(),
+      numero: values.numero.trim(),
+      almacenOrigenId: Number(values.almacenOrigenId),
+      almacenDestinoId: Number(values.almacenDestinoId),
+      fechaSolicitud: new Date(values.fechaSolicitud).toISOString(),
       observacion: values.observacion?.trim() || null,
       detalles: values.detalles.map((d) => ({
         productoId: Number(d.productoId),
         loteId: d.loteId ? Number(d.loteId) : null,
-        cantidad: Number(d.cantidad),
+        cantidadSolicitada: Number(d.cantidadSolicitada),
       })),
     };
 
     try {
-      if (isEditing && ajusteToEdit) {
+      if (isEditing && transferenciaToEdit) {
         await updateMutation.mutateAsync({
-          id: ajusteToEdit.id,
+          id: transferenciaToEdit.id,
           data: payload,
         });
-        toast.success(`Ajuste actualizado.`);
+        toast.success(`Transferencia "${payload.numero}" actualizada correctamente.`);
       } else {
         await createMutation.mutateAsync(payload);
-        toast.success(`Ajuste registrado como borrador.`);
+        toast.success(`Transferencia "${payload.numero}" guardada como borrador.`);
       }
       onSuccessCallback?.();
       onOpenChange(false);
@@ -210,7 +208,7 @@ export function AjusteInventarioFormDialog({
         error?.response?.data?.message ||
         error?.response?.data?.detail ||
         error?.message ||
-        "Error al procesar el ajuste de inventario.";
+        "Ocurrió un error al procesar la transferencia.";
       toast.error(errorMsg);
     }
   };
@@ -226,18 +224,18 @@ export function AjusteInventarioFormDialog({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="size-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-2xs">
-                <SlidersHorizontal className="size-5" />
+                <GitCompareArrows className="size-5" />
               </div>
               <div>
                 <DialogTitle className="text-base font-bold text-foreground">
                   {isEditing
-                    ? `Editar Ajuste: ${ajusteToEdit?.numero}`
-                    : "Nuevo Ajuste de Inventario"}
+                    ? `Editar Transferencia: ${transferenciaToEdit?.numero}`
+                    : "Nueva Transferencia entre Almacenes"}
                 </DialogTitle>
                 <DialogDescription className="text-xs text-muted-foreground">
                   {isEditing
-                    ? "Modifica los datos del borrador de ajuste"
-                    : "Registra un ajuste de stock positivo o negativo"}
+                    ? "Modifica los datos del comprobante y actualiza los artículos a traspasar."
+                    : "Registra la solicitud de traslado entre almacenes e ingresa las cantidades requeridas."}
                 </DialogDescription>
               </div>
             </div>
@@ -253,157 +251,115 @@ export function AjusteInventarioFormDialog({
 
         {/* Scrollable Form Content */}
         <form
-          id="ajuste-form"
+          id="transferencia-almacen-form"
           onSubmit={handleSubmit(onSubmit)}
           className="flex-1 overflow-y-auto py-4 space-y-4 pr-1"
         >
           {/* Section 1: General Info */}
           <div className="p-3.5 rounded-xl bg-muted/30 border border-border/60 flex flex-col gap-3.5 shadow-2xs">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {/* Tipo de Ajuste */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Número de Comprobante */}
               <div className="flex flex-col gap-1">
-                <Label htmlFor="tipo" className="text-xs font-medium">
-                  Tipo de Ajuste <span className="text-destructive">*</span>
+                <Label htmlFor="numero" className="text-xs font-medium flex items-center gap-1">
+                  <Hash className="size-3 text-muted-foreground" />
+                  N° Comprobante <span className="text-destructive">*</span>
                 </Label>
-                <Controller
-                  name="tipo"
-                  control={control}
-                  render={({ field }) => {
-                    const tipoOptions = [
-                      {
-                        value: String(TipoAjusteInventario.Positivo),
-                        label: "Positivo (Ingreso / Sobrante)",
-                        icon: ArrowDownLeft,
-                        color: "text-emerald-600",
-                      },
-                      {
-                        value: String(TipoAjusteInventario.Negativo),
-                        label: "Negativo (Salida / Pérdida)",
-                        icon: ArrowUpRight,
-                        color: "text-amber-600",
-                      },
-                    ];
-                    const selected = tipoOptions.find(
-                      (o) => o.value === String(field.value)
-                    );
-                    const SelectedIcon = selected?.icon;
-
-                    return (
-                      <Select
-                        value={String(field.value)}
-                        onValueChange={(val) => field.onChange(Number(val))}
-                      >
-                        <SelectTrigger className="w-full h-8 text-xs">
-                          <SelectValue placeholder="Seleccionar tipo">
-                            {selected && (
-                              <span className="flex items-center gap-1.5 truncate">
-                                {SelectedIcon && (
-                                  <SelectedIcon className={`size-3 shrink-0 ${selected.color}`} />
-                                )}
-                                <span className="truncate">{selected.label}</span>
-                              </span>
-                            )}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {tipoOptions.map((opt) => {
-                            const IconComponent = opt.icon;
-                            return (
-                              <SelectItem key={opt.value} value={opt.value}>
-                                <span className="flex items-center gap-1.5">
-                                  <IconComponent className={`size-3 shrink-0 ${opt.color}`} />
-                                  <span>{opt.label}</span>
-                                </span>
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
-                    );
-                  }}
+                <Input
+                  id="numero"
+                  {...register("numero")}
+                  placeholder="TRA-2026-0001"
+                  className="h-8 text-xs font-mono"
                 />
-                {errors.tipo && (
+                {errors.numero && (
                   <span className="text-[10px] text-destructive">
-                    {errors.tipo.message}
+                    {errors.numero.message}
                   </span>
                 )}
               </div>
 
-              {/* Almacén */}
+              {/* Fecha y Hora de Solicitud */}
+              <div className="flex flex-col gap-1">
+                <Label
+                  htmlFor="fechaSolicitud"
+                  className="text-xs font-medium flex items-center gap-1"
+                >
+                  <Calendar className="size-3 text-muted-foreground" />
+                  Fecha y Hora <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="fechaSolicitud"
+                  type="datetime-local"
+                  {...register("fechaSolicitud")}
+                  className="h-8 text-xs"
+                />
+                {errors.fechaSolicitud && (
+                  <span className="text-[10px] text-destructive">
+                    {errors.fechaSolicitud.message}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Almacén Origen y Destino */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="flex flex-col gap-1">
                 <Label className="text-xs font-medium flex items-center gap-1">
                   <Warehouse className="size-3 text-muted-foreground" />
-                  Almacén <span className="text-destructive">*</span>
+                  Almacén Origen (Emisor) <span className="text-destructive">*</span>
                 </Label>
                 <Controller
-                  name="almacenId"
+                  name="almacenOrigenId"
                   control={control}
                   render={({ field }) => (
                     <AlmacenAutocomplete
                       value={field.value}
                       onValueChange={(val) => field.onChange(val || 0)}
-                      error={Boolean(errors.almacenId)}
-                      placeholder="Seleccionar almacén..."
+                      error={Boolean(errors.almacenOrigenId)}
+                      placeholder="Seleccionar almacén emisor..."
                     />
                   )}
                 />
-                {errors.almacenId && (
+                {errors.almacenOrigenId && (
                   <span className="text-[10px] text-destructive">
-                    {errors.almacenId.message}
+                    {errors.almacenOrigenId.message}
                   </span>
                 )}
               </div>
 
-              {/* Fecha */}
               <div className="flex flex-col gap-1">
-                <Label
-                  htmlFor="fecha"
-                  className="text-xs font-medium flex items-center gap-1"
-                >
-                  <Calendar className="size-3 text-muted-foreground" />
-                  Fecha <span className="text-destructive">*</span>
+                <Label className="text-xs font-medium flex items-center gap-1">
+                  <Warehouse className="size-3 text-primary" />
+                  Almacén Destino (Receptor) <span className="text-destructive">*</span>
                 </Label>
-                <Input
-                  id="fecha"
-                  type="datetime-local"
-                  {...register("fecha")}
-                  className="h-8 text-xs"
+                <Controller
+                  name="almacenDestinoId"
+                  control={control}
+                  render={({ field }) => (
+                    <AlmacenAutocomplete
+                      value={field.value}
+                      onValueChange={(val) => field.onChange(val || 0)}
+                      error={Boolean(errors.almacenDestinoId)}
+                      placeholder="Seleccionar almacén receptor..."
+                    />
+                  )}
                 />
-                {errors.fecha && (
+                {errors.almacenDestinoId && (
                   <span className="text-[10px] text-destructive">
-                    {errors.fecha.message}
+                    {errors.almacenDestinoId.message}
                   </span>
                 )}
               </div>
             </div>
 
-            {/* Motivo */}
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="motivo" className="text-xs font-medium">
-                Motivo del Ajuste <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="motivo"
-                {...register("motivo")}
-                placeholder="Ej. Regularización de stock físico, rotura accidental, error de conteo..."
-                className="h-8 text-xs"
-              />
-              {errors.motivo && (
-                <span className="text-[10px] text-destructive">
-                  {errors.motivo.message}
-                </span>
-              )}
-            </div>
-
-            {/* Observación */}
+            {/* Observaciones */}
             <div className="flex flex-col gap-1">
               <Label htmlFor="observacion" className="text-xs font-medium">
-                Observaciones adicionales
+                Observaciones o Justificación del Traspaso
               </Label>
               <Textarea
                 id="observacion"
                 {...register("observacion")}
-                placeholder="Detalles complementarios, autorización..."
+                placeholder="Motivo del traslado, área de destino, nivel de urgencia o instrucciones..."
                 rows={2}
                 className="text-xs resize-none"
               />
@@ -416,7 +372,7 @@ export function AjusteInventarioFormDialog({
               <div className="flex items-center gap-2">
                 <Package className="size-3.5 text-primary" />
                 <span className="text-xs font-bold text-foreground uppercase tracking-wider">
-                  2. Artículos del Ajuste
+                  2. Detalle de Productos a Transferir
                 </span>
                 <Badge
                   variant="secondary"
@@ -452,9 +408,7 @@ export function AjusteInventarioFormDialog({
                     <th className="px-2.5 py-1.5 w-8 text-center">#</th>
                     <th className="px-2.5 py-1.5 min-w-56">Producto *</th>
                     <th className="px-2.5 py-1.5 w-40">Lote (Opcional)</th>
-                    <th className="px-2.5 py-1.5 w-36 text-center">
-                      Cant. {watchedTipo === TipoAjusteInventario.Positivo ? "(+)" : "(-)"} *
-                    </th>
+                    <th className="px-2.5 py-1.5 w-32 text-center">Cant. Solicitada *</th>
                     <th className="px-2 py-1.5 w-9 text-center"></th>
                   </tr>
                 </thead>
@@ -468,7 +422,7 @@ export function AjusteInventarioFormDialog({
                         <div className="flex flex-col items-center justify-center gap-1.5">
                           <FileSpreadsheet className="size-5 text-muted-foreground/60" />
                           <span className="font-medium text-xs">
-                            No hay productos agregados al ajuste
+                            No hay productos agregados a la transferencia
                           </span>
                           <Button
                             type="button"
@@ -486,6 +440,7 @@ export function AjusteInventarioFormDialog({
                   ) : (
                     fields.map((field, idx) => {
                       const currentProdId = watch(`detalles.${idx}.productoId`);
+
                       return (
                         <tr
                           key={field.id}
@@ -508,6 +463,11 @@ export function AjusteInventarioFormDialog({
                                         `detalles.${idx}.productoNombre`,
                                         prod.nombre
                                       );
+                                    } else {
+                                      setValue(
+                                        `detalles.${idx}.productoNombre`,
+                                        ""
+                                      );
                                     }
                                     setValue(`detalles.${idx}.loteId`, null);
                                   }}
@@ -523,11 +483,11 @@ export function AjusteInventarioFormDialog({
                               render={({ field: lField }) => (
                                 <LoteAutocomplete
                                   productoId={currentProdId}
-                                  almacenId={selectedAlmacenId}
+                                  almacenId={selectedAlmacenOrigenId}
                                   value={lField.value}
-                                  onValueChange={(val) =>
-                                    lField.onChange(val || null)
-                                  }
+                                  onValueChange={(val) => {
+                                    lField.onChange(val || null);
+                                  }}
                                   placeholder="Sin lote / Seleccionar..."
                                 />
                               )}
@@ -538,7 +498,7 @@ export function AjusteInventarioFormDialog({
                               type="number"
                               step="any"
                               min="0.01"
-                              {...register(`detalles.${idx}.cantidad`, {
+                              {...register(`detalles.${idx}.cantidadSolicitada`, {
                                 valueAsNumber: true,
                               })}
                               className="h-7 text-xs font-mono text-center"
@@ -564,12 +524,17 @@ export function AjusteInventarioFormDialog({
               </table>
             </div>
 
-            {/* Totals */}
-            <div className="flex justify-end py-1.5 px-3 rounded-lg bg-muted/40 border border-border/40 text-xs gap-4 font-mono">
-              <div>
-                <span className="text-muted-foreground text-[11px]">Total Unidades: </span>
-                <span className="font-bold text-primary text-xs">
-                  {totalCantidad.toLocaleString("es-ES")}
+            {/* Totals Summary */}
+            <div className="flex flex-wrap items-center justify-between py-1.5 px-3 rounded-lg bg-muted/40 border border-border/40 text-xs font-mono gap-3">
+              <div className="flex items-center gap-4 text-muted-foreground text-[11px]">
+                <span>
+                  Líneas: <strong className="text-foreground font-sans">{totalItemsCount}</strong>
+                </span>
+                <span>
+                  Total Solicitado:{" "}
+                  <strong className="text-primary font-bold">
+                    {totalCantidad.toLocaleString("es-ES")}
+                  </strong>
                 </span>
               </div>
             </div>
@@ -591,7 +556,7 @@ export function AjusteInventarioFormDialog({
 
           <Button
             type="submit"
-            form="ajuste-form"
+            form="transferencia-almacen-form"
             size="sm"
             disabled={isSaving}
             className="h-8 px-4 text-xs bg-primary hover:bg-primary/90 text-primary-foreground font-medium gap-1.5 cursor-pointer shadow-2xs"
@@ -602,7 +567,7 @@ export function AjusteInventarioFormDialog({
                 <span>Guardando...</span>
               </>
             ) : (
-              <span>{isEditing ? "Actualizar Ajuste" : "Guardar Borrador"}</span>
+              <span>{isEditing ? "Actualizar Transferencia" : "Guardar Borrador"}</span>
             )}
           </Button>
         </DialogFooter>
