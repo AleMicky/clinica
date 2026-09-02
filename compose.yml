@@ -35,6 +35,7 @@ services:
       - "5011:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - RunSeeds=${RUN_SEEDS:-true}
       - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=ClinicaDb;User Id=sa;Password=${SQLSERVER_PASSWORD:-YourSecurePasswordHere!};TrustServerCertificate=True;
     depends_on:
       sqlserver:
