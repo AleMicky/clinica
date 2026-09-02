@@ -11,8 +11,7 @@ public static partial class ConsumoInternoMapper
     [MapperIgnoreSource(nameof(ConsumoInternoEntity.Detalles))]
     [MapperIgnoreSource(nameof(ConsumoInternoEntity.Almacen))]
     [MapperIgnoreSource(nameof(ConsumoInternoEntity.MovimientoInventario))]
-    public static partial ConsumoInternoResponse ToResponse(
-        ConsumoInternoEntity entity);
+    public static partial ConsumoInternoResponse ToResponse(ConsumoInternoEntity entity);
 
     [MapperIgnoreTarget(nameof(ConsumoInternoEntity.Id))]
     [MapperIgnoreTarget(nameof(ConsumoInternoEntity.Activo))]
@@ -25,15 +24,13 @@ public static partial class ConsumoInternoMapper
     [MapperIgnoreTarget(nameof(ConsumoInternoEntity.MovimientoInventario))]
     [MapperIgnoreTarget(nameof(ConsumoInternoEntity.Estado))]
     [MapperIgnoreTarget(nameof(ConsumoInternoEntity.MovimientoInventarioId))]
-    public static partial ConsumoInternoEntity ToEntity(
-        CreateConsumoInternoRequest request);
+    public static partial ConsumoInternoEntity ToEntity(CreateConsumoInternoRequest request);
 
     [MapperIgnoreSource(nameof(ConsumoInternoDetalleEntity.Producto))]
     [MapperIgnoreSource(nameof(ConsumoInternoDetalleEntity.Lote))]
     [MapperIgnoreSource(nameof(ConsumoInternoDetalleEntity.ConsumoInterno))]
-    public static partial ConsumoInternoDetalleResponse ToResponse(
-        ConsumoInternoDetalleEntity entity);
+    public static partial ConsumoInternoDetalleResponse ToResponse(ConsumoInternoDetalleEntity entity);
 
-    public static partial List<ConsumoInternoDetalleResponse> ToResponse(
-        IEnumerable<ConsumoInternoDetalleEntity> entities);
+    public static partial List<ConsumoInternoDetalleResponse> ToResponse(IEnumerable<ConsumoInternoDetalleEntity> entities);
+    
 }

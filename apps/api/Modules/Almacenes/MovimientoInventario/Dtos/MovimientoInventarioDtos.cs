@@ -13,16 +13,12 @@ public sealed record MovimientoInventarioDetalleRequest
 
 public abstract record MovimientoInventarioRequest
 {
-    public required string Numero { get; init; }
     public required int TipoMovimientoInventarioId { get; init; }
     public required int AlmacenId { get; init; }
     public required DateTime FechaMovimiento { get; init; }
-
     public string? ReferenciaTipo { get; init; }
     public int? ReferenciaId { get; init; }
-
     public string? Observacion { get; init; }
-
     public IReadOnlyCollection<MovimientoInventarioDetalleRequest> Detalles { get; init; } = [];
 }
 
@@ -46,6 +42,19 @@ public sealed record MovimientoInventarioDetalleResponse
     public decimal? CostoUnitario { get; init; }
     public decimal CostoTotal { get; init; }
 }
+
+public sealed record MovimientoInventarioIntegracionRequest
+{
+    public required string TipoMovimiento { get; init; }
+    public required int AlmacenId { get; init; }
+    public required DateTime Fecha { get; init; }
+    public string? Observacion { get; init; }
+
+    public string? TipoReferencia { get; init; }
+    public int? ReferenciaId { get; init; }
+    public IReadOnlyCollection<MovimientoInventarioDetalleRequest> Detalles { get; init; } = [];
+}
+
 
 public sealed record MovimientoInventarioResponse : AuditableResponse
 {

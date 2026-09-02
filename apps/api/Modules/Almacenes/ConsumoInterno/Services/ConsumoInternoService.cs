@@ -1,6 +1,8 @@
 using Clinica.Api.Data;
 using Clinica.Api.Modules.Almacenes.ConsumoInterno.Dtos;
 using Clinica.Api.Modules.Almacenes.ConsumoInterno.Enums;
+using Clinica.Api.Modules.Almacenes.MovimientoInventario.Dtos;
+using Clinica.Api.Modules.Almacenes.MovimientoInventario.Services;
 using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
@@ -51,7 +53,9 @@ public interface IConsumoInternoService
         CancellationToken cancellationToken = default);
 }
 
-public sealed class ConsumoInternoService(AppDbContext dbContext)
+public sealed class ConsumoInternoService(
+    AppDbContext dbContext,
+    IMovimientoInventarioService movimientoInventarioService)
     : IConsumoInternoService
 {
     public async Task<PagedResult<ConsumoInternoResponse>> ListarAsync(
@@ -129,9 +133,9 @@ public sealed class ConsumoInternoService(AppDbContext dbContext)
             .Include(x => x.Almacen)
             .Include(x => x.Area)
             .Include(x => x.Detalles)
-                .ThenInclude(d => d.Producto)
+            .ThenInclude(d => d.Producto)
             .Include(x => x.Detalles)
-                .ThenInclude(d => d.Lote)
+            .ThenInclude(d => d.Lote)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (consumo is null || !consumo.Activo)
@@ -146,14 +150,12 @@ public sealed class ConsumoInternoService(AppDbContext dbContext)
             consumo.Detalles);
     }
 
-    public async Task<ConsumoInternoResponse> CrearAsync(
-        CreateConsumoInternoRequest request,
+    public async Task<ConsumoInternoResponse> CrearAsync(CreateConsumoInternoRequest request,
         CancellationToken cancellationToken = default)
     {
         if (request.Detalles.Count == 0)
         {
-            throw new BusinessException(
-                "El consumo interno debe tener al menos un detalle.");
+            throw new BusinessException("El consumo interno debe tener al menos un detalle.");
         }
 
         await ValidarEncabezadoAsync(
@@ -189,8 +191,7 @@ public sealed class ConsumoInternoService(AppDbContext dbContext)
     {
         if (request.Detalles.Count == 0)
         {
-            throw new BusinessException(
-                "El consumo interno debe tener al menos un detalle.");
+            throw new BusinessException("El consumo interno debe tener al menos un detalle.");
         }
 
         var entity = await dbContext.ConsumosInterno
@@ -204,8 +205,7 @@ public sealed class ConsumoInternoService(AppDbContext dbContext)
 
         if (entity.Estado != EstadoConsumoInterno.Borrador)
         {
-            throw new ConflictException(
-                "No se puede editar un consumo que no esté en estado Borrador.");
+            throw new ConflictException("No se puede editar un consumo que no esté en estado Borrador.");
         }
 
         await ValidarEncabezadoAsync(
@@ -260,9 +260,7 @@ public sealed class ConsumoInternoService(AppDbContext dbContext)
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<ConsumoInternoResponse> ConfirmarAsync(
-        int id,
-        CancellationToken cancellationToken = default)
+    public async Task<ConsumoInternoResponse> ConfirmarAsync(int id, CancellationToken cancellationToken = default)
     {
         var entity = await dbContext.ConsumosInterno
             .Include(x => x.Detalles)
@@ -273,18 +271,48 @@ public sealed class ConsumoInternoService(AppDbContext dbContext)
             throw new NotFoundException(nameof(ConsumoEntity), id);
         }
 
-        if (entity.Estado == EstadoConsumoInterno.Confirmado)
+        switch (entity.Estado)
         {
-            throw new ConflictException("El consumo interno ya está confirmado.");
+            case EstadoConsumoInterno.Confirmado:
+                throw new ConflictException("El consumo interno ya está confirmado.");
+            case EstadoConsumoInterno.Anulado:
+                throw new ConflictException("No se puede confirmar un consumo anulado.");
+            case EstadoConsumoInterno.Borrador:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
         }
 
-        if (entity.Estado == EstadoConsumoInterno.Anulado)
+        var detallesActivos = entity.Detalles.Where(x => x.Activo).ToList();
+       
+        if (detallesActivos.Count == 0)
         {
-            throw new ConflictException("No se puede confirmar un consumo anulado.");
+            throw new BusinessException("El consumo interno no tiene detalles activos.");
         }
 
+        var detallesMovimiento = detallesActivos.Select(d => new MovimientoInventarioDetalleRequest
+        {
+            ProductoId = d.ProductoId,
+            LoteId = d.LoteId,
+            Cantidad = d.Cantidad,
+        }).ToList();
+
+        // 2. Construir el request de integración
+        var requestIntegracion = new MovimientoInventarioIntegracionRequest
+        {
+            TipoMovimiento = "CONSUMO",
+            AlmacenId = entity.AlmacenId,
+            Fecha = DateTime.UtcNow,
+            TipoReferencia = "CONSUMO_INTERNO",
+            ReferenciaId = entity.Id,
+            Observacion = $"Consumo interno {entity.Numero}",
+            Detalles = detallesMovimiento
+        };
+
+        
+        await movimientoInventarioService.CrearIntegracionAsync(requestIntegracion, cancellationToken);
+        
         entity.Estado = EstadoConsumoInterno.Confirmado;
-
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return await ObtenerAsync(id, cancellationToken);
@@ -454,9 +482,9 @@ public sealed class ConsumoInternoService(AppDbContext dbContext)
             AlmacenNombre = nombreAlmacen,
             AreaNombre = nombreArea,
             Detalles = (detalles ?? [])
-                .Where(x => x.Activo)
-                .Select(x => MapearDetalle(x))
-                .ToList()
+            .Where(x => x.Activo)
+            .Select(x => MapearDetalle(x))
+            .ToList()
         };
     }
 

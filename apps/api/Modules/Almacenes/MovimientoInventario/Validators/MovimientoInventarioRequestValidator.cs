@@ -9,11 +9,6 @@ public abstract class MovimientoInventarioRequestValidator<TRequest>
 {
     protected MovimientoInventarioRequestValidator()
     {
-        RuleFor(x => x.Numero)
-            .NotEmpty()
-            .WithMessage("El número es obligatorio.")
-            .MaximumLength(20)
-            .WithMessage("El número no puede superar los 20 caracteres.");
 
         RuleFor(x => x.TipoMovimientoInventarioId)
             .GreaterThan(0)

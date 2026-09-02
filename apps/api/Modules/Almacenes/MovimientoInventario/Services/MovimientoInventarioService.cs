@@ -61,6 +61,9 @@ public interface IMovimientoInventarioService
     Task GenerarMovimientoEntradaTransferenciaAsync(
         int transferenciaId,
         CancellationToken cancellationToken = default);
+
+    Task CrearIntegracionAsync(MovimientoInventarioIntegracionRequest request,
+        CancellationToken cancellationToken = default);
 }
 
 public sealed class MovimientoInventarioService(
@@ -157,18 +160,20 @@ public sealed class MovimientoInventarioService(
             throw new BusinessException("El movimiento de inventario debe tener al menos un detalle.");
         }
 
+        var correlativo = await CorrelativoAsync("MOV", "MOV", cancellationToken);
+
         await ValidarEncabezadoAsync(
             request.TipoMovimientoInventarioId,
             request.AlmacenId,
-            request.Numero,
             idExcluido: null,
-            cancellationToken);
+            cancellationToken
+        );
 
         await ValidarDetallesAsync(request.Detalles, cancellationToken);
 
         var entity = MovimientoMapper.ToEntity(request);
         NormalizarEncabezado(entity, request);
-
+        entity.Numero = correlativo;
         dbContext.MovimientosInventario.Add(entity);
 
         foreach (var detalle in request.Detalles)
@@ -177,8 +182,59 @@ public sealed class MovimientoInventarioService(
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
-
         return await ObtenerAsync(entity.Id, cancellationToken);
+    }
+
+    public async Task CrearIntegracionAsync(MovimientoInventarioIntegracionRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (request.Detalles.Count == 0)
+        {
+            throw new BusinessException(
+                "El movimiento de inventario debe tener al menos un detalle.");
+        }
+
+        var correlativo = await CorrelativoAsync(
+            "MOV",
+            "MOV",
+            cancellationToken);
+
+        var tipoMovimiento = await dbContext.TiposMovimientoInventario
+                                 .FirstOrDefaultAsync(
+                                     x => x.Codigo == request.TipoMovimiento && x.Activo,
+                                     cancellationToken)
+                             ?? throw new BusinessException(
+                                 $"No existe el tipo de movimiento {request.TipoMovimiento}.");
+
+        var existeAlmacen = await dbContext.Almacenes
+            .AnyAsync(
+                x => x.Id == request.AlmacenId && x.Activo,
+                cancellationToken);
+
+        if (!existeAlmacen)
+        {
+            throw new NotFoundException(nameof(AlmacenEntity), request.AlmacenId);
+        }
+
+        await ValidarDetallesAsync(request.Detalles, cancellationToken);
+
+        var entity = MovimientoMapper.ToEntity(request);
+        entity.Numero = correlativo;
+        entity.FechaMovimiento = request.Fecha;
+        entity.Observacion = Limpiar(request.Observacion);
+        entity.ReferenciaTipo = request.TipoReferencia;
+        entity.ReferenciaId = request.ReferenciaId;
+        entity.TipoMovimientoInventarioId = tipoMovimiento.Id;
+
+        dbContext.MovimientosInventario.Add(entity);
+
+        foreach (var detalle in request.Detalles)
+        {
+            entity.Detalles.Add(CrearDetalle(detalle));
+        }
+
+        // Se guarda en la base de datos (por defecto queda en estado Borrador)
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<MovimientoInventarioResponse> ActualizarAsync(int id, UpdateMovimientoInventarioRequest request,
@@ -186,8 +242,7 @@ public sealed class MovimientoInventarioService(
     {
         if (request.Detalles.Count == 0)
         {
-            throw new BusinessException(
-                "El movimiento de inventario debe tener al menos un detalle.");
+            throw new BusinessException("El movimiento de inventario debe tener al menos un detalle.");
         }
 
         var entity = await dbContext.MovimientosInventario
@@ -201,14 +256,12 @@ public sealed class MovimientoInventarioService(
 
         if (entity.Estado != EstadoMovimientoInventario.Borrador)
         {
-            throw new ConflictException(
-                "No se puede editar un movimiento que no esté en estado Borrador.");
+            throw new ConflictException("No se puede editar un movimiento que no esté en estado Borrador.");
         }
 
         await ValidarEncabezadoAsync(
             request.TipoMovimientoInventarioId,
             request.AlmacenId,
-            request.Numero,
             idExcluido: id,
             cancellationToken);
 
@@ -220,11 +273,9 @@ public sealed class MovimientoInventarioService(
         entity.ReferenciaTipo = Limpiar(request.ReferenciaTipo);
         entity.ReferenciaId = request.ReferenciaId;
         entity.Observacion = Limpiar(request.Observacion);
-        NormalizarNumero(entity, request.Numero);
         ReemplazarDetalles(entity, request.Detalles);
 
         await dbContext.SaveChangesAsync(cancellationToken);
-
         return await ObtenerAsync(id, cancellationToken);
     }
 
@@ -321,8 +372,7 @@ public sealed class MovimientoInventarioService(
                     break;
 
                 default:
-                    throw new BusinessException(
-                        "El tipo de movimiento no tiene una naturaleza válida.");
+                    throw new BusinessException("El tipo de movimiento no tiene una naturaleza válida.");
             }
         }
 
@@ -346,9 +396,7 @@ public sealed class MovimientoInventarioService(
 
         if (entity is null)
         {
-            throw new NotFoundException(
-                nameof(MovimientoEntity),
-                id);
+            throw new NotFoundException(nameof(MovimientoEntity), id);
         }
 
         switch (entity.Estado)
@@ -417,13 +465,7 @@ public sealed class MovimientoInventarioService(
             throw new BusinessException("Solo una transferencia despachada puede generar el movimiento de salida.");
 
 
-        var correlativo = await correlativoService.GenerarAsync(new GenerarCorrelativoRequest
-        {
-            Codigo = "MOV",
-            Gestion = DateTime.Now.Year,
-            Prefijo = "MOV",
-            Longitud = 6
-        }, cancellationToken);
+        var correlativo = await CorrelativoAsync("MOV", "MOV", cancellationToken);
 
         var tipoMovimiento = await dbContext.TiposMovimientoInventario
                                  .FirstOrDefaultAsync(
@@ -432,7 +474,7 @@ public sealed class MovimientoInventarioService(
 
         var movimiento = new MovimientoEntity
         {
-            Numero = correlativo.NumeroFormateado,
+            Numero = correlativo,
             TipoMovimientoInventarioId = tipoMovimiento.Id,
             AlmacenId = transferencia.AlmacenOrigenId,
             FechaMovimiento = DateTime.UtcNow,
@@ -472,16 +514,7 @@ public sealed class MovimientoInventarioService(
             throw new BusinessException("Solo una transferencia recibida puede generar la entrada.");
         }
 
-        var correlativo = await correlativoService.GenerarAsync(
-            new GenerarCorrelativoRequest
-            {
-                Codigo = "MOV",
-                Gestion = DateTime.Now.Year,
-                Prefijo = "MOV",
-                Longitud = 6
-            },
-            cancellationToken);
-
+        var correlativo = await CorrelativoAsync("MOV", "MOV", cancellationToken);
         var tipoMovimiento = await dbContext.TiposMovimientoInventario
                                  .FirstOrDefaultAsync(x => x.Codigo == "TRANSFERENCIA_ENTRADA" && x.Activo,
                                      cancellationToken)
@@ -489,7 +522,7 @@ public sealed class MovimientoInventarioService(
 
         var movimiento = new MovimientoEntity
         {
-            Numero = correlativo.NumeroFormateado,
+            Numero = correlativo,
             TipoMovimientoInventarioId = tipoMovimiento.Id,
             AlmacenId = transferencia.AlmacenDestinoId,
             FechaMovimiento = DateTime.UtcNow,
@@ -514,11 +547,23 @@ public sealed class MovimientoInventarioService(
         await ConfirmarAsync(movimiento.Id, cancellationToken);
     }
 
+    private async Task<string> CorrelativoAsync(string codigo, string prefijo, CancellationToken cancellationToken)
+    {
+        var correlativo = await correlativoService.GenerarAsync(new GenerarCorrelativoRequest
+        {
+            Codigo = codigo,
+            Gestion = DateTime.Now.Year,
+            Prefijo = prefijo,
+            Longitud = 6
+        }, cancellationToken);
+
+        return correlativo.NumeroFormateado;
+    }
+
 
     private async Task ValidarEncabezadoAsync(
         int tipoMovimientoInventarioId,
         int almacenId,
-        string numero,
         int? idExcluido,
         CancellationToken cancellationToken)
     {
@@ -541,24 +586,9 @@ public sealed class MovimientoInventarioService(
         {
             throw new NotFoundException(nameof(AlmacenEntity), almacenId);
         }
-
-        var numeroNormalizado = NormalizarNumero(numero);
-
-        var existeNumero = await dbContext.MovimientosInventario
-            .AnyAsync(
-                x => x.Numero == numeroNormalizado &&
-                     (!idExcluido.HasValue || x.Id != idExcluido.Value),
-                cancellationToken);
-
-        if (existeNumero)
-        {
-            throw new ConflictException(
-                $"Ya existe un movimiento de inventario con el número '{numeroNormalizado}'.");
-        }
     }
 
-    private async Task ValidarDetallesAsync(
-        IReadOnlyCollection<MovimientoInventarioDetalleRequest> detalles,
+    private async Task ValidarDetallesAsync(IReadOnlyCollection<MovimientoInventarioDetalleRequest> detalles,
         CancellationToken cancellationToken)
     {
         var productoIds = detalles.Select(x => x.ProductoId).Distinct().ToList();
@@ -610,8 +640,7 @@ public sealed class MovimientoInventarioService(
         }
     }
 
-    private static MovimientoDetalleEntity CrearDetalle(
-        MovimientoInventarioDetalleRequest request)
+    private static MovimientoDetalleEntity CrearDetalle(MovimientoInventarioDetalleRequest request)
     {
         return new MovimientoDetalleEntity
         {
@@ -639,26 +668,24 @@ public sealed class MovimientoInventarioService(
         }
     }
 
-    private static MovimientoInventarioResponse Mapear(
-        MovimientoEntity entity,
-        string? nombreTipo,
-        string? nombreAlmacen,
-        ICollection<MovimientoDetalleEntity>? detalles)
+    private static MovimientoInventarioResponse Mapear(MovimientoEntity entity, string? nombreTipo,
+        string? nombreAlmacen, ICollection<MovimientoDetalleEntity>? detalles)
     {
         var response = MovimientoMapper.ToResponse(entity);
         return response with
         {
             TipoMovimientoNombre = nombreTipo,
             AlmacenNombre = nombreAlmacen,
-            Detalles = (detalles ?? [])
-            .Where(x => x.Activo)
-            .Select(x => MapearDetalle(x))
-            .ToList()
+            Detalles =
+            [
+                .. (detalles ?? [])
+                .Where(x => x.Activo)
+                .Select(MapearDetalle)
+            ]
         };
     }
 
-    private static MovimientoInventarioDetalleResponse MapearDetalle(
-        MovimientoDetalleEntity entity)
+    private static MovimientoInventarioDetalleResponse MapearDetalle(MovimientoDetalleEntity entity)
     {
         var response = MovimientoMapper.ToResponse(entity);
         return response with
@@ -668,29 +695,14 @@ public sealed class MovimientoInventarioService(
         };
     }
 
-    private static void NormalizarEncabezado(
-        MovimientoEntity entity,
-        MovimientoInventarioRequest request)
+    private static void NormalizarEncabezado(MovimientoEntity entity, MovimientoInventarioRequest request)
     {
-        entity.Numero = NormalizarNumero(request.Numero);
         entity.ReferenciaTipo = Limpiar(request.ReferenciaTipo);
         entity.Observacion = Limpiar(request.Observacion);
     }
 
-    private static void NormalizarNumero(MovimientoEntity entity, string numero)
-    {
-        entity.Numero = NormalizarNumero(numero);
-    }
-
-    private static string NormalizarNumero(string value)
-    {
-        return value.Trim().ToUpperInvariant();
-    }
-
     private static string? Limpiar(string? value)
     {
-        return string.IsNullOrWhiteSpace(value)
-            ? null
-            : value.Trim();
+        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 }
