@@ -14,11 +14,7 @@ export const bajaInventarioDetalleSchema = z.object({
 });
 
 export const bajaInventarioSchema = z.object({
-  numero: z
-    .string()
-    .trim()
-    .min(1, "El número de baja es obligatorio")
-    .max(50, "El número no puede exceder 50 caracteres"),
+  numero: z.string().optional(),
   almacenId: z
     .number()
     .min(1, "Debe seleccionar un almacén"),

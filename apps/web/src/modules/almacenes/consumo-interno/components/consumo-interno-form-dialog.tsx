@@ -53,14 +53,6 @@ interface ConsumoInternoFormDialogProps {
   onSuccessCallback?: () => void;
 }
 
-function generateDefaultNumero() {
-  const d = new Date();
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-  return `CON-${year}${month}-${randomSuffix}`;
-}
-
 export function ConsumoInternoFormDialog({
   open,
   onOpenChange,
@@ -140,7 +132,7 @@ export function ConsumoInternoFormDialog({
       }
     } else {
       reset({
-        numero: generateDefaultNumero(),
+        numero: "",
         almacenId: 0,
         areaId: 0,
         fecha: new Date().toISOString().slice(0, 16),
@@ -183,7 +175,7 @@ export function ConsumoInternoFormDialog({
     }
 
     const payload = {
-      numero: values.numero.trim(),
+      numero: values.numero?.trim() || (isEditing && consumoToEdit ? consumoToEdit.numero : ""),
       almacenId: Number(values.almacenId),
       areaId: Number(values.areaId),
       fecha: new Date(values.fecha).toISOString(),
@@ -203,10 +195,10 @@ export function ConsumoInternoFormDialog({
           id: consumoToEdit.id,
           data: payload,
         });
-        toast.success(`Vale de consumo "${payload.numero}" actualizado.`);
+        toast.success(`Vale de consumo actualizado.`);
       } else {
         await createMutation.mutateAsync(payload);
-        toast.success(`Vale de consumo "${payload.numero}" guardado como borrador.`);
+        toast.success(`Vale de consumo guardado como borrador.`);
       }
       onSuccessCallback?.();
       onOpenChange(false);
@@ -264,25 +256,7 @@ export function ConsumoInternoFormDialog({
         >
           {/* Section 1: General Info */}
           <div className="p-3.5 rounded-xl bg-muted/30 border border-border/60 flex flex-col gap-3.5 shadow-2xs">
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-              {/* Número */}
-              <div className="flex flex-col gap-1">
-                <Label htmlFor="numero" className="text-xs font-medium">
-                  N° Vale <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="numero"
-                  {...register("numero")}
-                  placeholder="CON-2026-0001"
-                  className="h-8 text-xs font-mono font-semibold"
-                />
-                {errors.numero && (
-                  <span className="text-[10px] text-destructive">
-                    {errors.numero.message}
-                  </span>
-                )}
-              </div>
-
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {/* Almacén Emisor */}
               <div className="flex flex-col gap-1">
                 <Label className="text-xs font-medium flex items-center gap-1">

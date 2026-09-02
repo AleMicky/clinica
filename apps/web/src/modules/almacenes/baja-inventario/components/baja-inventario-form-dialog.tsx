@@ -54,20 +54,13 @@ import {
 } from "../types/baja-inventario.types";
 import { AlmacenAutocomplete } from "../../almacen";
 import { ProductoAutocomplete } from "../../producto";
+import { LoteAutocomplete } from "../../lote";
 
 interface BajaInventarioFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   bajaToEdit?: BajaInventarioResponse | null;
   onSuccessCallback?: () => void;
-}
-
-function generateDefaultNumero() {
-  const d = new Date();
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-  return `BAJ-${year}${month}-${randomSuffix}`;
 }
 
 export function BajaInventarioFormDialog({
@@ -113,6 +106,7 @@ export function BajaInventarioFormDialog({
   });
 
   const watchedDetalles = watch("detalles") || [];
+  const selectedAlmacenId = watch("almacenId");
 
   const totalCantidad = watchedDetalles.reduce(
     (acc, curr) => acc + (Number(curr.cantidad) || 0),
@@ -147,7 +141,7 @@ export function BajaInventarioFormDialog({
       }
     } else {
       reset({
-        numero: generateDefaultNumero(),
+        numero: "",
         almacenId: 0,
         tipo: TipoBajaInventario.Vencimiento,
         fecha: new Date().toISOString().slice(0, 16),
@@ -191,7 +185,7 @@ export function BajaInventarioFormDialog({
     }
 
     const payload = {
-      numero: values.numero.trim(),
+      numero: values.numero?.trim() || (isEditing && bajaToEdit ? bajaToEdit.numero : ""),
       almacenId: Number(values.almacenId),
       tipo: Number(values.tipo) as TipoBajaInventario,
       fecha: new Date(values.fecha).toISOString(),
@@ -211,10 +205,10 @@ export function BajaInventarioFormDialog({
           id: bajaToEdit.id,
           data: payload,
         });
-        toast.success(`Baja "${payload.numero}" actualizada.`);
+        toast.success(`Baja de inventario actualizada.`);
       } else {
         await createMutation.mutateAsync(payload);
-        toast.success(`Baja "${payload.numero}" registrada como borrador.`);
+        toast.success(`Baja de inventario registrada como borrador.`);
       }
       onSuccessCallback?.();
       onOpenChange(false);
@@ -272,25 +266,7 @@ export function BajaInventarioFormDialog({
         >
           {/* Section 1: General Info */}
           <div className="p-3.5 rounded-xl bg-muted/30 border border-border/60 flex flex-col gap-3.5 shadow-2xs">
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-              {/* Número */}
-              <div className="flex flex-col gap-1">
-                <Label htmlFor="numero" className="text-xs font-medium">
-                  N° Baja <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="numero"
-                  {...register("numero")}
-                  placeholder="BAJ-2026-0001"
-                  className="h-8 text-xs font-mono font-semibold"
-                />
-                {errors.numero && (
-                  <span className="text-[10px] text-destructive">
-                    {errors.numero.message}
-                  </span>
-                )}
-              </div>
-
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {/* Tipo / Causa */}
               <div className="flex flex-col gap-1">
                 <Label htmlFor="tipo" className="text-xs font-medium">
@@ -299,36 +275,65 @@ export function BajaInventarioFormDialog({
                 <Controller
                   name="tipo"
                   control={control}
-                  render={({ field }) => (
-                    <Select
-                      value={String(field.value)}
-                      onValueChange={(val) => field.onChange(Number(val))}
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Seleccionar causa" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={String(TipoBajaInventario.Vencimiento)}>
-                          <span className="flex items-center gap-1.5 text-amber-600">
-                            <CalendarX className="size-3" />
-                            Vencimiento / Caducidad
-                          </span>
-                        </SelectItem>
-                        <SelectItem value={String(TipoBajaInventario.Danio)}>
-                          <span className="flex items-center gap-1.5 text-orange-600">
-                            <AlertTriangle className="size-3" />
-                            Daño / Rotura / Deterioro
-                          </span>
-                        </SelectItem>
-                        <SelectItem value={String(TipoBajaInventario.Merma)}>
-                          <span className="flex items-center gap-1.5 text-purple-600">
-                            <Flame className="size-3" />
-                            Merma / Pérdida Clínica
-                          </span>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
+                  render={({ field }) => {
+                    const tipoOptions = [
+                      {
+                        value: String(TipoBajaInventario.Vencimiento),
+                        label: "Vencimiento / Caducidad",
+                        icon: CalendarX,
+                        color: "text-amber-600",
+                      },
+                      {
+                        value: String(TipoBajaInventario.Danio),
+                        label: "Daño / Rotura / Deterioro",
+                        icon: AlertTriangle,
+                        color: "text-orange-600",
+                      },
+                      {
+                        value: String(TipoBajaInventario.Merma),
+                        label: "Merma / Pérdida Clínica",
+                        icon: Flame,
+                        color: "text-purple-600",
+                      },
+                    ];
+                    const selected = tipoOptions.find(
+                      (o) => o.value === String(field.value)
+                    );
+                    const SelectedIcon = selected?.icon;
+
+                    return (
+                      <Select
+                        value={String(field.value)}
+                        onValueChange={(val) => field.onChange(Number(val))}
+                      >
+                        <SelectTrigger className="w-full h-8 text-xs">
+                          <SelectValue placeholder="Seleccionar causa">
+                            {selected && (
+                              <span className="flex items-center gap-1.5 truncate">
+                                {SelectedIcon && (
+                                  <SelectedIcon className={`size-3 shrink-0 ${selected.color}`} />
+                                )}
+                                <span className="truncate">{selected.label}</span>
+                              </span>
+                            )}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {tipoOptions.map((opt) => {
+                            const IconComponent = opt.icon;
+                            return (
+                              <SelectItem key={opt.value} value={opt.value}>
+                                <span className="flex items-center gap-1.5">
+                                  <IconComponent className={`size-3 shrink-0 ${opt.color}`} />
+                                  <span>{opt.label}</span>
+                                </span>
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                    );
+                  }}
                 />
                 {errors.tipo && (
                   <span className="text-[10px] text-destructive">
@@ -393,7 +398,7 @@ export function BajaInventarioFormDialog({
               <Input
                 id="motivo"
                 {...register("motivo")}
-                placeholder="Ej. Frasco quebrado durante manipulación en quirófano, lote vencido el mes anterior..."
+                placeholder="Ej. Frasco quebrado durante manipulación en quirófano, lote vencido..."
                 className="h-8 text-xs"
               />
               {errors.motivo && (
@@ -419,16 +424,16 @@ export function BajaInventarioFormDialog({
           </div>
 
           {/* Section 2: Items Table */}
-          <div className="flex flex-col gap-2.5">
+          <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Package className="size-4 text-rose-600 dark:text-rose-400" />
+                <Package className="size-3.5 text-rose-600 dark:text-rose-400" />
                 <span className="text-xs font-bold text-foreground uppercase tracking-wider">
                   2. Artículos a Descartar
                 </span>
                 <Badge
                   variant="secondary"
-                  className="text-[10px] h-5 px-1.5 font-mono"
+                  className="text-[10px] h-4.5 px-1.5 font-mono"
                 >
                   {fields.length} {fields.length === 1 ? "artículo" : "artículos"}
                 </Badge>
@@ -438,7 +443,7 @@ export function BajaInventarioFormDialog({
                 size="sm"
                 variant="outline"
                 onClick={handleAddRow}
-                className="h-7 text-xs gap-1.5 text-rose-600 border-rose-500/30 hover:bg-rose-500/5 cursor-pointer shadow-2xs"
+                className="h-6.5 text-xs px-2.5 gap-1 text-rose-600 border-rose-500/30 hover:bg-rose-500/5 cursor-pointer shadow-2xs"
               >
                 <Plus className="size-3" />
                 <span>Agregar Producto</span>
@@ -446,34 +451,35 @@ export function BajaInventarioFormDialog({
             </div>
 
             {errors.detalles && typeof errors.detalles.message === "string" && (
-              <div className="p-2.5 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-center gap-2">
-                <AlertCircle className="size-4 shrink-0" />
+              <div className="p-2 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-center gap-1.5">
+                <AlertCircle className="size-3.5 shrink-0" />
                 <span>{errors.detalles.message}</span>
               </div>
             )}
 
             {/* Table */}
-            <div className="rounded-xl border border-border/60 overflow-x-auto bg-card shadow-2xs">
+            <div className="rounded-lg border border-border/60 overflow-x-auto bg-card shadow-2xs">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-border/60 bg-muted/40 text-muted-foreground font-semibold">
-                    <th className="px-3 py-2 w-10 text-center">#</th>
-                    <th className="px-3 py-2 min-w-64">Producto *</th>
-                    <th className="px-3 py-2 w-32">Cantidad a Descartar *</th>
-                    <th className="px-3 py-2 min-w-44">Nota / Detalle</th>
-                    <th className="px-3 py-2 w-12 text-center"></th>
+                  <tr className="border-b border-border/60 bg-muted/40 text-muted-foreground font-semibold text-[11px]">
+                    <th className="px-2.5 py-1.5 w-8 text-center">#</th>
+                    <th className="px-2.5 py-1.5 min-w-56">Producto *</th>
+                    <th className="px-2.5 py-1.5 w-40">Lote (Opcional)</th>
+                    <th className="px-2.5 py-1.5 w-28 text-center">Cantidad *</th>
+                    <th className="px-2.5 py-1.5 min-w-36">Nota / Detalle</th>
+                    <th className="px-2 py-1.5 w-9 text-center"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/30">
                   {fields.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={5}
-                        className="px-3 py-8 text-center text-muted-foreground text-xs"
+                        colSpan={6}
+                        className="px-3 py-6 text-center text-muted-foreground text-xs"
                       >
-                        <div className="flex flex-col items-center justify-center gap-2">
-                          <FileSpreadsheet className="size-6 text-muted-foreground/60" />
-                          <span className="font-medium">
+                        <div className="flex flex-col items-center justify-center gap-1.5">
+                          <FileSpreadsheet className="size-5 text-muted-foreground/60" />
+                          <span className="font-medium text-xs">
                             No hay productos agregados a la baja
                           </span>
                           <Button
@@ -481,7 +487,7 @@ export function BajaInventarioFormDialog({
                             size="sm"
                             variant="outline"
                             onClick={handleAddRow}
-                            className="h-7 text-xs gap-1 text-rose-600 border-rose-500/30 hover:bg-rose-500/5"
+                            className="h-6.5 text-xs px-2 gap-1 text-rose-600 border-rose-500/30 hover:bg-rose-500/5"
                           >
                             <Plus className="size-3" />
                             <span>Agregar Primer Producto</span>
@@ -490,78 +496,99 @@ export function BajaInventarioFormDialog({
                       </td>
                     </tr>
                   ) : (
-                    fields.map((field, idx) => (
-                      <tr
-                        key={field.id}
-                        className="hover:bg-muted/20 transition-colors"
-                      >
-                        <td className="px-3 py-2 text-center text-muted-foreground font-mono text-[11px]">
-                          {idx + 1}
-                        </td>
-                        <td className="px-3 py-2">
-                          <Controller
-                            name={`detalles.${idx}.productoId`}
-                            control={control}
-                            render={({ field: pField }) => (
-                              <ProductoAutocomplete
-                                value={pField.value}
-                                onValueChange={(val, prod) => {
-                                  pField.onChange(val || 0);
-                                  if (prod) {
-                                    setValue(
-                                      `detalles.${idx}.productoNombre`,
-                                      prod.nombre
-                                    );
+                    fields.map((field, idx) => {
+                      const currentProdId = watch(`detalles.${idx}.productoId`);
+                      return (
+                        <tr
+                          key={field.id}
+                          className="hover:bg-muted/20 transition-colors"
+                        >
+                          <td className="px-2.5 py-1 text-center text-muted-foreground font-mono text-[11px]">
+                            {idx + 1}
+                          </td>
+                          <td className="px-2.5 py-1">
+                            <Controller
+                              name={`detalles.${idx}.productoId`}
+                              control={control}
+                              render={({ field: pField }) => (
+                                <ProductoAutocomplete
+                                  value={pField.value}
+                                  onValueChange={(val, prod) => {
+                                    pField.onChange(val || 0);
+                                    if (prod) {
+                                      setValue(
+                                        `detalles.${idx}.productoNombre`,
+                                        prod.nombre
+                                      );
+                                    }
+                                    setValue(`detalles.${idx}.loteId`, null);
+                                  }}
+                                  placeholder="Buscar por código o nombre..."
+                                />
+                              )}
+                            />
+                          </td>
+                          <td className="px-2.5 py-1">
+                            <Controller
+                              name={`detalles.${idx}.loteId`}
+                              control={control}
+                              render={({ field: lField }) => (
+                                <LoteAutocomplete
+                                  productoId={currentProdId}
+                                  almacenId={selectedAlmacenId}
+                                  value={lField.value}
+                                  onValueChange={(val) =>
+                                    lField.onChange(val || null)
                                   }
-                                }}
-                                placeholder="Buscar por código o nombre..."
-                              />
-                            )}
-                          />
-                        </td>
-                        <td className="px-3 py-2">
-                          <Input
-                            type="number"
-                            step="any"
-                            min="0.01"
-                            {...register(`detalles.${idx}.cantidad`, {
-                              valueAsNumber: true,
-                            })}
-                            className="h-8 text-xs font-mono"
-                          />
-                        </td>
-                        <td className="px-3 py-2">
-                          <Input
-                            type="text"
-                            placeholder="Ej. Ampolla rota, vencido..."
-                            {...register(`detalles.${idx}.observacion`)}
-                            className="h-8 text-xs"
-                          />
-                        </td>
-                        <td className="px-3 py-2 text-center">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => remove(idx)}
-                            disabled={fields.length === 1}
-                            className="size-7 text-muted-foreground hover:text-destructive cursor-pointer disabled:opacity-30 transition-colors"
-                          >
-                            <Trash2 className="size-3.5" />
-                          </Button>
-                        </td>
-                      </tr>
-                    ))
+                                  placeholder="Sin lote / Seleccionar..."
+                                />
+                              )}
+                            />
+                          </td>
+                          <td className="px-2.5 py-1">
+                            <Input
+                              type="number"
+                              step="any"
+                              min="0.01"
+                              {...register(`detalles.${idx}.cantidad`, {
+                                valueAsNumber: true,
+                              })}
+                              className="h-7 text-xs font-mono text-center"
+                            />
+                          </td>
+                          <td className="px-2.5 py-1">
+                            <Input
+                              type="text"
+                              placeholder="Ej. Ampolla rota, vencido..."
+                              {...register(`detalles.${idx}.observacion`)}
+                              className="h-7 text-xs"
+                            />
+                          </td>
+                          <td className="px-2 py-1 text-center">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => remove(idx)}
+                              disabled={fields.length === 1}
+                              className="size-6 text-muted-foreground hover:text-destructive cursor-pointer disabled:opacity-30 transition-colors"
+                            >
+                              <Trash2 className="size-3.5" />
+                            </Button>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
             </div>
 
             {/* Totals */}
-            <div className="flex justify-end p-2.5 rounded-lg bg-muted/40 border border-border/40 text-xs gap-4 font-mono">
+            <div className="flex justify-end py-1.5 px-3 rounded-lg bg-muted/40 border border-border/40 text-xs gap-4 font-mono">
               <div>
-                <span className="text-muted-foreground">Total Unidades a Descartar: </span>
-                <span className="font-bold text-rose-600 dark:text-rose-400">
+                <span className="text-muted-foreground text-[11px]">Total Unidades a Descartar: </span>
+                <span className="font-bold text-rose-600 dark:text-rose-400 text-xs">
                   {totalCantidad.toLocaleString("es-ES")}
                 </span>
               </div>
@@ -603,3 +630,4 @@ export function BajaInventarioFormDialog({
     </Dialog>
   );
 }
+

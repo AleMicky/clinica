@@ -12,11 +12,7 @@ export const consumoInternoDetalleSchema = z.object({
 });
 
 export const consumoInternoSchema = z.object({
-  numero: z
-    .string()
-    .trim()
-    .min(1, "El número de vale es obligatorio")
-    .max(50, "El número no puede exceder 50 caracteres"),
+  numero: z.string().optional(),
   almacenId: z
     .number()
     .min(1, "Debe seleccionar un almacén emisor"),
