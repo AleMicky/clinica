@@ -1,5 +1,9 @@
 using Clinica.Api.Modules.Almacenes.AjusteInventario.Entity;
+using Clinica.Api.Modules.Compras.CotizacionCompra.Entity;
+using Clinica.Api.Modules.Compras.DevolucionProveedor.Entity;
+using Clinica.Api.Modules.Compras.OrdenCompra.Entity;
 using Clinica.Api.Modules.Compras.Proveedor.Entity;
+using Clinica.Api.Modules.Compras.RecepcionCompra.Entity;
 using Clinica.Api.Modules.Compras.SolicitudCompra.Entity;
 using Clinica.Api.Modules.Almacenes.Almacen.Entity;
 using Clinica.Api.Modules.Almacenes.BajaInventario.Entity;
@@ -118,6 +122,14 @@ public class AppDbContext(
     public DbSet<Proveedor> Proveedores => Set<Proveedor>();
     public DbSet<SolicitudCompra> SolicitudesCompra => Set<SolicitudCompra>();
     public DbSet<SolicitudCompraDetalle> SolicitudesCompraDetalles => Set<SolicitudCompraDetalle>();
+    public DbSet<CotizacionCompra> CotizacionesCompra => Set<CotizacionCompra>();
+    public DbSet<CotizacionCompraDetalle> CotizacionesCompraDetalles => Set<CotizacionCompraDetalle>();
+    public DbSet<OrdenCompra> OrdenesCompra => Set<OrdenCompra>();
+    public DbSet<OrdenCompraDetalle> OrdenesCompraDetalles => Set<OrdenCompraDetalle>();
+    public DbSet<RecepcionCompra> RecepcionesCompra => Set<RecepcionCompra>();
+    public DbSet<RecepcionCompraDetalle> RecepcionesCompraDetalles => Set<RecepcionCompraDetalle>();
+    public DbSet<DevolucionProveedor> DevolucionesProveedor => Set<DevolucionProveedor>();
+    public DbSet<DevolucionProveedorDetalle> DevolucionesProveedorDetalles => Set<DevolucionProveedorDetalle>();
     
     protected override void OnModelCreating(ModelBuilder builder)
     {

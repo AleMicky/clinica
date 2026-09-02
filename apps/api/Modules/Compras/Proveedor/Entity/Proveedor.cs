@@ -15,9 +15,9 @@ public sealed class Proveedor : AuditableEntity
     public string? Contacto { get; set; }
     public string? Observacion { get; set; }
 
-    // public ICollection<OrdenCompra> OrdenesCompra { get; set; } = [];
+    public ICollection<OrdenCompra.Entity.OrdenCompra> OrdenesCompra { get; set; } = [];
 
-    // public ICollection<CotizacionCompra> Cotizaciones { get; set; } = [];
+    public ICollection<CotizacionCompra.Entity.CotizacionCompra> Cotizaciones { get; set; } = [];
 
-    // public ICollection<RecepcionCompra> Recepciones { get; set; } = [];
+     public ICollection<RecepcionCompra.Entity.RecepcionCompra> Recepciones { get; set; } = [];
 }
