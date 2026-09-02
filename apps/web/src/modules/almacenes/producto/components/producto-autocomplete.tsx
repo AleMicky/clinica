@@ -1,8 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { Package, Check, ChevronsUpDown, Loader2, X } from "lucide-react";
+import { Package, Check, ChevronsUpDown, Loader2, X, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { useProductos } from "../hooks/use-producto";
 import type { ProductoResponse } from "../types/producto.types";
 
@@ -26,9 +31,8 @@ export function ProductoAutocomplete({
   id,
 }: ProductoAutocompleteProps) {
   const [isOpen, setIsOpen] = React.useState(false);
-  const [query, setQuery] = React.useState("");
-  const containerRef = React.useRef<HTMLDivElement>(null);
-  const inputRef = React.useRef<HTMLInputElement>(null);
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
 
   const { data, isLoading } = useProductos({
     pageSize: 200,
@@ -41,42 +45,11 @@ export function ProductoAutocomplete({
     return productos.find((p) => String(p.id) === String(value)) || null;
   }, [value, productos]);
 
-  // Synchronize text with selected product
-  React.useEffect(() => {
-    if (selectedProducto) {
-      setQuery(`${selectedProducto.codigo} - ${selectedProducto.nombre}`);
-    } else if (!value || Number(value) <= 0) {
-      setQuery("");
-    }
-  }, [selectedProducto, value]);
-
-  React.useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        if (!isOpen) return;
-        setIsOpen(false);
-
-        if (selectedProducto) {
-          setQuery(`${selectedProducto.codigo} - ${selectedProducto.nombre}`);
-        } else {
-          setQuery("");
-          if (value) onValueChange(null, null);
-        }
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isOpen, selectedProducto, value, onValueChange]);
-
   const filteredProductos = React.useMemo(() => {
-    if (
-      !query.trim() ||
-      (selectedProducto && query === `${selectedProducto.codigo} - ${selectedProducto.nombre}`)
-    ) {
+    if (!searchQuery.trim()) {
       return productos;
     }
-    const q = query.toLowerCase().trim();
+    const q = searchQuery.toLowerCase().trim();
     return productos.filter(
       (p) =>
         p.nombre.toLowerCase().includes(q) ||
@@ -84,95 +57,134 @@ export function ProductoAutocomplete({
         (p.categoriaProductoNombre &&
           p.categoriaProductoNombre.toLowerCase().includes(q))
     );
-  }, [productos, query, selectedProducto]);
+  }, [productos, searchQuery]);
 
   const handleSelect = (producto: ProductoResponse) => {
-    setQuery(`${producto.codigo} - ${producto.nombre}`);
     onValueChange(producto.id, producto);
     setIsOpen(false);
+    setSearchQuery("");
   };
 
   const handleClear = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setQuery("");
     onValueChange(null, null);
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
+    setSearchQuery("");
   };
 
   return (
-    <div ref={containerRef} className={cn("relative w-full", isOpen && "z-50", className)}>
-      <div className="relative flex items-center">
-        <input
-          ref={inputRef}
-          id={id}
-          type="text"
-          disabled={disabled}
-          value={query}
-          placeholder={placeholder}
-          onFocus={() => setIsOpen(true)}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            if (!isOpen) setIsOpen(true);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") {
-              setIsOpen(false);
-            } else if (e.key === "Enter" && isOpen) {
-              if (filteredProductos.length > 0) {
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger
+        id={id}
+        type="button"
+        disabled={disabled}
+        aria-expanded={isOpen}
+        className={cn(
+          "w-full h-7.5 px-2 flex items-center justify-between gap-1.5 text-xs rounded-md border bg-background text-left transition-all cursor-pointer shadow-2xs focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring",
+          error
+            ? "border-destructive focus-visible:ring-destructive"
+            : "border-input hover:border-primary/50",
+          disabled && "opacity-50 cursor-not-allowed pointer-events-none",
+          className
+        )}
+      >
+        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+          <Package
+            className={cn(
+              "size-3 shrink-0",
+              selectedProducto
+                ? "text-violet-600 dark:text-violet-400"
+                : "text-muted-foreground"
+            )}
+          />
+          {selectedProducto ? (
+            <div className="flex items-center gap-1.5 min-w-0 flex-1 truncate">
+              <span className="font-mono font-bold text-[10px] text-violet-700 dark:text-violet-300 bg-violet-500/10 px-1 py-0.5 rounded shrink-0">
+                {selectedProducto.codigo}
+              </span>
+              <span className="font-medium text-foreground truncate text-xs">
+                {selectedProducto.nombre}
+              </span>
+            </div>
+          ) : (
+            <span className="text-muted-foreground truncate text-xs">
+              {placeholder}
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-0.5 shrink-0 text-muted-foreground ml-1">
+          {isLoading ? (
+            <Loader2 className="size-3 animate-spin text-primary" />
+          ) : selectedProducto && !disabled ? (
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={handleClear}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleClear(e as any);
+                }
+              }}
+              className="rounded-full p-0.5 hover:bg-muted hover:text-foreground transition-colors cursor-pointer inline-flex items-center justify-center"
+              title="Quitar selección"
+            >
+              <X className="size-3" />
+            </span>
+          ) : (
+            <ChevronsUpDown className="size-3 opacity-60" />
+          )}
+        </div>
+      </PopoverTrigger>
+
+      <PopoverContent
+        align="start"
+        className="w-[320px] sm:w-[420px] p-1.5 max-h-80 overflow-hidden flex flex-col rounded-xl shadow-xl border-border/80 z-50"
+      >
+        {/* Search header */}
+        <div className="flex items-center gap-2 px-2 py-1.5 border-b border-border/50 bg-muted/20 rounded-md mb-1">
+          <Search className="size-3.5 text-muted-foreground shrink-0" />
+          <input
+            ref={searchInputRef}
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && filteredProductos.length > 0) {
                 e.preventDefault();
                 handleSelect(filteredProductos[0]);
               }
-            }
-          }}
-          className={cn(
-            "flex h-7.5 w-full rounded-md border border-input bg-transparent px-2 py-1 text-xs shadow-2xs transition-colors placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 pr-6.5",
-            error && "border-destructive focus-visible:ring-destructive",
-            className
-          )}
-        />
-
-        <div className="absolute right-1.5 flex items-center text-muted-foreground">
-          {isLoading ? (
-            <Loader2 className="size-3 animate-spin text-primary" />
-          ) : query && !disabled ? (
+            }}
+            placeholder="Buscar por código, nombre o categoría..."
+            className="w-full text-xs bg-transparent outline-none placeholder:text-muted-foreground/70"
+            autoFocus
+          />
+          {searchQuery && (
             <button
               type="button"
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={handleClear}
-              className="rounded-full p-0.5 hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
+              onClick={() => setSearchQuery("")}
+              className="p-0.5 text-muted-foreground hover:text-foreground"
             >
-              <X className="size-2.5" />
-              <span className="sr-only">Limpiar</span>
-            </button>
-          ) : (
-            <button
-              type="button"
-              tabIndex={-1}
-              onClick={() => setIsOpen((prev) => !prev)}
-              className="p-0.5 hover:text-foreground transition-colors cursor-pointer"
-            >
-              <ChevronsUpDown className="size-3" />
+              <X className="size-3" />
             </button>
           )}
         </div>
-      </div>
 
-      {isOpen && (
-        <div className="absolute z-50 mt-1 max-h-52 min-w-full w-max max-w-md overflow-auto rounded-md border border-border bg-popover text-popover-foreground shadow-md animate-in fade-in-80">
+        {/* Results list */}
+        <div className="overflow-y-auto max-h-56 pr-0.5 space-y-0.5">
           {isLoading && filteredProductos.length === 0 ? (
-            <div className="flex items-center justify-center gap-2 px-3 py-2.5 text-xs text-muted-foreground">
-              <Loader2 className="size-3 animate-spin text-primary" />
+            <div className="flex items-center justify-center gap-2 px-3 py-4 text-xs text-muted-foreground">
+              <Loader2 className="size-3.5 animate-spin text-primary" />
               <span>Cargando productos...</span>
             </div>
           ) : filteredProductos.length === 0 ? (
-            <div className="px-3 py-2 text-xs text-muted-foreground text-center">
-              No se encontraron productos.
+            <div className="px-3 py-4 text-xs text-muted-foreground text-center">
+              No se encontraron productos coincidentes.
             </div>
           ) : (
-            <ul className="p-1 text-xs">
+            <ul className="space-y-0.5">
               {filteredProductos.map((prod) => {
                 const isSelected = selectedProducto?.id === prod.id;
 
@@ -181,27 +193,27 @@ export function ProductoAutocomplete({
                     key={prod.id}
                     onClick={() => handleSelect(prod)}
                     className={cn(
-                      "relative flex cursor-pointer select-none items-center justify-between rounded-sm px-2 py-1 outline-hidden hover:bg-accent hover:text-accent-foreground transition-colors",
-                      isSelected && "bg-accent/60 font-medium text-accent-foreground"
+                      "flex cursor-pointer select-none items-center justify-between rounded-lg px-2 py-1.5 outline-hidden hover:bg-accent hover:text-accent-foreground transition-colors text-xs",
+                      isSelected && "bg-accent/80 font-medium text-accent-foreground"
                     )}
                   >
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <div className="size-4.5 rounded flex items-center justify-center text-[9px] shrink-0 border bg-violet-500/10 border-violet-500/30 text-violet-600 dark:text-violet-400">
-                        <Package className="size-2.5" />
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <div className="size-5 rounded flex items-center justify-center shrink-0 border bg-violet-500/10 border-violet-500/30 text-violet-600 dark:text-violet-400">
+                        <Package className="size-3" />
                       </div>
-                      <div className="flex flex-col min-w-0">
-                        <div className="flex items-center gap-1">
-                          <span className="font-mono font-semibold text-[9px] text-foreground bg-muted px-1 rounded">
+                      <div className="flex flex-col min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-mono font-bold text-[10px] text-foreground bg-muted px-1 py-0.2 rounded shrink-0">
                             {prod.codigo}
                           </span>
-                          <span className="truncate text-xs">{prod.nombre}</span>
+                          <span className="truncate font-medium text-xs">{prod.nombre}</span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground">
+                        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
                           {prod.categoriaProductoNombre && (
-                            <span>{prod.categoriaProductoNombre}</span>
+                            <span className="truncate">{prod.categoriaProductoNombre}</span>
                           )}
                           {prod.unidadMedidaSimbolo && (
-                            <span className="font-mono bg-muted/60 px-1 rounded">
+                            <span className="font-mono bg-muted/70 px-1 rounded text-[9px]">
                               {prod.unidadMedidaSimbolo}
                             </span>
                           )}
@@ -209,7 +221,7 @@ export function ProductoAutocomplete({
                       </div>
                     </div>
                     {isSelected && (
-                      <Check className="size-3 text-primary ml-1.5 shrink-0" />
+                      <Check className="size-3.5 text-primary ml-1.5 shrink-0" />
                     )}
                   </li>
                 );
@@ -217,7 +229,7 @@ export function ProductoAutocomplete({
             </ul>
           )}
         </div>
-      )}
-    </div>
+      </PopoverContent>
+    </Popover>
   );
 }
