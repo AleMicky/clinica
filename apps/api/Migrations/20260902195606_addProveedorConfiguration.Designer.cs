@@ -4,6 +4,7 @@ using Clinica.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Clinica.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260902195606_addProveedorConfiguration")]
+    partial class addProveedorConfiguration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1892,135 +1895,6 @@ namespace Clinica.Api.Migrations
                         .HasFilter("[Nit] IS NOT NULL");
 
                     b.ToTable("Proveedores", (string)null);
-                });
-
-            modelBuilder.Entity("Clinica.Api.Modules.Compras.SolicitudCompra.Entity.SolicitudCompra", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("Activo")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<int>("AlmacenId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("AprobadoPorId")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("CreadoPor")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("Estado")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(1);
-
-                    b.Property<DateTime?>("FechaAprobacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("FechaCreacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("FechaModificacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("FechaRequerida")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("FechaSolicitud")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ModificadoPor")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Numero")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("Observacion")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("ObservacionAprobacion")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("SolicitadoPorId")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AlmacenId");
-
-                    b.HasIndex("Numero")
-                        .IsUnique();
-
-                    b.ToTable("SolicitudesCompra", (string)null);
-                });
-
-            modelBuilder.Entity("Clinica.Api.Modules.Compras.SolicitudCompra.Entity.SolicitudCompraDetalle", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("Activo")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<decimal?>("CantidadAprobada")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("CantidadSolicitada")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("CreadoPor")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("FechaCreacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("FechaModificacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ModificadoPor")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Observacion")
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)");
-
-                    b.Property<int>("ProductoId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SolicitudCompraId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductoId");
-
-                    b.HasIndex("SolicitudCompraId");
-
-                    b.ToTable("SolicitudesCompraDetalles", (string)null);
                 });
 
             modelBuilder.Entity("Clinica.Api.Modules.Notificaciones.Entity.Notificacion", b =>
@@ -4748,36 +4622,6 @@ namespace Clinica.Api.Migrations
                     b.Navigation("Empleado");
                 });
 
-            modelBuilder.Entity("Clinica.Api.Modules.Compras.SolicitudCompra.Entity.SolicitudCompra", b =>
-                {
-                    b.HasOne("Clinica.Api.Modules.Almacenes.Almacen.Entity.Almacen", "Almacen")
-                        .WithMany()
-                        .HasForeignKey("AlmacenId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Almacen");
-                });
-
-            modelBuilder.Entity("Clinica.Api.Modules.Compras.SolicitudCompra.Entity.SolicitudCompraDetalle", b =>
-                {
-                    b.HasOne("Clinica.Api.Modules.Almacenes.Producto.Entity.Producto", "Producto")
-                        .WithMany()
-                        .HasForeignKey("ProductoId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Clinica.Api.Modules.Compras.SolicitudCompra.Entity.SolicitudCompra", "SolicitudCompra")
-                        .WithMany("Detalles")
-                        .HasForeignKey("SolicitudCompraId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Producto");
-
-                    b.Navigation("SolicitudCompra");
-                });
-
             modelBuilder.Entity("Clinica.Api.Modules.Parametros.Banco.Entity.CuentaBancaria", b =>
                 {
                     b.HasOne("Clinica.Api.Modules.Parametros.Banco.Entity.Banco", "Banco")
@@ -5295,11 +5139,6 @@ namespace Clinica.Api.Migrations
                 });
 
             modelBuilder.Entity("Clinica.Api.Modules.Cajas.Cobro.Entity.Cobro", b =>
-                {
-                    b.Navigation("Detalles");
-                });
-
-            modelBuilder.Entity("Clinica.Api.Modules.Compras.SolicitudCompra.Entity.SolicitudCompra", b =>
                 {
                     b.Navigation("Detalles");
                 });

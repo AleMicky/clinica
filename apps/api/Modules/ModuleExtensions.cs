@@ -1,5 +1,6 @@
 using Clinica.Api.Modules.Almacenes;
 using Clinica.Api.Modules.Cajas;
+using Clinica.Api.Modules.Compras;
 using Clinica.Api.Modules.Notificaciones;
 using Clinica.Api.Modules.Parametros;
 using Clinica.Api.Modules.Recepcion;
@@ -26,6 +27,7 @@ public static class ModuleExtensions
         services.AddVentasModule();
         services.AddCajasModule();
         services.AddNotificacionesModule();
+        services.AddComprasModule();
 
         return services;
     }
@@ -44,6 +46,7 @@ public static class ModuleExtensions
         api.MapVentasModule();
         api.MapCajasModule();
         api.MapNotificacionesModule();
+        api.MapComprasModule();
 
         return app;
     }

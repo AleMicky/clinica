@@ -1,4 +1,6 @@
 using Clinica.Api.Modules.Almacenes.AjusteInventario.Entity;
+using Clinica.Api.Modules.Compras.Proveedor.Entity;
+using Clinica.Api.Modules.Compras.SolicitudCompra.Entity;
 using Clinica.Api.Modules.Almacenes.Almacen.Entity;
 using Clinica.Api.Modules.Almacenes.BajaInventario.Entity;
 using Clinica.Api.Modules.Almacenes.CategoriaProducto.Entity;
@@ -113,6 +115,9 @@ public class AppDbContext(
     public DbSet<OpcionMenu> OpcionesMenu => Set<OpcionMenu>();
     public DbSet<RolOpcionMenu> RolesOpcionesMenu => Set<RolOpcionMenu>();
     public DbSet<Notificacion> Notificaciones => Set<Notificacion>();
+    public DbSet<Proveedor> Proveedores => Set<Proveedor>();
+    public DbSet<SolicitudCompra> SolicitudesCompra => Set<SolicitudCompra>();
+    public DbSet<SolicitudCompraDetalle> SolicitudesCompraDetalles => Set<SolicitudCompraDetalle>();
     
     protected override void OnModelCreating(ModelBuilder builder)
     {

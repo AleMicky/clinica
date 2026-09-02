@@ -197,7 +197,8 @@ public sealed class InventarioFisicoService(
         return await ObtenerAsync(entity.Id, cancellationToken);
     }
 
-    public async Task<InventarioFisicoResponse> ActualizarAsync(int id, UpdateInventarioFisicoRequest request, CancellationToken cancellationToken = default)
+    public async Task<InventarioFisicoResponse> ActualizarAsync(int id, UpdateInventarioFisicoRequest request,
+        CancellationToken cancellationToken = default)
     {
         if (request.Detalles.Count == 0)
         {
@@ -306,9 +307,7 @@ public sealed class InventarioFisicoService(
         {
             if (!detallesActivos.TryGetValue(item.DetalleId, out var detalle))
             {
-                throw new NotFoundException(
-                    nameof(InventarioFisicoDetalleEntity),
-                    item.DetalleId);
+                throw new NotFoundException(nameof(InventarioFisicoDetalleEntity), item.DetalleId);
             }
 
             detalle.CantidadContada = item.CantidadContada;
@@ -681,9 +680,7 @@ public sealed class InventarioFisicoService(
         return (positivoId, negativoId);
     }
 
-    private async Task<InventarioFisicoEntity> ObtenerCabeceraAsync(
-        int id,
-        CancellationToken cancellationToken)
+    private async Task<InventarioFisicoEntity> ObtenerCabeceraAsync(int id, CancellationToken cancellationToken)
     {
         var entity = await dbContext.InventariosFisicos
             .FirstOrDefaultAsync(x => x.Id == id && x.Activo, cancellationToken);
@@ -696,9 +693,7 @@ public sealed class InventarioFisicoService(
         return entity;
     }
 
-    private static InventarioFisicoResponse Mapear(
-        InventarioFisicoEntity entity,
-        string? nombreAlmacen,
+    private static InventarioFisicoResponse Mapear(InventarioFisicoEntity entity, string? nombreAlmacen,
         ICollection<InventarioFisicoDetalleEntity>? detalles)
     {
         var response = InventarioFisicoMapper.ToResponse(entity);
