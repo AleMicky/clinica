@@ -42,20 +42,14 @@ import {
 import type { InventarioFisicoResponse } from "../types/inventario-fisico.types";
 import { AlmacenAutocomplete } from "../../almacen";
 import { ProductoAutocomplete } from "../../producto";
+import { LoteAutocomplete } from "../../lote";
+import { useExistencias } from "../../existencia";
 
 interface InventarioFisicoFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   inventarioToEdit?: InventarioFisicoResponse | null;
   onSuccessCallback?: () => void;
-}
-
-function generateDefaultNumero() {
-  const d = new Date();
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-  return `INV-${year}${month}-${randomSuffix}`;
 }
 
 export function InventarioFisicoFormDialog({
@@ -85,7 +79,6 @@ export function InventarioFisicoFormDialog({
   } = useForm<InventarioFisicoFormValues>({
     resolver: zodResolver(inventarioFisicoSchema),
     defaultValues: {
-      numero: "",
       almacenId: 0,
       fechaInicio: new Date().toISOString().slice(0, 16),
       observacion: "",
@@ -99,10 +92,37 @@ export function InventarioFisicoFormDialog({
   });
 
   const watchedDetalles = watch("detalles") || [];
+  const selectedAlmacenId = watch("almacenId");
+
+  // Obtener existencias actuales del almacén seleccionado para autocompletar la cantidad en sistema
+  const { data: existenciasData } = useExistencias(
+    open && selectedAlmacenId && selectedAlmacenId > 0
+      ? {
+          almacenId: selectedAlmacenId,
+          pageSize: 1000,
+        }
+      : undefined
+  );
 
   const totalSistema = watchedDetalles.reduce(
     (acc, curr) => acc + (Number(curr.cantidadSistema) || 0),
     0
+  );
+
+  const calculateStock = React.useCallback(
+    (productoId?: number | null, loteId?: number | null) => {
+      if (!productoId || productoId <= 0 || !existenciasData?.items) return 0;
+      if (loteId && loteId > 0) {
+        const found = existenciasData.items.find(
+          (ex) => ex.productoId === productoId && ex.loteId === loteId
+        );
+        return found ? Number(found.cantidad) : 0;
+      }
+      return existenciasData.items
+        .filter((ex) => ex.productoId === productoId)
+        .reduce((sum, ex) => sum + Number(ex.cantidad), 0);
+    },
+    [existenciasData]
   );
 
   React.useEffect(() => {
@@ -116,7 +136,6 @@ export function InventarioFisicoFormDialog({
           : new Date().toISOString().slice(0, 16);
 
         reset({
-          numero: target.numero,
           almacenId: target.almacenId,
           fechaInicio: formattedDate,
           observacion: target.observacion || "",
@@ -134,7 +153,6 @@ export function InventarioFisicoFormDialog({
       }
     } else {
       reset({
-        numero: generateDefaultNumero(),
         almacenId: 0,
         fechaInicio: new Date().toISOString().slice(0, 16),
         observacion: "",
@@ -176,7 +194,6 @@ export function InventarioFisicoFormDialog({
     }
 
     const payload = {
-      numero: values.numero.trim(),
       almacenId: Number(values.almacenId),
       fechaInicio: new Date(values.fechaInicio).toISOString(),
       observacion: values.observacion?.trim() || null,
@@ -197,10 +214,12 @@ export function InventarioFisicoFormDialog({
           id: inventarioToEdit.id,
           data: payload,
         });
-        toast.success(`Inventario "${payload.numero}" actualizado.`);
+        toast.success(
+          `Inventario "${inventarioToEdit.numero || "actualizado"}" actualizado.`
+        );
       } else {
         await createMutation.mutateAsync(payload);
-        toast.success(`Inventario "${payload.numero}" guardado como borrador.`);
+        toast.success("Inventario guardado como borrador.");
       }
       onSuccessCallback?.();
       onOpenChange(false);
@@ -243,7 +262,7 @@ export function InventarioFisicoFormDialog({
 
             <Badge
               variant="outline"
-              className="text-[11px] h-6 px-2.5 font-semibold text-amber-600 border-amber-500/30 bg-amber-500/10"
+              className="text-[11px] h-6 px-2.5 font-semibold text-blue-600 border-blue-500/30 bg-blue-500/10"
             >
               Borrador
             </Badge>
@@ -258,25 +277,7 @@ export function InventarioFisicoFormDialog({
         >
           {/* Section 1: General Info */}
           <div className="p-3.5 rounded-xl bg-muted/30 border border-border/60 flex flex-col gap-3.5 shadow-2xs">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {/* Número */}
-              <div className="flex flex-col gap-1">
-                <Label htmlFor="numero" className="text-xs font-medium">
-                  N° Inventario <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="numero"
-                  {...register("numero")}
-                  placeholder="INV-2026-0001"
-                  className="h-8 text-xs font-mono font-semibold"
-                />
-                {errors.numero && (
-                  <span className="text-[10px] text-destructive">
-                    {errors.numero.message}
-                  </span>
-                )}
-              </div>
-
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Almacén */}
               <div className="flex flex-col gap-1">
                 <Label className="text-xs font-medium flex items-center gap-1">
@@ -289,7 +290,14 @@ export function InventarioFisicoFormDialog({
                   render={({ field }) => (
                     <AlmacenAutocomplete
                       value={field.value}
-                      onValueChange={(val) => field.onChange(val || 0)}
+                      onValueChange={(val) => {
+                        field.onChange(val || 0);
+                        // Limpiar lotes y recalcular cantidades
+                        watchedDetalles.forEach((_, idx) => {
+                          setValue(`detalles.${idx}.loteId`, null);
+                          setValue(`detalles.${idx}.cantidadSistema`, 0);
+                        });
+                      }}
                       error={Boolean(errors.almacenId)}
                       placeholder="Seleccionar almacén..."
                     />
@@ -341,16 +349,16 @@ export function InventarioFisicoFormDialog({
           </div>
 
           {/* Section 2: Items Table */}
-          <div className="flex flex-col gap-2.5">
+          <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Package className="size-4 text-primary" />
+                <Package className="size-3.5 text-primary" />
                 <span className="text-xs font-bold text-foreground uppercase tracking-wider">
                   2. Lista de Productos a Auditar
                 </span>
                 <Badge
                   variant="secondary"
-                  className="text-[10px] h-5 px-1.5 font-mono"
+                  className="text-[10px] h-4.5 px-1.5 font-mono"
                 >
                   {fields.length} {fields.length === 1 ? "artículo" : "artículos"}
                 </Badge>
@@ -360,7 +368,7 @@ export function InventarioFisicoFormDialog({
                 size="sm"
                 variant="outline"
                 onClick={handleAddRow}
-                className="h-7 text-xs gap-1.5 text-primary border-primary/30 hover:bg-primary/5 cursor-pointer shadow-2xs"
+                className="h-6.5 text-xs px-2.5 gap-1 text-primary border-primary/30 hover:bg-primary/5 cursor-pointer shadow-2xs"
               >
                 <Plus className="size-3" />
                 <span>Agregar Producto</span>
@@ -368,33 +376,34 @@ export function InventarioFisicoFormDialog({
             </div>
 
             {errors.detalles && typeof errors.detalles.message === "string" && (
-              <div className="p-2.5 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-center gap-2">
-                <AlertCircle className="size-4 shrink-0" />
+              <div className="p-2 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-center gap-1.5">
+                <AlertCircle className="size-3.5 shrink-0" />
                 <span>{errors.detalles.message}</span>
               </div>
             )}
 
             {/* Table */}
-            <div className="rounded-xl border border-border/60 overflow-x-auto bg-card shadow-2xs">
+            <div className="rounded-lg border border-border/60 overflow-x-auto bg-card shadow-2xs">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-border/60 bg-muted/40 text-muted-foreground font-semibold">
-                    <th className="px-3 py-2 w-10 text-center">#</th>
-                    <th className="px-3 py-2 min-w-72">Producto *</th>
-                    <th className="px-3 py-2 w-36">Cant. en Sistema</th>
-                    <th className="px-3 py-2 w-12 text-center"></th>
+                  <tr className="border-b border-border/60 bg-muted/40 text-muted-foreground font-semibold text-[11px]">
+                    <th className="px-2.5 py-1.5 w-8 text-center">#</th>
+                    <th className="px-2.5 py-1.5 min-w-56">Producto *</th>
+                    <th className="px-2.5 py-1.5 w-44">Lote (Opcional)</th>
+                    <th className="px-2.5 py-1.5 w-32 text-center">Cant. en Sistema</th>
+                    <th className="px-2 py-1.5 w-9 text-center"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/30">
                   {fields.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={4}
-                        className="px-3 py-8 text-center text-muted-foreground text-xs"
+                        colSpan={5}
+                        className="px-3 py-6 text-center text-muted-foreground text-xs"
                       >
-                        <div className="flex flex-col items-center justify-center gap-2">
-                          <FileSpreadsheet className="size-6 text-muted-foreground/60" />
-                          <span className="font-medium">
+                        <div className="flex flex-col items-center justify-center gap-1.5">
+                          <FileSpreadsheet className="size-5 text-muted-foreground/60" />
+                          <span className="font-medium text-xs">
                             No hay productos agregados al arqueo
                           </span>
                           <Button
@@ -402,7 +411,7 @@ export function InventarioFisicoFormDialog({
                             size="sm"
                             variant="outline"
                             onClick={handleAddRow}
-                            className="h-7 text-xs gap-1 text-primary border-primary/30 hover:bg-primary/5"
+                            className="h-6.5 text-xs px-2 gap-1 text-primary border-primary/30 hover:bg-primary/5"
                           >
                             <Plus className="size-3" />
                             <span>Agregar Primer Producto</span>
@@ -411,70 +420,103 @@ export function InventarioFisicoFormDialog({
                       </td>
                     </tr>
                   ) : (
-                    fields.map((field, idx) => (
-                      <tr
-                        key={field.id}
-                        className="hover:bg-muted/20 transition-colors"
-                      >
-                        <td className="px-3 py-2 text-center text-muted-foreground font-mono text-[11px]">
-                          {idx + 1}
-                        </td>
-                        <td className="px-3 py-2">
-                          <Controller
-                            name={`detalles.${idx}.productoId`}
-                            control={control}
-                            render={({ field: pField }) => (
-                              <ProductoAutocomplete
-                                value={pField.value}
-                                onValueChange={(val, prod) => {
-                                  pField.onChange(val || 0);
-                                  if (prod) {
+                    fields.map((field, idx) => {
+                      const currentProdId = watch(`detalles.${idx}.productoId`);
+
+                      return (
+                        <tr
+                          key={field.id}
+                          className="hover:bg-muted/20 transition-colors"
+                        >
+                          <td className="px-2.5 py-1 text-center text-muted-foreground font-mono text-[11px]">
+                            {idx + 1}
+                          </td>
+                          <td className="px-2.5 py-1">
+                            <Controller
+                              name={`detalles.${idx}.productoId`}
+                              control={control}
+                              render={({ field: pField }) => (
+                                <ProductoAutocomplete
+                                  value={pField.value}
+                                  onValueChange={(val, prod) => {
+                                    pField.onChange(val || 0);
+                                    if (prod) {
+                                      setValue(
+                                        `detalles.${idx}.productoNombre`,
+                                        prod.nombre
+                                      );
+                                    }
+                                    setValue(`detalles.${idx}.loteId`, null);
+                                    const autoStock = calculateStock(val, null);
                                     setValue(
-                                      `detalles.${idx}.productoNombre`,
-                                      prod.nombre
+                                      `detalles.${idx}.cantidadSistema`,
+                                      autoStock
                                     );
-                                  }
-                                }}
-                                placeholder="Buscar por código o nombre..."
-                              />
-                            )}
-                          />
-                        </td>
-                        <td className="px-3 py-2">
-                          <Input
-                            type="number"
-                            step="any"
-                            min="0"
-                            {...register(`detalles.${idx}.cantidadSistema`, {
-                              valueAsNumber: true,
-                            })}
-                            className="h-8 text-xs font-mono"
-                          />
-                        </td>
-                        <td className="px-3 py-2 text-center">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => remove(idx)}
-                            disabled={fields.length === 1}
-                            className="size-7 text-muted-foreground hover:text-destructive cursor-pointer disabled:opacity-30 transition-colors"
-                          >
-                            <Trash2 className="size-3.5" />
-                          </Button>
-                        </td>
-                      </tr>
-                    ))
+                                  }}
+                                  placeholder="Buscar por código o nombre..."
+                                />
+                              )}
+                            />
+                          </td>
+                          <td className="px-2.5 py-1">
+                            <Controller
+                              name={`detalles.${idx}.loteId`}
+                              control={control}
+                              render={({ field: lField }) => (
+                                <LoteAutocomplete
+                                  productoId={currentProdId}
+                                  almacenId={selectedAlmacenId}
+                                  value={lField.value}
+                                  onValueChange={(val) => {
+                                    lField.onChange(val || null);
+                                    const autoStock = calculateStock(
+                                      currentProdId,
+                                      val
+                                    );
+                                    setValue(
+                                      `detalles.${idx}.cantidadSistema`,
+                                      autoStock
+                                    );
+                                  }}
+                                  placeholder="Sin lote / Seleccionar..."
+                                />
+                              )}
+                            />
+                          </td>
+                          <td className="px-2.5 py-1">
+                            <Input
+                              type="number"
+                              disabled
+                              readOnly
+                              value={watch(`detalles.${idx}.cantidadSistema`) ?? 0}
+                              className="h-7 text-xs font-mono text-center bg-muted/60 text-foreground cursor-not-allowed font-semibold opacity-90"
+                            />
+                          </td>
+                          <td className="px-2 py-1 text-center">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => remove(idx)}
+                              disabled={fields.length === 1}
+                              className="size-6 text-muted-foreground hover:text-destructive cursor-pointer disabled:opacity-30 transition-colors"
+                            >
+                              <Trash2 className="size-3.5" />
+                            </Button>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
             </div>
 
             {/* Totals */}
-            <div className="flex justify-end p-2.5 rounded-lg bg-muted/40 border border-border/40 text-xs gap-4 font-mono">
+            <div className="flex justify-end py-1.5 px-3 rounded-lg bg-muted/40 border border-border/40 text-xs gap-4 font-mono">
               <div>
-                <span className="text-muted-foreground">Total Teórico en Sistema: </span>
-                <span className="font-bold text-foreground">
+                <span className="text-muted-foreground text-[11px]">Total Teórico en Sistema: </span>
+                <span className="font-bold text-primary text-xs">
                   {totalSistema.toLocaleString("es-ES")}
                 </span>
               </div>

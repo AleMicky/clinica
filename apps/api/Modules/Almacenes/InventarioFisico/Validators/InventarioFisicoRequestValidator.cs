@@ -9,12 +9,6 @@ public abstract class InventarioFisicoRequestValidator<TRequest>
 {
     protected InventarioFisicoRequestValidator()
     {
-        RuleFor(x => x.Numero)
-            .NotEmpty()
-            .WithMessage("El número es obligatorio.")
-            .MaximumLength(20)
-            .WithMessage("El número no puede superar los 20 caracteres.");
-
         RuleFor(x => x.AlmacenId)
             .GreaterThan(0)
             .WithMessage("El almacén es obligatorio.");

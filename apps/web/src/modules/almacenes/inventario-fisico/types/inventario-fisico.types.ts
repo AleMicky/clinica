@@ -13,7 +13,6 @@ export interface InventarioFisicoDetalleRequest {
 }
 
 export interface InventarioFisicoRequest {
-  numero: string;
   almacenId: number;
   fechaInicio: string;
   observacion?: string | null;

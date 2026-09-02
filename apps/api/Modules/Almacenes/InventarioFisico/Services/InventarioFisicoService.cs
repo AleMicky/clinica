@@ -2,7 +2,10 @@ using Clinica.Api.Data;
 using Clinica.Api.Modules.Almacenes.InventarioFisico.Dtos;
 using Clinica.Api.Modules.Almacenes.InventarioFisico.Enums;
 using Clinica.Api.Modules.Almacenes.MovimientoInventario.Enums;
+using Clinica.Api.Modules.Almacenes.MovimientoInventario.Services;
 using Clinica.Api.Modules.Almacenes.TipoMovimientoInventario.Enums;
+using Clinica.Api.Modules.Parametros.Correlativo.Dtos;
+using Clinica.Api.Modules.Parametros.Correlativo.Services;
 using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
@@ -15,7 +18,8 @@ using LoteEntity = Clinica.Api.Modules.Almacenes.Lote.Entity.Lote;
 using MovimientoDetalleEntity = Clinica.Api.Modules.Almacenes.MovimientoInventario.Entity.MovimientoInventarioDetalle;
 using MovimientoEntity = Clinica.Api.Modules.Almacenes.MovimientoInventario.Entity.MovimientoInventario;
 using ProductoEntity = Clinica.Api.Modules.Almacenes.Producto.Entity.Producto;
-using TipoMovimientoInventarioEntity = Clinica.Api.Modules.Almacenes.TipoMovimientoInventario.Entity.TipoMovimientoInventario;
+using TipoMovimientoInventarioEntity =
+    Clinica.Api.Modules.Almacenes.TipoMovimientoInventario.Entity.TipoMovimientoInventario;
 
 namespace Clinica.Api.Modules.Almacenes.InventarioFisico.Services;
 
@@ -64,7 +68,10 @@ public interface IInventarioFisicoService
         CancellationToken cancellationToken = default);
 }
 
-public sealed class InventarioFisicoService(AppDbContext dbContext)
+public sealed class InventarioFisicoService(
+    AppDbContext dbContext,
+    ICorrelativoService correlativoService
+)
     : IInventarioFisicoService
 {
     private const string CodigoTipoAjusteEntrada = "AJUSTE_INV_ENTRADA";
@@ -136,9 +143,9 @@ public sealed class InventarioFisicoService(AppDbContext dbContext)
             .AsNoTracking()
             .Include(x => x.Almacen)
             .Include(x => x.Detalles)
-                .ThenInclude(d => d.Producto)
+            .ThenInclude(d => d.Producto)
             .Include(x => x.Detalles)
-                .ThenInclude(d => d.Lote)
+            .ThenInclude(d => d.Lote)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (entity is null || !entity.Activo)
@@ -162,15 +169,20 @@ public sealed class InventarioFisicoService(AppDbContext dbContext)
                 "El inventario físico debe tener al menos un detalle.");
         }
 
-        await ValidarEncabezadoAsync(
-            request.AlmacenId,
-            request.Numero,
-            idExcluido: null,
-            cancellationToken);
+        await ValidarEncabezadoAsync(request.AlmacenId, cancellationToken);
 
         await ValidarDetallesAsync(request.Detalles, cancellationToken);
 
+        var correlativo = await correlativoService.GenerarAsync(new GenerarCorrelativoRequest
+        {
+            Codigo = "FIS",
+            Gestion = DateTime.Now.Year,
+            Prefijo = "FIS",
+            Longitud = 6
+        }, cancellationToken);
+
         var entity = InventarioFisicoMapper.ToEntity(request);
+        entity.Numero = correlativo.NumeroFormateado;
         NormalizarEncabezado(entity, request);
 
         dbContext.InventariosFisicos.Add(entity);
@@ -185,10 +197,7 @@ public sealed class InventarioFisicoService(AppDbContext dbContext)
         return await ObtenerAsync(entity.Id, cancellationToken);
     }
 
-    public async Task<InventarioFisicoResponse> ActualizarAsync(
-        int id,
-        UpdateInventarioFisicoRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<InventarioFisicoResponse> ActualizarAsync(int id, UpdateInventarioFisicoRequest request, CancellationToken cancellationToken = default)
     {
         if (request.Detalles.Count == 0)
         {
@@ -213,8 +222,6 @@ public sealed class InventarioFisicoService(AppDbContext dbContext)
 
         await ValidarEncabezadoAsync(
             request.AlmacenId,
-            request.Numero,
-            idExcluido: id,
             cancellationToken);
 
         await ValidarDetallesAsync(request.Detalles, cancellationToken);
@@ -222,7 +229,6 @@ public sealed class InventarioFisicoService(AppDbContext dbContext)
         entity.AlmacenId = request.AlmacenId;
         entity.FechaInicio = request.FechaInicio;
         entity.Observacion = Limpiar(request.Observacion);
-        entity.Numero = NormalizarNumero(request.Numero);
 
         ReemplazarDetalles(entity, request.Detalles);
 
@@ -231,9 +237,7 @@ public sealed class InventarioFisicoService(AppDbContext dbContext)
         return await ObtenerAsync(id, cancellationToken);
     }
 
-    public async Task EliminarAsync(
-        int id,
-        CancellationToken cancellationToken = default)
+    public async Task EliminarAsync(int id, CancellationToken cancellationToken = default)
     {
         var entity = await dbContext.InventariosFisicos
             .Include(x => x.Detalles)
@@ -267,14 +271,11 @@ public sealed class InventarioFisicoService(AppDbContext dbContext)
 
         if (entity.Estado != EstadoInventarioFisico.Borrador)
         {
-            throw new ConflictException(
-                $"No se puede iniciar el conteo de un inventario en estado {entity.Estado}.");
+            throw new ConflictException($"No se puede iniciar el conteo de un inventario en estado {entity.Estado}.");
         }
 
         entity.Estado = EstadoInventarioFisico.EnConteo;
-
         await dbContext.SaveChangesAsync(cancellationToken);
-
         return await ObtenerAsync(id, cancellationToken);
     }
 
@@ -294,8 +295,7 @@ public sealed class InventarioFisicoService(AppDbContext dbContext)
 
         if (entity.Estado != EstadoInventarioFisico.EnConteo)
         {
-            throw new ConflictException(
-                $"No se puede registrar el conteo de un inventario en estado {entity.Estado}.");
+            throw new ConflictException($"No se puede registrar el conteo de un inventario en estado {entity.Estado}.");
         }
 
         var detallesActivos = entity.Detalles
@@ -422,8 +422,7 @@ public sealed class InventarioFisicoService(AppDbContext dbContext)
 
         if (entity.Estado == EstadoInventarioFisico.Cerrado)
         {
-            throw new ConflictException(
-                "No se puede anular un inventario físico cerrado.");
+            throw new ConflictException("No se puede anular un inventario físico cerrado.");
         }
 
         entity.Estado = EstadoInventarioFisico.Anulado;
@@ -436,8 +435,6 @@ public sealed class InventarioFisicoService(AppDbContext dbContext)
 
     private async Task ValidarEncabezadoAsync(
         int almacenId,
-        string numero,
-        int? idExcluido,
         CancellationToken cancellationToken)
     {
         var existeAlmacen = await dbContext.Almacenes
@@ -448,20 +445,6 @@ public sealed class InventarioFisicoService(AppDbContext dbContext)
         if (!existeAlmacen)
         {
             throw new NotFoundException(nameof(AlmacenEntity), almacenId);
-        }
-
-        var numeroNormalizado = NormalizarNumero(numero);
-
-        var existeNumero = await dbContext.InventariosFisicos
-            .AnyAsync(
-                x => x.Numero == numeroNormalizado &&
-                     (!idExcluido.HasValue || x.Id != idExcluido.Value),
-                cancellationToken);
-
-        if (existeNumero)
-        {
-            throw new ConflictException(
-                $"Ya existe un inventario físico con el número '{numeroNormalizado}'.");
         }
     }
 
@@ -526,8 +509,7 @@ public sealed class InventarioFisicoService(AppDbContext dbContext)
         }
     }
 
-    private static InventarioFisicoDetalleEntity CrearDetalle(
-        InventarioFisicoDetalleRequest request)
+    private static InventarioFisicoDetalleEntity CrearDetalle(InventarioFisicoDetalleRequest request)
     {
         return new InventarioFisicoDetalleEntity
         {
@@ -724,9 +706,9 @@ public sealed class InventarioFisicoService(AppDbContext dbContext)
         {
             AlmacenNombre = nombreAlmacen,
             Detalles = (detalles ?? [])
-                .Where(x => x.Activo)
-                .Select(x => MapearDetalle(x))
-                .ToList()
+            .Where(x => x.Activo)
+            .Select(x => MapearDetalle(x))
+            .ToList()
         };
     }
 
@@ -746,14 +728,9 @@ public sealed class InventarioFisicoService(AppDbContext dbContext)
         InventarioFisicoEntity entity,
         InventarioFisicoRequest request)
     {
-        entity.Numero = NormalizarNumero(request.Numero);
         entity.Observacion = Limpiar(request.Observacion);
     }
 
-    private static string NormalizarNumero(string value)
-    {
-        return value.Trim().ToUpperInvariant();
-    }
 
     private static string? Limpiar(string? value)
     {

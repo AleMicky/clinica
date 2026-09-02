@@ -13,7 +13,6 @@ public sealed record InventarioFisicoDetalleRequest
 
 public abstract record InventarioFisicoRequest
 {
-    public required string Numero { get; init; }
     public required int AlmacenId { get; init; }
     public required DateTime FechaInicio { get; init; }
 
