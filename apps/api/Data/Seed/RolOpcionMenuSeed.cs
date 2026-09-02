@@ -13,75 +13,38 @@ public static class RolOpcionMenuSeed
         var dbContext = scope.ServiceProvider
             .GetRequiredService<AppDbContext>();
 
-        var roles = await dbContext.Roles
-            .ToListAsync();
+        var adminRol = await dbContext.Roles
+            .FirstOrDefaultAsync(r => r.NormalizedName == "ADMINISTRADOR" || r.Name == "Administrador");
+
+        if (adminRol == null)
+        {
+            return;
+        }
 
         var opciones = await dbContext.OpcionesMenu
             .Where(o => o.Activo)
             .ToListAsync();
 
-        var opcionesPorCodigo = opciones
-            .ToDictionary(o => o.Codigo, StringComparer.OrdinalIgnoreCase);
-
-        var opcionesPorId = opciones
-            .ToDictionary(o => o.Id);
-
         var asignacionesExistentes = await dbContext.Set<RolOpcionMenu>()
+            .Where(x => x.RolId == adminRol.Id)
+            .Select(x => x.OpcionMenuId)
             .ToListAsync();
 
-        var asignacionesSet = new HashSet<string>(
-            asignacionesExistentes.Select(x => $"{x.RolId}_{x.OpcionMenuId}"));
-
-        var rolMap = roles.ToDictionary(
-            r => r.NormalizedName ?? r.Name!.ToUpperInvariant(),
-            StringComparer.OrdinalIgnoreCase);
-
-        var configuracionRoles = ObtenerConfiguracionRoles();
+        var asignacionesSet = new HashSet<int>(asignacionesExistentes);
         var nuevasAsignaciones = new List<RolOpcionMenu>();
 
-        foreach (var (nombreRol, codigosOpciones) in configuracionRoles)
+        foreach (var opcion in opciones)
         {
-            if (!rolMap.TryGetValue(nombreRol, out var rol))
-                continue;
-
-            var idsAAsignar = new HashSet<int>();
-
-            if (codigosOpciones.Contains("*"))
+            if (!asignacionesSet.Contains(opcion.Id))
             {
-                // Asignar todas las opciones activas (e.g. ADMINISTRADOR)
-                foreach (var op in opciones)
+                nuevasAsignaciones.Add(new RolOpcionMenu
                 {
-                    idsAAsignar.Add(op.Id);
-                }
-            }
-            else
-            {
-                // Resolver códigos específicos y asegurar ancestros/padres
-                foreach (var codigo in codigosOpciones)
-                {
-                    if (opcionesPorCodigo.TryGetValue(codigo, out var opcion))
-                    {
-                        idsAAsignar.Add(opcion.Id);
-                        AgregarPadresRecursivo(opcion, opcionesPorId, idsAAsignar);
-                    }
-                }
-            }
-
-            foreach (var opcionId in idsAAsignar)
-            {
-                var key = $"{rol.Id}_{opcionId}";
-                if (!asignacionesSet.Contains(key))
-                {
-                    nuevasAsignaciones.Add(new RolOpcionMenu
-                    {
-                        RolId = rol.Id,
-                        OpcionMenuId = opcionId,
-                        Activo = true,
-                        FechaCreacion = DateTime.UtcNow,
-                        CreadoPor = "Seed"
-                    });
-                    asignacionesSet.Add(key);
-                }
+                    RolId = adminRol.Id,
+                    OpcionMenuId = opcion.Id,
+                    Activo = true,
+                    FechaCreacion = DateTime.UtcNow,
+                    CreadoPor = "Seed"
+                });
             }
         }
 
@@ -90,88 +53,5 @@ public static class RolOpcionMenuSeed
             await dbContext.Set<RolOpcionMenu>().AddRangeAsync(nuevasAsignaciones);
             await dbContext.SaveChangesAsync();
         }
-    }
-
-    private static void AgregarPadresRecursivo(
-        OpcionMenu opcion,
-        Dictionary<int, OpcionMenu> opcionesPorId,
-        HashSet<int> ids)
-    {
-        var actualPadreId = opcion.PadreId;
-        while (actualPadreId.HasValue && opcionesPorId.TryGetValue(actualPadreId.Value, out var padre))
-        {
-            ids.Add(padre.Id);
-            actualPadreId = padre.PadreId;
-        }
-    }
-
-    private static Dictionary<string, List<string>> ObtenerConfiguracionRoles()
-    {
-        return new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase)
-        {
-            ["ADMINISTRADOR"] = ["*"],
-
-            ["RECEPCION"] =
-            [
-                "INICIO",
-                "PACIENTES",
-                "ADMISIONES",
-                "VENTAS",
-                "MI_PERFIL"
-            ],
-
-            ["CAJA"] =
-            [
-                "INICIO",
-                "VENTAS",
-                "COBROS",
-                "ARQUEOS_CIERRES",
-                "TUR-CA",
-                "MOVIMIENTOS_CAJA",
-                "PUNTOS_CAJA",
-                "MI_PERFIL"
-            ],
-
-            ["RECURSOS_HUMANOS"] =
-            [
-                "INICIO",
-                "EMPLEADOS",
-                "MEDICOS",
-                "ASIGNACIONES_EMPLEADO",
-                "CARGOS",
-                "ESPECIALIDADES",
-                "AREAS",
-                "TIPOS_AREA",
-                "MI_PERFIL"
-            ],
-
-            ["FARMACIA"] =
-            [
-                "INICIO",
-                "MI_PERFIL",
-                "PRODUCTOS",
-                "CATEGORIAS_PRODUCTO",
-                "EXISTENCIAS",
-                "MOVIMIENTOS_INVENTARIO",
-                "CONSUMOS_INTERNOS"
-            ],
-
-            ["ALMACEN"] =
-            [
-                "INICIO",
-                "MI_PERFIL",
-                "ALMACEN_PUNTOS",
-                "CATEGORIAS_PRODUCTO",
-                "PRODUCTOS",
-                "EXISTENCIAS",
-                "TIPOS_MOVIMIENTO",
-                "MOVIMIENTOS_INVENTARIO",
-                "TRANSFERENCIAS_ALMACEN",
-                "AJUSTES_INVENTARIO",
-                "BAJAS_INVENTARIO",
-                "CONSUMOS_INTERNOS",
-                "INVENTARIOS_FISICOS"
-            ]
-        };
     }
 }
