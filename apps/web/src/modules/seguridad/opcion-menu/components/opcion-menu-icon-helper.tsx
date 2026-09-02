@@ -3,6 +3,7 @@
 import * as React from "react";
 import {
   Activity,
+  ArrowDownUp,
   ArrowLeftRight,
   BarChart3,
   Bell,
@@ -12,6 +13,7 @@ import {
   Calculator,
   Calendar,
   CircleDot,
+  ClipboardCheck,
   ClipboardList,
   Clock,
   Coins,
@@ -35,6 +37,8 @@ import {
   Lock,
   Menu,
   Network,
+  Package,
+  PackageCheck,
   PieChart,
   Receipt,
   Scale,
@@ -57,6 +61,7 @@ import {
   Users,
   Vault,
   Wallet,
+  Warehouse,
   Workflow,
   type LucideIcon,
 } from "lucide-react";
@@ -114,6 +119,13 @@ export const POPULAR_MENU_ICONS: IconOption[] = [
   { name: "Tags", label: "Catálogos / Precios", category: "configuracion", icon: Tags },
   { name: "Network", label: "Red / Áreas", category: "configuracion", icon: Network },
   { name: "Workflow", label: "Flujos de Trabajo", category: "configuracion", icon: Workflow },
+
+  // Logística & Almacenes
+  { name: "Warehouse", label: "Almacén / Depósito", category: "general", icon: Warehouse },
+  { name: "Package", label: "Paquete / Producto", category: "general", icon: Package },
+  { name: "PackageCheck", label: "Producto Validado", category: "general", icon: PackageCheck },
+  { name: "ClipboardCheck", label: "Inventario Físico / Control", category: "clinica", icon: ClipboardCheck },
+  { name: "ArrowDownUp", label: "Movimiento Arriba/Abajo", category: "finanzas", icon: ArrowDownUp },
 
   // General & Navegación
   { name: "Home", label: "Inicio", category: "general", icon: Home },

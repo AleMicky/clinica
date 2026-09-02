@@ -184,13 +184,13 @@ public static class OpcionMenuSeed
                 "ADMISIONES",
                 "Admisiones",
                 "/recepcion/admisiones",
-                "FileText",
+                "ClipboardList",
                 2,
                 "CLINICA_SERVICIOS"),
 
             new(
                 "SERVICIOS",
-                "Servicios",
+                "Servicios Médicos",
                 null,
                 "Stethoscope",
                 3,
@@ -233,7 +233,7 @@ public static class OpcionMenuSeed
 
             new(
                 "VENTAS",
-                "Ventas",
+                "Punto de Venta",
                 "/ventas",
                 "Coins",
                 1,
@@ -257,15 +257,15 @@ public static class OpcionMenuSeed
 
             new(
                 "TUR-CA",
-                "Turno Cajas",
+                "Turnos de Caja",
                 "/caja/turnos",
-                "Wallet",
+                "Clock",
                 4,
                 "CAJA_VENTAS"),
 
             new(
                 "MOVIMIENTOS_CAJA",
-                "Movimientos",
+                "Movimientos de Caja",
                 "/caja/movimientos",
                 "ArrowLeftRight",
                 5,
@@ -273,7 +273,7 @@ public static class OpcionMenuSeed
 
             new(
                 "CONF",
-                "Configuraciones",
+                "Configuración de Caja",
                 null,
                 "Settings",
                 6,
@@ -288,96 +288,21 @@ public static class OpcionMenuSeed
                 "CONF"),
 
             // =========================================================
-            // 4. GESTIÓN HUMANA
-            // =========================================================
-            new(
-                "GESTION_HUMANA",
-                "Gestión Humana",
-                null,
-                null,
-                4,
-                null),
-
-            new(
-                "RECURSOS_HUMANOS",
-                "Recursos Humanos",
-                null,
-                "Users",
-                1,
-                "GESTION_HUMANA"),
-
-            new(
-                "EMPLEADOS",
-                "Empleados",
-                "/recursos-humanos/empleados",
-                "UserCheck",
-                1,
-                "RECURSOS_HUMANOS"),
-
-            new(
-                "MEDICOS",
-                "Médicos",
-                "/recursos-humanos/medicos",
-                "HeartPulse",
-                2,
-                "RECURSOS_HUMANOS"),
-
-            new(
-                "CARGOS",
-                "Cargos",
-                "/recursos-humanos/cargos",
-                "Briefcase",
-                3,
-                "RECURSOS_HUMANOS"),
-
-            new(
-                "ESPECIALIDADES",
-                "Especialidades",
-                "/recursos-humanos/especialidades",
-                "Stethoscope",
-                4,
-                "RECURSOS_HUMANOS"),
-
-            new(
-                "TIPOS_AREA",
-                "Tipos de Área",
-                "/recursos-humanos/tipos-area",
-                "Building2",
-                5,
-                "RECURSOS_HUMANOS"),
-
-            new(
-                "AREAS",
-                "Áreas",
-                "/recursos-humanos/areas",
-                "Network",
-                6,
-                "RECURSOS_HUMANOS"),
-
-            new(
-                "ASIGNACIONES_EMPLEADO",
-                "Asignaciones Empleado",
-                "/recursos-humanos/asignaciones-empleado",
-                "UserCog",
-                7,
-                "RECURSOS_HUMANOS"),
-
-            // =========================================================
-            // 5. LOGÍSTICA & ALMACENES
+            // 4. LOGÍSTICA & ALMACENES
             // =========================================================
             new(
                 "LOGISTICA_ALMACENES",
                 "Logística & Almacenes",
                 null,
                 null,
-                5,
+                4,
                 null),
 
             new(
                 "ALMACENES_MODULO",
-                "Almacenes e Inventarios",
+                "Inventario & Catálogo",
                 null,
-                "Warehouse",
+                "Boxes",
                 1,
                 "LOGISTICA_ALMACENES"),
 
@@ -406,28 +331,159 @@ public static class OpcionMenuSeed
                 "ALMACENES_MODULO"),
 
             new(
-                "TIPOS_MOVIMIENTO",
-                "Tipos de Movimiento",
-                "/almacenes/tipos-movimiento",
-                "ArrowLeftRight",
-                4,
-                "ALMACENES_MODULO"),
-
-            new(
-                "MOVIMIENTOS_INVENTARIO",
-                "Movimientos de Inventario",
-                "/almacenes/movimientos",
-                "ArrowDownUp",
-                5,
-                "ALMACENES_MODULO"),
-
-            new(
                 "EXISTENCIAS",
                 "Existencias / Stock",
                 "/almacenes/existencias",
                 "Boxes",
-                6,
+                4,
                 "ALMACENES_MODULO"),
+
+            new(
+                "TIPOS_MOVIMIENTO",
+                "Tipos de Movimiento",
+                "/almacenes/tipos-movimiento",
+                "SlidersHorizontal",
+                5,
+                "ALMACENES_MODULO"),
+
+            new(
+                "OPERACIONES_ALMACEN",
+                "Operaciones de Stock",
+                null,
+                "ArrowLeftRight",
+                2,
+                "LOGISTICA_ALMACENES"),
+
+            new(
+                "MOVIMIENTOS_INVENTARIO",
+                "Movimientos",
+                "/almacenes/movimientos",
+                "ArrowDownUp",
+                1,
+                "OPERACIONES_ALMACEN"),
+
+            new(
+                "TRANSFERENCIAS_ALMACEN",
+                "Transferencias",
+                "/almacenes/transferencias",
+                "ArrowLeftRight",
+                2,
+                "OPERACIONES_ALMACEN"),
+
+            new(
+                "AJUSTES_INVENTARIO",
+                "Ajustes de Inventario",
+                "/almacenes/ajustes",
+                "Sliders",
+                3,
+                "OPERACIONES_ALMACEN"),
+
+            new(
+                "BAJAS_INVENTARIO",
+                "Bajas de Inventario",
+                "/almacenes/bajas",
+                "FileText",
+                4,
+                "OPERACIONES_ALMACEN"),
+
+            new(
+                "CONSUMOS_INTERNOS",
+                "Consumos Internos",
+                "/almacenes/consumos",
+                "ClipboardList",
+                5,
+                "OPERACIONES_ALMACEN"),
+
+            new(
+                "INVENTARIOS_FISICOS",
+                "Inventarios Físicos",
+                "/almacenes/inventarios-fisicos",
+                "ClipboardCheck",
+                6,
+                "OPERACIONES_ALMACEN"),
+
+            // =========================================================
+            // 5. GESTIÓN HUMANA
+            // =========================================================
+            new(
+                "GESTION_HUMANA",
+                "Gestión Humana",
+                null,
+                null,
+                5,
+                null),
+
+            new(
+                "RECURSOS_HUMANOS",
+                "Personal & Médicos",
+                null,
+                "Users",
+                1,
+                "GESTION_HUMANA"),
+
+            new(
+                "EMPLEADOS",
+                "Empleados",
+                "/recursos-humanos/empleados",
+                "UserCheck",
+                1,
+                "RECURSOS_HUMANOS"),
+
+            new(
+                "MEDICOS",
+                "Médicos",
+                "/recursos-humanos/medicos",
+                "HeartPulse",
+                2,
+                "RECURSOS_HUMANOS"),
+
+            new(
+                "ASIGNACIONES_EMPLEADO",
+                "Asignaciones de Empleado",
+                "/recursos-humanos/asignaciones-empleado",
+                "UserCog",
+                3,
+                "RECURSOS_HUMANOS"),
+
+            new(
+                "ESTRUCTURA_ORGANIZACIONAL",
+                "Estructura Organizacional",
+                null,
+                "Building2",
+                2,
+                "GESTION_HUMANA"),
+
+            new(
+                "CARGOS",
+                "Cargos",
+                "/recursos-humanos/cargos",
+                "Briefcase",
+                1,
+                "ESTRUCTURA_ORGANIZACIONAL"),
+
+            new(
+                "ESPECIALIDADES",
+                "Especialidades",
+                "/recursos-humanos/especialidades",
+                "Stethoscope",
+                2,
+                "ESTRUCTURA_ORGANIZACIONAL"),
+
+            new(
+                "AREAS",
+                "Áreas",
+                "/recursos-humanos/areas",
+                "Network",
+                3,
+                "ESTRUCTURA_ORGANIZACIONAL"),
+
+            new(
+                "TIPOS_AREA",
+                "Tipos de Área",
+                "/recursos-humanos/tipos-area",
+                "Layers",
+                4,
+                "ESTRUCTURA_ORGANIZACIONAL"),
 
             // =========================================================
             // 6. CONFIGURACIÓN & SISTEMA
@@ -442,7 +498,7 @@ public static class OpcionMenuSeed
 
             new(
                 "SEGURIDAD",
-                "Seguridad",
+                "Seguridad & Accesos",
                 null,
                 "Shield",
                 1,
@@ -468,7 +524,7 @@ public static class OpcionMenuSeed
                 "PERSONAS",
                 "Personas",
                 "/seguridad/personas",
-                "User",
+                "UserPlus",
                 3,
                 "SEGURIDAD"),
 
@@ -489,24 +545,8 @@ public static class OpcionMenuSeed
                 "SEGURIDAD"),
 
             new(
-                "AUDITORIA_SISTEMA",
-                "Auditoría de Sistema",
-                "/seguridad/auditoria",
-                "FileText",
-                6,
-                "SEGURIDAD"),
-
-            new(
-                "SESIONES_ACTIVAS",
-                "Sesiones Activas",
-                "/seguridad/sesiones",
-                "Lock",
-                7,
-                "SEGURIDAD"),
-
-            new(
                 "PARAMETROS",
-                "Parámetros",
+                "Parámetros Generales",
                 null,
                 "Sliders",
                 2,
@@ -558,14 +598,6 @@ public static class OpcionMenuSeed
                 "/parametros/unidades-medida",
                 "Scale",
                 6,
-                "PARAMETROS"),
-
-            new(
-                "CONFIGURACION_GENERAL",
-                "Configuración General",
-                "/parametros/general",
-                "Settings",
-                7,
                 "PARAMETROS")
         ];
     }

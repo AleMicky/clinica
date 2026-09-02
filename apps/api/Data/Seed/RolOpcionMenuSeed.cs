@@ -137,11 +137,11 @@ public static class RolOpcionMenuSeed
                 "INICIO",
                 "EMPLEADOS",
                 "MEDICOS",
+                "ASIGNACIONES_EMPLEADO",
                 "CARGOS",
                 "ESPECIALIDADES",
-                "TIPOS_AREA",
                 "AREAS",
-                "ASIGNACIONES_EMPLEADO",
+                "TIPOS_AREA",
                 "MI_PERFIL"
             ],
 
@@ -150,8 +150,10 @@ public static class RolOpcionMenuSeed
                 "INICIO",
                 "MI_PERFIL",
                 "PRODUCTOS",
+                "CATEGORIAS_PRODUCTO",
+                "EXISTENCIAS",
                 "MOVIMIENTOS_INVENTARIO",
-                "EXISTENCIAS"
+                "CONSUMOS_INTERNOS"
             ],
 
             ["ALMACEN"] =
@@ -161,9 +163,14 @@ public static class RolOpcionMenuSeed
                 "ALMACEN_PUNTOS",
                 "CATEGORIAS_PRODUCTO",
                 "PRODUCTOS",
+                "EXISTENCIAS",
                 "TIPOS_MOVIMIENTO",
                 "MOVIMIENTOS_INVENTARIO",
-                "EXISTENCIAS"
+                "TRANSFERENCIAS_ALMACEN",
+                "AJUSTES_INVENTARIO",
+                "BAJAS_INVENTARIO",
+                "CONSUMOS_INTERNOS",
+                "INVENTARIOS_FISICOS"
             ]
         };
     }
