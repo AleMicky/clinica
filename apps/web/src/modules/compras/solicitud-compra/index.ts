@@ -14,3 +14,4 @@ export * from "./components/solicitud-compra-reject-dialog";
 export * from "./components/solicitud-compra-cancel-dialog";
 export * from "./components/solicitud-compra-delete-dialog";
 export * from "./components/solicitud-compra-module-view";
+export * from "./components/solicitud-compra-autocomplete";

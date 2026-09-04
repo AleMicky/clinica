@@ -11,3 +11,4 @@ export * from "./components/orden-compra-detail-dialog";
 export * from "./components/orden-compra-cancel-dialog";
 export * from "./components/orden-compra-delete-dialog";
 export * from "./components/orden-compra-module-view";
+export * from "./components/orden-compra-autocomplete";

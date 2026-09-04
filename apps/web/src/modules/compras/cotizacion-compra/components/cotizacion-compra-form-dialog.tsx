@@ -39,6 +39,11 @@ import {
 import type { CotizacionCompraResponse } from "../types/cotizacion-compra.types";
 import { ProveedorAutocomplete } from "@/modules/compras/proveedor";
 import { ProductoAutocomplete } from "@/modules/almacenes/producto";
+import {
+  SolicitudCompraAutocomplete,
+  EstadoSolicitudCompra,
+  getSolicitudCompraById,
+} from "@/modules/compras/solicitud-compra";
 
 interface CotizacionCompraFormDialogProps {
   open: boolean;
@@ -284,8 +289,78 @@ export function CotizacionCompraFormDialog({
                 )}
               </div>
 
+              {/* Solicitud de Compra (Filtrada a Estado 3 - Aprobada) */}
+              <div className="space-y-1 sm:col-span-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="solicitudCompraId" className="text-xs font-medium">
+                    Solicitud de Compra <span className="text-muted-foreground font-normal text-[10px]">(Opcional)</span>
+                  </Label>
+                  <Badge
+                    variant="outline"
+                    className="text-[9px] h-4 px-1.5 font-normal text-emerald-600 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/5"
+                  >
+                    Aprobadas
+                  </Badge>
+                </div>
+                <Controller
+                  control={control}
+                  name="solicitudCompraId"
+                  render={({ field }) => (
+                    <SolicitudCompraAutocomplete
+                      value={field.value || null}
+                      estado={EstadoSolicitudCompra.Aprobada}
+                      onValueChange={async (id) => {
+                        field.onChange(id || null);
+                        if (!id) return;
+
+                        try {
+                          const fullSolicitud = await getSolicitudCompraById(id);
+                          if (
+                            fullSolicitud?.detalles &&
+                            fullSolicitud.detalles.length > 0
+                          ) {
+                            const newDetalles = fullSolicitud.detalles.map(
+                              (d) => ({
+                                productoId: d.productoId,
+                                productoNombre: d.productoNombre || "",
+                                productoCodigo: d.productoCodigo || "",
+                                cantidad: Number(
+                                  d.cantidadAprobada ??
+                                  d.cantidadSolicitada ??
+                                  1
+                                ),
+                                precioUnitario: 0,
+                                descuento: 0,
+                                observacion: d.observacion || "",
+                              })
+                            );
+                            setValue("detalles", newDetalles);
+                            toast.success(
+                              `Se importaron ${newDetalles.length} producto(s) desde la solicitud ${fullSolicitud.numero}.`
+                            );
+                          }
+                        } catch (error) {
+                          console.error(
+                            "Error al obtener detalles de la solicitud",
+                            error
+                          );
+                        }
+                      }}
+                      placeholder="Seleccionar solicitud aprobada..."
+                      className="h-7.5 text-xs"
+                      error={Boolean(errors.solicitudCompraId)}
+                    />
+                  )}
+                />
+                {errors.solicitudCompraId && (
+                  <span className="text-[10px] text-destructive">
+                    {errors.solicitudCompraId.message}
+                  </span>
+                )}
+              </div>
+
               {/* Fecha */}
-              <div className="space-y-1">
+              <div className="space-y-1 sm:col-span-2">
                 <Label htmlFor="fecha" className="text-xs font-medium">
                   Fecha Emisión <span className="text-destructive">*</span>
                 </Label>
@@ -303,7 +378,7 @@ export function CotizacionCompraFormDialog({
               </div>
 
               {/* Vencimiento */}
-              <div className="space-y-1">
+              <div className="space-y-1 sm:col-span-2">
                 <Label htmlFor="fechaVencimiento" className="text-xs font-medium">
                   Validez / Vencimiento
                 </Label>

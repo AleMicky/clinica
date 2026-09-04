@@ -1,4 +1,6 @@
 using Clinica.Api.Data;
+using Clinica.Api.Modules.Compras.CotizacionCompra.Dtos;
+using Clinica.Api.Modules.Compras.CotizacionCompra.Services;
 using Clinica.Api.Modules.Compras.SolicitudCompra.Dtos;
 using Clinica.Api.Modules.Compras.SolicitudCompra.Enums;
 using Clinica.Api.Modules.Parametros.Correlativo.Dtos;
@@ -62,15 +64,13 @@ public interface ISolicitudCompraService
 public sealed class SolicitudCompraService(
     AppDbContext dbContext,
     ICurrentUserService currentUserService,
-    ICorrelativoService correlativoService)
+    ICorrelativoService correlativoService,
+    ICotizacionCompraService cotizacionCompraService
+)
     : ISolicitudCompraService
 {
-    public async Task<PagedResult<SolicitudCompraResponse>> ListarAsync(
-        int? almacenId,
-        EstadoSolicitudCompra? estado,
-        string? search,
-        PaginationRequest pagination,
-        CancellationToken cancellationToken = default)
+    public async Task<PagedResult<SolicitudCompraResponse>> ListarAsync(int? almacenId, EstadoSolicitudCompra? estado,
+        string? search, PaginationRequest pagination, CancellationToken cancellationToken = default)
     {
         var query = dbContext
             .SolicitudesCompra
@@ -121,9 +121,7 @@ public sealed class SolicitudCompraService(
             totalItems);
     }
 
-    public async Task<SolicitudCompraResponse> ObtenerAsync(
-        int id,
-        CancellationToken cancellationToken = default)
+    public async Task<SolicitudCompraResponse> ObtenerAsync(int id, CancellationToken cancellationToken = default)
     {
         var entity = await dbContext
             .SolicitudesCompra
@@ -258,42 +256,35 @@ public sealed class SolicitudCompraService(
 
         if (entity.Estado != EstadoSolicitudCompra.Borrador)
         {
-            throw new ConflictException(
-                $"No se puede enviar a aprobación una solicitud en estado {entity.Estado}.");
+            throw new ConflictException($"No se puede enviar a aprobación una solicitud en estado {entity.Estado}.");
         }
 
+        // cotizacionCompraService
         entity.Estado = EstadoSolicitudCompra.PendienteAprobacion;
-
         await dbContext.SaveChangesAsync(cancellationToken);
-
         return await ObtenerAsync(id, cancellationToken);
     }
 
-    public async Task<SolicitudCompraResponse> AprobarAsync(
-        int id,
-        AprobarSolicitudCompraRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<SolicitudCompraResponse> AprobarAsync(int id, AprobarSolicitudCompraRequest request, CancellationToken cancellationToken = default)
     {
         var entity = await ObtenerCabeceraConDetallesAsync(id, cancellationToken);
 
         if (entity.Estado != EstadoSolicitudCompra.PendienteAprobacion)
         {
-            throw new ConflictException(
-                $"No se puede aprobar una solicitud en estado {entity.Estado}.");
+            throw new ConflictException($"No se puede aprobar una solicitud en estado {entity.Estado}.");
         }
 
         entity.Estado = EstadoSolicitudCompra.Aprobada;
         entity.AprobadoPorId = currentUserService.UserName;
         entity.FechaAprobacion = DateTime.UtcNow;
         entity.ObservacionAprobacion = Limpiar(request.ObservacionAprobacion);
-
         foreach (var detalle in entity.Detalles.Where(x => x.Activo))
         {
             detalle.CantidadAprobada = detalle.CantidadSolicitada;
         }
 
-        await dbContext.SaveChangesAsync(cancellationToken);
-
+       
+        
         return await ObtenerAsync(id, cancellationToken);
     }
 
@@ -306,8 +297,7 @@ public sealed class SolicitudCompraService(
 
         if (entity.Estado != EstadoSolicitudCompra.PendienteAprobacion)
         {
-            throw new ConflictException(
-                $"No se puede rechazar una solicitud en estado {entity.Estado}.");
+            throw new ConflictException($"No se puede rechazar una solicitud en estado {entity.Estado}.");
         }
 
         entity.Estado = EstadoSolicitudCompra.Rechazada;
@@ -449,9 +439,9 @@ public sealed class SolicitudCompraService(
         {
             AlmacenNombre = nombreAlmacen,
             Detalles = (detalles ?? [])
-                .Where(x => x.Activo)
-                .Select(MapearDetalle)
-                .ToList()
+            .Where(x => x.Activo)
+            .Select(MapearDetalle)
+            .ToList()
         };
     }
 

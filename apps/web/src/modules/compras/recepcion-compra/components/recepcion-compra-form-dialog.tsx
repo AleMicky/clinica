@@ -41,6 +41,11 @@ import type { RecepcionCompraResponse } from "../types/recepcion-compra.types";
 import { AlmacenAutocomplete } from "@/modules/almacenes/almacen";
 import { ProductoAutocomplete } from "@/modules/almacenes/producto";
 import { LoteAutocomplete } from "@/modules/almacenes/lote";
+import {
+  OrdenCompraAutocomplete,
+  EstadoOrdenCompra,
+  getOrdenCompraById,
+} from "@/modules/compras/orden-compra";
 
 interface RecepcionCompraFormDialogProps {
   open: boolean;
@@ -76,7 +81,7 @@ export function RecepcionCompraFormDialog({
   } = useForm<RecepcionCompraFormValues>({
     resolver: zodResolver(recepcionCompraSchema),
     defaultValues: {
-      ordenCompraId: 1,
+      ordenCompraId: 0,
       almacenId: 0,
       fechaRecepcion: new Date().toISOString().slice(0, 16),
       numeroFactura: "",
@@ -128,7 +133,7 @@ export function RecepcionCompraFormDialog({
       }
     } else {
       reset({
-        ordenCompraId: 1,
+        ordenCompraId: 0,
         almacenId: 0,
         fechaRecepcion: new Date().toISOString().slice(0, 16),
         numeroFactura: "",
@@ -256,19 +261,83 @@ export function RecepcionCompraFormDialog({
           {/* Section 1: General Info */}
           <div className="bg-muted/20 border border-border/40 rounded-lg p-2.5 space-y-2.5">
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
-              {/* ID Orden de Compra */}
-              <div className="space-y-1">
-                <Label htmlFor="ordenCompraId" className="text-xs font-medium">
-                  ID Orden Compra <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="ordenCompraId"
-                  type="number"
-                  min="1"
-                  {...register("ordenCompraId", { valueAsNumber: true })}
-                  placeholder="ID Orden..."
-                  className="h-7.5 text-xs font-mono bg-background/50"
+              {/* Orden de Compra (Filtrada a Estado 4 - Enviada a Proveedor) */}
+              <div className="space-y-1 sm:col-span-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="ordenCompraId" className="text-xs font-medium">
+                    Orden de Compra <span className="text-destructive">*</span>
+                  </Label>
+                  <Badge
+                    variant="outline"
+                    className="text-[9px] h-4 px-1.5 font-normal text-blue-600 dark:text-blue-400 border-blue-500/30 bg-blue-500/5"
+                  >
+                    Enviadas (Est. 4)
+                  </Badge>
+                </div>
+                <Controller
+                  control={control}
+                  name="ordenCompraId"
+                  render={({ field }) => (
+                    <OrdenCompraAutocomplete
+                      value={field.value || null}
+                      estado={EstadoOrdenCompra.EnviadaProveedor}
+                      onValueChange={async (id) => {
+                        field.onChange(id || 0);
+                        if (!id) return;
+                        try {
+                          const fullOrden = await getOrdenCompraById(id);
+                          if (fullOrden) {
+                            if (fullOrden.almacenId) {
+                              setValue("almacenId", fullOrden.almacenId, {
+                                shouldValidate: true,
+                              });
+                            }
+                            if (
+                              fullOrden.detalles &&
+                              fullOrden.detalles.length > 0
+                            ) {
+                              const newDetalles = fullOrden.detalles.map(
+                                (d) => ({
+                                  ordenCompraDetalleId: d.id,
+                                  productoId: d.productoId,
+                                  productoNombre: d.productoNombre || "",
+                                  productoCodigo: d.productoCodigo || "",
+                                  loteId: null,
+                                  cantidadRecibida: Math.max(
+                                    0,
+                                    Number(d.cantidad) -
+                                      Number(d.cantidadRecibida || 0)
+                                  ) || Number(d.cantidad),
+                                  precioUnitario: Number(d.precioUnitario),
+                                  observacion: d.observacion || "",
+                                })
+                              );
+                              setValue("detalles", newDetalles, {
+                                shouldValidate: true,
+                              });
+                              toast.success(
+                                `Se cargaron ${newDetalles.length} producto(s) desde la orden ${fullOrden.numero}.`
+                              );
+                            }
+                          }
+                        } catch (error) {
+                          console.error(
+                            "Error al obtener detalles de la orden",
+                            error
+                          );
+                        }
+                      }}
+                      placeholder="Seleccionar orden de compra enviada..."
+                      className="h-7.5 text-xs"
+                      error={Boolean(errors.ordenCompraId)}
+                    />
+                  )}
                 />
+                {errors.ordenCompraId && (
+                  <span className="text-[10px] text-destructive">
+                    {errors.ordenCompraId.message}
+                  </span>
+                )}
               </div>
 
               {/* Almacén */}
@@ -297,7 +366,7 @@ export function RecepcionCompraFormDialog({
               </div>
 
               {/* Fecha Recepción */}
-              <div className="space-y-1">
+              <div className="space-y-1 sm:col-span-2">
                 <Label htmlFor="fechaRecepcion" className="text-xs font-medium">
                   Fecha Recepción <span className="text-destructive">*</span>
                 </Label>
@@ -307,12 +376,17 @@ export function RecepcionCompraFormDialog({
                   {...register("fechaRecepcion")}
                   className="h-7.5 text-xs bg-background/50"
                 />
+                {errors.fechaRecepcion && (
+                  <span className="text-[10px] text-destructive">
+                    {errors.fechaRecepcion.message}
+                  </span>
+                )}
               </div>
 
               {/* Factura */}
-              <div className="space-y-1 sm:col-span-2">
+              <div className="space-y-1 sm:col-span-1">
                 <Label htmlFor="numeroFactura" className="text-xs font-medium">
-                  N° Factura del Proveedor
+                  N° Factura
                 </Label>
                 <Input
                   id="numeroFactura"
@@ -323,9 +397,9 @@ export function RecepcionCompraFormDialog({
               </div>
 
               {/* Remisión */}
-              <div className="space-y-1 sm:col-span-2">
+              <div className="space-y-1 sm:col-span-1">
                 <Label htmlFor="numeroRemision" className="text-xs font-medium">
-                  N° Guía de Remisión / Despacho
+                  N° Guía Remisión
                 </Label>
                 <Input
                   id="numeroRemision"

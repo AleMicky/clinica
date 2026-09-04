@@ -6,6 +6,5 @@ public enum EstadoCotizacionCompra
     Recibida = 2,
     Seleccionada = 3,
     Rechazada = 4,
-    Vencida = 5,
     Cancelada = 6
 }

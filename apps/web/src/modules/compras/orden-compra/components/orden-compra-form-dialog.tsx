@@ -8,8 +8,6 @@ import {
   Trash2,
   Plus,
   Package,
-  Building2,
-  Warehouse,
   ShoppingBag,
   Loader2,
   AlertCircle,
@@ -42,6 +40,16 @@ import type { OrdenCompraResponse } from "../types/orden-compra.types";
 import { ProveedorAutocomplete } from "@/modules/compras/proveedor";
 import { AlmacenAutocomplete } from "@/modules/almacenes/almacen";
 import { ProductoAutocomplete } from "@/modules/almacenes/producto";
+import {
+  SolicitudCompraAutocomplete,
+  EstadoSolicitudCompra,
+  getSolicitudCompraById,
+} from "@/modules/compras/solicitud-compra";
+import {
+  CotizacionCompraAutocomplete,
+  EstadoCotizacionCompra,
+  getCotizacionCompraById,
+} from "@/modules/compras/cotizacion-compra";
 
 interface OrdenCompraFormDialogProps {
   open: boolean;
@@ -268,6 +276,156 @@ export function OrdenCompraFormDialog({
           {/* Section 1: General Info */}
           <div className="bg-muted/20 border border-border/40 rounded-lg p-2.5 space-y-2.5">
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
+              {/* 1. Solicitud de Compra (Primero - Estado 3 Aprobada) */}
+              <div className="space-y-1 sm:col-span-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="solicitudCompraId" className="text-xs font-medium">
+                    1. Solicitud de Compra <span className="text-muted-foreground font-normal text-[10px]">(Opcional)</span>
+                  </Label>
+                  <Badge
+                    variant="outline"
+                    className="text-[9px] h-4 px-1.5 font-normal text-emerald-600 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/5"
+                  >
+                    Aprobadas (Est. 3)
+                  </Badge>
+                </div>
+                <Controller
+                  control={control}
+                  name="solicitudCompraId"
+                  render={({ field }) => (
+                    <SolicitudCompraAutocomplete
+                      value={field.value || null}
+                      estado={EstadoSolicitudCompra.Aprobada}
+                      onValueChange={async (id) => {
+                        field.onChange(id || null);
+                        setValue("cotizacionCompraId", null);
+                        if (!id) return;
+                        try {
+                          const fullSolicitud = await getSolicitudCompraById(id);
+                          if (fullSolicitud?.almacenId) {
+                            setValue("almacenId", fullSolicitud.almacenId, {
+                              shouldValidate: true,
+                            });
+                          }
+                        } catch (error) {
+                          console.error("Error al obtener solicitud", error);
+                        }
+                      }}
+                      placeholder="Seleccionar solicitud aprobada..."
+                      className="h-7.5 text-xs"
+                      error={Boolean(errors.solicitudCompraId)}
+                    />
+                  )}
+                />
+                {errors.solicitudCompraId && (
+                  <span className="text-[10px] text-destructive">
+                    {errors.solicitudCompraId.message}
+                  </span>
+                )}
+              </div>
+
+              {/* 2. Cotización de Compra (Segundo - Estado 3 Seleccionada) */}
+              <div className="space-y-1 sm:col-span-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="cotizacionCompraId" className="text-xs font-medium">
+                    2. Cotización de Compra <span className="text-muted-foreground font-normal text-[10px]">(Opcional)</span>
+                  </Label>
+                  <Badge
+                    variant="outline"
+                    className="text-[9px] h-4 px-1.5 font-normal text-teal-600 dark:text-teal-400 border-teal-500/30 bg-teal-500/5"
+                  >
+                    Seleccionadas (Est. 3)
+                  </Badge>
+                </div>
+                <Controller
+                  control={control}
+                  name="cotizacionCompraId"
+                  render={({ field }) => (
+                    <CotizacionCompraAutocomplete
+                      value={field.value || null}
+                      solicitudCompraId={watch("solicitudCompraId") || undefined}
+                      proveedorId={watch("proveedorId") || undefined}
+                      estado={EstadoCotizacionCompra.Seleccionada}
+                      onValueChange={async (id) => {
+                        field.onChange(id || null);
+                        if (!id) return;
+                        try {
+                          const fullCotizacion =
+                            await getCotizacionCompraById(id);
+                          if (fullCotizacion) {
+                            // Cabecera: Proveedor
+                            if (fullCotizacion.proveedorId) {
+                              setValue(
+                                "proveedorId",
+                                fullCotizacion.proveedorId,
+                                { shouldValidate: true }
+                              );
+                            }
+                            // Cabecera: Condición de Pago
+                            if (fullCotizacion.condicionPago) {
+                              setValue(
+                                "condicionPago",
+                                fullCotizacion.condicionPago,
+                                { shouldValidate: true }
+                              );
+                            }
+                            // Cabecera: Solicitud de Compra vinculada
+                            if (fullCotizacion.solicitudCompraId) {
+                              setValue(
+                                "solicitudCompraId",
+                                fullCotizacion.solicitudCompraId,
+                                { shouldValidate: true }
+                              );
+                            }
+                            // Cabecera: Observación si aplica
+                            if (fullCotizacion.observacion) {
+                              setValue(
+                                "observacion",
+                                fullCotizacion.observacion,
+                                { shouldValidate: true }
+                              );
+                            }
+                            // Detalle completo: Productos, cantidades, precios unitarios, descuentos y observaciones
+                            if (
+                              fullCotizacion.detalles &&
+                              fullCotizacion.detalles.length > 0
+                            ) {
+                              const newDetalles = fullCotizacion.detalles.map(
+                                (d) => ({
+                                  productoId: d.productoId,
+                                  productoNombre: d.productoNombre || "",
+                                  productoCodigo: d.productoCodigo || "",
+                                  cantidad: Number(d.cantidad),
+                                  precioUnitario: Number(d.precioUnitario),
+                                  descuento: Number(d.descuento || 0),
+                                  observacion: d.observacion || "",
+                                })
+                              );
+                              setValue("detalles", newDetalles, {
+                                shouldValidate: true,
+                              });
+                              toast.success(
+                                `Se cargaron todos los datos y ${newDetalles.length} producto(s) desde la cotización ${fullCotizacion.numero}.`
+                              );
+                            }
+                          }
+                        } catch (error) {
+                          console.error("Error al obtener cotización", error);
+                        }
+                      }}
+                      placeholder="Seleccionar cotización ganadora/seleccionada..."
+                      className="h-7.5 text-xs"
+                      error={Boolean(errors.cotizacionCompraId)}
+                    />
+                  )}
+                />
+                {errors.cotizacionCompraId && (
+                  <span className="text-[10px] text-destructive">
+                    {errors.cotizacionCompraId.message}
+                  </span>
+                )}
+              </div>
+
               {/* Proveedor */}
               <div className="space-y-1 sm:col-span-2">
                 <Label htmlFor="proveedorId" className="text-xs font-medium">
@@ -319,7 +477,7 @@ export function OrdenCompraFormDialog({
               </div>
 
               {/* Fecha Emisión */}
-              <div className="space-y-1">
+              <div className="space-y-1 sm:col-span-1">
                 <Label htmlFor="fecha" className="text-xs font-medium">
                   Fecha Emisión <span className="text-destructive">*</span>
                 </Label>
@@ -329,10 +487,15 @@ export function OrdenCompraFormDialog({
                   {...register("fecha")}
                   className="h-7.5 text-xs bg-background/50"
                 />
+                {errors.fecha && (
+                  <span className="text-[10px] text-destructive">
+                    {errors.fecha.message}
+                  </span>
+                )}
               </div>
 
               {/* Fecha Entrega Esperada */}
-              <div className="space-y-1">
+              <div className="space-y-1 sm:col-span-1">
                 <Label htmlFor="fechaEntregaEsperada" className="text-xs font-medium">
                   Entrega Esperada
                 </Label>

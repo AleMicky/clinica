@@ -11,3 +11,4 @@ export * from "./components/cotizacion-compra-detail-dialog";
 export * from "./components/cotizacion-compra-cancel-dialog";
 export * from "./components/cotizacion-compra-delete-dialog";
 export * from "./components/cotizacion-compra-module-view";
+export * from "./components/cotizacion-compra-autocomplete";
