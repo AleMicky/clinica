@@ -20,8 +20,8 @@ export function ProductoModuleView() {
   const [page, setPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(10);
 
-  // Selected Producto for Master-Detail view
-  const [selectedProducto, setSelectedProducto] = React.useState<ProductoResponse | null>(null);
+  // Selected Producto ID for Master-Detail view
+  const [selectedProductoId, setSelectedProductoId] = React.useState<number | null>(null);
 
   const {
     data: productosData,
@@ -35,24 +35,25 @@ export function ProductoModuleView() {
   });
 
   const { data: categoriasData } = useCategoriasProducto({ pageSize: 200 });
-  const categorias = categoriasData?.items ?? [];
+  const categorias = React.useMemo(
+    () => categoriasData?.items ?? [],
+    [categoriasData?.items]
+  );
 
-  const productos = productosData?.items ?? [];
+  const productos = React.useMemo(
+    () => productosData?.items ?? [],
+    [productosData?.items]
+  );
 
-  // Automatically select the first item when data loads or selection changes
-  React.useEffect(() => {
-    if (productos.length > 0) {
-      if (!selectedProducto || !productos.some((p) => p.id === selectedProducto.id)) {
-        setSelectedProducto(productos[0]);
-      } else {
-        // Keep updated item reference
-        const updated = productos.find((p) => p.id === selectedProducto.id);
-        if (updated) setSelectedProducto(updated);
-      }
-    } else {
-      setSelectedProducto(null);
+  // Derive active selected producto during render (avoids cascading setState in useEffect)
+  const selectedProducto = React.useMemo(() => {
+    if (productos.length === 0) return null;
+    if (selectedProductoId !== null) {
+      const found = productos.find((p) => p.id === selectedProductoId);
+      if (found) return found;
     }
-  }, [productos, selectedProducto]);
+    return productos[0] ?? null;
+  }, [productos, selectedProductoId]);
 
   const handleSearchChange = (term: string) => {
     setSearchTerm(term);
@@ -109,24 +110,16 @@ export function ProductoModuleView() {
   const handleViewAuditProducto = (producto: ProductoResponse) => {
     const rawCreated =
       producto.fechaCreacion ||
-      producto.createdAt ||
-      (producto as any).created_at ||
-      (producto as any).creadoEn;
+      producto.createdAt;
     const rawUpdated =
       producto.fechaModificacion ||
-      producto.updatedAt ||
-      (producto as any).updated_at ||
-      (producto as any).actualizadoEn;
+      producto.updatedAt;
     const createdUser =
       producto.creadoPor ||
-      producto.createdBy ||
-      (producto as any).created_by ||
-      (producto as any).usuarioCreacion;
+      producto.createdBy;
     const updatedUser =
       producto.modificadoPor ||
-      producto.updatedBy ||
-      (producto as any).updated_by ||
-      (producto as any).usuarioModificacion;
+      producto.updatedBy;
 
     setAuditInfo({
       title: "Auditoría de Producto",
@@ -173,24 +166,16 @@ export function ProductoModuleView() {
   const handleViewAuditLote = (lote: LoteResponse) => {
     const rawCreated =
       lote.fechaCreacion ||
-      lote.createdAt ||
-      (lote as any).created_at ||
-      (lote as any).creadoEn;
+      lote.createdAt;
     const rawUpdated =
       lote.fechaModificacion ||
-      lote.updatedAt ||
-      (lote as any).updated_at ||
-      (lote as any).actualizadoEn;
+      lote.updatedAt;
     const createdUser =
       lote.creadoPor ||
-      lote.createdBy ||
-      (lote as any).created_by ||
-      (lote as any).usuarioCreacion;
+      lote.createdBy;
     const updatedUser =
       lote.modificadoPor ||
-      lote.updatedBy ||
-      (lote as any).updated_by ||
-      (lote as any).usuarioModificacion;
+      lote.updatedBy;
 
     setAuditInfo({
       title: "Auditoría de Lote",
@@ -231,7 +216,7 @@ export function ProductoModuleView() {
             categorias={categorias}
             isLoading={isLoading}
             selectedProductoId={selectedProducto?.id ?? null}
-            onSelectProducto={setSelectedProducto}
+            onSelectProducto={(producto) => setSelectedProductoId(producto.id)}
             searchTerm={searchTerm}
             onSearchChange={handleSearchChange}
             categoriaFilter={categoriaFilter}
