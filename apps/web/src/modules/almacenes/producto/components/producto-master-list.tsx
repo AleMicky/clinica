@@ -13,6 +13,9 @@ import {
   Search,
   Trash2,
   Filter,
+  X,
+  Loader2,
+  RotateCcw,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -40,12 +43,14 @@ interface ProductoMasterListProps {
   productos: ProductoResponse[];
   categorias: CategoriaProductoResponse[];
   isLoading: boolean;
+  isFetching?: boolean;
   selectedProductoId: number | null;
   onSelectProducto: (producto: ProductoResponse) => void;
   searchTerm: string;
   onSearchChange: (val: string) => void;
   categoriaFilter: number | null;
   onCategoriaFilterChange: (catId: number | null) => void;
+  onClearFilters?: () => void;
   page: number;
   pageSize: number;
   totalItems: number;
@@ -61,12 +66,14 @@ export function ProductoMasterList({
   productos,
   categorias,
   isLoading,
+  isFetching = false,
   selectedProductoId,
   onSelectProducto,
   searchTerm,
   onSearchChange,
   categoriaFilter,
   onCategoriaFilterChange,
+  onClearFilters,
   page,
   pageSize,
   totalItems,
@@ -77,8 +84,33 @@ export function ProductoMasterList({
   onDelete,
   onRefresh,
 }: ProductoMasterListProps) {
+  const hasActiveFilters = Boolean(searchTerm.trim() || categoriaFilter !== null);
+
+  // Keyboard navigation through items
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (productos.length === 0) return;
+
+    const currentIndex = productos.findIndex((p) => p.id === selectedProductoId);
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      const nextIndex = currentIndex < productos.length - 1 ? currentIndex + 1 : 0;
+      onSelectProducto(productos[nextIndex]);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      const prevIndex = currentIndex > 0 ? currentIndex - 1 : productos.length - 1;
+      onSelectProducto(productos[prevIndex]);
+    }
+  };
+
   return (
-    <div className="flex flex-col h-full bg-card rounded-xl border border-border/40 shadow-2xs overflow-hidden">
+    <div
+      className="flex flex-col h-full bg-card rounded-xl border border-border/40 shadow-2xs overflow-hidden outline-hidden"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      role="region"
+      aria-label="Catálogo de productos"
+    >
       {/* Top Header */}
       <div className="p-3 border-b border-border/30 space-y-2.5">
         <div className="flex items-center justify-between gap-2">
@@ -108,7 +140,7 @@ export function ProductoMasterList({
                 className="size-7 text-muted-foreground hover:text-foreground cursor-pointer"
                 title="Recargar catálogo"
               >
-                <RefreshCw className={cn("size-3.5", isLoading && "animate-spin")} />
+                <RefreshCw className={cn("size-3.5", (isLoading || isFetching) && "animate-spin")} />
               </Button>
             )}
             <Button
@@ -125,36 +157,64 @@ export function ProductoMasterList({
         {/* Search & Category Filter Controls */}
         <div className="space-y-1.5">
           <div className="relative w-full">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+            {isFetching ? (
+              <Loader2 className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-primary animate-spin" />
+            ) : (
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+            )}
             <Input
               placeholder="Buscar por código o nombre..."
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="pl-8 h-7.5 text-xs bg-muted/20 border-border/40 focus:bg-background w-full"
+              className="pl-8 pr-8 h-7.5 text-xs bg-muted/20 border-border/40 focus:bg-background w-full"
             />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => onSearchChange("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded-sm transition-colors cursor-pointer"
+                title="Limpiar búsqueda"
+              >
+                <X className="size-3.5" />
+              </button>
+            )}
           </div>
 
-          <Select
-            value={categoriaFilter !== null ? String(categoriaFilter) : "all"}
-            onValueChange={(val) =>
-              onCategoriaFilterChange(val === "all" ? null : Number(val))
-            }
-          >
-            <SelectTrigger className="h-7.5 w-full text-xs bg-muted/20 border-border/40 text-muted-foreground focus:text-foreground">
-              <div className="flex items-center gap-1.5 truncate">
-                <Filter className="size-3 text-muted-foreground shrink-0" />
-                <SelectValue placeholder="Todas las categorías" />
-              </div>
-            </SelectTrigger>
-            <SelectContent className="text-xs">
-              <SelectItem value="all">Todas las categorías</SelectItem>
-              {categorias.map((cat) => (
-                <SelectItem key={cat.id} value={String(cat.id)}>
-                  {cat.codigo} — {cat.nombre}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-1.5">
+            <Select
+              value={categoriaFilter !== null ? String(categoriaFilter) : "all"}
+              onValueChange={(val) =>
+                onCategoriaFilterChange(val === "all" ? null : Number(val))
+              }
+            >
+              <SelectTrigger className="h-7.5 w-full text-xs bg-muted/20 border-border/40 text-muted-foreground focus:text-foreground">
+                <div className="flex items-center gap-1.5 truncate">
+                  <Filter className="size-3 text-muted-foreground shrink-0" />
+                  <SelectValue placeholder="Todas las categorías" />
+                </div>
+              </SelectTrigger>
+              <SelectContent className="text-xs">
+                <SelectItem value="all">Todas las categorías</SelectItem>
+                {categorias.map((cat) => (
+                  <SelectItem key={cat.id} value={String(cat.id)}>
+                    {cat.codigo} — {cat.nombre}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {hasActiveFilters && onClearFilters && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onClearFilters}
+                className="size-7.5 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
+                title="Restablecer todos los filtros"
+              >
+                <RotateCcw className="size-3.5" />
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -179,10 +239,21 @@ export function ProductoMasterList({
               No se encontraron productos
             </p>
             <p className="text-[11px] text-muted-foreground mt-0.5 max-w-[200px]">
-              {searchTerm || categoriaFilter !== null
+              {hasActiveFilters
                 ? "Sin coincidencias para los filtros aplicados."
                 : "No hay productos registrados en el sistema."}
             </p>
+            {hasActiveFilters && onClearFilters && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onClearFilters}
+                className="mt-3 h-7 text-xs gap-1.5 border-border/50 hover:bg-muted cursor-pointer"
+              >
+                <RotateCcw className="size-3" />
+                Limpiar filtros
+              </Button>
+            )}
           </div>
         ) : (
           productos.map((prod) => {

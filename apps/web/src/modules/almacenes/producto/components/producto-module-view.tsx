@@ -12,10 +12,12 @@ import { useCategoriasProducto } from "../../categoria-producto/hooks/use-catego
 import type { ProductoMetrics, ProductoResponse } from "../types/producto.types";
 import type { LoteResponse } from "../../lote/types/lote.types";
 import { AuditDialog, type AuditInfo } from "@/components/shared";
+import { useDebounce } from "@/hooks/use-debounce";
 
 export function ProductoModuleView() {
   // Search, pagination & category filter state
   const [searchTerm, setSearchTerm] = React.useState("");
+  const debouncedSearch = useDebounce(searchTerm, 300);
   const [categoriaFilter, setCategoriaFilter] = React.useState<number | null>(null);
   const [page, setPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(10);
@@ -26,11 +28,12 @@ export function ProductoModuleView() {
   const {
     data: productosData,
     isLoading,
+    isFetching,
     refetch,
   } = useProductos({
     page,
     pageSize,
-    search: searchTerm.trim() || undefined,
+    search: debouncedSearch.trim() || undefined,
     categoriaProductoId: categoriaFilter ?? undefined,
   });
 
@@ -55,15 +58,30 @@ export function ProductoModuleView() {
     return productos[0] ?? null;
   }, [productos, selectedProductoId]);
 
-  const handleSearchChange = (term: string) => {
+  const handleSearchChange = React.useCallback((term: string) => {
     setSearchTerm(term);
     setPage(1);
-  };
+  }, []);
 
-  const handleCategoriaFilterChange = (catId: number | null) => {
+  const handleCategoriaFilterChange = React.useCallback((catId: number | null) => {
     setCategoriaFilter(catId);
     setPage(1);
-  };
+  }, []);
+
+  const handleClearFilters = React.useCallback(() => {
+    setSearchTerm("");
+    setCategoriaFilter(null);
+    setPage(1);
+  }, []);
+
+  const handlePageSizeChange = React.useCallback((size: number) => {
+    setPageSize(size);
+    setPage(1);
+  }, []);
+
+  const handleSelectProducto = React.useCallback((producto: ProductoResponse) => {
+    setSelectedProductoId(producto.id);
+  }, []);
 
   // Metrics computation
   const metrics: ProductoMetrics = React.useMemo(() => {
@@ -84,122 +102,38 @@ export function ProductoModuleView() {
   const [formOpen, setFormOpen] = React.useState(false);
   const [productoToEdit, setProductoToEdit] = React.useState<ProductoResponse | null>(null);
 
-  const handleOpenAdd = () => {
+  const handleOpenAdd = React.useCallback(() => {
     setProductoToEdit(null);
     setFormOpen(true);
-  };
+  }, []);
 
-  const handleOpenEdit = (producto: ProductoResponse) => {
+  const handleOpenEdit = React.useCallback((producto: ProductoResponse) => {
     setProductoToEdit(producto);
     setFormOpen(true);
-  };
+  }, []);
 
   // Delete Dialog state (Producto)
   const [deleteOpen, setDeleteOpen] = React.useState(false);
   const [productoToDelete, setProductoToDelete] = React.useState<ProductoResponse | null>(null);
 
-  const handleOpenDelete = (producto: ProductoResponse) => {
+  const handleOpenDelete = React.useCallback((producto: ProductoResponse) => {
     setProductoToDelete(producto);
     setDeleteOpen(true);
-  };
+  }, []);
 
   // Audit Dialog state
   const [auditDialogOpen, setAuditDialogOpen] = React.useState(false);
   const [auditInfo, setAuditInfo] = React.useState<AuditInfo | null>(null);
 
-  const handleViewAuditProducto = (producto: ProductoResponse) => {
-    const rawCreated =
-      producto.fechaCreacion ||
-      producto.createdAt;
-    const rawUpdated =
-      producto.fechaModificacion ||
-      producto.updatedAt;
-    const createdUser =
-      producto.creadoPor ||
-      producto.createdBy;
-    const updatedUser =
-      producto.modificadoPor ||
-      producto.updatedBy;
-
-    setAuditInfo({
-      title: "Auditoría de Producto",
-      entityName: producto.nombre,
-      entityCode: producto.codigo,
-      id: producto.id,
-      createdAt: rawCreated,
-      createdBy: createdUser,
-      updatedAt: rawUpdated,
-      updatedBy: updatedUser,
-      extraDetails: [
-        ...(producto.categoriaProductoNombre
-          ? [{ label: "Categoría", value: producto.categoriaProductoNombre }]
-          : []),
-        ...(producto.unidadMedidaNombre
-          ? [
-              {
-                label: "Unidad de Medida",
-                value: `${producto.unidadMedidaNombre} (${producto.unidadMedidaSimbolo ?? ""})`,
-              },
-            ]
-          : []),
-        { label: "Controla Lote", value: producto.controlaLote ? "Sí" : "No" },
-        {
-          label: "Controla Vencimiento",
-          value: producto.controlaVencimiento ? "Sí" : "No",
-        },
-        { label: "Stock Mínimo", value: String(producto.stockMinimo) },
-        {
-          label: "Stock Máximo",
-          value:
-            producto.stockMaximo !== null && producto.stockMaximo !== undefined
-              ? String(producto.stockMaximo)
-              : "Sin límite",
-        },
-        ...(producto.descripcion
-          ? [{ label: "Descripción", value: producto.descripcion }]
-          : []),
-      ],
-    });
+  const handleViewAuditProducto = React.useCallback((producto: ProductoResponse) => {
+    setAuditInfo(buildProductoAuditInfo(producto));
     setAuditDialogOpen(true);
-  };
+  }, []);
 
-  const handleViewAuditLote = (lote: LoteResponse) => {
-    const rawCreated =
-      lote.fechaCreacion ||
-      lote.createdAt;
-    const rawUpdated =
-      lote.fechaModificacion ||
-      lote.updatedAt;
-    const createdUser =
-      lote.creadoPor ||
-      lote.createdBy;
-    const updatedUser =
-      lote.modificadoPor ||
-      lote.updatedBy;
-
-    setAuditInfo({
-      title: "Auditoría de Lote",
-      entityName: `Lote ${lote.numeroLote}`,
-      entityCode: lote.numeroLote,
-      id: lote.id,
-      createdAt: rawCreated,
-      createdBy: createdUser,
-      updatedAt: rawUpdated,
-      updatedBy: updatedUser,
-      extraDetails: [
-        ...(lote.fechaFabricacion
-          ? [{ label: "Fabricación", value: lote.fechaFabricacion }]
-          : []),
-        ...(lote.fechaVencimiento
-          ? [{ label: "Vencimiento", value: lote.fechaVencimiento }]
-          : []),
-        ...(lote.costoUnitario !== null && lote.costoUnitario !== undefined
-          ? [{ label: "Costo Unitario", value: `Bs. ${Number(lote.costoUnitario).toFixed(2)}` }]
-          : []),
-      ],
-    });
+  const handleViewAuditLote = React.useCallback((lote: LoteResponse) => {
+    setAuditInfo(buildLoteAuditInfo(lote));
     setAuditDialogOpen(true);
-  };
+  }, []);
 
   return (
     <div className="flex flex-col gap-3 w-full">
@@ -215,24 +149,23 @@ export function ProductoModuleView() {
             productos={productos}
             categorias={categorias}
             isLoading={isLoading}
+            isFetching={isFetching}
             selectedProductoId={selectedProducto?.id ?? null}
-            onSelectProducto={(producto) => setSelectedProductoId(producto.id)}
+            onSelectProducto={handleSelectProducto}
             searchTerm={searchTerm}
             onSearchChange={handleSearchChange}
             categoriaFilter={categoriaFilter}
             onCategoriaFilterChange={handleCategoriaFilterChange}
+            onClearFilters={handleClearFilters}
             page={page}
             pageSize={pageSize}
             totalItems={productosData?.totalItems ?? 0}
             onPageChange={setPage}
-            onPageSizeChange={(size) => {
-              setPageSize(size);
-              setPage(1);
-            }}
+            onPageSizeChange={handlePageSizeChange}
             onAddProducto={handleOpenAdd}
             onEdit={handleOpenEdit}
             onDelete={handleOpenDelete}
-            onRefresh={() => refetch()}
+            onRefresh={refetch}
           />
         </div>
 
@@ -253,7 +186,7 @@ export function ProductoModuleView() {
         open={formOpen}
         onOpenChange={setFormOpen}
         productoToEdit={productoToEdit}
-        onSuccessCallback={() => refetch()}
+        onSuccessCallback={refetch}
       />
 
       {/* Delete Dialog (Producto) */}
@@ -261,7 +194,7 @@ export function ProductoModuleView() {
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
         productoToDelete={productoToDelete}
-        onSuccessCallback={() => refetch()}
+        onSuccessCallback={refetch}
       />
 
       {/* Shared Audit Dialog */}
@@ -272,4 +205,84 @@ export function ProductoModuleView() {
       />
     </div>
   );
+}
+
+// ---------------------------------------------------------------------------
+// Helper functions for Audit transformations
+// ---------------------------------------------------------------------------
+
+function buildProductoAuditInfo(producto: ProductoResponse): AuditInfo {
+  const rawCreated = producto.fechaCreacion || producto.createdAt;
+  const rawUpdated = producto.fechaModificacion || producto.updatedAt;
+  const createdUser = producto.creadoPor || producto.createdBy;
+  const updatedUser = producto.modificadoPor || producto.updatedBy;
+
+  return {
+    title: "Auditoría de Producto",
+    entityName: producto.nombre,
+    entityCode: producto.codigo,
+    id: producto.id,
+    createdAt: rawCreated,
+    createdBy: createdUser,
+    updatedAt: rawUpdated,
+    updatedBy: updatedUser,
+    extraDetails: [
+      ...(producto.categoriaProductoNombre
+        ? [{ label: "Categoría", value: producto.categoriaProductoNombre }]
+        : []),
+      ...(producto.unidadMedidaNombre
+        ? [
+            {
+              label: "Unidad de Medida",
+              value: `${producto.unidadMedidaNombre} (${producto.unidadMedidaSimbolo ?? ""})`,
+            },
+          ]
+        : []),
+      { label: "Controla Lote", value: producto.controlaLote ? "Sí" : "No" },
+      {
+        label: "Controla Vencimiento",
+        value: producto.controlaVencimiento ? "Sí" : "No",
+      },
+      { label: "Stock Mínimo", value: String(producto.stockMinimo) },
+      {
+        label: "Stock Máximo",
+        value:
+          producto.stockMaximo !== null && producto.stockMaximo !== undefined
+            ? String(producto.stockMaximo)
+            : "Sin límite",
+      },
+      ...(producto.descripcion
+        ? [{ label: "Descripción", value: producto.descripcion }]
+        : []),
+    ],
+  };
+}
+
+function buildLoteAuditInfo(lote: LoteResponse): AuditInfo {
+  const rawCreated = lote.fechaCreacion || lote.createdAt;
+  const rawUpdated = lote.fechaModificacion || lote.updatedAt;
+  const createdUser = lote.creadoPor || lote.createdBy;
+  const updatedUser = lote.modificadoPor || lote.updatedBy;
+
+  return {
+    title: "Auditoría de Lote",
+    entityName: `Lote ${lote.numeroLote}`,
+    entityCode: lote.numeroLote,
+    id: lote.id,
+    createdAt: rawCreated,
+    createdBy: createdUser,
+    updatedAt: rawUpdated,
+    updatedBy: updatedUser,
+    extraDetails: [
+      ...(lote.fechaFabricacion
+        ? [{ label: "Fabricación", value: lote.fechaFabricacion }]
+        : []),
+      ...(lote.fechaVencimiento
+        ? [{ label: "Vencimiento", value: lote.fechaVencimiento }]
+        : []),
+      ...(lote.costoUnitario !== null && lote.costoUnitario !== undefined
+        ? [{ label: "Costo Unitario", value: `Bs. ${Number(lote.costoUnitario).toFixed(2)}` }]
+        : []),
+    ],
+  };
 }
