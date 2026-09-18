@@ -2,9 +2,7 @@ name: clinica-prod
 
 services:
   api:
-    build:
-      context: .
-      dockerfile: apps/api/Dockerfile
+    image: clinica-api:latest
 
     container_name: clinica-api
     restart: unless-stopped
@@ -14,11 +12,8 @@ services:
 
     environment:
       ASPNETCORE_ENVIRONMENT: Production
-
       RunSeeds: ${RUN_SEEDS:-true}
-
       ConnectionStrings__DefaultConnection: ${CONNECTION_STRING:-Server=host.docker.internal,1433;Database=ClinicaDb;User Id=sa;Password=YourSecurePasswordHere!;TrustServerCertificate=True;}
-
       Cors__AllowedOrigins__0: http://157.173.99.216:8084
 
     extra_hosts:
@@ -28,11 +23,7 @@ services:
       - infraestructura-network
 
   web:
-    build:
-      context: .
-      dockerfile: apps/web/Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://157.173.99.216:5011/api/v1}
+    image: clinica-web:latest
 
     container_name: clinica-web
     restart: unless-stopped

@@ -13,12 +13,10 @@ import {
   Search,
   RefreshCw,
   Clock,
-  Layers,
-  Sparkles,
-  Info,
-  CheckCircle2,
-  FileText,
-  CornerDownRight,
+  X,
+  UnfoldVertical,
+  FoldVertical,
+  MoreVertical,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +29,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { CategoriaProductoResponse } from "../types/categoria-producto.types";
 
 export interface CategoryTreeNode extends CategoriaProductoResponse {
@@ -49,7 +55,7 @@ interface CategoriaProductoTreeProps {
 }
 
 /**
- * Builds a hierarchical tree from a flat list of categories
+ * Builds a hierarchical tree from a flat list of categories with guaranteed depth calculations
  */
 function buildTree(items: CategoriaProductoResponse[]): CategoryTreeNode[] {
   const itemMap = new Map<number, CategoryTreeNode>();
@@ -64,13 +70,23 @@ function buildTree(items: CategoriaProductoResponse[]): CategoryTreeNode[] {
     const node = itemMap.get(item.id)!;
     if (item.categoriaPadreId && itemMap.has(item.categoriaPadreId)) {
       const parent = itemMap.get(item.categoriaPadreId)!;
-      node.depth = parent.depth + 1;
       parent.children.push(node);
     } else {
-      node.depth = 0;
       roots.push(node);
     }
   });
+
+  // Calculate depths recursively from roots to avoid ordering issues
+  function assignDepth(nodes: CategoryTreeNode[], currentDepth: number) {
+    nodes.forEach((node) => {
+      node.depth = currentDepth;
+      if (node.children.length > 0) {
+        assignDepth(node.children, currentDepth + 1);
+      }
+    });
+  }
+
+  assignDepth(roots, 0);
 
   return roots;
 }
@@ -111,6 +127,287 @@ function filterTree(nodes: CategoryTreeNode[], term: string): CategoryTreeNode[]
     .filter((node): node is CategoryTreeNode => node !== null);
 }
 
+/**
+ * Collect all IDs recursively from tree nodes
+ */
+function getAllNodeIds(nodes: CategoryTreeNode[]): Set<number> {
+  const all = new Set<number>();
+  const collect = (list: CategoryTreeNode[]) => {
+    list.forEach((n) => {
+      all.add(n.id);
+      if (n.children.length > 0) collect(n.children);
+    });
+  };
+  collect(nodes);
+  return all;
+}
+
+/**
+ * Counts total visible nodes in a tree
+ */
+function countTreeNodes(nodes: CategoryTreeNode[]): number {
+  let count = 0;
+  const walk = (list: CategoryTreeNode[]) => {
+    count += list.length;
+    list.forEach((n) => {
+      if (n.children.length > 0) walk(n.children);
+    });
+  };
+  walk(nodes);
+  return count;
+}
+
+interface TreeNodeItemProps {
+  node: CategoryTreeNode;
+  searchTerm: string;
+  expandedIds: Set<number>;
+  onToggle: (id: number, e?: React.MouseEvent) => void;
+  onAddSubcategoria?: (padreId: number) => void;
+  onEdit?: (categoria: CategoriaProductoResponse) => void;
+  onDelete?: (categoria: CategoriaProductoResponse) => void;
+  onViewAudit?: (categoria: CategoriaProductoResponse) => void;
+}
+
+/**
+ * Memoized individual tree item with direct actions
+ */
+const TreeNodeItem = React.memo(function TreeNodeItem({
+  node,
+  searchTerm,
+  expandedIds,
+  onToggle,
+  onAddSubcategoria,
+  onEdit,
+  onDelete,
+  onViewAudit,
+}: TreeNodeItemProps) {
+  const hasChildren = node.children.length > 0;
+  const isExpanded = Boolean(searchTerm.trim()) || expandedIds.has(node.id);
+  const isRoot = node.depth === 0;
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "ArrowRight" && hasChildren && !isExpanded) {
+      e.preventDefault();
+      onToggle(node.id);
+    } else if (e.key === "ArrowLeft" && hasChildren && isExpanded) {
+      e.preventDefault();
+      onToggle(node.id);
+    }
+  };
+
+  return (
+    <div
+      className="flex flex-col select-none"
+      role="treeitem"
+      aria-expanded={hasChildren ? isExpanded : undefined}
+    >
+      <div
+        tabIndex={0}
+        onKeyDown={handleKeyDown}
+        style={{ paddingLeft: `${node.depth * 1.5 + 0.6}rem` }}
+        className="group relative flex items-center justify-between gap-3 py-2 pr-3 rounded-lg text-xs transition-all duration-150 border border-transparent hover:bg-muted/60 hover:border-border/50 outline-none focus-visible:ring-1 focus-visible:ring-ring"
+      >
+        {/* Left Side: Icon, Code Badge, Name, Description and Subcategory Count */}
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+          {/* Expand / Collapse Button */}
+          {hasChildren ? (
+            <button
+              type="button"
+              onClick={(e) => onToggle(node.id, e)}
+              className="size-5 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground shrink-0 cursor-pointer transition-colors hover:bg-muted"
+              aria-label={isExpanded ? "Contraer subcategorías" : "Expandir subcategorías"}
+            >
+              {isExpanded ? (
+                <ChevronDown className="size-3.5 transition-transform" />
+              ) : (
+                <ChevronRight className="size-3.5 transition-transform" />
+              )}
+            </button>
+          ) : (
+            <div className="size-5 flex items-center justify-center shrink-0">
+              <span className="size-1.5 rounded-full bg-muted-foreground/40" />
+            </div>
+          )}
+
+          {/* Folder Icon */}
+          <div className="shrink-0">
+            {isRoot ? (
+              <div className="size-6 rounded-md flex items-center justify-center bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                {isExpanded && hasChildren ? (
+                  <FolderOpen className="size-3.5" />
+                ) : (
+                  <Folder className="size-3.5" />
+                )}
+              </div>
+            ) : (
+              <div className="size-6 rounded-md flex items-center justify-center bg-primary/10 text-primary border border-primary/20">
+                {isExpanded && hasChildren ? (
+                  <FolderOpen className="size-3.5" />
+                ) : (
+                  <Folder className="size-3.5" />
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Code Badge */}
+          <span className="font-mono text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 tracking-tight bg-muted/80 text-foreground/80 border border-border/60">
+            {node.codigo}
+          </span>
+
+          {/* Category Name */}
+          <span className="font-semibold text-xs text-foreground truncate">
+            {node.nombre}
+          </span>
+
+          {/* Optional Description */}
+          {node.descripcion && (
+            <span className="text-[11px] text-muted-foreground truncate hidden md:inline max-w-xs font-normal">
+              — {node.descripcion}
+            </span>
+          )}
+
+          {/* Subcategories count badge */}
+          {hasChildren && (
+            <span className="text-[10px] px-1.5 py-0.2 rounded-full font-mono shrink-0 bg-muted text-muted-foreground font-medium border border-border/40 ml-1">
+              {node.children.length} {node.children.length === 1 ? "subcategoría" : "subcategorías"}
+            </span>
+          )}
+        </div>
+
+        {/* Right Side: Action Buttons directly in tree row */}
+        <div className="flex items-center gap-1 shrink-0">
+          {/* Quick Add Subcategory */}
+          <Tooltip>
+            <TooltipTrigger
+              type="button"
+              className="inline-flex items-center gap-1 h-7 px-2 text-[11px] font-medium rounded-md text-primary bg-primary/10 hover:bg-primary/20 border border-primary/25 transition-colors cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddSubcategoria?.(node.id);
+              }}
+              aria-label="Añadir subcategoría"
+            >
+              <Plus className="size-3" />
+              <span className="hidden sm:inline">Subcategoría</span>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-[11px]">
+              Añadir subcategoría en {node.nombre}
+            </TooltipContent>
+          </Tooltip>
+
+          {/* Quick Edit Button */}
+          <Tooltip>
+            <TooltipTrigger
+              type="button"
+              className="size-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted border border-border/60 hover:border-border transition-colors cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit?.(node);
+              }}
+              aria-label="Editar categoría"
+            >
+              <Edit2 className="size-3.5" />
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-[11px]">
+              Editar categoría
+            </TooltipContent>
+          </Tooltip>
+
+          {/* Quick Delete Button */}
+          <Tooltip>
+            <TooltipTrigger
+              type="button"
+              className="size-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 border border-border/60 hover:border-destructive/30 transition-colors cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete?.(node);
+              }}
+              aria-label="Eliminar categoría"
+            >
+              <Trash2 className="size-3.5" />
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-[11px]">
+              Eliminar categoría
+            </TooltipContent>
+          </Tooltip>
+
+          {/* More options dropdown menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              type="button"
+              className="size-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted border border-border/60 transition-colors cursor-pointer"
+              aria-label="Más opciones"
+            >
+              <MoreVertical className="size-3.5" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 text-xs">
+              <DropdownMenuLabel className="text-[10px] text-muted-foreground font-normal uppercase tracking-wider">
+                {node.codigo} - {node.nombre}
+              </DropdownMenuLabel>
+              <DropdownMenuItem
+                onClick={() => onAddSubcategoria?.(node.id)}
+                className="cursor-pointer gap-2 text-xs"
+              >
+                <Plus className="size-3.5 text-primary" />
+                <span>Añadir subcategoría</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => onEdit?.(node)}
+                className="cursor-pointer gap-2 text-xs"
+              >
+                <Edit2 className="size-3.5 text-muted-foreground" />
+                <span>Editar categoría</span>
+              </DropdownMenuItem>
+              {onViewAudit && (
+                <DropdownMenuItem
+                  onClick={() => onViewAudit(node)}
+                  className="cursor-pointer gap-2 text-xs"
+                >
+                  <Clock className="size-3.5 text-muted-foreground" />
+                  <span>Ver auditoría</span>
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => onDelete?.(node)}
+                className="cursor-pointer gap-2 text-xs text-destructive focus:text-destructive focus:bg-destructive/10"
+              >
+                <Trash2 className="size-3.5" />
+                <span>Eliminar</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
+      {/* Children Render with Connector Line */}
+      {hasChildren && isExpanded && (
+        <div className="relative flex flex-col mt-0.5">
+          {/* Vertical Guide line */}
+          <div
+            className="absolute top-0 bottom-2 border-l border-border/50 pointer-events-none"
+            style={{ left: `${node.depth * 1.5 + 1.25}rem` }}
+          />
+          {node.children.map((child) => (
+            <TreeNodeItem
+              key={child.id}
+              node={child}
+              searchTerm={searchTerm}
+              expandedIds={expandedIds}
+              onToggle={onToggle}
+              onAddSubcategoria={onAddSubcategoria}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onViewAudit={onViewAudit}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+});
+
 export function CategoriaProductoTree({
   categorias,
   isLoading = false,
@@ -121,474 +418,241 @@ export function CategoriaProductoTree({
   onViewAudit,
 }: CategoriaProductoTreeProps) {
   const [searchTerm, setSearchTerm] = React.useState("");
-  const [expandedIds, setExpandedIds] = React.useState<Set<number>>(new Set());
-  const [selectedCategory, setSelectedCategory] = React.useState<CategoriaProductoResponse | null>(null);
+  const [manualExpandedIds, setManualExpandedIds] = React.useState<Set<number> | null>(null);
 
   // Compute tree
   const fullTree = React.useMemo(() => buildTree(categorias), [categorias]);
   const visibleTree = React.useMemo(() => filterTree(fullTree, searchTerm.trim()), [fullTree, searchTerm]);
+  const visibleCount = React.useMemo(() => countTreeNodes(visibleTree), [visibleTree]);
 
-  // Keep selectedCategory up to date or fallback
-  React.useEffect(() => {
-    if (categorias.length > 0) {
-      if (!selectedCategory || !categorias.some((c) => c.id === selectedCategory.id)) {
-        setSelectedCategory(categorias[0]);
-      } else {
-        const fresh = categorias.find((c) => c.id === selectedCategory.id);
-        if (fresh) setSelectedCategory(fresh);
-      }
-    } else {
-      setSelectedCategory(null);
+  // Derived expanded IDs: defaults to root nodes on initial load if not manually modified
+  const expandedIds = React.useMemo(() => {
+    if (manualExpandedIds !== null) {
+      return manualExpandedIds;
     }
-  }, [categorias, selectedCategory]);
+    const initialExpanded = new Set<number>();
+    fullTree.forEach((root) => initialExpanded.add(root.id));
+    return initialExpanded;
+  }, [manualExpandedIds, fullTree]);
 
-  // Auto-expand all when searching
-  React.useEffect(() => {
-    if (searchTerm.trim()) {
-      const allIds = new Set<number>();
-      const addAll = (nodes: CategoryTreeNode[]) => {
-        nodes.forEach((n) => {
-          allIds.add(n.id);
-          if (n.children.length > 0) addAll(n.children);
-        });
-      };
-      addAll(fullTree);
-      setExpandedIds(allIds);
-    }
-  }, [searchTerm, fullTree]);
-
-  // Default expand root nodes on initial load
-  React.useEffect(() => {
-    if (fullTree.length > 0 && expandedIds.size === 0 && !searchTerm) {
-      const initialExpanded = new Set<number>();
-      fullTree.forEach((root) => initialExpanded.add(root.id));
-      setExpandedIds(initialExpanded);
-    }
-  }, [fullTree, expandedIds.size, searchTerm]);
-
-  const toggleExpand = (id: number, e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    setExpandedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  const expandAll = () => {
-    const all = new Set<number>();
-    const collect = (nodes: CategoryTreeNode[]) => {
-      nodes.forEach((n) => {
-        all.add(n.id);
-        if (n.children.length > 0) collect(n.children);
+  const toggleExpand = React.useCallback(
+    (id: number, e?: React.MouseEvent) => {
+      e?.stopPropagation();
+      setManualExpandedIds((prev) => {
+        const current = prev ?? new Set(fullTree.map((r) => r.id));
+        const next = new Set(current);
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        return next;
       });
-    };
-    collect(fullTree);
-    setExpandedIds(all);
-  };
+    },
+    [fullTree]
+  );
 
-  const collapseAll = () => {
-    setExpandedIds(new Set());
-  };
+  const expandAll = React.useCallback(() => {
+    setManualExpandedIds(getAllNodeIds(fullTree));
+  }, [fullTree]);
 
-  // Render tree item recursive component
-  const renderTreeNode = (node: CategoryTreeNode) => {
-    const hasChildren = node.children.length > 0;
-    const isExpanded = expandedIds.has(node.id);
-    const isSelected = selectedCategory?.id === node.id;
+  const collapseAll = React.useCallback(() => {
+    setManualExpandedIds(new Set());
+  }, []);
 
-    return (
-      <div key={node.id} className="flex flex-col select-none">
-        <div
-          onClick={() => setSelectedCategory(node)}
-          style={{ paddingLeft: `${node.depth * 1.25 + 0.5}rem` }}
-          className={cn(
-            "group relative flex items-center justify-between gap-2 py-1.5 pr-2 rounded-lg text-xs cursor-pointer transition-all duration-150 border border-transparent",
-            isSelected
-              ? "bg-primary/10 text-primary border-primary/20 font-medium"
-              : "text-foreground hover:bg-muted/50"
-          )}
-        >
-          <div className="flex items-center gap-1.5 min-w-0 flex-1">
-            {/* Expand / Collapse Button */}
-            {hasChildren ? (
-              <button
-                type="button"
-                onClick={(e) => toggleExpand(node.id, e)}
-                className="size-5 flex items-center justify-center rounded hover:bg-muted text-muted-foreground hover:text-foreground shrink-0 cursor-pointer transition-colors"
-                aria-label={isExpanded ? "Contraer subcategorías" : "Expandir subcategorías"}
-              >
-                {isExpanded ? (
-                  <ChevronDown className="size-3.5 text-muted-foreground" />
-                ) : (
-                  <ChevronRight className="size-3.5 text-muted-foreground" />
-                )}
-              </button>
-            ) : (
-              <div className="size-5 flex items-center justify-center shrink-0">
-                <span className="size-1 rounded-full bg-border" />
-              </div>
-            )}
-
-            {/* Folder / Category Icon */}
-            <div className="shrink-0">
-              {hasChildren ? (
-                isExpanded ? (
-                  <FolderOpen className={cn("size-3.5", isSelected ? "text-primary" : "text-amber-500")} />
-                ) : (
-                  <Folder className={cn("size-3.5", isSelected ? "text-primary" : "text-amber-500/80")} />
-                )
-              ) : (
-                <Folder className={cn("size-3.5", isSelected ? "text-primary" : "text-muted-foreground/60")} />
-              )}
-            </div>
-
-            {/* Code Badge */}
-            <span
-              className={cn(
-                "font-mono text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 tracking-tight transition-colors",
-                isSelected
-                  ? "bg-primary text-primary-foreground shadow-2xs"
-                  : "bg-muted text-muted-foreground group-hover:text-foreground"
-              )}
-            >
-              {node.codigo}
-            </span>
-
-            {/* Name */}
-            <span className="truncate text-xs text-foreground/90">{node.nombre}</span>
-
-            {/* Subcategories count pill */}
-            {hasChildren && (
-              <span
-                className={cn(
-                  "text-[9px] px-1.5 py-0.2 rounded-full font-mono shrink-0 transition-colors",
-                  isSelected
-                    ? "bg-primary/20 text-primary"
-                    : "bg-muted text-muted-foreground"
-                )}
-              >
-                {node.children.length} {node.children.length === 1 ? "sub" : "subs"}
-              </span>
-            )}
-          </div>
-
-          {/* Quick Action to Add Subcategory on Hover */}
-          <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 transition-opacity shrink-0">
-            <TooltipProvider delay={200}>
-              <Tooltip>
-                <TooltipTrigger
-                  type="button"
-                  className="size-6 inline-flex items-center justify-center rounded-md bg-background border border-border/60 hover:border-primary hover:text-primary text-muted-foreground transition-colors cursor-pointer shadow-2xs"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onAddCategoria?.(node.id);
-                  }}
-                  aria-label="Añadir subcategoría"
-                >
-                  <Plus className="size-3" />
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-[11px]">
-                  Añadir subcategoría aquí
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-        </div>
-
-        {/* Children Render */}
-        {hasChildren && isExpanded && (
-          <div className="relative flex flex-col mt-0.5">
-            {/* Guide line */}
-            <div
-              className="absolute left-0 top-0 bottom-2 border-l border-border/40 pointer-events-none"
-              style={{ left: `${node.depth * 1.25 + 1.1}rem` }}
-            />
-            {node.children.map((child) => renderTreeNode(child))}
-          </div>
-        )}
-      </div>
-    );
+  const handleClearSearch = () => {
+    setSearchTerm("");
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start w-full">
-      {/* LEFT COLUMN: Tree Navigation & Management */}
-      <div className="lg:col-span-7 flex flex-col gap-3 bg-card border border-border/60 rounded-xl p-4 shadow-2xs">
-        {/* Tree Header & Actions */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-border/40 pb-3">
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
+    <TooltipProvider delay={200}>
+      <div className="w-full flex flex-col gap-3.5 bg-card border border-border/70 rounded-xl p-4.5 shadow-2xs">
+        {/* Tree Header & Toolbar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/40 pb-3.5">
+          <div className="flex items-center gap-2.5">
+            <div className="size-8 rounded-lg bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
               <FolderTree className="size-4" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-xs font-semibold uppercase tracking-wider text-foreground">
-                  Estructura Jerárquica
+                  Árbol Jerárquico
                 </h2>
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-mono">
-                  {categorias.length} {categorias.length === 1 ? "categoría" : "categorías"}
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-mono border-border/70">
+                  {searchTerm.trim() ? `${visibleCount} de ${categorias.length}` : `${categorias.length} total`}
                 </Badge>
               </div>
               <p className="text-[11px] text-muted-foreground">
-                Explora y organiza las categorías de forma visual.
+                Navega y administra la categorización multinivel y sus subcategorías.
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-auto">
             {onRefresh && (
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={onRefresh}
-                disabled={isLoading}
-                className="size-7 border-border/60 text-muted-foreground hover:text-foreground cursor-pointer"
-                title="Recargar árbol"
-              >
-                <RefreshCw className={cn("size-3.5", isLoading && "animate-spin")} />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger
+                  type="button"
+                  onClick={onRefresh}
+                  disabled={isLoading}
+                  className="size-7.5 inline-flex items-center justify-center rounded-md border border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer transition-colors"
+                  aria-label="Recargar árbol"
+                >
+                  <RefreshCw className={cn("size-3.5", isLoading && "animate-spin")} />
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-[11px]">
+                  Recargar datos
+                </TooltipContent>
+              </Tooltip>
             )}
+
             <Button
               onClick={() => onAddCategoria?.(null)}
               size="sm"
-              className="h-7 px-2.5 text-xs font-medium gap-1.5 cursor-pointer shadow-2xs"
+              className="h-7.5 px-3 text-xs font-medium gap-1.5 cursor-pointer shadow-2xs"
             >
               <Plus className="size-3.5" />
-              <span>Nueva Raíz</span>
+              <span>Nueva Categoría Raíz</span>
             </Button>
           </div>
         </div>
 
-        {/* Tree Controls: Search & Expand/Collapse */}
+        {/* Search & Collapse/Expand Controls */}
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-2.5 top-2.5 size-3.5 text-muted-foreground" />
             <Input
-              placeholder="Filtrar por código o nombre..."
+              placeholder="Filtrar por código, nombre o descripción..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8 text-xs h-8 bg-muted/20 border-border/60 focus:bg-background w-full"
+              className="pl-8 pr-8 text-xs h-8 bg-muted/20 border-border/60 focus:bg-background w-full"
             />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={handleClearSearch}
+                className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+                title="Limpiar búsqueda"
+                aria-label="Limpiar búsqueda"
+              >
+                <X className="size-3.5" />
+              </button>
+            )}
           </div>
 
           <div className="flex items-center gap-1 shrink-0">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={expandAll}
-              className="h-8 px-2 text-[11px] text-muted-foreground hover:text-foreground cursor-pointer"
-            >
-              Expandir
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={collapseAll}
-              className="h-8 px-2 text-[11px] text-muted-foreground hover:text-foreground cursor-pointer"
-            >
-              Contraer
-            </Button>
+            <Tooltip>
+              <TooltipTrigger
+                type="button"
+                onClick={expandAll}
+                className="size-8 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground cursor-pointer hover:bg-muted/70 transition-colors"
+                aria-label="Expandir todo"
+              >
+                <UnfoldVertical className="size-3.5" />
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-[11px]">
+                Expandir todas las carpetas
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger
+                type="button"
+                onClick={collapseAll}
+                className="size-8 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground cursor-pointer hover:bg-muted/70 transition-colors"
+                aria-label="Contraer todo"
+              >
+                <FoldVertical className="size-3.5" />
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-[11px]">
+                Contraer todas las carpetas
+              </TooltipContent>
+            </Tooltip>
           </div>
         </div>
 
-        {/* Tree Scroll View */}
-        <div className="p-1 min-h-[380px] max-h-[560px] overflow-y-auto">
+        {/* Tree List View */}
+        <div
+          className="p-1 min-h-[350px] overflow-y-auto"
+          role="tree"
+          aria-label="Árbol de categorías de productos"
+        >
           {isLoading ? (
-            <div className="space-y-2 p-2">
-              <Skeleton className="h-7 w-3/4" />
-              <Skeleton className="h-7 w-1/2 ml-4" />
-              <Skeleton className="h-7 w-2/3 ml-4" />
-              <Skeleton className="h-7 w-4/5" />
-              <Skeleton className="h-7 w-3/5 ml-4" />
+            <div className="space-y-3 p-2">
+              <div className="flex items-center gap-2">
+                <Skeleton className="size-5 rounded-md" />
+                <Skeleton className="h-6 w-1/4" />
+                <Skeleton className="h-5 w-1/3 ml-auto" />
+              </div>
+              <div className="flex items-center gap-2 ml-6">
+                <Skeleton className="size-4.5 rounded" />
+                <Skeleton className="h-5.5 w-1/3" />
+              </div>
+              <div className="flex items-center gap-2 ml-12">
+                <Skeleton className="size-4.5 rounded" />
+                <Skeleton className="h-5.5 w-1/4" />
+              </div>
+              <div className="flex items-center gap-2 pt-2">
+                <Skeleton className="size-5 rounded-md" />
+                <Skeleton className="h-6 w-1/3" />
+                <Skeleton className="h-5 w-1/3 ml-auto" />
+              </div>
             </div>
           ) : visibleTree.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center gap-2.5 text-muted-foreground">
-              <FolderTree className="size-8 stroke-1 text-muted-foreground/50" />
-              <p className="text-xs font-medium text-foreground">
-                {searchTerm ? "No se encontraron categorías" : "Sin categorías configuradas"}
-              </p>
-              <p className="text-[11px] max-w-xs">
-                {searchTerm
-                  ? "Prueba con otro término de búsqueda."
-                  : "Crea tu primera categoría raíz para comenzar a estructurar el inventario."}
-              </p>
-              {!searchTerm && onAddCategoria && (
+            <div className="flex flex-col items-center justify-center py-16 text-center gap-3 text-muted-foreground">
+              <div className="size-14 rounded-full bg-muted/40 border border-border/50 flex items-center justify-center">
+                <FolderTree className="size-7 stroke-1 text-muted-foreground/60" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-foreground">
+                  {searchTerm ? "No se encontraron categorías" : "Sin categorías configuradas"}
+                </p>
+                <p className="text-[11px] text-muted-foreground mt-0.5 max-w-xs">
+                  {searchTerm
+                    ? "Prueba buscando por otro código o nombre de categoría."
+                    : "Crea tu primera categoría raíz para comenzar a estructurar el inventario."}
+                </p>
+              </div>
+              {searchTerm ? (
                 <Button
-                  onClick={() => onAddCategoria(null)}
+                  onClick={handleClearSearch}
                   variant="outline"
                   size="sm"
-                  className="mt-2 text-xs gap-1.5 cursor-pointer"
+                  className="mt-1 text-xs gap-1.5 cursor-pointer h-7.5"
                 >
-                  <Plus className="size-3.5 text-primary" />
-                  <span>Crear Categoría Raíz</span>
+                  <X className="size-3.5" />
+                  <span>Limpiar búsqueda</span>
                 </Button>
+              ) : (
+                onAddCategoria && (
+                  <Button
+                    onClick={() => onAddCategoria(null)}
+                    variant="outline"
+                    size="sm"
+                    className="mt-1 text-xs gap-1.5 cursor-pointer h-7.5 shadow-2xs"
+                  >
+                    <Plus className="size-3.5 text-primary" />
+                    <span>Crear Categoría Raíz</span>
+                  </Button>
+                )
               )}
             </div>
           ) : (
-            <div className="flex flex-col gap-0.5">
-              {visibleTree.map((rootNode) => renderTreeNode(rootNode))}
+            <div className="flex flex-col gap-1">
+              {visibleTree.map((rootNode) => (
+                <TreeNodeItem
+                  key={rootNode.id}
+                  node={rootNode}
+                  searchTerm={searchTerm}
+                  expandedIds={expandedIds}
+                  onToggle={toggleExpand}
+                  onAddSubcategoria={onAddCategoria}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  onViewAudit={onViewAudit}
+                />
+              ))}
             </div>
           )}
         </div>
       </div>
-
-      {/* RIGHT COLUMN: Detail & Inspector Card */}
-      <div className="lg:col-span-5 flex flex-col gap-3">
-        {selectedCategory ? (
-          <div className="bg-card border border-border/60 rounded-xl p-4 shadow-2xs flex flex-col gap-3.5 sticky top-4">
-            {/* Detail Header */}
-            <div className="flex items-start justify-between gap-3 border-b border-border/40 pb-3">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="size-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
-                  <Layers className="size-4.5" />
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-mono text-[11px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded">
-                      {selectedCategory.codigo}
-                    </span>
-                    <Badge variant="outline" className="text-[10px] py-0 px-1.5">
-                      {selectedCategory.categoriaPadreNombre ? "Subcategoría" : "Categoría Raíz"}
-                    </Badge>
-                  </div>
-                  <h3 className="text-sm font-semibold text-foreground truncate mt-0.5">
-                    {selectedCategory.nombre}
-                  </h3>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex items-center gap-1 shrink-0">
-                <TooltipProvider delay={200}>
-                  <Tooltip>
-                    <TooltipTrigger
-                      type="button"
-                      className="size-7 inline-flex items-center justify-center rounded-md border border-border/60 hover:text-primary hover:border-primary/40 hover:bg-muted/40 transition-colors cursor-pointer text-muted-foreground"
-                      onClick={() => onEdit?.(selectedCategory)}
-                      aria-label="Editar categoría"
-                    >
-                      <Edit2 className="size-3.5" />
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="text-[11px]">
-                      Editar categoría
-                    </TooltipContent>
-                  </Tooltip>
-
-                  <Tooltip>
-                    <TooltipTrigger
-                      type="button"
-                      className="size-7 inline-flex items-center justify-center rounded-md border border-border/60 hover:text-destructive hover:border-destructive/40 hover:bg-muted/40 transition-colors cursor-pointer text-muted-foreground"
-                      onClick={() => onDelete?.(selectedCategory)}
-                      aria-label="Eliminar categoría"
-                    >
-                      <Trash2 className="size-3.5" />
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="text-[11px]">
-                      Eliminar categoría
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-            </div>
-
-            {/* Details Content */}
-            <div className="space-y-3 text-xs">
-              {/* Hierarchy path */}
-              <div className="space-y-1 bg-muted/30 p-2.5 rounded-lg border border-border/40">
-                <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider block">
-                  Ubicación Jerárquica
-                </span>
-                <div className="flex items-center gap-1.5 text-xs flex-wrap font-medium">
-                  {selectedCategory.categoriaPadreNombre ? (
-                    <>
-                      <span className="text-muted-foreground flex items-center gap-1">
-                        <Folder className="size-3 text-amber-500" />
-                        {selectedCategory.categoriaPadreNombre}
-                      </span>
-                      <ChevronRight className="size-3 text-muted-foreground" />
-                      <span className="text-foreground font-semibold flex items-center gap-1">
-                        <FolderOpen className="size-3 text-primary" />
-                        {selectedCategory.nombre}
-                      </span>
-                    </>
-                  ) : (
-                    <span className="text-primary font-semibold flex items-center gap-1">
-                      <Folder className="size-3 text-amber-500" />
-                      {selectedCategory.nombre} (Nivel Principal)
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Description */}
-              <div className="space-y-1">
-                <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider block">
-                  Descripción
-                </span>
-                <div className="p-2.5 rounded-lg bg-background border border-border/40 min-h-[44px] text-[11px] text-muted-foreground leading-relaxed">
-                  {selectedCategory.descripcion || (
-                    <span className="italic text-muted-foreground/60">Sin descripción asignada.</span>
-                  )}
-                </div>
-              </div>
-
-              {/* Stats & Metadata */}
-              <div className="grid grid-cols-2 gap-2 pt-0.5">
-                <div className="p-2 rounded-lg bg-muted/20 border border-border/40 space-y-0.5">
-                  <span className="text-[10px] text-muted-foreground">Subcategorías</span>
-                  <div className="text-sm font-bold text-foreground">
-                    {selectedCategory.cantidadSubcategorias ?? 0}
-                  </div>
-                </div>
-                <div className="p-2 rounded-lg bg-muted/20 border border-border/40 space-y-0.5">
-                  <span className="text-[10px] text-muted-foreground">ID Registro</span>
-                  <div className="text-sm font-bold font-mono text-foreground">
-                    #{selectedCategory.id}
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick actions bar */}
-              <div className="pt-2 border-t border-border/40 flex flex-col gap-1.5">
-                <Button
-                  onClick={() => onAddCategoria?.(selectedCategory.id)}
-                  size="sm"
-                  className="w-full text-xs gap-1.5 h-8 cursor-pointer justify-center shadow-2xs font-medium"
-                >
-                  <Plus className="size-3.5" />
-                  <span>Añadir subcategoría aquí</span>
-                </Button>
-
-                {onViewAudit && (
-                  <Button
-                    onClick={() => onViewAudit(selectedCategory)}
-                    variant="ghost"
-                    size="sm"
-                    className="w-full text-[11px] text-muted-foreground hover:text-foreground gap-1.5 h-7 cursor-pointer justify-center"
-                  >
-                    <Clock className="size-3 text-muted-foreground" />
-                    <span>Ver historial de auditoría</span>
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="bg-card border border-border/60 rounded-xl p-8 shadow-2xs flex flex-col items-center justify-center text-center gap-2.5 text-muted-foreground min-h-[260px]">
-            <div className="p-2.5 rounded-full bg-muted/50 text-muted-foreground">
-              <Info className="size-5" />
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-foreground">Ninguna categoría seleccionada</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5 max-w-[220px]">
-                Selecciona una categoría del árbol para gestionarla o crear subniveles.
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+    </TooltipProvider>
   );
 }

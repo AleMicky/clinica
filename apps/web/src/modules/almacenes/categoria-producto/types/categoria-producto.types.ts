@@ -23,7 +23,7 @@ export interface CreateCategoriaProductoRequest {
   categoriaPadreId?: number | null;
 }
 
-export interface UpdateCategoriaProductoRequest extends CreateCategoriaProductoRequest {}
+export type UpdateCategoriaProductoRequest = CreateCategoriaProductoRequest;
 
 export interface CategoriaProductoQueryParams {
   page?: number;

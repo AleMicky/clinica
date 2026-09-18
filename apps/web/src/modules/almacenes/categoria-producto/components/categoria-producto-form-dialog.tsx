@@ -36,6 +36,7 @@ interface CategoriaProductoFormDialogProps {
   onOpenChange: (open: boolean) => void;
   categoriaToEdit?: CategoriaProductoResponse | null;
   defaultParentId?: number | null;
+  categorias?: CategoriaProductoResponse[];
   onSuccessCallback?: () => void;
 }
 
@@ -44,6 +45,7 @@ export function CategoriaProductoFormDialog({
   onOpenChange,
   categoriaToEdit,
   defaultParentId = null,
+  categorias,
   onSuccessCallback,
 }: CategoriaProductoFormDialogProps) {
   const isEditing = Boolean(categoriaToEdit);
@@ -51,8 +53,12 @@ export function CategoriaProductoFormDialog({
   const createMutation = useCreateCategoriaProducto();
   const updateMutation = useUpdateCategoriaProducto();
 
-  // Fetch categories to resolve parent category name for visual feedback
-  const { data: categoriasData } = useCategoriasProducto({ pageSize: 500 });
+  // Fallback query if categories list was not passed as prop
+  const { data: categoriasData } = useCategoriasProducto(
+    categorias ? undefined : { pageSize: 500 }
+  );
+
+  const allCategorias = categorias ?? categoriasData?.items ?? [];
 
   const {
     register,
@@ -74,9 +80,9 @@ export function CategoriaProductoFormDialog({
 
   const parentCategoryName = React.useMemo(() => {
     if (!selectedPadreId) return null;
-    const found = categoriasData?.items?.find((c) => c.id === selectedPadreId);
+    const found = allCategorias.find((c) => c.id === selectedPadreId);
     return found ? `${found.codigo} — ${found.nombre}` : null;
-  }, [selectedPadreId, categoriasData]);
+  }, [selectedPadreId, allCategorias]);
 
   const [keepOpen, setKeepOpen] = React.useState(false);
 
@@ -134,11 +140,15 @@ export function CategoriaProductoFormDialog({
           onOpenChange(false);
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as {
+        response?: { data?: { message?: string; detail?: string } };
+        message?: string;
+      };
       const errorMsg =
-        error?.response?.data?.message ||
-        error?.response?.data?.detail ||
-        error?.message ||
+        err?.response?.data?.message ||
+        err?.response?.data?.detail ||
+        err?.message ||
         "Ocurrió un error al guardar la categoría.";
       toast.error(errorMsg);
     }
