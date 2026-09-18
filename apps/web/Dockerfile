@@ -1,12 +1,16 @@
+# syntax=docker/dockerfile:1
+
 # Stage 1: Dependencies
 FROM oven/bun:1-alpine AS deps
 WORKDIR /app
 
+# Copiar manifiestos de dependencias para aprovechar la cache de capas
 COPY apps/web/package.json apps/web/bun.lock* ./
-RUN bun install --frozen-lockfile || bun install
+RUN --mount=type=cache,target=/root/.bun/install/cache \
+    bun install --frozen-lockfile || bun install
 
 # Stage 2: Builder
-FROM node:20-alpine AS builder
+FROM oven/bun:1-alpine AS builder
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
@@ -18,7 +22,9 @@ ENV NODE_ENV=production
 ARG NEXT_PUBLIC_API_URL=http://157.173.99.216:5011/api/v1
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
-RUN npm run build
+# Cache mount para .next/cache acelera drásticamente las compilaciones sucesivas
+RUN --mount=type=cache,target=/app/.next/cache \
+    bun run build
 
 # Stage 3: Runner
 FROM node:20-alpine AS runner
@@ -43,3 +49,4 @@ USER nextjs
 EXPOSE 3000
 
 CMD ["node", "server.js"]
+
