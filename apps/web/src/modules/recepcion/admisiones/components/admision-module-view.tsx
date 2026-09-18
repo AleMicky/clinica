@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useDebounce } from "@/hooks/use-debounce";
 import { AdmisionHeader } from "./admision-header";
 import { AdmisionMetricsCards } from "./admision-metrics";
 import { AdmisionList } from "./admision-list";
@@ -23,6 +24,11 @@ import {
   type AdmisionResponse,
   type EstadoAdmisionTab,
 } from "../types/admision.types";
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  const err = error as { response?: { data?: { detail?: string } }; message?: string };
+  return err?.response?.data?.detail || err?.message || fallback;
+}
 
 export function AdmisionModuleView() {
   const router = useRouter();
@@ -55,200 +61,217 @@ export function AdmisionModuleView() {
   const [searchTerm, setSearchTerm] = React.useState("");
   const [selectedEstadoTab, setSelectedEstadoTab] = React.useState<EstadoAdmisionTab>("TODOS");
 
+  // Búsqueda con debounce para reducir carga al servidor
+  const debouncedSearch = useDebounce(searchTerm, 300);
+
   // Fetch de React Query para la lista filtrada
   const {
     data: apiData,
     isLoading,
+    isFetching,
     refetch,
   } = useAdmisiones({
     page: currentPage,
     pageSize: pageSize,
-    search: searchTerm.trim() || undefined,
+    search: debouncedSearch.trim() || undefined,
     estado: selectedEstadoTab === "TODOS" ? undefined : selectedEstadoTab,
   });
 
   // Fetch para métricas globales del día
-  const { data: allAdmisionesData } = useAdmisiones({
+  const { data: allAdmisionesData, isLoading: isAllAdmisionesLoading } = useAdmisiones({
     pageSize: 100,
   });
 
   const cambiarEstadoMutation = useCambiarEstadoAdmision();
   const deleteMutation = useDeleteAdmision();
 
-  const handleSearchChange = (term: string) => {
+  const handleSearchChange = React.useCallback((term: string) => {
     setSearchTerm(term);
     setCurrentPage(1);
-  };
+  }, []);
 
-  const handleEstadoTabChange = (tab: EstadoAdmisionTab) => {
+  const handleEstadoTabChange = React.useCallback((tab: EstadoAdmisionTab) => {
     setSelectedEstadoTab(tab);
     setCurrentPage(1);
-  };
+  }, []);
 
-  const handlePageSizeChange = (size: number) => {
+  const handlePageSizeChange = React.useCallback((size: number) => {
     setPageSize(size);
     setCurrentPage(1);
-  };
+  }, []);
+
+  const handleResetFilters = React.useCallback(() => {
+    setSearchTerm("");
+    setSelectedEstadoTab("TODOS");
+    setCurrentPage(1);
+  }, []);
 
   const admisiones: AdmisionResponse[] = apiData?.items ?? [];
-  const allAdmisionesList: AdmisionResponse[] = allAdmisionesData?.items ?? admisiones;
 
-  // Cálculo de Métricas en Vivo
-  const totalHoy = allAdmisionesData?.totalItems ?? allAdmisionesList.length;
-  const registradas = allAdmisionesList.filter(
-    (a) => a.estado === EstadoAdmision.Registrada
-  ).length;
-  const confirmadas = allAdmisionesList.filter(
-    (a) => a.estado === EstadoAdmision.Confirmada
-  ).length;
-  const enviadasVenta = allAdmisionesList.filter(
-    (a) => a.estado === EstadoAdmision.EnviadaVenta
-  ).length;
-  const canceladas = allAdmisionesList.filter(
-    (a) => a.estado === EstadoAdmision.Cancelada
-  ).length;
+  // Cálculo memoizado de Métricas y Contadores
+  const { counts, metrics } = React.useMemo(() => {
+    const list: AdmisionResponse[] = allAdmisionesData?.items ?? apiData?.items ?? [];
+    const totalHoy = allAdmisionesData?.totalItems ?? list.length;
 
-  const counts: AdmisionCounts = {
-    todos: totalHoy,
-    registradas,
-    confirmadas,
-    enviadasVenta,
-    canceladas,
-  };
+    let registradas = 0;
+    let confirmadas = 0;
+    let enviadasVenta = 0;
+    let canceladas = 0;
+    let montoTotalHoy = 0;
 
-  const montoTotalHoy = allAdmisionesList.reduce((acc, a) => {
-    const total =
-      a.totalAdmision ??
-      a.detalles.reduce((sub, d) => sub + (d.total || 0), 0);
-    return acc + total;
-  }, 0);
+    for (const a of list) {
+      if (a.estado === EstadoAdmision.Registrada) registradas++;
+      else if (a.estado === EstadoAdmision.Confirmada) confirmadas++;
+      else if (a.estado === EstadoAdmision.EnviadaVenta) enviadasVenta++;
+      else if (a.estado === EstadoAdmision.Cancelada) canceladas++;
 
-  const metrics: AdmisionMetrics = {
-    totalHoy,
-    registradas,
-    confirmadas,
-    enviadasVenta,
-    canceladas,
-    montoTotalHoy,
-  };
+      const total =
+        a.totalAdmision ??
+        a.detalles.reduce((sub, d) => sub + (d.total || 0), 0);
+      montoTotalHoy += total;
+    }
+
+    const calculatedCounts: AdmisionCounts = {
+      todos: totalHoy,
+      registradas,
+      confirmadas,
+      enviadasVenta,
+      canceladas,
+    };
+
+    const calculatedMetrics: AdmisionMetrics = {
+      totalHoy,
+      registradas,
+      confirmadas,
+      enviadasVenta,
+      canceladas,
+      montoTotalHoy,
+    };
+
+    return { counts: calculatedCounts, metrics: calculatedMetrics };
+  }, [allAdmisionesData, apiData]);
 
   // Handlers de navegación y modales
-  const handleOpenAdd = () => {
+  const handleOpenAdd = React.useCallback(() => {
     router.push("/recepcion/admisiones/nueva");
-  };
+  }, [router]);
 
-  const handleEdit = (admision: AdmisionResponse) => {
+  const handleEdit = React.useCallback((admision: AdmisionResponse) => {
     router.push(`/recepcion/admisiones/${admision.id}/editar`);
-  };
+  }, [router]);
 
-  const handleViewDetail = (admision: AdmisionResponse) => {
+  const handleViewDetail = React.useCallback((admision: AdmisionResponse) => {
     setSelectedAdmisionForDetail(admision);
     setDetailSheetOpen(true);
-  };
+  }, []);
 
-  const handleOpenStatusDialog = (admision: AdmisionResponse) => {
+  const handleOpenStatusDialog = React.useCallback((admision: AdmisionResponse) => {
     setSelectedAdmisionForStatus(admision);
     setStatusDialogOpen(true);
-  };
+  }, []);
 
-  const handleOpenDelete = (id: number) => {
+  const handleOpenDelete = React.useCallback((id: number) => {
     setAdmisionToDeleteId(id);
     setDeleteDialogOpen(true);
-  };
+  }, []);
 
-  const handleConfirmStatusChange = async (
-    targetEstado: EstadoAdmision,
-    motivo?: string
-  ) => {
-    if (!selectedAdmisionForStatus) return;
+  // Lógica unificada para cambio de estado
+  const executeStatusChange = React.useCallback(
+    async (
+      admisionId: number,
+      numero: string,
+      targetEstado: EstadoAdmision,
+      motivo?: string
+    ): Promise<boolean> => {
+      try {
+        await cambiarEstadoMutation.mutateAsync({
+          id: admisionId,
+          data: {
+            estadoDestino: targetEstado,
+            motivo: motivo || `Cambio de estado a ${EstadoAdmisionLabels[targetEstado]}`,
+          },
+        });
+        toast.success(
+          `Estado de la admisión #${numero} actualizado a "${EstadoAdmisionLabels[targetEstado]}".`
+        );
+        return true;
+      } catch (error: unknown) {
+        toast.error(getErrorMessage(error, "No se pudo actualizar el estado de la admisión."));
+        return false;
+      }
+    },
+    [cambiarEstadoMutation]
+  );
 
-    try {
-      await cambiarEstadoMutation.mutateAsync({
-        id: selectedAdmisionForStatus.id,
-        data: {
-          estadoDestino: targetEstado,
-          motivo: motivo || `Cambio de estado a ${EstadoAdmisionLabels[targetEstado]}`,
-        },
-      });
-      toast.success(
-        `Estado de la admisión #${selectedAdmisionForStatus.numero} actualizado a "${EstadoAdmisionLabels[targetEstado]}".`
+  const handleConfirmStatusChange = React.useCallback(
+    async (targetEstado: EstadoAdmision, motivo?: string) => {
+      if (!selectedAdmisionForStatus) return;
+      const success = await executeStatusChange(
+        selectedAdmisionForStatus.id,
+        selectedAdmisionForStatus.numero,
+        targetEstado,
+        motivo
       );
-      refetch();
-    } catch (error: any) {
-      const msg =
-        error?.response?.data?.detail ||
-        error?.message ||
-        "No se pudo actualizar el estado de la admisión.";
-      toast.error(msg);
-    }
-  };
+      if (success) {
+        setStatusDialogOpen(false);
+        setSelectedAdmisionForStatus(null);
+      }
+    },
+    [selectedAdmisionForStatus, executeStatusChange]
+  );
 
-  const handleRequestDirectChangeStatus = (
-    admision: AdmisionResponse,
-    nuevoEstado: EstadoAdmision
-  ) => {
-    setStatusChangeCandidate({
-      admision,
-      targetEstado: nuevoEstado,
-      motivo: `Cambio a ${EstadoAdmisionLabels[nuevoEstado]}`,
-    });
-    setConfirmStatusDialogOpen(true);
-  };
+  const handleRequestDirectChangeStatus = React.useCallback(
+    (admision: AdmisionResponse, nuevoEstado: EstadoAdmision) => {
+      setStatusChangeCandidate({
+        admision,
+        targetEstado: nuevoEstado,
+        motivo: `Cambio a ${EstadoAdmisionLabels[nuevoEstado]}`,
+      });
+      setConfirmStatusDialogOpen(true);
+    },
+    []
+  );
 
-  const handleExecuteStatusChange = async () => {
+  const handleExecuteStatusChange = React.useCallback(async () => {
     if (!statusChangeCandidate) return;
     const { admision, targetEstado, motivo } = statusChangeCandidate;
 
     try {
-      await cambiarEstadoMutation.mutateAsync({
-        id: admision.id,
-        data: {
-          estadoDestino: targetEstado,
-          motivo: motivo || `Cambio de estado a ${EstadoAdmisionLabels[targetEstado]}`,
-        },
-      });
-      toast.success(
-        `Admisión #${admision.numero} marcada como "${EstadoAdmisionLabels[targetEstado]}".`
-      );
-      refetch();
-    } catch (error: any) {
-      const msg =
-        error?.response?.data?.detail ||
-        error?.message ||
-        "No se pudo actualizar el estado de la admisión.";
-      toast.error(msg);
+      await executeStatusChange(admision.id, admision.numero, targetEstado, motivo);
     } finally {
       setStatusChangeCandidate(null);
       setConfirmStatusDialogOpen(false);
     }
-  };
+  }, [statusChangeCandidate, executeStatusChange]);
 
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = React.useCallback(async () => {
     if (!admisionToDeleteId) return;
 
     try {
       await deleteMutation.mutateAsync(admisionToDeleteId);
       toast.success("Admisión cancelada correctamente.");
-      refetch();
-    } catch (error: any) {
-      const msg =
-        error?.response?.data?.detail ||
-        error?.message ||
-        "Ocurrió un error al cancelar la admisión.";
-      toast.error(msg);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Ocurrió un error al cancelar la admisión."));
     } finally {
       setAdmisionToDeleteId(null);
       setDeleteDialogOpen(false);
     }
-  };
+  }, [admisionToDeleteId, deleteMutation]);
 
   return (
     <div className="flex flex-col gap-3 w-full animate-in fade-in-50 duration-300">
       {/* Cabecera del Módulo */}
-      <AdmisionHeader onAddClick={handleOpenAdd} onRefresh={() => refetch()} />
+      <AdmisionHeader
+        onAddClick={handleOpenAdd}
+        onRefresh={() => refetch()}
+        isRefreshing={isFetching}
+      />
 
       {/* Tarjetas de Métricas en Vivo */}
-      <AdmisionMetricsCards metrics={metrics} />
+      <AdmisionMetricsCards
+        metrics={metrics}
+        isLoading={isAllAdmisionesLoading && !allAdmisionesData}
+      />
 
       {/* Listado Principal de Admisiones (Formato Lista) */}
       <AdmisionList
@@ -268,6 +291,7 @@ export function AdmisionModuleView() {
         onEdit={handleEdit}
         onDirectChangeStatus={handleRequestDirectChangeStatus}
         onDelete={handleOpenDelete}
+        onResetFilters={handleResetFilters}
       />
 
       {/* Sheet: Ficha y Detalle de Admisión */}
