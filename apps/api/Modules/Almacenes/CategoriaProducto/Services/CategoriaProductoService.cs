@@ -190,11 +190,11 @@ public sealed class CategoriaProductoService(AppDbContext dbContext)
 
         if (tieneSubcategorias)
         {
-            throw new ConflictException(
-                "No se puede eliminar la categoría porque tiene subcategorías asociadas.");
+            throw new ConflictException("No se puede eliminar la categoría porque tiene subcategorías asociadas.");
         }
 
-        entity.Activo = false;
+         
+        dbContext.CategoriasProducto.Remove(entity);
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
