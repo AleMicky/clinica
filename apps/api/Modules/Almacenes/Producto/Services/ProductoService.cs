@@ -181,7 +181,7 @@ public sealed class ProductoService(AppDbContext dbContext)
             throw new NotFoundException(nameof(ProductoEntity), id);
         }
 
-        entity.Activo = false;
+        dbContext.Productos.Remove(entity);
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 

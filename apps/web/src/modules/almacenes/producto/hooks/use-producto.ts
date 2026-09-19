@@ -9,6 +9,7 @@ import {
   deleteProducto,
   getProductoById,
   getProductos,
+  importarProductosExcel,
   updateProducto,
 } from "../api/producto.api";
 import { productoKeys } from "../api/producto.key";
@@ -91,3 +92,15 @@ export function useDeleteProducto() {
     },
   });
 }
+
+export function useImportarProductosExcel() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (archivo: File) => importarProductosExcel(archivo),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: productoKeys.lists() });
+    },
+  });
+}
+

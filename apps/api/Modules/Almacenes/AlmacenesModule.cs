@@ -35,6 +35,7 @@ public static class AlmacenesModule
         services.AddScoped<AlmacenService>();
         services.AddScoped<ICategoriaProductoService, CategoriaProductoService>();
         services.AddScoped<IProductoService, ProductoService>();
+        services.AddScoped<IProductoImportacionService, ProductoImportacionService>();
         services.AddScoped<ILoteService, LoteService>();
         services.AddScoped<IExistenciaService, ExistenciaService>();
         services.AddScoped<ITipoMovimientoInventarioService, TipoMovimientoInventarioService>();

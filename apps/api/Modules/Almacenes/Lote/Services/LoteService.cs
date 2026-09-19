@@ -173,7 +173,7 @@ public sealed class LoteService(AppDbContext dbContext)
             throw new NotFoundException(nameof(LoteEntity), id);
         }
 
-        entity.Activo = false;
+        dbContext.Lotes.Remove(entity);
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 

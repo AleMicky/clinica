@@ -5,6 +5,7 @@ import type {
   CreateProductoRequest,
   PagedResult,
   UpdateProductoRequest,
+  ExcelImportResult,
 } from "../types/producto.types";
 
 export async function getProductos(
@@ -50,3 +51,31 @@ export async function updateProducto(
 export async function deleteProducto(id: number): Promise<void> {
   await apiClient.delete(`/productos/${id}`);
 }
+
+// Importación masiva desde Excel
+export async function importarProductosExcel(
+  archivo: File
+): Promise<ExcelImportResult> {
+  const formData = new FormData();
+  formData.append("archivo", archivo);
+
+  const response = await apiClient.post<ExcelImportResult>(
+    "/productos/importar-excel",
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+  return response.data;
+}
+
+// Descarga de plantilla Excel oficial (.xlsx)
+export async function descargarPlantillaProductosExcel(): Promise<Blob> {
+  const response = await apiClient.get<Blob>("/productos/plantilla-excel", {
+    responseType: "blob",
+  });
+  return response.data;
+}
+

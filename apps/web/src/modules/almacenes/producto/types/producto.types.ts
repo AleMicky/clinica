@@ -34,7 +34,7 @@ export interface CreateProductoRequest {
   stockMaximo?: number | null;
 }
 
-export interface UpdateProductoRequest extends CreateProductoRequest {}
+export type UpdateProductoRequest = CreateProductoRequest;
 
 export interface ProductoQueryParams {
   page?: number;
@@ -59,3 +59,19 @@ export interface ProductoMetrics {
   controlaVencimientoCount: number;
   categoriasCount: number;
 }
+
+export interface ExcelImportError {
+  row: number;
+  column?: string | null;
+  value?: string | null;
+  message: string;
+}
+
+export interface ExcelImportResult {
+  total: number;
+  importados: number;
+  omitidos: number;
+  errores: number;
+  errors: ExcelImportError[];
+}
+

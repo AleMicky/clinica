@@ -7,6 +7,7 @@ import { ProductoMasterList } from "./producto-master-list";
 import { ProductoDetailLotesView } from "./producto-detail-lotes-view";
 import { ProductoFormDialog } from "./producto-form-dialog";
 import { ProductoDeleteDialog } from "./producto-delete-dialog";
+import { ProductoImportDialog } from "./producto-import-dialog";
 import { useProductos } from "../hooks/use-producto";
 import { useCategoriasProducto } from "../../categoria-producto/hooks/use-categoria-producto";
 import type { ProductoMetrics, ProductoResponse } from "../types/producto.types";
@@ -121,6 +122,13 @@ export function ProductoModuleView() {
     setDeleteOpen(true);
   }, []);
 
+  // Import Dialog state (Excel)
+  const [importOpen, setImportOpen] = React.useState(false);
+
+  const handleOpenImport = React.useCallback(() => {
+    setImportOpen(true);
+  }, []);
+
   // Audit Dialog state
   const [auditDialogOpen, setAuditDialogOpen] = React.useState(false);
   const [auditInfo, setAuditInfo] = React.useState<AuditInfo | null>(null);
@@ -163,6 +171,7 @@ export function ProductoModuleView() {
             onPageChange={setPage}
             onPageSizeChange={handlePageSizeChange}
             onAddProducto={handleOpenAdd}
+            onImportClick={handleOpenImport}
             onEdit={handleOpenEdit}
             onDelete={handleOpenDelete}
             onRefresh={refetch}
@@ -195,6 +204,13 @@ export function ProductoModuleView() {
         onOpenChange={setDeleteOpen}
         productoToDelete={productoToDelete}
         onSuccessCallback={refetch}
+      />
+
+      {/* Excel Import Dialog */}
+      <ProductoImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        onSuccess={refetch}
       />
 
       {/* Shared Audit Dialog */}

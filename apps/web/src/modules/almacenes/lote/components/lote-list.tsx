@@ -36,9 +36,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { DataTablePagination, SearchInput } from "@/components/shared";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { SearchInput } from "@/components/shared";
 import { cn } from "@/lib/utils";
 import type { LoteResponse } from "../types/lote.types";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface LoteListProps {
   lotes: LoteResponse[];
@@ -138,16 +146,20 @@ export function LoteList({
   onViewAudit,
   onRefresh,
 }: LoteListProps) {
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const fromItem = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const toItem = Math.min(totalItems, currentPage * pageSize);
+
   return (
     <div className="flex flex-col gap-2.5 w-full">
       {/* Mini toolbar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
         <div className="flex flex-1 items-center gap-2">
           <SearchInput
-            placeholder="Buscar por lote..."
+            placeholder="Buscar por número de lote..."
             value={searchTerm}
             onChange={onSearchChange}
-            className="w-full sm:w-56 h-8 text-xs bg-muted/20 border-border/60 focus:bg-background"
+            className="w-full sm:w-64 h-8 text-xs bg-muted/20 border-border/60 focus:bg-background rounded-lg"
           />
         </div>
 
@@ -158,7 +170,7 @@ export function LoteList({
               size="icon"
               onClick={onRefresh}
               disabled={isLoading}
-              className="size-8 border-border/60 text-muted-foreground hover:text-foreground cursor-pointer"
+              className="size-8 border-border/50 text-muted-foreground hover:text-foreground cursor-pointer rounded-lg"
               title="Recargar lotes"
             >
               <RefreshCw className={cn("size-3.5", isLoading && "animate-spin")} />
@@ -169,7 +181,7 @@ export function LoteList({
             <Button
               size="sm"
               onClick={onAddLote}
-              className="h-8 px-2.5 text-xs font-medium gap-1.5 cursor-pointer shadow-2xs"
+              className="h-8 px-2.5 text-xs font-medium gap-1.5 cursor-pointer shadow-2xs rounded-lg"
             >
               <Plus className="size-3.5" />
               <span>Nuevo Lote</span>
@@ -179,7 +191,7 @@ export function LoteList({
       </div>
 
       {/* Table Container */}
-      <div className="rounded-xl border border-border/60 bg-card overflow-hidden shadow-2xs">
+      <div className="rounded-xl border border-border/40 bg-card overflow-hidden shadow-2xs">
         <Table>
           <TableHeader className="bg-muted/30">
             <TableRow className="hover:bg-transparent h-9 border-b border-border/40">
@@ -231,7 +243,7 @@ export function LoteList({
                   <TableCell className="pl-3 py-2 font-mono text-xs font-semibold text-foreground">
                     <div className="flex items-center gap-1.5">
                       <Layers className="size-3 text-primary shrink-0" />
-                      <span className="bg-muted px-1.5 py-0.5 rounded border border-border/40">
+                      <span className="bg-muted px-1.5 py-0.5 rounded border border-border/40 font-mono">
                         {lote.numeroLote}
                       </span>
                     </div>
@@ -288,20 +300,63 @@ export function LoteList({
           </TableBody>
         </Table>
 
-        {totalItems > 10 && (
-          <div className="p-2 border-t border-border/40 bg-muted/10">
-            <DataTablePagination
-              totalItems={totalItems}
-              currentPage={currentPage}
-              pageSize={pageSize}
-              onPageChange={onPageChange || (() => {})}
-              onPageSizeChange={onPageSizeChange}
-              isLoading={isLoading}
-              itemLabel="lotes"
-            />
+        {/* Clean compact table pagination footer */}
+        {totalItems > 0 && (
+          <div className="px-3 py-2 border-t border-border/30 bg-muted/15 flex items-center justify-between gap-2 text-xs">
+            <div className="text-[11px] text-muted-foreground">
+              Mostrando <span className="font-semibold text-foreground">{fromItem}-{toItem}</span> de{" "}
+              <span className="font-semibold text-foreground">{totalItems}</span> lotes
+            </div>
+
+            <div className="flex items-center gap-2">
+              {onPageSizeChange && (
+                <Select
+                  value={String(pageSize)}
+                  onValueChange={(val) => onPageSizeChange(Number(val))}
+                >
+                  <SelectTrigger className="h-6 w-16 text-[10px] bg-background border-border/40 px-1.5 py-0 font-medium">
+                    <SelectValue placeholder={String(pageSize)} />
+                  </SelectTrigger>
+                  <SelectContent className="text-xs">
+                    {[5, 10, 20, 50].map((size) => (
+                      <SelectItem key={size} value={String(size)} className="text-xs">
+                        {size} / pág
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="size-6 cursor-pointer border-border/40 bg-background hover:bg-muted"
+                  onClick={() => onPageChange?.(Math.max(1, currentPage - 1))}
+                  disabled={currentPage <= 1 || isLoading}
+                  title="Página anterior"
+                >
+                  <ChevronLeft className="size-3" />
+                </Button>
+                <span className="text-[10px] text-muted-foreground px-1 font-mono font-medium">
+                  {currentPage} / {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="size-6 cursor-pointer border-border/40 bg-background hover:bg-muted"
+                  onClick={() => onPageChange?.(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage >= totalPages || isLoading}
+                  title="Página siguiente"
+                >
+                  <ChevronRight className="size-3" />
+                </Button>
+              </div>
+            </div>
           </div>
         )}
       </div>
     </div>
   );
 }
+
