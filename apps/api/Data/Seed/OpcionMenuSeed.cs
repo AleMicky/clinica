@@ -424,7 +424,7 @@ public static class OpcionMenuSeed
             new(
                 "SOLICITUDES_COMPRA",
                 "Solicitudes de Compra",
-                "/compras/solicitudes-compra",
+                "/compras/solicitudes",
                 "ClipboardList",
                 2,
                 "COMPRAS"),
@@ -432,7 +432,7 @@ public static class OpcionMenuSeed
             new(
                 "COTIZACIONES_COMPRA",
                 "Cotizaciones de Compra",
-                "/compras/cotizaciones-compra",
+                "/compras/cotizaciones",
                 "Receipt",
                 3,
                 "COMPRAS"),
@@ -440,7 +440,7 @@ public static class OpcionMenuSeed
             new(
                 "ORDENES_COMPRA",
                 "Órdenes de Compra",
-                "/compras/ordenes-compra",
+                "/compras/ordenes",
                 "FileText",
                 4,
                 "COMPRAS"),
@@ -448,7 +448,7 @@ public static class OpcionMenuSeed
             new(
                 "RECEPCIONES_COMPRA",
                 "Recepciones de Compra",
-                "/compras/recepciones-compra",
+                "/compras/recepciones",
                 "PackageCheck",
                 5,
                 "COMPRAS"),
@@ -456,7 +456,7 @@ public static class OpcionMenuSeed
             new(
                 "DEVOLUCIONES_PROVEEDOR",
                 "Devoluciones a Proveedor",
-                "/compras/devoluciones-proveedor",
+                "/compras/devoluciones",
                 "ArrowLeftRight",
                 6,
                 "COMPRAS"),
