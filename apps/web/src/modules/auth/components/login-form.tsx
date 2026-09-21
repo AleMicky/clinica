@@ -95,7 +95,7 @@ export function LoginForm() {
       <Card className="w-full shadow-xl border-border/60 backdrop-blur-sm bg-card/95 transition-all">
         <CardHeader className="space-y-1.5 pb-6">
           <CardTitle className="text-2xl font-bold tracking-tight">
-            Bienvenido de nuevo Prueba esto es una pruebna
+            Bienvenido de nuevo
           </CardTitle>
 
           <CardDescription className="text-sm text-muted-foreground">
