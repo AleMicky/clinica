@@ -12,6 +12,7 @@ public abstract record UsuarioRequest
 public sealed record CreateUsuarioRequest : UsuarioRequest
 {
     public required string Password { get; init; }
+    public required DateOnly FechaIngreso { get; init; }
 }
 
 public sealed record UpdateUsuarioRequest

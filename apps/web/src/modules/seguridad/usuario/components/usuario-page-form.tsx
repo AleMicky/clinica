@@ -81,6 +81,7 @@ export function UsuarioPageForm({ id }: UsuarioPageFormProps) {
       email: "",
       password: "",
       activo: true,
+      fechaIngreso: new Date().toISOString().split("T")[0],
       nombres: "",
       apellidoPaterno: "",
       apellidoMaterno: "",
@@ -102,6 +103,7 @@ export function UsuarioPageForm({ id }: UsuarioPageFormProps) {
   const estadoCivilValue: string = watch("estadoCivil") || "";
   const activoValue: boolean = watch("activo") ?? true;
   const fechaNacimientoValue: string = watch("fechaNacimiento") || "";
+  const fechaIngresoValue: string = watch("fechaIngreso") || "";
   const passwordValue: string = watch("password") || "";
 
   const passwordRequirements = React.useMemo(
@@ -126,6 +128,7 @@ export function UsuarioPageForm({ id }: UsuarioPageFormProps) {
     register("roles");
     register("activo");
     register("fechaNacimiento");
+    register("fechaIngreso");
   }, [register]);
 
   // Load existing user data in edit mode
@@ -136,6 +139,7 @@ export function UsuarioPageForm({ id }: UsuarioPageFormProps) {
         email: usuarioData.email || "",
         password: "",
         activo: usuarioData.activo ?? true,
+        fechaIngreso: "",
         nombres: usuarioData.persona?.nombres || "",
         apellidoPaterno: usuarioData.persona?.apellidoPaterno || "",
         apellidoMaterno: usuarioData.persona?.apellidoMaterno || "",
@@ -187,10 +191,16 @@ export function UsuarioPageForm({ id }: UsuarioPageFormProps) {
           return;
         }
 
+        if (!values.fechaIngreso) {
+          toast.error("Por favor seleccione la fecha de ingreso.");
+          return;
+        }
+
         await createMutation.mutateAsync({
           userName: values.userName.trim(),
           email: values.email.trim(),
           password: values.password?.trim() || undefined,
+          fechaIngreso: values.fechaIngreso,
           roles: values.roles,
           persona: {
             nombres: values.nombres.trim(),
@@ -208,11 +218,15 @@ export function UsuarioPageForm({ id }: UsuarioPageFormProps) {
         toast.success(`Cuenta @${values.userName} creada exitosamente.`);
       }
       router.push("/seguridad/usuarios");
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as {
+        response?: { data?: { detail?: string; message?: string } };
+        message?: string;
+      };
       const errorMsg =
-        error?.response?.data?.message ||
-        error?.response?.data?.detail ||
-        error?.message ||
+        err?.response?.data?.message ||
+        err?.response?.data?.detail ||
+        err?.message ||
         "Ocurrió un error al procesar la solicitud.";
       toast.error(errorMsg);
     }
@@ -446,7 +460,12 @@ export function UsuarioPageForm({ id }: UsuarioPageFormProps) {
                 </div>
 
                 {/* Fecha Nacimiento */}
-                <div className="space-y-1 sm:col-span-1 md:col-span-1 lg:col-span-4">
+                <div
+                  className={cn(
+                    "space-y-1 sm:col-span-1 md:col-span-1",
+                    isEditing ? "lg:col-span-4" : "lg:col-span-3"
+                  )}
+                >
                   <Label htmlFor="fechaNacimiento" className="text-xs font-medium">
                     Fecha de Nacimiento
                   </Label>
@@ -470,8 +489,42 @@ export function UsuarioPageForm({ id }: UsuarioPageFormProps) {
                   )}
                 </div>
 
+                {/* Fecha de Ingreso (Requerido para crear empleado/usuario) */}
+                {!isEditing && (
+                  <div className="space-y-1 sm:col-span-1 md:col-span-1 lg:col-span-3">
+                    <Label
+                      htmlFor="fechaIngreso"
+                      className="text-xs font-medium flex items-center gap-0.5"
+                    >
+                      Fecha de Ingreso <span className="text-destructive">*</span>
+                    </Label>
+                    <DatePicker
+                      id="fechaIngreso"
+                      value={fechaIngresoValue}
+                      onChange={(val) =>
+                        setValue("fechaIngreso", val, { shouldValidate: true })
+                      }
+                      placeholder="DD/MM/AAAA"
+                      error={Boolean(errors.fechaIngreso)}
+                      maxDate={new Date().toISOString().split("T")[0]}
+                      fromYear={1980}
+                      toYear={new Date().getFullYear()}
+                    />
+                    {errors.fechaIngreso && (
+                      <p className="text-[10px] text-destructive font-medium">
+                        {errors.fechaIngreso.message}
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 {/* Género */}
-                <div className="space-y-1 sm:col-span-1 md:col-span-1 lg:col-span-4">
+                <div
+                  className={cn(
+                    "space-y-1 sm:col-span-1 md:col-span-1",
+                    isEditing ? "lg:col-span-4" : "lg:col-span-3"
+                  )}
+                >
                   <Label htmlFor="genero" className="text-xs font-medium">
                     Género
                   </Label>
@@ -487,7 +540,12 @@ export function UsuarioPageForm({ id }: UsuarioPageFormProps) {
                 </div>
 
                 {/* Estado Civil */}
-                <div className="space-y-1 sm:col-span-2 md:col-span-1 lg:col-span-4">
+                <div
+                  className={cn(
+                    "space-y-1 sm:col-span-2 md:col-span-1",
+                    isEditing ? "lg:col-span-4" : "lg:col-span-3"
+                  )}
+                >
                   <Label htmlFor="estadoCivil" className="text-xs font-medium">
                     Estado Civil
                   </Label>

@@ -22,6 +22,7 @@ public abstract class UsuarioRequestValidator<TRequest>
             .WithMessage("El correo electrónico no es válido.")
             .MaximumLength(256)
             .WithMessage("El correo electrónico no puede superar los 256 caracteres.");
+        
 
         RuleFor(x => x.Persona)
             .NotNull()
@@ -119,5 +120,11 @@ public sealed class CreateUsuarioRequestValidator
             .WithMessage("La contraseña debe tener al menos 6 caracteres.")
             .MaximumLength(100)
             .WithMessage("La contraseña no puede superar los 100 caracteres.");
+        
+        RuleFor(x => x.FechaIngreso)
+            .NotEqual(default(DateOnly))
+            .WithMessage("La fecha de ingreso es obligatoria.")
+            .LessThanOrEqualTo(DateOnly.FromDateTime(DateTime.Today))
+            .WithMessage("La fecha de ingreso no puede ser futura.");
     }
 }

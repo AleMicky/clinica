@@ -140,8 +140,7 @@ public sealed class UsuarioService(
             cancellationToken);
 
         await using var transaction =
-            await dbContext.Database.BeginTransactionAsync(
-                cancellationToken);
+            await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
         try
         {
@@ -162,18 +161,15 @@ public sealed class UsuarioService(
                 EstadoCivil = request.Persona.EstadoCivil.TrimUpperOrNull()
             };
 
-            await dbContext.Personas.AddAsync(
-                persona,
-                cancellationToken);
+            await dbContext.Personas.AddAsync(persona, cancellationToken);
 
-            // Necesitamos el Id de Persona.
-            await dbContext.SaveChangesAsync(
-                cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
 
             // 2. Crear empleado
             var requestEmpleado = new CreateEmpleadoRequest
             {
-                PersonaId = persona.Id
+                PersonaId = persona.Id,
+                FechaIngreso = request.FechaIngreso
             };
 
             await empleadoService.CrearAsync(
@@ -186,10 +182,8 @@ public sealed class UsuarioService(
                 UserName = userName,
                 Email = email,
                 EmailConfirmed = true,
-
                 Activo = request.Activo,
                 DebeCambiarPassword = true,
-
                 PersonaId = persona.Id,
                 Persona = persona
             };

@@ -48,6 +48,7 @@ export interface CreateUsuarioRequest {
   email: string;
   userName: string;
   password?: string;
+  fechaIngreso: string;
   roles?: string[];
 }
 

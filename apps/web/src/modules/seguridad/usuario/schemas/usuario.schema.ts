@@ -33,6 +33,8 @@ export const usuarioSchema = z.object({
 
   activo: z.boolean(),
 
+  fechaIngreso: z.string().optional(),
+
   // Persona fields (required when creating new user, optional when editing)
   nombres: z.string().trim().optional(),
   apellidoPaterno: z.string().trim().optional(),
