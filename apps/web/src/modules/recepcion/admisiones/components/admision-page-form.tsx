@@ -18,6 +18,7 @@ import { useAdmision, useCreateAdmision, useUpdateAdmision } from "../hooks/use-
 import { useAdmisionStore } from "../store/use-admision-store";
 import { useDebounce } from "@/hooks/use-debounce";
 import { MultiServicePickerModal } from "./multi-service-picker-modal";
+import { PacienteFormDialog } from "../../pacientes/components/paciente-form-dialog";
 import { AdmisionPacienteSection } from "./admision-paciente-section";
 import { AdmisionCoberturaSection } from "./admision-cobertura-section";
 import { AdmisionCarritoSection } from "./admision-carrito-section";
@@ -141,6 +142,18 @@ function AdmisionFormContent({ admisionId, existingAdmision }: AdmisionFormConte
 
   // Modales
   const [multiPickerOpen, setMultiPickerOpen] = React.useState<boolean>(false);
+  const [pacienteModalOpen, setPacienteModalOpen] = React.useState<boolean>(false);
+  const [pacienteToEdit, setPacienteToEdit] = React.useState<PacienteResponse | null>(null);
+
+  const handleOpenRegisterModal = (paciente?: PacienteResponse | null) => {
+    setPacienteToEdit(paciente || null);
+    setPacienteModalOpen(true);
+  };
+
+  const handlePacienteModalSuccess = (savedPaciente: PacienteResponse) => {
+    handleSelectPaciente(String(savedPaciente.id));
+    setPatientSearch("");
+  };
 
   // Mutations
   const createAdmisionMutation = useCreateAdmision();
@@ -314,6 +327,15 @@ function AdmisionFormContent({ admisionId, existingAdmision }: AdmisionFormConte
         convenioId={effectiveConvenioId}
       />
 
+      {/* MODAL DE REGISTRO / EDICIÓN DE PACIENTE */}
+      <PacienteFormDialog
+        open={pacienteModalOpen}
+        onOpenChange={setPacienteModalOpen}
+        paciente={pacienteToEdit}
+        initialSearch={patientSearch}
+        onSuccess={handlePacienteModalSuccess}
+      />
+
       {/* CABECERA PRINCIPAL COMPACTA */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-card p-3 rounded-xl border border-border/70 shadow-2xs">
         <div className="flex items-center gap-2.5 min-w-0">
@@ -393,13 +415,7 @@ function AdmisionFormContent({ admisionId, existingAdmision }: AdmisionFormConte
               selectedPaciente={selectedPaciente}
               isPatientValid={isPatientValid}
               isLoadingPacientes={isLoadingPacientes}
-              onOpenRegisterModal={(paciente) => {
-                if (paciente) {
-                  router.push(`/recepcion/pacientes/${paciente.id}/editar`);
-                } else {
-                  router.push("/recepcion/pacientes/nuevo");
-                }
-              }}
+              onOpenRegisterModal={handleOpenRegisterModal}
             />
 
             <AdmisionCoberturaSection

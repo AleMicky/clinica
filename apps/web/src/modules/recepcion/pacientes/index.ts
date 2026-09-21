@@ -11,3 +11,4 @@ export * from "./components/paciente-convenios-dialog";
 export * from "./components/paciente-import-dialog";
 export * from "./components/paciente-module-view";
 export * from "./components/paciente-page-form";
+export * from "./components/paciente-form-dialog";
