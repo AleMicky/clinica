@@ -54,7 +54,10 @@ export function UsuarioModuleView() {
     setCurrentPage(1);
   };
 
-  const allUsuarios: UsuarioResponse[] = apiData?.items ?? [];
+  const allUsuarios = React.useMemo(
+    () => apiData?.items ?? [],
+    [apiData?.items]
+  );
 
   // Filter by status tab locally on items
   const filteredUsuarios = React.useMemo(() => {

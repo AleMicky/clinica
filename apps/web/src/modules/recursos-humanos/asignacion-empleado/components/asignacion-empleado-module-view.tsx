@@ -112,7 +112,17 @@ export function AsignacionEmpleadoModuleView() {
             await deleteMutation.mutateAsync(asignacionToDelete.id);
             toast.success("Asignación eliminada correctamente.");
             refetch();
-        } catch {
+        } catch (error: unknown) {
+            const err = error as {
+                response?: { data?: { detail?: string; message?: string } };
+                message?: string;
+            };
+            const errorMsg =
+                err?.response?.data?.detail ||
+                err?.response?.data?.message ||
+                err?.message ||
+                "Ocurrió un error al eliminar la asignación.";
+            toast.error(errorMsg);
         } finally {
             setAsignacionToDelete(null);
             setDeleteDialogOpen(false);

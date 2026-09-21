@@ -151,8 +151,17 @@ export function AsignacionEmpleadoFormDialog({
             }
             onSuccessCallback?.();
             onOpenChange(false);
-        } catch {
-            // Intercepted by query client or backend handler
+        } catch (error: unknown) {
+            const err = error as {
+                response?: { data?: { detail?: string; message?: string } };
+                message?: string;
+            };
+            const errorMsg =
+                err?.response?.data?.detail ||
+                err?.response?.data?.message ||
+                err?.message ||
+                "Ocurrió un error al procesar la asignación del empleado.";
+            toast.error(errorMsg);
         }
     };
 

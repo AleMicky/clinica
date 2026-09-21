@@ -176,7 +176,9 @@ export function EmpleadoFormDialog({
     try {
       const payload = {
         personaId: values.personaId,
-        codigoEmpleado: values.codigoEmpleado?.trim() || null,
+        codigoEmpleado: isEditing
+          ? (empleadoToEdit?.codigoEmpleado || null)
+          : (values.codigoEmpleado?.trim() || null),
         fechaIngreso: values.fechaIngreso.trim(),
         fechaRetiro: values.fechaRetiro?.trim() || null,
       };
@@ -194,11 +196,15 @@ export function EmpleadoFormDialog({
 
       onSuccessCallback?.();
       onOpenChange(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as {
+        response?: { data?: { detail?: string; message?: string } };
+        message?: string;
+      };
       const errorMsg =
-        error?.response?.data?.detail ||
-        error?.response?.data?.message ||
-        error?.message ||
+        err?.response?.data?.detail ||
+        err?.response?.data?.message ||
+        err?.message ||
         "Ocurrió un error al procesar el registro del empleado.";
       toast.error(errorMsg);
     }
@@ -208,32 +214,32 @@ export function EmpleadoFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-xl p-0 overflow-hidden border-border/60 shadow-2xl">
+      <DialogContent className="sm:max-w-lg p-0 overflow-hidden border-border/60 shadow-xl">
         {/* Modal Header */}
         <div
           className={cn(
-            "p-6 pb-5 border-b",
+            "px-5 py-3.5 border-b",
             isEditing
-              ? "bg-gradient-to-r from-blue-500/15 via-blue-500/5 to-transparent border-blue-500/20"
-              : "bg-gradient-to-r from-primary/15 via-primary/5 to-transparent border-primary/20"
+              ? "bg-gradient-to-r from-blue-500/10 via-blue-500/5 to-transparent border-blue-500/20"
+              : "bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-primary/20"
           )}
         >
-          <DialogHeader className="space-y-1.5">
+          <DialogHeader className="space-y-1">
             <div className="flex items-center gap-3">
               <div
                 className={cn(
-                  "flex size-11 items-center justify-center rounded-2xl border shadow-xs shrink-0",
+                  "flex size-9 items-center justify-center rounded-xl border shadow-xs shrink-0",
                   isEditing
                     ? "bg-blue-600 text-white border-blue-700 shadow-blue-500/20"
                     : "bg-primary text-primary-foreground border-primary/80 shadow-primary/20"
                 )}
               >
-                {isEditing ? <Pencil className="size-5.5" /> : <UserPlus className="size-5.5" />}
+                {isEditing ? <Pencil className="size-4.5" /> : <UserPlus className="size-4.5" />}
               </div>
 
               <div>
                 <div className="flex items-center gap-2">
-                  <DialogTitle className="text-xl font-bold tracking-tight text-foreground">
+                  <DialogTitle className="text-base font-bold tracking-tight text-foreground">
                     {isEditing ? "Modificar Ficha de Empleado" : "Registrar Nuevo Empleado"}
                   </DialogTitle>
                   <Badge
@@ -248,10 +254,10 @@ export function EmpleadoFormDialog({
                     {isEditing ? "Modo Edición" : "Nuevo Ingreso"}
                   </Badge>
                 </div>
-                <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+                <DialogDescription className="text-xs text-muted-foreground">
                   {isEditing
                     ? "Actualice los parámetros laborales del empleado registrado."
-                    : "Vincule una persona titular y configure sus fechas de contratación."}
+                    : "Vincule una persona titular y configure sus fechas laborales."}
                 </DialogDescription>
               </div>
             </div>
@@ -259,19 +265,19 @@ export function EmpleadoFormDialog({
         </div>
 
         {/* Modal Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="p-6 pt-4 space-y-5">
+        <form onSubmit={handleSubmit(onSubmit)} className="p-5 pt-3.5 space-y-3.5">
           {/* SECCIÓN 1: VINCULACIÓN DE PERSONA TITULAR */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div className="flex items-center justify-between pb-1 border-b border-border/40">
-              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                 <IdCard className="size-3.5 text-primary" />
                 1. Persona Titular
               </span>
-              <span className="text-[10px] font-medium text-destructive">* Campo requerido</span>
+              <span className="text-[10px] font-medium text-destructive">* Requerido</span>
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="personaId" className="text-xs font-semibold flex items-center gap-1">
+            <div className="space-y-1">
+              <Label htmlFor="personaId" className="text-xs font-medium flex items-center gap-1">
                 Persona <span className="text-destructive">*</span>
               </Label>
               <Autocomplete
@@ -294,23 +300,23 @@ export function EmpleadoFormDialog({
               )}
             </div>
 
-            {/* Vista previa de la Persona Seleccionada */}
+            {/* Vista previa compacta de la Persona Seleccionada */}
             {selectedPersonaObj && (
-              <div className="rounded-xl border border-primary/25 bg-primary/[0.04] p-3 flex items-center gap-3">
-                <div className="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0 border border-primary/20">
-                  <User className="size-5" />
+              <div className="rounded-lg border border-primary/20 bg-primary/[0.03] p-2.5 flex items-center gap-2.5">
+                <div className="size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
+                  <User className="size-4" />
                 </div>
-                <div className="min-w-0 flex-1 space-y-0.5 text-xs">
+                <div className="min-w-0 flex-1 text-xs">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-foreground truncate">
+                    <span className="font-semibold text-foreground truncate">
                       {nombreCompleto(selectedPersonaObj)}
                     </span>
-                    <span className="text-[10px] font-mono bg-background px-1.5 py-0.2 rounded border border-border/60 text-muted-foreground">
+                    <span className="text-[10px] font-mono bg-background px-1.5 py-0.2 rounded border border-border/60 text-muted-foreground shrink-0">
                       {documentoCompleto(selectedPersonaObj)}
                     </span>
                   </div>
-                  <p className="text-[11px] text-muted-foreground">
-                    Teléfono: {selectedPersonaObj.telefono || "No registrado"} • Dirección: {selectedPersonaObj.direccion || "No registrada"}
+                  <p className="text-[11px] text-muted-foreground truncate">
+                    Tel: {selectedPersonaObj.telefono || "N/D"} • Dir: {selectedPersonaObj.direccion || "N/D"}
                   </p>
                 </div>
               </div>
@@ -318,25 +324,36 @@ export function EmpleadoFormDialog({
           </div>
 
           {/* SECCIÓN 2: INFORMACIÓN LABORAL */}
-          <div className="space-y-3 pt-1">
+          <div className="space-y-2.5 pt-1">
             <div className="flex items-center justify-between pb-1 border-b border-border/40">
-              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                 <Briefcase className="size-3.5 text-primary" />
                 2. Parámetros Laborales
               </span>
             </div>
 
             {/* Código de Empleado */}
-            <div className="space-y-1.5">
-              <Label htmlFor="codigoEmpleado" className="text-xs font-semibold flex items-center gap-1">
-                Código de Empleado <span className="text-muted-foreground text-[10px] font-normal">(Opcional)</span>
-              </Label>
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="codigoEmpleado" className="text-xs font-medium flex items-center gap-1">
+                  Código de Empleado{" "}
+                  {isEditing ? (
+                    <span className="text-muted-foreground text-[10px] font-normal">(No modificable)</span>
+                  ) : (
+                    <span className="text-muted-foreground text-[10px] font-normal">(Opcional / Auto)</span>
+                  )}
+                </Label>
+              </div>
               <Input
                 id="codigoEmpleado"
                 {...register("codigoEmpleado")}
-                placeholder="Ej. EMP-00123 (Se auto-generará si se deja vacío)"
-                className="h-9.5 text-xs font-mono uppercase bg-background"
-                disabled={isLoading}
+                placeholder={isEditing ? "Código asignado" : "Ej. EMP-00123 (Auto si se deja vacío)"}
+                className={cn(
+                  "h-8.5 text-xs font-mono uppercase bg-background",
+                  isEditing && "bg-muted/50 text-muted-foreground cursor-not-allowed opacity-80"
+                )}
+                disabled={isLoading || isEditing}
+                readOnly={isEditing}
               />
               {errors.codigoEmpleado && (
                 <p className="text-[11px] text-destructive font-medium flex items-center gap-1">
@@ -346,13 +363,13 @@ export function EmpleadoFormDialog({
               )}
             </div>
 
-            {/* Fechas de Ingreso y Retiro */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+            {/* Fechas de Ingreso y Retiro en 2 columnas */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Fecha de Ingreso */}
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="fechaIngreso" className="text-xs font-semibold flex items-center gap-1">
-                    Fecha de Ingreso <span className="text-destructive">*</span>
+                  <Label htmlFor="fechaIngreso" className="text-xs font-medium flex items-center gap-1">
+                    Fecha Ingreso <span className="text-destructive">*</span>
                   </Label>
                   <button
                     type="button"
@@ -368,7 +385,7 @@ export function EmpleadoFormDialog({
                   value={fechaIngresoVal}
                   onChange={(e) => setValue("fechaIngreso", e.target.value, { shouldValidate: true })}
                   className={cn(
-                    "h-9.5 text-xs font-mono bg-background",
+                    "h-8.5 text-xs font-mono bg-background",
                     errors.fechaIngreso && "border-destructive focus-visible:ring-destructive"
                   )}
                   disabled={isLoading}
@@ -382,10 +399,10 @@ export function EmpleadoFormDialog({
               </div>
 
               {/* Fecha de Retiro */}
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="fechaRetiro" className="text-xs font-semibold flex items-center gap-1 text-muted-foreground">
-                    Fecha de Retiro <span className="text-[10px] font-normal">(Si aplica)</span>
+                  <Label htmlFor="fechaRetiro" className="text-xs font-medium flex items-center gap-1 text-muted-foreground">
+                    Fecha Retiro <span className="text-[10px] font-normal">(Opcional)</span>
                   </Label>
                   {fechaRetiroVal && (
                     <button
@@ -403,7 +420,7 @@ export function EmpleadoFormDialog({
                   value={fechaRetiroVal || ""}
                   onChange={(e) => setValue("fechaRetiro", e.target.value, { shouldValidate: true })}
                   className={cn(
-                    "h-9.5 text-xs font-mono bg-background",
+                    "h-8.5 text-xs font-mono bg-background",
                     errors.fechaRetiro && "border-destructive focus-visible:ring-destructive"
                   )}
                   disabled={isLoading}
@@ -418,28 +435,30 @@ export function EmpleadoFormDialog({
             </div>
           </div>
 
-          <DialogFooter className="pt-4 border-t gap-2 sm:gap-0">
+          <DialogFooter className="pt-3 border-t gap-2 sm:gap-2">
             <Button
               type="button"
               variant="outline"
+              size="sm"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
-              className="h-9.5 text-xs sm:text-sm cursor-pointer"
+              className="h-8.5 text-xs cursor-pointer"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
+              size="sm"
               disabled={isLoading}
               className={cn(
-                "h-9.5 px-4 gap-2 text-xs sm:text-sm font-semibold cursor-pointer shadow-sm transition-all",
+                "h-8.5 px-3.5 gap-1.5 text-xs font-semibold cursor-pointer shadow-xs transition-all",
                 isEditing
                   ? "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20"
                   : "bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/20"
               )}
             >
-              {isLoading && <Loader2 className="size-4 animate-spin" />}
-              <span>{isEditing ? "Guardar Modificaciones" : "Registrar Empleado"}</span>
+              {isLoading && <Loader2 className="size-3.5 animate-spin" />}
+              <span>{isEditing ? "Guardar Cambios" : "Registrar Empleado"}</span>
             </Button>
           </DialogFooter>
         </form>

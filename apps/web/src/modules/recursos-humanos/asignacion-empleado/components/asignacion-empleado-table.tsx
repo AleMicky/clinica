@@ -8,10 +8,8 @@ import {
     Trash2,
     ChevronLeft,
     ChevronRight,
-    UserCheck,
     Building2,
     Briefcase,
-    Calendar,
     Filter,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -27,7 +25,7 @@ import {
 } from "@/components/ui/select";
 import type { AsignacionEmpleadoResponse } from "../types/asignacion-empleado.types";
 
-export interface AsignacionEmpleadoItem extends AsignacionEmpleadoResponse {}
+export type AsignacionEmpleadoItem = AsignacionEmpleadoResponse;
 
 interface AsignacionEmpleadoTableProps {
     asignaciones: AsignacionEmpleadoItem[];

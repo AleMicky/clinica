@@ -9,17 +9,14 @@ import {
   Edit,
   Trash2,
   Users,
-  User,
   Mail,
   Shield,
-  CreditCard,
   KeyRound,
   ShieldCheck,
   History,
   Calendar,
 } from "lucide-react";
 import type { UsuarioResponse, UsuarioPersonaResponse } from "../types/usuario.types";
-import { cn } from "@/lib/utils";
 
 interface UsuarioListProps {
   usuarios: UsuarioResponse[];
