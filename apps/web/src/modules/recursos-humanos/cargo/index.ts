@@ -7,4 +7,4 @@ export * from "./components/cargo-module-view";
 export * from "./components/cargo-header";
 export * from "./components/cargo-metrics";
 export * from "./components/cargo-list";
-export * from "./components/cargo-page-form";
+export * from "./components/cargo-form-dialog";

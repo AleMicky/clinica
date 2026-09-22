@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Award, Plus, RefreshCw } from "lucide-react";
 
@@ -11,16 +10,6 @@ interface CargoHeaderProps {
 }
 
 export function CargoHeader({ onAddClick, onRefresh }: CargoHeaderProps) {
-  const router = useRouter();
-
-  const handleAddClick = () => {
-    if (onAddClick) {
-      onAddClick();
-    } else {
-      router.push("/recursos-humanos/cargos/nuevo");
-    }
-  };
-
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-card via-card to-primary/5 px-4 py-2.5 rounded-xl border border-border/70 shadow-2xs">
       <div className="flex items-center gap-2.5">
@@ -58,7 +47,7 @@ export function CargoHeader({ onAddClick, onRefresh }: CargoHeaderProps) {
 
         <Button
           size="sm"
-          onClick={handleAddClick}
+          onClick={onAddClick}
           className="h-8 px-3.5 text-xs font-semibold gap-1.5 bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-700 text-primary-foreground shadow-xs shadow-primary/20 transition-all duration-200 cursor-pointer"
         >
           <Plus className="size-3.5" />

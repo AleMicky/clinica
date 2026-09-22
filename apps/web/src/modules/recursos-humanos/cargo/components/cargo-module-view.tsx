@@ -1,17 +1,19 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { CargoHeader } from "./cargo-header";
 import { CargoMetricsCards, type CargoMetrics } from "./cargo-metrics";
 import { CargoList } from "./cargo-list";
+import { CargoFormDialog } from "./cargo-form-dialog";
 import { ConfirmDeleteDialog } from "@/components/shared";
 import { useDeleteCargo, useCargos } from "../hooks/use-cargos";
 import type { CargoResponse } from "../types/cargo.types";
 
 export function CargoModuleView() {
-  const router = useRouter();
+  // Form dialog state (Crear / Editar)
+  const [formDialogOpen, setFormDialogOpen] = React.useState(false);
+  const [cargoToEdit, setCargoToEdit] = React.useState<CargoResponse | null>(null);
 
   // Delete dialog confirmation state
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
@@ -77,11 +79,13 @@ export function CargoModuleView() {
   };
 
   const handleOpenAdd = () => {
-    router.push("/recursos-humanos/cargos/nuevo");
+    setCargoToEdit(null);
+    setFormDialogOpen(true);
   };
 
   const handleOpenEdit = (cargo: CargoResponse) => {
-    router.push(`/recursos-humanos/cargos/${cargo.id}/editar`);
+    setCargoToEdit(cargo);
+    setFormDialogOpen(true);
   };
 
   const handleOpenDelete = (cargo: CargoResponse) => {
@@ -112,7 +116,7 @@ export function CargoModuleView() {
       {/* Tarjetas de Métricas en Vivo */}
       <CargoMetricsCards metrics={metrics} />
 
-      {/* Listado Principal de Cargos (Formato Lista igual a los demás módulos) */}
+      {/* Listado Principal de Cargos */}
       <CargoList
         cargos={filteredCargos}
         isLoading={isLoading}
@@ -128,6 +132,14 @@ export function CargoModuleView() {
         onEdit={handleOpenEdit}
         onDelete={handleOpenDelete}
         onRefresh={() => refetch()}
+      />
+
+      {/* Modal: Crear / Editar Cargo */}
+      <CargoFormDialog
+        open={formDialogOpen}
+        onOpenChange={setFormDialogOpen}
+        cargoToEdit={cargoToEdit}
+        onSuccessCallback={() => refetch()}
       />
 
       {/* Modal: Confirmación de Eliminación */}
