@@ -127,3 +127,18 @@ export function documentoCompleto(
         : "";
     return `${p.tipoDocumento} ${p.numeroDocumento}${ext}`.trim();
 }
+
+export interface ExcelImportError {
+    row: number;
+    column?: string | null;
+    value?: string | null;
+    message: string;
+}
+
+export interface ExcelImportResult {
+    total: number;
+    importados: number;
+    omitidos: number;
+    errores: number;
+    errors: ExcelImportError[];
+}

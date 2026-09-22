@@ -2,14 +2,15 @@
 
 import * as React from "react";
 import { Button } from "@/components/ui/button";
-import { Briefcase, Plus, RefreshCw } from "lucide-react";
+import { Briefcase, FileSpreadsheet, Plus, RefreshCw } from "lucide-react";
 
 interface EmpleadoHeaderProps {
   onAddClick?: () => void;
   onRefresh?: () => void;
+  onImportClick?: () => void;
 }
 
-export function EmpleadoHeader({ onAddClick, onRefresh }: EmpleadoHeaderProps) {
+export function EmpleadoHeader({ onAddClick, onRefresh, onImportClick }: EmpleadoHeaderProps) {
   const handleAddClick = () => {
     onAddClick?.();
   };
@@ -46,6 +47,19 @@ export function EmpleadoHeader({ onAddClick, onRefresh }: EmpleadoHeaderProps) {
           >
             <RefreshCw className="size-3.5" />
             <span className="hidden md:inline">Actualizar</span>
+          </Button>
+        )}
+
+        {onImportClick && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onImportClick}
+            className="h-8 px-2.5 text-xs font-medium gap-1.5 border-border/80 hover:bg-blue-500/10 hover:text-blue-600 hover:border-blue-500/30 dark:hover:text-blue-400 transition-all cursor-pointer"
+            title="Importar empleados desde Excel"
+          >
+            <FileSpreadsheet className="size-3.5 text-blue-600 dark:text-blue-400" />
+            <span className="hidden sm:inline">Importar Excel</span>
           </Button>
         )}
 

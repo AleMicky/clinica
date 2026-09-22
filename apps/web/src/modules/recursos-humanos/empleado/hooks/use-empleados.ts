@@ -8,6 +8,7 @@ import {
     getEmpleadoById,
     getEmpleados,
     getEmpleadosPermitidos,
+    importarEmpleadosExcel,
     updateEmpleado,
     updateEmpleadoConPersona,
 } from "../api/empleado.api";
@@ -140,6 +141,22 @@ export function useDeleteEmpleado() {
             queryClient.invalidateQueries({ queryKey: ["admisiones"], refetchType: "all" });
             queryClient.invalidateQueries({ queryKey: ["ventas"], refetchType: "all" });
             queryClient.invalidateQueries({ queryKey: ["cajas"], refetchType: "all" });
+        },
+    });
+}
+
+export function useImportarEmpleadosExcel() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (archivo: File) => importarEmpleadosExcel(archivo),
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: empleadoKeys.all,
+                refetchType: "all",
+            });
+            queryClient.invalidateQueries({ queryKey: ["personas"], refetchType: "all" });
+            queryClient.invalidateQueries({ queryKey: ["asignaciones-empleado"], refetchType: "all" });
         },
     });
 }

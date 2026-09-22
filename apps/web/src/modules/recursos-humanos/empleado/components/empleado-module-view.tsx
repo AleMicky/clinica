@@ -9,6 +9,7 @@ import { EmpleadoMetricsCards, type EmpleadoMetrics } from "./empleado-metrics";
 import { EmpleadoList } from "./empleado-list";
 import { EmpleadoDeleteDialog } from "./empleado-delete-dialog";
 import { EmpleadoAsignacionesDrawer } from "./empleado-asignaciones-drawer";
+import { EmpleadoImportDialog } from "./empleado-import-dialog";
 import { useDeleteEmpleado, useEmpleados } from "../hooks/use-empleados";
 import {
   nombreCompleto,
@@ -51,6 +52,8 @@ export function EmpleadoModuleView() {
     React.useState(false);
   const [selectedEmpleadoForAsignaciones, setSelectedEmpleadoForAsignaciones] =
     React.useState<EmpleadoResponse | null>(null);
+
+  const [importDialogOpen, setImportDialogOpen] = React.useState(false);
 
   // Paginación y Búsqueda
   const [currentPage, setCurrentPage] = React.useState(1);
@@ -182,7 +185,11 @@ export function EmpleadoModuleView() {
   return (
     <div className="flex flex-col gap-3 w-full animate-in fade-in-50 duration-300">
       {/* Cabecera del Módulo */}
-      <EmpleadoHeader onAddClick={handleOpenAdd} onRefresh={refetch} />
+      <EmpleadoHeader
+        onAddClick={handleOpenAdd}
+        onRefresh={refetch}
+        onImportClick={() => setImportDialogOpen(true)}
+      />
 
       {/* Tarjetas de Métricas en Vivo */}
       <EmpleadoMetricsCards metrics={metrics} />
@@ -222,6 +229,13 @@ export function EmpleadoModuleView() {
         empleado={deleteEmpleadoItem}
         onConfirm={handleConfirmDelete}
         isLoading={deleteMutation.isPending}
+      />
+
+      {/* Modal: Importación Masiva desde Excel */}
+      <EmpleadoImportDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        onSuccess={() => refetch()}
       />
     </div>
   );

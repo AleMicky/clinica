@@ -5,6 +5,7 @@ import type {
     EmpleadoPersonaRequest,
     EmpleadoQueryParams,
     EmpleadoResponse,
+    ExcelImportResult,
     PagedResult,
     UpdateEmpleadoRequest,
 } from "../types/empleado.types";
@@ -81,4 +82,34 @@ export async function updateEmpleadoConPersona(
 
 export async function deleteEmpleado(id: number): Promise<void> {
     await apiClient.delete(`${BASE}/${id}`);
+}
+
+// Importación masiva desde Excel
+export async function importarEmpleadosExcel(
+    archivo: File,
+): Promise<ExcelImportResult> {
+    const formData = new FormData();
+    formData.append("archivo", archivo);
+
+    const response = await apiClient.post<ExcelImportResult>(
+        `${BASE}/importar-excel`,
+        formData,
+        {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        },
+    );
+    return response.data;
+}
+
+// Descarga de plantilla Excel oficial (.xlsx)
+export async function descargarPlantillaEmpleadosExcel(): Promise<Blob> {
+    const response = await apiClient.get<Blob>(
+        `${BASE}/plantilla-excel`,
+        {
+            responseType: "blob",
+        },
+    );
+    return response.data;
 }

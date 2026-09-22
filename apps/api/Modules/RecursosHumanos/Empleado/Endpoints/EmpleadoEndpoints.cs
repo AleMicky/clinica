@@ -2,6 +2,7 @@ using Clinica.Api.Modules.RecursosHumanos.Empleado.Dtos;
 using Clinica.Api.Modules.RecursosHumanos.Empleado.Services;
 using Clinica.Api.Shared.Pagination;
 using Clinica.Api.Shared.Validation;
+using ClosedXML.Excel;
 
 namespace Clinica.Api.Modules.RecursosHumanos.Empleado.Endpoints;
 
@@ -56,6 +57,18 @@ public static class EmpleadoEndpoints
         // ELIMINAR
         group.MapDelete("/{id:int}", EliminarAsync)
             .WithName("EliminarEmpleado");
+
+        // IMPORTACIÓN EXCEL
+        group.MapPost(
+                "/importar-excel",
+                ImportarExcelAsync)
+            .WithName("ImportarEmpleadosExcel")
+            .DisableAntiforgery();
+
+        group.MapGet(
+                "/plantilla-excel",
+                DescargarPlantillaExcelAsync)
+            .WithName("DescargarPlantillaEmpleadosExcel");
 
         return app;
     }
@@ -175,5 +188,100 @@ public static class EmpleadoEndpoints
     {
         await service.EliminarAsync(id, cancellationToken);
         return Results.NoContent();
+    }
+
+    private static async Task<IResult> ImportarExcelAsync(
+        IFormFile archivo,
+        IEmpleadoImportacionService service,
+        CancellationToken cancellationToken)
+    {
+        if (archivo is null || archivo.Length == 0)
+        {
+            return Results.BadRequest(new
+            {
+                message = "Debe seleccionar un archivo Excel."
+            });
+        }
+
+        var extension = Path.GetExtension(archivo.FileName);
+
+        if (!extension.Equals(".xlsx", StringComparison.OrdinalIgnoreCase))
+        {
+            return Results.BadRequest(new
+            {
+                message = "Solo se permiten archivos Excel .xlsx."
+            });
+        }
+
+        await using var stream = archivo.OpenReadStream();
+        var resultado = await service.ImportarAsync(stream, cancellationToken);
+        return Results.Ok(resultado);
+    }
+
+    private static IResult DescargarPlantillaExcelAsync()
+    {
+        using var workbook = new XLWorkbook();
+        var worksheet = workbook.Worksheets.Add("Plantilla Empleados");
+
+        string[] headers =
+        [
+            "TIPO_DOCUMENTO",
+            "NUMERO_DOCUMENTO",
+            "EXTENSION_DOCUMENTO",
+            "COMPLEMENTO_DOCUMENTO",
+            "NOMBRES",
+            "APELLIDO_PATERNO",
+            "APELLIDO_MATERNO",
+            "FECHA_NACIMIENTO",
+            "GENERO",
+            "ESTADO_CIVIL",
+            "TELEFONO",
+            "DIRECCION",
+            "FECHA_INGRESO",
+            "CODIGO_AREA",
+            "CODIGO_CARGO",
+            "FECHA_INICIO_ASIGNACION",
+            "OBSERVACION_ASIGNACION"
+        ];
+
+        for (var i = 0; i < headers.Length; i++)
+        {
+            var cell = worksheet.Cell(1, i + 1);
+            cell.Value = headers[i];
+            cell.Style.Font.Bold = true;
+            cell.Style.Font.FontColor = XLColor.White;
+            cell.Style.Fill.BackgroundColor = XLColor.FromHtml("#2563eb"); // Blue / Indigo
+            cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+        }
+
+        // Fila de ejemplo
+        worksheet.Cell(2, 1).Value = "CI";
+        worksheet.Cell(2, 2).Value = "87654321";
+        worksheet.Cell(2, 3).Value = "LP";
+        worksheet.Cell(2, 4).Value = "";
+        worksheet.Cell(2, 5).Value = "CARLOS ALBERTO";
+        worksheet.Cell(2, 6).Value = "MAMANI";
+        worksheet.Cell(2, 7).Value = "FLORES";
+        worksheet.Cell(2, 8).Value = "1988-03-20";
+        worksheet.Cell(2, 9).Value = "M";
+        worksheet.Cell(2, 10).Value = "SOLTERO";
+        worksheet.Cell(2, 11).Value = "78901234";
+        worksheet.Cell(2, 12).Value = "AV. 6 DE AGOSTO #456";
+        worksheet.Cell(2, 13).Value = "2024-01-15";
+        worksheet.Cell(2, 14).Value = "ADM";
+        worksheet.Cell(2, 15).Value = "REC";
+        worksheet.Cell(2, 16).Value = "2024-01-15";
+        worksheet.Cell(2, 17).Value = "Asignación inicial de ingreso";
+
+        worksheet.Columns().AdjustToContents();
+
+        using var stream = new MemoryStream();
+        workbook.SaveAs(stream);
+        var content = stream.ToArray();
+
+        return Results.File(
+            content,
+            contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            fileDownloadName: "plantilla_importacion_empleados.xlsx");
     }
 }

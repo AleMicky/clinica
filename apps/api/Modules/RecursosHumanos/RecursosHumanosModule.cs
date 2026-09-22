@@ -31,6 +31,7 @@ public static class RecursosHumanosModule
         services.AddScoped<AreaService>();
         services.AddScoped<CargoService>();
         services.AddScoped<EmpleadoService>();
+        services.AddScoped<IEmpleadoImportacionService, EmpleadoImportacionService>();
         services.AddScoped<AsignacionEmpleadoService>();
         services.AddScoped<EspecialidadService>();
         services.AddScoped<MedicoService>();
