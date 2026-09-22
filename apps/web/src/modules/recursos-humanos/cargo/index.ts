@@ -8,3 +8,4 @@ export * from "./components/cargo-header";
 export * from "./components/cargo-metrics";
 export * from "./components/cargo-list";
 export * from "./components/cargo-form-dialog";
+export * from "./components/cargo-import-dialog";

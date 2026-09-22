@@ -6,14 +6,18 @@ import { CargoHeader } from "./cargo-header";
 import { CargoMetricsCards, type CargoMetrics } from "./cargo-metrics";
 import { CargoList } from "./cargo-list";
 import { CargoFormDialog } from "./cargo-form-dialog";
+import { CargoImportDialog } from "./cargo-import-dialog";
 import { ConfirmDeleteDialog } from "@/components/shared";
-import { useDeleteCargo, useCargos } from "../hooks/use-cargos";
+import { useDeleteCargo, useCargos, useExportarCargosExcel } from "../hooks/use-cargos";
 import type { CargoResponse } from "../types/cargo.types";
 
 export function CargoModuleView() {
   // Form dialog state (Crear / Editar)
   const [formDialogOpen, setFormDialogOpen] = React.useState(false);
   const [cargoToEdit, setCargoToEdit] = React.useState<CargoResponse | null>(null);
+
+  // Import dialog state
+  const [importDialogOpen, setImportDialogOpen] = React.useState(false);
 
   // Delete dialog confirmation state
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
@@ -38,6 +42,7 @@ export function CargoModuleView() {
   });
 
   const deleteMutation = useDeleteCargo();
+  const exportMutation = useExportarCargosExcel();
 
   const handleSearchChange = (term: string) => {
     setSearchTerm(term);
@@ -54,7 +59,10 @@ export function CargoModuleView() {
     setCurrentPage(1);
   };
 
-  const allCargos: CargoResponse[] = apiData?.items ?? [];
+  const allCargos = React.useMemo<CargoResponse[]>(
+    () => apiData?.items ?? [],
+    [apiData?.items]
+  );
 
   // Filter by status tab
   const filteredCargos = React.useMemo(() => {
@@ -108,10 +116,35 @@ export function CargoModuleView() {
     }
   };
 
+  // Exportar listado de cargos a Excel
+  const handleExportExcel = async () => {
+    try {
+      const blob = await exportMutation.mutateAsync(searchTerm.trim() || undefined);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      const timestamp = new Date().toISOString().replace(/[-:T.]/g, "").slice(0, 14);
+      link.setAttribute("download", `reporte_cargos_${timestamp}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("Catálogo de cargos exportado a Excel (.xlsx) correctamente.");
+    } catch {
+      toast.error("Ocurrió un error al exportar el catálogo de cargos a Excel.");
+    }
+  };
+
   return (
     <div className="flex flex-col gap-3 w-full animate-in fade-in-50 duration-300">
       {/* Cabecera del Módulo */}
-      <CargoHeader onAddClick={handleOpenAdd} onRefresh={() => refetch()} />
+      <CargoHeader
+        onAddClick={handleOpenAdd}
+        onRefresh={() => refetch()}
+        onImportClick={() => setImportDialogOpen(true)}
+        onExportClick={handleExportExcel}
+        isExporting={exportMutation.isPending}
+      />
 
       {/* Tarjetas de Métricas en Vivo */}
       <CargoMetricsCards metrics={metrics} />
@@ -140,6 +173,13 @@ export function CargoModuleView() {
         onOpenChange={setFormDialogOpen}
         cargoToEdit={cargoToEdit}
         onSuccessCallback={() => refetch()}
+      />
+
+      {/* Modal: Importación Masiva desde Excel */}
+      <CargoImportDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        onSuccess={() => refetch()}
       />
 
       {/* Modal: Confirmación de Eliminación */}

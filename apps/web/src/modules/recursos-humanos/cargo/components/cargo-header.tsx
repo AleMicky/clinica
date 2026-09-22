@@ -2,14 +2,23 @@
 
 import * as React from "react";
 import { Button } from "@/components/ui/button";
-import { Award, Plus, RefreshCw } from "lucide-react";
+import { Award, Download, FileSpreadsheet, Loader2, Plus, RefreshCw } from "lucide-react";
 
 interface CargoHeaderProps {
   onAddClick?: () => void;
   onRefresh?: () => void;
+  onImportClick?: () => void;
+  onExportClick?: () => void;
+  isExporting?: boolean;
 }
 
-export function CargoHeader({ onAddClick, onRefresh }: CargoHeaderProps) {
+export function CargoHeader({
+  onAddClick,
+  onRefresh,
+  onImportClick,
+  onExportClick,
+  isExporting,
+}: CargoHeaderProps) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-card via-card to-primary/5 px-4 py-2.5 rounded-xl border border-border/70 shadow-2xs">
       <div className="flex items-center gap-2.5">
@@ -31,7 +40,7 @@ export function CargoHeader({ onAddClick, onRefresh }: CargoHeaderProps) {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+      <div className="flex items-center flex-wrap gap-2 self-end sm:self-auto shrink-0">
         {onRefresh && (
           <Button
             variant="outline"
@@ -42,6 +51,37 @@ export function CargoHeader({ onAddClick, onRefresh }: CargoHeaderProps) {
           >
             <RefreshCw className="size-3.5" />
             <span className="hidden md:inline">Actualizar</span>
+          </Button>
+        )}
+
+        {onExportClick && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onExportClick}
+            disabled={isExporting}
+            className="h-8 px-2.5 text-xs gap-1.5 border-border/80 hover:bg-accent hover:text-accent-foreground transition-all cursor-pointer"
+            title="Exportar a Excel"
+          >
+            {isExporting ? (
+              <Loader2 className="size-3.5 animate-spin text-primary" />
+            ) : (
+              <Download className="size-3.5 text-emerald-600 dark:text-emerald-400" />
+            )}
+            <span className="hidden md:inline">Exportar Excel</span>
+          </Button>
+        )}
+
+        {onImportClick && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onImportClick}
+            className="h-8 px-2.5 text-xs gap-1.5 border-blue-500/30 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10 transition-all cursor-pointer"
+            title="Importación masiva desde Excel"
+          >
+            <FileSpreadsheet className="size-3.5" />
+            <span className="hidden md:inline">Importar Excel</span>
           </Button>
         )}
 

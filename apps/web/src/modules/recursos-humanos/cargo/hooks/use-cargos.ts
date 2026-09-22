@@ -4,8 +4,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
     createCargo,
     deleteCargo,
+    exportarCargosExcel,
     getCargoById,
     getCargos,
+    importarCargosExcel,
     updateCargo,
 } from "../api/cargo.api";
 import { cargoKeys } from "../api/cargo.key";
@@ -36,7 +38,7 @@ export function useCreateCargo() {
     return useMutation({
         mutationFn: (data: CreateCargoRequest) => createCargo(data),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: cargoKeys.all });
+            queryClient.invalidateQueries({ queryKey: cargoKeys.all, refetchType: "all" });
         },
     });
 }
@@ -48,8 +50,8 @@ export function useUpdateCargo() {
         mutationFn: ({ id, data }: { id: number; data: UpdateCargoRequest }) =>
             updateCargo(id, data),
         onSuccess: (_, variables) => {
-            queryClient.invalidateQueries({ queryKey: cargoKeys.all });
-            queryClient.invalidateQueries({ queryKey: cargoKeys.detail(variables.id) });
+            queryClient.invalidateQueries({ queryKey: cargoKeys.all, refetchType: "all" });
+            queryClient.invalidateQueries({ queryKey: cargoKeys.detail(variables.id), refetchType: "all" });
         },
     });
 }
@@ -60,7 +62,27 @@ export function useDeleteCargo() {
     return useMutation({
         mutationFn: (id: number) => deleteCargo(id),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: cargoKeys.all });
+            queryClient.invalidateQueries({ queryKey: cargoKeys.all, refetchType: "all" });
         },
+    });
+}
+
+export function useImportarCargosExcel() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (archivo: File) => importarCargosExcel(archivo),
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: cargoKeys.all,
+                refetchType: "all",
+            });
+        },
+    });
+}
+
+export function useExportarCargosExcel() {
+    return useMutation({
+        mutationFn: (search?: string) => exportarCargosExcel(search),
     });
 }

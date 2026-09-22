@@ -10,7 +10,6 @@ import {
   Award,
   ShieldCheck,
   History,
-  FileText,
 } from "lucide-react";
 import type { CargoResponse } from "../types/cargo.types";
 
