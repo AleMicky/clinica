@@ -4,6 +4,7 @@ import type {
     AreaQueryParams,
     AreaResponse,
     CreateAreaRequest,
+    ExcelImportResult,
     PagedResult,
     UpdateAreaRequest,
 } from "../types/area.types";
@@ -55,4 +56,46 @@ export async function updateArea(
 
 export async function deleteArea(id: number): Promise<void> {
     await apiClient.delete(`${BASE}/${id}`);
+}
+
+// Importación masiva desde Excel
+export async function importarAreasExcel(
+    archivo: File,
+): Promise<ExcelImportResult> {
+    const formData = new FormData();
+    formData.append("archivo", archivo);
+
+    const response = await apiClient.post<ExcelImportResult>(
+        `${BASE}/importar-excel`,
+        formData,
+        {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        },
+    );
+    return response.data;
+}
+
+// Descarga de plantilla Excel oficial (.xlsx)
+export async function descargarPlantillaAreasExcel(): Promise<Blob> {
+    const response = await apiClient.get<Blob>(
+        `${BASE}/plantilla-excel`,
+        {
+            responseType: "blob",
+        },
+    );
+    return response.data;
+}
+
+// Exportación del catálogo de áreas a Excel (.xlsx)
+export async function exportarAreasExcel(search?: string): Promise<Blob> {
+    const response = await apiClient.get<Blob>(
+        `${BASE}/exportar-excel`,
+        {
+            params: search ? { search } : undefined,
+            responseType: "blob",
+        },
+    );
+    return response.data;
 }

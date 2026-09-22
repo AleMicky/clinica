@@ -1,7 +1,9 @@
 using Clinica.Api.Data;
 using Clinica.Api.Modules.RecursosHumanos.Area.Dtos;
 using Clinica.Api.Modules.RecursosHumanos.Area.Mappers;
+using Clinica.Api.Shared.Abstractions;
 using Clinica.Api.Shared.Crud;
+using Clinica.Api.Shared.Excel;
 using Clinica.Api.Shared.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using AreaEntity = Clinica.Api.Modules.RecursosHumanos.Area.Entity.Area;
@@ -9,8 +11,11 @@ using TipoAreaEntity = Clinica.Api.Modules.RecursosHumanos.TipoArea.Entity.TipoA
 
 namespace Clinica.Api.Modules.RecursosHumanos.Area.Services;
 
-public sealed class AreaService(AppDbContext dbContext)
-    : CrudService<
+public sealed class AreaService(
+    AppDbContext dbContext,
+    IExcelReportGenerator excelReportGenerator,
+    ICurrentUserService currentUserService
+) : CrudService<
         AreaEntity,
         CreateAreaRequest,
         UpdateAreaRequest,
@@ -297,6 +302,55 @@ public sealed class AreaService(AppDbContext dbContext)
                 $"Ya existe un área con el código '{codigoNorm}' " +
                 $"para el tipo de área '{tipoAreaId}'.");
         }
+    }
+
+    public async Task<byte[]> ExportarExcelAsync(
+        string? search,
+        CancellationToken cancellationToken = default)
+    {
+        var query = dbContext.Areas
+            .Include(x => x.TipoArea)
+            .Include(x => x.AreaPadre)
+            .AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            query = query.Where(x =>
+                x.Codigo.Contains(term) ||
+                x.Nombre.Contains(term) ||
+                x.TipoArea.Nombre.Contains(term) ||
+                (x.AreaPadre != null && x.AreaPadre.Nombre.Contains(term)) ||
+                (x.Descripcion != null && x.Descripcion.Contains(term)));
+        }
+
+        var areas = await query
+            .OrderBy(x => x.TipoArea.Nombre)
+            .ThenBy(x => x.Nombre)
+            .ToListAsync(cancellationToken);
+
+        var options = new ExcelReportOptions
+        {
+            Title = "Catálogo Oficial de Áreas Organizacionales",
+            Subtitle = string.IsNullOrWhiteSpace(search)
+                ? "Recursos Humanos - Estructura y Jerarquía de Áreas"
+                : $"Recursos Humanos - Filtro de búsqueda: \"{search}\"",
+            SheetName = "Áreas",
+            HeaderColor = "#2563EB",
+            GeneratedBy = currentUserService.UserId?.ToString()
+        };
+
+        return excelReportGenerator.Generate(options, areas, builder =>
+        {
+            builder.AddColumn("Código", x => x.Codigo, ExcelColumnAlignment.Center);
+            builder.AddColumn("Nombre", x => x.Nombre);
+            builder.AddColumn("Tipo de Área", x => x.TipoArea?.Nombre ?? string.Empty);
+            builder.AddColumn("Área Padre", x => x.AreaPadre != null ? $"{x.AreaPadre.Nombre} ({x.AreaPadre.Codigo})" : string.Empty);
+            builder.AddColumn("Descripción", x => x.Descripcion ?? string.Empty);
+            builder.AddColumn("Orden", x => x.Orden, ExcelColumnAlignment.Center);
+            builder.AddBooleanColumn("Estado", x => x.Activo, trueText: "Activo", falseText: "Inactivo");
+            builder.AddDateColumn("Fecha Creación", x => x.FechaCreacion);
+        });
     }
 
     private static void Normalizar(

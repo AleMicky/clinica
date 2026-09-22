@@ -11,3 +11,4 @@ export * from "./components/area-form-dialog";
 export * from "./components/area-delete-dialog";
 export * from "./components/area-module-view";
 export * from "./components/area-tree-select";
+export * from "./components/area-import-dialog";

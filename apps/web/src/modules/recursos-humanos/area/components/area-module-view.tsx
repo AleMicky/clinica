@@ -8,10 +8,12 @@ import { AreaTable, type AreaItem } from "./area-table";
 import { AreaTreeView } from "./area-tree-view";
 import { AreaFormDialog } from "./area-form-dialog";
 import { AreaDeleteDialog } from "./area-delete-dialog";
+import { AreaImportDialog } from "./area-import-dialog";
 import {
     useArbolAreas,
     useAreas,
     useDeleteArea,
+    useExportarAreasExcel,
 } from "../hooks/use-areas";
 import { useTiposArea } from "@/modules/recursos-humanos/tipo-area";
 import type { AreaArbolResponse, AreaResponse } from "../types/area.types";
@@ -39,6 +41,7 @@ export function AreaModuleView() {
     const [vista, setVista] = React.useState<"lista" | "arbol">("arbol");
 
     const [formDialogOpen, setFormDialogOpen] = React.useState(false);
+    const [importDialogOpen, setImportDialogOpen] = React.useState(false);
     const [areaToEdit, setAreaToEdit] = React.useState<AreaEditable | null>(null);
     const [defaultTipoAreaId, setDefaultTipoAreaId] = React.useState<number | null>(null);
     const [defaultAreaPadreId, setDefaultAreaPadreId] = React.useState<number | null>(null);
@@ -63,6 +66,7 @@ export function AreaModuleView() {
     const arbolQuery = useArbolAreas();
     const tiposAreaQuery = useTiposArea({ page: 1, pageSize: 100 });
     const deleteAreaMutation = useDeleteArea();
+    const exportMutation = useExportarAreasExcel();
 
     const handleSearchChange = (term: string) => {
         setSearchTerm(term);
@@ -129,10 +133,12 @@ export function AreaModuleView() {
         try {
             await deleteAreaMutation.mutateAsync(areaToDeleteId);
             toast.success(`Área eliminada correctamente.`);
-            refetch();
+            handleRefreshAll();
         } catch {
+            toast.error("Ocurrió un error al eliminar el área.");
         } finally {
             setAreaToDeleteId(null);
+            setDeleteDialogOpen(false);
         }
     };
 
@@ -141,9 +147,33 @@ export function AreaModuleView() {
         arbolQuery.refetch();
     };
 
+    const handleExportExcel = async () => {
+        try {
+            const blob = await exportMutation.mutateAsync(searchTerm.trim() || undefined);
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            const timestamp = new Date().toISOString().replace(/[-:T.]/g, "").slice(0, 14);
+            link.setAttribute("download", `reporte_areas_${timestamp}.xlsx`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+            toast.success("Catálogo de áreas exportado a Excel (.xlsx) correctamente.");
+        } catch {
+            toast.error("Ocurrió un error al exportar el catálogo de áreas a Excel.");
+        }
+    };
+
     return (
-        <div className="flex flex-col gap-6 w-full">
-            <AreaHeader onAddClick={handleOpenAdd} />
+        <div className="flex flex-col gap-4 w-full animate-in fade-in-50 duration-300">
+            <AreaHeader
+                onAddClick={handleOpenAdd}
+                onRefresh={handleRefreshAll}
+                onImportClick={() => setImportDialogOpen(true)}
+                onExportClick={handleExportExcel}
+                isExporting={exportMutation.isPending}
+            />
             <AreaMetricsCards metrics={metrics} />
 
             <Tabs
@@ -181,7 +211,7 @@ export function AreaModuleView() {
                         onPageSizeChange={handlePageSizeChange}
                         onEdit={handleOpenEdit}
                         onDelete={handleOpenDelete}
-                        onRefresh={() => refetch()}
+                        onRefresh={handleRefreshAll}
                     />
                 )}
             </Tabs>
@@ -194,6 +224,13 @@ export function AreaModuleView() {
                 defaultAreaPadreId={defaultAreaPadreId}
                 onSuccessCallback={handleRefreshAll}
             />
+
+            <AreaImportDialog
+                open={importDialogOpen}
+                onOpenChange={setImportDialogOpen}
+                onSuccess={handleRefreshAll}
+            />
+
             <AreaDeleteDialog
                 open={deleteDialogOpen}
                 onOpenChange={setDeleteDialogOpen}

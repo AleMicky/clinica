@@ -12,8 +12,6 @@ import {
   ChevronsUpDown,
   ChevronsDownUp,
   X,
-  Loader2,
-  Sparkles,
 } from "lucide-react";
 import {
   Popover,
@@ -22,7 +20,6 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useArbolAreas, useAreas } from "../hooks/use-areas";
@@ -299,12 +296,13 @@ export function AreaTreeSelect({
     return filterTreeNodes(rootNodes, searchTerm);
   }, [rootNodes, searchTerm]);
 
-  // Sync auto-expand on search changes
-  React.useEffect(() => {
+  // Merge user expanded nodes with auto-expanded matching branches
+  const effectiveExpandedNodes = React.useMemo(() => {
     if (searchTerm.trim().length > 0) {
-      setExpandedNodes((prev) => new Set([...prev, ...autoExpandSet]));
+      return new Set([...expandedNodes, ...autoExpandSet]);
     }
-  }, [searchTerm, autoExpandSet]);
+    return expandedNodes;
+  }, [expandedNodes, searchTerm, autoExpandSet]);
 
   const handleToggleExpand = (nodeId: number) => {
     setExpandedNodes((prev) => {
@@ -465,7 +463,7 @@ export function AreaTreeSelect({
                 node={node}
                 level={0}
                 selectedValue={value}
-                expandedSet={expandedNodes}
+                expandedSet={effectiveExpandedNodes}
                 onToggleExpand={handleToggleExpand}
                 onSelect={handleSelectNode}
                 searchTerm={searchTerm}
