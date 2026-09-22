@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { TipoAreaHeader } from "./tipo-area-header";
 import {
@@ -9,6 +8,7 @@ import {
   type TipoAreaMetrics,
 } from "./tipo-area-metrics";
 import { TipoAreaList } from "./tipo-area-list";
+import { TipoAreaFormDialog } from "./tipo-area-form-dialog";
 import { ConfirmDeleteDialog } from "@/components/shared";
 import {
   useDeleteTipoArea,
@@ -17,7 +17,10 @@ import {
 import type { TipoAreaResponse } from "../types/tipo-area.types";
 
 export function TipoAreaModuleView() {
-  const router = useRouter();
+  // State for Form Dialog (Crear / Editar)
+  const [formDialogOpen, setFormDialogOpen] = React.useState(false);
+  const [tipoAreaToEdit, setTipoAreaToEdit] =
+    React.useState<TipoAreaResponse | null>(null);
 
   // State for Delete AlertDialog confirmation
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
@@ -60,7 +63,10 @@ export function TipoAreaModuleView() {
     setCurrentPage(1);
   };
 
-  const allTiposArea: TipoAreaResponse[] = apiData?.items ?? [];
+  const allTiposArea = React.useMemo<TipoAreaResponse[]>(
+    () => apiData?.items ?? [],
+    [apiData?.items]
+  );
 
   // Filter by status tab
   const filteredTiposArea = React.useMemo(() => {
@@ -85,11 +91,13 @@ export function TipoAreaModuleView() {
   };
 
   const handleOpenAdd = () => {
-    router.push("/recursos-humanos/tipos-area/nuevo");
+    setTipoAreaToEdit(null);
+    setFormDialogOpen(true);
   };
 
   const handleOpenEdit = (tipoArea: TipoAreaResponse) => {
-    router.push(`/recursos-humanos/tipos-area/${tipoArea.id}/editar`);
+    setTipoAreaToEdit(tipoArea);
+    setFormDialogOpen(true);
   };
 
   const handleOpenDelete = (tipoArea: TipoAreaResponse) => {
@@ -140,12 +148,24 @@ export function TipoAreaModuleView() {
         onRefresh={() => refetch()}
       />
 
+      {/* Modal: Crear / Editar Tipo de Área */}
+      <TipoAreaFormDialog
+        open={formDialogOpen}
+        onOpenChange={setFormDialogOpen}
+        tipoAreaToEdit={tipoAreaToEdit}
+        onSuccessCallback={() => refetch()}
+      />
+
       {/* Modal: Confirmación de Eliminación */}
       <ConfirmDeleteDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         title="¿Eliminar el tipo de área seleccionado?"
-        itemName={tipoAreaToDelete ? `${tipoAreaToDelete.nombre} (${tipoAreaToDelete.codigo})` : undefined}
+        itemName={
+          tipoAreaToDelete
+            ? `${tipoAreaToDelete.nombre} (${tipoAreaToDelete.codigo})`
+            : undefined
+        }
         confirmLabel="Eliminar Tipo de Área"
         onConfirm={handleConfirmDelete}
         isLoading={deleteMutation.isPending}

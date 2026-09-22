@@ -7,4 +7,4 @@ export * from "./components/tipo-area-module-view";
 export * from "./components/tipo-area-header";
 export * from "./components/tipo-area-metrics";
 export * from "./components/tipo-area-list";
-export * from "./components/tipo-area-page-form";
+export * from "./components/tipo-area-form-dialog";
