@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SearchInput, DataTablePagination, StatusBadge } from "@/components/shared";
@@ -9,12 +8,12 @@ import {
   Edit,
   Trash2,
   Stethoscope,
-  Eye,
   FileText,
   FileBadge,
   ShieldCheck,
   History,
   Award,
+  Handshake,
 } from "lucide-react";
 import type { MedicoResponse } from "../types/medico.types";
 
@@ -32,6 +31,7 @@ interface MedicoListProps {
   onPageSizeChange: (size: number) => void;
   onEdit: (medico: MedicoResponse) => void;
   onDelete: (medico: MedicoResponse) => void;
+  onManageAcuerdos?: (medico: MedicoResponse) => void;
   onRefresh?: () => void;
 }
 
@@ -60,9 +60,8 @@ export function MedicoList({
   onPageSizeChange,
   onEdit,
   onDelete,
+  onManageAcuerdos,
 }: MedicoListProps) {
-  const router = useRouter();
-
   const tabs: Array<{
     key: "TODOS" | "ACTIVOS" | "INACTIVOS";
     label: string;
@@ -239,54 +238,30 @@ export function MedicoList({
                   <div className="flex items-center justify-between sm:justify-end gap-2.5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/30">
                     <StatusBadge active={med.activo} />
 
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      {/* Botón Ver Ficha */}
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={() => router.push(`/recursos-humanos/medicos/${med.id}`)}
-                        className="h-7 px-2.5 text-[11px] font-semibold gap-1 border-border/80 text-foreground hover:bg-accent hover:text-primary shadow-2xs cursor-pointer transition-all"
-                        title="Ver ficha completa del médico"
-                      >
-                        <Eye className="size-3 text-primary" />
-                        <span>Ficha</span>
-                      </Button>
+                    <div className="flex items-center gap-1.5">
+                      {/* Botón Acuerdos Comerciales */}
+                      {onManageAcuerdos && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => onManageAcuerdos(med)}
+                          className="h-7 px-2.5 text-[11px] font-semibold gap-1 border-border/80 text-foreground hover:bg-accent hover:text-purple-600 shadow-2xs cursor-pointer transition-all"
+                          title="Gestionar acuerdos de honorarios"
+                        >
+                          <Handshake className="size-3 text-purple-600" />
+                          <span>Acuerdos</span>
+                        </Button>
+                      )}
 
-                      {/* Botón Especialidades */}
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={() => router.push(`/recursos-humanos/medicos/${med.id}/especialidades`)}
-                        className="h-7 px-2.5 text-[11px] font-semibold gap-1 border-border/80 text-foreground hover:bg-accent hover:text-primary shadow-2xs cursor-pointer transition-all"
-                        title="Gestionar especialidades médicas"
-                      >
-                        <Stethoscope className="size-3 text-blue-600" />
-                        <span className="hidden md:inline">Especialidades</span>
-                      </Button>
-
-                      {/* Botón Acuerdos */}
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={() => router.push(`/recursos-humanos/medicos/${med.id}/acuerdos`)}
-                        className="h-7 px-2.5 text-[11px] font-semibold gap-1 border-border/80 text-foreground hover:bg-accent hover:text-primary shadow-2xs cursor-pointer transition-all"
-                        title="Gestionar acuerdos comerciales por servicio"
-                      >
-                        <FileText className="size-3 text-purple-600" />
-                        <span className="hidden md:inline">Acuerdos</span>
-                      </Button>
-
-                      {/* Botón Editar Visible */}
+                      {/* Botón Editar (Datos + Especialidades) */}
                       <Button
                         type="button"
                         size="sm"
                         variant="outline"
                         onClick={() => onEdit(med)}
                         className="h-7 px-2.5 text-[11px] font-semibold gap-1 border-border/80 text-foreground hover:bg-accent hover:text-primary shadow-2xs cursor-pointer transition-all"
-                        title="Editar médico"
+                        title="Editar expediente y especialidades"
                       >
                         <Edit className="size-3 text-primary" />
                         <span>Editar</span>

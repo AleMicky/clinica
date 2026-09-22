@@ -5,14 +5,19 @@ import { MedicoHeader } from "./medico-header";
 import { MedicoMetricsCards, type MedicoMetrics } from "./medico-metrics";
 import { MedicoList } from "./medico-list";
 import { MedicoFormDialog } from "./medico-form-dialog";
+import { MedicoAcuerdosModal } from "./medico-acuerdos-modal";
 import { MedicoDeleteDialog } from "./medico-delete-dialog";
 import { useMedicos } from "../hooks/use-medicos";
 import type { MedicoResponse } from "../types/medico.types";
 
 export function MedicoModuleView() {
-  // Form Dialog state (Crear / Editar)
+  // Form Dialog state (Crear / Editar + Especialidades)
   const [formDialogOpen, setFormDialogOpen] = React.useState(false);
   const [medicoToEdit, setMedicoToEdit] = React.useState<MedicoResponse | null>(null);
+
+  // Agreements Modal state (Gestión en Modal con Tabla de Acuerdos)
+  const [acuerdosModalMedico, setAcuerdosModalMedico] =
+    React.useState<MedicoResponse | null>(null);
 
   // Delete dialog confirmation state
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
@@ -93,6 +98,10 @@ export function MedicoModuleView() {
     setDeleteDialogOpen(true);
   };
 
+  const handleOpenAcuerdos = (medico: MedicoResponse) => {
+    setAcuerdosModalMedico(medico);
+  };
+
   return (
     <div className="flex flex-col gap-3 w-full animate-in fade-in-50 duration-300">
       {/* Cabecera del Módulo */}
@@ -116,15 +125,34 @@ export function MedicoModuleView() {
         onPageSizeChange={handlePageSizeChange}
         onEdit={handleOpenEdit}
         onDelete={handleOpenDelete}
+        onManageAcuerdos={handleOpenAcuerdos}
         onRefresh={() => refetch()}
       />
 
-      {/* Modal: Crear / Editar Médico */}
+      {/* Modal: Crear / Editar Médico con Especialidades Integradas */}
       <MedicoFormDialog
         open={formDialogOpen}
-        onOpenChange={setFormDialogOpen}
+        onOpenChange={(open) => {
+          setFormDialogOpen(open);
+          if (!open) {
+            setMedicoToEdit(null);
+            refetch();
+          }
+        }}
         medicoToEdit={medicoToEdit}
         onSuccessCallback={() => refetch()}
+      />
+
+      {/* Modal: Gestión de Acuerdos de Honorarios en Tabla */}
+      <MedicoAcuerdosModal
+        open={Boolean(acuerdosModalMedico)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setAcuerdosModalMedico(null);
+            refetch();
+          }
+        }}
+        medico={acuerdosModalMedico}
       />
 
       {/* Modal: Confirmación de Eliminación */}
