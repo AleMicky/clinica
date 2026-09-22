@@ -1,4 +1,5 @@
 using Clinica.Api.Data;
+using Clinica.Api.Modules.Parametros.Correlativo.Services;
 using Clinica.Api.Modules.RecursosHumanos.Empleado.Dtos;
 using Clinica.Api.Modules.RecursosHumanos.Empleado.Mappers;
 using Clinica.Api.Shared.Abstractions;
@@ -12,10 +13,11 @@ namespace Clinica.Api.Modules.RecursosHumanos.Empleado.Services;
 
 public sealed class EmpleadoService(
     AppDbContext dbContext,
-    ICurrentUserService currentUserService
-)
+    ICurrentUserService currentUserService)
 {
-    public async Task<PagedResult<EmpleadoResponse>> ListarAsync(PaginationRequest pagination, string? search,
+    public async Task<PagedResult<EmpleadoResponse>> ListarAsync(
+        PaginationRequest pagination,
+        string? search,
         CancellationToken cancellationToken = default)
     {
         var query = dbContext.Empleados
@@ -35,8 +37,7 @@ public sealed class EmpleadoService(
                 x.Persona.NumeroDocumento.Contains(term));
         }
 
-        var totalItems =
-            await query.CountAsync(cancellationToken);
+        var totalItems = await query.CountAsync(cancellationToken);
 
         var empleados = await query
             .OrderBy(x => x.Persona.ApellidoPaterno)
@@ -50,14 +51,14 @@ public sealed class EmpleadoService(
 
         return new PagedResult<EmpleadoResponse>(
             empleados
-                .Select(MapToResponse)
+                .Select(EmpleadoMapper.ToResponse)
                 .ToList(),
             pagination.ValidPage,
             pagination.ValidPageSize,
             totalItems);
     }
 
-    public async Task<EmpleadoResponse> ObtenerAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<EmpleadoResponse> ObtenerAsync(int id,CancellationToken cancellationToken = default)
     {
         var empleado = await dbContext.Empleados
                            .Include(x => x.Persona)
@@ -65,17 +66,19 @@ public sealed class EmpleadoService(
                            .FirstOrDefaultAsync(
                                x => x.Id == id && x.Activo,
                                cancellationToken)
-                       ?? throw new NotFoundException(
-                           "Empleado",
-                           id);
+                       ?? throw new NotFoundException("Empleado", id);
 
-        return MapToResponse(empleado);
+        return EmpleadoMapper.ToResponse(empleado);
     }
 
     public async Task<List<EmpleadoBaseInfo>> EmpleadoBase(CancellationToken cancellationToken = default)
     {
         return await dbContext.Empleados
             .AsNoTracking()
+            .Where(x => x.Activo)
+            .OrderBy(x => x.Persona.ApellidoPaterno)
+            .ThenBy(x => x.Persona.ApellidoMaterno)
+            .ThenBy(x => x.Persona.Nombres)
             .Select(x => new EmpleadoBaseInfo
             {
                 Id = x.Id,
@@ -83,98 +86,161 @@ public sealed class EmpleadoService(
                 NombreCompleto =
                     x.Persona.Nombres + " " +
                     x.Persona.ApellidoPaterno + " " +
-                    x.Persona.ApellidoMaterno
+                    (x.Persona.ApellidoMaterno ?? "")
             })
             .ToListAsync(cancellationToken);
     }
 
     public async Task<List<EmpleadoBaseInfo>> EmpleadosPermitidos(CancellationToken cancellationToken = default)
     {
-        var usuarioId = currentUserService.UserId;
-
-        if (usuarioId is null)
-            throw new UnauthorizedAccessException();
+        var usuarioId = currentUserService.UserId
+                        ?? throw new UnauthorizedAccessException();
 
         var query = dbContext.Empleados
             .AsNoTracking()
-            .AsQueryable();
+            .Where(x => x.Activo);
 
         if (!currentUserService.IsInRole("ADMINISTRADOR"))
         {
             var personaId = await dbContext.Users
-                .Where(u => u.Id == usuarioId.Value)
-                .Select(u => u.PersonaId)
+                .Where(x => x.Id == usuarioId)
+                .Select(x => x.PersonaId)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            query = query.Where(e =>
-                e.PersonaId == personaId);
+            query = query.Where(x => x.PersonaId == personaId);
         }
 
         return await query
-            .Select(e => new EmpleadoBaseInfo
+            .OrderBy(x => x.Persona.ApellidoPaterno)
+            .ThenBy(x => x.Persona.ApellidoMaterno)
+            .ThenBy(x => x.Persona.Nombres)
+            .Select(x => new EmpleadoBaseInfo
             {
-                Id = e.Id,
-                CodigoEmpleado = e.CodigoEmpleado,
+                Id = x.Id,
+                CodigoEmpleado = x.CodigoEmpleado,
                 NombreCompleto =
-                    e.Persona.Nombres + " " +
-                    e.Persona.ApellidoPaterno + " " +
-                    (e.Persona.ApellidoMaterno ?? "")
+                    x.Persona.Nombres + " " +
+                    x.Persona.ApellidoPaterno + " " +
+                    (x.Persona.ApellidoMaterno ?? "")
             })
             .ToListAsync(cancellationToken);
     }
 
+    // ---------------------------------------------------------
+    // CREAR CON PERSONA EXISTENTE
+    // ---------------------------------------------------------
 
-    public async Task<EmpleadoResponse> CrearAsync(CreateEmpleadoRequest request,
+    public async Task<EmpleadoResponse> CrearAsync(
+        CreateEmpleadoRequest request,
         CancellationToken cancellationToken = default)
     {
-        await ValidarPersonaAsync(request.PersonaId, excludeId: null, cancellationToken);
+        await ValidarPersonaAsync(
+            request.PersonaId,
+            excludeEmpleadoId: null,
+            cancellationToken);
+
         var empleado = EmpleadoMapper.ToEntity(request);
+
         empleado.Activo = true;
         await dbContext.Empleados.AddAsync(empleado, cancellationToken);
-        // Primer guardado para obtener el Id
         await dbContext.SaveChangesAsync(cancellationToken);
-        // Generar código definitivo
         empleado.CodigoEmpleado = GenerarCodigoEmpleado(empleado.Id);
-        // Guardar el código generado
         await dbContext.SaveChangesAsync(cancellationToken);
         await dbContext.Entry(empleado)
             .Reference(x => x.Persona)
             .LoadAsync(cancellationToken);
-
-        return MapToResponse(empleado);
+        return EmpleadoMapper.ToResponse(empleado);
     }
+
+    // ---------------------------------------------------------
+    // ACTUALIZAR CON PERSONA EXISTENTE
+    // ---------------------------------------------------------
 
     public async Task<EmpleadoResponse> ActualizarAsync(
         int id,
         UpdateEmpleadoRequest request,
         CancellationToken cancellationToken = default)
     {
-        var empleado = await dbContext.Empleados
-                           .Include(x => x.Persona)
-                           .FirstOrDefaultAsync(x => x.Id == id && x.Activo, cancellationToken)
-                       ?? throw new NotFoundException("Empleado", id);
+        var empleado = await ObtenerEntityAsync(id, cancellationToken);
 
         await ValidarPersonaAsync(request.PersonaId, id, cancellationToken);
         EmpleadoMapper.UpdateEntity(request, empleado);
         await dbContext.SaveChangesAsync(cancellationToken);
-        return MapToResponse(empleado);
+        return EmpleadoMapper.ToResponse(empleado);
     }
 
-    public async Task EliminarAsync(int id, CancellationToken cancellationToken = default)
+    // ---------------------------------------------------------
+    // CREAR EMPLEADO + PERSONA
+    // ---------------------------------------------------------
+
+    public async Task<EmpleadoResponse> CrearConPersonaAsync(EmpleadoPersonaRequest request, CancellationToken cancellationToken = default)
+    {
+        await ValidarDocumentoPersonaAsync(
+            request.Persona.TipoDocumento,
+            request.Persona.NumeroDocumento,
+            request.Persona.ExtensionDocumento,
+            request.Persona.ComplementoDocumento,
+            excludePersonaId: null,
+            cancellationToken);
+
+        var empleado = EmpleadoPersonaMapper.ToEntity(request);
+
+        empleado.Activo = true;
+        empleado.Persona.Activo = true;
+        await dbContext.Empleados.AddAsync(empleado, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        empleado.CodigoEmpleado = GenerarCodigoEmpleado(empleado.Id);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return EmpleadoMapper.ToResponse(empleado);
+    }
+
+    // ---------------------------------------------------------
+    // ACTUALIZAR EMPLEADO + PERSONA
+    // ---------------------------------------------------------
+
+    public async Task<EmpleadoResponse> ActualizarConPersonaAsync(
+        int id,
+        EmpleadoPersonaRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var empleado = await ObtenerEntityAsync(id, cancellationToken);
+
+        await ValidarDocumentoPersonaAsync(
+            request.Persona.TipoDocumento,
+            request.Persona.NumeroDocumento,
+            request.Persona.ExtensionDocumento,
+            request.Persona.ComplementoDocumento,
+            empleado.PersonaId,
+            cancellationToken);
+
+        EmpleadoPersonaMapper.UpdateEntity(request, empleado);
+        EmpleadoPersonaMapper.UpdatePersona(request.Persona, empleado.Persona);
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return EmpleadoMapper.ToResponse(empleado);
+    }
+
+    // ---------------------------------------------------------
+    // ELIMINAR
+    // ---------------------------------------------------------
+
+    public async Task EliminarAsync(
+        int id,
+        CancellationToken cancellationToken = default)
     {
         var empleado = await dbContext.Empleados
                            .FirstOrDefaultAsync(
                                x => x.Id == id,
                                cancellationToken)
-                       ?? throw new NotFoundException(
-                           "Empleado",
-                           id);
+                       ?? throw new NotFoundException("Empleado", id);
 
         dbContext.Empleados.Remove(empleado);
-
-        await dbContext.SaveChangesAsync(
-            cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
+
+    // ---------------------------------------------------------
+    // INACTIVAR
+    // ---------------------------------------------------------
 
     public async Task InactivarAsync(
         int id,
@@ -184,20 +250,18 @@ public sealed class EmpleadoService(
                            .FirstOrDefaultAsync(
                                x => x.Id == id,
                                cancellationToken)
-                       ?? throw new NotFoundException(
-                           "Empleado",
-                           id);
+                       ?? throw new NotFoundException("Empleado", id);
 
         if (!empleado.Activo)
-        {
             return;
-        }
 
         empleado.Activo = false;
-
-        await dbContext.SaveChangesAsync(
-            cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
+
+    // ---------------------------------------------------------
+    // ACTIVAR
+    // ---------------------------------------------------------
 
     public async Task ActivarAsync(
         int id,
@@ -207,22 +271,35 @@ public sealed class EmpleadoService(
                            .FirstOrDefaultAsync(
                                x => x.Id == id,
                                cancellationToken)
-                       ?? throw new NotFoundException(
-                           "Empleado",
-                           id);
+                       ?? throw new NotFoundException("Empleado", id);
 
         if (empleado.Activo)
-        {
             return;
-        }
 
         empleado.Activo = true;
+
         await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    // ---------------------------------------------------------
+    // PRIVATE
+    // ---------------------------------------------------------
+
+    private async Task<EmpleadoEntity> ObtenerEntityAsync(
+        int id,
+        CancellationToken cancellationToken)
+    {
+        return await dbContext.Empleados
+                   .Include(x => x.Persona)
+                   .FirstOrDefaultAsync(
+                       x => x.Id == id && x.Activo,
+                       cancellationToken)
+               ?? throw new NotFoundException("Empleado", id);
     }
 
     private async Task ValidarPersonaAsync(
         int personaId,
-        int? excludeId,
+        int? excludeEmpleadoId,
         CancellationToken cancellationToken)
     {
         var existePersona = await dbContext
@@ -245,50 +322,50 @@ public sealed class EmpleadoService(
             .AsNoTracking()
             .Where(x => x.PersonaId == personaId);
 
-        if (excludeId.HasValue)
+        if (excludeEmpleadoId.HasValue)
         {
-            query = query.Where(x => x.Id != excludeId.Value);
+            query = query.Where(x => x.Id != excludeEmpleadoId.Value);
         }
 
-        var yaEsEmpleado =
-            await query.AnyAsync(cancellationToken);
-
-        if (yaEsEmpleado)
+        if (await query.AnyAsync(cancellationToken))
         {
             throw new ConflictException(
                 $"La persona '{personaId}' ya está registrada como empleado.");
         }
     }
 
-    private static string GenerarCodigoEmpleado(int empleadoId)
+    private async Task ValidarDocumentoPersonaAsync(
+        string tipoDocumento,
+        string numeroDocumento,
+        string? extensionDocumento,
+        string? complementoDocumento,
+        int? excludePersonaId,
+        CancellationToken cancellationToken)
     {
-        return $"CQ-{empleadoId:D5}";
+        var query = dbContext
+            .Set<PersonaEntity>()
+            .AsNoTracking()
+            .Where(x =>
+                x.TipoDocumento == tipoDocumento &&
+                x.NumeroDocumento == numeroDocumento &&
+                x.ExtensionDocumento == extensionDocumento &&
+                x.ComplementoDocumento == complementoDocumento);
+
+        if (excludePersonaId.HasValue)
+        {
+            query = query.Where(x => x.Id != excludePersonaId.Value);
+        }
+
+        if (await query.AnyAsync(cancellationToken))
+        {
+            throw new ConflictException(
+                $"Ya existe una persona con el documento '{numeroDocumento}'.");
+        }
     }
 
-    private static EmpleadoResponse MapToResponse(
-        EmpleadoEntity entity)
+    private static string GenerarCodigoEmpleado(
+        int empleadoId)
     {
-        var response =
-            EmpleadoMapper.ToResponse(entity);
-
-        return response with
-        {
-            Persona = new PersonaInfoResponse
-            {
-                Id = entity.Persona.Id,
-                Nombres = entity.Persona.Nombres,
-                ApellidoPaterno = entity.Persona.ApellidoPaterno,
-                ApellidoMaterno = entity.Persona.ApellidoMaterno,
-                FechaNacimiento = entity.Persona.FechaNacimiento,
-                Telefono = entity.Persona.Telefono,
-                Direccion = entity.Persona.Direccion,
-                TipoDocumento = entity.Persona.TipoDocumento,
-                NumeroDocumento = entity.Persona.NumeroDocumento,
-                ExtensionDocumento = entity.Persona.ExtensionDocumento,
-                ComplementoDocumento = entity.Persona.ComplementoDocumento,
-                Genero = entity.Persona.Genero,
-                EstadoCivil = entity.Persona.EstadoCivil
-            }
-        };
+        return $"CQ-{empleadoId:D5}";
     }
 }

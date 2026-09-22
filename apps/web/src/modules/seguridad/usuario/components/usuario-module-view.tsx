@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useDebounce } from "@/hooks/use-debounce";
 import { UsuarioHeader } from "./usuario-header";
 import { UsuarioMetricsCards } from "./usuario-metrics";
 import { UsuarioList } from "./usuario-list";
@@ -15,7 +16,8 @@ export function UsuarioModuleView() {
 
   // Delete AlertDialog confirmation state
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
-  const [usuarioToDelete, setUsuarioToDelete] = React.useState<UsuarioResponse | null>(null);
+  const [usuarioToDelete, setUsuarioToDelete] =
+    React.useState<UsuarioResponse | null>(null);
 
   // Filtros & Paginación
   const [currentPage, setCurrentPage] = React.useState(1);
@@ -25,6 +27,9 @@ export function UsuarioModuleView() {
     "TODOS" | "ACTIVOS" | "INACTIVOS"
   >("TODOS");
 
+  // Debounce para optimizar llamadas a la API
+  const debouncedSearch = useDebounce(searchTerm, 300);
+
   // React Query Hook: Requests real API endpoint `/usuarios`
   const {
     data: apiData,
@@ -33,26 +38,29 @@ export function UsuarioModuleView() {
   } = useUsuarios({
     page: currentPage,
     pageSize: pageSize,
-    search: searchTerm.trim() || undefined,
+    search: debouncedSearch.trim() || undefined,
   });
 
   const deleteMutation = useDeleteUsuario();
 
-  // Reset pagination when search or page size changes
-  const handleSearchChange = (term: string) => {
+  // Handlers con useCallback
+  const handleSearchChange = React.useCallback((term: string) => {
     setSearchTerm(term);
     setCurrentPage(1);
-  };
+  }, []);
 
-  const handleStatusTabChange = (tab: "TODOS" | "ACTIVOS" | "INACTIVOS") => {
-    setSelectedStatusTab(tab);
-    setCurrentPage(1);
-  };
+  const handleStatusTabChange = React.useCallback(
+    (tab: "TODOS" | "ACTIVOS" | "INACTIVOS") => {
+      setSelectedStatusTab(tab);
+      setCurrentPage(1);
+    },
+    []
+  );
 
-  const handlePageSizeChange = (size: number) => {
+  const handlePageSizeChange = React.useCallback((size: number) => {
     setPageSize(size);
     setCurrentPage(1);
-  };
+  }, []);
 
   const allUsuarios = React.useMemo(
     () => apiData?.items ?? [],
@@ -71,33 +79,43 @@ export function UsuarioModuleView() {
   }, [allUsuarios, selectedStatusTab]);
 
   // Compute Metrics from API data
-  const total = apiData?.totalItems ?? allUsuarios.length;
-  const activas = allUsuarios.filter((u) => u.activo).length;
-  const bloqueadas = allUsuarios.filter((u) => !u.activo).length;
-  const cobertura = total > 0 ? Math.round((activas / total) * 100) : 100;
+  const metrics: UsuarioMetrics = React.useMemo(() => {
+    const total = apiData?.totalItems ?? allUsuarios.length;
+    const activas = allUsuarios.filter((u) => u.activo).length;
+    const bloqueadas = allUsuarios.filter((u) => !u.activo).length;
+    const totalPagina = allUsuarios.length;
+    const cobertura =
+      totalPagina > 0 ? Math.round((activas / totalPagina) * 100) : 100;
 
-  const metrics: UsuarioMetrics = {
-    totalUsuarios: total,
-    cuentasActivas: activas,
-    cuentasBloqueadas: bloqueadas,
-    coberturaSeguridad: cobertura,
-  };
+    return {
+      totalUsuarios: total,
+      cuentasActivas: activas,
+      cuentasBloqueadas: bloqueadas,
+      coberturaSeguridad: cobertura,
+    };
+  }, [apiData?.totalItems, allUsuarios]);
 
-  const handleOpenAdd = () => {
+  const handleOpenAdd = React.useCallback(() => {
     router.push("/seguridad/usuarios/nuevo");
-  };
+  }, [router]);
 
-  const handleOpenEdit = (usuario: UsuarioResponse) => {
-    router.push(`/seguridad/usuarios/${usuario.id}/editar`);
-  };
+  const handleOpenEdit = React.useCallback(
+    (usuario: UsuarioResponse) => {
+      router.push(`/seguridad/usuarios/${usuario.id}/editar`);
+    },
+    [router]
+  );
 
-  const handleOpenDelete = (id: number) => {
-    const target = allUsuarios.find((u) => u.id === id);
-    if (target) {
-      setUsuarioToDelete(target);
-      setDeleteDialogOpen(true);
-    }
-  };
+  const handleOpenDelete = React.useCallback(
+    (id: number) => {
+      const target = allUsuarios.find((u) => u.id === id);
+      if (target) {
+        setUsuarioToDelete(target);
+        setDeleteDialogOpen(true);
+      }
+    },
+    [allUsuarios]
+  );
 
   const handleConfirmDelete = async () => {
     if (!usuarioToDelete) return;
@@ -107,28 +125,37 @@ export function UsuarioModuleView() {
       toast.success(
         `Usuario @${usuarioToDelete.userName} eliminado correctamente.`
       );
-      refetch();
-    } catch {
-      toast.error("Ocurrió un error al eliminar el usuario.");
+    } catch (error: unknown) {
+      const err = error as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
+      const serverMsg = err?.response?.data?.message || err?.message;
+      toast.error(serverMsg || "Ocurrió un error al eliminar el usuario.");
     } finally {
       setUsuarioToDelete(null);
       setDeleteDialogOpen(false);
     }
   };
 
+  const totalItemsCount =
+    selectedStatusTab !== "TODOS"
+      ? filteredUsuarios.length
+      : apiData?.totalItems ?? allUsuarios.length;
+
   return (
     <div className="flex flex-col gap-3 w-full animate-in fade-in-50 duration-300">
       {/* Cabecera del Módulo */}
-      <UsuarioHeader onAddClick={handleOpenAdd} onRefresh={() => refetch()} />
+      <UsuarioHeader onAddClick={handleOpenAdd} onRefresh={refetch} />
 
       {/* Tarjetas de Métricas en Vivo */}
       <UsuarioMetricsCards metrics={metrics} />
 
-      {/* Listado Principal de Usuarios (Formato Lista igual a Admisiones) */}
+      {/* Listado Principal de Usuarios */}
       <UsuarioList
         usuarios={filteredUsuarios}
         isLoading={isLoading}
-        totalItems={apiData?.totalItems ?? allUsuarios.length}
+        totalItems={totalItemsCount}
         currentPage={currentPage}
         pageSize={pageSize}
         searchTerm={searchTerm}
@@ -139,7 +166,7 @@ export function UsuarioModuleView() {
         onPageSizeChange={handlePageSizeChange}
         onEdit={handleOpenEdit}
         onDelete={handleOpenDelete}
-        onRefresh={() => refetch()}
+        onRefresh={refetch}
       />
 
       {/* Modal: Confirmación de Eliminación */}

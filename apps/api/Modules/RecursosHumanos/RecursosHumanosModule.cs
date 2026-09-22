@@ -25,8 +25,7 @@ namespace Clinica.Api.Modules.RecursosHumanos;
 
 public static class RecursosHumanosModule
 {
-    public static IServiceCollection AddRecursosHumanosModule(
-        this IServiceCollection services)
+    public static IServiceCollection AddRecursosHumanosModule(this IServiceCollection services)
     {
         services.AddScoped<TipoAreaService>();
         services.AddScoped<AreaService>();
@@ -41,8 +40,7 @@ public static class RecursosHumanosModule
         return services;
     }
 
-    public static IEndpointRouteBuilder MapRecursosHumanosModule(
-        this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapRecursosHumanosModule(this IEndpointRouteBuilder app)
     {
         app.MapTipoAreaEndpoints();
         app.MapAreaEndpoints();

@@ -11,8 +11,7 @@ public static partial class EmpleadoMapper
     [MapperIgnoreSource(nameof(EmpleadoEntity.Persona))]
     [MapperIgnoreSource(nameof(EmpleadoEntity.Asignaciones))]
     [MapperIgnoreTarget(nameof(EmpleadoResponse.Persona))]
-    public static partial EmpleadoResponse ToResponse(
-        EmpleadoEntity entity);
+    public static partial EmpleadoResponse ToResponse(EmpleadoEntity entity);
 
     [MapperIgnoreTarget(nameof(EmpleadoEntity.Id))]
     [MapperIgnoreTarget(nameof(EmpleadoEntity.CodigoEmpleado))]
@@ -23,8 +22,7 @@ public static partial class EmpleadoMapper
     [MapperIgnoreTarget(nameof(EmpleadoEntity.ModificadoPor))]
     [MapperIgnoreTarget(nameof(EmpleadoEntity.Persona))]
     [MapperIgnoreTarget(nameof(EmpleadoEntity.Asignaciones))]
-    public static partial EmpleadoEntity ToEntity(
-        CreateEmpleadoRequest request);
+    public static partial EmpleadoEntity ToEntity(CreateEmpleadoRequest request);
 
     [MapperIgnoreTarget(nameof(EmpleadoEntity.Id))]
     [MapperIgnoreTarget(nameof(EmpleadoEntity.CodigoEmpleado))]
@@ -35,7 +33,5 @@ public static partial class EmpleadoMapper
     [MapperIgnoreTarget(nameof(EmpleadoEntity.ModificadoPor))]
     [MapperIgnoreTarget(nameof(EmpleadoEntity.Persona))]
     [MapperIgnoreTarget(nameof(EmpleadoEntity.Asignaciones))]
-    public static partial void UpdateEntity(
-        UpdateEmpleadoRequest request,
-        EmpleadoEntity entity);
+    public static partial void UpdateEntity(UpdateEmpleadoRequest request, EmpleadoEntity entity);
 }
