@@ -1,16 +1,22 @@
-"use client";
-
 import * as React from "react";
 import { Button } from "@/components/ui/button";
-import { Briefcase, FileSpreadsheet, Plus, RefreshCw } from "lucide-react";
+import { Briefcase, Download, FileSpreadsheet, Loader2, Plus, RefreshCw } from "lucide-react";
 
 interface EmpleadoHeaderProps {
   onAddClick?: () => void;
   onRefresh?: () => void;
   onImportClick?: () => void;
+  onExportClick?: () => void;
+  isExporting?: boolean;
 }
 
-export function EmpleadoHeader({ onAddClick, onRefresh, onImportClick }: EmpleadoHeaderProps) {
+export function EmpleadoHeader({
+  onAddClick,
+  onRefresh,
+  onImportClick,
+  onExportClick,
+  isExporting = false,
+}: EmpleadoHeaderProps) {
   const handleAddClick = () => {
     onAddClick?.();
   };
@@ -36,7 +42,7 @@ export function EmpleadoHeader({ onAddClick, onRefresh, onImportClick }: Emplead
         </div>
       </div>
 
-      <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+      <div className="flex items-center gap-2 self-end sm:self-auto shrink-0 flex-wrap">
         {onRefresh && (
           <Button
             variant="outline"
@@ -47,6 +53,24 @@ export function EmpleadoHeader({ onAddClick, onRefresh, onImportClick }: Emplead
           >
             <RefreshCw className="size-3.5" />
             <span className="hidden md:inline">Actualizar</span>
+          </Button>
+        )}
+
+        {onExportClick && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onExportClick}
+            disabled={isExporting}
+            className="h-8 px-2.5 text-xs font-medium gap-1.5 border-border/80 hover:bg-emerald-500/10 hover:text-emerald-600 hover:border-emerald-500/30 dark:hover:text-emerald-400 transition-all cursor-pointer disabled:opacity-50"
+            title="Exportar empleados a Excel"
+          >
+            {isExporting ? (
+              <Loader2 className="size-3.5 animate-spin text-emerald-600 dark:text-emerald-400" />
+            ) : (
+              <Download className="size-3.5 text-emerald-600 dark:text-emerald-400" />
+            )}
+            <span className="hidden sm:inline">{isExporting ? "Exportando..." : "Exportar Excel"}</span>
           </Button>
         )}
 

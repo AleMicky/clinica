@@ -5,6 +5,7 @@ import {
     createEmpleado,
     createEmpleadoConPersona,
     deleteEmpleado,
+    exportarEmpleadosExcel,
     getEmpleadoById,
     getEmpleados,
     getEmpleadosPermitidos,
@@ -158,5 +159,11 @@ export function useImportarEmpleadosExcel() {
             queryClient.invalidateQueries({ queryKey: ["personas"], refetchType: "all" });
             queryClient.invalidateQueries({ queryKey: ["asignaciones-empleado"], refetchType: "all" });
         },
+    });
+}
+
+export function useExportarEmpleadosExcel() {
+    return useMutation({
+        mutationFn: (search?: string) => exportarEmpleadosExcel(search),
     });
 }

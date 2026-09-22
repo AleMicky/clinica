@@ -31,6 +31,7 @@ public static class SharedExtensions
         services.AddSingleton<ICurrentUserService, CurrentUserService>();
         services.AddSingleton<AuditSaveChangesInterceptor>();
         services.AddScoped<IExcelReader, ExcelReader>();
+        services.AddScoped<IExcelReportGenerator, ExcelReportGenerator>();
         services.AddValidatorsFromAssembly(
             typeof(SharedExtensions).Assembly,
             includeInternalTypes: true);

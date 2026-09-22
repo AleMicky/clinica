@@ -70,6 +70,11 @@ public static class EmpleadoEndpoints
                 DescargarPlantillaExcelAsync)
             .WithName("DescargarPlantillaEmpleadosExcel");
 
+        group.MapGet(
+                "/exportar-excel",
+                ExportarExcelAsync)
+            .WithName("ExportarEmpleadosExcel");
+
         return app;
     }
 
@@ -283,5 +288,19 @@ public static class EmpleadoEndpoints
             content,
             contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             fileDownloadName: "plantilla_importacion_empleados.xlsx");
+    }
+
+    private static async Task<IResult> ExportarExcelAsync(
+        string? search,
+        EmpleadoService service,
+        CancellationToken cancellationToken)
+    {
+        var bytes = await service.ExportarExcelAsync(search, cancellationToken);
+        var filename = $"reporte_empleados_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+
+        return Results.File(
+            bytes,
+            contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            fileDownloadName: filename);
     }
 }

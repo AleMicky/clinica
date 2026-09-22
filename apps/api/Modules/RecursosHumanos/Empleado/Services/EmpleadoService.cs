@@ -3,6 +3,7 @@ using Clinica.Api.Modules.Parametros.Correlativo.Services;
 using Clinica.Api.Modules.RecursosHumanos.Empleado.Dtos;
 using Clinica.Api.Modules.RecursosHumanos.Empleado.Mappers;
 using Clinica.Api.Shared.Abstractions;
+using Clinica.Api.Shared.Excel;
 using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
@@ -13,7 +14,8 @@ namespace Clinica.Api.Modules.RecursosHumanos.Empleado.Services;
 
 public sealed class EmpleadoService(
     AppDbContext dbContext,
-    ICurrentUserService currentUserService)
+    ICurrentUserService currentUserService,
+    IExcelReportGenerator excelReportGenerator)
 {
     public async Task<PagedResult<EmpleadoResponse>> ListarAsync(
         PaginationRequest pagination,
@@ -365,5 +367,64 @@ public sealed class EmpleadoService(
         int empleadoId)
     {
         return $"CQ-{empleadoId:D5}";
+    }
+
+    public async Task<byte[]> ExportarExcelAsync(
+        string? search,
+        CancellationToken cancellationToken = default)
+    {
+        var query = dbContext.Empleados
+            .Include(x => x.Persona)
+            .AsNoTracking()
+            .Where(x => x.Activo);
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+
+            query = query.Where(x =>
+                (x.CodigoEmpleado != null &&
+                 x.CodigoEmpleado.Contains(term)) ||
+                x.Persona.Nombres.Contains(term) ||
+                x.Persona.ApellidoPaterno.Contains(term) ||
+                x.Persona.NumeroDocumento.Contains(term));
+        }
+
+        var empleados = await query
+            .OrderBy(x => x.Persona.ApellidoPaterno)
+            .ThenBy(x => x.Persona.ApellidoMaterno)
+            .ThenBy(x => x.Persona.Nombres)
+            .ToListAsync(cancellationToken);
+
+        var options = new ExcelReportOptions
+        {
+            Title = "Directorio General de Empleados",
+            Subtitle = string.IsNullOrWhiteSpace(search)
+                ? "Recursos Humanos - Personal Activo"
+                : $"Recursos Humanos - Filtro de búsqueda: \"{search}\"",
+            SheetName = "Empleados",
+            HeaderColor = "#1E40AF",
+            GeneratedBy = currentUserService.UserId?.ToString()
+        };
+
+        return excelReportGenerator.Generate(options, empleados, builder =>
+        {
+            builder.AddColumn("Código", x => x.CodigoEmpleado ?? $"EMP-{x.Id:D5}", ExcelColumnAlignment.Center);
+            builder.AddColumn("Tipo Doc.", x => x.Persona.TipoDocumento, ExcelColumnAlignment.Center);
+            builder.AddColumn("Nro. Documento", x => string.IsNullOrWhiteSpace(x.Persona.ExtensionDocumento)
+                ? x.Persona.NumeroDocumento
+                : $"{x.Persona.NumeroDocumento} {x.Persona.ExtensionDocumento}", ExcelColumnAlignment.Center);
+            builder.AddColumn("Nombres", x => x.Persona.Nombres);
+            builder.AddColumn("Apellido Paterno", x => x.Persona.ApellidoPaterno);
+            builder.AddColumn("Apellido Materno", x => x.Persona.ApellidoMaterno ?? string.Empty);
+            builder.AddDateColumn("Fecha Nacimiento", x => x.Persona.FechaNacimiento);
+            builder.AddColumn("Género", x => x.Persona.Genero ?? string.Empty, ExcelColumnAlignment.Center);
+            builder.AddColumn("Estado Civil", x => x.Persona.EstadoCivil ?? string.Empty, ExcelColumnAlignment.Center);
+            builder.AddColumn("Teléfono", x => x.Persona.Telefono ?? string.Empty, ExcelColumnAlignment.Center);
+            builder.AddColumn("Dirección", x => x.Persona.Direccion ?? string.Empty);
+            builder.AddDateColumn("Fecha Ingreso", x => x.FechaIngreso);
+            builder.AddDateColumn("Fecha Retiro", x => x.FechaRetiro);
+            builder.AddBooleanColumn("Estado", x => x.Activo, trueText: "Activo", falseText: "Inactivo");
+        });
     }
 }

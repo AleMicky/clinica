@@ -113,3 +113,15 @@ export async function descargarPlantillaEmpleadosExcel(): Promise<Blob> {
     );
     return response.data;
 }
+
+// Exportación del listado general de empleados a Excel (.xlsx)
+export async function exportarEmpleadosExcel(search?: string): Promise<Blob> {
+    const response = await apiClient.get<Blob>(
+        `${BASE}/exportar-excel`,
+        {
+            params: search ? { search } : undefined,
+            responseType: "blob",
+        },
+    );
+    return response.data;
+}

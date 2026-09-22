@@ -10,7 +10,7 @@ import { EmpleadoList } from "./empleado-list";
 import { EmpleadoDeleteDialog } from "./empleado-delete-dialog";
 import { EmpleadoAsignacionesDrawer } from "./empleado-asignaciones-drawer";
 import { EmpleadoImportDialog } from "./empleado-import-dialog";
-import { useDeleteEmpleado, useEmpleados } from "../hooks/use-empleados";
+import { useDeleteEmpleado, useEmpleados, useExportarEmpleadosExcel } from "../hooks/use-empleados";
 import {
   nombreCompleto,
   documentoCompleto,
@@ -78,6 +78,24 @@ export function EmpleadoModuleView() {
   });
 
   const deleteMutation = useDeleteEmpleado();
+  const exportMutation = useExportarEmpleadosExcel();
+
+  const handleExportExcel = React.useCallback(async () => {
+    try {
+      const blob = await exportMutation.mutateAsync(debouncedSearch.trim() || undefined);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `reporte_empleados_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("Reporte de empleados generado exitosamente");
+    } catch {
+      toast.error("Ocurrió un error al generar el reporte de empleados");
+    }
+  }, [debouncedSearch, exportMutation]);
 
   // Handlers con useCallback
   const handleSearchChange = React.useCallback((term: string) => {
@@ -189,6 +207,8 @@ export function EmpleadoModuleView() {
         onAddClick={handleOpenAdd}
         onRefresh={refetch}
         onImportClick={() => setImportDialogOpen(true)}
+        onExportClick={handleExportExcel}
+        isExporting={exportMutation.isPending}
       />
 
       {/* Tarjetas de Métricas en Vivo */}
