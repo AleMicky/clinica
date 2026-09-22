@@ -40,9 +40,7 @@ public sealed class EmpleadoService(
         var totalItems = await query.CountAsync(cancellationToken);
 
         var empleados = await query
-            .OrderBy(x => x.Persona.ApellidoPaterno)
-            .ThenBy(x => x.Persona.ApellidoMaterno)
-            .ThenBy(x => x.Persona.Nombres)
+            .OrderByDescending(x => x.Id)
             .Skip(
                 (pagination.ValidPage - 1) *
                 pagination.ValidPageSize)

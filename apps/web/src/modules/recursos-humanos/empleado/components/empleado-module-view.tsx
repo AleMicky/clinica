@@ -59,6 +59,7 @@ export function EmpleadoModuleView() {
   const [selectedStatusTab, setSelectedStatusTab] = React.useState<
     "TODOS" | "ACTIVOS" | "INACTIVOS"
   >("TODOS");
+  const [sortOrder, setSortOrder] = React.useState<"DESC" | "ASC">("DESC");
 
   // Debounce para optimizar llamadas a la API
   const debouncedSearch = useDebounce(searchTerm, 300);
@@ -89,12 +90,20 @@ export function EmpleadoModuleView() {
     []
   );
 
+  const handleToggleSortOrder = React.useCallback(() => {
+    setSortOrder((prev) => (prev === "DESC" ? "ASC" : "DESC"));
+  }, []);
+
   const handlePageSizeChange = React.useCallback((size: number) => {
     setPageSize(size);
     setCurrentPage(1);
   }, []);
 
-  const allEmpleados: EmpleadoResponse[] = apiData?.items ?? [];
+  const allEmpleados: EmpleadoResponse[] = React.useMemo(() => {
+    return (apiData?.items ?? []).slice().sort((a, b) => {
+      return sortOrder === "DESC" ? b.id - a.id : a.id - b.id;
+    });
+  }, [apiData?.items, sortOrder]);
 
   // Filtrado por tab
   const filteredEmpleados = React.useMemo(() => {
@@ -187,7 +196,9 @@ export function EmpleadoModuleView() {
         pageSize={pageSize}
         searchTerm={searchTerm}
         selectedStatusTab={selectedStatusTab}
+        sortOrder={sortOrder}
         onStatusTabChange={handleStatusTabChange}
+        onToggleSortOrder={handleToggleSortOrder}
         onSearchChange={handleSearchChange}
         onPageChange={setCurrentPage}
         onPageSizeChange={handlePageSizeChange}

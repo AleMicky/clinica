@@ -8,12 +8,14 @@ import {
   Edit,
   Trash2,
   Users,
+  Layers,
   Phone,
   ShieldCheck,
   History,
-  Layers,
   CalendarCheck,
   CalendarX,
+  ArrowDownWideNarrow,
+  ArrowUpNarrowWide,
 } from "lucide-react";
 import {
   nombreCompleto,
@@ -29,7 +31,9 @@ interface EmpleadoListProps {
   pageSize: number;
   searchTerm: string;
   selectedStatusTab?: "TODOS" | "ACTIVOS" | "INACTIVOS";
+  sortOrder?: "DESC" | "ASC";
   onStatusTabChange?: (tab: "TODOS" | "ACTIVOS" | "INACTIVOS") => void;
+  onToggleSortOrder?: () => void;
   onSearchChange: (term: string) => void;
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
@@ -47,7 +51,9 @@ export function EmpleadoList({
   pageSize,
   searchTerm,
   selectedStatusTab = "TODOS",
+  sortOrder = "DESC",
   onStatusTabChange,
+  onToggleSortOrder,
   onSearchChange,
   onPageChange,
   onPageSizeChange,
@@ -90,14 +96,43 @@ export function EmpleadoList({
           })}
         </div>
 
-        {/* Buscador */}
-        <div className="w-full md:w-64">
-          <SearchInput
-            value={searchTerm}
-            onChange={onSearchChange}
-            placeholder="Buscar por código, nombre, CI..."
-            className="h-8 text-xs bg-background shadow-2xs"
-          />
+        {/* Buscador y Botón de Ordenamiento ASC/DESC */}
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <div className="w-full md:w-64">
+            <SearchInput
+              value={searchTerm}
+              onChange={onSearchChange}
+              placeholder="Buscar por código, nombre, CI..."
+              className="h-8 text-xs bg-background shadow-2xs"
+            />
+          </div>
+
+          {onToggleSortOrder && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onToggleSortOrder}
+              className="h-8 px-2.5 text-xs font-semibold gap-1.5 border-border/80 text-foreground hover:bg-accent cursor-pointer shadow-2xs shrink-0"
+              title={
+                sortOrder === "DESC"
+                  ? "Orden: Más recientes primero (DESC). Click para cambiar a ASC."
+                  : "Orden: Más antiguos primero (ASC). Click para cambiar a DESC."
+              }
+            >
+              {sortOrder === "DESC" ? (
+                <>
+                  <ArrowDownWideNarrow className="size-3.5 text-primary shrink-0" />
+                  <span className="hidden sm:inline">Recientes (DESC)</span>
+                </>
+              ) : (
+                <>
+                  <ArrowUpNarrowWide className="size-3.5 text-primary shrink-0" />
+                  <span className="hidden sm:inline">Antiguos (ASC)</span>
+                </>
+              )}
+            </Button>
+          )}
         </div>
       </div>
 
