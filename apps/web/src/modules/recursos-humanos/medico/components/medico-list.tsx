@@ -151,13 +151,12 @@ export function MedicoList({
               return (
                 <div
                   key={med.id}
-                  onClick={() => router.push(`/recursos-humanos/medicos/${med.id}`)}
-                  className="group cursor-pointer p-3 rounded-xl border border-border/50 bg-card hover:border-primary/40 hover:bg-muted/25 transition-all shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative"
+                  className="p-3 rounded-xl border border-border/50 bg-card hover:border-border/80 transition-all shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative"
                 >
                   {/* Bloque Izquierdo: Avatar + Matrícula + Nombre + Código Empleado */}
                   <div className="flex items-start gap-3 min-w-0 flex-1">
                     {/* Avatar */}
-                    <div className="size-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0 border border-primary/20 mt-0.5 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                    <div className="size-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0 border border-primary/20 mt-0.5">
                       {initials}
                     </div>
 
@@ -167,7 +166,7 @@ export function MedicoList({
                           #{med.matriculaProfesional}
                         </span>
 
-                        <span className="font-bold text-xs text-foreground group-hover:text-primary transition-colors truncate">
+                        <span className="font-bold text-xs text-foreground truncate">
                           Dr(a). {nombre}
                         </span>
 
@@ -246,10 +245,7 @@ export function MedicoList({
                         type="button"
                         size="sm"
                         variant="outline"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          router.push(`/recursos-humanos/medicos/${med.id}`);
-                        }}
+                        onClick={() => router.push(`/recursos-humanos/medicos/${med.id}`)}
                         className="h-7 px-2.5 text-[11px] font-semibold gap-1 border-border/80 text-foreground hover:bg-accent hover:text-primary shadow-2xs cursor-pointer transition-all"
                         title="Ver ficha completa del médico"
                       >
@@ -262,10 +258,7 @@ export function MedicoList({
                         type="button"
                         size="sm"
                         variant="outline"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          router.push(`/recursos-humanos/medicos/${med.id}/especialidades`);
-                        }}
+                        onClick={() => router.push(`/recursos-humanos/medicos/${med.id}/especialidades`)}
                         className="h-7 px-2.5 text-[11px] font-semibold gap-1 border-border/80 text-foreground hover:bg-accent hover:text-primary shadow-2xs cursor-pointer transition-all"
                         title="Gestionar especialidades médicas"
                       >
@@ -278,10 +271,7 @@ export function MedicoList({
                         type="button"
                         size="sm"
                         variant="outline"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          router.push(`/recursos-humanos/medicos/${med.id}/acuerdos`);
-                        }}
+                        onClick={() => router.push(`/recursos-humanos/medicos/${med.id}/acuerdos`)}
                         className="h-7 px-2.5 text-[11px] font-semibold gap-1 border-border/80 text-foreground hover:bg-accent hover:text-primary shadow-2xs cursor-pointer transition-all"
                         title="Gestionar acuerdos comerciales por servicio"
                       >
@@ -294,10 +284,7 @@ export function MedicoList({
                         type="button"
                         size="sm"
                         variant="outline"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onEdit(med);
-                        }}
+                        onClick={() => onEdit(med)}
                         className="h-7 px-2.5 text-[11px] font-semibold gap-1 border-border/80 text-foreground hover:bg-accent hover:text-primary shadow-2xs cursor-pointer transition-all"
                         title="Editar médico"
                       >
@@ -310,10 +297,7 @@ export function MedicoList({
                         type="button"
                         size="sm"
                         variant="ghost"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDelete(med);
-                        }}
+                        onClick={() => onDelete(med)}
                         className="h-7 px-2 text-[11px] font-semibold gap-1 text-destructive/80 hover:text-destructive hover:bg-destructive/10 cursor-pointer transition-all"
                         title="Eliminar médico"
                       >

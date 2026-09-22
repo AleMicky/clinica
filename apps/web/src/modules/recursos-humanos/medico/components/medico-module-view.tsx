@@ -1,16 +1,18 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import { MedicoHeader } from "./medico-header";
 import { MedicoMetricsCards, type MedicoMetrics } from "./medico-metrics";
-import { MedicoList, getMedicoFullName } from "./medico-list";
+import { MedicoList } from "./medico-list";
+import { MedicoFormDialog } from "./medico-form-dialog";
 import { MedicoDeleteDialog } from "./medico-delete-dialog";
 import { useMedicos } from "../hooks/use-medicos";
 import type { MedicoResponse } from "../types/medico.types";
 
 export function MedicoModuleView() {
-  const router = useRouter();
+  // Form Dialog state (Crear / Editar)
+  const [formDialogOpen, setFormDialogOpen] = React.useState(false);
+  const [medicoToEdit, setMedicoToEdit] = React.useState<MedicoResponse | null>(null);
 
   // Delete dialog confirmation state
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
@@ -49,7 +51,10 @@ export function MedicoModuleView() {
     setCurrentPage(1);
   };
 
-  const allMedicos: MedicoResponse[] = apiData?.items ?? [];
+  const allMedicos = React.useMemo<MedicoResponse[]>(
+    () => apiData?.items ?? [],
+    [apiData?.items]
+  );
 
   // Filter by status tab
   const filteredMedicos = React.useMemo(() => {
@@ -74,11 +79,13 @@ export function MedicoModuleView() {
   };
 
   const handleOpenAdd = () => {
-    router.push("/recursos-humanos/medicos/nuevo");
+    setMedicoToEdit(null);
+    setFormDialogOpen(true);
   };
 
   const handleOpenEdit = (medico: MedicoResponse) => {
-    router.push(`/recursos-humanos/medicos/${medico.id}/editar`);
+    setMedicoToEdit(medico);
+    setFormDialogOpen(true);
   };
 
   const handleOpenDelete = (medico: MedicoResponse) => {
@@ -94,7 +101,7 @@ export function MedicoModuleView() {
       {/* Tarjetas de Métricas en Vivo */}
       <MedicoMetricsCards metrics={metrics} />
 
-      {/* Listado Principal de Médicos (Formato Lista igual a Admisiones, Usuarios, Personas, Pacientes y Empleados) */}
+      {/* Listado Principal de Médicos */}
       <MedicoList
         medicos={filteredMedicos}
         isLoading={isLoading}
@@ -110,6 +117,14 @@ export function MedicoModuleView() {
         onEdit={handleOpenEdit}
         onDelete={handleOpenDelete}
         onRefresh={() => refetch()}
+      />
+
+      {/* Modal: Crear / Editar Médico */}
+      <MedicoFormDialog
+        open={formDialogOpen}
+        onOpenChange={setFormDialogOpen}
+        medicoToEdit={medicoToEdit}
+        onSuccessCallback={() => refetch()}
       />
 
       {/* Modal: Confirmación de Eliminación */}

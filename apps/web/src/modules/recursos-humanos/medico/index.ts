@@ -2,7 +2,7 @@ export { MedicoModuleView } from "./components/medico-module-view";
 export { MedicoHeader } from "./components/medico-header";
 export { MedicoMetricsCards } from "./components/medico-metrics";
 export { MedicoList, getMedicoFullName } from "./components/medico-list";
-export { MedicoPageForm } from "./components/medico-page-form";
+export { MedicoFormDialog } from "./components/medico-form-dialog";
 export { MedicoEspecialidadesDrawer } from "./components/medico-especialidades-drawer";
 export { MedicoAcuerdosDrawer } from "./components/medico-acuerdos-drawer";
 export { MedicoEspecialidadesView } from "./components/medico-especialidades-view";
