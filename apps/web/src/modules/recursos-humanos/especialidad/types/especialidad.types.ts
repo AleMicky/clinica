@@ -41,7 +41,7 @@ export interface CreateEspecialidadRequest {
   descripcion?: string;
 }
 
-export interface UpdateEspecialidadRequest extends CreateEspecialidadRequest {}
+export type UpdateEspecialidadRequest = CreateEspecialidadRequest;
 
 export interface EspecialidadQueryParams {
   page?: number;
