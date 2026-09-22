@@ -4,8 +4,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createEspecialidad,
   deleteEspecialidad,
+  exportarEspecialidadesExcel,
   getEspecialidadById,
   getEspecialidades,
+  importarEspecialidadesExcel,
   updateEspecialidad,
 } from "../api/especialidad.api";
 import { especialidadKeys } from "../api/especialidad.key";
@@ -36,7 +38,7 @@ export function useCreateEspecialidad() {
   return useMutation({
     mutationFn: (data: CreateEspecialidadRequest) => createEspecialidad(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: especialidadKeys.all });
+      queryClient.invalidateQueries({ queryKey: especialidadKeys.all, refetchType: "all" });
     },
   });
 }
@@ -48,9 +50,10 @@ export function useUpdateEspecialidad() {
     mutationFn: ({ id, data }: { id: number; data: UpdateEspecialidadRequest }) =>
       updateEspecialidad(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: especialidadKeys.all });
+      queryClient.invalidateQueries({ queryKey: especialidadKeys.all, refetchType: "all" });
       queryClient.invalidateQueries({
         queryKey: especialidadKeys.detail(variables.id),
+        refetchType: "all",
       });
     },
   });
@@ -62,7 +65,27 @@ export function useDeleteEspecialidad() {
   return useMutation({
     mutationFn: (id: number) => deleteEspecialidad(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: especialidadKeys.all });
+      queryClient.invalidateQueries({ queryKey: especialidadKeys.all, refetchType: "all" });
     },
+  });
+}
+
+export function useImportarEspecialidadesExcel() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (archivo: File) => importarEspecialidadesExcel(archivo),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: especialidadKeys.all,
+        refetchType: "all",
+      });
+    },
+  });
+}
+
+export function useExportarEspecialidadesExcel() {
+  return useMutation({
+    mutationFn: (search?: string) => exportarEspecialidadesExcel(search),
   });
 }

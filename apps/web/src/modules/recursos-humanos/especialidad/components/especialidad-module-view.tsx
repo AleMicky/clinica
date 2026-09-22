@@ -1,15 +1,17 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { EspecialidadHeader } from "./especialidad-header";
 import { EspecialidadMetricsCards } from "./especialidad-metrics";
 import { EspecialidadList } from "./especialidad-list";
+import { EspecialidadFormDialog } from "./especialidad-form-dialog";
+import { EspecialidadImportDialog } from "./especialidad-import-dialog";
 import { EspecialidadDeleteDialog } from "./especialidad-delete-dialog";
 import {
   useEspecialidades,
   useDeleteEspecialidad,
+  useExportarEspecialidadesExcel,
 } from "../hooks/use-especialidades";
 import type {
   EspecialidadMetrics as EspecialidadMetricsType,
@@ -17,7 +19,13 @@ import type {
 } from "../types/especialidad.types";
 
 export function EspecialidadModuleView() {
-  const router = useRouter();
+  // Form Dialog state (Crear / Editar en Modal)
+  const [formDialogOpen, setFormDialogOpen] = React.useState(false);
+  const [especialidadToEdit, setEspecialidadToEdit] =
+    React.useState<EspecialidadResponse | null>(null);
+
+  // Import Dialog state
+  const [importDialogOpen, setImportDialogOpen] = React.useState(false);
 
   // Delete Dialog state
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
@@ -44,6 +52,7 @@ export function EspecialidadModuleView() {
   });
 
   const deleteMutation = useDeleteEspecialidad();
+  const exportMutation = useExportarEspecialidadesExcel();
 
   const handleSearchChange = (term: string) => {
     setSearchTerm(term);
@@ -60,7 +69,10 @@ export function EspecialidadModuleView() {
     setCurrentPage(1);
   };
 
-  const allEspecialidades: EspecialidadResponse[] = apiData?.items ?? [];
+  const allEspecialidades = React.useMemo<EspecialidadResponse[]>(
+    () => apiData?.items ?? [],
+    [apiData?.items]
+  );
 
   // Filter by status tab
   const filteredEspecialidades = React.useMemo(() => {
@@ -85,11 +97,13 @@ export function EspecialidadModuleView() {
   };
 
   const handleOpenAdd = () => {
-    router.push("/recursos-humanos/especialidades/nueva");
+    setEspecialidadToEdit(null);
+    setFormDialogOpen(true);
   };
 
   const handleOpenEdit = (especialidad: EspecialidadResponse) => {
-    router.push(`/recursos-humanos/especialidades/${especialidad.id}/editar`);
+    setEspecialidadToEdit(especialidad);
+    setFormDialogOpen(true);
   };
 
   const handleOpenDelete = (especialidad: EspecialidadResponse) => {
@@ -114,10 +128,35 @@ export function EspecialidadModuleView() {
     }
   };
 
+  // Exportar listado de especialidades a Excel
+  const handleExportExcel = async () => {
+    try {
+      const blob = await exportMutation.mutateAsync(searchTerm.trim() || undefined);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      const timestamp = new Date().toISOString().replace(/[-:T.]/g, "").slice(0, 14);
+      link.setAttribute("download", `reporte_especialidades_${timestamp}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("Catálogo de especialidades exportado a Excel (.xlsx) correctamente.");
+    } catch {
+      toast.error("Ocurrió un error al exportar el catálogo de especialidades a Excel.");
+    }
+  };
+
   return (
     <div className="flex flex-col gap-3 w-full animate-in fade-in-50 duration-300">
       {/* Cabecera del Módulo */}
-      <EspecialidadHeader onAddClick={handleOpenAdd} onRefresh={() => refetch()} />
+      <EspecialidadHeader
+        onAddClick={handleOpenAdd}
+        onRefresh={() => refetch()}
+        onImportClick={() => setImportDialogOpen(true)}
+        onExportClick={handleExportExcel}
+        isExporting={exportMutation.isPending}
+      />
 
       {/* Tarjetas de Métricas en Vivo */}
       <EspecialidadMetricsCards metrics={metrics} />
@@ -138,6 +177,21 @@ export function EspecialidadModuleView() {
         onEdit={handleOpenEdit}
         onDelete={handleOpenDelete}
         onRefresh={() => refetch()}
+      />
+
+      {/* Modal: Crear / Editar Especialidad */}
+      <EspecialidadFormDialog
+        open={formDialogOpen}
+        onOpenChange={setFormDialogOpen}
+        especialidadToEdit={especialidadToEdit}
+        onSuccessCallback={() => refetch()}
+      />
+
+      {/* Modal: Importación Masiva desde Excel */}
+      <EspecialidadImportDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        onSuccess={() => refetch()}
       />
 
       {/* Modal: Confirmación de Eliminación */}

@@ -129,13 +129,12 @@ export function EspecialidadList({
               return (
                 <div
                   key={esp.id}
-                  onClick={() => onEdit(esp)}
-                  className="group cursor-pointer p-3 rounded-xl border border-border/50 bg-card hover:border-primary/40 hover:bg-muted/25 transition-all shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative"
+                  className="p-3 rounded-xl border border-border/50 bg-card hover:border-border transition-all shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative"
                 >
                   {/* Bloque Izquierdo: Avatar + Código + Nombre + Descripción */}
                   <div className="flex items-start gap-3 min-w-0 flex-1">
                     {/* Avatar */}
-                    <div className="size-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0 border border-primary/20 mt-0.5 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                    <div className="size-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0 border border-primary/20 mt-0.5">
                       {initials}
                     </div>
 
@@ -145,7 +144,7 @@ export function EspecialidadList({
                           #{esp.codigo}
                         </span>
 
-                        <span className="font-bold text-xs text-foreground group-hover:text-primary transition-colors truncate">
+                        <span className="font-bold text-xs text-foreground truncate">
                           {esp.nombre}
                         </span>
                       </div>

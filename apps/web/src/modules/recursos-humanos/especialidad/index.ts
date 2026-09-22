@@ -6,6 +6,7 @@ export * from "./hooks/use-especialidades";
 export * from "./components/especialidad-header";
 export * from "./components/especialidad-metrics";
 export * from "./components/especialidad-list";
-export * from "./components/especialidad-page-form";
+export * from "./components/especialidad-form-dialog";
+export * from "./components/especialidad-import-dialog";
 export * from "./components/especialidad-delete-dialog";
 export * from "./components/especialidad-module-view";
