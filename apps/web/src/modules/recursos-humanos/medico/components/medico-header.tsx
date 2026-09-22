@@ -2,14 +2,30 @@
 
 import * as React from "react";
 import { Button } from "@/components/ui/button";
-import { Stethoscope, Plus, RefreshCw } from "lucide-react";
+import {
+  Stethoscope,
+  Plus,
+  RefreshCw,
+  Download,
+  FileSpreadsheet,
+  Loader2,
+} from "lucide-react";
 
 interface MedicoHeaderProps {
   onAddClick?: () => void;
   onRefresh?: () => void;
+  onImportClick?: () => void;
+  onExportClick?: () => void;
+  isExporting?: boolean;
 }
 
-export function MedicoHeader({ onAddClick, onRefresh }: MedicoHeaderProps) {
+export function MedicoHeader({
+  onAddClick,
+  onRefresh,
+  onImportClick,
+  onExportClick,
+  isExporting = false,
+}: MedicoHeaderProps) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-card via-card to-primary/5 px-4 py-2.5 rounded-xl border border-border/70 shadow-2xs">
       <div className="flex items-center gap-2.5">
@@ -31,7 +47,7 @@ export function MedicoHeader({ onAddClick, onRefresh }: MedicoHeaderProps) {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+      <div className="flex items-center gap-2 self-end sm:self-auto shrink-0 flex-wrap">
         {onRefresh && (
           <Button
             variant="outline"
@@ -42,6 +58,39 @@ export function MedicoHeader({ onAddClick, onRefresh }: MedicoHeaderProps) {
           >
             <RefreshCw className="size-3.5" />
             <span className="hidden md:inline">Actualizar</span>
+          </Button>
+        )}
+
+        {onExportClick && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onExportClick}
+            disabled={isExporting}
+            className="h-8 px-2.5 text-xs font-medium gap-1.5 border-border/80 hover:bg-emerald-500/10 hover:text-emerald-600 hover:border-emerald-500/30 dark:hover:text-emerald-400 transition-all cursor-pointer disabled:opacity-50"
+            title="Exportar médicos a Excel"
+          >
+            {isExporting ? (
+              <Loader2 className="size-3.5 animate-spin text-emerald-600 dark:text-emerald-400" />
+            ) : (
+              <Download className="size-3.5 text-emerald-600 dark:text-emerald-400" />
+            )}
+            <span className="hidden sm:inline">
+              {isExporting ? "Exportando..." : "Exportar Excel"}
+            </span>
+          </Button>
+        )}
+
+        {onImportClick && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onImportClick}
+            className="h-8 px-2.5 text-xs font-medium gap-1.5 border-border/80 hover:bg-sky-500/10 hover:text-sky-600 hover:border-sky-500/30 dark:hover:text-sky-400 transition-all cursor-pointer"
+            title="Importar médicos desde Excel"
+          >
+            <FileSpreadsheet className="size-3.5 text-sky-600 dark:text-sky-400" />
+            <span className="hidden sm:inline">Importar Excel</span>
           </Button>
         )}
 
@@ -57,3 +106,4 @@ export function MedicoHeader({ onAddClick, onRefresh }: MedicoHeaderProps) {
     </div>
   );
 }
+

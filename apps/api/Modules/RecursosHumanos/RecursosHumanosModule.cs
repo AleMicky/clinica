@@ -38,6 +38,7 @@ public static class RecursosHumanosModule
         services.AddScoped<EspecialidadService>();
         services.AddScoped<IEspecialidadImportacionService, EspecialidadImportacionService>();
         services.AddScoped<MedicoService>();
+        services.AddScoped<IMedicoImportacionService, MedicoImportacionService>();
         services.AddScoped<MedicoEspecialidadService>();
         services.AddScoped<MedicoServicioAcuerdoService>();
 

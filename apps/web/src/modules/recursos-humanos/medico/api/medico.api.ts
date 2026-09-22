@@ -3,6 +3,7 @@ import type {
   CreateMedicoEspecialidadRequest,
   CreateMedicoRequest,
   CreateMedicoServicioAcuerdoRequest,
+  ExcelImportResult,
   MedicoEspecialidadResponse,
   MedicoQueryParams,
   MedicoResponse,
@@ -47,6 +48,49 @@ export async function updateMedico(
 export async function deleteMedico(id: number): Promise<void> {
   await apiClient.delete(`/medicos/${id}`);
 }
+
+// Importación masiva desde Excel
+export async function importarMedicosExcel(
+  archivo: File
+): Promise<ExcelImportResult> {
+  const formData = new FormData();
+  formData.append("archivo", archivo);
+
+  const response = await apiClient.post<ExcelImportResult>(
+    "/medicos/importar-excel",
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+  return response.data;
+}
+
+// Descarga de plantilla Excel oficial (.xlsx)
+export async function descargarPlantillaMedicosExcel(): Promise<Blob> {
+  const response = await apiClient.get<Blob>("/medicos/plantilla-excel", {
+    responseType: "blob",
+  });
+  return response.data;
+}
+
+// Exportación del directorio del cuerpo médico a Excel (.xlsx)
+export async function exportarMedicosExcel(
+  search?: string,
+  empleadoId?: number
+): Promise<Blob> {
+  const response = await apiClient.get<Blob>("/medicos/exportar-excel", {
+    params: {
+      search: search || undefined,
+      empleadoId: empleadoId || undefined,
+    },
+    responseType: "blob",
+  });
+  return response.data;
+}
+
 
 // === Medico Especialidades Endpoints ===
 

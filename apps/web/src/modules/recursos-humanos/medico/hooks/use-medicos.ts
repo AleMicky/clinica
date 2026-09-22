@@ -11,6 +11,7 @@ import {
   getMedicoEspecialidades,
   getMedicoServicioAcuerdos,
   getMedicos,
+  importarMedicosExcel,
   updateMedico,
   updateMedicoEspecialidad,
   updateMedicoServicioAcuerdo,
@@ -101,6 +102,18 @@ export function useDeleteMedico() {
         error.message ||
         "Error al inhabilitar el médico";
       toast.error(message);
+    },
+  });
+}
+
+export function useImportarMedicosExcel() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (archivo: File) => importarMedicosExcel(archivo),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: medicoKeys.all, refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["admisiones"], refetchType: "all" });
     },
   });
 }

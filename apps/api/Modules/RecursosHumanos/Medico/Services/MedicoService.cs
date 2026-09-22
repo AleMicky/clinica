@@ -1,6 +1,8 @@
 using Clinica.Api.Data;
 using Clinica.Api.Modules.RecursosHumanos.Medico.Dtos;
 using Clinica.Api.Modules.RecursosHumanos.Medico.Mappers;
+using Clinica.Api.Shared.Abstractions;
+using Clinica.Api.Shared.Excel;
 using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +13,10 @@ using EspecialidadEntity = Clinica.Api.Modules.RecursosHumanos.Especialidad.Enti
 
 namespace Clinica.Api.Modules.RecursosHumanos.Medico.Services;
 
-public sealed class MedicoService(AppDbContext dbContext)
+public sealed class MedicoService(
+    AppDbContext dbContext,
+    ICurrentUserService currentUserService,
+    IExcelReportGenerator excelReportGenerator)
 {
     public async Task<PagedResult<MedicoResponse>> ListarAsync(
         int? empleadoId,
@@ -369,5 +374,84 @@ public sealed class MedicoService(AppDbContext dbContext)
         return string.IsNullOrWhiteSpace(value)
             ? null
             : value.Trim();
+    }
+
+    public async Task<byte[]> ExportarExcelAsync(
+        string? search,
+        int? empleadoId,
+        CancellationToken cancellationToken = default)
+    {
+        var query = BuildQuery()
+            .AsNoTracking()
+            .Where(x => x.Activo);
+
+        if (empleadoId.HasValue)
+            query = query.Where(x => x.EmpleadoId == empleadoId.Value);
+
+        var normalizedSearch = string.IsNullOrWhiteSpace(search)
+            ? null
+            : search.Trim();
+
+        if (normalizedSearch is not null)
+        {
+            query = query.Where(x =>
+                x.MatriculaProfesional.Contains(normalizedSearch) ||
+                (x.RegistroMinisterioSalud != null &&
+                 x.RegistroMinisterioSalud.Contains(normalizedSearch)) ||
+                (x.Empleado.Persona != null && (
+                    x.Empleado.Persona.Nombres.Contains(normalizedSearch) ||
+                    x.Empleado.Persona.ApellidoPaterno.Contains(normalizedSearch) ||
+                    x.Empleado.Persona.NumeroDocumento.Contains(normalizedSearch))));
+        }
+
+        var medicos = await query
+            .OrderBy(x => x.Empleado.Persona.ApellidoPaterno)
+            .ThenBy(x => x.Empleado.Persona.ApellidoMaterno)
+            .ThenBy(x => x.Empleado.Persona.Nombres)
+            .ToListAsync(cancellationToken);
+
+        var options = new ExcelReportOptions
+        {
+            Title = "Directorio del Cuerpo Médico",
+            Subtitle = string.IsNullOrWhiteSpace(search)
+                ? "Recursos Humanos - Especialistas y Honorarios"
+                : $"Recursos Humanos - Filtro de búsqueda: \"{search}\"",
+            SheetName = "Médicos",
+            HeaderColor = "#0284C7", // Cyan / Blue Medical Header
+            GeneratedBy = currentUserService.UserId?.ToString()
+        };
+
+        return excelReportGenerator.Generate(options, medicos, builder =>
+        {
+            builder.AddColumn("Código Empleado", x => x.Empleado?.CodigoEmpleado ?? $"EMP-{x.EmpleadoId:D5}", ExcelColumnAlignment.Center);
+            builder.AddColumn("Tipo Doc.", x => x.Empleado?.Persona?.TipoDocumento ?? string.Empty, ExcelColumnAlignment.Center);
+            builder.AddColumn("Nro. Documento", x =>
+            {
+                if (x.Empleado?.Persona is null) return string.Empty;
+                return string.IsNullOrWhiteSpace(x.Empleado.Persona.ExtensionDocumento)
+                    ? x.Empleado.Persona.NumeroDocumento
+                    : $"{x.Empleado.Persona.NumeroDocumento} {x.Empleado.Persona.ExtensionDocumento}";
+            }, ExcelColumnAlignment.Center);
+            builder.AddColumn("Nombres", x => x.Empleado?.Persona?.Nombres ?? string.Empty);
+            builder.AddColumn("Apellido Paterno", x => x.Empleado?.Persona?.ApellidoPaterno ?? string.Empty);
+            builder.AddColumn("Apellido Materno", x => x.Empleado?.Persona?.ApellidoMaterno ?? string.Empty);
+            builder.AddColumn("Matrícula Prof.", x => x.MatriculaProfesional, ExcelColumnAlignment.Center);
+            builder.AddColumn("Reg. MINSAL", x => x.RegistroMinisterioSalud ?? "—", ExcelColumnAlignment.Center);
+            builder.AddColumn("Especialidad Principal", x =>
+            {
+                var principal = x.Especialidades.FirstOrDefault(e => e.Activo && e.EsPrincipal)?.Especialidad?.Nombre;
+                return principal ?? "—";
+            });
+            builder.AddColumn("Otras Especialidades", x =>
+            {
+                var secundarias = x.Especialidades
+                    .Where(e => e.Activo && !e.EsPrincipal && e.Especialidad != null)
+                    .Select(e => e.Especialidad.Nombre)
+                    .ToList();
+                return secundarias.Count > 0 ? string.Join(", ", secundarias) : "—";
+            });
+            builder.AddColumn("Teléfono", x => x.Empleado?.Persona?.Telefono ?? "—", ExcelColumnAlignment.Center);
+            builder.AddBooleanColumn("Estado", x => x.Activo, trueText: "Activo", falseText: "Inactivo");
+        });
     }
 }

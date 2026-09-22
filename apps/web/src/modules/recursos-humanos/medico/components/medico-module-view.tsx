@@ -1,13 +1,16 @@
 "use client";
 
 import * as React from "react";
+import { toast } from "sonner";
 import { MedicoHeader } from "./medico-header";
 import { MedicoMetricsCards, type MedicoMetrics } from "./medico-metrics";
 import { MedicoList } from "./medico-list";
 import { MedicoFormDialog } from "./medico-form-dialog";
 import { MedicoAcuerdosModal } from "./medico-acuerdos-modal";
 import { MedicoDeleteDialog } from "./medico-delete-dialog";
+import { MedicoImportDialog } from "./medico-import-dialog";
 import { useMedicos } from "../hooks/use-medicos";
+import { exportarMedicosExcel } from "../api/medico.api";
 import { useDebounce } from "@/hooks/use-debounce";
 import type { MedicoResponse } from "../types/medico.types";
 
@@ -15,6 +18,12 @@ export function MedicoModuleView() {
   // Form Dialog state (Crear / Editar + Especialidades)
   const [formDialogOpen, setFormDialogOpen] = React.useState(false);
   const [medicoToEdit, setMedicoToEdit] = React.useState<MedicoResponse | null>(null);
+
+  // Import Dialog state (Importación masiva Excel)
+  const [importDialogOpen, setImportDialogOpen] = React.useState(false);
+
+  // Export loading state
+  const [isExporting, setIsExporting] = React.useState(false);
 
   // Agreements Modal state (Gestión en Modal con Tabla de Acuerdos)
   const [acuerdosModalMedico, setAcuerdosModalMedico] =
@@ -121,6 +130,31 @@ export function MedicoModuleView() {
     refetchGlobal();
   };
 
+  const handleExportExcel = async () => {
+    try {
+      setIsExporting(true);
+      toast.info("Generando reporte de médicos en Excel...");
+      const blob = await exportarMedicosExcel(debouncedSearch || undefined);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      const timestamp = new Date()
+        .toISOString()
+        .replace(/[-:T]/g, "")
+        .slice(0, 14);
+      link.setAttribute("download", `directorio_medicos_${timestamp}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("Reporte Excel descargado correctamente.");
+    } catch {
+      toast.error("Ocurrió un error al exportar el archivo Excel.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   // Keyboard shortcut: Alt+N to open new Doctor dialog
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -142,6 +176,9 @@ export function MedicoModuleView() {
           refetch();
           refetchGlobal();
         }}
+        onExportClick={handleExportExcel}
+        onImportClick={() => setImportDialogOpen(true)}
+        isExporting={isExporting}
       />
 
       {/* Tarjetas de Métricas en Vivo */}
@@ -183,6 +220,13 @@ export function MedicoModuleView() {
         onSuccessCallback={handleMutationSuccess}
       />
 
+      {/* Modal: Importación Masiva Excel */}
+      <MedicoImportDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        onSuccess={handleMutationSuccess}
+      />
+
       {/* Modal: Gestión de Acuerdos de Honorarios en Tabla */}
       <MedicoAcuerdosModal
         open={Boolean(acuerdosModalMedico)}
@@ -209,3 +253,4 @@ export function MedicoModuleView() {
     </div>
   );
 }
+
