@@ -4,7 +4,6 @@ export { MedicoMetricsCards } from "./components/medico-metrics";
 export { MedicoList, getMedicoFullName } from "./components/medico-list";
 export { MedicoFormDialog } from "./components/medico-form-dialog";
 export { MedicoAcuerdosModal } from "./components/medico-acuerdos-modal";
-export { MedicoAcuerdoDialog } from "./components/medico-acuerdo-dialog";
 export { MedicoDeleteDialog } from "./components/medico-delete-dialog";
 export * from "./types/medico.types";
 export * from "./schemas/medico.schema";
