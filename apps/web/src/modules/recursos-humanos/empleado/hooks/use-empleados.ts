@@ -3,15 +3,18 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
     createEmpleado,
+    createEmpleadoConPersona,
     deleteEmpleado,
     getEmpleadoById,
     getEmpleados,
     getEmpleadosPermitidos,
     updateEmpleado,
+    updateEmpleadoConPersona,
 } from "../api/empleado.api";
 import { empleadoKeys } from "../api/empleado.key";
 import type {
     CreateEmpleadoRequest,
+    EmpleadoPersonaRequest,
     EmpleadoQueryParams,
     UpdateEmpleadoRequest,
 } from "../types/empleado.types";
@@ -45,6 +48,22 @@ export function useCreateEmpleado() {
         mutationFn: (data: CreateEmpleadoRequest) => createEmpleado(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: empleadoKeys.all, refetchType: "all" });
+            queryClient.invalidateQueries({ queryKey: ["personas"], refetchType: "all" });
+            queryClient.invalidateQueries({ queryKey: ["admisiones"], refetchType: "all" });
+            queryClient.invalidateQueries({ queryKey: ["ventas"], refetchType: "all" });
+            queryClient.invalidateQueries({ queryKey: ["cajas"], refetchType: "all" });
+        },
+    });
+}
+
+export function useCreateEmpleadoConPersona() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (data: EmpleadoPersonaRequest) => createEmpleadoConPersona(data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: empleadoKeys.all, refetchType: "all" });
+            queryClient.invalidateQueries({ queryKey: ["personas"], refetchType: "all" });
             queryClient.invalidateQueries({ queryKey: ["admisiones"], refetchType: "all" });
             queryClient.invalidateQueries({ queryKey: ["ventas"], refetchType: "all" });
             queryClient.invalidateQueries({ queryKey: ["cajas"], refetchType: "all" });
@@ -72,6 +91,35 @@ export function useUpdateEmpleado() {
                 queryKey: empleadoKeys.detail(variables.id),
                 refetchType: "all",
             });
+            queryClient.invalidateQueries({ queryKey: ["personas"], refetchType: "all" });
+            queryClient.invalidateQueries({ queryKey: ["admisiones"], refetchType: "all" });
+            queryClient.invalidateQueries({ queryKey: ["ventas"], refetchType: "all" });
+            queryClient.invalidateQueries({ queryKey: ["cajas"], refetchType: "all" });
+        },
+    });
+}
+
+export function useUpdateEmpleadoConPersona() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({
+            id,
+            data,
+        }: {
+            id: number;
+            data: EmpleadoPersonaRequest;
+        }) => updateEmpleadoConPersona(id, data),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({
+                queryKey: empleadoKeys.all,
+                refetchType: "all",
+            });
+            queryClient.invalidateQueries({
+                queryKey: empleadoKeys.detail(variables.id),
+                refetchType: "all",
+            });
+            queryClient.invalidateQueries({ queryKey: ["personas"], refetchType: "all" });
             queryClient.invalidateQueries({ queryKey: ["admisiones"], refetchType: "all" });
             queryClient.invalidateQueries({ queryKey: ["ventas"], refetchType: "all" });
             queryClient.invalidateQueries({ queryKey: ["cajas"], refetchType: "all" });

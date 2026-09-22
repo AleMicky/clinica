@@ -144,8 +144,7 @@ export function EmpleadoList({
               return (
                 <div
                   key={emp.id}
-                  onClick={() => onEdit(emp)}
-                  className="group cursor-pointer p-3 rounded-xl border border-border/50 bg-card hover:border-primary/40 hover:bg-muted/25 transition-all shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative"
+                  className="group p-3 rounded-xl border border-border/50 bg-card hover:border-border/80 hover:bg-muted/15 transition-all shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative"
                 >
                   {/* Bloque Izquierdo: Avatar + Código + Nombre + Documento + Ingreso */}
                   <div className="flex items-start gap-3 min-w-0 flex-1">
@@ -160,7 +159,7 @@ export function EmpleadoList({
                           #{emp.codigoEmpleado || `EMP-${emp.id}`}
                         </span>
 
-                        <span className="font-bold text-xs text-foreground group-hover:text-primary transition-colors truncate">
+                        <span className="font-bold text-xs text-foreground truncate">
                           {nombre}
                         </span>
 

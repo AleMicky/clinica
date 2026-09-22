@@ -47,6 +47,27 @@ export interface CreateEmpleadoRequest {
 
 export type UpdateEmpleadoRequest = CreateEmpleadoRequest;
 
+export interface PersonaCreateDto {
+    nombres: string;
+    apellidoPaterno: string;
+    apellidoMaterno?: string | null;
+    fechaNacimiento: string;
+    telefono?: string | null;
+    direccion?: string | null;
+    tipoDocumento: string;
+    numeroDocumento: string;
+    extensionDocumento?: string | null;
+    complementoDocumento?: string | null;
+    genero?: string | null;
+    estadoCivil?: string | null;
+}
+
+export interface EmpleadoPersonaRequest {
+    fechaIngreso: string;
+    fechaRetiro?: string | null;
+    persona: PersonaCreateDto;
+}
+
 export interface EmpleadoQueryParams {
     page?: number;
     pageSize?: number;

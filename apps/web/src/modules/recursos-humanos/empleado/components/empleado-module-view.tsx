@@ -1,12 +1,12 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useDebounce } from "@/hooks/use-debounce";
 import { EmpleadoHeader } from "./empleado-header";
 import { EmpleadoMetricsCards, type EmpleadoMetrics } from "./empleado-metrics";
 import { EmpleadoList } from "./empleado-list";
-import { EmpleadoFormDialog } from "./empleado-form-dialog";
 import { EmpleadoDeleteDialog } from "./empleado-delete-dialog";
 import { EmpleadoAsignacionesDrawer } from "./empleado-asignaciones-drawer";
 import { useDeleteEmpleado, useEmpleados } from "../hooks/use-empleados";
@@ -40,11 +40,9 @@ function toEmpleadoItem(emp: EmpleadoResponse | null): EmpleadoItem | null {
 }
 
 export function EmpleadoModuleView() {
-  // Estados de Modales / Drawers
-  const [formDialogOpen, setFormDialogOpen] = React.useState(false);
-  const [empleadoToEdit, setEmpleadoToEdit] =
-    React.useState<EmpleadoResponse | null>(null);
+  const router = useRouter();
 
+  // Estados de Modales / Drawers
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [empleadoToDelete, setEmpleadoToDelete] =
     React.useState<EmpleadoResponse | null>(null);
@@ -118,16 +116,17 @@ export function EmpleadoModuleView() {
     return { total, activos, inactivos };
   }, [apiData?.totalItems, allEmpleados]);
 
-  // Handlers de apertura de diálogos
+  // Handlers de navegación a páginas dedicadas
   const handleOpenAdd = React.useCallback(() => {
-    setEmpleadoToEdit(null);
-    setFormDialogOpen(true);
-  }, []);
+    router.push("/recursos-humanos/empleados/nuevo");
+  }, [router]);
 
-  const handleOpenEdit = React.useCallback((empleado: EmpleadoResponse) => {
-    setEmpleadoToEdit(empleado);
-    setFormDialogOpen(true);
-  }, []);
+  const handleOpenEdit = React.useCallback(
+    (empleado: EmpleadoResponse) => {
+      router.push(`/recursos-humanos/empleados/${empleado.id}/editar`);
+    },
+    [router]
+  );
 
   const handleOpenAsignaciones = React.useCallback(
     (empleado: EmpleadoResponse) => {
@@ -196,13 +195,6 @@ export function EmpleadoModuleView() {
         onDelete={handleOpenDelete}
         onManageAsignaciones={handleOpenAsignaciones}
         onRefresh={refetch}
-      />
-
-      {/* Modal: Crear / Editar Empleado */}
-      <EmpleadoFormDialog
-        open={formDialogOpen}
-        onOpenChange={setFormDialogOpen}
-        empleadoToEdit={empleadoToEdit}
       />
 
       {/* Drawer: Gestión de Asignaciones (Áreas y Cargos) */}

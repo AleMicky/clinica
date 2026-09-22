@@ -2,6 +2,7 @@ import { apiClient } from "@/lib/api/api-client";
 import type {
     CreateEmpleadoRequest,
     EmpleadoBaseInfo,
+    EmpleadoPersonaRequest,
     EmpleadoQueryParams,
     EmpleadoResponse,
     PagedResult,
@@ -52,6 +53,27 @@ export async function updateEmpleado(
 ): Promise<EmpleadoResponse> {
     const response = await apiClient.put<EmpleadoResponse>(
         `${BASE}/${id}`,
+        request,
+    );
+    return response.data;
+}
+
+export async function createEmpleadoConPersona(
+    request: EmpleadoPersonaRequest,
+): Promise<EmpleadoResponse> {
+    const response = await apiClient.post<EmpleadoResponse>(
+        `${BASE}/con-persona`,
+        request,
+    );
+    return response.data;
+}
+
+export async function updateEmpleadoConPersona(
+    id: number,
+    request: EmpleadoPersonaRequest,
+): Promise<EmpleadoResponse> {
+    const response = await apiClient.put<EmpleadoResponse>(
+        `${BASE}/${id}/con-persona`,
         request,
     );
     return response.data;
