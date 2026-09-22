@@ -38,23 +38,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Autocomplete, type AutocompleteOption } from "@/components/ui/autocomplete";
-import { StatusBadge } from "@/components/shared";
 import { cn } from "@/lib/utils";
 
 import {
   medicoSchema,
   type MedicoFormValues,
-  medicoEspecialidadSchema,
-  type MedicoEspecialidadFormValues,
 } from "../schemas/medico.schema";
 import {
   useCreateMedico,
   useUpdateMedico,
   useMedicos,
-  useMedicoEspecialidades,
-  useCreateMedicoEspecialidad,
-  useUpdateMedicoEspecialidad,
-  useDeleteMedicoEspecialidad,
 } from "../hooks/use-medicos";
 import { useEspecialidades } from "@/modules/recursos-humanos/especialidad/hooks/use-especialidades";
 import { useEmpleados } from "@/modules/recursos-humanos/empleado";
@@ -68,6 +61,13 @@ interface MedicoFormDialogProps {
   onSuccessCallback?: () => void;
 }
 
+interface EspecialidadItemState {
+  especialidadId: number;
+  nombre: string;
+  codigo?: string;
+  esPrincipal: boolean;
+}
+
 export function MedicoFormDialog({
   open,
   onOpenChange,
@@ -75,8 +75,6 @@ export function MedicoFormDialog({
   onSuccessCallback,
 }: MedicoFormDialogProps) {
   const isEditing = Boolean(medicoToEdit && medicoToEdit.id > 0);
-  const medicoId = medicoToEdit?.id ?? 0;
-  const empleadoId = medicoToEdit?.empleadoId ?? 0;
 
   // Mutations for Medico
   const createMutation = useCreateMedico();
@@ -139,29 +137,18 @@ export function MedicoFormDialog({
   const empleadoIdWatch = watch("empleadoId");
 
   // =============================
-  // ESPECIALIDADES (Sub-módulo integrado)
+  // ESPECIALIDADES (Maestro - Detalle en memoria)
   // =============================
-  const {
-    data: especialidadesMedicoData,
-    isLoading: isLoadingEspecialidades,
-    refetch: refetchEspecialidades,
-  } = useMedicoEspecialidades(
-    empleadoId,
-    medicoId,
-    open && isEditing && medicoId > 0
-  );
+  const [especialidadesList, setEspecialidadesList] = React.useState<
+    EspecialidadItemState[]
+  >([]);
+  const [selectedEspId, setSelectedEspId] = React.useState<number>(0);
+  const [isPrincipalSelected, setIsPrincipalSelected] =
+    React.useState<boolean>(false);
+  const [espError, setEspError] = React.useState<string | null>(null);
 
   const { data: catalogoEspData, isLoading: isLoadingCatalogoEsp } =
     useEspecialidades({ pageSize: 200 });
-
-  const createEspMutation = useCreateMedicoEspecialidad();
-  const updateEspMutation = useUpdateMedicoEspecialidad();
-  const deleteEspMutation = useDeleteMedicoEspecialidad();
-
-  const especialidadesMedico = React.useMemo(
-    () => especialidadesMedicoData?.items ?? [],
-    [especialidadesMedicoData]
-  );
 
   const catalogoEspecialidades = React.useMemo(
     () => catalogoEspData?.items ?? [],
@@ -169,8 +156,8 @@ export function MedicoFormDialog({
   );
 
   const assignedEspIds = React.useMemo(
-    () => new Set(especialidadesMedico.map((e) => e.especialidadId)),
-    [especialidadesMedico]
+    () => new Set(especialidadesList.map((e) => e.especialidadId)),
+    [especialidadesList]
   );
 
   const especialidadOptions: AutocompleteOption[] = React.useMemo(() => {
@@ -183,23 +170,6 @@ export function MedicoFormDialog({
       }));
   }, [catalogoEspecialidades, assignedEspIds]);
 
-  const {
-    handleSubmit: handleEspSubmit,
-    reset: resetEspForm,
-    setValue: setEspValue,
-    watch: watchEsp,
-    formState: { errors: espErrors, isSubmitting: isSubmittingEsp },
-  } = useForm<MedicoEspecialidadFormValues>({
-    resolver: zodResolver(medicoEspecialidadSchema),
-    defaultValues: {
-      especialidadId: 0,
-      esPrincipal: false,
-    },
-  });
-
-  const selectedEspId = watchEsp("especialidadId");
-  const esPrincipalVal = watchEsp("esPrincipal");
-
   // Reset form when modal opens or editing target changes
   React.useEffect(() => {
     if (open) {
@@ -209,19 +179,89 @@ export function MedicoFormDialog({
           matriculaProfesional: medicoToEdit.matriculaProfesional ?? "",
           registroMinisterioSalud: medicoToEdit.registroMinisterioSalud ?? "",
         });
+
+        const initialEsp: EspecialidadItemState[] = (
+          medicoToEdit.especialidades ?? []
+        )
+          .filter((e) => e.activo)
+          .map((e) => ({
+            especialidadId: e.especialidadId,
+            nombre:
+              e.especialidad?.nombre || `Especialidad #${e.especialidadId}`,
+            codigo: e.especialidad?.codigo,
+            esPrincipal: e.esPrincipal,
+          }));
+
+        setEspecialidadesList(initialEsp);
       } else {
         reset({
           empleadoId: 0,
           matriculaProfesional: "",
           registroMinisterioSalud: "",
         });
+        setEspecialidadesList([]);
       }
-      resetEspForm({
-        especialidadId: 0,
-        esPrincipal: false,
-      });
+      setSelectedEspId(0);
+      setIsPrincipalSelected(false);
+      setEspError(null);
     }
-  }, [open, medicoToEdit, reset, resetEspForm]);
+  }, [open, medicoToEdit, reset]);
+
+  // Add Specialty handler
+  const handleAddEspecialidad = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+
+    if (!selectedEspId || selectedEspId <= 0) {
+      setEspError("Debe seleccionar una especialidad.");
+      return;
+    }
+
+    const espCatalog = catalogoEspecialidades.find(
+      (item) => item.id === selectedEspId
+    );
+    if (!espCatalog) return;
+
+    const shouldBePrincipal =
+      isPrincipalSelected || especialidadesList.length === 0;
+
+    setEspecialidadesList((prev) => {
+      const updated = prev.map((item) =>
+        shouldBePrincipal ? { ...item, esPrincipal: false } : item
+      );
+      updated.push({
+        especialidadId: espCatalog.id,
+        nombre: espCatalog.nombre,
+        codigo: espCatalog.codigo,
+        esPrincipal: shouldBePrincipal,
+      });
+      return updated;
+    });
+
+    setSelectedEspId(0);
+    setIsPrincipalSelected(false);
+    setEspError(null);
+  };
+
+  // Toggle Principal Specialty handler
+  const handleSetPrincipal = (espId: number) => {
+    setEspecialidadesList((prev) =>
+      prev.map((item) => ({
+        ...item,
+        esPrincipal: item.especialidadId === espId,
+      }))
+    );
+  };
+
+  // Delete Specialty handler
+  const handleRemoveEspecialidad = (espId: number) => {
+    setEspecialidadesList((prev) => {
+      const updated = prev.filter((item) => item.especialidadId !== espId);
+      if (updated.length > 0 && !updated.some((item) => item.esPrincipal)) {
+        updated[0] = { ...updated[0], esPrincipal: true };
+      }
+      return updated;
+    });
+  };
 
   const onSubmit = async (values: MedicoFormValues) => {
     try {
@@ -229,6 +269,10 @@ export function MedicoFormDialog({
         empleadoId: values.empleadoId,
         matriculaProfesional: values.matriculaProfesional.trim().toUpperCase(),
         registroMinisterioSalud: values.registroMinisterioSalud?.trim() || null,
+        especialidades: especialidadesList.map((e) => ({
+          especialidadId: e.especialidadId,
+          esPrincipal: e.esPrincipal,
+        })),
       };
 
       if (isEditing && medicoToEdit) {
@@ -244,66 +288,6 @@ export function MedicoFormDialog({
       onOpenChange(false);
     } catch {
       // Error handled by mutation toast
-    }
-  };
-
-  // Add Specialty handler
-  const onAddEspecialidad = async (values: MedicoEspecialidadFormValues) => {
-    if (!medicoToEdit) return;
-    try {
-      await createEspMutation.mutateAsync({
-        empleadoId: medicoToEdit.empleadoId,
-        medicoId: medicoToEdit.id,
-        request: {
-          especialidadId: values.especialidadId,
-          esPrincipal: values.esPrincipal,
-        },
-      });
-      resetEspForm({
-        especialidadId: 0,
-        esPrincipal: false,
-      });
-      refetchEspecialidades();
-    } catch {
-      // Handled by mutation toast
-    }
-  };
-
-  // Toggle Principal Specialty handler
-  const handleTogglePrincipal = async (
-    espRelId: number,
-    currentEspId: number,
-    currentEsPrincipal: boolean
-  ) => {
-    if (!medicoToEdit || currentEsPrincipal) return;
-    try {
-      await updateEspMutation.mutateAsync({
-        empleadoId: medicoToEdit.empleadoId,
-        medicoId: medicoToEdit.id,
-        id: espRelId,
-        request: {
-          especialidadId: currentEspId,
-          esPrincipal: true,
-        },
-      });
-      refetchEspecialidades();
-    } catch {
-      // Handled by toast
-    }
-  };
-
-  // Delete Specialty handler
-  const handleDeleteEspecialidad = async (id: number) => {
-    if (!medicoToEdit) return;
-    try {
-      await deleteEspMutation.mutateAsync({
-        empleadoId: medicoToEdit.empleadoId,
-        medicoId: medicoToEdit.id,
-        id,
-      });
-      refetchEspecialidades();
-    } catch {
-      // Handled by toast
     }
   };
 
@@ -328,7 +312,7 @@ export function MedicoFormDialog({
               <DialogDescription className="text-xs text-muted-foreground">
                 {isEditing
                   ? "Actualice datos generales y gestione las especialidades médicas asignadas."
-                  : "Vincule un empleado registrado para habilitarlo como médico asistencial."}
+                  : "Vincule un empleado registrado y asigne sus especialidades médicas en un solo paso."}
               </DialogDescription>
             </div>
           </div>
@@ -474,224 +458,183 @@ export function MedicoFormDialog({
                     Especialidades Acreditadas
                   </h3>
                   <p className="text-[11px] text-muted-foreground">
-                    {isEditing
-                      ? "Asigne especialidades médicas y defina cuál es la principal."
-                      : "Podrá vincular especialidades médicas una vez creado el expediente."}
+                    Añada las especialidades médicas correspondientes y defina cuál es la principal.
                   </p>
                 </div>
               </div>
 
-              {isEditing && especialidadesMedico.length > 0 && (
+              {especialidadesList.length > 0 && (
                 <Badge variant="secondary" className="text-[10px] font-semibold h-5">
-                  {especialidadesMedico.length} asignadas
+                  {especialidadesList.length} asignadas
                 </Badge>
               )}
             </div>
 
-            {isEditing ? (
-              <div className="space-y-3">
-                {/* Formulario rápido para asignar especialidad */}
-                <div className="p-3 rounded-xl border border-border/70 bg-muted/25 space-y-2.5">
-                  <span className="text-[11.5px] font-bold text-foreground flex items-center gap-1">
-                    <Plus className="size-3 text-primary" />
-                    Asignar Nueva Especialidad
-                  </span>
+            <div className="space-y-3">
+              {/* Formulario rápido para añadir especialidad al detalle */}
+              <div className="p-3 rounded-xl border border-border/70 bg-muted/25 space-y-2.5">
+                <span className="text-[11.5px] font-bold text-foreground flex items-center gap-1">
+                  <Plus className="size-3 text-primary" />
+                  Añadir Especialidad
+                </span>
 
-                  <form onSubmit={handleEspSubmit(onAddEspecialidad)} className="space-y-2">
-                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-end">
-                      {/* Autocomplete Especialidad */}
-                      <div className="sm:col-span-7 space-y-1">
-                        <Autocomplete
-                          id="inlineEspecialidadId"
-                          value={
-                            selectedEspId && selectedEspId > 0
-                              ? String(selectedEspId)
-                              : ""
-                          }
-                          onValueChange={(val) =>
-                            setEspValue("especialidadId", Number(val) || 0, {
-                              shouldValidate: true,
-                            })
-                          }
-                          options={especialidadOptions}
-                          placeholder="Buscar especialidad..."
-                          emptyText="No hay más especialidades disponibles"
-                          allowCustomValue={false}
-                          isLoading={isLoadingCatalogoEsp}
-                          error={Boolean(espErrors.especialidadId)}
-                          className="w-full text-xs h-8.5"
-                        />
-                        {espErrors.especialidadId && (
-                          <p className="text-[10.5px] text-destructive font-medium">
-                            {espErrors.especialidadId.message}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Checkbox Principal */}
-                      <div className="sm:col-span-3 flex items-center gap-2 pb-1.5">
-                        <Checkbox
-                          id="inlineEsPrincipal"
-                          checked={esPrincipalVal}
-                          onCheckedChange={(checked) =>
-                            setEspValue("esPrincipal", Boolean(checked))
-                          }
-                        />
-                        <Label
-                          htmlFor="inlineEsPrincipal"
-                          className="text-xs cursor-pointer font-medium select-none flex items-center gap-1"
-                        >
-                          <Star
-                            className={`size-3.5 ${
-                              esPrincipalVal
-                                ? "text-amber-500 fill-amber-500"
-                                : "text-muted-foreground"
-                            }`}
-                          />
-                          <span>Principal</span>
-                        </Label>
-                      </div>
-
-                      {/* Botón Asignar */}
-                      <div className="sm:col-span-2">
-                        <Button
-                          type="submit"
-                          size="sm"
-                          className="w-full h-8.5 text-xs font-semibold gap-1 bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xs cursor-pointer"
-                          disabled={createEspMutation.isPending || isSubmittingEsp}
-                        >
-                          {createEspMutation.isPending ? (
-                            <Loader2 className="size-3.5 animate-spin" />
-                          ) : (
-                            <>
-                              <Plus className="size-3.5" />
-                              <span>Asignar</span>
-                            </>
-                          )}
-                        </Button>
-                      </div>
+                <div className="space-y-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-end">
+                    {/* Autocomplete Especialidad */}
+                    <div className="sm:col-span-7 space-y-1">
+                      <Autocomplete
+                        id="inlineEspecialidadId"
+                        value={
+                          selectedEspId && selectedEspId > 0
+                            ? String(selectedEspId)
+                            : ""
+                        }
+                        onValueChange={(val) => {
+                          setSelectedEspId(Number(val) || 0);
+                          setEspError(null);
+                        }}
+                        options={especialidadOptions}
+                        placeholder="Buscar especialidad..."
+                        emptyText="No hay más especialidades disponibles"
+                        allowCustomValue={false}
+                        isLoading={isLoadingCatalogoEsp}
+                        error={Boolean(espError)}
+                        className="w-full text-xs h-8.5"
+                      />
+                      {espError && (
+                        <p className="text-[10.5px] text-destructive font-medium">
+                          {espError}
+                        </p>
+                      )}
                     </div>
-                  </form>
+
+                    {/* Checkbox Principal */}
+                    <div className="sm:col-span-3 flex items-center gap-2 pb-1.5">
+                      <Checkbox
+                        id="inlineEsPrincipal"
+                        checked={isPrincipalSelected}
+                        onCheckedChange={(checked) =>
+                          setIsPrincipalSelected(Boolean(checked))
+                        }
+                      />
+                      <Label
+                        htmlFor="inlineEsPrincipal"
+                        className="text-xs cursor-pointer font-medium select-none flex items-center gap-1"
+                      >
+                        <Star
+                          className={`size-3.5 ${
+                            isPrincipalSelected
+                              ? "text-amber-500 fill-amber-500"
+                              : "text-muted-foreground"
+                          }`}
+                        />
+                        <span>Principal</span>
+                      </Label>
+                    </div>
+
+                    {/* Botón Añadir */}
+                    <div className="sm:col-span-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => handleAddEspecialidad()}
+                        disabled={isLoadingCatalogoEsp || !selectedEspId}
+                        className="w-full h-8.5 text-xs font-semibold gap-1 bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xs cursor-pointer"
+                      >
+                        <Plus className="size-3.5" />
+                        <span>Añadir</span>
+                      </Button>
+                    </div>
+                  </div>
                 </div>
+              </div>
 
-                {/* Tabla de Especialidades */}
-                {isLoadingEspecialidades ? (
-                  <div className="flex items-center justify-center py-6 text-xs text-muted-foreground gap-2 border rounded-xl bg-card">
-                    <Loader2 className="size-4 animate-spin text-primary" />
-                    <span>Cargando especialidades...</span>
-                  </div>
-                ) : especialidadesMedico.length === 0 ? (
-                  <div className="py-6 text-center border border-dashed rounded-xl bg-muted/10 space-y-1">
-                    <AlertCircle className="size-5 text-muted-foreground/50 mx-auto" />
-                    <p className="text-xs font-semibold text-foreground">
-                      Sin especialidades asignadas
-                    </p>
-                    <p className="text-[10.5px] text-muted-foreground">
-                      Use el selector superior para añadir la primera especialidad.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="border border-border/70 rounded-xl overflow-hidden bg-card shadow-2xs">
-                    <Table>
-                      <TableHeader className="bg-muted/40">
-                        <TableRow className="hover:bg-transparent">
-                          <TableHead className="text-xs font-bold h-8">Especialidad</TableHead>
-                          <TableHead className="text-xs font-bold h-8 text-center w-28">
-                            Tipo
-                          </TableHead>
-                          <TableHead className="text-xs font-bold h-8 text-center w-20">
-                            Estado
-                          </TableHead>
-                          <TableHead className="text-xs font-bold h-8 text-right w-16">
-                            Acción
-                          </TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {especialidadesMedico.map((item) => (
-                          <TableRow key={item.id} className="hover:bg-muted/30">
-                            <TableCell className="py-2">
-                              <div className="flex items-center gap-2">
-                                <div className="size-6 rounded-md bg-primary/10 text-primary flex items-center justify-center font-bold text-[10px] shrink-0">
-                                  <Stethoscope className="size-3" />
-                                </div>
-                                <div className="min-w-0">
-                                  <p className="text-xs font-bold text-foreground truncate">
-                                    {item.especialidad?.nombre ||
-                                      `Especialidad #${item.especialidadId}`}
-                                  </p>
-                                  {item.especialidad?.codigo && (
-                                    <span className="font-mono text-[9.5px] text-muted-foreground">
-                                      #{item.especialidad.codigo}
-                                    </span>
-                                  )}
-                                </div>
+              {/* Tabla de Especialidades en Memoria */}
+              {especialidadesList.length === 0 ? (
+                <div className="py-6 text-center border border-dashed rounded-xl bg-muted/10 space-y-1">
+                  <AlertCircle className="size-5 text-muted-foreground/50 mx-auto" />
+                  <p className="text-xs font-semibold text-foreground">
+                    Sin especialidades añadidas
+                  </p>
+                  <p className="text-[10.5px] text-muted-foreground">
+                    Use el selector superior para añadir al menos una especialidad al médico.
+                  </p>
+                </div>
+              ) : (
+                <div className="border border-border/70 rounded-xl overflow-hidden bg-card shadow-2xs">
+                  <Table>
+                    <TableHeader className="bg-muted/40">
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="text-xs font-bold h-8">Especialidad</TableHead>
+                        <TableHead className="text-xs font-bold h-8 text-center w-32">
+                          Tipo
+                        </TableHead>
+                        <TableHead className="text-xs font-bold h-8 text-right w-16">
+                          Acción
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {especialidadesList.map((item) => (
+                        <TableRow key={item.especialidadId} className="hover:bg-muted/30">
+                          <TableCell className="py-2">
+                            <div className="flex items-center gap-2">
+                              <div className="size-6 rounded-md bg-primary/10 text-primary flex items-center justify-center font-bold text-[10px] shrink-0">
+                                <Stethoscope className="size-3" />
                               </div>
-                            </TableCell>
+                              <div className="min-w-0">
+                                <p className="text-xs font-bold text-foreground truncate">
+                                  {item.nombre}
+                                </p>
+                                {item.codigo && (
+                                  <span className="font-mono text-[9.5px] text-muted-foreground">
+                                    #{item.codigo}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </TableCell>
 
-                            <TableCell className="py-2 text-center">
-                              {item.esPrincipal ? (
-                                <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 gap-1 text-[10px] px-1.5 py-0.2">
-                                  <Star className="size-2.5 fill-amber-500 text-amber-500" />
-                                  Principal
-                                </Badge>
-                              ) : (
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleTogglePrincipal(
-                                      item.id,
-                                      item.especialidadId,
-                                      item.esPrincipal
-                                    )
-                                  }
-                                  disabled={updateEspMutation.isPending}
-                                  className="h-5 px-1.5 text-[10px] text-muted-foreground hover:text-amber-600 hover:bg-amber-500/10 cursor-pointer rounded-full"
-                                  title="Marcar como especialidad principal"
-                                >
-                                  <Star className="size-2.5 mr-1 text-muted-foreground/60" />
-                                  Hacer Principal
-                                </Button>
-                              )}
-                            </TableCell>
-
-                            <TableCell className="py-2 text-center">
-                              <StatusBadge active={item.activo} />
-                            </TableCell>
-
-                            <TableCell className="py-2 text-right">
+                          <TableCell className="py-2 text-center">
+                            {item.esPrincipal ? (
+                              <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 gap-1 text-[10px] px-1.5 py-0.2">
+                                <Star className="size-2.5 fill-amber-500 text-amber-500" />
+                                Principal
+                              </Badge>
+                            ) : (
                               <Button
                                 type="button"
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => handleDeleteEspecialidad(item.id)}
-                                disabled={deleteEspMutation.isPending}
-                                className="size-6.5 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer rounded-md transition-colors"
-                                title="Eliminar especialidad"
+                                onClick={() => handleSetPrincipal(item.especialidadId)}
+                                className="h-5 px-1.5 text-[10px] text-muted-foreground hover:text-amber-600 hover:bg-amber-500/10 cursor-pointer rounded-full"
+                                title="Marcar como especialidad principal"
                               >
-                                {deleteEspMutation.isPending ? (
-                                  <Loader2 className="size-3 animate-spin" />
-                                ) : (
-                                  <Trash2 className="size-3" />
-                                )}
+                                <Star className="size-2.5 mr-1 text-muted-foreground/60" />
+                                Hacer Principal
                               </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="p-3.5 rounded-xl border border-dashed border-border/70 bg-muted/10 text-center">
-                <p className="text-xs text-muted-foreground">
-                  Al registrar este médico, se habilitará inmediatamente la tabla para acreditar sus especialidades clínicas.
-                </p>
-              </div>
-            )}
+                            )}
+                          </TableCell>
+
+                          <TableCell className="py-2 text-right">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRemoveEspecialidad(item.especialidadId)}
+                              className="size-6.5 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer rounded-md transition-colors"
+                              title="Quitar especialidad"
+                            >
+                              <Trash2 className="size-3" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

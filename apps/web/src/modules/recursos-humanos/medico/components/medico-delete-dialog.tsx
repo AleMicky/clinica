@@ -19,12 +19,14 @@ interface MedicoDeleteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   medico: MedicoResponse | null;
+  onSuccessCallback?: () => void;
 }
 
 export function MedicoDeleteDialog({
   open,
   onOpenChange,
   medico,
+  onSuccessCallback,
 }: MedicoDeleteDialogProps) {
   const deleteMutation = useDeleteMedico();
 
@@ -32,6 +34,7 @@ export function MedicoDeleteDialog({
     if (!medico) return;
     try {
       await deleteMutation.mutateAsync(medico.id);
+      onSuccessCallback?.();
       onOpenChange(false);
     } catch {
       // Error handled by mutation toast

@@ -8,6 +8,7 @@ namespace Clinica.Api.Modules.RecursosHumanos.Medico.Mappers;
 public static partial class MedicoMapper
 {
     [MapperIgnoreSource(nameof(MedicoEntity.Empleado))]
+    [MapperIgnoreSource(nameof(MedicoEntity.Especialidades))]
     public static partial MedicoResponse ToResponse(
         MedicoEntity entity
     );
@@ -19,6 +20,7 @@ public static partial class MedicoMapper
     [MapperIgnoreTarget(nameof(MedicoEntity.Id))]
     [MapperIgnoreTarget(nameof(MedicoEntity.Empleado))]
     [MapperIgnoreTarget(nameof(MedicoEntity.EmpleadoId))]
+    [MapperIgnoreTarget(nameof(MedicoEntity.Especialidades))]
     [MapperIgnoreTarget(nameof(MedicoEntity.Activo))]
     [MapperIgnoreTarget(nameof(MedicoEntity.FechaCreacion))]
     [MapperIgnoreTarget(nameof(MedicoEntity.FechaModificacion))]
@@ -31,6 +33,7 @@ public static partial class MedicoMapper
     [MapperIgnoreTarget(nameof(MedicoEntity.Id))]
     [MapperIgnoreTarget(nameof(MedicoEntity.Empleado))]
     [MapperIgnoreTarget(nameof(MedicoEntity.EmpleadoId))]
+    [MapperIgnoreTarget(nameof(MedicoEntity.Especialidades))]
     [MapperIgnoreTarget(nameof(MedicoEntity.Activo))]
     [MapperIgnoreTarget(nameof(MedicoEntity.FechaCreacion))]
     [MapperIgnoreTarget(nameof(MedicoEntity.FechaModificacion))]

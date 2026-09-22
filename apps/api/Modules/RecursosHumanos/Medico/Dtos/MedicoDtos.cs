@@ -7,6 +7,13 @@ public abstract record MedicoRequest
     public required int EmpleadoId { get; init; }
     public required string MatriculaProfesional { get; init; }
     public string? RegistroMinisterioSalud { get; init; }
+    public List<MedicoEspecialidadItemRequest>? Especialidades { get; init; }
+}
+
+public sealed record MedicoEspecialidadItemRequest
+{
+    public int EspecialidadId { get; init; }
+    public bool EsPrincipal { get; init; }
 }
 
 public sealed record CreateMedicoRequest : MedicoRequest;
@@ -20,6 +27,7 @@ public sealed record MedicoResponse : AuditableResponse
     public EmpleadoInfo? Empleado { get; init; }
     public string MatriculaProfesional { get; init; }
     public string? RegistroMinisterioSalud { get; init; }
+    public List<MedicoEspecialidadResponse> Especialidades { get; init; } = [];
 }
 
 public sealed record EmpleadoInfo

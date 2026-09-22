@@ -3,17 +3,24 @@
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { SearchInput, DataTablePagination, StatusBadge } from "@/components/shared";
 import {
   Edit,
   Trash2,
   Stethoscope,
-  FileText,
   FileBadge,
-  ShieldCheck,
-  History,
-  Award,
   Handshake,
+  Star,
+  Plus,
 } from "lucide-react";
 import type { MedicoResponse } from "../types/medico.types";
 
@@ -32,6 +39,7 @@ interface MedicoListProps {
   onEdit: (medico: MedicoResponse) => void;
   onDelete: (medico: MedicoResponse) => void;
   onManageAcuerdos?: (medico: MedicoResponse) => void;
+  onAddClick?: () => void;
   onRefresh?: () => void;
 }
 
@@ -61,6 +69,7 @@ export function MedicoList({
   onEdit,
   onDelete,
   onManageAcuerdos,
+  onAddClick,
 }: MedicoListProps) {
   const tabs: Array<{
     key: "TODOS" | "ACTIVOS" | "INACTIVOS";
@@ -74,10 +83,10 @@ export function MedicoList({
 
   return (
     <div className="space-y-2.5 w-full">
-      {/* FILTROS EN FORMATO BADGE Y BUSCADOR */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 px-0.5">
-        {/* Badges interactivos de estado */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+      {/* BARRA DE FILTROS Y BUSCADOR COMPACTA */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 px-0.5">
+        {/* Badges de estado */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
           {tabs.map((t) => {
             const isActive = selectedStatusTab === t.key;
             return (
@@ -98,208 +107,273 @@ export function MedicoList({
         </div>
 
         {/* Buscador */}
-        <div className="w-full md:w-64">
+        <div className="w-full sm:w-72">
           <SearchInput
             value={searchTerm}
             onChange={onSearchChange}
-            placeholder="Buscar por médico, matrícula, CI..."
-            className="h-8 text-xs bg-background shadow-2xs"
+            placeholder="Buscar por médico, matrícula o empleado..."
+            className="h-8.5 text-xs bg-background shadow-2xs"
           />
         </div>
       </div>
 
-      {/* CONTENIDO DEL LISTADO */}
-      <div className="space-y-1.5">
-        {isLoading ? (
-          <div className="space-y-1.5">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div
-                key={i}
-                className="p-3 rounded-xl border border-border/50 bg-card space-y-2"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <Skeleton className="size-9 rounded-xl" />
-                    <div className="space-y-1">
-                      <Skeleton className="h-4 w-36" />
-                      <Skeleton className="h-3 w-48" />
+      {/* TABLA DE MÉDICOS */}
+      <div className="border border-border/70 rounded-xl overflow-hidden bg-card shadow-2xs">
+        <Table>
+          <TableHeader className="bg-muted/40">
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="text-xs font-bold h-9">Médico Asistencial</TableHead>
+              <TableHead className="text-xs font-bold h-9 hidden md:table-cell">
+                Matrícula & Registro
+              </TableHead>
+              <TableHead className="text-xs font-bold h-9">Especialidades</TableHead>
+              <TableHead className="text-xs font-bold h-9 text-center w-24">Estado</TableHead>
+              <TableHead className="text-xs font-bold h-9 text-right w-44">Acciones</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell className="py-2.5">
+                    <div className="flex items-center gap-2.5">
+                      <Skeleton className="size-8 rounded-lg" />
+                      <div className="space-y-1">
+                        <Skeleton className="h-3.5 w-32" />
+                        <Skeleton className="h-2.5 w-20" />
+                      </div>
                     </div>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell py-2.5">
+                    <Skeleton className="h-4 w-24" />
+                  </TableCell>
+                  <TableCell className="py-2.5">
+                    <Skeleton className="h-4 w-28" />
+                  </TableCell>
+                  <TableCell className="text-center py-2.5">
+                    <Skeleton className="h-5 w-16 mx-auto rounded-full" />
+                  </TableCell>
+                  <TableCell className="text-right py-2.5">
+                    <Skeleton className="h-7 w-24 ml-auto rounded-md" />
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : medicos.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="py-10 text-center">
+                  <div className="max-w-xs mx-auto space-y-2">
+                    <div className="size-10 rounded-full bg-muted/50 flex items-center justify-center mx-auto text-muted-foreground">
+                      <Stethoscope className="size-5" />
+                    </div>
+                    <p className="font-bold text-xs text-foreground">
+                      No se encontraron médicos
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {searchTerm
+                        ? "Intente con otro término de búsqueda."
+                        : "Comience registrando el primer médico de la clínica."}
+                    </p>
+                    {onAddClick && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={onAddClick}
+                        className="h-7.5 px-3 text-xs gap-1 bg-primary text-primary-foreground mt-1 cursor-pointer"
+                      >
+                        <Plus className="size-3" />
+                        <span>Registrar Médico</span>
+                      </Button>
+                    )}
                   </div>
-                  <Skeleton className="h-6 w-16 rounded-full" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : medicos.length === 0 ? (
-          <div className="py-12 text-center border border-dashed border-border/60 rounded-xl bg-muted/10 space-y-2">
-            <Stethoscope className="size-8 text-muted-foreground/40 mx-auto" />
-            <p className="font-bold text-xs text-foreground">No se encontraron médicos</p>
-            <p className="text-[11px] max-w-xs mx-auto text-muted-foreground">
-              Intente ajustar los filtros de búsqueda o registre un nuevo médico.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-1.5">
-            {medicos.map((med) => {
-              const nombre = getMedicoFullName(med);
-              const initials =
-                med.empleado?.persona?.nombres?.[0] && med.empleado?.persona?.apellidoPaterno?.[0]
-                  ? `${med.empleado.persona.nombres[0]}${med.empleado.persona.apellidoPaterno[0]}`
-                  : "DR";
+                </TableCell>
+              </TableRow>
+            ) : (
+              medicos.map((med) => {
+                const nombre = getMedicoFullName(med);
+                const initials =
+                  med.empleado?.persona?.nombres?.[0] &&
+                  med.empleado?.persona?.apellidoPaterno?.[0]
+                    ? `${med.empleado.persona.nombres[0]}${med.empleado.persona.apellidoPaterno[0]}`
+                    : "DR";
 
-              return (
-                <div
-                  key={med.id}
-                  className="p-3 rounded-xl border border-border/50 bg-card hover:border-border/80 transition-all shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative"
-                >
-                  {/* Bloque Izquierdo: Avatar + Matrícula + Nombre + Código Empleado */}
-                  <div className="flex items-start gap-3 min-w-0 flex-1">
-                    {/* Avatar */}
-                    <div className="size-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0 border border-primary/20 mt-0.5">
-                      {initials}
-                    </div>
+                const especialidadesActivas = (med.especialidades ?? []).filter(
+                  (e) => e.activo
+                );
+                const principalEsp = especialidadesActivas.find((e) => e.esPrincipal);
+                const otrasEsp = especialidadesActivas.filter((e) => !e.esPrincipal);
 
-                    <div className="min-w-0 flex-1 space-y-0.5">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-mono font-bold text-xs text-primary bg-primary/10 px-1.5 py-0.2 rounded border border-primary/20">
+                return (
+                  <TableRow
+                    key={med.id}
+                    onDoubleClick={() => onEdit(med)}
+                    className="hover:bg-muted/40 transition-colors group cursor-default"
+                  >
+                    {/* Médico Asistencial */}
+                    <TableCell className="py-2.5">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-[11px] shrink-0 border border-primary/20">
+                          {initials}
+                        </div>
+                        <div className="min-w-0">
+                          <p
+                            className="font-bold text-xs text-foreground truncate group-hover:text-primary transition-colors cursor-pointer"
+                            onClick={() => onEdit(med)}
+                            title="Haga clic para editar"
+                          >
+                            Dr(a). {nombre}
+                          </p>
+                          <div className="flex items-center gap-1.5 text-[10.5px] text-muted-foreground">
+                            {med.empleado?.codigoEmpleado && (
+                              <span className="font-mono">
+                                EMP: {med.empleado.codigoEmpleado}
+                              </span>
+                            )}
+                            {/* Matrícula visible en pantallas móviles */}
+                            <span className="md:hidden font-mono font-semibold text-primary">
+                              • #{med.matriculaProfesional}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </TableCell>
+
+                    {/* Matrícula & MinSalud */}
+                    <TableCell className="hidden md:table-cell py-2.5">
+                      <div className="space-y-0.5">
+                        <span className="font-mono font-bold text-[11px] text-primary bg-primary/10 px-1.5 py-0.2 rounded border border-primary/20 inline-block">
                           #{med.matriculaProfesional}
                         </span>
-
-                        <span className="font-bold text-xs text-foreground truncate">
-                          Dr(a). {nombre}
-                        </span>
-
-                        {med.empleado?.codigoEmpleado && (
-                          <span className="text-[11px] text-muted-foreground font-mono bg-muted/60 px-1.5 py-0.2 rounded border border-border/40">
-                            (EMP: {med.empleado.codigoEmpleado})
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Detalles secundarios */}
-                      <div className="flex items-center gap-2.5 text-[11px] text-muted-foreground flex-wrap pt-0.5">
                         {med.registroMinisterioSalud ? (
-                          <span className="flex items-center gap-1 font-medium text-sky-600 dark:text-sky-400">
-                            <FileBadge className="size-3 shrink-0" />
-                            <span>Min. Salud: {med.registroMinisterioSalud}</span>
-                          </span>
+                          <div className="flex items-center gap-1 text-[10px] text-sky-600 dark:text-sky-400 font-medium">
+                            <FileBadge className="size-2.5 shrink-0" />
+                            <span>MinSalud: {med.registroMinisterioSalud}</span>
+                          </div>
                         ) : (
-                          <span className="text-muted-foreground/60 italic text-[10.5px]">
-                            Sin Reg. Min. Salud
-                          </span>
+                          <p className="text-[10px] text-muted-foreground/60 italic">
+                            Sin Reg. MinSalud
+                          </p>
                         )}
                       </div>
+                    </TableCell>
 
-                      {/* Metadatos de Auditoría UX/UI */}
-                      {(med.creadoPor || med.fechaCreacion || med.modificadoPor) && (
-                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground/70 flex-wrap pt-1 border-t border-border/30 mt-1">
-                          {(med.creadoPor || med.fechaCreacion) && (
-                            <span className="flex items-center gap-1">
-                              <ShieldCheck className="size-2.5 text-primary/70 shrink-0" />
-                              <span>
-                                {med.creadoPor ? `Registrado por: ${med.creadoPor}` : "Registrado"}
+                    {/* Especialidades */}
+                    <TableCell className="py-2.5">
+                      {especialidadesActivas.length > 0 ? (
+                        <div className="flex items-center gap-1 flex-wrap">
+                          {principalEsp && (
+                            <Badge className="bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30 gap-1 text-[10px] px-1.5 py-0.2">
+                              <Star className="size-2.5 fill-amber-500 text-amber-500 shrink-0" />
+                              <span className="truncate max-w-[140px]">
+                                {principalEsp.especialidad?.nombre ||
+                                  `Esp #${principalEsp.especialidadId}`}
                               </span>
-                              {med.fechaCreacion && (
-                                <span className="font-mono text-[9.5px] text-muted-foreground/60">
-                                  ({new Date(med.fechaCreacion).toLocaleString("es-ES", {
-                                    dateStyle: "short",
-                                    timeStyle: "short",
-                                  })})
-                                </span>
-                              )}
-                            </span>
+                            </Badge>
                           )}
 
-                          {med.modificadoPor && (
-                            <>
-                              <span className="text-muted-foreground/30">•</span>
-                              <span className="flex items-center gap-1">
-                                <History className="size-2.5 text-amber-600/70 shrink-0" />
-                                <span>
-                                  Modificado: <strong>{med.modificadoPor}</strong>
-                                </span>
-                                {med.fechaModificacion && (
-                                  <span className="font-mono text-[9.5px] text-muted-foreground/60">
-                                    ({new Date(med.fechaModificacion).toLocaleString("es-ES", {
-                                      dateStyle: "short",
-                                      timeStyle: "short",
-                                    })})
-                                  </span>
-                                )}
-                              </span>
-                            </>
+                          {otrasEsp.slice(0, 2).map((esp) => (
+                            <Badge
+                              key={esp.id}
+                              variant="outline"
+                              className="text-[10px] bg-muted/60 text-muted-foreground px-1.5 py-0.2 border-border/60 truncate max-w-[120px]"
+                            >
+                              {esp.especialidad?.nombre ||
+                                `Esp #${esp.especialidadId}`}
+                            </Badge>
+                          ))}
+
+                          {otrasEsp.length > 2 && (
+                            <Badge
+                              variant="secondary"
+                              className="text-[9.5px] px-1 py-0.2 font-mono"
+                              title={otrasEsp
+                                .slice(2)
+                                .map(
+                                  (e) =>
+                                    e.especialidad?.nombre ||
+                                    `Esp #${e.especialidadId}`
+                                )
+                                .join(", ")}
+                            >
+                              +{otrasEsp.length - 2} más
+                            </Badge>
                           )}
                         </div>
+                      ) : (
+                        <span className="text-[10.5px] text-muted-foreground/60 italic">
+                          Sin especialidades
+                        </span>
                       )}
-                    </div>
-                  </div>
+                    </TableCell>
 
-                  {/* Bloque Derecho: Estado & Acciones */}
-                  <div className="flex items-center justify-between sm:justify-end gap-2.5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/30">
-                    <StatusBadge active={med.activo} />
+                    {/* Estado */}
+                    <TableCell className="text-center py-2.5">
+                      <StatusBadge active={med.activo} />
+                    </TableCell>
 
-                    <div className="flex items-center gap-1.5">
-                      {/* Botón Acuerdos Comerciales */}
-                      {onManageAcuerdos && (
+                    {/* Acciones Rápidas */}
+                    <TableCell className="text-right py-2.5">
+                      <div className="flex items-center justify-end gap-1">
+                        {/* Botón Acuerdos */}
+                        {onManageAcuerdos && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => onManageAcuerdos(med)}
+                            className="h-7 px-2 text-[11px] font-semibold gap-1 text-purple-600 hover:text-purple-700 hover:bg-purple-500/10 cursor-pointer rounded-md transition-colors"
+                            title="Pactar acuerdos de honorarios"
+                          >
+                            <Handshake className="size-3" />
+                            <span className="hidden lg:inline">Acuerdos</span>
+                          </Button>
+                        )}
+
+                        {/* Botón Editar */}
                         <Button
                           type="button"
                           size="sm"
-                          variant="outline"
-                          onClick={() => onManageAcuerdos(med)}
-                          className="h-7 px-2.5 text-[11px] font-semibold gap-1 border-border/80 text-foreground hover:bg-accent hover:text-purple-600 shadow-2xs cursor-pointer transition-all"
-                          title="Gestionar acuerdos de honorarios"
+                          variant="ghost"
+                          onClick={() => onEdit(med)}
+                          className="h-7 px-2 text-[11px] font-semibold gap-1 text-primary hover:text-primary/90 hover:bg-primary/10 cursor-pointer rounded-md transition-colors"
+                          title="Editar expediente y especialidades"
                         >
-                          <Handshake className="size-3 text-purple-600" />
-                          <span>Acuerdos</span>
+                          <Edit className="size-3" />
+                          <span className="hidden lg:inline">Editar</span>
                         </Button>
-                      )}
 
-                      {/* Botón Editar (Datos + Especialidades) */}
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={() => onEdit(med)}
-                        className="h-7 px-2.5 text-[11px] font-semibold gap-1 border-border/80 text-foreground hover:bg-accent hover:text-primary shadow-2xs cursor-pointer transition-all"
-                        title="Editar expediente y especialidades"
-                      >
-                        <Edit className="size-3 text-primary" />
-                        <span>Editar</span>
-                      </Button>
-
-                      {/* Botón Eliminar Visible */}
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => onDelete(med)}
-                        className="h-7 px-2 text-[11px] font-semibold gap-1 text-destructive/80 hover:text-destructive hover:bg-destructive/10 cursor-pointer transition-all"
-                        title="Eliminar médico"
-                      >
-                        <Trash2 className="size-3" />
-                        <span>Eliminar</span>
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* PAGINACIÓN */}
-        {totalItems > 10 && (
-          <div className="pt-2 px-1">
-            <DataTablePagination
-              currentPage={currentPage}
-              pageSize={pageSize}
-              totalItems={totalItems}
-              onPageChange={onPageChange}
-              onPageSizeChange={onPageSizeChange}
-            />
-          </div>
-        )}
+                        {/* Botón Eliminar */}
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => onDelete(med)}
+                          className="size-7 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer rounded-md transition-colors"
+                          title="Inhabilitar médico"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
       </div>
+
+      {/* PAGINACIÓN */}
+      {totalItems > 10 && (
+        <div className="pt-1 px-0.5">
+          <DataTablePagination
+            currentPage={currentPage}
+            pageSize={pageSize}
+            totalItems={totalItems}
+            onPageChange={onPageChange}
+            onPageSizeChange={onPageSizeChange}
+          />
+        </div>
+      )}
     </div>
   );
 }

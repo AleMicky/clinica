@@ -18,6 +18,7 @@ export interface MedicoResponse {
   empleado?: EmpleadoInfo | null;
   matriculaProfesional: string;
   registroMinisterioSalud?: string | null;
+  especialidades?: MedicoEspecialidadResponse[];
   activo: boolean;
   fechaCreacion: string;
   fechaModificacion?: string | null;
@@ -25,16 +26,23 @@ export interface MedicoResponse {
   modificadoPor?: string | null;
 }
 
+export interface MedicoEspecialidadItemRequest {
+  especialidadId: number;
+  esPrincipal: boolean;
+}
+
 export interface CreateMedicoRequest {
   empleadoId: number;
   matriculaProfesional: string;
   registroMinisterioSalud?: string | null;
+  especialidades?: MedicoEspecialidadItemRequest[];
 }
 
 export interface UpdateMedicoRequest {
   empleadoId: number;
   matriculaProfesional: string;
   registroMinisterioSalud?: string | null;
+  especialidades?: MedicoEspecialidadItemRequest[];
 }
 
 export interface MedicoQueryParams {

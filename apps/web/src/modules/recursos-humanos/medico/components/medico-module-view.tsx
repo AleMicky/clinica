@@ -8,6 +8,7 @@ import { MedicoFormDialog } from "./medico-form-dialog";
 import { MedicoAcuerdosModal } from "./medico-acuerdos-modal";
 import { MedicoDeleteDialog } from "./medico-delete-dialog";
 import { useMedicos } from "../hooks/use-medicos";
+import { useDebounce } from "@/hooks/use-debounce";
 import type { MedicoResponse } from "../types/medico.types";
 
 export function MedicoModuleView() {
@@ -27,10 +28,13 @@ export function MedicoModuleView() {
   const [currentPage, setCurrentPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(10);
   const [searchTerm, setSearchTerm] = React.useState("");
+  const debouncedSearch = useDebounce(searchTerm.trim(), 300);
+
   const [selectedStatusTab, setSelectedStatusTab] = React.useState<
     "TODOS" | "ACTIVOS" | "INACTIVOS"
   >("TODOS");
 
+  // Main paginated query
   const {
     data: apiData,
     isLoading,
@@ -38,7 +42,12 @@ export function MedicoModuleView() {
   } = useMedicos({
     page: currentPage,
     pageSize: pageSize,
-    search: searchTerm.trim() || undefined,
+    search: debouncedSearch || undefined,
+  });
+
+  // Global query for accurate metrics
+  const { data: globalData, refetch: refetchGlobal } = useMedicos({
+    pageSize: 500,
   });
 
   const handleSearchChange = (term: string) => {
@@ -61,7 +70,7 @@ export function MedicoModuleView() {
     [apiData?.items]
   );
 
-  // Filter by status tab
+  // Filter by status tab on current data
   const filteredMedicos = React.useMemo(() => {
     if (selectedStatusTab === "ACTIVOS") {
       return allMedicos.filter((m) => m.activo);
@@ -72,21 +81,26 @@ export function MedicoModuleView() {
     return allMedicos;
   }, [allMedicos, selectedStatusTab]);
 
-  // Compute Metrics
-  const total = apiData?.totalCount ?? allMedicos.length;
-  const activos = allMedicos.filter((m) => m.activo).length;
-  const conMinsal = allMedicos.filter((m) => Boolean(m.registroMinisterioSalud?.trim())).length;
+  // Compute Metrics from global dataset
+  const globalItems = globalData?.items ?? allMedicos;
+  const metrics = React.useMemo<MedicoMetrics>(() => {
+    const total = globalData?.totalCount ?? globalItems.length;
+    const activos = globalItems.filter((m) => m.activo).length;
+    const conMinsal = globalItems.filter((m) =>
+      Boolean(m.registroMinisterioSalud?.trim())
+    ).length;
 
-  const metrics: MedicoMetrics = {
-    totalMedicos: total,
-    medicosActivos: activos,
-    conRegistroMinsal: conMinsal,
-  };
+    return {
+      totalMedicos: total,
+      medicosActivos: activos,
+      conRegistroMinsal: conMinsal,
+    };
+  }, [globalData?.totalCount, globalItems]);
 
-  const handleOpenAdd = () => {
+  const handleOpenAdd = React.useCallback(() => {
     setMedicoToEdit(null);
     setFormDialogOpen(true);
-  };
+  }, []);
 
   const handleOpenEdit = (medico: MedicoResponse) => {
     setMedicoToEdit(medico);
@@ -102,10 +116,33 @@ export function MedicoModuleView() {
     setAcuerdosModalMedico(medico);
   };
 
+  const handleMutationSuccess = () => {
+    refetch();
+    refetchGlobal();
+  };
+
+  // Keyboard shortcut: Alt+N to open new Doctor dialog
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.altKey && (e.key === "n" || e.key === "N")) {
+        e.preventDefault();
+        handleOpenAdd();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleOpenAdd]);
+
   return (
     <div className="flex flex-col gap-3 w-full animate-in fade-in-50 duration-300">
       {/* Cabecera del Módulo */}
-      <MedicoHeader onAddClick={handleOpenAdd} onRefresh={() => refetch()} />
+      <MedicoHeader
+        onAddClick={handleOpenAdd}
+        onRefresh={() => {
+          refetch();
+          refetchGlobal();
+        }}
+      />
 
       {/* Tarjetas de Métricas en Vivo */}
       <MedicoMetricsCards metrics={metrics} />
@@ -126,7 +163,11 @@ export function MedicoModuleView() {
         onEdit={handleOpenEdit}
         onDelete={handleOpenDelete}
         onManageAcuerdos={handleOpenAcuerdos}
-        onRefresh={() => refetch()}
+        onAddClick={handleOpenAdd}
+        onRefresh={() => {
+          refetch();
+          refetchGlobal();
+        }}
       />
 
       {/* Modal: Crear / Editar Médico con Especialidades Integradas */}
@@ -136,11 +177,10 @@ export function MedicoModuleView() {
           setFormDialogOpen(open);
           if (!open) {
             setMedicoToEdit(null);
-            refetch();
           }
         }}
         medicoToEdit={medicoToEdit}
-        onSuccessCallback={() => refetch()}
+        onSuccessCallback={handleMutationSuccess}
       />
 
       {/* Modal: Gestión de Acuerdos de Honorarios en Tabla */}
@@ -149,7 +189,6 @@ export function MedicoModuleView() {
         onOpenChange={(open) => {
           if (!open) {
             setAcuerdosModalMedico(null);
-            refetch();
           }
         }}
         medico={acuerdosModalMedico}
@@ -162,10 +201,10 @@ export function MedicoModuleView() {
           setDeleteDialogOpen(open);
           if (!open) {
             setMedicoToDelete(null);
-            refetch();
           }
         }}
         medico={medicoToDelete}
+        onSuccessCallback={handleMutationSuccess}
       />
     </div>
   );
