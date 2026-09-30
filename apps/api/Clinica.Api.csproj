@@ -69,6 +69,11 @@
     <Folder Include="Modules\Almacenes\Lote\Mappers\" />
     <Folder Include="Modules\Almacenes\Lote\Services\" />
     <Folder Include="Modules\Almacenes\Lote\Validators\" />
+    <Folder Include="Modules\Almacenes\Marca\Dtos\" />
+    <Folder Include="Modules\Almacenes\Marca\Endpoints\" />
+    <Folder Include="Modules\Almacenes\Marca\Mappers\" />
+    <Folder Include="Modules\Almacenes\Marca\Services\" />
+    <Folder Include="Modules\Almacenes\Marca\Validators\" />
     <Folder Include="Modules\Almacenes\MovimientoInventario\Dtos\" />
     <Folder Include="Modules\Almacenes\MovimientoInventario\Endpoints\" />
     <Folder Include="Modules\Almacenes\MovimientoInventario\Mappers\" />
