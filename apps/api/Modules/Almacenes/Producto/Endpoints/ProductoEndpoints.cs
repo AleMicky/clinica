@@ -155,6 +155,8 @@ public static class ProductoEndpoints
             "NOMBRE",
             "DESCRIPCION",
             "CATEGORIA",
+            "MARCA",
+            "PROVEEDOR",
             "UNIDAD_MEDIDA",
             "CONTROLA_LOTE",
             "CONTROLA_VENCIMIENTO",
@@ -176,35 +178,39 @@ public static class ProductoEndpoints
             cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
         }
 
-        // Fila 1 de ejemplo: Producto con Lote y Vencimiento
+        // Fila 1 de ejemplo: Producto con Marca, Proveedor, Lote y Vencimiento
         worksheet.Cell(2, 1).Value = "MED-001";
         worksheet.Cell(2, 2).Value = "PARACETAMOL 500MG TABLETAS";
         worksheet.Cell(2, 3).Value = "CAJA CON 100 TABLETAS";
         worksheet.Cell(2, 4).Value = "MEDICAMENTOS";
-        worksheet.Cell(2, 5).Value = "CAJA";
-        worksheet.Cell(2, 6).Value = "SI";
-        worksheet.Cell(2, 7).Value = "SI";
-        worksheet.Cell(2, 8).Value = 10;
-        worksheet.Cell(2, 9).Value = 500;
-        worksheet.Cell(2, 10).Value = "LOT-2026-001";
-        worksheet.Cell(2, 11).Value = "2026-01-15";
-        worksheet.Cell(2, 12).Value = "2028-01-15";
-        worksheet.Cell(2, 13).Value = 12.50;
+        worksheet.Cell(2, 5).Value = "GENFAR";
+        worksheet.Cell(2, 6).Value = "DROGUERIA INTI S.A.";
+        worksheet.Cell(2, 7).Value = "CAJA";
+        worksheet.Cell(2, 8).Value = "SI";
+        worksheet.Cell(2, 9).Value = "SI";
+        worksheet.Cell(2, 10).Value = 10;
+        worksheet.Cell(2, 11).Value = 500;
+        worksheet.Cell(2, 12).Value = "LOT-2026-001";
+        worksheet.Cell(2, 13).Value = "2026-01-15";
+        worksheet.Cell(2, 14).Value = "2028-01-15";
+        worksheet.Cell(2, 15).Value = 12.50;
 
         // Fila 2 de ejemplo: Insumo sin control de lote
         worksheet.Cell(3, 1).Value = "INS-001";
         worksheet.Cell(3, 2).Value = "GASA ESTERIL 10X10 CM";
         worksheet.Cell(3, 3).Value = "PAQUETE POR 10 UNIDADES";
         worksheet.Cell(3, 4).Value = "INSUMOS";
-        worksheet.Cell(3, 5).Value = "PAQUETE";
-        worksheet.Cell(3, 6).Value = "NO";
-        worksheet.Cell(3, 7).Value = "NO";
-        worksheet.Cell(3, 8).Value = 20;
-        worksheet.Cell(3, 9).Value = 1000;
-        worksheet.Cell(3, 10).Value = "";
-        worksheet.Cell(3, 11).Value = "";
+        worksheet.Cell(3, 5).Value = "CRISVAL";
+        worksheet.Cell(3, 6).Value = "";
+        worksheet.Cell(3, 7).Value = "PAQUETE";
+        worksheet.Cell(3, 8).Value = "NO";
+        worksheet.Cell(3, 9).Value = "NO";
+        worksheet.Cell(3, 10).Value = 20;
+        worksheet.Cell(3, 11).Value = 1000;
         worksheet.Cell(3, 12).Value = "";
         worksheet.Cell(3, 13).Value = "";
+        worksheet.Cell(3, 14).Value = "";
+        worksheet.Cell(3, 15).Value = "";
 
         worksheet.Columns().AdjustToContents();
 

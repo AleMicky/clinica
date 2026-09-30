@@ -4,7 +4,9 @@ using Clinica.Api.Shared.Excel;
 using Microsoft.EntityFrameworkCore;
 using CategoriaProductoEntity = Clinica.Api.Modules.Almacenes.CategoriaProducto.Entity.CategoriaProducto;
 using LoteEntity = Clinica.Api.Modules.Almacenes.Lote.Entity.Lote;
+using MarcaEntity = Clinica.Api.Modules.Almacenes.Marca.Entity.Marca;
 using ProductoEntity = Clinica.Api.Modules.Almacenes.Producto.Entity.Producto;
+using ProveedorEntity = Clinica.Api.Modules.Compras.Proveedor.Entity.Proveedor;
 using UnidadesMedidaEntity = Clinica.Api.Modules.Parametros.UnidadesMedida.Entity.UnidadesMedida;
 
 namespace Clinica.Api.Modules.Almacenes.Producto.Services;
@@ -49,12 +51,24 @@ public sealed class ProductoImportacionService(
             .Where(x => x.Activo)
             .ToListAsync(cancellationToken);
 
+        var marcas = await dbContext.Marcas
+            .AsNoTracking()
+            .Where(x => x.Activo)
+            .ToListAsync(cancellationToken);
+
+        var proveedores = await dbContext.Proveedores
+            .AsNoTracking()
+            .Where(x => x.Activo)
+            .ToListAsync(cancellationToken);
+
         var unidadesMedida = await dbContext.UnidadesMedida
             .AsNoTracking()
             .Where(x => x.Activo)
             .ToListAsync(cancellationToken);
 
         var categoriasMap = ConstruirCategoriasMap(categorias);
+        var marcasMap = ConstruirMarcasMap(marcas);
+        var proveedoresMap = ConstruirProveedoresMap(proveedores);
         var unidadesMap = ConstruirUnidadesMap(unidadesMedida);
 
         // 2. Extraer códigos de productos del Excel
@@ -98,6 +112,8 @@ public sealed class ProductoImportacionService(
                 productosNuevosMap,
                 lotesNuevos,
                 categoriasMap,
+                marcasMap,
+                proveedoresMap,
                 unidadesMap,
                 productosExistentesMap,
                 lotesExistentesDbSet,
@@ -131,6 +147,8 @@ public sealed class ProductoImportacionService(
         Dictionary<string, ProductoEntity> productosNuevosMap,
         List<LoteEntity> lotesNuevos,
         Dictionary<string, int> categoriasMap,
+        Dictionary<string, int> marcasMap,
+        Dictionary<string, int> proveedoresMap,
         Dictionary<string, int> unidadesMap,
         Dictionary<string, ProductoEntity> productosExistentesMap,
         HashSet<string> lotesExistentesDbSet,
@@ -144,6 +162,8 @@ public sealed class ProductoImportacionService(
         var nombre = NormalizarTexto(fila.Get("NOMBRE"));
         var descripcion = NormalizarTexto(fila.Get("DESCRIPCION"));
         var categoriaTexto = NormalizarTexto(fila.Get("CATEGORIA"));
+        var marcaTexto = NormalizarTexto(fila.Get("MARCA"));
+        var proveedorTexto = NormalizarTexto(fila.Get("PROVEEDOR"));
         var unidadTexto = NormalizarTexto(fila.Get("UNIDAD_MEDIDA"));
         var controlaLoteTexto = NormalizarTexto(fila.Get("CONTROLA_LOTE"));
         var controlaVencimientoTexto = NormalizarTexto(fila.Get("CONTROLA_VENCIMIENTO"));
@@ -201,6 +221,46 @@ public sealed class ProductoImportacionService(
                 categoriaTexto,
                 $"No se encontró la categoría '{categoriaTexto}'.");
             tieneError = true;
+        }
+
+        // Validación Producto: Marca (Opcional)
+        int? marcaId = null;
+        if (!string.IsNullOrWhiteSpace(marcaTexto))
+        {
+            if (marcasMap.TryGetValue(marcaTexto.ToUpperInvariant(), out var mId))
+            {
+                marcaId = mId;
+            }
+            else
+            {
+                AgregarError(
+                    resultado,
+                    fila.RowNumber,
+                    "MARCA",
+                    marcaTexto,
+                    $"No se encontró la marca '{marcaTexto}'.");
+                tieneError = true;
+            }
+        }
+
+        // Validación Producto: Proveedor (Opcional)
+        int? proveedorId = null;
+        if (!string.IsNullOrWhiteSpace(proveedorTexto))
+        {
+            if (proveedoresMap.TryGetValue(proveedorTexto.ToUpperInvariant(), out var pId))
+            {
+                proveedorId = pId;
+            }
+            else
+            {
+                AgregarError(
+                    resultado,
+                    fila.RowNumber,
+                    "PROVEEDOR",
+                    proveedorTexto,
+                    $"No se encontró el proveedor '{proveedorTexto}'.");
+                tieneError = true;
+            }
         }
 
         // Validación Producto: Unidad de Medida
@@ -430,6 +490,8 @@ public sealed class ProductoImportacionService(
                 Nombre = nombre!,
                 Descripcion = descripcion,
                 CategoriaProductoId = categoriaId,
+                MarcaId = marcaId,
+                ProveedorId = proveedorId,
                 UnidadMedidaId = unidadMedidaId,
                 ControlaLote = controlaLote,
                 ControlaVencimiento = controlaVencimiento,
@@ -512,6 +574,44 @@ public sealed class ProductoImportacionService(
 
             if (!string.IsNullOrWhiteSpace(cat.Nombre))
                 map[cat.Nombre.Trim().ToUpperInvariant()] = cat.Id;
+        }
+
+        return map;
+    }
+
+    private static Dictionary<string, int> ConstruirMarcasMap(List<MarcaEntity> marcas)
+    {
+        var map = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var m in marcas)
+        {
+            if (!string.IsNullOrWhiteSpace(m.Codigo))
+                map[m.Codigo.Trim().ToUpperInvariant()] = m.Id;
+
+            if (!string.IsNullOrWhiteSpace(m.Nombre))
+                map[m.Nombre.Trim().ToUpperInvariant()] = m.Id;
+        }
+
+        return map;
+    }
+
+    private static Dictionary<string, int> ConstruirProveedoresMap(List<ProveedorEntity> proveedores)
+    {
+        var map = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var p in proveedores)
+        {
+            if (!string.IsNullOrWhiteSpace(p.Codigo))
+                map[p.Codigo.Trim().ToUpperInvariant()] = p.Id;
+
+            if (!string.IsNullOrWhiteSpace(p.RazonSocial))
+                map[p.RazonSocial.Trim().ToUpperInvariant()] = p.Id;
+
+            if (!string.IsNullOrWhiteSpace(p.NombreComercial))
+                map[p.NombreComercial.Trim().ToUpperInvariant()] = p.Id;
+
+            if (!string.IsNullOrWhiteSpace(p.Nit))
+                map[p.Nit.Trim().ToUpperInvariant()] = p.Id;
         }
 
         return map;

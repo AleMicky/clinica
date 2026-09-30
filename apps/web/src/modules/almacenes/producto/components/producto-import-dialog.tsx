@@ -311,8 +311,10 @@ export function ProductoImportDialog({
                         <ul className="list-disc list-inside space-y-0.5 text-muted-foreground">
                           <li><span className="font-mono text-foreground font-semibold">CODIGO</span>: Código único (Obligatorio)</li>
                           <li><span className="font-mono text-foreground font-semibold">NOMBRE</span>: Nombre comercial (Obligatorio)</li>
-                          <li><span className="font-mono text-foreground font-semibold">CATEGORIA</span>: Nombre o ID de categoría (Obligatorio)</li>
+                          <li><span className="font-mono text-foreground font-semibold">CATEGORIA</span>: Nombre o código de categoría (Obligatorio)</li>
                           <li><span className="font-mono text-foreground font-semibold">UNIDAD_MEDIDA</span>: Nombre o símbolo (Obligatorio)</li>
+                          <li><span className="font-mono">MARCA</span>: Nombre o código (Opcional)</li>
+                          <li><span className="font-mono">PROVEEDOR</span>: Razón social, código o NIT (Opcional)</li>
                           <li><span className="font-mono">DESCRIPCION</span>: Detalle opcional</li>
                           <li><span className="font-mono">CONTROLA_LOTE</span>: SI / NO</li>
                           <li><span className="font-mono">CONTROLA_VENCIMIENTO</span>: SI / NO</li>
