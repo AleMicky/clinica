@@ -7,6 +7,7 @@ using CategoriaProductoEntity = Clinica.Api.Modules.Almacenes.CategoriaProducto.
 using MarcaEntity = Clinica.Api.Modules.Almacenes.Marca.Entity.Marca;
 using ProductoEntity = Clinica.Api.Modules.Almacenes.Producto.Entity.Producto;
 using ProductoMapper = Clinica.Api.Modules.Almacenes.Producto.Mappers.ProductoMapper;
+using ProveedorEntity = Clinica.Api.Modules.Compras.Proveedor.Entity.Proveedor;
 using UnidadesMedidaEntity = Clinica.Api.Modules.Parametros.UnidadesMedida.Entity.UnidadesMedida;
 
 namespace Clinica.Api.Modules.Almacenes.Producto.Services;
@@ -16,6 +17,7 @@ public interface IProductoService
     Task<PagedResult<ProductoResponse>> ListarAsync(
         int? categoriaProductoId,
         int? marcaId,
+        int? proveedorId,
         string? search,
         PaginationRequest pagination,
         CancellationToken cancellationToken = default);
@@ -44,6 +46,7 @@ public sealed class ProductoService(AppDbContext dbContext)
     public async Task<PagedResult<ProductoResponse>> ListarAsync(
         int? categoriaProductoId,
         int? marcaId,
+        int? proveedorId,
         string? search,
         PaginationRequest pagination,
         CancellationToken cancellationToken = default)
@@ -63,6 +66,11 @@ public sealed class ProductoService(AppDbContext dbContext)
             query = query.Where(x => x.MarcaId == marcaId.Value);
         }
 
+        if (proveedorId.HasValue)
+        {
+            query = query.Where(x => x.ProveedorId == proveedorId.Value);
+        }
+
         if (!string.IsNullOrWhiteSpace(search))
         {
             var termino = search.Trim();
@@ -70,7 +78,8 @@ public sealed class ProductoService(AppDbContext dbContext)
                 x.Codigo.Contains(termino) ||
                 x.Nombre.Contains(termino) ||
                 (x.Descripcion != null && x.Descripcion.Contains(termino)) ||
-                (x.Marca != null && (x.Marca.Nombre.Contains(termino) || x.Marca.Codigo.Contains(termino))));
+                (x.Marca != null && (x.Marca.Nombre.Contains(termino) || x.Marca.Codigo.Contains(termino))) ||
+                (x.Proveedor != null && (x.Proveedor.RazonSocial.Contains(termino) || x.Proveedor.Codigo.Contains(termino))));
         }
 
         var totalItems = await query.CountAsync(cancellationToken);
@@ -85,6 +94,7 @@ public sealed class ProductoService(AppDbContext dbContext)
             .Include(x => x.CategoriaProducto)
             .Include(x => x.Marca)
             .Include(x => x.UnidadMedida)
+            .Include(x => x.Proveedor)
             .ToListAsync(cancellationToken);
 
         var items = productos
@@ -94,7 +104,9 @@ public sealed class ProductoService(AppDbContext dbContext)
                 x.Marca?.Nombre,
                 x.Marca?.Codigo,
                 x.UnidadMedida?.Nombre,
-                x.UnidadMedida?.Simbolo))
+                x.UnidadMedida?.Simbolo,
+                x.Proveedor?.RazonSocial,
+                x.Proveedor?.Codigo))
             .ToList();
 
         return new PagedResult<ProductoResponse>(
@@ -114,6 +126,7 @@ public sealed class ProductoService(AppDbContext dbContext)
             .Include(x => x.CategoriaProducto)
             .Include(x => x.Marca)
             .Include(x => x.UnidadMedida)
+            .Include(x => x.Proveedor)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (producto is null || !producto.Activo)
@@ -127,7 +140,9 @@ public sealed class ProductoService(AppDbContext dbContext)
             producto.Marca?.Nombre,
             producto.Marca?.Codigo,
             producto.UnidadMedida?.Nombre,
-            producto.UnidadMedida?.Simbolo);
+            producto.UnidadMedida?.Simbolo,
+            producto.Proveedor?.RazonSocial,
+            producto.Proveedor?.Codigo);
     }
 
     public async Task<ProductoResponse> CrearAsync(
@@ -138,6 +153,7 @@ public sealed class ProductoService(AppDbContext dbContext)
             request.CategoriaProductoId,
             request.MarcaId,
             request.UnidadMedidaId,
+            request.ProveedorId,
             cancellationToken);
 
         await ValidarCodigoUnicoAsync(
@@ -163,6 +179,7 @@ public sealed class ProductoService(AppDbContext dbContext)
             request.CategoriaProductoId,
             request.MarcaId,
             request.UnidadMedidaId,
+            request.ProveedorId,
             cancellationToken);
 
         var entity = await dbContext.Productos
@@ -206,6 +223,7 @@ public sealed class ProductoService(AppDbContext dbContext)
         int categoriaProductoId,
         int? marcaId,
         int unidadMedidaId,
+        int? proveedorId,
         CancellationToken cancellationToken)
     {
         var existeCategoria = await dbContext.CategoriasProducto
@@ -246,6 +264,21 @@ public sealed class ProductoService(AppDbContext dbContext)
                 nameof(UnidadesMedidaEntity),
                 unidadMedidaId);
         }
+
+        if (proveedorId.HasValue)
+        {
+            var existeProveedor = await dbContext.Proveedores
+                .AnyAsync(
+                    x => x.Id == proveedorId.Value && x.Activo,
+                    cancellationToken);
+
+            if (!existeProveedor)
+            {
+                throw new NotFoundException(
+                    nameof(ProveedorEntity),
+                    proveedorId.Value);
+            }
+        }
     }
 
     private async Task ValidarCodigoUnicoAsync(
@@ -274,7 +307,9 @@ public sealed class ProductoService(AppDbContext dbContext)
         string? nombreMarca,
         string? codigoMarca,
         string? nombreUnidad,
-        string? simboloUnidad)
+        string? simboloUnidad,
+        string? razonSocialProveedor,
+        string? codigoProveedor)
     {
         var response = ProductoMapper.ToResponse(entity);
         return response with
@@ -284,7 +319,10 @@ public sealed class ProductoService(AppDbContext dbContext)
             MarcaNombre = nombreMarca,
             MarcaCodigo = codigoMarca,
             UnidadMedidaNombre = nombreUnidad,
-            UnidadMedidaSimbolo = simboloUnidad
+            UnidadMedidaSimbolo = simboloUnidad,
+            ProveedorId = entity.ProveedorId,
+            ProveedorRazonSocial = razonSocialProveedor,
+            ProveedorCodigo = codigoProveedor
         };
     }
 
@@ -297,6 +335,7 @@ public sealed class ProductoService(AppDbContext dbContext)
         entity.Nombre = request.Nombre.Trim();
         entity.Descripcion = Limpiar(request.Descripcion);
         entity.MarcaId = request.MarcaId;
+        entity.ProveedorId = request.ProveedorId;
 
         if (esNuevo)
         {

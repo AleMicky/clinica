@@ -3,6 +3,7 @@
 import * as React from "react";
 import {
   Boxes,
+  Building2,
   CalendarClock,
   Edit2,
   FileText,
@@ -137,7 +138,7 @@ export function ProductoDetailLotesView({
                 </div>
               </div>
 
-              {/* Categoría, Marca & Unidad */}
+              {/* Categoría, Marca, Proveedor & Unidad */}
               <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <Tag className="size-3 text-muted-foreground/80" />
@@ -153,6 +154,17 @@ export function ProductoDetailLotesView({
                       <span className="font-medium text-primary text-[11px]">
                         {producto.marcaNombre}
                         {producto.marcaCodigo && ` (${producto.marcaCodigo})`}
+                      </span>
+                    </span>
+                  </>
+                )}
+                {producto.proveedorRazonSocial && (
+                  <>
+                    <span className="text-border">•</span>
+                    <span className="flex items-center gap-1">
+                      <Building2 className="size-3 text-emerald-600 dark:text-emerald-400" />
+                      <span className="font-medium text-foreground text-[11px]">
+                        {producto.proveedorRazonSocial}
                       </span>
                     </span>
                   </>

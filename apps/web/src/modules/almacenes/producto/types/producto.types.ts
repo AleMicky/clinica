@@ -8,6 +8,9 @@ export interface ProductoResponse {
   marcaId?: number | null;
   marcaNombre?: string | null;
   marcaCodigo?: string | null;
+  proveedorId?: number | null;
+  proveedorRazonSocial?: string | null;
+  proveedorCodigo?: string | null;
   unidadMedidaId: number;
   unidadMedidaNombre?: string | null;
   unidadMedidaSimbolo?: string | null;
@@ -31,6 +34,7 @@ export interface CreateProductoRequest {
   descripcion?: string | null;
   categoriaProductoId: number;
   marcaId?: number | null;
+  proveedorId?: number | null;
   unidadMedidaId: number;
   controlaLote: boolean;
   controlaVencimiento: boolean;
@@ -46,6 +50,7 @@ export interface ProductoQueryParams {
   search?: string;
   categoriaProductoId?: number | null;
   marcaId?: number | null;
+  proveedorId?: number | null;
 }
 
 export interface PagedResult<T> {

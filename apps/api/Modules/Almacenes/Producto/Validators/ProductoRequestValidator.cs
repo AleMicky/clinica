@@ -39,6 +39,11 @@ public abstract class ProductoRequestValidator<TRequest>
             .GreaterThan(0)
             .WithMessage("La unidad de medida es obligatoria.");
 
+        RuleFor(x => x.ProveedorId)
+            .GreaterThan(0)
+            .WithMessage("El proveedor seleccionado no es válido.")
+            .When(x => x.ProveedorId.HasValue);
+
         RuleFor(x => x.StockMinimo)
             .GreaterThanOrEqualTo(0)
             .WithMessage("El stock mínimo no puede ser negativo.");

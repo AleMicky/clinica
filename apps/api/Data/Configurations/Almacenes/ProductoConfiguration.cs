@@ -48,5 +48,10 @@ public sealed class ProductoConfiguration
             .WithMany()
             .HasForeignKey(x => x.UnidadMedidaId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(x => x.Proveedor)
+            .WithMany(x => x.Productos)
+            .HasForeignKey(x => x.ProveedorId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

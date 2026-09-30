@@ -26,6 +26,12 @@ export const productoSchema = z
       .positive("La marca seleccionada no es válida")
       .optional()
       .nullable(),
+    proveedorId: z
+      .number()
+      .int()
+      .positive("El proveedor seleccionado no es válido")
+      .optional()
+      .nullable(),
     unidadMedidaId: z
       .number({ message: "La unidad de medida es obligatoria" })
       .int()

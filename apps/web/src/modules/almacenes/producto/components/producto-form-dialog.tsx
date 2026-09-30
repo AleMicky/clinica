@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import {
   Boxes,
+  Building2,
   Check,
   ChevronsUpDown,
   FolderTree,
@@ -46,6 +47,7 @@ import { useCreateProducto, useUpdateProducto } from "../hooks/use-producto";
 import { useCategoriasProducto } from "../../categoria-producto/hooks/use-categoria-producto";
 import { useUnidadesMedida } from "@/modules/parametros/unidad-medida/hooks/use-unidades-medida";
 import { MarcaAutocomplete } from "@/modules/almacenes/marca";
+import { ProveedorAutocomplete } from "@/modules/compras/proveedor";
 import type { ProductoResponse } from "../types/producto.types";
 
 interface ProductoFormDialogProps {
@@ -121,6 +123,7 @@ export function ProductoFormDialog({
       descripcion: "",
       categoriaProductoId: 0,
       marcaId: null,
+      proveedorId: null,
       unidadMedidaId: 0,
       controlaLote: false,
       controlaVencimiento: false,
@@ -131,6 +134,7 @@ export function ProductoFormDialog({
 
   const selectedCategoriaId = watch("categoriaProductoId");
   const selectedMarcaId = watch("marcaId");
+  const selectedProveedorId = watch("proveedorId");
   const selectedUnidadId = watch("unidadMedidaId");
   const controlaLote = watch("controlaLote");
   const controlaVencimiento = watch("controlaVencimiento");
@@ -199,6 +203,7 @@ export function ProductoFormDialog({
           descripcion: productoToEdit.descripcion || "",
           categoriaProductoId: productoToEdit.categoriaProductoId,
           marcaId: productoToEdit.marcaId ?? null,
+          proveedorId: productoToEdit.proveedorId ?? null,
           unidadMedidaId: productoToEdit.unidadMedidaId,
           controlaLote: productoToEdit.controlaLote,
           controlaVencimiento: productoToEdit.controlaVencimiento,
@@ -215,6 +220,7 @@ export function ProductoFormDialog({
           descripcion: "",
           categoriaProductoId: 0,
           marcaId: null,
+          proveedorId: null,
           unidadMedidaId: 0,
           controlaLote: false,
           controlaVencimiento: false,
@@ -305,6 +311,7 @@ export function ProductoFormDialog({
         descripcion: values.descripcion?.trim() || null,
         categoriaProductoId: values.categoriaProductoId,
         marcaId: values.marcaId ? Number(values.marcaId) : null,
+        proveedorId: values.proveedorId ? Number(values.proveedorId) : null,
         unidadMedidaId: values.unidadMedidaId,
         controlaLote: values.controlaLote,
         controlaVencimiento: values.controlaVencimiento,
@@ -332,6 +339,7 @@ export function ProductoFormDialog({
             descripcion: "",
             categoriaProductoId: values.categoriaProductoId,
             marcaId: values.marcaId ? Number(values.marcaId) : null,
+            proveedorId: values.proveedorId ? Number(values.proveedorId) : null,
             unidadMedidaId: values.unidadMedidaId,
             controlaLote: values.controlaLote,
             controlaVencimiento: values.controlaVencimiento,
@@ -521,8 +529,8 @@ export function ProductoFormDialog({
                     </div>
                   </div>
 
-                  {/* Categoría, Marca y Unidad de Medida */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Categoría y Marca */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {/* Categoría */}
                     <div className="space-y-1.5">
                       <Label className="text-xs flex items-center gap-1">
@@ -651,7 +659,10 @@ export function ProductoFormDialog({
                         <p className="text-[11px] text-destructive font-medium">{errors.marcaId.message}</p>
                       )}
                     </div>
+                  </div>
 
+                  {/* Unidad de Medida y Proveedor */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {/* Unidad de Medida */}
                     <div className="space-y-1.5">
                       <Label className="text-xs flex items-center gap-1">
@@ -759,6 +770,22 @@ export function ProductoFormDialog({
                         <p className="text-[11px] text-destructive font-medium">
                           {errors.unidadMedidaId.message}
                         </p>
+                      )}
+                    </div>
+
+                    {/* Proveedor (Opcional) */}
+                    <div className="space-y-1.5">
+                      <Label className="text-xs flex items-center gap-1">
+                        <Building2 className="size-3 text-primary" /> Proveedor <span className="text-[10px] text-muted-foreground font-normal">(Opcional)</span>
+                      </Label>
+                      <ProveedorAutocomplete
+                        value={selectedProveedorId}
+                        onValueChange={(val) => setValue("proveedorId", val, { shouldValidate: true })}
+                        error={Boolean(errors.proveedorId)}
+                        className="h-9"
+                      />
+                      {errors.proveedorId && (
+                        <p className="text-[11px] text-destructive font-medium">{errors.proveedorId.message}</p>
                       )}
                     </div>
                   </div>
@@ -1229,8 +1256,8 @@ export function ProductoFormDialog({
                 </div>
               </div>
 
-              {/* Categoría, Marca y Unidad de Medida */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* Categoría y Marca */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {/* Categoría */}
                 <div className="space-y-1.5">
                   <Label className="text-xs flex items-center gap-1">
@@ -1359,7 +1386,10 @@ export function ProductoFormDialog({
                     <p className="text-[11px] text-destructive font-medium">{errors.marcaId.message}</p>
                   )}
                 </div>
+              </div>
 
+              {/* Unidad de Medida y Proveedor */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {/* Unidad de Medida */}
                 <div className="space-y-1.5">
                   <Label className="text-xs flex items-center gap-1">
@@ -1467,6 +1497,22 @@ export function ProductoFormDialog({
                     <p className="text-[11px] text-destructive font-medium">
                       {errors.unidadMedidaId.message}
                     </p>
+                  )}
+                </div>
+
+                {/* Proveedor (Opcional) */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs flex items-center gap-1">
+                    <Building2 className="size-3 text-primary" /> Proveedor <span className="text-[10px] text-muted-foreground font-normal">(Opcional)</span>
+                  </Label>
+                  <ProveedorAutocomplete
+                    value={selectedProveedorId}
+                    onValueChange={(val) => setValue("proveedorId", val, { shouldValidate: true })}
+                    error={Boolean(errors.proveedorId)}
+                    className="h-9"
+                  />
+                  {errors.proveedorId && (
+                    <p className="text-[11px] text-destructive font-medium">{errors.proveedorId.message}</p>
                   )}
                 </div>
               </div>

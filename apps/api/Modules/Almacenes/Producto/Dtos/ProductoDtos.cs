@@ -11,6 +11,7 @@ public abstract record ProductoRequest
     public required int CategoriaProductoId { get; init; }
     public int? MarcaId { get; init; }
     public required int UnidadMedidaId { get; init; }
+    public int? ProveedorId { get; init; }
 
     public bool ControlaLote { get; init; }
     public bool ControlaVencimiento { get; init; }
@@ -40,6 +41,10 @@ public sealed record ProductoResponse : AuditableResponse
     public int UnidadMedidaId { get; init; }
     public string? UnidadMedidaNombre { get; init; }
     public string? UnidadMedidaSimbolo { get; init; }
+
+    public int? ProveedorId { get; init; }
+    public string? ProveedorRazonSocial { get; init; }
+    public string? ProveedorCodigo { get; init; }
 
     public bool ControlaLote { get; init; }
     public bool ControlaVencimiento { get; init; }

@@ -1,3 +1,4 @@
+using Clinica.Api.Modules.Compras.Proveedor.Entity;
 using Clinica.Api.Modules.Parametros.UnidadesMedida.Entity;
 using Clinica.Api.Shared.Abstractions;
 
@@ -17,11 +18,13 @@ public sealed class Producto : AuditableEntity
     public CategoriaProductoEntity CategoriaProducto { get; set; } = null!;
     
     public int? MarcaId { get; set; }
-
     public MarcaEntity? Marca { get; set; }
 
     public int UnidadMedidaId { get; set; }
     public UnidadesMedida UnidadMedida { get; set; } = null!;
+    
+    public int? ProveedorId { get; set; }
+    public Proveedor? Proveedor { get; set; }
 
     public bool ControlaLote { get; set; } = false;
     public bool ControlaVencimiento { get; set; } = false;

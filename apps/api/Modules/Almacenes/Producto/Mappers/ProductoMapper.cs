@@ -10,6 +10,7 @@ public static partial class ProductoMapper
     [MapperIgnoreSource(nameof(ProductoEntity.CategoriaProducto))]
     [MapperIgnoreSource(nameof(ProductoEntity.Marca))]
     [MapperIgnoreSource(nameof(ProductoEntity.UnidadMedida))]
+    [MapperIgnoreSource(nameof(ProductoEntity.Proveedor))]
     public static partial ProductoResponse ToResponse(
         ProductoEntity entity);
 
@@ -25,6 +26,7 @@ public static partial class ProductoMapper
     [MapperIgnoreTarget(nameof(ProductoEntity.CategoriaProducto))]
     [MapperIgnoreTarget(nameof(ProductoEntity.Marca))]
     [MapperIgnoreTarget(nameof(ProductoEntity.UnidadMedida))]
+    [MapperIgnoreTarget(nameof(ProductoEntity.Proveedor))]
     public static partial ProductoEntity ToEntity(
         CreateProductoRequest request);
 
@@ -37,6 +39,7 @@ public static partial class ProductoMapper
     [MapperIgnoreTarget(nameof(ProductoEntity.CategoriaProducto))]
     [MapperIgnoreTarget(nameof(ProductoEntity.Marca))]
     [MapperIgnoreTarget(nameof(ProductoEntity.UnidadMedida))]
+    [MapperIgnoreTarget(nameof(ProductoEntity.Proveedor))]
     public static partial void UpdateEntity(
         UpdateProductoRequest request,
         ProductoEntity entity);

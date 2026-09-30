@@ -1,8 +1,9 @@
+using Clinica.Api.Modules.Almacenes.Producto.Entity;
 using Clinica.Api.Shared.Abstractions;
 
 namespace Clinica.Api.Modules.Compras.Proveedor.Entity;
 
-public sealed class Proveedor : AuditableEntity
+public sealed class  Proveedor : AuditableEntity
 {
     public string Codigo { get; set; } = string.Empty;
     public string RazonSocial { get; set; } = string.Empty;
@@ -16,8 +17,7 @@ public sealed class Proveedor : AuditableEntity
     public string? Observacion { get; set; }
 
     public ICollection<OrdenCompra.Entity.OrdenCompra> OrdenesCompra { get; set; } = [];
-
     public ICollection<CotizacionCompra.Entity.CotizacionCompra> Cotizaciones { get; set; } = [];
-
-     public ICollection<RecepcionCompra.Entity.RecepcionCompra> Recepciones { get; set; } = [];
+    public ICollection<RecepcionCompra.Entity.RecepcionCompra> Recepciones { get; set; } = [];
+    public ICollection<Producto> Productos{ get; set; } = new List<Producto>();
 }
