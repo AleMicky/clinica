@@ -323,11 +323,19 @@ public static class OpcionMenuSeed
                 "ALMACENES_MODULO"),
 
             new(
+                "MARCAS",
+                "Marcas",
+                "/almacenes/marcas",
+                "Tag",
+                3,
+                "ALMACENES_MODULO"),
+
+            new(
                 "PRODUCTOS",
                 "Productos",
                 "/almacenes/productos",
                 "Package",
-                3,
+                4,
                 "ALMACENES_MODULO"),
 
             new(
@@ -335,7 +343,7 @@ public static class OpcionMenuSeed
                 "Existencias / Stock",
                 "/almacenes/existencias",
                 "Boxes",
-                4,
+                5,
                 "ALMACENES_MODULO"),
 
             new(
@@ -343,7 +351,7 @@ public static class OpcionMenuSeed
                 "Tipos de Movimiento",
                 "/almacenes/tipos-movimiento",
                 "SlidersHorizontal",
-                5,
+                6,
                 "ALMACENES_MODULO"),
 
             new(
