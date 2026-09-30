@@ -5,6 +5,9 @@ export interface ProductoResponse {
   descripcion?: string | null;
   categoriaProductoId: number;
   categoriaProductoNombre?: string | null;
+  marcaId?: number | null;
+  marcaNombre?: string | null;
+  marcaCodigo?: string | null;
   unidadMedidaId: number;
   unidadMedidaNombre?: string | null;
   unidadMedidaSimbolo?: string | null;
@@ -27,6 +30,7 @@ export interface CreateProductoRequest {
   nombre: string;
   descripcion?: string | null;
   categoriaProductoId: number;
+  marcaId?: number | null;
   unidadMedidaId: number;
   controlaLote: boolean;
   controlaVencimiento: boolean;
@@ -41,6 +45,7 @@ export interface ProductoQueryParams {
   pageSize?: number;
   search?: string;
   categoriaProductoId?: number | null;
+  marcaId?: number | null;
 }
 
 export interface PagedResult<T> {
@@ -74,4 +79,3 @@ export interface ExcelImportResult {
   errores: number;
   errors: ExcelImportError[];
 }
-

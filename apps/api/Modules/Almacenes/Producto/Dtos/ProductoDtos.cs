@@ -9,6 +9,7 @@ public abstract record ProductoRequest
     public string? Descripcion { get; init; }
 
     public required int CategoriaProductoId { get; init; }
+    public int? MarcaId { get; init; }
     public required int UnidadMedidaId { get; init; }
 
     public bool ControlaLote { get; init; }
@@ -31,6 +32,10 @@ public sealed record ProductoResponse : AuditableResponse
 
     public int CategoriaProductoId { get; init; }
     public string? CategoriaProductoNombre { get; init; }
+
+    public int? MarcaId { get; init; }
+    public string? MarcaNombre { get; init; }
+    public string? MarcaCodigo { get; init; }
 
     public int UnidadMedidaId { get; init; }
     public string? UnidadMedidaNombre { get; init; }

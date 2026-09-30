@@ -207,9 +207,19 @@ export function ProductoTable({
                   {/* Nombre y Descripción */}
                   <TableCell className="py-2 min-w-[180px]">
                     <div className="flex flex-col">
-                      <span className="font-medium text-xs text-foreground">
-                        {producto.nombre}
-                      </span>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="font-medium text-xs text-foreground">
+                          {producto.nombre}
+                        </span>
+                        {producto.marcaNombre && (
+                          <Badge
+                            variant="secondary"
+                            className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary border-primary/20 font-normal"
+                          >
+                            {producto.marcaNombre}
+                          </Badge>
+                        )}
+                      </div>
                       {producto.descripcion ? (
                         <span className="text-[11px] text-muted-foreground line-clamp-1">
                           {producto.descripcion}

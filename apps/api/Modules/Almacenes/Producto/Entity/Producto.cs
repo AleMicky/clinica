@@ -2,7 +2,9 @@ using Clinica.Api.Modules.Parametros.UnidadesMedida.Entity;
 using Clinica.Api.Shared.Abstractions;
 
 using CategoriaProductoEntity = Clinica.Api.Modules.Almacenes.CategoriaProducto.Entity.CategoriaProducto;
- 
+using MarcaEntity = Clinica.Api.Modules.Almacenes.Marca.Entity.Marca;
+
+
 namespace Clinica.Api.Modules.Almacenes.Producto.Entity;
 
 public sealed class Producto : AuditableEntity
@@ -13,6 +15,10 @@ public sealed class Producto : AuditableEntity
 
     public int CategoriaProductoId { get; set; }
     public CategoriaProductoEntity CategoriaProducto { get; set; } = null!;
+    
+    public int? MarcaId { get; set; }
+
+    public MarcaEntity? Marca { get; set; }
 
     public int UnidadMedidaId { get; set; }
     public UnidadesMedida UnidadMedida { get; set; } = null!;

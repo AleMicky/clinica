@@ -8,6 +8,7 @@ namespace Clinica.Api.Modules.Almacenes.Producto.Mappers;
 public static partial class ProductoMapper
 {
     [MapperIgnoreSource(nameof(ProductoEntity.CategoriaProducto))]
+    [MapperIgnoreSource(nameof(ProductoEntity.Marca))]
     [MapperIgnoreSource(nameof(ProductoEntity.UnidadMedida))]
     public static partial ProductoResponse ToResponse(
         ProductoEntity entity);
@@ -22,6 +23,7 @@ public static partial class ProductoMapper
     [MapperIgnoreTarget(nameof(ProductoEntity.CreadoPor))]
     [MapperIgnoreTarget(nameof(ProductoEntity.ModificadoPor))]
     [MapperIgnoreTarget(nameof(ProductoEntity.CategoriaProducto))]
+    [MapperIgnoreTarget(nameof(ProductoEntity.Marca))]
     [MapperIgnoreTarget(nameof(ProductoEntity.UnidadMedida))]
     public static partial ProductoEntity ToEntity(
         CreateProductoRequest request);
@@ -33,6 +35,7 @@ public static partial class ProductoMapper
     [MapperIgnoreTarget(nameof(ProductoEntity.CreadoPor))]
     [MapperIgnoreTarget(nameof(ProductoEntity.ModificadoPor))]
     [MapperIgnoreTarget(nameof(ProductoEntity.CategoriaProducto))]
+    [MapperIgnoreTarget(nameof(ProductoEntity.Marca))]
     [MapperIgnoreTarget(nameof(ProductoEntity.UnidadMedida))]
     public static partial void UpdateEntity(
         UpdateProductoRequest request,

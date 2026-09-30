@@ -49,6 +49,7 @@ public static class ProductoEndpoints
 
     private static async Task<IResult> ListarAsync(
         int? categoriaProductoId,
+        int? marcaId,
         string? search,
         [AsParameters] PaginationRequest pagination,
         IProductoService service,
@@ -57,6 +58,7 @@ public static class ProductoEndpoints
         return Results.Ok(
             await service.ListarAsync(
                 categoriaProductoId,
+                marcaId,
                 search,
                 pagination,
                 cancellationToken));

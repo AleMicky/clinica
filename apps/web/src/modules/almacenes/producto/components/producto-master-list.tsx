@@ -347,11 +347,17 @@ export function ProductoMasterList({
                   </div>
                 </div>
 
-                {/* Sub details: Category & Feature Badges */}
+                {/* Sub details: Category, Brand & Feature Badges */}
                 <div className="flex items-center justify-between text-[10px] text-muted-foreground gap-2 pt-0.5">
-                  <span className="truncate text-[10px] text-muted-foreground/90">
-                    {prod.categoriaProductoNombre || "Sin categoría"}
-                  </span>
+                  <div className="flex items-center gap-1.5 truncate text-[10px] text-muted-foreground/90 min-w-0">
+                    <span className="truncate">{prod.categoriaProductoNombre || "Sin categoría"}</span>
+                    {prod.marcaNombre && (
+                      <>
+                        <span className="text-muted-foreground/40">•</span>
+                        <span className="text-primary/90 font-medium truncate">{prod.marcaNombre}</span>
+                      </>
+                    )}
+                  </div>
                   <div className="flex items-center gap-1 shrink-0">
                     {prod.controlaLote && (
                       <span className="inline-flex items-center gap-0.5 text-[9px] px-1 py-0.2 rounded border border-blue-500/25 bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium">

@@ -4,6 +4,7 @@ using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
 using CategoriaProductoEntity = Clinica.Api.Modules.Almacenes.CategoriaProducto.Entity.CategoriaProducto;
+using MarcaEntity = Clinica.Api.Modules.Almacenes.Marca.Entity.Marca;
 using ProductoEntity = Clinica.Api.Modules.Almacenes.Producto.Entity.Producto;
 using ProductoMapper = Clinica.Api.Modules.Almacenes.Producto.Mappers.ProductoMapper;
 using UnidadesMedidaEntity = Clinica.Api.Modules.Parametros.UnidadesMedida.Entity.UnidadesMedida;
@@ -14,6 +15,7 @@ public interface IProductoService
 {
     Task<PagedResult<ProductoResponse>> ListarAsync(
         int? categoriaProductoId,
+        int? marcaId,
         string? search,
         PaginationRequest pagination,
         CancellationToken cancellationToken = default);
@@ -41,6 +43,7 @@ public sealed class ProductoService(AppDbContext dbContext)
 {
     public async Task<PagedResult<ProductoResponse>> ListarAsync(
         int? categoriaProductoId,
+        int? marcaId,
         string? search,
         PaginationRequest pagination,
         CancellationToken cancellationToken = default)
@@ -55,13 +58,19 @@ public sealed class ProductoService(AppDbContext dbContext)
             query = query.Where(x => x.CategoriaProductoId == categoriaProductoId.Value);
         }
 
+        if (marcaId.HasValue)
+        {
+            query = query.Where(x => x.MarcaId == marcaId.Value);
+        }
+
         if (!string.IsNullOrWhiteSpace(search))
         {
             var termino = search.Trim();
             query = query.Where(x =>
                 x.Codigo.Contains(termino) ||
                 x.Nombre.Contains(termino) ||
-                (x.Descripcion != null && x.Descripcion.Contains(termino)));
+                (x.Descripcion != null && x.Descripcion.Contains(termino)) ||
+                (x.Marca != null && (x.Marca.Nombre.Contains(termino) || x.Marca.Codigo.Contains(termino))));
         }
 
         var totalItems = await query.CountAsync(cancellationToken);
@@ -74,6 +83,7 @@ public sealed class ProductoService(AppDbContext dbContext)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .Include(x => x.CategoriaProducto)
+            .Include(x => x.Marca)
             .Include(x => x.UnidadMedida)
             .ToListAsync(cancellationToken);
 
@@ -81,6 +91,8 @@ public sealed class ProductoService(AppDbContext dbContext)
             .Select(x => Mapear(
                 x,
                 x.CategoriaProducto?.Nombre,
+                x.Marca?.Nombre,
+                x.Marca?.Codigo,
                 x.UnidadMedida?.Nombre,
                 x.UnidadMedida?.Simbolo))
             .ToList();
@@ -100,6 +112,7 @@ public sealed class ProductoService(AppDbContext dbContext)
             .Productos
             .AsNoTracking()
             .Include(x => x.CategoriaProducto)
+            .Include(x => x.Marca)
             .Include(x => x.UnidadMedida)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
@@ -111,6 +124,8 @@ public sealed class ProductoService(AppDbContext dbContext)
         return Mapear(
             producto,
             producto.CategoriaProducto?.Nombre,
+            producto.Marca?.Nombre,
+            producto.Marca?.Codigo,
             producto.UnidadMedida?.Nombre,
             producto.UnidadMedida?.Simbolo);
     }
@@ -121,6 +136,7 @@ public sealed class ProductoService(AppDbContext dbContext)
     {
         await ValidarReferenciasAsync(
             request.CategoriaProductoId,
+            request.MarcaId,
             request.UnidadMedidaId,
             cancellationToken);
 
@@ -145,6 +161,7 @@ public sealed class ProductoService(AppDbContext dbContext)
     {
         await ValidarReferenciasAsync(
             request.CategoriaProductoId,
+            request.MarcaId,
             request.UnidadMedidaId,
             cancellationToken);
 
@@ -187,6 +204,7 @@ public sealed class ProductoService(AppDbContext dbContext)
 
     private async Task ValidarReferenciasAsync(
         int categoriaProductoId,
+        int? marcaId,
         int unidadMedidaId,
         CancellationToken cancellationToken)
     {
@@ -200,6 +218,21 @@ public sealed class ProductoService(AppDbContext dbContext)
             throw new NotFoundException(
                 nameof(CategoriaProductoEntity),
                 categoriaProductoId);
+        }
+
+        if (marcaId.HasValue)
+        {
+            var existeMarca = await dbContext.Marcas
+                .AnyAsync(
+                    x => x.Id == marcaId.Value && x.Activo,
+                    cancellationToken);
+
+            if (!existeMarca)
+            {
+                throw new NotFoundException(
+                    nameof(MarcaEntity),
+                    marcaId.Value);
+            }
         }
 
         var existeUnidad = await dbContext.UnidadesMedida
@@ -238,6 +271,8 @@ public sealed class ProductoService(AppDbContext dbContext)
     private static ProductoResponse Mapear(
         ProductoEntity entity,
         string? nombreCategoria,
+        string? nombreMarca,
+        string? codigoMarca,
         string? nombreUnidad,
         string? simboloUnidad)
     {
@@ -245,6 +280,9 @@ public sealed class ProductoService(AppDbContext dbContext)
         return response with
         {
             CategoriaProductoNombre = nombreCategoria,
+            MarcaId = entity.MarcaId,
+            MarcaNombre = nombreMarca,
+            MarcaCodigo = codigoMarca,
             UnidadMedidaNombre = nombreUnidad,
             UnidadMedidaSimbolo = simboloUnidad
         };
@@ -258,6 +296,7 @@ public sealed class ProductoService(AppDbContext dbContext)
         entity.Codigo = NormalizarCodigo(request.Codigo);
         entity.Nombre = request.Nombre.Trim();
         entity.Descripcion = Limpiar(request.Descripcion);
+        entity.MarcaId = request.MarcaId;
 
         if (esNuevo)
         {

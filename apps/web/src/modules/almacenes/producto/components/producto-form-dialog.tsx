@@ -45,6 +45,7 @@ import { productoSchema, type ProductoFormValues } from "../schemas/producto.sch
 import { useCreateProducto, useUpdateProducto } from "../hooks/use-producto";
 import { useCategoriasProducto } from "../../categoria-producto/hooks/use-categoria-producto";
 import { useUnidadesMedida } from "@/modules/parametros/unidad-medida/hooks/use-unidades-medida";
+import { MarcaAutocomplete } from "@/modules/almacenes/marca";
 import type { ProductoResponse } from "../types/producto.types";
 
 interface ProductoFormDialogProps {
@@ -119,6 +120,7 @@ export function ProductoFormDialog({
       nombre: "",
       descripcion: "",
       categoriaProductoId: 0,
+      marcaId: null,
       unidadMedidaId: 0,
       controlaLote: false,
       controlaVencimiento: false,
@@ -128,6 +130,7 @@ export function ProductoFormDialog({
   });
 
   const selectedCategoriaId = watch("categoriaProductoId");
+  const selectedMarcaId = watch("marcaId");
   const selectedUnidadId = watch("unidadMedidaId");
   const controlaLote = watch("controlaLote");
   const controlaVencimiento = watch("controlaVencimiento");
@@ -195,6 +198,7 @@ export function ProductoFormDialog({
           nombre: productoToEdit.nombre,
           descripcion: productoToEdit.descripcion || "",
           categoriaProductoId: productoToEdit.categoriaProductoId,
+          marcaId: productoToEdit.marcaId ?? null,
           unidadMedidaId: productoToEdit.unidadMedidaId,
           controlaLote: productoToEdit.controlaLote,
           controlaVencimiento: productoToEdit.controlaVencimiento,
@@ -210,6 +214,7 @@ export function ProductoFormDialog({
           nombre: "",
           descripcion: "",
           categoriaProductoId: 0,
+          marcaId: null,
           unidadMedidaId: 0,
           controlaLote: false,
           controlaVencimiento: false,
@@ -299,6 +304,7 @@ export function ProductoFormDialog({
         nombre: values.nombre.trim(),
         descripcion: values.descripcion?.trim() || null,
         categoriaProductoId: values.categoriaProductoId,
+        marcaId: values.marcaId ? Number(values.marcaId) : null,
         unidadMedidaId: values.unidadMedidaId,
         controlaLote: values.controlaLote,
         controlaVencimiento: values.controlaVencimiento,
@@ -325,6 +331,7 @@ export function ProductoFormDialog({
             nombre: "",
             descripcion: "",
             categoriaProductoId: values.categoriaProductoId,
+            marcaId: values.marcaId ? Number(values.marcaId) : null,
             unidadMedidaId: values.unidadMedidaId,
             controlaLote: values.controlaLote,
             controlaVencimiento: values.controlaVencimiento,
@@ -514,8 +521,8 @@ export function ProductoFormDialog({
                     </div>
                   </div>
 
-                  {/* Categoría y Unidad de Medida */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Categoría, Marca y Unidad de Medida */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {/* Categoría */}
                     <div className="space-y-1.5">
                       <Label className="text-xs flex items-center gap-1">
@@ -626,6 +633,22 @@ export function ProductoFormDialog({
                         <p className="text-[11px] text-destructive font-medium">
                           {errors.categoriaProductoId.message}
                         </p>
+                      )}
+                    </div>
+
+                    {/* Marca (Opcional) */}
+                    <div className="space-y-1.5">
+                      <Label className="text-xs flex items-center gap-1">
+                        <Tag className="size-3 text-primary" /> Marca <span className="text-[10px] text-muted-foreground font-normal">(Opcional)</span>
+                      </Label>
+                      <MarcaAutocomplete
+                        value={selectedMarcaId}
+                        onValueChange={(val) => setValue("marcaId", val, { shouldValidate: true })}
+                        error={Boolean(errors.marcaId)}
+                        className="h-9"
+                      />
+                      {errors.marcaId && (
+                        <p className="text-[11px] text-destructive font-medium">{errors.marcaId.message}</p>
                       )}
                     </div>
 
@@ -1206,8 +1229,8 @@ export function ProductoFormDialog({
                 </div>
               </div>
 
-              {/* Categoría y Unidad de Medida */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Categoría, Marca y Unidad de Medida */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {/* Categoría */}
                 <div className="space-y-1.5">
                   <Label className="text-xs flex items-center gap-1">
@@ -1318,6 +1341,22 @@ export function ProductoFormDialog({
                     <p className="text-[11px] text-destructive font-medium">
                       {errors.categoriaProductoId.message}
                     </p>
+                  )}
+                </div>
+
+                {/* Marca (Opcional) */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs flex items-center gap-1">
+                    <Tag className="size-3 text-primary" /> Marca <span className="text-[10px] text-muted-foreground font-normal">(Opcional)</span>
+                  </Label>
+                  <MarcaAutocomplete
+                    value={selectedMarcaId}
+                    onValueChange={(val) => setValue("marcaId", val, { shouldValidate: true })}
+                    error={Boolean(errors.marcaId)}
+                    className="h-9"
+                  />
+                  {errors.marcaId && (
+                    <p className="text-[11px] text-destructive font-medium">{errors.marcaId.message}</p>
                   )}
                 </div>
 

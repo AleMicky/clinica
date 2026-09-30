@@ -30,6 +30,11 @@ public abstract class ProductoRequestValidator<TRequest>
             .GreaterThan(0)
             .WithMessage("La categoría de producto es obligatoria.");
 
+        RuleFor(x => x.MarcaId)
+            .GreaterThan(0)
+            .WithMessage("La marca seleccionada no es válida.")
+            .When(x => x.MarcaId.HasValue);
+
         RuleFor(x => x.UnidadMedidaId)
             .GreaterThan(0)
             .WithMessage("La unidad de medida es obligatoria.");

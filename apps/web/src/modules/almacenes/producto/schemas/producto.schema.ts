@@ -20,6 +20,12 @@ export const productoSchema = z
       .number({ message: "La categoría de producto es obligatoria" })
       .int()
       .positive("La categoría de producto es obligatoria"),
+    marcaId: z
+      .number()
+      .int()
+      .positive("La marca seleccionada no es válida")
+      .optional()
+      .nullable(),
     unidadMedidaId: z
       .number({ message: "La unidad de medida es obligatoria" })
       .int()

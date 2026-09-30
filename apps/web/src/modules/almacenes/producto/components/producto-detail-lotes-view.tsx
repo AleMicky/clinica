@@ -137,7 +137,7 @@ export function ProductoDetailLotesView({
                 </div>
               </div>
 
-              {/* Categoría & Unidad */}
+              {/* Categoría, Marca & Unidad */}
               <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <Tag className="size-3 text-muted-foreground/80" />
@@ -145,6 +145,18 @@ export function ProductoDetailLotesView({
                     {producto.categoriaProductoNombre || "Sin categoría"}
                   </span>
                 </span>
+                {producto.marcaNombre && (
+                  <>
+                    <span className="text-border">•</span>
+                    <span className="flex items-center gap-1">
+                      <Tag className="size-3 text-primary/80" />
+                      <span className="font-medium text-primary text-[11px]">
+                        {producto.marcaNombre}
+                        {producto.marcaCodigo && ` (${producto.marcaCodigo})`}
+                      </span>
+                    </span>
+                  </>
+                )}
                 <span className="text-border">•</span>
                 <span className="flex items-center gap-1">
                   <Scale className="size-3 text-muted-foreground/80" />
