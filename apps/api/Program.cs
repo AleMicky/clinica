@@ -178,6 +178,7 @@ if (app.Configuration.GetValue<bool>("RunSeeds", false))
     await TarifarioSeed.SeedAsync(app.Services);
     await EspecialidadSeed.SeedAsync(app.Services);
     await AlmacenSeed.SeedAsync(app.Services);
+    await MarcaSeed.SeedAsync(app.Services);
     await UnidadesMedidaSeed.SeedAsync(app.Services);
     await ProveedorSeed.SeedAsync(app.Services);
     await TipoMovimientoInventarioSeed.SeedAsync(app.Services);
