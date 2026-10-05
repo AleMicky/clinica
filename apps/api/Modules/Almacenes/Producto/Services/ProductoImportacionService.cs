@@ -563,17 +563,27 @@ public sealed class ProductoImportacionService(
         }
     }
 
+    private static void RegistrarVariaciones(Dictionary<string, int> map, string? valor, int id)
+    {
+        if (string.IsNullOrWhiteSpace(valor))
+            return;
+
+        var limpio = valor.Trim().ToUpperInvariant();
+        map[limpio] = id;
+        map[limpio.Replace("_", " ")] = id;
+        map[limpio.Replace(".", "")] = id;
+        map[limpio.Replace(" ", "")] = id;
+        map[limpio.Replace(".", " ").Replace("  ", " ").Trim()] = id;
+    }
+
     private static Dictionary<string, int> ConstruirCategoriasMap(List<CategoriaProductoEntity> categorias)
     {
         var map = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var cat in categorias)
         {
-            if (!string.IsNullOrWhiteSpace(cat.Codigo))
-                map[cat.Codigo.Trim().ToUpperInvariant()] = cat.Id;
-
-            if (!string.IsNullOrWhiteSpace(cat.Nombre))
-                map[cat.Nombre.Trim().ToUpperInvariant()] = cat.Id;
+            RegistrarVariaciones(map, cat.Codigo, cat.Id);
+            RegistrarVariaciones(map, cat.Nombre, cat.Id);
         }
 
         return map;
@@ -585,11 +595,8 @@ public sealed class ProductoImportacionService(
 
         foreach (var m in marcas)
         {
-            if (!string.IsNullOrWhiteSpace(m.Codigo))
-                map[m.Codigo.Trim().ToUpperInvariant()] = m.Id;
-
-            if (!string.IsNullOrWhiteSpace(m.Nombre))
-                map[m.Nombre.Trim().ToUpperInvariant()] = m.Id;
+            RegistrarVariaciones(map, m.Codigo, m.Id);
+            RegistrarVariaciones(map, m.Nombre, m.Id);
         }
 
         return map;
@@ -601,17 +608,10 @@ public sealed class ProductoImportacionService(
 
         foreach (var p in proveedores)
         {
-            if (!string.IsNullOrWhiteSpace(p.Codigo))
-                map[p.Codigo.Trim().ToUpperInvariant()] = p.Id;
-
-            if (!string.IsNullOrWhiteSpace(p.RazonSocial))
-                map[p.RazonSocial.Trim().ToUpperInvariant()] = p.Id;
-
-            if (!string.IsNullOrWhiteSpace(p.NombreComercial))
-                map[p.NombreComercial.Trim().ToUpperInvariant()] = p.Id;
-
-            if (!string.IsNullOrWhiteSpace(p.Nit))
-                map[p.Nit.Trim().ToUpperInvariant()] = p.Id;
+            RegistrarVariaciones(map, p.Codigo, p.Id);
+            RegistrarVariaciones(map, p.RazonSocial, p.Id);
+            RegistrarVariaciones(map, p.NombreComercial, p.Id);
+            RegistrarVariaciones(map, p.Nit, p.Id);
         }
 
         return map;
@@ -623,14 +623,9 @@ public sealed class ProductoImportacionService(
 
         foreach (var u in unidades)
         {
-            if (!string.IsNullOrWhiteSpace(u.Codigo))
-                map[u.Codigo.Trim().ToUpperInvariant()] = u.Id;
-
-            if (!string.IsNullOrWhiteSpace(u.Simbolo))
-                map[u.Simbolo.Trim().ToUpperInvariant()] = u.Id;
-
-            if (!string.IsNullOrWhiteSpace(u.Nombre))
-                map[u.Nombre.Trim().ToUpperInvariant()] = u.Id;
+            RegistrarVariaciones(map, u.Codigo, u.Id);
+            RegistrarVariaciones(map, u.Simbolo, u.Id);
+            RegistrarVariaciones(map, u.Nombre, u.Id);
         }
 
         return map;

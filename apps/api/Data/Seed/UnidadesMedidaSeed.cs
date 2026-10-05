@@ -287,6 +287,7 @@ public static class UnidadesMedidaSeed
             new("Presentación Específica", "FRASCO_X_50ML", "Frasco X 50Ml", "fco 50ml"),
             new("Presentación Específica", "X_FRASCO_50ML", "X Frasco 50Ml", "x fco 50ml"),
             new("Presentación Específica", "X_FRASCO_60ML", "X Frasco 60Ml", "x fco 60ml"),
+            new("Presentación Específica", "FRASCO_X_60ML", "Frasco X 60Ml", "fco x 60ml"),
             new("Presentación Específica", "X_FRASCO_80ML", "X Frasco 80Ml", "x fco 80ml"),
             new("Presentación Específica", "FRASCO_X_90ML", "Frasco X 90Ml", "fco 90ml"),
             new("Presentación Específica", "X_FRASCO_90ML", "X Frasco 90Ml", "x fco 90ml"),
@@ -310,6 +311,7 @@ public static class UnidadesMedidaSeed
             new("Presentación Específica", "TUBO_15GR", "Tubo 15Gr", "tubo 15g"),
             new("Presentación Específica", "TUBO_30GR", "Tubo 30Gr", "tubo 30g"),
             new("Presentación Específica", "TUBO_X_30GR", "Tubo X 30Gr", "tubo x 30g"),
+            new("Presentación Específica", "X_TUBO_30GR", "X Tubo 30Gr", "x tubo 30g"),
             new("Presentación Específica", "TUBO_X_50GR", "Tubo X 50 Gr", "tubo 50g"),
             new("Presentación Específica", "TUBO_X_60GR", "Tubo X 60Gr", "tubo 60g"),
             new("Presentación Específica", "X_TUBO_60GR", "X Tubo 60Gr", "x tubo 60g"),
@@ -340,11 +342,12 @@ public static class UnidadesMedidaSeed
             new("Packs / Multi-unidad", "X_12_FRASCOS", "X 12 Frascos", "12 fcos"),
             new("Packs / Multi-unidad", "X_20_FRASCOS", "X 20 Frascos", "20 fcos"),
 
-            // Óvulos
+            // Packs con Óvulos
             new("Packs / Multi-unidad", "X_1_OVULO", "X 1 Ovulo", "1 ov"),
             new("Packs / Multi-unidad", "X_10_OVULOS", "X 10 Ovulos", "10 ov"),
             new("Packs / Multi-unidad", "X_10_0VULOS", "X 10 0Vulos", "10 ovulos"),
             new("Packs / Multi-unidad", "X_12_OVULOS", "X 12 Ovulos", "12 ov"),
+            new("Packs / Multi-unidad", "X_12_OVULOS_MIN", "x 12 OVULOS", "x 12 ov"),
 
             // Comprimidos / Tabletas / Grageas
             new("Packs / Multi-unidad", "X_4_COMPRIM", "X 4 Comprim.", "4 comp"),
@@ -360,6 +363,7 @@ public static class UnidadesMedidaSeed
             new("Packs / Multi-unidad", "X_30_TABLETAS", "X 30 Tabletas", "30 tab"),
             new("Packs / Multi-unidad", "X_50_TABLETAS", "X 50 Tabletas", "50 tab"),
             new("Packs / Multi-unidad", "X_100_TABLETAS", "X 100 Tabletas", "100 tab"),
+            new("Packs / Multi-unidad", "X100_TABLETAS", "X100 Tabletas", "x100 tab"),
             new("Packs / Multi-unidad", "X_200_TABLETAS", "X 200 Tabletas", "200 tab"),
             new("Packs / Multi-unidad", "X_21_GRAGEAS", "X 21 Grageas", "21 grag"),
 
@@ -369,6 +373,7 @@ public static class UnidadesMedidaSeed
             new("Packs / Multi-unidad", "X_24_CAPSULAS", "X 24 Capsulas", "24 cap"),
             new("Packs / Multi-unidad", "X_30_CAPSULAS", "X 30 Capsulas", "30 cap"),
             new("Packs / Multi-unidad", "X_35_CAPSULAS", "X 35 Capsulas", "35 cap"),
+            new("Packs / Multi-unidad", "X35_CAPSULAS", "X35 Capsulas", "x35 cap"),
             new("Packs / Multi-unidad", "X_50_CAPSULAS", "X 50 Capsulas", "50 cap"),
             new("Packs / Multi-unidad", "X_100_CAPS", "X 100 Caps", "100 cap"),
             new("Packs / Multi-unidad", "X_120_CAPSULAS", "X 120 Capsulas", "120 cap"),
