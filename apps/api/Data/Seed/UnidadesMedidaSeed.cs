@@ -39,6 +39,8 @@ public static class UnidadesMedidaSeed
                     existente.Nombre = seed.Nombre;
                     existente.Simbolo = seed.Simbolo;
                     existente.Categoria = seed.Categoria;
+                    existente.ModificadoPor = "Seed";
+                    existente.FechaModificacion = DateTime.UtcNow;
                     faltaGuardar = true;
                 }
                 continue;
@@ -51,7 +53,8 @@ public static class UnidadesMedidaSeed
                 Nombre = seed.Nombre,
                 Simbolo = seed.Simbolo,
                 Activo = true,
-                FechaCreacion = DateTime.UtcNow
+                FechaCreacion = DateTime.UtcNow,
+                CreadoPor = "Seed"
             });
 
             faltaGuardar = true;
