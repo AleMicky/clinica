@@ -19,6 +19,9 @@ public static class ProductoEndpoints
         group.MapGet("/", ListarAsync)
             .WithName("ListarProductos");
 
+        group.MapGet("/exportar-excel", ExportarExcelAsync)
+            .WithName("ExportarProductosExcel");
+
         group.MapGet("/{id:int}", ObtenerAsync)
             .WithName("ObtenerProducto");
 
@@ -51,6 +54,10 @@ public static class ProductoEndpoints
         int? categoriaProductoId,
         int? marcaId,
         int? proveedorId,
+        int? unidadMedidaId,
+        string? categoriaUnidadMedida,
+        bool? controlaLote,
+        bool? controlaVencimiento,
         string? search,
         [AsParameters] PaginationRequest pagination,
         IProductoService service,
@@ -61,9 +68,43 @@ public static class ProductoEndpoints
                 categoriaProductoId,
                 marcaId,
                 proveedorId,
+                unidadMedidaId,
+                categoriaUnidadMedida,
+                controlaLote,
+                controlaVencimiento,
                 search,
                 pagination,
                 cancellationToken));
+    }
+
+    private static async Task<IResult> ExportarExcelAsync(
+        int? categoriaProductoId,
+        int? marcaId,
+        int? proveedorId,
+        int? unidadMedidaId,
+        string? categoriaUnidadMedida,
+        bool? controlaLote,
+        bool? controlaVencimiento,
+        string? search,
+        IProductoService service,
+        CancellationToken cancellationToken)
+    {
+        var bytes = await service.ExportarExcelAsync(
+            categoriaProductoId,
+            marcaId,
+            proveedorId,
+            unidadMedidaId,
+            categoriaUnidadMedida,
+            controlaLote,
+            controlaVencimiento,
+            search,
+            cancellationToken);
+
+        var fileName = $"reporte_productos_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+        return Results.File(
+            bytes,
+            contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            fileDownloadName: fileName);
     }
 
     private static async Task<IResult> ObtenerAsync(

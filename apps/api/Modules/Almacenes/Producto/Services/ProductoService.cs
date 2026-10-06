@@ -1,5 +1,7 @@
 using Clinica.Api.Data;
 using Clinica.Api.Modules.Almacenes.Producto.Dtos;
+using Clinica.Api.Shared.Abstractions;
+using Clinica.Api.Shared.Excel;
 using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
@@ -18,8 +20,23 @@ public interface IProductoService
         int? categoriaProductoId,
         int? marcaId,
         int? proveedorId,
+        int? unidadMedidaId,
+        string? categoriaUnidadMedida,
+        bool? controlaLote,
+        bool? controlaVencimiento,
         string? search,
         PaginationRequest pagination,
+        CancellationToken cancellationToken = default);
+
+    Task<byte[]> ExportarExcelAsync(
+        int? categoriaProductoId,
+        int? marcaId,
+        int? proveedorId,
+        int? unidadMedidaId,
+        string? categoriaUnidadMedida,
+        bool? controlaLote,
+        bool? controlaVencimiento,
+        string? search,
         CancellationToken cancellationToken = default);
 
     Task<ProductoResponse> ObtenerAsync(
@@ -40,13 +57,20 @@ public interface IProductoService
         CancellationToken cancellationToken = default);
 }
 
-public sealed class ProductoService(AppDbContext dbContext)
+public sealed class ProductoService(
+    AppDbContext dbContext,
+    ICurrentUserService currentUserService,
+    IExcelReportGenerator excelReportGenerator)
     : IProductoService
 {
     public async Task<PagedResult<ProductoResponse>> ListarAsync(
         int? categoriaProductoId,
         int? marcaId,
         int? proveedorId,
+        int? unidadMedidaId,
+        string? categoriaUnidadMedida,
+        bool? controlaLote,
+        bool? controlaVencimiento,
         string? search,
         PaginationRequest pagination,
         CancellationToken cancellationToken = default)
@@ -69,6 +93,27 @@ public sealed class ProductoService(AppDbContext dbContext)
         if (proveedorId.HasValue)
         {
             query = query.Where(x => x.ProveedorId == proveedorId.Value);
+        }
+
+        if (unidadMedidaId.HasValue)
+        {
+            query = query.Where(x => x.UnidadMedidaId == unidadMedidaId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(categoriaUnidadMedida))
+        {
+            var catUm = categoriaUnidadMedida.Trim();
+            query = query.Where(x => x.UnidadMedida.Categoria == catUm);
+        }
+
+        if (controlaLote.HasValue)
+        {
+            query = query.Where(x => x.ControlaLote == controlaLote.Value);
+        }
+
+        if (controlaVencimiento.HasValue)
+        {
+            query = query.Where(x => x.ControlaVencimiento == controlaVencimiento.Value);
         }
 
         if (!string.IsNullOrWhiteSpace(search))
@@ -105,6 +150,7 @@ public sealed class ProductoService(AppDbContext dbContext)
                 x.Marca?.Codigo,
                 x.UnidadMedida?.Nombre,
                 x.UnidadMedida?.Simbolo,
+                x.UnidadMedida?.Categoria,
                 x.Proveedor?.RazonSocial,
                 x.Proveedor?.Codigo))
             .ToList();
@@ -141,8 +187,109 @@ public sealed class ProductoService(AppDbContext dbContext)
             producto.Marca?.Codigo,
             producto.UnidadMedida?.Nombre,
             producto.UnidadMedida?.Simbolo,
+            producto.UnidadMedida?.Categoria,
             producto.Proveedor?.RazonSocial,
             producto.Proveedor?.Codigo);
+    }
+
+    public async Task<byte[]> ExportarExcelAsync(
+        int? categoriaProductoId,
+        int? marcaId,
+        int? proveedorId,
+        int? unidadMedidaId,
+        string? categoriaUnidadMedida,
+        bool? controlaLote,
+        bool? controlaVencimiento,
+        string? search,
+        CancellationToken cancellationToken = default)
+    {
+        var query = dbContext
+            .Productos
+            .AsNoTracking()
+            .Where(x => x.Activo);
+
+        if (categoriaProductoId.HasValue)
+        {
+            query = query.Where(x => x.CategoriaProductoId == categoriaProductoId.Value);
+        }
+
+        if (marcaId.HasValue)
+        {
+            query = query.Where(x => x.MarcaId == marcaId.Value);
+        }
+
+        if (proveedorId.HasValue)
+        {
+            query = query.Where(x => x.ProveedorId == proveedorId.Value);
+        }
+
+        if (unidadMedidaId.HasValue)
+        {
+            query = query.Where(x => x.UnidadMedidaId == unidadMedidaId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(categoriaUnidadMedida))
+        {
+            var catUm = categoriaUnidadMedida.Trim();
+            query = query.Where(x => x.UnidadMedida.Categoria == catUm);
+        }
+
+        if (controlaLote.HasValue)
+        {
+            query = query.Where(x => x.ControlaLote == controlaLote.Value);
+        }
+
+        if (controlaVencimiento.HasValue)
+        {
+            query = query.Where(x => x.ControlaVencimiento == controlaVencimiento.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var termino = search.Trim();
+            query = query.Where(x =>
+                x.Codigo.Contains(termino) ||
+                x.Nombre.Contains(termino) ||
+                (x.Descripcion != null && x.Descripcion.Contains(termino)) ||
+                (x.Marca != null && (x.Marca.Nombre.Contains(termino) || x.Marca.Codigo.Contains(termino))) ||
+                (x.Proveedor != null && (x.Proveedor.RazonSocial.Contains(termino) || x.Proveedor.Codigo.Contains(termino))));
+        }
+
+        var productos = await query
+            .OrderBy(x => x.Nombre)
+            .Include(x => x.CategoriaProducto)
+            .Include(x => x.Marca)
+            .Include(x => x.UnidadMedida)
+            .Include(x => x.Proveedor)
+            .ToListAsync(cancellationToken);
+
+        var options = new ExcelReportOptions
+        {
+            Title = "Reporte de Catálogo de Productos e Insumos",
+            Subtitle = "Almacenes & Logística - Gestión Integral de Inventario",
+            SheetName = "Productos",
+            HeaderColor = "#059669", // Emerald
+            GeneratedBy = currentUserService.UserId?.ToString()
+        };
+
+        return excelReportGenerator.Generate(options, productos, builder =>
+        {
+            builder.AddColumn("Código", x => x.Codigo, ExcelColumnAlignment.Center);
+            builder.AddColumn("Nombre del Producto", x => x.Nombre);
+            builder.AddColumn("Descripción", x => x.Descripcion ?? string.Empty);
+            builder.AddColumn("Categoría", x => x.CategoriaProducto?.Nombre ?? "Sin categoría");
+            builder.AddColumn("Marca", x => x.Marca?.Nombre ?? "Sin marca");
+            builder.AddColumn("Catálogo / Grupo U.M.", x => x.UnidadMedida?.Categoria ?? string.Empty);
+            builder.AddColumn("Unidad Medida", x => x.UnidadMedida?.Nombre ?? string.Empty);
+            builder.AddColumn("Símbolo", x => x.UnidadMedida?.Simbolo ?? string.Empty, ExcelColumnAlignment.Center);
+            builder.AddColumn("Proveedor", x => x.Proveedor?.RazonSocial ?? "Sin proveedor");
+            builder.AddColumn("Cód. Proveedor", x => x.Proveedor?.Codigo ?? string.Empty, ExcelColumnAlignment.Center);
+            builder.AddBooleanColumn("Controla Lote", x => x.ControlaLote, trueText: "SÍ", falseText: "NO");
+            builder.AddBooleanColumn("Controla Venc.", x => x.ControlaVencimiento, trueText: "SÍ", falseText: "NO");
+            builder.AddNumberColumn("Stock Mínimo", x => x.StockMinimo, "#,##0.00");
+            builder.AddNumberColumn("Stock Máximo", x => x.StockMaximo, "#,##0.00");
+            builder.AddBooleanColumn("Estado", x => x.Activo, trueText: "Activo", falseText: "Inactivo");
+        });
     }
 
     public async Task<ProductoResponse> CrearAsync(
@@ -308,6 +455,7 @@ public sealed class ProductoService(AppDbContext dbContext)
         string? codigoMarca,
         string? nombreUnidad,
         string? simboloUnidad,
+        string? categoriaUnidad,
         string? razonSocialProveedor,
         string? codigoProveedor)
     {
@@ -320,6 +468,7 @@ public sealed class ProductoService(AppDbContext dbContext)
             MarcaCodigo = codigoMarca,
             UnidadMedidaNombre = nombreUnidad,
             UnidadMedidaSimbolo = simboloUnidad,
+            UnidadMedidaCategoria = categoriaUnidad,
             ProveedorId = entity.ProveedorId,
             ProveedorRazonSocial = razonSocialProveedor,
             ProveedorCodigo = codigoProveedor

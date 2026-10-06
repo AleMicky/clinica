@@ -13,4 +13,5 @@ export * from "./components/producto-autocomplete";
 export * from "./components/producto-delete-dialog";
 export * from "./components/producto-import-dialog";
 export * from "./components/producto-module-view";
+export * from "./components/producto-reporte-view";
 

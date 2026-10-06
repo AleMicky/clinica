@@ -1,6 +1,7 @@
 import { apiClient } from "@/lib/api/api-client";
 import type {
   ProductoQueryParams,
+  ExportarProductosQueryParams,
   ProductoResponse,
   CreateProductoRequest,
   PagedResult,
@@ -68,6 +69,17 @@ export async function importarProductosExcel(
       },
     }
   );
+  return response.data;
+}
+
+// Exportación / Reporte Excel oficial (.xlsx)
+export async function exportarProductosExcel(
+  params?: ExportarProductosQueryParams
+): Promise<Blob> {
+  const response = await apiClient.get<Blob>("/productos/exportar-excel", {
+    params,
+    responseType: "blob",
+  });
   return response.data;
 }
 

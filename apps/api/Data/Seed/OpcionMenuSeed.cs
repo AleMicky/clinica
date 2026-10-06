@@ -339,11 +339,19 @@ public static class OpcionMenuSeed
                 "ALMACENES_MODULO"),
 
             new(
+                "REPORTE_PRODUCTOS",
+                "Reportes de Productos",
+                "/almacenes/reportes-productos",
+                "FileSpreadsheet",
+                5,
+                "ALMACENES_MODULO"),
+
+            new(
                 "EXISTENCIAS",
                 "Existencias / Stock",
                 "/almacenes/existencias",
                 "Boxes",
-                5,
+                6,
                 "ALMACENES_MODULO"),
 
             new(
@@ -351,7 +359,7 @@ public static class OpcionMenuSeed
                 "Tipos de Movimiento",
                 "/almacenes/tipos-movimiento",
                 "SlidersHorizontal",
-                6,
+                7,
                 "ALMACENES_MODULO"),
 
             new(

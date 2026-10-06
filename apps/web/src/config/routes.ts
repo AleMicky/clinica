@@ -68,6 +68,7 @@ export const ROUTES = {
     ALMACEN: "/almacenes/almacen",
     CATEGORIAS_PRODUCTO: "/almacenes/categorias-producto",
     PRODUCTOS: "/almacenes/productos",
+    REPORTES_PRODUCTOS: "/almacenes/reportes-productos",
     TIPOS_MOVIMIENTO: "/almacenes/tipos-movimiento",
     EXISTENCIAS: "/almacenes/existencias",
     MOVIMIENTOS: "/almacenes/movimientos",

@@ -14,6 +14,7 @@ export interface ProductoResponse {
   unidadMedidaId: number;
   unidadMedidaNombre?: string | null;
   unidadMedidaSimbolo?: string | null;
+  unidadMedidaCategoria?: string | null;
   controlaLote: boolean;
   controlaVencimiento: boolean;
   stockMinimo: number;
@@ -51,7 +52,13 @@ export interface ProductoQueryParams {
   categoriaProductoId?: number | null;
   marcaId?: number | null;
   proveedorId?: number | null;
+  unidadMedidaId?: number | null;
+  categoriaUnidadMedida?: string | null;
+  controlaLote?: boolean | null;
+  controlaVencimiento?: boolean | null;
 }
+
+export type ExportarProductosQueryParams = Omit<ProductoQueryParams, "page" | "pageSize">;
 
 export interface PagedResult<T> {
   items: T[];

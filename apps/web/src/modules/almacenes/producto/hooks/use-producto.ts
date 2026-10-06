@@ -7,6 +7,7 @@ import {
 import {
   createProducto,
   deleteProducto,
+  exportarProductosExcel,
   getProductoById,
   getProductos,
   importarProductosExcel,
@@ -15,6 +16,7 @@ import {
 import { productoKeys } from "../api/producto.key";
 import type {
   CreateProductoRequest,
+  ExportarProductosQueryParams,
   PagedResult,
   ProductoQueryParams,
   ProductoResponse,
@@ -101,6 +103,13 @@ export function useImportarProductosExcel() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: productoKeys.lists() });
     },
+  });
+}
+
+export function useExportarProductosExcel() {
+  return useMutation({
+    mutationFn: (params?: ExportarProductosQueryParams) =>
+      exportarProductosExcel(params),
   });
 }
 

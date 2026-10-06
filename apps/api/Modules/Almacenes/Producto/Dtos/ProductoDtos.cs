@@ -41,6 +41,7 @@ public sealed record ProductoResponse : AuditableResponse
     public int UnidadMedidaId { get; init; }
     public string? UnidadMedidaNombre { get; init; }
     public string? UnidadMedidaSimbolo { get; init; }
+    public string? UnidadMedidaCategoria { get; init; }
 
     public int? ProveedorId { get; init; }
     public string? ProveedorRazonSocial { get; init; }
