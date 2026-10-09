@@ -2,26 +2,29 @@
 
 import * as React from "react";
 import {
-  Building2,
-  Search,
   Plus,
-  MoreVertical,
+  MoreHorizontal,
   Edit,
   Trash2,
-  Inbox,
-  Clock,
   RefreshCw,
   Phone,
   Mail,
   MapPin,
   User,
-  FileText,
+  Clock,
   FileSpreadsheet,
+  Building2,
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,11 +32,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { DataTablePagination } from "@/components/shared";
+import {
+  DataTablePagination,
+  EmptyState,
+  SearchInput,
+  TableSkeletonRows,
+} from "@/components/shared";
 import { cn } from "@/lib/utils";
 import type { ProveedorResponse } from "../types/proveedor.types";
 
-interface ProveedorListProps {
+export interface ProveedorTableProps {
   proveedores: ProveedorResponse[];
   isLoading?: boolean;
   totalItems?: number;
@@ -51,23 +59,7 @@ interface ProveedorListProps {
   onViewAudit?: (proveedor: ProveedorResponse) => void;
 }
 
-function formatDate(dateStr?: string | null) {
-  if (!dateStr) return null;
-  try {
-    const d = new Date(dateStr);
-    return isNaN(d.getTime())
-      ? dateStr
-      : d.toLocaleDateString("es-ES", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        });
-  } catch {
-    return dateStr;
-  }
-}
-
-export function ProveedorList({
+export function ProveedorTable({
   proveedores,
   isLoading = false,
   totalItems = 0,
@@ -83,24 +75,20 @@ export function ProveedorList({
   onDelete,
   onRefresh,
   onViewAudit,
-}: ProveedorListProps) {
+}: ProveedorTableProps) {
   return (
-    <div className="flex flex-col gap-3 w-full">
-      {/* Controls: Search & Actions */}
+    <div className="space-y-3 w-full">
+      {/* Toolbar: Search & Action Buttons */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
-        <div className="flex items-center gap-2 flex-1">
-          <div className="relative flex-1">
-            <Search className="absolute left-2.5 top-2 size-3.5 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por código, razón social, NIT o contacto..."
-              value={searchTerm}
-              onChange={(e) => onSearchChange?.(e.target.value)}
-              className="pl-8 text-xs h-8 bg-background border-border/60 focus:bg-background w-full"
-            />
-          </div>
-        </div>
+        <SearchInput
+          placeholder="Buscar por código, razón social, NIT o contacto..."
+          value={searchTerm}
+          onChange={onSearchChange}
+          className="w-full sm:w-80"
+          inputClassName="h-8 text-xs bg-background"
+        />
 
-        <div className="flex items-center gap-1.5 self-end sm:self-auto shrink-0">
+        <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
           {onRefresh && (
             <Button
               variant="outline"
@@ -111,7 +99,9 @@ export function ProveedorList({
               title="Recargar datos"
               aria-label="Recargar datos"
             >
-              <RefreshCw className={cn("size-3.5", isLoading && "animate-spin")} />
+              <RefreshCw
+                className={cn("size-3.5", isLoading && "animate-spin")}
+              />
             </Button>
           )}
 
@@ -120,7 +110,7 @@ export function ProveedorList({
               variant="outline"
               size="sm"
               onClick={onImportClick}
-              className="h-8 px-2.5 text-xs font-medium gap-1 text-primary border-primary/25 hover:bg-primary/10 cursor-pointer rounded-lg shadow-2xs"
+              className="h-8 px-2.5 text-xs font-medium gap-1.5 text-primary border-primary/25 hover:bg-primary/10 cursor-pointer shadow-2xs"
               title="Importar proveedores desde Excel (.xlsx)"
             >
               <FileSpreadsheet className="size-3.5" />
@@ -135,200 +125,226 @@ export function ProveedorList({
               className="h-8 px-3 text-xs font-medium gap-1.5 cursor-pointer shadow-2xs"
             >
               <Plus className="size-3.5" />
-              <span className="text-xs">Nuevo Proveedor</span>
+              <span>Nuevo Proveedor</span>
             </Button>
           )}
         </div>
       </div>
 
-      {/* List Container */}
-      <div className="flex flex-col gap-2 w-full">
-        {isLoading ? (
-          Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="p-3 rounded-lg border border-border/40 space-y-2">
-              <div className="flex items-center justify-between">
-                <Skeleton className="h-4 w-1/3" />
-                <Skeleton className="h-4 w-20" />
-              </div>
-              <Skeleton className="h-3 w-1/2" />
-            </div>
-          ))
-        ) : proveedores.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 px-4 border border-dashed rounded-lg bg-muted/20 text-center gap-2 my-auto">
-            <div className="size-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
-              <Inbox className="size-4 stroke-1" />
-            </div>
-            <p className="text-xs font-medium text-foreground">
-              Sin proveedores encontrados
-            </p>
-            <p className="text-[11px] text-muted-foreground max-w-xs">
-              {searchTerm
-                ? "No se encontraron proveedores que coincidan con la búsqueda."
-                : "No hay registros de proveedores. Haz clic en 'Nuevo Proveedor' para añadir uno."}
-            </p>
-            {onAddProveedor && !searchTerm && (
-              <Button
-                onClick={onAddProveedor}
-                size="sm"
-                variant="outline"
-                className="mt-1 h-7 text-xs gap-1 cursor-pointer"
-              >
-                <Plus className="size-3.5 text-primary" />
-                <span>Nuevo Proveedor</span>
-              </Button>
-            )}
-          </div>
-        ) : (
-          proveedores.map((item) => {
-            const rawCreated =
-              item.fechaCreacion ||
-              item.createdAt ||
-              (item as any).created_at ||
-              (item as any).creadoEn;
-            const formattedCreated = formatDate(rawCreated);
+      {/* Table Container */}
+      <div className="rounded-lg border border-border/60 bg-card overflow-hidden shadow-2xs">
+        <Table>
+          <TableHeader className="bg-muted/40">
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="w-[110px] text-xs font-semibold">
+                Código
+              </TableHead>
+              <TableHead className="min-w-[220px] text-xs font-semibold">
+                Razón Social / Comercial
+              </TableHead>
+              <TableHead className="w-[140px] text-xs font-semibold">
+                NIT / RUC
+              </TableHead>
+              <TableHead className="min-w-[160px] text-xs font-semibold">
+                Contacto
+              </TableHead>
+              <TableHead className="min-w-[200px] text-xs font-semibold">
+                Teléfono / Email
+              </TableHead>
+              <TableHead className="min-w-[200px] text-xs font-semibold hidden md:table-cell">
+                Dirección
+              </TableHead>
+              <TableHead className="w-[80px] text-right text-xs font-semibold pr-4">
+                Acciones
+              </TableHead>
+            </TableRow>
+          </TableHeader>
 
-            const phone = item.celular || item.telefono;
+          <TableBody>
+            {isLoading ? (
+              <TableSkeletonRows rows={pageSize > 10 ? 10 : pageSize} columns={7} />
+            ) : proveedores.length === 0 ? (
+              <TableRow className="hover:bg-transparent">
+                <TableCell colSpan={7} className="h-64 p-0">
+                  <EmptyState
+                    icon={Building2}
+                    title="No se encontraron proveedores"
+                    description={
+                      searchTerm
+                        ? `No hay resultados que coincidan con "${searchTerm}".`
+                        : "No hay registros de proveedores creados actualmente."
+                    }
+                    action={
+                      onAddProveedor && !searchTerm
+                        ? {
+                            label: "Nuevo Proveedor",
+                            icon: Plus,
+                            onClick: onAddProveedor,
+                          }
+                        : undefined
+                    }
+                    className="border-0 bg-transparent py-12"
+                  />
+                </TableCell>
+              </TableRow>
+            ) : (
+              proveedores.map((item) => {
+                const phone = item.celular || item.telefono;
 
-            return (
-              <div
-                key={item.id}
-                className="group border border-border/60 hover:border-primary/40 bg-card hover:bg-muted/20 rounded-lg px-3.5 py-2.5 transition-all flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs hover:shadow-xs"
-              >
-                {/* Left: Commercial & Corporate Info */}
-                <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary text-xs font-semibold">
-                    <Building2 className="size-4.5" />
-                  </div>
-
-                  <div className="flex flex-col gap-1 min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-mono text-[11px] font-bold text-foreground bg-muted/80 px-1.5 py-0.5 rounded border border-border/40 shrink-0">
+                return (
+                  <TableRow
+                    key={item.id}
+                    className="hover:bg-muted/30 transition-colors group"
+                  >
+                    {/* Código */}
+                    <TableCell className="font-mono text-xs font-semibold py-3 align-top">
+                      <span className="inline-block px-1.5 py-0.5 rounded bg-muted/80 border border-border/50 text-foreground">
                         {item.codigo}
                       </span>
-                      <span className="font-semibold text-xs text-foreground truncate">
-                        {item.razonSocial}
-                      </span>
-                      {item.nombreComercial && (
-                        <span className="text-[11px] text-muted-foreground italic truncate">
-                          ({item.nombreComercial})
+                    </TableCell>
+
+                    {/* Razón Social y Nombre Comercial */}
+                    <TableCell className="py-3 align-top">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-medium text-xs text-foreground">
+                          {item.razonSocial}
                         </span>
-                      )}
-                      {item.nit && (
+                        {item.nombreComercial && (
+                          <span className="text-[11px] text-muted-foreground italic">
+                            {item.nombreComercial}
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+
+                    {/* NIT / RUC */}
+                    <TableCell className="py-3 align-top">
+                      {item.nit ? (
                         <Badge
                           variant="outline"
-                          className="text-[10px] font-mono h-4 px-1.5 py-0 bg-secondary/50 text-secondary-foreground border-border/50"
+                          className="font-mono text-[10px] h-4.5 px-1.5 bg-secondary/40 text-secondary-foreground border-border/60"
                         >
-                          NIT: {item.nit}
+                          {item.nit}
                         </Badge>
+                      ) : (
+                        <span className="text-xs text-muted-foreground/60">—</span>
                       )}
-                    </div>
+                    </TableCell>
 
-                    <div className="flex items-center gap-2.5 text-[11px] text-muted-foreground flex-wrap">
-                      {item.contacto && (
-                        <span className="inline-flex items-center gap-1 bg-muted/40 px-1.5 py-0.5 rounded border border-border/30">
-                          <User className="size-3 text-muted-foreground" />
-                          <span>{item.contacto}</span>
-                        </span>
+                    {/* Contacto */}
+                    <TableCell className="py-3 align-top">
+                      {item.contacto ? (
+                        <div className="flex items-center gap-1.5 text-xs text-foreground">
+                          <User className="size-3 text-muted-foreground shrink-0" />
+                          <span className="truncate max-w-[150px]" title={item.contacto}>
+                            {item.contacto}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground/60">—</span>
                       )}
+                    </TableCell>
 
-                      {phone && (
-                        <a
-                          href={`tel:${phone}`}
-                          className="inline-flex items-center gap-1 bg-muted/40 hover:bg-muted/70 px-1.5 py-0.5 rounded border border-border/30 transition-colors"
-                          title="Llamar"
-                        >
-                          <Phone className="size-3 text-emerald-600 dark:text-emerald-400" />
-                          <span>{phone}</span>
-                        </a>
-                      )}
-
-                      {item.email && (
-                        <a
-                          href={`mailto:${item.email}`}
-                          className="inline-flex items-center gap-1 bg-muted/40 hover:bg-muted/70 px-1.5 py-0.5 rounded border border-border/30 transition-colors"
-                          title="Enviar correo"
-                        >
-                          <Mail className="size-3 text-blue-600 dark:text-blue-400" />
-                          <span className="truncate max-w-[160px]">{item.email}</span>
-                        </a>
-                      )}
-
-                      {item.direccion && (
-                        <span className="inline-flex items-center gap-1 bg-muted/40 px-1.5 py-0.5 rounded border border-border/30 truncate max-w-[200px]" title={item.direccion}>
-                          <MapPin className="size-3 text-muted-foreground" />
-                          <span className="truncate">{item.direccion}</span>
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right: Observacion & Actions */}
-                <div className="flex items-center justify-between md:justify-end gap-3 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-border/30">
-                  {item.observacion && (
-                    <div className="hidden xl:flex items-center gap-1 text-[11px] text-muted-foreground max-w-[220px] truncate" title={item.observacion}>
-                      <FileText className="size-3 shrink-0 text-muted-foreground/70" />
-                      <span className="truncate">{item.observacion}</span>
-                    </div>
-                  )}
-
-                  {/* Audit & Dropdown Actions */}
-                  <div className="flex items-center gap-1.5">
-                    {onViewAudit && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onViewAudit(item)}
-                        className="h-6 px-2 text-[10px] text-muted-foreground/80 hover:text-foreground bg-muted/40 hover:bg-muted border border-border/40 gap-1 cursor-pointer"
-                        title="Ver Auditoría Completa"
-                      >
-                        <Clock className="size-3 text-muted-foreground" />
-                        <span className="hidden lg:inline">
-                          {formattedCreated || "Auditoría"}
-                        </span>
-                      </Button>
-                    )}
-
-                    <DropdownMenu>
-                      <DropdownMenuTrigger
-                        className="inline-flex size-6 items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground text-muted-foreground/70 transition-colors cursor-pointer"
-                        aria-label="Acciones de proveedor"
-                      >
-                        <MoreVertical className="size-3.5" />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-40">
-                        {onViewAudit && (
-                          <DropdownMenuItem
-                            onClick={() => onViewAudit(item)}
-                            className="gap-2 text-xs cursor-pointer"
+                    {/* Teléfono / Email */}
+                    <TableCell className="py-3 align-top">
+                      <div className="flex flex-col gap-1 text-xs">
+                        {phone && (
+                          <a
+                            href={`tel:${phone}`}
+                            className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
+                            title="Llamar"
                           >
-                            <Clock className="size-3.5" /> Ver Auditoría
-                          </DropdownMenuItem>
+                            <Phone className="size-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                            <span>{phone}</span>
+                          </a>
                         )}
-                        <DropdownMenuItem
-                          onClick={() => onEdit?.(item)}
-                          className="gap-2 text-xs cursor-pointer"
+
+                        {item.email && (
+                          <a
+                            href={`mailto:${item.email}`}
+                            className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
+                            title="Enviar correo"
+                          >
+                            <Mail className="size-3 text-blue-600 dark:text-blue-400 shrink-0" />
+                            <span className="truncate max-w-[180px]">
+                              {item.email}
+                            </span>
+                          </a>
+                        )}
+
+                        {!phone && !item.email && (
+                          <span className="text-xs text-muted-foreground/60">—</span>
+                        )}
+                      </div>
+                    </TableCell>
+
+                    {/* Dirección */}
+                    <TableCell className="py-3 align-top hidden md:table-cell">
+                      {item.direccion ? (
+                        <div
+                          className="flex items-center gap-1.5 text-xs text-muted-foreground truncate max-w-[220px]"
+                          title={item.direccion}
                         >
-                          <Edit className="size-3.5" /> Editar Proveedor
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => onDelete?.(item)}
-                          className="gap-2 text-xs text-destructive focus:text-destructive cursor-pointer"
+                          <MapPin className="size-3 text-muted-foreground shrink-0" />
+                          <span className="truncate">{item.direccion}</span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground/60">—</span>
+                      )}
+                    </TableCell>
+
+                    {/* Acciones */}
+                    <TableCell className="py-3 align-top text-right pr-3">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger
+                          className="inline-flex size-7 items-center justify-center rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                          aria-label="Acciones de proveedor"
                         >
-                          <Trash2 className="size-3.5" /> Eliminar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-              </div>
-            );
-          })
-        )}
+                          <MoreHorizontal className="size-4" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-44">
+                          {onViewAudit && (
+                            <DropdownMenuItem
+                              onClick={() => onViewAudit(item)}
+                              className="gap-2 text-xs cursor-pointer"
+                            >
+                              <Clock className="size-3.5 text-muted-foreground" />
+                              <span>Ver Auditoría</span>
+                            </DropdownMenuItem>
+                          )}
+                          {onEdit && (
+                            <DropdownMenuItem
+                              onClick={() => onEdit(item)}
+                              className="gap-2 text-xs cursor-pointer"
+                            >
+                              <Edit className="size-3.5 text-muted-foreground" />
+                              <span>Editar Proveedor</span>
+                            </DropdownMenuItem>
+                          )}
+                          {onDelete && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => onDelete(item)}
+                                className="gap-2 text-xs text-destructive focus:text-destructive cursor-pointer"
+                              >
+                                <Trash2 className="size-3.5" />
+                                <span>Eliminar</span>
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
       </div>
 
-      {/* Pagination Footer */}
+      {/* Pagination Controls */}
       {totalItems > 10 && (
         <DataTablePagination
           totalItems={totalItems}
@@ -343,3 +359,7 @@ export function ProveedorList({
     </div>
   );
 }
+
+// Export alias for backward compatibility
+export const ProveedorList = ProveedorTable;
+export type ProveedorListProps = ProveedorTableProps;

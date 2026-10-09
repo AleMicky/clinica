@@ -79,7 +79,6 @@ export function ProveedorFormDialog({
 
   React.useEffect(() => {
     if (open) {
-      setKeepOpen(false);
       if (proveedorToEdit) {
         reset({
           codigo: proveedorToEdit.codigo || "",
@@ -110,6 +109,13 @@ export function ProveedorFormDialog({
     }
   }, [open, proveedorToEdit, reset]);
 
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      setKeepOpen(false);
+    }
+    onOpenChange(nextOpen);
+  };
+
   const onSubmit = async (values: ProveedorFormValues) => {
     try {
       const payload = {
@@ -139,6 +145,7 @@ export function ProveedorFormDialog({
       onSuccessCallback?.();
 
       if (!isEditing && keepOpen) {
+        setKeepOpen(false);
         reset({
           codigo: "",
           razonSocial: "",
@@ -152,13 +159,17 @@ export function ProveedorFormDialog({
           observacion: "",
         });
       } else {
-        onOpenChange(false);
+        handleOpenChange(false);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as {
+        response?: { data?: { message?: string; detail?: string } };
+        message?: string;
+      };
       const errorMsg =
-        error?.response?.data?.message ||
-        error?.response?.data?.detail ||
-        error?.message ||
+        err?.response?.data?.message ||
+        err?.response?.data?.detail ||
+        err?.message ||
         "Ocurrió un error al guardar el proveedor.";
       toast.error(errorMsg);
     }
@@ -167,7 +178,7 @@ export function ProveedorFormDialog({
   const isPending = isSubmitting || createMutation.isPending || updateMutation.isPending;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[760px] md:max-w-[820px] p-0 overflow-hidden">
         <DialogHeader className="px-5 py-3.5 border-b border-border/60 bg-muted/20">
           <div className="flex items-center gap-3">
@@ -389,7 +400,7 @@ export function ProveedorFormDialog({
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => onOpenChange(false)}
+              onClick={() => handleOpenChange(false)}
               disabled={isPending}
               className="h-8 text-xs w-full sm:w-auto cursor-pointer"
             >

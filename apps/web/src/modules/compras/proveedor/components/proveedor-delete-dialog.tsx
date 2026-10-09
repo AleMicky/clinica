@@ -30,11 +30,15 @@ export function ProveedorDeleteDialog({
       );
       onSuccessCallback?.();
       onOpenChange(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as {
+        response?: { data?: { message?: string; detail?: string } };
+        message?: string;
+      };
       const errorMsg =
-        error?.response?.data?.message ||
-        error?.response?.data?.detail ||
-        error?.message ||
+        err?.response?.data?.message ||
+        err?.response?.data?.detail ||
+        err?.message ||
         "No se pudo eliminar el proveedor.";
       toast.error(errorMsg);
     }

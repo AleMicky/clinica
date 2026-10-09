@@ -18,6 +18,14 @@ export interface ProveedorResponse {
   fechaModificacion?: string;
   creadoPor?: string;
   modificadoPor?: string;
+  created_at?: string;
+  updated_at?: string;
+  created_by?: string;
+  updated_by?: string;
+  creadoEn?: string;
+  actualizadoEn?: string;
+  usuarioCreacion?: string;
+  usuarioModificacion?: string;
 }
 
 export interface CreateProveedorRequest {
@@ -33,7 +41,7 @@ export interface CreateProveedorRequest {
   observacion?: string | null;
 }
 
-export interface UpdateProveedorRequest extends CreateProveedorRequest {}
+export type UpdateProveedorRequest = CreateProveedorRequest;
 
 export interface ProveedorQueryParams {
   page?: number;

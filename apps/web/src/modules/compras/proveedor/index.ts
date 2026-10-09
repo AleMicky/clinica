@@ -8,7 +8,5 @@ export * from "./components/proveedor-list";
 export * from "./components/proveedor-form-dialog";
 export * from "./components/proveedor-delete-dialog";
 export * from "./components/proveedor-autocomplete";
-export * from "./components/proveedor-card";
-export * from "./components/proveedor-detail-view";
 export * from "./components/proveedor-import-dialog";
 export * from "./components/proveedor-module-view";

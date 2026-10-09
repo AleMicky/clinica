@@ -117,7 +117,7 @@ export function ProveedorAutocomplete({
                 onClick={handleClear}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
-                    handleClear(e as any);
+                    handleClear(e as unknown as React.MouseEvent);
                   }
                 }}
                 className="rounded-full p-0.5 hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer"
