@@ -5,6 +5,7 @@ import { ProveedorHeader } from "./proveedor-header";
 import { ProveedorList } from "./proveedor-list";
 import { ProveedorFormDialog } from "./proveedor-form-dialog";
 import { ProveedorDeleteDialog } from "./proveedor-delete-dialog";
+import { ProveedorImportDialog } from "./proveedor-import-dialog";
 import { useProveedores } from "../hooks/use-proveedor";
 import type { ProveedorResponse } from "../types/proveedor.types";
 import { AuditDialog, type AuditInfo } from "@/components/shared";
@@ -61,6 +62,9 @@ export function ProveedorModuleView() {
     setProveedorToEdit(item);
     setFormOpen(true);
   };
+
+  // Import Dialog state
+  const [importOpen, setImportOpen] = React.useState(false);
 
   // Delete Dialog state
   const [deleteOpen, setDeleteOpen] = React.useState(false);
@@ -141,6 +145,7 @@ export function ProveedorModuleView() {
           setPage(1);
         }}
         onAddProveedor={handleOpenAdd}
+        onImportClick={() => setImportOpen(true)}
         onEdit={handleOpenEdit}
         onDelete={handleOpenDelete}
         onRefresh={() => refetch()}
@@ -153,6 +158,13 @@ export function ProveedorModuleView() {
         onOpenChange={setFormOpen}
         proveedorToEdit={proveedorToEdit}
         onSuccessCallback={() => refetch()}
+      />
+
+      {/* Import Dialog (Excel) */}
+      <ProveedorImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        onSuccess={() => refetch()}
       />
 
       {/* Delete Dialog */}

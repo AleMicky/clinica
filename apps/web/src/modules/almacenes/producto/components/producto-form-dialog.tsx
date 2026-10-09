@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/popover";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import { getApiErrorMessage } from "@/lib/api/api-error";
 
 import { productoSchema, type ProductoFormValues } from "../schemas/producto.schema";
 import { useCreateProducto, useUpdateProducto } from "../hooks/use-producto";
@@ -296,7 +297,11 @@ export function ProductoFormDialog({
     setMultiRows((prev) => prev.filter((r) => r.id !== id));
   };
 
-  const handleUpdateMultiRow = (id: string, field: keyof MultiProductoRow, value: any) => {
+  const handleUpdateMultiRow = <K extends keyof MultiProductoRow>(
+    id: string,
+    field: K,
+    value: MultiProductoRow[K]
+  ) => {
     setMultiRows((prev) =>
       prev.map((row) => (row.id === id ? { ...row, [field]: value, error: undefined } : row))
     );
@@ -350,13 +355,8 @@ export function ProductoFormDialog({
           onOpenChange(false);
         }
       }
-    } catch (error: any) {
-      const errorMsg =
-        error?.response?.data?.message ||
-        error?.response?.data?.detail ||
-        error?.message ||
-        "Ocurrió un error al guardar el producto.";
-      toast.error(errorMsg);
+    } catch (error: unknown) {
+      toast.error(getApiErrorMessage(error));
     }
   };
 
@@ -421,9 +421,9 @@ export function ProductoFormDialog({
           stockMaximo: row.stockMaximo ?? null,
         });
         successCount++;
-      } catch (err: any) {
+      } catch (err: unknown) {
         failCount++;
-        const msg = err?.response?.data?.message || err?.message || "Error al crear";
+        const msg = getApiErrorMessage(err);
         errorsList.push(`${row.codigo}: ${msg}`);
       }
     }

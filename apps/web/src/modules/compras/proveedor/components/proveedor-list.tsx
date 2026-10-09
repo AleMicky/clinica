@@ -16,6 +16,7 @@ import {
   MapPin,
   User,
   FileText,
+  FileSpreadsheet,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,7 @@ interface ProveedorListProps {
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (size: number) => void;
   onAddProveedor?: () => void;
+  onImportClick?: () => void;
   onEdit?: (proveedor: ProveedorResponse) => void;
   onDelete?: (proveedor: ProveedorResponse) => void;
   onRefresh?: () => void;
@@ -76,6 +78,7 @@ export function ProveedorList({
   onPageChange,
   onPageSizeChange,
   onAddProveedor,
+  onImportClick,
   onEdit,
   onDelete,
   onRefresh,
@@ -109,6 +112,19 @@ export function ProveedorList({
               aria-label="Recargar datos"
             >
               <RefreshCw className={cn("size-3.5", isLoading && "animate-spin")} />
+            </Button>
+          )}
+
+          {onImportClick && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onImportClick}
+              className="h-8 px-2.5 text-xs font-medium gap-1 text-primary border-primary/25 hover:bg-primary/10 cursor-pointer rounded-lg shadow-2xs"
+              title="Importar proveedores desde Excel (.xlsx)"
+            >
+              <FileSpreadsheet className="size-3.5" />
+              <span>Importar Excel</span>
             </Button>
           )}
 

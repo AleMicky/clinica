@@ -6,6 +6,7 @@ import {
   deleteProveedor,
   getProveedorById,
   getProveedores,
+  importarProveedoresExcel,
   updateProveedor,
 } from "../api/proveedor.api";
 import { proveedorKeys } from "../api/proveedor.key";
@@ -59,6 +60,17 @@ export function useDeleteProveedor() {
 
   return useMutation({
     mutationFn: (id: number) => deleteProveedor(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: proveedorKeys.all });
+    },
+  });
+}
+
+export function useImportarProveedoresExcel() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (archivo: File) => importarProveedoresExcel(archivo),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: proveedorKeys.all });
     },

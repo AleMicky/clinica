@@ -19,6 +19,7 @@ public static class ComprasModule
         this IServiceCollection services)
     {
         services.AddScoped<IProveedorService, ProveedorService>();
+        services.AddScoped<IProveedorImportacionService, ProveedorImportacionService>();
         services.AddScoped<ISolicitudCompraService, SolicitudCompraService>();
         services.AddScoped<ICotizacionCompraService, CotizacionCompraService>();
         services.AddScoped<IOrdenCompraService, OrdenCompraService>();
