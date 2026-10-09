@@ -1,21 +1,80 @@
 "use client";
 
 import * as React from "react";
-import { Scale } from "lucide-react";
-import { PageHeader } from "@/components/shared";
+import { Button } from "@/components/ui/button";
+import { FileSpreadsheet, Plus, RefreshCw, Scale } from "lucide-react";
 
 interface UnidadMedidaHeaderProps {
   onAddClick?: () => void;
+  onRefresh?: () => void;
+  onImportClick?: () => void;
 }
 
-export function UnidadMedidaHeader({ onAddClick }: UnidadMedidaHeaderProps) {
+export function UnidadMedidaHeader({
+  onAddClick,
+  onRefresh,
+  onImportClick,
+}: UnidadMedidaHeaderProps) {
   return (
-    <PageHeader
-      title="Unidades de Medida"
-      description="Catálogo de magnitudes, peso, volumen y dosificación farmacológica para recetas y fichas clínicas."
-      icon={Scale}
-      actionLabel="Nueva Unidad"
-      onActionClick={onAddClick}
-    />
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-card via-card to-primary/5 px-4 py-2.5 rounded-xl border border-border/70 shadow-2xs">
+      <div className="flex items-center gap-2.5">
+        <div className="size-8.5 rounded-lg bg-gradient-to-br from-primary/20 via-primary/10 to-emerald-500/20 text-primary flex items-center justify-center border border-primary/20 shadow-2xs shrink-0">
+          <Scale className="size-4.5" />
+        </div>
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-base font-bold text-foreground tracking-tight">
+              Unidades de Medida
+            </h1>
+            <span className="text-[10px] font-semibold bg-primary/10 text-primary px-2 py-0.2 rounded-full border border-primary/20">
+              Parámetros
+            </span>
+          </div>
+          <p className="text-[11px] text-muted-foreground line-clamp-1">
+            Catálogo de magnitudes, peso, volumen, dosificación farmacológica y presentaciones.
+          </p>
+        </div>
+      </div>
+
+      <div className="flex items-center flex-wrap gap-2 self-end sm:self-auto shrink-0">
+        {onRefresh && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onRefresh}
+            className="h-8 px-2.5 text-xs gap-1.5 border-border/80 hover:bg-accent hover:text-accent-foreground transition-all cursor-pointer"
+            title="Actualizar datos"
+          >
+            <RefreshCw className="size-3.5" />
+            <span className="hidden md:inline">Actualizar</span>
+          </Button>
+        )}
+
+        {onImportClick && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onImportClick}
+            className="h-8 px-2.5 text-xs gap-1.5 border-emerald-500/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10 transition-all cursor-pointer"
+            title="Importación masiva desde Excel"
+          >
+            <FileSpreadsheet className="size-3.5 text-emerald-600 dark:text-emerald-400" />
+            <span className="hidden md:inline">Importar Excel</span>
+          </Button>
+        )}
+
+        {onAddClick && (
+          <Button
+            size="sm"
+            onClick={onAddClick}
+            className="h-8 px-3.5 text-xs font-semibold gap-1.5 bg-gradient-to-r from-primary to-emerald-600 hover:from-primary/90 hover:to-emerald-700 text-primary-foreground shadow-xs shadow-primary/20 transition-all duration-200 cursor-pointer"
+          >
+            <Plus className="size-3.5" />
+            Nueva Unidad
+          </Button>
+        )}
+      </div>
+    </div>
   );
 }
+

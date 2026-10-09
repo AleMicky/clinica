@@ -6,12 +6,14 @@ import { UnidadMedidaHeader } from "./unidad-medida-header";
 import { UnidadMedidaMetricsCards } from "./unidad-medida-metrics";
 import { UnidadMedidaTable, type UnidadMedidaItem } from "./unidad-medida-table";
 import { UnidadMedidaFormDialog } from "./unidad-medida-form-dialog";
+import { UnidadMedidaImportDialog } from "./unidad-medida-import-dialog";
 import { ConfirmDeleteDialog } from "@/components/shared";
 import { useUnidadesMedida, useDeleteUnidadMedida } from "../hooks/use-unidades-medida";
 import type { UnidadMedidaMetrics, UnidadMedidaResponse } from "../types/unidad-medida.types";
 
 export function UnidadMedidaModuleView() {
   const [formDialogOpen, setFormDialogOpen] = React.useState(false);
+  const [importDialogOpen, setImportDialogOpen] = React.useState(false);
   const [unidadToEdit, setUnidadToEdit] = React.useState<
     UnidadMedidaResponse | UnidadMedidaItem | null
   >(null);
@@ -129,7 +131,11 @@ export function UnidadMedidaModuleView() {
 
   return (
     <div className="flex flex-col gap-4 w-full">
-      <UnidadMedidaHeader onAddClick={handleOpenAdd} />
+      <UnidadMedidaHeader
+        onAddClick={handleOpenAdd}
+        onImportClick={() => setImportDialogOpen(true)}
+        onRefresh={() => refetch()}
+      />
       <UnidadMedidaMetricsCards metrics={metrics} />
       <UnidadMedidaTable
         unidades={unidades}
@@ -152,6 +158,11 @@ export function UnidadMedidaModuleView() {
         onOpenChange={setFormDialogOpen}
         unidadToEdit={unidadToEdit}
         onSuccessCallback={() => refetch()}
+      />
+      <UnidadMedidaImportDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        onSuccess={() => refetch()}
       />
       <ConfirmDeleteDialog
         open={deleteDialogOpen}

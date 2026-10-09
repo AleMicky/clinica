@@ -6,6 +6,7 @@ import {
   deleteUnidadMedida,
   getUnidadMedidaById,
   getUnidadesMedida,
+  importarUnidadesMedidaExcel,
   updateUnidadMedida,
 } from "../api/unidad-medida.api";
 import { unidadMedidaKeys } from "../api/unidad-medida.key";
@@ -64,3 +65,15 @@ export function useDeleteUnidadMedida() {
     },
   });
 }
+
+export function useImportarUnidadesMedidaExcel() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (archivo: File) => importarUnidadesMedidaExcel(archivo),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: unidadMedidaKeys.all });
+    },
+  });
+}
+

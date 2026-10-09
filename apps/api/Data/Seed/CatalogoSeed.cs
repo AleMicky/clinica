@@ -254,6 +254,27 @@ public static class CatalogoSeed
                     new SeedItem("AMARILLO", "Amarillo - Urgente", 3),
                     new SeedItem("VERDE", "Verde - Poco Urgente / Normal", 4),
                     new SeedItem("AZUL", "Azul - No Urgente / Consulta Ambulatoria", 5)
+                ]),
+
+            new SeedCatalogo(
+                "UNIDAD_MEDIDA_CATEGORIA",
+                "Categoría de Unidad de Medida",
+                "Clasificación y magnitudes de unidades de medida",
+                [
+                    new SeedItem("UNIDAD_CONTEO", "Unidad / Conteo", 1),
+                    new SeedItem("VOLUMEN", "Volumen", 2),
+                    new SeedItem("MASA_PESO", "Masa / Peso", 3),
+                    new SeedItem("LONGITUD", "Longitud", 4),
+                    new SeedItem("DOSIFICACION", "Dosificación", 5),
+                    new SeedItem("SERVICIOS_TIEMPO", "Servicios / Tiempo", 6),
+                    new SeedItem("FORMA_FARMACEUTICA_SOLIDA", "Forma Farmacéutica Sólida", 7),
+                    new SeedItem("FORMA_FARMACEUTICA_LIQUIDA", "Forma Farmacéutica Líquida", 8),
+                    new SeedItem("FORMA_FARMACEUTICA_SEMISOLIDA", "Forma Farmacéutica Semisólida", 9),
+                    new SeedItem("VIAS_ESPECIALES", "Vías Especiales", 10),
+                    new SeedItem("PRESENTACION_EMPAQUE", "Presentación / Empaque", 11),
+                    new SeedItem("INSUMO_DISPOSITIVO", "Insumo / Dispositivo", 12),
+                    new SeedItem("PRESENTACION_ESPECIFICA", "Presentación Específica", 13),
+                    new SeedItem("PACKS_MULTI_UNIDAD", "Packs / Multi-unidad", 14)
                 ])
         ];
     }

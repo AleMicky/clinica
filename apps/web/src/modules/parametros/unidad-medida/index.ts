@@ -8,3 +8,5 @@ export * from "./components/unidad-medida-header";
 export * from "./components/unidad-medida-metrics";
 export * from "./components/unidad-medida-table";
 export * from "./components/unidad-medida-form-dialog";
+export * from "./components/unidad-medida-import-dialog";
+

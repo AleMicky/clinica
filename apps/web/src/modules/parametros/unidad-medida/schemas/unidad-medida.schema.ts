@@ -1,14 +1,5 @@
 import { z } from "zod";
 
-export const CATEGORIAS_UNIDAD_MEDIDA = [
-  "Dosificación",
-  "Peso",
-  "Volumen",
-  "Presentación",
-  "Unidades",
-  "Otros",
-] as const;
-
 export const unidadMedidaSchema = z.object({
   codigo: z
     .string()

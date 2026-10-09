@@ -21,6 +21,7 @@ public static class ParametrosModule
         services.AddScoped<CatalogoGrupoService>();
         services.AddScoped<CatalogoItemService>();
         services.AddScoped<UnidadesMedidaService>();
+        services.AddScoped<IUnidadesMedidaImportacionService, UnidadesMedidaImportacionService>();
         services.AddScoped<MonedaService>();
         services.AddScoped<TipoCambioService>();
         services.AddScoped<MetodoPagoService>();

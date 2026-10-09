@@ -35,6 +35,23 @@ interface UnidadMedidaFormDialogProps {
   onSuccessCallback?: () => void;
 }
 
+const DEFAULT_CATEGORIAS = [
+  "Unidad / Conteo",
+  "Volumen",
+  "Masa / Peso",
+  "Longitud",
+  "Dosificación",
+  "Servicios / Tiempo",
+  "Forma Farmacéutica Sólida",
+  "Forma Farmacéutica Líquida",
+  "Forma Farmacéutica Semisólida",
+  "Vías Especiales",
+  "Presentación / Empaque",
+  "Insumo / Dispositivo",
+  "Presentación Específica",
+  "Packs / Multi-unidad",
+];
+
 export function UnidadMedidaFormDialog({
   open,
   onOpenChange,
@@ -46,7 +63,9 @@ export function UnidadMedidaFormDialog({
   const createUnidadMutation = useCreateUnidadMedida();
   const updateUnidadMutation = useUpdateUnidadMedida();
   const { data: catalogosData, isLoading: isLoadingCategorias } =
-    useCatalogoItemsByCodigo("UNIDAD_MEDIDA_CATEGORIA");
+    useCatalogoItemsByCodigo("UNIDAD_MEDIDA_CATEGORIA", undefined, {
+      enabled: open,
+    });
 
   const categoriaOptions = React.useMemo(() => {
     const apiItems = (catalogosData?.items || [])
@@ -54,7 +73,7 @@ export function UnidadMedidaFormDialog({
       .map((item: CatalogoItemResponse) => item.nombre || item.valor);
 
     const combined = Array.from(
-      new Set([...apiItems])
+      new Set([...(apiItems.length > 0 ? apiItems : DEFAULT_CATEGORIAS)])
     );
 
     return combined.map((cat) => ({
@@ -143,11 +162,11 @@ export function UnidadMedidaFormDialog({
           onOpenChange(false);
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       const errorMsg =
-        error?.response?.data?.message ||
-        error?.response?.data?.detail ||
-        error?.message ||
+        (error as { response?: { data?: { message?: string; detail?: string } } })?.response?.data?.message ||
+        (error as { response?: { data?: { message?: string; detail?: string } } })?.response?.data?.detail ||
+        (error as { message?: string })?.message ||
         "Ocurrió un error al procesar la solicitud.";
       toast.error(errorMsg);
     }

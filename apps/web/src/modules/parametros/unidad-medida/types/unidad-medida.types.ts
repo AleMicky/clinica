@@ -1,14 +1,3 @@
-export type EstadoUnidadMedida = "Activo" | "Inactivo";
-
-export interface UnidadMedida {
-  id: number;
-  codigo: string;
-  nombre: string;
-  simbolo: string;
-  categoria: string;
-  activo: boolean;
-}
-
 export interface UnidadMedidaItem {
   id: number | string;
   codigo: string;
@@ -23,12 +12,6 @@ export interface UnidadMedidaMetrics {
   dosificacionCount: number;
   volumenPesoCount: number;
   categoriasCount: number;
-}
-
-export interface UnidadMedidaFilters {
-  search: string;
-  categoria?: string;
-  estado?: EstadoUnidadMedida | "Todos";
 }
 
 // =============================
@@ -55,7 +38,7 @@ export interface CreateUnidadMedidaRequest {
   simbolo: string;
 }
 
-export interface UpdateUnidadMedidaRequest extends CreateUnidadMedidaRequest {}
+export type UpdateUnidadMedidaRequest = CreateUnidadMedidaRequest;
 
 export interface UnidadMedidaQueryParams {
   page?: number;
@@ -70,4 +53,23 @@ export interface PagedResult<T> {
   totalItems: number;
   hasPreviousPage?: boolean;
   hasNextPage?: boolean;
+}
+
+// =============================
+// Excel Import Types
+// =============================
+
+export interface ExcelImportError {
+  row: number;
+  column: string | null;
+  value: string | null;
+  message: string;
+}
+
+export interface ExcelImportResult {
+  total: number;
+  importados: number;
+  omitidos: number;
+  errores: number;
+  errors: ExcelImportError[];
 }
