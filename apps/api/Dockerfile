@@ -8,16 +8,14 @@ WORKDIR /src
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1 \
     DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
 
-# Copiar csproj y restaurar dependencias con cache persistente de NuGet
+# Copiar csproj y restaurar dependencias
 COPY ["apps/api/Clinica.Api.csproj", "apps/api/"]
-RUN --mount=type=cache,target=/root/.nuget/packages \
-    dotnet restore "apps/api/Clinica.Api.csproj"
+RUN dotnet restore "apps/api/Clinica.Api.csproj"
 
-# Copiar el codigo fuente y publicar directamente (sin dotnet build redundante)
+# Copiar el codigo fuente y publicar
 COPY ["apps/api/", "apps/api/"]
 WORKDIR "/src/apps/api"
-RUN --mount=type=cache,target=/root/.nuget/packages \
-    dotnet publish "Clinica.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false --no-restore
+RUN dotnet publish "Clinica.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Stage 2: Final runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
