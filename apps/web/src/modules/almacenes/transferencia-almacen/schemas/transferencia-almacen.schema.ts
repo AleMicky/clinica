@@ -5,7 +5,6 @@ export const transferenciaAlmacenDetalleSchema = z.object({
     .number()
     .min(1, "Debe seleccionar un producto válido"),
   productoNombre: z.string().optional(),
-  loteId: z.number().nullable().optional(),
   cantidadSolicitada: z
     .number()
     .positive("La cantidad solicitada debe ser mayor a 0"),

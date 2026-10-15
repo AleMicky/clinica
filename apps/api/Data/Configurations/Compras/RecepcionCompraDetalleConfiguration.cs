@@ -34,11 +34,6 @@ public sealed class RecepcionCompraDetalleConfiguration
             .HasForeignKey(x => x.ProductoId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(x => x.Lote)
-            .WithMany()
-            .HasForeignKey(x => x.LoteId)
-            .OnDelete(DeleteBehavior.Restrict);
-
         builder.HasOne(x => x.RecepcionCompra)
             .WithMany(x => x.Detalles)
             .HasForeignKey(x => x.RecepcionCompraId)

@@ -22,11 +22,6 @@ public sealed class ConsumoInternoDetalleConfiguration
             .HasForeignKey(x => x.ProductoId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(x => x.Lote)
-            .WithMany()
-            .HasForeignKey(x => x.LoteId)
-            .OnDelete(DeleteBehavior.Restrict);
-
         builder.HasOne(x => x.ConsumoInterno)
             .WithMany(x => x.Detalles)
             .HasForeignKey(x => x.ConsumoInternoId)

@@ -11,7 +11,6 @@ using AreaEntity = Clinica.Api.Modules.RecursosHumanos.Area.Entity.Area;
 using ConsumoDetalleEntity = Clinica.Api.Modules.Almacenes.ConsumoInterno.Entity.ConsumoInternoDetalle;
 using ConsumoEntity = Clinica.Api.Modules.Almacenes.ConsumoInterno.Entity.ConsumoInterno;
 using ConsumoMapper = Clinica.Api.Modules.Almacenes.ConsumoInterno.Mappers.ConsumoInternoMapper;
-using LoteEntity = Clinica.Api.Modules.Almacenes.Lote.Entity.Lote;
 using ProductoEntity = Clinica.Api.Modules.Almacenes.Producto.Entity.Producto;
 
 namespace Clinica.Api.Modules.Almacenes.ConsumoInterno.Services;
@@ -134,8 +133,6 @@ public sealed class ConsumoInternoService(
             .Include(x => x.Area)
             .Include(x => x.Detalles)
             .ThenInclude(d => d.Producto)
-            .Include(x => x.Detalles)
-            .ThenInclude(d => d.Lote)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (consumo is null || !consumo.Activo)
@@ -293,7 +290,6 @@ public sealed class ConsumoInternoService(
         var detallesMovimiento = detallesActivos.Select(d => new MovimientoInventarioDetalleRequest
         {
             ProductoId = d.ProductoId,
-            LoteId = d.LoteId,
             Cantidad = d.Cantidad,
         }).ToList();
 
@@ -398,26 +394,11 @@ public sealed class ConsumoInternoService(
         CancellationToken cancellationToken)
     {
         var productoIds = detalles.Select(x => x.ProductoId).Distinct().ToList();
-        var loteIds = detalles
-            .Where(x => x.LoteId.HasValue)
-            .Select(x => x.LoteId!.Value)
-            .Distinct()
-            .ToList();
 
         var productosActivos = await dbContext.Productos
             .Where(x => productoIds.Contains(x.Id) && x.Activo)
             .Select(x => x.Id)
             .ToListAsync(cancellationToken);
-
-        var loteIdsValidos = new HashSet<int>();
-        if (loteIds.Count > 0)
-        {
-            loteIdsValidos = (await dbContext.Lotes
-                    .Where(x => loteIds.Contains(x.Id) && x.Activo)
-                    .Select(x => x.Id)
-                    .ToListAsync(cancellationToken))
-                .ToHashSet();
-        }
 
         foreach (var detalle in detalles)
         {
@@ -431,14 +412,6 @@ public sealed class ConsumoInternoService(
             {
                 throw new NotFoundException(nameof(ProductoEntity), detalle.ProductoId);
             }
-
-            if (detalle.LoteId.HasValue)
-            {
-                if (!loteIdsValidos.Contains(detalle.LoteId.Value))
-                {
-                    throw new NotFoundException(nameof(LoteEntity), detalle.LoteId.Value);
-                }
-            }
         }
     }
 
@@ -448,7 +421,6 @@ public sealed class ConsumoInternoService(
         return new ConsumoDetalleEntity
         {
             ProductoId = request.ProductoId,
-            LoteId = request.LoteId,
             Cantidad = request.Cantidad
         };
     }
@@ -494,8 +466,7 @@ public sealed class ConsumoInternoService(
         var response = ConsumoMapper.ToResponse(entity);
         return response with
         {
-            ProductoNombre = entity.Producto?.Nombre,
-            LoteNumero = entity.Lote?.NumeroLote
+            ProductoNombre = entity.Producto?.Nombre
         };
     }
 

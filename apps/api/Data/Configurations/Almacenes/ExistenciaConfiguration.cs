@@ -21,7 +21,7 @@ public sealed class ExistenciaConfiguration
             .HasPrecision(18, 2)
             .IsRequired();
 
-        builder.HasIndex(x => new { x.AlmacenId, x.ProductoId, x.LoteId })
+        builder.HasIndex(x => new { x.AlmacenId, x.ProductoId })
             .IsUnique();
 
         builder.HasOne(x => x.Almacen)
@@ -32,11 +32,6 @@ public sealed class ExistenciaConfiguration
         builder.HasOne(x => x.Producto)
             .WithMany()
             .HasForeignKey(x => x.ProductoId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasOne(x => x.Lote)
-            .WithMany()
-            .HasForeignKey(x => x.LoteId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

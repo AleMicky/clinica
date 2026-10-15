@@ -10,7 +10,6 @@ using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
 using AlmacenEntity = Clinica.Api.Modules.Almacenes.Almacen.Entity.Almacen;
-using LoteEntity = Clinica.Api.Modules.Almacenes.Lote.Entity.Lote;
 using MovimientoDetalleEntity = Clinica.Api.Modules.Almacenes.MovimientoInventario.Entity.MovimientoInventarioDetalle;
 using MovimientoEntity = Clinica.Api.Modules.Almacenes.MovimientoInventario.Entity.MovimientoInventario;
 using MovimientoMapper = Clinica.Api.Modules.Almacenes.MovimientoInventario.Mappers.MovimientoInventarioMapper;
@@ -137,8 +136,6 @@ public sealed class MovimientoInventarioService(
             .Include(x => x.Almacen)
             .Include(x => x.Detalles)
             .ThenInclude(d => d.Producto)
-            .Include(x => x.Detalles)
-            .ThenInclude(d => d.Lote)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (movimiento is null || !movimiento.Activo)
@@ -366,7 +363,6 @@ public sealed class MovimientoInventarioService(
                     await existenciaService.AumentarStockAsync(
                         entity.AlmacenId,
                         detalle.ProductoId,
-                        detalle.LoteId,
                         detalle.Cantidad,
                         cancellationToken);
                     break;
@@ -375,7 +371,6 @@ public sealed class MovimientoInventarioService(
                     await existenciaService.DisminuirStockAsync(
                         entity.AlmacenId,
                         detalle.ProductoId,
-                        detalle.LoteId,
                         detalle.Cantidad,
                         cancellationToken);
                     break;
@@ -431,7 +426,6 @@ public sealed class MovimientoInventarioService(
                     await existenciaService.DisminuirStockAsync(
                         entity.AlmacenId,
                         detalle.ProductoId,
-                        detalle.LoteId,
                         detalle.Cantidad,
                         cancellationToken);
 
@@ -444,7 +438,6 @@ public sealed class MovimientoInventarioService(
                     await existenciaService.AumentarStockAsync(
                         entity.AlmacenId,
                         detalle.ProductoId,
-                        detalle.LoteId,
                         detalle.Cantidad,
                         cancellationToken);
 
@@ -499,7 +492,6 @@ public sealed class MovimientoInventarioService(
             movimiento.Detalles.Add(new MovimientoDetalleEntity
             {
                 ProductoId = detalle.ProductoId,
-                LoteId = detalle.LoteId,
                 Cantidad = detalle.CantidadDespachada
             });
         }
@@ -547,7 +539,6 @@ public sealed class MovimientoInventarioService(
             movimiento.Detalles.Add(new MovimientoDetalleEntity
             {
                 ProductoId = detalle.ProductoId,
-                LoteId = detalle.LoteId,
                 Cantidad = detalle.CantidadRecibida
             });
         }
@@ -602,26 +593,11 @@ public sealed class MovimientoInventarioService(
         CancellationToken cancellationToken)
     {
         var productoIds = detalles.Select(x => x.ProductoId).Distinct().ToList();
-        var loteIds = detalles
-            .Where(x => x.LoteId.HasValue)
-            .Select(x => x.LoteId!.Value)
-            .Distinct()
-            .ToList();
 
         var productosActivos = await dbContext.Productos
             .Where(x => productoIds.Contains(x.Id) && x.Activo)
             .Select(x => x.Id)
             .ToListAsync(cancellationToken);
-
-        var loteIdsValidos = new HashSet<int>();
-        if (loteIds.Count > 0)
-        {
-            loteIdsValidos = (await dbContext.Lotes
-                    .Where(x => loteIds.Contains(x.Id) && x.Activo)
-                    .Select(x => x.Id)
-                    .ToListAsync(cancellationToken))
-                .ToHashSet();
-        }
 
         foreach (var detalle in detalles)
         {
@@ -633,14 +609,6 @@ public sealed class MovimientoInventarioService(
             if (!productosActivos.Contains(detalle.ProductoId))
             {
                 throw new NotFoundException(nameof(ProductoEntity), detalle.ProductoId);
-            }
-
-            if (detalle.LoteId.HasValue)
-            {
-                if (!loteIdsValidos.Contains(detalle.LoteId.Value))
-                {
-                    throw new NotFoundException(nameof(LoteEntity), detalle.LoteId.Value);
-                }
             }
 
             if (detalle.CostoUnitario.HasValue && detalle.CostoUnitario.Value < 0)
@@ -655,7 +623,6 @@ public sealed class MovimientoInventarioService(
         return new MovimientoDetalleEntity
         {
             ProductoId = request.ProductoId,
-            LoteId = request.LoteId,
             Cantidad = request.Cantidad,
             CostoUnitario = request.CostoUnitario
         };
@@ -700,8 +667,7 @@ public sealed class MovimientoInventarioService(
         var response = MovimientoMapper.ToResponse(entity);
         return response with
         {
-            ProductoNombre = entity.Producto?.Nombre,
-            LoteNumero = entity.Lote?.NumeroLote
+            ProductoNombre = entity.Producto?.Nombre
         };
     }
 

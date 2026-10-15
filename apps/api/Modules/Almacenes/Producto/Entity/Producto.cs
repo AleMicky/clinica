@@ -26,9 +26,10 @@ public sealed class Producto : AuditableEntity
     public int? ProveedorId { get; set; }
     public Proveedor? Proveedor { get; set; }
 
-    public bool ControlaLote { get; set; } = false;
     public bool ControlaVencimiento { get; set; } = false;
 
+    public decimal PrecioVenta { get; set; } = 0;
+    
     public decimal StockMinimo { get; set; } = 0;
     public decimal? StockMaximo { get; set; }
 }

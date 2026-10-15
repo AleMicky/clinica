@@ -6,7 +6,6 @@ namespace Clinica.Api.Modules.Almacenes.ReservaStock.Dtos;
 public sealed record ReservaStockDetalleRequest
 {
     public required int ProductoId { get; init; }
-    public int? LoteId { get; init; }
     public required decimal CantidadReservada { get; init; }
 }
 
@@ -46,8 +45,6 @@ public sealed record ReservaStockDetalleResponse
     public int Id { get; init; }
     public int ProductoId { get; init; }
     public string? ProductoNombre { get; init; }
-    public int? LoteId { get; init; }
-    public string? LoteNumero { get; init; }
     public decimal CantidadReservada { get; init; }
     public decimal CantidadConsumida { get; init; }
 }

@@ -64,11 +64,6 @@
     <Folder Include="Modules\Almacenes\Kardex\Dtos\" />
     <Folder Include="Modules\Almacenes\Kardex\Endpoints\" />
     <Folder Include="Modules\Almacenes\Kardex\Services\" />
-    <Folder Include="Modules\Almacenes\Lote\Dtos\" />
-    <Folder Include="Modules\Almacenes\Lote\Endpoints\" />
-    <Folder Include="Modules\Almacenes\Lote\Mappers\" />
-    <Folder Include="Modules\Almacenes\Lote\Services\" />
-    <Folder Include="Modules\Almacenes\Lote\Validators\" />
     <Folder Include="Modules\Almacenes\Marca\Dtos\" />
     <Folder Include="Modules\Almacenes\Marca\Endpoints\" />
     <Folder Include="Modules\Almacenes\Marca\Mappers\" />

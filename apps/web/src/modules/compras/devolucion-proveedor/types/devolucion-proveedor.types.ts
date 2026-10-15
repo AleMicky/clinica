@@ -9,7 +9,6 @@ export enum EstadoDevolucionProveedor {
 
 export interface DevolucionProveedorDetalleRequest {
   productoId: number;
-  loteId?: number | null;
   cantidad: number;
   motivo?: string | null;
   observacion?: string | null;
@@ -40,8 +39,6 @@ export interface DevolucionProveedorDetalleResponse {
   productoId: number;
   productoNombre?: string | null;
   productoCodigo?: string | null;
-  loteId?: number | null;
-  loteNumero?: string | null;
   cantidad: number;
   motivo?: string | null;
   observacion?: string | null;

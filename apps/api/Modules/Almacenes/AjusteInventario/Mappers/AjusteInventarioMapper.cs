@@ -32,7 +32,6 @@ public static partial class AjusteInventarioMapper
         CreateAjusteInventarioRequest request);
 
     [MapperIgnoreSource(nameof(AjusteInventarioDetalleEntity.Producto))]
-    [MapperIgnoreSource(nameof(AjusteInventarioDetalleEntity.Lote))]
     [MapperIgnoreSource(nameof(AjusteInventarioDetalleEntity.AjusteInventario))]
     public static partial AjusteInventarioDetalleResponse ToResponse(
         AjusteInventarioDetalleEntity entity);

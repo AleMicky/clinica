@@ -43,7 +43,6 @@ import {
 import type { ConsumoInternoResponse } from "../types/consumo-interno.types";
 import { AlmacenAutocomplete } from "../../almacen";
 import { ProductoAutocomplete } from "../../producto";
-import { LoteAutocomplete } from "../../lote";
 import { AreaTreeSelect } from "@/modules/recursos-humanos/area/components/area-tree-select";
 
 interface ConsumoInternoFormDialogProps {
@@ -97,7 +96,6 @@ export function ConsumoInternoFormDialog({
   });
 
   const watchedDetalles = watch("detalles") || [];
-  const selectedAlmacenId = watch("almacenId");
 
   const totalCantidad = watchedDetalles.reduce(
     (acc, curr) => acc + (Number(curr.cantidad) || 0),
@@ -125,7 +123,6 @@ export function ConsumoInternoFormDialog({
           detalles: (target.detalles || []).map((d) => ({
             productoId: d.productoId,
             productoNombre: d.productoNombre || "",
-            loteId: d.loteId || null,
             cantidad: Number(d.cantidad),
           })),
         });
@@ -143,7 +140,6 @@ export function ConsumoInternoFormDialog({
           {
             productoId: 0,
             productoNombre: "",
-            loteId: null,
             cantidad: 1,
           },
         ],
@@ -155,7 +151,6 @@ export function ConsumoInternoFormDialog({
     append({
       productoId: 0,
       productoNombre: "",
-      loteId: null,
       cantidad: 1,
     });
   };
@@ -184,7 +179,6 @@ export function ConsumoInternoFormDialog({
       observacion: values.observacion?.trim() || null,
       detalles: values.detalles.map((d) => ({
         productoId: Number(d.productoId),
-        loteId: d.loteId ? Number(d.loteId) : null,
         cantidad: Number(d.cantidad),
       })),
     };
@@ -414,7 +408,6 @@ export function ConsumoInternoFormDialog({
                   <tr className="border-b border-border/60 bg-muted/40 text-muted-foreground font-semibold text-[11px]">
                     <th className="px-2.5 py-1.5 w-8 text-center">#</th>
                     <th className="px-2.5 py-1.5 min-w-56">Producto *</th>
-                    <th className="px-2.5 py-1.5 w-40">Lote (Opcional)</th>
                     <th className="px-2.5 py-1.5 w-28 text-center">Cantidad *</th>
                     <th className="px-2 py-1.5 w-9 text-center"></th>
                   </tr>
@@ -423,7 +416,7 @@ export function ConsumoInternoFormDialog({
                   {fields.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={5}
+                        colSpan={4}
                         className="px-3 py-6 text-center text-muted-foreground text-xs"
                       >
                         <div className="flex flex-col items-center justify-center gap-1.5">
@@ -446,7 +439,6 @@ export function ConsumoInternoFormDialog({
                     </tr>
                   ) : (
                     fields.map((field, idx) => {
-                      const currentProdId = watch(`detalles.${idx}.productoId`);
                       return (
                         <tr
                           key={field.id}
@@ -469,28 +461,14 @@ export function ConsumoInternoFormDialog({
                                         `detalles.${idx}.productoNombre`,
                                         prod.nombre
                                       );
+                                    } else {
+                                      setValue(
+                                        `detalles.${idx}.productoNombre`,
+                                        ""
+                                      );
                                     }
-                                    // Reset lote if product changes
-                                    setValue(`detalles.${idx}.loteId`, null);
                                   }}
                                   placeholder="Buscar por código o nombre..."
-                                />
-                              )}
-                            />
-                          </td>
-                          <td className="px-2.5 py-1">
-                            <Controller
-                              name={`detalles.${idx}.loteId`}
-                              control={control}
-                              render={({ field: lField }) => (
-                                <LoteAutocomplete
-                                  productoId={currentProdId}
-                                  almacenId={selectedAlmacenId}
-                                  value={lField.value}
-                                  onValueChange={(val) =>
-                                    lField.onChange(val || null)
-                                  }
-                                  placeholder="Sin lote / Seleccionar..."
                                 />
                               )}
                             />

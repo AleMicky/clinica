@@ -5,7 +5,6 @@ export const movimientoInventarioDetalleSchema = z.object({
     .number()
     .min(1, "Debe seleccionar un producto válido"),
   productoNombre: z.string().optional(),
-  loteId: z.number().nullable().optional(),
   cantidad: z
     .number()
     .positive("La cantidad debe ser mayor a 0"),

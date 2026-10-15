@@ -36,7 +36,6 @@ export const productoSchema = z
       .number({ message: "La unidad de medida es obligatoria" })
       .int()
       .positive("La unidad de medida es obligatoria"),
-    controlaLote: z.boolean(),
     controlaVencimiento: z.boolean(),
     stockMinimo: z
       .number({ message: "El stock mínimo es obligatorio" })

@@ -44,7 +44,6 @@ import {
 import type { TransferenciaAlmacenResponse } from "../types/transferencia-almacen.types";
 import { AlmacenAutocomplete } from "../../almacen";
 import { ProductoAutocomplete } from "../../producto";
-import { LoteAutocomplete } from "../../lote";
 
 interface TransferenciaAlmacenFormDialogProps {
   open: boolean;
@@ -103,7 +102,6 @@ export function TransferenciaAlmacenFormDialog({
   });
 
   const watchedDetalles = watch("detalles") || [];
-  const selectedAlmacenOrigenId = watch("almacenOrigenId");
 
   const totalItemsCount = watchedDetalles.length;
   const totalCantidad = watchedDetalles.reduce(
@@ -130,7 +128,6 @@ export function TransferenciaAlmacenFormDialog({
           detalles: (target.detalles || []).map((d) => ({
             productoId: d.productoId,
             productoNombre: d.productoNombre || "",
-            loteId: d.loteId || null,
             cantidadSolicitada: Number(d.cantidadSolicitada),
           })),
         });
@@ -146,7 +143,6 @@ export function TransferenciaAlmacenFormDialog({
           {
             productoId: 0,
             productoNombre: "",
-            loteId: null,
             cantidadSolicitada: 1,
           },
         ],
@@ -158,7 +154,6 @@ export function TransferenciaAlmacenFormDialog({
     append({
       productoId: 0,
       productoNombre: "",
-      loteId: null,
       cantidadSolicitada: 1,
     });
   };
@@ -185,7 +180,6 @@ export function TransferenciaAlmacenFormDialog({
       observacion: values.observacion?.trim() || null,
       detalles: values.detalles.map((d) => ({
         productoId: Number(d.productoId),
-        loteId: d.loteId ? Number(d.loteId) : null,
         cantidadSolicitada: Number(d.cantidadSolicitada),
       })),
     };
@@ -407,7 +401,6 @@ export function TransferenciaAlmacenFormDialog({
                   <tr className="border-b border-border/60 bg-muted/40 text-muted-foreground font-semibold text-[11px]">
                     <th className="px-2.5 py-1.5 w-8 text-center">#</th>
                     <th className="px-2.5 py-1.5 min-w-56">Producto *</th>
-                    <th className="px-2.5 py-1.5 w-36">Lote (Opcional)</th>
                     <th className="px-2.5 py-1.5 w-28 text-center">Cant. Solicitada *</th>
                     <th className="px-2 py-1.5 w-9 text-center"></th>
                   </tr>
@@ -416,7 +409,7 @@ export function TransferenciaAlmacenFormDialog({
                   {fields.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={5}
+                        colSpan={4}
                         className="px-3 py-6 text-center text-muted-foreground text-xs"
                       >
                         <div className="flex flex-col items-center justify-center gap-1.5">
@@ -469,26 +462,8 @@ export function TransferenciaAlmacenFormDialog({
                                         ""
                                       );
                                     }
-                                    setValue(`detalles.${idx}.loteId`, null);
                                   }}
                                   placeholder="Buscar por código o nombre..."
-                                />
-                              )}
-                            />
-                          </td>
-                          <td className="px-2.5 py-1">
-                            <Controller
-                              name={`detalles.${idx}.loteId`}
-                              control={control}
-                              render={({ field: lField }) => (
-                                <LoteAutocomplete
-                                  productoId={currentProdId}
-                                  almacenId={selectedAlmacenOrigenId}
-                                  value={lField.value}
-                                  onValueChange={(val) =>
-                                    lField.onChange(val || null)
-                                  }
-                                  placeholder="Sin lote / Seleccionar..."
                                 />
                               )}
                             />

@@ -67,7 +67,6 @@ interface MultiProductoRow {
   unidadMedidaId: number;
   stockMinimo: number;
   stockMaximo: number | null;
-  controlaLote: boolean;
   controlaVencimiento: boolean;
   error?: string;
 }
@@ -102,7 +101,6 @@ export function ProductoFormDialog({
   // Default values for Multi-Insert bulk row creator
   const [defaultBulkCategoriaId, setDefaultBulkCategoriaId] = React.useState<number>(0);
   const [defaultBulkUnidadId, setDefaultBulkUnidadId] = React.useState<number>(0);
-  const [defaultBulkControlaLote, setDefaultBulkControlaLote] = React.useState<boolean>(false);
   const [defaultBulkControlaVence, setDefaultBulkControlaVence] = React.useState<boolean>(false);
 
   // Rows state for Multi-Product registration
@@ -126,7 +124,6 @@ export function ProductoFormDialog({
       marcaId: null,
       proveedorId: null,
       unidadMedidaId: 0,
-      controlaLote: false,
       controlaVencimiento: false,
       stockMinimo: 0,
       stockMaximo: null,
@@ -137,7 +134,6 @@ export function ProductoFormDialog({
   const selectedMarcaId = watch("marcaId");
   const selectedProveedorId = watch("proveedorId");
   const selectedUnidadId = watch("unidadMedidaId");
-  const controlaLote = watch("controlaLote");
   const controlaVencimiento = watch("controlaVencimiento");
 
   // Selected entities for label display
@@ -184,7 +180,6 @@ export function ProductoFormDialog({
     unidadMedidaId: customDefaults?.unidadMedidaId ?? defaultBulkUnidadId ?? 0,
     stockMinimo: 0,
     stockMaximo: null,
-    controlaLote: customDefaults?.controlaLote ?? defaultBulkControlaLote ?? false,
     controlaVencimiento: customDefaults?.controlaVencimiento ?? defaultBulkControlaVence ?? false,
   });
 
@@ -206,7 +201,6 @@ export function ProductoFormDialog({
           marcaId: productoToEdit.marcaId ?? null,
           proveedorId: productoToEdit.proveedorId ?? null,
           unidadMedidaId: productoToEdit.unidadMedidaId,
-          controlaLote: productoToEdit.controlaLote,
           controlaVencimiento: productoToEdit.controlaVencimiento,
           stockMinimo: Number(productoToEdit.stockMinimo),
           stockMaximo:
@@ -223,7 +217,6 @@ export function ProductoFormDialog({
           marcaId: null,
           proveedorId: null,
           unidadMedidaId: 0,
-          controlaLote: false,
           controlaVencimiento: false,
           stockMinimo: 0,
           stockMaximo: null,
@@ -239,7 +232,6 @@ export function ProductoFormDialog({
             unidadMedidaId: 0,
             stockMinimo: 0,
             stockMaximo: null,
-            controlaLote: false,
             controlaVencimiento: false,
           },
           {
@@ -251,7 +243,6 @@ export function ProductoFormDialog({
             unidadMedidaId: 0,
             stockMinimo: 0,
             stockMaximo: null,
-            controlaLote: false,
             controlaVencimiento: false,
           },
           {
@@ -263,7 +254,6 @@ export function ProductoFormDialog({
             unidadMedidaId: 0,
             stockMinimo: 0,
             stockMaximo: null,
-            controlaLote: false,
             controlaVencimiento: false,
           },
         ]);
@@ -278,7 +268,6 @@ export function ProductoFormDialog({
         ...row,
         categoriaProductoId: defaultBulkCategoriaId || row.categoriaProductoId,
         unidadMedidaId: defaultBulkUnidadId || row.unidadMedidaId,
-        controlaLote: defaultBulkControlaLote,
         controlaVencimiento: defaultBulkControlaVence,
       }))
     );
@@ -318,7 +307,6 @@ export function ProductoFormDialog({
         marcaId: values.marcaId ? Number(values.marcaId) : null,
         proveedorId: values.proveedorId ? Number(values.proveedorId) : null,
         unidadMedidaId: values.unidadMedidaId,
-        controlaLote: values.controlaLote,
         controlaVencimiento: values.controlaVencimiento,
         stockMinimo: values.stockMinimo,
         stockMaximo: values.stockMaximo ?? null,
@@ -346,7 +334,6 @@ export function ProductoFormDialog({
             marcaId: values.marcaId ? Number(values.marcaId) : null,
             proveedorId: values.proveedorId ? Number(values.proveedorId) : null,
             unidadMedidaId: values.unidadMedidaId,
-            controlaLote: values.controlaLote,
             controlaVencimiento: values.controlaVencimiento,
             stockMinimo: 0,
             stockMaximo: null,
@@ -415,7 +402,6 @@ export function ProductoFormDialog({
           descripcion: row.descripcion?.trim() || null,
           categoriaProductoId: row.categoriaProductoId,
           unidadMedidaId: row.unidadMedidaId,
-          controlaLote: row.controlaLote,
           controlaVencimiento: row.controlaVencimiento,
           stockMinimo: row.stockMinimo || 0,
           stockMaximo: row.stockMaximo ?? null,
@@ -839,23 +825,9 @@ export function ProductoFormDialog({
                     </div>
                   </div>
 
-                  {/* Controles de Lote y Vencimiento */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-muted/30 rounded-lg border border-border/50">
+                  {/* Control de Vencimiento */}
+                  <div className="p-3 bg-muted/30 rounded-lg border border-border/50">
                     <div className="flex items-center gap-2.5">
-                      <Checkbox
-                        id="controlaLote"
-                        checked={controlaLote}
-                        onCheckedChange={(val) => setValue("controlaLote", Boolean(val))}
-                      />
-                      <div className="space-y-0.5">
-                        <Label htmlFor="controlaLote" className="text-xs font-medium cursor-pointer">
-                          Controla Lote
-                        </Label>
-                        <p className="text-[11px] text-muted-foreground">Exige lote en compras y despachos</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2.5 sm:border-l sm:pl-3 border-border/40">
                       <Checkbox
                         id="controlaVencimiento"
                         checked={controlaVencimiento}
@@ -979,17 +951,6 @@ export function ProductoFormDialog({
                     </select>
                   </div>
 
-                  {/* Default Lote */}
-                  <div className="flex items-center gap-2 bg-background px-2.5 rounded-md border border-border/70 h-8">
-                    <Checkbox
-                      id="bulkLote"
-                      checked={defaultBulkControlaLote}
-                      onCheckedChange={(v) => setDefaultBulkControlaLote(Boolean(v))}
-                    />
-                    <label htmlFor="bulkLote" className="text-xs text-muted-foreground cursor-pointer select-none">
-                      Controla Lote
-                    </label>
-                  </div>
 
                   {/* Default Vence */}
                   <div className="flex items-center gap-2 bg-background px-2.5 rounded-md border border-border/70 h-8">
@@ -1017,7 +978,6 @@ export function ProductoFormDialog({
                         <th className="p-2.5 w-52">Categoría *</th>
                         <th className="p-2.5 w-44">Unidad *</th>
                         <th className="p-2.5 w-24 text-center">Stk Mín.</th>
-                        <th className="p-2.5 w-20 text-center">Lote</th>
                         <th className="p-2.5 w-20 text-center">Vence</th>
                         <th className="p-2.5 w-12 text-center"></th>
                       </tr>
@@ -1121,15 +1081,7 @@ export function ProductoFormDialog({
                             />
                           </td>
 
-                          {/* Controla Lote */}
-                          <td className="p-1.5 text-center">
-                            <div className="flex items-center justify-center">
-                              <Checkbox
-                                checked={row.controlaLote}
-                                onCheckedChange={(v) => handleUpdateMultiRow(row.id, "controlaLote", Boolean(v))}
-                              />
-                            </div>
-                          </td>
+
 
                           {/* Controla Vence */}
                           <td className="p-1.5 text-center">
@@ -1562,23 +1514,9 @@ export function ProductoFormDialog({
                 </div>
               </div>
 
-              {/* Controles de Lote y Vencimiento */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-muted/30 rounded-lg border border-border/50">
+              {/* Control de Vencimiento */}
+              <div className="p-3 bg-muted/30 rounded-lg border border-border/50">
                 <div className="flex items-center gap-2.5">
-                  <Checkbox
-                    id="controlaLote"
-                    checked={controlaLote}
-                    onCheckedChange={(val) => setValue("controlaLote", Boolean(val))}
-                  />
-                  <div className="space-y-0.5">
-                    <Label htmlFor="controlaLote" className="text-xs font-medium cursor-pointer">
-                      Controla Lote
-                    </Label>
-                    <p className="text-[11px] text-muted-foreground">Exige lote en compras y despachos</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2.5 sm:border-l sm:pl-3 border-border/40">
                   <Checkbox
                     id="controlaVencimiento"
                     checked={controlaVencimiento}

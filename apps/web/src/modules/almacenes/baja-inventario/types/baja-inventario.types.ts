@@ -12,7 +12,6 @@ export enum EstadoBajaInventario {
 
 export interface BajaInventarioDetalleRequest {
   productoId: number;
-  loteId?: number | null;
   cantidad: number;
   observacion?: string | null;
 }
@@ -39,8 +38,6 @@ export interface BajaInventarioDetalleResponse {
   id: number;
   productoId: number;
   productoNombre?: string | null;
-  loteId?: number | null;
-  loteNumero?: string | null;
   cantidad: number;
   observacion?: string | null;
 }

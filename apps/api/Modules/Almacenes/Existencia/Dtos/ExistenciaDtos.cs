@@ -6,8 +6,6 @@ public abstract record ExistenciaRequest
 {
     public required int AlmacenId { get; init; }
     public required int ProductoId { get; init; }
-    public int? LoteId { get; init; }
-
     public decimal Cantidad { get; init; }
     public decimal CantidadReservada { get; init; }
 }
@@ -26,9 +24,6 @@ public sealed record ExistenciaResponse : AuditableResponse
     public int ProductoId { get; init; }
     public string? ProductoNombre { get; init; }
     public string? ProductoCodigo { get; init; }
-
-    public int? LoteId { get; init; }
-    public string? LoteNumero { get; init; }
 
     public decimal Cantidad { get; init; }
     public decimal CantidadReservada { get; init; }

@@ -41,7 +41,6 @@ import type { DevolucionProveedorResponse } from "../types/devolucion-proveedor.
 import { ProveedorAutocomplete } from "@/modules/compras/proveedor";
 import { AlmacenAutocomplete } from "@/modules/almacenes/almacen";
 import { ProductoAutocomplete } from "@/modules/almacenes/producto";
-import { LoteAutocomplete } from "@/modules/almacenes/lote";
 
 interface DevolucionProveedorFormDialogProps {
   open: boolean;
@@ -93,7 +92,6 @@ export function DevolucionProveedorFormDialog({
   });
 
   const watchedDetalles = watch("detalles") || [];
-  const selectedAlmacenId = watch("almacenId");
 
   const totalCantidad = watchedDetalles.reduce(
     (acc, curr) => acc + (Number(curr.cantidad) || 0),
@@ -119,7 +117,6 @@ export function DevolucionProveedorFormDialog({
             productoId: d.productoId,
             productoNombre: d.productoNombre || "",
             productoCodigo: d.productoCodigo || "",
-            loteId: d.loteId ?? null,
             cantidad: Number(d.cantidad),
             motivo: d.motivo || "",
             observacion: d.observacion || "",
@@ -139,7 +136,6 @@ export function DevolucionProveedorFormDialog({
             productoId: 0,
             productoNombre: "",
             productoCodigo: "",
-            loteId: null,
             cantidad: 1,
             motivo: "",
             observacion: "",
@@ -154,7 +150,6 @@ export function DevolucionProveedorFormDialog({
       productoId: 0,
       productoNombre: "",
       productoCodigo: "",
-      loteId: null,
       cantidad: 1,
       motivo: "",
       observacion: "",
@@ -174,7 +169,6 @@ export function DevolucionProveedorFormDialog({
         observacion: values.observacion ? values.observacion.trim() : null,
         detalles: values.detalles.map((d) => ({
           productoId: Number(d.productoId),
-          loteId: d.loteId ? Number(d.loteId) : null,
           cantidad: Number(d.cantidad),
           motivo: d.motivo ? d.motivo.trim() : null,
           observacion: d.observacion ? d.observacion.trim() : null,
@@ -407,7 +401,6 @@ export function DevolucionProveedorFormDialog({
                   <tr className="border-b border-border/60 bg-muted/40 text-muted-foreground font-semibold text-[11px]">
                     <th className="px-2.5 py-1.5 w-8 text-center">#</th>
                     <th className="px-2.5 py-1.5 min-w-[200px]">Producto *</th>
-                    <th className="px-2.5 py-1.5 w-36">Lote (Opcional)</th>
                     <th className="px-2.5 py-1.5 w-24 text-center">Cantidad *</th>
                     <th className="px-2.5 py-1.5 min-w-[140px]">Causa Específica</th>
                     <th className="px-2.5 py-1.5 min-w-[120px]">Nota</th>
@@ -418,7 +411,7 @@ export function DevolucionProveedorFormDialog({
                   {fields.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={7}
+                        colSpan={6}
                         className="px-3 py-6 text-center text-muted-foreground text-xs"
                       >
                         <div className="flex flex-col items-center justify-center gap-1.5">
@@ -441,8 +434,6 @@ export function DevolucionProveedorFormDialog({
                     </tr>
                   ) : (
                     fields.map((field, idx) => {
-                      const currentProdId = watch(`detalles.${idx}.productoId`);
-
                       return (
                         <tr
                           key={field.id}
@@ -470,30 +461,12 @@ export function DevolucionProveedorFormDialog({
                                         prod.codigo
                                       );
                                     }
-                                    setValue(`detalles.${idx}.loteId`, null);
                                   }}
                                   placeholder="Buscar producto..."
                                   className="h-7 text-xs"
                                   error={Boolean(
                                     errors.detalles?.[idx]?.productoId
                                   )}
-                                />
-                              )}
-                            />
-                          </td>
-                          <td className="px-2.5 py-1">
-                            <Controller
-                              name={`detalles.${idx}.loteId`}
-                              control={control}
-                              render={({ field: lField }) => (
-                                <LoteAutocomplete
-                                  productoId={currentProdId}
-                                  almacenId={selectedAlmacenId}
-                                  value={lField.value}
-                                  onValueChange={(val) =>
-                                    lField.onChange(val || null)
-                                  }
-                                  placeholder="Sin lote / Seleccionar..."
                                 />
                               )}
                             />

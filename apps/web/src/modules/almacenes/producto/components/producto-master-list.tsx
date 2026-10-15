@@ -6,7 +6,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Edit2,
-  Layers,
   CalendarClock,
   MoreHorizontal,
   Plus,
@@ -359,11 +358,6 @@ export function ProductoMasterList({
                     )}
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
-                    {prod.controlaLote && (
-                      <span className="inline-flex items-center gap-0.5 text-[9px] px-1 py-0.2 rounded border border-blue-500/25 bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium">
-                        <Layers className="size-2.5" /> Lote
-                      </span>
-                    )}
                     {prod.controlaVencimiento && (
                       <span className="inline-flex items-center gap-0.5 text-[9px] px-1 py-0.2 rounded border border-amber-500/25 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium">
                         <CalendarClock className="size-2.5" /> Vence

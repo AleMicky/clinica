@@ -27,7 +27,6 @@ public static partial class ConsumoInternoMapper
     public static partial ConsumoInternoEntity ToEntity(CreateConsumoInternoRequest request);
 
     [MapperIgnoreSource(nameof(ConsumoInternoDetalleEntity.Producto))]
-    [MapperIgnoreSource(nameof(ConsumoInternoDetalleEntity.Lote))]
     [MapperIgnoreSource(nameof(ConsumoInternoDetalleEntity.ConsumoInterno))]
     public static partial ConsumoInternoDetalleResponse ToResponse(ConsumoInternoDetalleEntity entity);
 

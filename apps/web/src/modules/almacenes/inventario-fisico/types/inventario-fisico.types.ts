@@ -7,7 +7,6 @@ export enum EstadoInventarioFisico {
 
 export interface InventarioFisicoDetalleRequest {
   productoId: number;
-  loteId?: number | null;
   cantidadSistema: number;
   cantidadContada?: number | null;
 }
@@ -42,8 +41,6 @@ export interface InventarioFisicoDetalleResponse {
   id: number;
   productoId: number;
   productoNombre?: string | null;
-  loteId?: number | null;
-  loteNumero?: string | null;
   cantidadSistema: number;
   cantidadContada?: number | null;
   diferencia: number;

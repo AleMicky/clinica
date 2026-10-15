@@ -214,11 +214,6 @@ export function ConsumoInternoDetailDialog({
                             <span className="font-medium text-foreground">
                               {item.productoNombre || `ID: ${item.productoId}`}
                             </span>
-                            {item.loteNumero && (
-                              <span className="font-mono text-[10px] font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 px-1.5 py-0.5 rounded">
-                                Lote: {item.loteNumero}
-                              </span>
-                            )}
                           </div>
                         </td>
                         <td className="px-3 py-1.5 text-right font-mono font-semibold text-teal-600 dark:text-teal-400">

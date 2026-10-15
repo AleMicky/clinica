@@ -6,7 +6,6 @@ namespace Clinica.Api.Modules.Almacenes.AjusteInventario.Dtos;
 public sealed record AjusteInventarioDetalleRequest
 {
     public required int ProductoId { get; init; }
-    public int? LoteId { get; init; }
     public required decimal Cantidad { get; init; }
 }
 
@@ -34,8 +33,6 @@ public sealed record AjusteInventarioDetalleResponse
     public int Id { get; init; }
     public int ProductoId { get; init; }
     public string? ProductoNombre { get; init; }
-    public int? LoteId { get; init; }
-    public string? LoteNumero { get; init; }
     public decimal Cantidad { get; init; }
 }
 

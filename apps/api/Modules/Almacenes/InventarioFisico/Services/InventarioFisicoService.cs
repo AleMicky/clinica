@@ -14,7 +14,6 @@ using ExistenciaEntity = Clinica.Api.Modules.Almacenes.Existencia.Entity.Existen
 using InventarioFisicoDetalleEntity = Clinica.Api.Modules.Almacenes.InventarioFisico.Entity.InventarioFisicoDetalle;
 using InventarioFisicoEntity = Clinica.Api.Modules.Almacenes.InventarioFisico.Entity.InventarioFisico;
 using InventarioFisicoMapper = Clinica.Api.Modules.Almacenes.InventarioFisico.Mappers.InventarioFisicoMapper;
-using LoteEntity = Clinica.Api.Modules.Almacenes.Lote.Entity.Lote;
 using MovimientoDetalleEntity = Clinica.Api.Modules.Almacenes.MovimientoInventario.Entity.MovimientoInventarioDetalle;
 using MovimientoEntity = Clinica.Api.Modules.Almacenes.MovimientoInventario.Entity.MovimientoInventario;
 using ProductoEntity = Clinica.Api.Modules.Almacenes.Producto.Entity.Producto;
@@ -144,8 +143,6 @@ public sealed class InventarioFisicoService(
             .Include(x => x.Almacen)
             .Include(x => x.Detalles)
             .ThenInclude(d => d.Producto)
-            .Include(x => x.Detalles)
-            .ThenInclude(d => d.Lote)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (entity is null || !entity.Activo)
@@ -381,7 +378,6 @@ public sealed class InventarioFisicoService(
             await AplicarDiferenciaExistenciaAsync(
                 entity.AlmacenId,
                 detalle.ProductoId,
-                detalle.LoteId,
                 detalle.Diferencia,
                 cancellationToken);
         }
@@ -452,28 +448,13 @@ public sealed class InventarioFisicoService(
         CancellationToken cancellationToken)
     {
         var productoIds = detalles.Select(x => x.ProductoId).Distinct().ToList();
-        var loteIds = detalles
-            .Where(x => x.LoteId.HasValue)
-            .Select(x => x.LoteId!.Value)
-            .Distinct()
-            .ToList();
 
         var productosActivos = await dbContext.Productos
             .Where(x => productoIds.Contains(x.Id) && x.Activo)
             .Select(x => x.Id)
             .ToListAsync(cancellationToken);
 
-        var loteIdsValidos = new HashSet<int>();
-        if (loteIds.Count > 0)
-        {
-            loteIdsValidos = (await dbContext.Lotes
-                    .Where(x => loteIds.Contains(x.Id) && x.Activo)
-                    .Select(x => x.Id)
-                    .ToListAsync(cancellationToken))
-                .ToHashSet();
-        }
-
-        var combinacionesVistas = new HashSet<(int ProductoId, int? LoteId)>();
+        var productosVistos = new HashSet<int>();
 
         foreach (var detalle in detalles)
         {
@@ -494,16 +475,10 @@ public sealed class InventarioFisicoService(
                 throw new NotFoundException(nameof(ProductoEntity), detalle.ProductoId);
             }
 
-            if (detalle.LoteId.HasValue && !loteIdsValidos.Contains(detalle.LoteId.Value))
-            {
-                throw new NotFoundException(nameof(LoteEntity), detalle.LoteId.Value);
-            }
-
-            var combinacion = (detalle.ProductoId, detalle.LoteId);
-            if (!combinacionesVistas.Add(combinacion))
+            if (!productosVistos.Add(detalle.ProductoId))
             {
                 throw new ConflictException(
-                    $"El producto {detalle.ProductoId} se repite en el inventario. Agrupa los detalles por producto y lote.");
+                    $"El producto {detalle.ProductoId} se repite en el inventario. Agrupa los detalles por producto.");
             }
         }
     }
@@ -513,7 +488,6 @@ public sealed class InventarioFisicoService(
         return new InventarioFisicoDetalleEntity
         {
             ProductoId = request.ProductoId,
-            LoteId = request.LoteId,
             CantidadSistema = request.CantidadSistema,
             CantidadContada = request.CantidadContada
         };
@@ -557,7 +531,6 @@ public sealed class InventarioFisicoService(
     private async Task AplicarDiferenciaExistenciaAsync(
         int almacenId,
         int productoId,
-        int? loteId,
         decimal diferencia,
         CancellationToken cancellationToken)
     {
@@ -569,8 +542,7 @@ public sealed class InventarioFisicoService(
         var existencia = await dbContext.Existencias
             .FirstOrDefaultAsync(
                 x => x.AlmacenId == almacenId &&
-                     x.ProductoId == productoId &&
-                     x.LoteId == loteId,
+                     x.ProductoId == productoId,
                 cancellationToken);
 
         if (existencia is null)
@@ -585,7 +557,6 @@ public sealed class InventarioFisicoService(
             {
                 AlmacenId = almacenId,
                 ProductoId = productoId,
-                LoteId = loteId,
                 Cantidad = diferencia,
                 CantidadReservada = 0
             });
@@ -635,7 +606,6 @@ public sealed class InventarioFisicoService(
                 movimiento.Detalles.Add(new MovimientoDetalleEntity
                 {
                     ProductoId = detalle.ProductoId,
-                    LoteId = detalle.LoteId,
                     Cantidad = detalle.Diferencia
                 });
             }
@@ -666,7 +636,6 @@ public sealed class InventarioFisicoService(
                 movimiento.Detalles.Add(new MovimientoDetalleEntity
                 {
                     ProductoId = detalle.ProductoId,
-                    LoteId = detalle.LoteId,
                     Cantidad = -detalle.Diferencia
                 });
             }
@@ -714,7 +683,6 @@ public sealed class InventarioFisicoService(
         return response with
         {
             ProductoNombre = entity.Producto?.Nombre,
-            LoteNumero = entity.Lote?.NumeroLote,
             Diferencia = entity.Diferencia
         };
     }

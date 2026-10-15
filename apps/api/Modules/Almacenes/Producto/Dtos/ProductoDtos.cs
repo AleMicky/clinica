@@ -13,7 +13,6 @@ public abstract record ProductoRequest
     public required int UnidadMedidaId { get; init; }
     public int? ProveedorId { get; init; }
 
-    public bool ControlaLote { get; init; }
     public bool ControlaVencimiento { get; init; }
 
     public decimal StockMinimo { get; init; }
@@ -47,7 +46,6 @@ public sealed record ProductoResponse : AuditableResponse
     public string? ProveedorRazonSocial { get; init; }
     public string? ProveedorCodigo { get; init; }
 
-    public bool ControlaLote { get; init; }
     public bool ControlaVencimiento { get; init; }
 
     public decimal StockMinimo { get; init; }

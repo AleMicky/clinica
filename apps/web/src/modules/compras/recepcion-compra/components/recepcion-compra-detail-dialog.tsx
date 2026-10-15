@@ -247,7 +247,6 @@ export function RecepcionCompraDetailDialog({
                       <th className="px-3 py-1.5 font-medium">#</th>
                       <th className="px-3 py-1.5 font-medium">Código</th>
                       <th className="px-3 py-1.5 font-medium">Producto</th>
-                      <th className="px-3 py-1.5 font-medium">Lote</th>
                       <th className="px-3 py-1.5 font-medium text-center">
                         Cantidad Ingresada
                       </th>
@@ -268,9 +267,6 @@ export function RecepcionCompraDetailDialog({
                         </td>
                         <td className="px-3 py-2 font-medium text-foreground">
                           {det.productoNombre || `Producto #${det.productoId}`}
-                        </td>
-                        <td className="px-3 py-2 font-mono text-[11px]">
-                          {det.loteNumero || "-"}
                         </td>
                         <td className="px-3 py-2 text-center font-mono font-bold text-emerald-600 dark:text-emerald-400">
                           {Number(det.cantidadRecibida).toLocaleString("es-ES")}

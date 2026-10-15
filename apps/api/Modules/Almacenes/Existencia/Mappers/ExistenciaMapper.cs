@@ -9,7 +9,6 @@ public static partial class ExistenciaMapper
 {
     [MapperIgnoreSource(nameof(ExistenciaEntity.Almacen))]
     [MapperIgnoreSource(nameof(ExistenciaEntity.Producto))]
-    [MapperIgnoreSource(nameof(ExistenciaEntity.Lote))]
     public static partial ExistenciaResponse ToResponse(
         ExistenciaEntity entity);
 
@@ -24,7 +23,6 @@ public static partial class ExistenciaMapper
     [MapperIgnoreTarget(nameof(ExistenciaEntity.ModificadoPor))]
     [MapperIgnoreTarget(nameof(ExistenciaEntity.Almacen))]
     [MapperIgnoreTarget(nameof(ExistenciaEntity.Producto))]
-    [MapperIgnoreTarget(nameof(ExistenciaEntity.Lote))]
     public static partial ExistenciaEntity ToEntity(
         CreateExistenciaRequest request);
 
@@ -36,7 +34,6 @@ public static partial class ExistenciaMapper
     [MapperIgnoreTarget(nameof(ExistenciaEntity.ModificadoPor))]
     [MapperIgnoreTarget(nameof(ExistenciaEntity.Almacen))]
     [MapperIgnoreTarget(nameof(ExistenciaEntity.Producto))]
-    [MapperIgnoreTarget(nameof(ExistenciaEntity.Lote))]
     public static partial void UpdateEntity(
         UpdateExistenciaRequest request,
         ExistenciaEntity entity);

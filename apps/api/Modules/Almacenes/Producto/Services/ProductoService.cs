@@ -22,7 +22,6 @@ public interface IProductoService
         int? proveedorId,
         int? unidadMedidaId,
         string? categoriaUnidadMedida,
-        bool? controlaLote,
         bool? controlaVencimiento,
         string? search,
         PaginationRequest pagination,
@@ -34,7 +33,6 @@ public interface IProductoService
         int? proveedorId,
         int? unidadMedidaId,
         string? categoriaUnidadMedida,
-        bool? controlaLote,
         bool? controlaVencimiento,
         string? search,
         CancellationToken cancellationToken = default);
@@ -69,7 +67,6 @@ public sealed class ProductoService(
         int? proveedorId,
         int? unidadMedidaId,
         string? categoriaUnidadMedida,
-        bool? controlaLote,
         bool? controlaVencimiento,
         string? search,
         PaginationRequest pagination,
@@ -104,11 +101,6 @@ public sealed class ProductoService(
         {
             var catUm = categoriaUnidadMedida.Trim();
             query = query.Where(x => x.UnidadMedida.Categoria == catUm);
-        }
-
-        if (controlaLote.HasValue)
-        {
-            query = query.Where(x => x.ControlaLote == controlaLote.Value);
         }
 
         if (controlaVencimiento.HasValue)
@@ -198,7 +190,6 @@ public sealed class ProductoService(
         int? proveedorId,
         int? unidadMedidaId,
         string? categoriaUnidadMedida,
-        bool? controlaLote,
         bool? controlaVencimiento,
         string? search,
         CancellationToken cancellationToken = default)
@@ -232,11 +223,6 @@ public sealed class ProductoService(
         {
             var catUm = categoriaUnidadMedida.Trim();
             query = query.Where(x => x.UnidadMedida.Categoria == catUm);
-        }
-
-        if (controlaLote.HasValue)
-        {
-            query = query.Where(x => x.ControlaLote == controlaLote.Value);
         }
 
         if (controlaVencimiento.HasValue)
@@ -284,7 +270,6 @@ public sealed class ProductoService(
             builder.AddColumn("Símbolo", x => x.UnidadMedida?.Simbolo ?? string.Empty, ExcelColumnAlignment.Center);
             builder.AddColumn("Proveedor", x => x.Proveedor?.RazonSocial ?? "Sin proveedor");
             builder.AddColumn("Cód. Proveedor", x => x.Proveedor?.Codigo ?? string.Empty, ExcelColumnAlignment.Center);
-            builder.AddBooleanColumn("Controla Lote", x => x.ControlaLote, trueText: "SÍ", falseText: "NO");
             builder.AddBooleanColumn("Controla Venc.", x => x.ControlaVencimiento, trueText: "SÍ", falseText: "NO");
             builder.AddNumberColumn("Stock Mínimo", x => x.StockMinimo, "#,##0.00");
             builder.AddNumberColumn("Stock Máximo", x => x.StockMaximo, "#,##0.00");
@@ -488,7 +473,6 @@ public sealed class ProductoService(
 
         if (esNuevo)
         {
-            entity.ControlaLote = request.ControlaLote;
             entity.ControlaVencimiento = request.ControlaVencimiento;
         }
 

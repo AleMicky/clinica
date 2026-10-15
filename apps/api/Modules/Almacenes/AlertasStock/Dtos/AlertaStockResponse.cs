@@ -7,8 +7,6 @@ public sealed record AlertaStockResponse(
     int AlmacenId,
     int ProductoId,
     string Producto,
-    int? LoteId,
-    string? NumeroLote,
     decimal Cantidad,
     decimal CantidadReservada,
     decimal CantidadDisponible,

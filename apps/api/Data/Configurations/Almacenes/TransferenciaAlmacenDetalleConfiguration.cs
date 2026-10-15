@@ -31,11 +31,6 @@ public sealed class TransferenciaAlmacenDetalleConfiguration
             .HasForeignKey(x => x.ProductoId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(x => x.Lote)
-            .WithMany()
-            .HasForeignKey(x => x.LoteId)
-            .OnDelete(DeleteBehavior.Restrict);
-
         builder.HasOne(x => x.TransferenciaAlmacen)
             .WithMany(x => x.Detalles)
             .HasForeignKey(x => x.TransferenciaAlmacenId)

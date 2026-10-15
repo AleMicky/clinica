@@ -56,7 +56,6 @@ public static class ProductoEndpoints
         int? proveedorId,
         int? unidadMedidaId,
         string? categoriaUnidadMedida,
-        bool? controlaLote,
         bool? controlaVencimiento,
         string? search,
         [AsParameters] PaginationRequest pagination,
@@ -70,7 +69,6 @@ public static class ProductoEndpoints
                 proveedorId,
                 unidadMedidaId,
                 categoriaUnidadMedida,
-                controlaLote,
                 controlaVencimiento,
                 search,
                 pagination,
@@ -83,7 +81,6 @@ public static class ProductoEndpoints
         int? proveedorId,
         int? unidadMedidaId,
         string? categoriaUnidadMedida,
-        bool? controlaLote,
         bool? controlaVencimiento,
         string? search,
         IProductoService service,
@@ -95,7 +92,6 @@ public static class ProductoEndpoints
             proveedorId,
             unidadMedidaId,
             categoriaUnidadMedida,
-            controlaLote,
             controlaVencimiento,
             search,
             cancellationToken);
@@ -199,14 +195,9 @@ public static class ProductoEndpoints
             "MARCA",
             "PROVEEDOR",
             "UNIDAD_MEDIDA",
-            "CONTROLA_LOTE",
             "CONTROLA_VENCIMIENTO",
             "STOCK_MINIMO",
-            "STOCK_MAXIMO",
-            "NUMERO_LOTE",
-            "FECHA_FABRICACION",
-            "FECHA_VENCIMIENTO",
-            "COSTO_UNITARIO"
+            "STOCK_MAXIMO"
         ];
 
         for (var i = 0; i < headers.Length; i++)
@@ -219,7 +210,7 @@ public static class ProductoEndpoints
             cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
         }
 
-        // Fila 1 de ejemplo: Producto con Marca, Proveedor, Lote y Vencimiento
+        // Fila 1 de ejemplo: Producto con Marca, Proveedor y Vencimiento
         worksheet.Cell(2, 1).Value = "MED-001";
         worksheet.Cell(2, 2).Value = "PARACETAMOL 500MG TABLETAS";
         worksheet.Cell(2, 3).Value = "CAJA CON 100 TABLETAS";
@@ -228,15 +219,10 @@ public static class ProductoEndpoints
         worksheet.Cell(2, 6).Value = "DROGUERIA INTI S.A.";
         worksheet.Cell(2, 7).Value = "CAJA";
         worksheet.Cell(2, 8).Value = "SI";
-        worksheet.Cell(2, 9).Value = "SI";
-        worksheet.Cell(2, 10).Value = 10;
-        worksheet.Cell(2, 11).Value = 500;
-        worksheet.Cell(2, 12).Value = "LOT-2026-001";
-        worksheet.Cell(2, 13).Value = "2026-01-15";
-        worksheet.Cell(2, 14).Value = "2028-01-15";
-        worksheet.Cell(2, 15).Value = 12.50;
+        worksheet.Cell(2, 9).Value = 10;
+        worksheet.Cell(2, 10).Value = 500;
 
-        // Fila 2 de ejemplo: Insumo sin control de lote
+        // Fila 2 de ejemplo: Insumo
         worksheet.Cell(3, 1).Value = "INS-001";
         worksheet.Cell(3, 2).Value = "GASA ESTERIL 10X10 CM";
         worksheet.Cell(3, 3).Value = "PAQUETE POR 10 UNIDADES";
@@ -245,13 +231,8 @@ public static class ProductoEndpoints
         worksheet.Cell(3, 6).Value = "";
         worksheet.Cell(3, 7).Value = "PAQUETE";
         worksheet.Cell(3, 8).Value = "NO";
-        worksheet.Cell(3, 9).Value = "NO";
-        worksheet.Cell(3, 10).Value = 20;
-        worksheet.Cell(3, 11).Value = 1000;
-        worksheet.Cell(3, 12).Value = "";
-        worksheet.Cell(3, 13).Value = "";
-        worksheet.Cell(3, 14).Value = "";
-        worksheet.Cell(3, 15).Value = "";
+        worksheet.Cell(3, 9).Value = 20;
+        worksheet.Cell(3, 10).Value = 1000;
 
         worksheet.Columns().AdjustToContents();
 

@@ -4,7 +4,6 @@ export const devolucionProveedorDetalleSchema = z.object({
   productoId: z.number().min(1, "Debe seleccionar un producto"),
   productoNombre: z.string().optional(),
   productoCodigo: z.string().optional(),
-  loteId: z.number().nullable().optional(),
   cantidad: z.number().positive("La cantidad debe ser mayor a 0"),
   motivo: z.string().trim().max(250, "Máximo 250 caracteres").nullable().optional(),
   observacion: z.string().trim().max(250, "Máximo 250 caracteres").nullable().optional(),

@@ -15,7 +15,6 @@ export interface ProductoResponse {
   unidadMedidaNombre?: string | null;
   unidadMedidaSimbolo?: string | null;
   unidadMedidaCategoria?: string | null;
-  controlaLote: boolean;
   controlaVencimiento: boolean;
   stockMinimo: number;
   stockMaximo?: number | null;
@@ -37,7 +36,6 @@ export interface CreateProductoRequest {
   marcaId?: number | null;
   proveedorId?: number | null;
   unidadMedidaId: number;
-  controlaLote: boolean;
   controlaVencimiento: boolean;
   stockMinimo: number;
   stockMaximo?: number | null;
@@ -54,7 +52,6 @@ export interface ProductoQueryParams {
   proveedorId?: number | null;
   unidadMedidaId?: number | null;
   categoriaUnidadMedida?: string | null;
-  controlaLote?: boolean | null;
   controlaVencimiento?: boolean | null;
 }
 
@@ -72,7 +69,6 @@ export interface PagedResult<T> {
 
 export interface ProductoMetrics {
   totalProductos: number;
-  controlaLoteCount: number;
   controlaVencimientoCount: number;
   categoriasCount: number;
 }

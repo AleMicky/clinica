@@ -28,7 +28,6 @@ public static partial class ReservaStockMapper
         CreateReservaStockRequest request);
 
     [MapperIgnoreSource(nameof(ReservaStockDetalleEntity.Producto))]
-    [MapperIgnoreSource(nameof(ReservaStockDetalleEntity.Lote))]
     [MapperIgnoreSource(nameof(ReservaStockDetalleEntity.ReservaStock))]
     public static partial ReservaStockDetalleResponse ToResponse(
         ReservaStockDetalleEntity entity);

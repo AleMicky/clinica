@@ -5,7 +5,6 @@ export const recepcionCompraDetalleSchema = z.object({
   productoId: z.number().min(1, "Producto requerido"),
   productoNombre: z.string().optional(),
   productoCodigo: z.string().optional(),
-  loteId: z.number().nullable().optional(),
   cantidadRecibida: z.number().positive("La cantidad debe ser mayor a 0"),
   precioUnitario: z.number().min(0, "El precio no puede ser negativo"),
   observacion: z.string().trim().max(250, "Máximo 250 caracteres").nullable().optional(),

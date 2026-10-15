@@ -172,7 +172,7 @@ export function ProductoImportDialog({
                 Importación Masiva de Productos
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-                Carga un archivo Excel (.xlsx) para registrar productos y sus lotes iniciales en el catálogo.
+                Carga un archivo Excel (.xlsx) para registrar productos en el catálogo.
               </DialogDescription>
             </div>
           </div>
@@ -316,20 +316,8 @@ export function ProductoImportDialog({
                           <li><span className="font-mono">MARCA</span>: Nombre o código (Opcional)</li>
                           <li><span className="font-mono">PROVEEDOR</span>: Razón social, código o NIT (Opcional)</li>
                           <li><span className="font-mono">DESCRIPCION</span>: Detalle opcional</li>
-                          <li><span className="font-mono">CONTROLA_LOTE</span>: SI / NO</li>
                           <li><span className="font-mono">CONTROLA_VENCIMIENTO</span>: SI / NO</li>
                           <li><span className="font-mono">STOCK_MINIMO</span> / <span className="font-mono">STOCK_MAXIMO</span></li>
-                        </ul>
-                      </div>
-                      <div className="p-2 rounded-lg bg-muted/40 border border-border/60 space-y-1">
-                        <p className="font-semibold text-foreground flex items-center gap-1">
-                          <Package className="size-3 text-primary" /> Lote Inicial (Opcional)
-                        </p>
-                        <ul className="list-disc list-inside space-y-0.5 text-muted-foreground">
-                          <li><span className="font-mono">NUMERO_LOTE</span>: Código de lote inicial</li>
-                          <li><span className="font-mono">FECHA_FABRICACION</span>: AAAA-MM-DD</li>
-                          <li><span className="font-mono">FECHA_VENCIMIENTO</span>: AAAA-MM-DD</li>
-                          <li><span className="font-mono">COSTO_UNITARIO</span>: Monto numérico</li>
                         </ul>
                       </div>
                     </div>

@@ -7,7 +7,6 @@ export enum EstadoRecepcionCompra {
 export interface RecepcionCompraDetalleRequest {
   ordenCompraDetalleId: number;
   cantidadRecibida: number;
-  loteId?: number | null;
   precioUnitario: number;
   observacion?: string | null;
 }
@@ -36,8 +35,6 @@ export interface RecepcionCompraDetalleResponse {
   productoId: number;
   productoNombre?: string | null;
   productoCodigo?: string | null;
-  loteId?: number | null;
-  loteNumero?: string | null;
   cantidadRecibida: number;
   precioUnitario: number;
   observacion?: string | null;

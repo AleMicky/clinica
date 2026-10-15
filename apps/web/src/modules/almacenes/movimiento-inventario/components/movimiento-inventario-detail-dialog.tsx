@@ -256,7 +256,6 @@ export function MovimientoInventarioDetailDialog({
                     <tr className="border-b border-border/60 bg-muted/40 text-muted-foreground font-semibold text-[11px]">
                       <th className="px-2.5 py-1.5 w-8 text-center">#</th>
                       <th className="px-2.5 py-1.5">Producto</th>
-                      <th className="px-2.5 py-1.5 w-24">Lote</th>
                       <th className="px-2.5 py-1.5 w-20 text-right">Cantidad</th>
                       <th className="px-2.5 py-1.5 w-24 text-right">Costo Unit.</th>
                       <th className="px-2.5 py-1.5 w-24 text-right">Costo Total</th>
@@ -270,9 +269,6 @@ export function MovimientoInventarioDetailDialog({
                         </td>
                         <td className="px-2.5 py-1.5 font-medium text-foreground">
                           {item.productoNombre || `Producto #${item.productoId}`}
-                        </td>
-                        <td className="px-2.5 py-1.5 text-muted-foreground font-mono text-[10px]">
-                          {item.loteNumero || (item.loteId ? `#${item.loteId}` : "-")}
                         </td>
                         <td className="px-2.5 py-1.5 text-right font-mono font-semibold text-foreground">
                           {Number(item.cantidad).toLocaleString("es-ES")}

@@ -36,7 +36,6 @@ public static partial class DevolucionProveedorMapper
         CreateDevolucionProveedorRequest request);
 
     [MapperIgnoreSource(nameof(DevolucionProveedorDetalleEntity.Producto))]
-    [MapperIgnoreSource(nameof(DevolucionProveedorDetalleEntity.Lote))]
     [MapperIgnoreSource(nameof(DevolucionProveedorDetalleEntity.DevolucionProveedor))]
     public static partial DevolucionProveedorDetalleResponse ToResponse(
         DevolucionProveedorDetalleEntity entity);

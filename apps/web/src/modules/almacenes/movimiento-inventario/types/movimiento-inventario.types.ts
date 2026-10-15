@@ -6,7 +6,6 @@ export enum EstadoMovimientoInventario {
 
 export interface MovimientoInventarioDetalleRequest {
   productoId: number;
-  loteId?: number | null;
   cantidad: number;
   costoUnitario?: number | null;
 }
@@ -36,8 +35,6 @@ export interface MovimientoInventarioDetalleResponse {
   id: number;
   productoId: number;
   productoNombre?: string | null;
-  loteId?: number | null;
-  loteNumero?: string | null;
   cantidad: number;
   costoUnitario?: number | null;
   costoTotal: number;

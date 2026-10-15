@@ -6,7 +6,6 @@ export enum EstadoConsumoInterno {
 
 export interface ConsumoInternoDetalleRequest {
   productoId: number;
-  loteId?: number | null;
   cantidad: number;
 }
 
@@ -33,8 +32,6 @@ export interface ConsumoInternoDetalleResponse {
   id: number;
   productoId: number;
   productoNombre?: string | null;
-  loteId?: number | null;
-  loteNumero?: string | null;
   cantidad: number;
 }
 

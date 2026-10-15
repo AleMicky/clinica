@@ -32,7 +32,6 @@ public static partial class BajaInventarioMapper
         CreateBajaInventarioRequest request);
 
     [MapperIgnoreSource(nameof(BajaInventarioDetalleEntity.Producto))]
-    [MapperIgnoreSource(nameof(BajaInventarioDetalleEntity.Lote))]
     [MapperIgnoreSource(nameof(BajaInventarioDetalleEntity.BajaInventario))]
     public static partial BajaInventarioDetalleResponse ToResponse(
         BajaInventarioDetalleEntity entity);

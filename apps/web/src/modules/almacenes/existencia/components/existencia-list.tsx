@@ -233,13 +233,6 @@ export function ExistenciaList({
                         <Warehouse className="size-3 text-muted-foreground" />
                         <span>{item.almacenNombre || `Almacén #${item.almacenId}`}</span>
                       </span>
-
-                      {(item.loteNumero || (item as any).numeroLote || (item.loteId ? `#${item.loteId}` : null)) && (
-                        <span className="inline-flex items-center gap-1 bg-muted/40 px-1.5 py-0.5 rounded border border-border/30">
-                          <Tag className="size-3 text-muted-foreground" />
-                          <span>Lote: {item.loteNumero || (item as any).numeroLote || `#${item.loteId}`}</span>
-                        </span>
-                      )}
                     </div>
                   </div>
                 </div>

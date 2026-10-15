@@ -44,7 +44,6 @@ import type { MovimientoInventarioResponse } from "../types/movimiento-inventari
 import { AlmacenAutocomplete } from "../../almacen";
 import { TipoMovimientoInventarioAutocomplete } from "../../tipo-movimiento-inventario";
 import { ProductoAutocomplete } from "../../producto";
-import { LoteAutocomplete } from "../../lote";
 
 interface MovimientoInventarioFormDialogProps {
   open: boolean;
@@ -96,7 +95,6 @@ export function MovimientoInventarioFormDialog({
   });
 
   const watchedDetalles = watch("detalles") || [];
-  const selectedAlmacenId = watch("almacenId");
 
   // Summary calculations
   const totalItemsCount = watchedDetalles.length;
@@ -130,7 +128,6 @@ export function MovimientoInventarioFormDialog({
           detalles: (target.detalles || []).map((d) => ({
             productoId: d.productoId,
             productoNombre: d.productoNombre || "",
-            loteId: d.loteId || null,
             cantidad: Number(d.cantidad),
             costoUnitario:
               d.costoUnitario !== null && d.costoUnitario !== undefined
@@ -151,7 +148,6 @@ export function MovimientoInventarioFormDialog({
           {
             productoId: 0,
             productoNombre: "",
-            loteId: null,
             cantidad: 1,
             costoUnitario: 0,
           },
@@ -164,7 +160,6 @@ export function MovimientoInventarioFormDialog({
     append({
       productoId: 0,
       productoNombre: "",
-      loteId: null,
       cantidad: 1,
       costoUnitario: 0,
     });
@@ -193,7 +188,6 @@ export function MovimientoInventarioFormDialog({
       observacion: values.observacion?.trim() || null,
       detalles: values.detalles.map((d) => ({
         productoId: Number(d.productoId),
-        loteId: d.loteId ? Number(d.loteId) : null,
         cantidad: Number(d.cantidad),
         costoUnitario:
           d.costoUnitario !== null && d.costoUnitario !== undefined
@@ -432,7 +426,6 @@ export function MovimientoInventarioFormDialog({
                   <tr className="border-b border-border/60 bg-muted/40 text-muted-foreground font-semibold text-[11px]">
                     <th className="px-2.5 py-1.5 w-8 text-center">#</th>
                     <th className="px-2.5 py-1.5 min-w-56">Producto *</th>
-                    <th className="px-2.5 py-1.5 w-36">Lote (Opcional)</th>
                     <th className="px-2.5 py-1.5 w-24 text-center">Cantidad *</th>
                     <th className="px-2.5 py-1.5 w-28 text-center">Costo Unit.</th>
                     <th className="px-2.5 py-1.5 w-28 text-right">Subtotal</th>
@@ -443,7 +436,7 @@ export function MovimientoInventarioFormDialog({
                   {fields.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={7}
+                        colSpan={6}
                         className="px-3 py-6 text-center text-muted-foreground text-xs"
                       >
                         <div className="flex flex-col items-center justify-center gap-1.5">
@@ -466,7 +459,6 @@ export function MovimientoInventarioFormDialog({
                     </tr>
                   ) : (
                     fields.map((field, idx) => {
-                      const currentProdId = watch(`detalles.${idx}.productoId`);
                       const qty = Number(watch(`detalles.${idx}.cantidad`)) || 0;
                       const cost = Number(watch(`detalles.${idx}.costoUnitario`)) || 0;
                       const subtotal = qty * cost;
@@ -499,36 +491,8 @@ export function MovimientoInventarioFormDialog({
                                         ""
                                       );
                                     }
-                                    setValue(`detalles.${idx}.loteId`, null);
                                   }}
                                   placeholder="Buscar por código o nombre..."
-                                />
-                              )}
-                            />
-                          </td>
-                          <td className="px-2.5 py-1">
-                            <Controller
-                              name={`detalles.${idx}.loteId`}
-                              control={control}
-                              render={({ field: lField }) => (
-                                <LoteAutocomplete
-                                  productoId={currentProdId}
-                                  almacenId={selectedAlmacenId}
-                                  value={lField.value}
-                                  onValueChange={(val, lote) => {
-                                    lField.onChange(val || null);
-                                    if (
-                                      lote?.costoUnitario !== null &&
-                                      lote?.costoUnitario !== undefined &&
-                                      Number(lote.costoUnitario) > 0
-                                    ) {
-                                      setValue(
-                                        `detalles.${idx}.costoUnitario`,
-                                        Number(lote.costoUnitario)
-                                      );
-                                    }
-                                  }}
-                                  placeholder="Sin lote / Seleccionar..."
                                 />
                               )}
                             />

@@ -9,7 +9,6 @@ export enum EstadoTransferenciaAlmacen {
 
 export interface TransferenciaAlmacenDetalleRequest {
   productoId: number;
-  loteId?: number | null;
   cantidadSolicitada: number;
 }
 
@@ -53,8 +52,6 @@ export interface TransferenciaAlmacenDetalleResponse {
   id: number;
   productoId: number;
   productoNombre?: string | null;
-  loteId?: number | null;
-  loteNumero?: string | null;
   cantidadSolicitada: number;
   cantidadAprobada: number;
   cantidadDespachada: number;

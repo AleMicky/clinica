@@ -36,7 +36,6 @@ public static partial class RecepcionCompraMapper
         CreateRecepcionCompraRequest request);
 
     [MapperIgnoreSource(nameof(RecepcionCompraDetalleEntity.Producto))]
-    [MapperIgnoreSource(nameof(RecepcionCompraDetalleEntity.Lote))]
     [MapperIgnoreSource(nameof(RecepcionCompraDetalleEntity.OrdenCompraDetalle))]
     [MapperIgnoreSource(nameof(RecepcionCompraDetalleEntity.RecepcionCompra))]
     public static partial RecepcionCompraDetalleResponse ToResponse(

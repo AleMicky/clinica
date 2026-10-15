@@ -11,7 +11,6 @@ using Clinica.Api.Modules.Almacenes.CategoriaProducto.Entity;
 using Clinica.Api.Modules.Almacenes.ConsumoInterno.Entity;
 using Clinica.Api.Modules.Almacenes.Existencia.Entity;
 using Clinica.Api.Modules.Almacenes.InventarioFisico.Entity;
-using Clinica.Api.Modules.Almacenes.Lote.Entity;
 using Clinica.Api.Modules.Almacenes.Marca.Entity;
 using Clinica.Api.Modules.Almacenes.MovimientoInventario.Entity;
 using Clinica.Api.Modules.Almacenes.Producto.Entity;
@@ -64,7 +63,6 @@ public class AppDbContext(
     public DbSet<CategoriaProducto> CategoriasProducto => Set<CategoriaProducto>();
     public DbSet<Marca> Marcas => Set<Marca>();
     public DbSet<Producto> Productos => Set<Producto>();
-    public DbSet<Lote> Lotes => Set<Lote>();
     public DbSet<Existencia> Existencias => Set<Existencia>();
     public DbSet<TipoMovimientoInventario> TiposMovimientoInventario => Set<TipoMovimientoInventario>();
     public DbSet<MovimientoInventario> MovimientosInventario => Set<MovimientoInventario>();

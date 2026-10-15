@@ -9,7 +9,6 @@ using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
 using AlmacenEntity = Clinica.Api.Modules.Almacenes.Almacen.Entity.Almacen;
-using LoteEntity = Clinica.Api.Modules.Almacenes.Lote.Entity.Lote;
 using ProductoEntity = Clinica.Api.Modules.Almacenes.Producto.Entity.Producto;
 using TransferenciaDetalleEntity =
     Clinica.Api.Modules.Almacenes.TransferenciaAlmacen.Entity.TransferenciaAlmacenDetalle;
@@ -152,8 +151,6 @@ public sealed class TransferenciaAlmacenService(
             .Include(x => x.AlmacenDestino)
             .Include(x => x.Detalles)
             .ThenInclude(d => d.Producto)
-            .Include(x => x.Detalles)
-            .ThenInclude(d => d.Lote)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (entity is null || !entity.Activo)
@@ -439,26 +436,11 @@ public sealed class TransferenciaAlmacenService(
         CancellationToken cancellationToken)
     {
         var productoIds = detalles.Select(x => x.ProductoId).Distinct().ToList();
-        var loteIds = detalles
-            .Where(x => x.LoteId.HasValue)
-            .Select(x => x.LoteId!.Value)
-            .Distinct()
-            .ToList();
 
         var productosActivos = await dbContext.Productos
             .Where(x => productoIds.Contains(x.Id) && x.Activo)
             .Select(x => x.Id)
             .ToListAsync(cancellationToken);
-
-        var loteIdsValidos = new HashSet<int>();
-        if (loteIds.Count > 0)
-        {
-            loteIdsValidos = (await dbContext.Lotes
-                    .Where(x => loteIds.Contains(x.Id) && x.Activo)
-                    .Select(x => x.Id)
-                    .ToListAsync(cancellationToken))
-                .ToHashSet();
-        }
 
         foreach (var detalle in detalles)
         {
@@ -472,11 +454,6 @@ public sealed class TransferenciaAlmacenService(
             {
                 throw new NotFoundException(nameof(ProductoEntity), detalle.ProductoId);
             }
-
-            if (detalle.LoteId.HasValue && !loteIdsValidos.Contains(detalle.LoteId.Value))
-            {
-                throw new NotFoundException(nameof(LoteEntity), detalle.LoteId.Value);
-            }
         }
     }
 
@@ -486,7 +463,6 @@ public sealed class TransferenciaAlmacenService(
         return new TransferenciaDetalleEntity
         {
             ProductoId = request.ProductoId,
-            LoteId = request.LoteId,
             CantidadSolicitada = request.CantidadSolicitada
         };
     }
@@ -604,8 +580,7 @@ public sealed class TransferenciaAlmacenService(
         var response = TransferenciaMapper.ToResponse(entity);
         return response with
         {
-            ProductoNombre = entity.Producto?.Nombre,
-            LoteNumero = entity.Lote?.NumeroLote
+            ProductoNombre = entity.Producto?.Nombre
         };
     }
 

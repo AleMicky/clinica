@@ -25,11 +25,6 @@ public sealed class BajaInventarioDetalleConfiguration
             .HasForeignKey(x => x.ProductoId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(x => x.Lote)
-            .WithMany()
-            .HasForeignKey(x => x.LoteId)
-            .OnDelete(DeleteBehavior.Restrict);
-
         builder.HasOne(x => x.BajaInventario)
             .WithMany(x => x.Detalles)
             .HasForeignKey(x => x.BajaInventarioId)

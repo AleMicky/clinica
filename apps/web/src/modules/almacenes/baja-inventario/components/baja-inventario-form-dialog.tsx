@@ -54,7 +54,6 @@ import {
 } from "../types/baja-inventario.types";
 import { AlmacenAutocomplete } from "../../almacen";
 import { ProductoAutocomplete } from "../../producto";
-import { LoteAutocomplete } from "../../lote";
 
 interface BajaInventarioFormDialogProps {
   open: boolean;
@@ -106,7 +105,6 @@ export function BajaInventarioFormDialog({
   });
 
   const watchedDetalles = watch("detalles") || [];
-  const selectedAlmacenId = watch("almacenId");
 
   const totalCantidad = watchedDetalles.reduce(
     (acc, curr) => acc + (Number(curr.cantidad) || 0),
@@ -133,7 +131,6 @@ export function BajaInventarioFormDialog({
           detalles: (target.detalles || []).map((d) => ({
             productoId: d.productoId,
             productoNombre: d.productoNombre || "",
-            loteId: d.loteId || null,
             cantidad: Number(d.cantidad),
             observacion: d.observacion || "",
           })),
@@ -151,7 +148,6 @@ export function BajaInventarioFormDialog({
           {
             productoId: 0,
             productoNombre: "",
-            loteId: null,
             cantidad: 1,
             observacion: "",
           },
@@ -164,7 +160,6 @@ export function BajaInventarioFormDialog({
     append({
       productoId: 0,
       productoNombre: "",
-      loteId: null,
       cantidad: 1,
       observacion: "",
     });
@@ -193,7 +188,6 @@ export function BajaInventarioFormDialog({
       observacion: values.observacion?.trim() || null,
       detalles: values.detalles.map((d) => ({
         productoId: Number(d.productoId),
-        loteId: d.loteId ? Number(d.loteId) : null,
         cantidad: Number(d.cantidad),
         observacion: d.observacion?.trim() || null,
       })),
@@ -398,7 +392,7 @@ export function BajaInventarioFormDialog({
               <Input
                 id="motivo"
                 {...register("motivo")}
-                placeholder="Ej. Frasco quebrado durante manipulación en quirófano, lote vencido..."
+                placeholder="Ej. Frasco quebrado durante manipulación en quirófano, producto dañado..."
                 className="h-8 text-xs"
               />
               {errors.motivo && (
@@ -464,7 +458,6 @@ export function BajaInventarioFormDialog({
                   <tr className="border-b border-border/60 bg-muted/40 text-muted-foreground font-semibold text-[11px]">
                     <th className="px-2.5 py-1.5 w-8 text-center">#</th>
                     <th className="px-2.5 py-1.5 min-w-56">Producto *</th>
-                    <th className="px-2.5 py-1.5 w-40">Lote (Opcional)</th>
                     <th className="px-2.5 py-1.5 w-28 text-center">Cantidad *</th>
                     <th className="px-2.5 py-1.5 min-w-36">Nota / Detalle</th>
                     <th className="px-2 py-1.5 w-9 text-center"></th>
@@ -474,7 +467,7 @@ export function BajaInventarioFormDialog({
                   {fields.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={6}
+                        colSpan={5}
                         className="px-3 py-6 text-center text-muted-foreground text-xs"
                       >
                         <div className="flex flex-col items-center justify-center gap-1.5">
@@ -497,7 +490,6 @@ export function BajaInventarioFormDialog({
                     </tr>
                   ) : (
                     fields.map((field, idx) => {
-                      const currentProdId = watch(`detalles.${idx}.productoId`);
                       return (
                         <tr
                           key={field.id}
@@ -521,26 +513,8 @@ export function BajaInventarioFormDialog({
                                         prod.nombre
                                       );
                                     }
-                                    setValue(`detalles.${idx}.loteId`, null);
                                   }}
                                   placeholder="Buscar por código o nombre..."
-                                />
-                              )}
-                            />
-                          </td>
-                          <td className="px-2.5 py-1">
-                            <Controller
-                              name={`detalles.${idx}.loteId`}
-                              control={control}
-                              render={({ field: lField }) => (
-                                <LoteAutocomplete
-                                  productoId={currentProdId}
-                                  almacenId={selectedAlmacenId}
-                                  value={lField.value}
-                                  onValueChange={(val) =>
-                                    lField.onChange(val || null)
-                                  }
-                                  placeholder="Sin lote / Seleccionar..."
                                 />
                               )}
                             />

@@ -61,7 +61,6 @@ public static partial class MovimientoInventarioMapper
 
     // DETALLE ENTITY -> RESPONSE
     [MapperIgnoreSource(nameof(MovimientoInventarioDetalleEntity.Producto))]
-    [MapperIgnoreSource(nameof(MovimientoInventarioDetalleEntity.Lote))]
     [MapperIgnoreSource(nameof(MovimientoInventarioDetalleEntity.MovimientoInventario))]
     public static partial MovimientoInventarioDetalleResponse ToResponse(
         MovimientoInventarioDetalleEntity entity);

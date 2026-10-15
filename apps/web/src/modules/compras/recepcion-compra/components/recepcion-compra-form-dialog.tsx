@@ -40,7 +40,6 @@ import {
 import type { RecepcionCompraResponse } from "../types/recepcion-compra.types";
 import { AlmacenAutocomplete } from "@/modules/almacenes/almacen";
 import { ProductoAutocomplete } from "@/modules/almacenes/producto";
-import { LoteAutocomplete } from "@/modules/almacenes/lote";
 import {
   OrdenCompraAutocomplete,
   EstadoOrdenCompra,
@@ -97,7 +96,6 @@ export function RecepcionCompraFormDialog({
   });
 
   const watchedDetalles = watch("detalles") || [];
-  const selectedAlmacenId = watch("almacenId");
 
   const totalCantidad = watchedDetalles.reduce(
     (acc, curr) => acc + (Number(curr.cantidadRecibida) || 0),
@@ -124,7 +122,6 @@ export function RecepcionCompraFormDialog({
             productoId: d.productoId,
             productoNombre: d.productoNombre || "",
             productoCodigo: d.productoCodigo || "",
-            loteId: d.loteId ?? null,
             cantidadRecibida: Number(d.cantidadRecibida),
             precioUnitario: Number(d.precioUnitario),
             observacion: d.observacion || "",
@@ -145,7 +142,6 @@ export function RecepcionCompraFormDialog({
             productoId: 0,
             productoNombre: "",
             productoCodigo: "",
-            loteId: null,
             cantidadRecibida: 1,
             precioUnitario: 0,
             observacion: "",
@@ -161,7 +157,6 @@ export function RecepcionCompraFormDialog({
       productoId: 0,
       productoNombre: "",
       productoCodigo: "",
-      loteId: null,
       cantidadRecibida: 1,
       precioUnitario: 0,
       observacion: "",
@@ -182,7 +177,6 @@ export function RecepcionCompraFormDialog({
         detalles: values.detalles.map((d) => ({
           ordenCompraDetalleId: Number(d.ordenCompraDetalleId || 1),
           productoId: Number(d.productoId),
-          loteId: d.loteId ? Number(d.loteId) : null,
           cantidadRecibida: Number(d.cantidadRecibida),
           precioUnitario: Number(d.precioUnitario),
           observacion: d.observacion ? d.observacion.trim() : null,
@@ -302,7 +296,6 @@ export function RecepcionCompraFormDialog({
                                   productoId: d.productoId,
                                   productoNombre: d.productoNombre || "",
                                   productoCodigo: d.productoCodigo || "",
-                                  loteId: null,
                                   cantidadRecibida: Math.max(
                                     0,
                                     Number(d.cantidad) -
@@ -466,7 +459,6 @@ export function RecepcionCompraFormDialog({
                   <tr className="border-b border-border/60 bg-muted/40 text-muted-foreground font-semibold text-[11px]">
                     <th className="px-2.5 py-1.5 w-8 text-center">#</th>
                     <th className="px-2.5 py-1.5 min-w-[200px]">Producto *</th>
-                    <th className="px-2.5 py-1.5 w-36">Lote (Opcional)</th>
                     <th className="px-2.5 py-1.5 w-24 text-center">Cant. Recibida *</th>
                     <th className="px-2.5 py-1.5 w-24 text-center">Precio Unit.</th>
                     <th className="px-2.5 py-1.5 min-w-[140px]">Nota</th>
@@ -477,7 +469,7 @@ export function RecepcionCompraFormDialog({
                   {fields.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={7}
+                        colSpan={6}
                         className="px-3 py-6 text-center text-muted-foreground text-xs"
                       >
                         <div className="flex flex-col items-center justify-center gap-1.5">
@@ -529,30 +521,12 @@ export function RecepcionCompraFormDialog({
                                         prod.codigo
                                       );
                                     }
-                                    setValue(`detalles.${idx}.loteId`, null);
                                   }}
                                   placeholder="Buscar producto..."
                                   className="h-7 text-xs"
                                   error={Boolean(
                                     errors.detalles?.[idx]?.productoId
                                   )}
-                                />
-                              )}
-                            />
-                          </td>
-                          <td className="px-2.5 py-1">
-                            <Controller
-                              name={`detalles.${idx}.loteId`}
-                              control={control}
-                              render={({ field: lField }) => (
-                                <LoteAutocomplete
-                                  productoId={currentProdId}
-                                  almacenId={selectedAlmacenId}
-                                  value={lField.value}
-                                  onValueChange={(val) =>
-                                    lField.onChange(val || null)
-                                  }
-                                  placeholder="Sin lote / Seleccionar..."
                                 />
                               )}
                             />

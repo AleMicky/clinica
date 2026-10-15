@@ -7,7 +7,6 @@ public sealed record RecepcionCompraDetalleRequest
 {
     public required int OrdenCompraDetalleId { get; init; }
     public required decimal CantidadRecibida { get; init; }
-    public int? LoteId { get; init; }
     public required decimal PrecioUnitario { get; init; }
     public string? Observacion { get; init; }
 }
@@ -40,8 +39,6 @@ public sealed record RecepcionCompraDetalleResponse
     public int ProductoId { get; init; }
     public string? ProductoNombre { get; init; }
     public string? ProductoCodigo { get; init; }
-    public int? LoteId { get; init; }
-    public string? LoteNumero { get; init; }
     public decimal CantidadRecibida { get; init; }
     public decimal PrecioUnitario { get; init; }
     public string? Observacion { get; init; }

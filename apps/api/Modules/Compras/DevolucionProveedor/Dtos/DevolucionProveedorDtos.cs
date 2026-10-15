@@ -6,7 +6,6 @@ namespace Clinica.Api.Modules.Compras.DevolucionProveedor.Dtos;
 public sealed record DevolucionProveedorDetalleRequest
 {
     public required int ProductoId { get; init; }
-    public int? LoteId { get; init; }
     public required decimal Cantidad { get; init; }
     public string? Motivo { get; init; }
     public string? Observacion { get; init; }
@@ -39,8 +38,6 @@ public sealed record DevolucionProveedorDetalleResponse
     public int ProductoId { get; init; }
     public string? ProductoNombre { get; init; }
     public string? ProductoCodigo { get; init; }
-    public int? LoteId { get; init; }
-    public string? LoteNumero { get; init; }
     public decimal Cantidad { get; init; }
     public string? Motivo { get; init; }
     public string? Observacion { get; init; }

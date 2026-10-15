@@ -12,8 +12,6 @@ using Clinica.Api.Modules.Almacenes.Existencia.Endpoints;
 using Clinica.Api.Modules.Almacenes.Existencia.Services;
 using Clinica.Api.Modules.Almacenes.InventarioFisico.Endpoints;
 using Clinica.Api.Modules.Almacenes.InventarioFisico.Services;
-using Clinica.Api.Modules.Almacenes.Lote.Endpoints;
-using Clinica.Api.Modules.Almacenes.Lote.Services;
 using Clinica.Api.Modules.Almacenes.Marca.Endpoints;
 using Clinica.Api.Modules.Almacenes.Marca.Services;
 using Clinica.Api.Modules.Almacenes.MovimientoInventario.Endpoints;
@@ -39,7 +37,6 @@ public static class AlmacenesModule
         services.AddScoped<MarcaService>();
         services.AddScoped<IProductoService, ProductoService>();
         services.AddScoped<IProductoImportacionService, ProductoImportacionService>();
-        services.AddScoped<ILoteService, LoteService>();
         services.AddScoped<IExistenciaService, ExistenciaService>();
         services.AddScoped<ITipoMovimientoInventarioService, TipoMovimientoInventarioService>();
         services.AddScoped<IMovimientoInventarioService, MovimientoInventarioService>();
@@ -60,7 +57,6 @@ public static class AlmacenesModule
         app.MapCategoriaProductoEndpoints();
         app.MapMarcaEndpoints();
         app.MapProductoEndpoints();
-        app.MapLoteEndpoints();
         app.MapExistenciaEndpoints();
         app.MapTipoMovimientoInventarioEndpoints();
         app.MapMovimientoInventarioEndpoints();

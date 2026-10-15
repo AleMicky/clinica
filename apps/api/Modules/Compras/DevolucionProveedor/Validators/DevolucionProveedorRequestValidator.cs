@@ -55,11 +55,6 @@ public sealed class DevolucionProveedorDetalleRequestValidator
             .GreaterThan(0)
             .WithMessage("El producto es obligatorio.");
 
-        RuleFor(x => x.LoteId)
-            .GreaterThan(0)
-            .WithMessage("El lote debe tener un identificador válido.")
-            .When(x => x.LoteId.HasValue);
-
         RuleFor(x => x.Cantidad)
             .GreaterThan(0)
             .WithMessage("La cantidad del detalle debe ser mayor que cero.");

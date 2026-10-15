@@ -8,7 +8,6 @@ import { ExistenciaDeleteDialog } from "./existencia-delete-dialog";
 import { useExistencias } from "../hooks/use-existencia";
 import { useAlmacenes } from "../../almacen/hooks/use-almacen";
 import { useProductos } from "../../producto/hooks/use-producto";
-import { useLotes } from "../../lote/hooks/use-lote";
 import type { ExistenciaResponse } from "../types/existencia.types";
 import { AuditDialog, type AuditInfo } from "@/components/shared";
 
@@ -23,12 +22,7 @@ export function ExistenciaModuleView() {
 
   // Aux queries
   const { data: almacenesData } = useAlmacenes({ pageSize: 100 });
-  const { data: productosData } = useProductos({ pageSize: 1000 });
-  const { data: lotesData } = useLotes({ pageSize: 500 });
-
   const almacenes = almacenesData?.items ?? [];
-  const productos = productosData?.items ?? [];
-  const lotes = lotesData?.items ?? [];
 
   // Main existencias query
   const {
@@ -132,7 +126,6 @@ export function ExistenciaModuleView() {
       updatedBy: updatedUser,
       extraDetails: [
         { label: "Almacén", value: item.almacenNombre || `#${item.almacenId}` },
-        ...(item.loteNumero ? [{ label: "Lote", value: item.loteNumero }] : []),
         { label: "Stock Físico", value: String(item.cantidad) },
         { label: "Stock Reservado", value: String(item.cantidadReservada) },
         { label: "Stock Disponible", value: String(item.cantidadDisponible) },

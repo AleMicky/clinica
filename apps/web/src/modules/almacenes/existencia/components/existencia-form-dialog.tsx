@@ -40,7 +40,6 @@ import {
 import type { ExistenciaResponse } from "../types/existencia.types";
 import { AlmacenAutocomplete } from "../../almacen";
 import { ProductoAutocomplete } from "../../producto";
-import { LoteAutocomplete } from "../../lote";
 
 interface ExistenciaFormDialogProps {
   open: boolean;
@@ -74,7 +73,6 @@ export function ExistenciaFormDialog({
     defaultValues: {
       almacenId: 0,
       productoId: 0,
-      loteId: null,
       cantidad: 0,
       cantidadReservada: 0,
     },
@@ -82,7 +80,6 @@ export function ExistenciaFormDialog({
 
   const selectedAlmacenId = watch("almacenId");
   const selectedProductoId = watch("productoId");
-  const selectedLoteId = watch("loteId");
   const watchedCantidad = watch("cantidad") || 0;
   const watchedReservada = watch("cantidadReservada") || 0;
   const calculatedDisponible = Math.max(0, watchedCantidad - watchedReservada);
@@ -100,13 +97,11 @@ export function ExistenciaFormDialog({
   const existingRecord = React.useMemo(() => {
     if (isEditing || !existenciasData?.items) return null;
     return (
-      existenciasData.items.find((item) => {
-        const itemLoteId = item.loteId || null;
-        const formLoteId = selectedLoteId ? Number(selectedLoteId) : null;
-        return itemLoteId === formLoteId;
-      }) || null
+      existenciasData.items.find(
+        (item) => item.productoId === Number(selectedProductoId)
+      ) || null
     );
-  }, [isEditing, existenciasData, selectedLoteId]);
+  }, [isEditing, existenciasData, selectedProductoId]);
 
   React.useEffect(() => {
     if (open) {
@@ -114,7 +109,6 @@ export function ExistenciaFormDialog({
         reset({
           almacenId: existenciaToEdit.almacenId,
           productoId: existenciaToEdit.productoId,
-          loteId: existenciaToEdit.loteId || null,
           cantidad: existenciaToEdit.cantidad,
           cantidadReservada: existenciaToEdit.cantidadReservada,
         });
@@ -122,7 +116,6 @@ export function ExistenciaFormDialog({
         reset({
           almacenId: 0,
           productoId: 0,
-          loteId: null,
           cantidad: 0,
           cantidadReservada: 0,
         });
@@ -138,7 +131,6 @@ export function ExistenciaFormDialog({
           data: {
             almacenId: Number(values.almacenId),
             productoId: Number(values.productoId),
-            loteId: values.loteId ? Number(values.loteId) : null,
             cantidad: Number(values.cantidad),
             cantidadReservada: Number(values.cantidadReservada),
           },
@@ -150,7 +142,6 @@ export function ExistenciaFormDialog({
         await createMutation.mutateAsync({
           almacenId: Number(values.almacenId),
           productoId: Number(values.productoId),
-          loteId: values.loteId ? Number(values.loteId) : null,
           cantidad: Number(values.cantidad),
           cantidadReservada: Number(values.cantidadReservada),
         });
@@ -161,7 +152,6 @@ export function ExistenciaFormDialog({
           reset({
             almacenId: values.almacenId,
             productoId: 0,
-            loteId: null,
             cantidad: 0,
             cantidadReservada: 0,
           });
@@ -246,8 +236,6 @@ export function ExistenciaFormDialog({
                     value={field.value}
                     onValueChange={(val) => {
                       field.onChange(val || 0);
-                      // Reset lote selection if product changes
-                      setValue("loteId", null);
                     }}
                     disabled={isLoading || isEditing}
                     error={Boolean(errors.productoId)}
@@ -262,30 +250,7 @@ export function ExistenciaFormDialog({
               )}
             </div>
 
-            {/* Lote (Opcional) */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-foreground flex items-center gap-1.5">
-                <Tag className="size-3.5 text-muted-foreground" />
-                <span>Lote (Opcional)</span>
-              </Label>
-              <Controller
-                name="loteId"
-                control={control}
-                render={({ field }) => (
-                  <LoteAutocomplete
-                    productoId={selectedProductoId}
-                    almacenId={selectedAlmacenId}
-                    value={field.value}
-                    onValueChange={(val) => field.onChange(val || null)}
-                    disabled={isLoading || !selectedProductoId || isEditing}
-                    error={Boolean(errors.loteId)}
-                    placeholder="Seleccionar lote del producto..."
-                  />
-                )}
-              />
-            </div>
-
-            {/* Aviso si ya existe stock previo para este producto/lote */}
+            {/* Aviso si ya existe stock previo para este producto */}
             {existingRecord && (
               <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 text-xs flex items-start gap-2">
                 <Info className="size-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />

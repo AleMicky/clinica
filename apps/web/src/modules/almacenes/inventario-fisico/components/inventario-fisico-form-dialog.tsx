@@ -42,7 +42,6 @@ import {
 import type { InventarioFisicoResponse } from "../types/inventario-fisico.types";
 import { AlmacenAutocomplete } from "../../almacen";
 import { ProductoAutocomplete } from "../../producto";
-import { LoteAutocomplete } from "../../lote";
 import { useExistencias } from "../../existencia";
 
 interface InventarioFisicoFormDialogProps {
@@ -110,17 +109,12 @@ export function InventarioFisicoFormDialog({
   );
 
   const calculateStock = React.useCallback(
-    (productoId?: number | null, loteId?: number | null) => {
+    (productoId?: number | null) => {
       if (!productoId || productoId <= 0 || !existenciasData?.items) return 0;
-      if (loteId && loteId > 0) {
-        const found = existenciasData.items.find(
-          (ex) => ex.productoId === productoId && ex.loteId === loteId
-        );
-        return found ? Number(found.cantidad) : 0;
-      }
-      return existenciasData.items
-        .filter((ex) => ex.productoId === productoId)
-        .reduce((sum, ex) => sum + Number(ex.cantidad), 0);
+      const found = existenciasData.items.find(
+        (ex) => ex.productoId === productoId
+      );
+      return found ? Number(found.cantidad) : 0;
     },
     [existenciasData]
   );
@@ -142,7 +136,6 @@ export function InventarioFisicoFormDialog({
           detalles: (target.detalles || []).map((d) => ({
             productoId: d.productoId,
             productoNombre: d.productoNombre || "",
-            loteId: d.loteId || null,
             cantidadSistema: Number(d.cantidadSistema),
             cantidadContada:
               d.cantidadContada !== null && d.cantidadContada !== undefined
@@ -160,7 +153,6 @@ export function InventarioFisicoFormDialog({
           {
             productoId: 0,
             productoNombre: "",
-            loteId: null,
             cantidadSistema: 0,
             cantidadContada: null,
           },
@@ -173,7 +165,6 @@ export function InventarioFisicoFormDialog({
     append({
       productoId: 0,
       productoNombre: "",
-      loteId: null,
       cantidadSistema: 0,
       cantidadContada: null,
     });
@@ -199,7 +190,6 @@ export function InventarioFisicoFormDialog({
       observacion: values.observacion?.trim() || null,
       detalles: values.detalles.map((d) => ({
         productoId: Number(d.productoId),
-        loteId: d.loteId ? Number(d.loteId) : null,
         cantidadSistema: Number(d.cantidadSistema),
         cantidadContada:
           d.cantidadContada !== null && d.cantidadContada !== undefined
@@ -292,9 +282,7 @@ export function InventarioFisicoFormDialog({
                       value={field.value}
                       onValueChange={(val) => {
                         field.onChange(val || 0);
-                        // Limpiar lotes y recalcular cantidades
                         watchedDetalles.forEach((_, idx) => {
-                          setValue(`detalles.${idx}.loteId`, null);
                           setValue(`detalles.${idx}.cantidadSistema`, 0);
                         });
                       }}
@@ -389,7 +377,6 @@ export function InventarioFisicoFormDialog({
                   <tr className="border-b border-border/60 bg-muted/40 text-muted-foreground font-semibold text-[11px]">
                     <th className="px-2.5 py-1.5 w-8 text-center">#</th>
                     <th className="px-2.5 py-1.5 min-w-56">Producto *</th>
-                    <th className="px-2.5 py-1.5 w-44">Lote (Opcional)</th>
                     <th className="px-2.5 py-1.5 w-32 text-center">Cant. en Sistema</th>
                     <th className="px-2 py-1.5 w-9 text-center"></th>
                   </tr>
@@ -398,7 +385,7 @@ export function InventarioFisicoFormDialog({
                   {fields.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={5}
+                        colSpan={4}
                         className="px-3 py-6 text-center text-muted-foreground text-xs"
                       >
                         <div className="flex flex-col items-center justify-center gap-1.5">
@@ -421,8 +408,6 @@ export function InventarioFisicoFormDialog({
                     </tr>
                   ) : (
                     fields.map((field, idx) => {
-                      const currentProdId = watch(`detalles.${idx}.productoId`);
-
                       return (
                         <tr
                           key={field.id}
@@ -445,40 +430,19 @@ export function InventarioFisicoFormDialog({
                                         `detalles.${idx}.productoNombre`,
                                         prod.nombre
                                       );
+                                    } else {
+                                      setValue(
+                                        `detalles.${idx}.productoNombre`,
+                                        ""
+                                      );
                                     }
-                                    setValue(`detalles.${idx}.loteId`, null);
-                                    const autoStock = calculateStock(val, null);
+                                    const autoStock = calculateStock(val);
                                     setValue(
                                       `detalles.${idx}.cantidadSistema`,
                                       autoStock
                                     );
                                   }}
                                   placeholder="Buscar por código o nombre..."
-                                />
-                              )}
-                            />
-                          </td>
-                          <td className="px-2.5 py-1">
-                            <Controller
-                              name={`detalles.${idx}.loteId`}
-                              control={control}
-                              render={({ field: lField }) => (
-                                <LoteAutocomplete
-                                  productoId={currentProdId}
-                                  almacenId={selectedAlmacenId}
-                                  value={lField.value}
-                                  onValueChange={(val) => {
-                                    lField.onChange(val || null);
-                                    const autoStock = calculateStock(
-                                      currentProdId,
-                                      val
-                                    );
-                                    setValue(
-                                      `detalles.${idx}.cantidadSistema`,
-                                      autoStock
-                                    );
-                                  }}
-                                  placeholder="Sin lote / Seleccionar..."
                                 />
                               )}
                             />

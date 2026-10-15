@@ -13,7 +13,6 @@ using AlmacenEntity = Clinica.Api.Modules.Almacenes.Almacen.Entity.Almacen;
 using DevolucionProveedorDetalleEntity = Clinica.Api.Modules.Compras.DevolucionProveedor.Entity.DevolucionProveedorDetalle;
 using DevolucionProveedorEntity = Clinica.Api.Modules.Compras.DevolucionProveedor.Entity.DevolucionProveedor;
 using DevolucionProveedorMapper = Clinica.Api.Modules.Compras.DevolucionProveedor.Mappers.DevolucionProveedorMapper;
-using LoteEntity = Clinica.Api.Modules.Almacenes.Lote.Entity.Lote;
 using ProveedorEntity = Clinica.Api.Modules.Compras.Proveedor.Entity.Proveedor;
 using ProductoEntity = Clinica.Api.Modules.Almacenes.Producto.Entity.Producto;
 using RecepcionCompraEntity = Clinica.Api.Modules.Compras.RecepcionCompra.Entity.RecepcionCompra;
@@ -162,8 +161,6 @@ public sealed class DevolucionProveedorService(
             .Include(x => x.RecepcionCompra)
             .Include(x => x.Detalles)
             .ThenInclude(d => d.Producto)
-            .Include(x => x.Detalles)
-            .ThenInclude(d => d.Lote)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (devolucion is null || !devolucion.Activo)
@@ -417,7 +414,6 @@ public sealed class DevolucionProveedorService(
             .Select(d => new MovimientoInventarioDetalleRequest
             {
                 ProductoId = d.ProductoId,
-                LoteId = d.LoteId,
                 Cantidad = d.Cantidad
             })
             .ToList();
@@ -521,26 +517,11 @@ public sealed class DevolucionProveedorService(
         CancellationToken cancellationToken)
     {
         var productoIds = detalles.Select(x => x.ProductoId).Distinct().ToList();
-        var loteIds = detalles
-            .Where(x => x.LoteId.HasValue)
-            .Select(x => x.LoteId!.Value)
-            .Distinct()
-            .ToList();
 
         var productosActivos = await dbContext.Productos
             .Where(x => productoIds.Contains(x.Id) && x.Activo)
             .Select(x => x.Id)
             .ToListAsync(cancellationToken);
-
-        var loteIdsValidos = new HashSet<int>();
-        if (loteIds.Count > 0)
-        {
-            loteIdsValidos = (await dbContext.Lotes
-                    .Where(x => loteIds.Contains(x.Id) && x.Activo)
-                    .Select(x => x.Id)
-                    .ToListAsync(cancellationToken))
-                .ToHashSet();
-        }
 
         foreach (var detalle in detalles)
         {
@@ -554,12 +535,6 @@ public sealed class DevolucionProveedorService(
             {
                 throw new NotFoundException(nameof(ProductoEntity), detalle.ProductoId);
             }
-
-            if (detalle.LoteId.HasValue &&
-                !loteIdsValidos.Contains(detalle.LoteId.Value))
-            {
-                throw new NotFoundException(nameof(LoteEntity), detalle.LoteId.Value);
-            }
         }
     }
 
@@ -569,7 +544,6 @@ public sealed class DevolucionProveedorService(
         return new DevolucionProveedorDetalleEntity
         {
             ProductoId = request.ProductoId,
-            LoteId = request.LoteId,
             Cantidad = request.Cantidad,
             Motivo = Limpiar(request.Motivo),
             Observacion = Limpiar(request.Observacion)
@@ -622,8 +596,7 @@ public sealed class DevolucionProveedorService(
         return response with
         {
             ProductoNombre = entity.Producto?.Nombre,
-            ProductoCodigo = entity.Producto?.Codigo,
-            LoteNumero = entity.Lote?.NumeroLote
+            ProductoCodigo = entity.Producto?.Codigo
         };
     }
 

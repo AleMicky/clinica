@@ -5,7 +5,6 @@ export const inventarioFisicoDetalleSchema = z.object({
     .number()
     .min(1, "Debe seleccionar un producto válido"),
   productoNombre: z.string().optional(),
-  loteId: z.number().nullable().optional(),
   cantidadSistema: z
     .number()
     .min(0, "La cantidad en sistema no puede ser negativa"),

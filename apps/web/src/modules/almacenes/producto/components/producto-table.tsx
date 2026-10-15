@@ -9,7 +9,6 @@ import {
   Inbox,
   History,
   Clock,
-  Layers,
   CalendarClock,
   Filter,
 } from "lucide-react";
@@ -254,26 +253,17 @@ export function ProductoTable({
                     </div>
                   </TableCell>
 
-                  {/* Controles de Lote y Vencimiento */}
+                  {/* Control de Vencimiento */}
                   <TableCell className="py-2">
                     <div className="flex flex-wrap gap-1">
-                      {producto.controlaLote && (
-                        <Badge
-                          variant="outline"
-                          className="text-[10px] px-1.5 py-0 border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-400 gap-1 font-medium"
-                        >
-                          <Layers className="size-2.5" /> Lote
-                        </Badge>
-                      )}
-                      {producto.controlaVencimiento && (
+                      {producto.controlaVencimiento ? (
                         <Badge
                           variant="outline"
                           className="text-[10px] px-1.5 py-0 border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400 gap-1 font-medium"
                         >
                           <CalendarClock className="size-2.5" /> Vence
                         </Badge>
-                      )}
-                      {!producto.controlaLote && !producto.controlaVencimiento && (
+                      ) : (
                         <span className="text-[11px] text-muted-foreground/70">Estándar</span>
                       )}
                     </div>

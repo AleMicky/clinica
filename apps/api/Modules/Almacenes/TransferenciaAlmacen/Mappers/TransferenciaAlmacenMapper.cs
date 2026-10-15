@@ -35,7 +35,6 @@ public static partial class TransferenciaAlmacenMapper
         CreateTransferenciaAlmacenRequest request);
 
     [MapperIgnoreSource(nameof(TransferenciaAlmacenDetalleEntity.Producto))]
-    [MapperIgnoreSource(nameof(TransferenciaAlmacenDetalleEntity.Lote))]
     [MapperIgnoreSource(nameof(TransferenciaAlmacenDetalleEntity.TransferenciaAlmacen))]
     public static partial TransferenciaAlmacenDetalleResponse ToResponse(
         TransferenciaAlmacenDetalleEntity entity);

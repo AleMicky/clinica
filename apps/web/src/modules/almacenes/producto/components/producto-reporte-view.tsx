@@ -74,7 +74,6 @@ export function ProductoReporteView() {
   const [proveedorId, setProveedorId] = React.useState<number | null>(null);
   const [catalogoUm, setCatalogoUm] = React.useState<string | null>(null);
   const [unidadMedidaId, setUnidadMedidaId] = React.useState<number | null>(null);
-  const [controlaLote, setControlaLote] = React.useState<string>("TODOS");
   const [controlaVence, setControlaVence] = React.useState<string>("TODOS");
 
   const [page, setPage] = React.useState(1);
@@ -113,12 +112,6 @@ export function ProductoReporteView() {
   // ---------------------------------------------------------------------------
   // Query Params & Data Fetching
   // ---------------------------------------------------------------------------
-  const parsedControlaLote = React.useMemo(() => {
-    if (controlaLote === "SI") return true;
-    if (controlaLote === "NO") return false;
-    return undefined;
-  }, [controlaLote]);
-
   const parsedControlaVence = React.useMemo(() => {
     if (controlaVence === "SI") return true;
     if (controlaVence === "NO") return false;
@@ -135,7 +128,6 @@ export function ProductoReporteView() {
       proveedorId: proveedorId ?? undefined,
       unidadMedidaId: unidadMedidaId ?? undefined,
       categoriaUnidadMedida: catalogoUm ?? undefined,
-      controlaLote: parsedControlaLote,
       controlaVencimiento: parsedControlaVence,
     }),
     [
@@ -147,7 +139,6 @@ export function ProductoReporteView() {
       proveedorId,
       unidadMedidaId,
       catalogoUm,
-      parsedControlaLote,
       parsedControlaVence,
     ]
   );
@@ -175,7 +166,6 @@ export function ProductoReporteView() {
     setProveedorId(null);
     setCatalogoUm(null);
     setUnidadMedidaId(null);
-    setControlaLote("TODOS");
     setControlaVence("TODOS");
     setPage(1);
   };
@@ -187,7 +177,6 @@ export function ProductoReporteView() {
       proveedorId !== null ||
       catalogoUm !== null ||
       unidadMedidaId !== null ||
-      controlaLote !== "TODOS" ||
       controlaVence !== "TODOS"
   );
 
@@ -200,7 +189,6 @@ export function ProductoReporteView() {
         proveedorId: proveedorId ?? undefined,
         unidadMedidaId: unidadMedidaId ?? undefined,
         categoriaUnidadMedida: catalogoUm ?? undefined,
-        controlaLote: parsedControlaLote,
         controlaVencimiento: parsedControlaVence,
       };
 
@@ -485,28 +473,6 @@ export function ProductoReporteView() {
               </Select>
             </div>
 
-            {/* Controla Lote */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-muted-foreground">
-                Control de Lote
-              </Label>
-              <Select
-                value={controlaLote}
-                onValueChange={(val) => {
-                  setControlaLote(val ?? "TODOS");
-                  setPage(1);
-                }}
-              >
-                <SelectTrigger className="h-8.5 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="TODOS">Todos</SelectItem>
-                  <SelectItem value="SI">Solo con control de lote</SelectItem>
-                  <SelectItem value="NO">Sin control de lote</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
 
             {/* Controla Vencimiento */}
             <div className="space-y-1.5">
@@ -582,7 +548,7 @@ export function ProductoReporteView() {
                 <TableHead className="text-xs font-semibold">Catálogo U.M.</TableHead>
                 <TableHead className="text-xs font-semibold">Unidad Medida</TableHead>
                 <TableHead className="text-xs font-semibold">Proveedor</TableHead>
-                <TableHead className="text-center text-xs font-semibold">Lote / Vence</TableHead>
+                <TableHead className="text-center text-xs font-semibold">Vencimiento</TableHead>
                 <TableHead className="text-right text-xs font-semibold">Stock Mín.</TableHead>
                 <TableHead className="text-right text-xs font-semibold">Stock Máx.</TableHead>
               </TableRow>
@@ -695,23 +661,14 @@ export function ProductoReporteView() {
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-1">
-                        {prod.controlaLote && (
-                          <Badge
-                            variant="secondary"
-                            className="text-[10px] px-1 py-0 bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20"
-                          >
-                            Lote
-                          </Badge>
-                        )}
-                        {prod.controlaVencimiento && (
+                        {prod.controlaVencimiento ? (
                           <Badge
                             variant="secondary"
                             className="text-[10px] px-1 py-0 bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/20"
                           >
                             Vence
                           </Badge>
-                        )}
-                        {!prod.controlaLote && !prod.controlaVencimiento && (
+                        ) : (
                           <span className="text-xs text-muted-foreground">—</span>
                         )}
                       </div>

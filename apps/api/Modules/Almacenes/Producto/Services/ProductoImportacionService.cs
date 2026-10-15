@@ -3,7 +3,6 @@ using Clinica.Api.Data;
 using Clinica.Api.Shared.Excel;
 using Microsoft.EntityFrameworkCore;
 using CategoriaProductoEntity = Clinica.Api.Modules.Almacenes.CategoriaProducto.Entity.CategoriaProducto;
-using LoteEntity = Clinica.Api.Modules.Almacenes.Lote.Entity.Lote;
 using MarcaEntity = Clinica.Api.Modules.Almacenes.Marca.Entity.Marca;
 using ProductoEntity = Clinica.Api.Modules.Almacenes.Producto.Entity.Producto;
 using ProveedorEntity = Clinica.Api.Modules.Compras.Proveedor.Entity.Proveedor;
@@ -88,53 +87,27 @@ public sealed class ProductoImportacionService(
         var productosExistentesMap = productosExistentesDb
             .ToDictionary(x => x.Codigo, x => x, StringComparer.OrdinalIgnoreCase);
 
-        // 4. Consultar lotes existentes en BD para los productos existentes
-        var productosExistentesIds = productosExistentesDb.Select(x => x.Id).ToList();
-        var lotesExistentesDb = await dbContext.Lotes
-            .AsNoTracking()
-            .Where(x => productosExistentesIds.Contains(x.ProductoId))
-            .Select(x => new { x.ProductoId, x.NumeroLote })
-            .ToListAsync(cancellationToken);
-
-        var lotesExistentesDbSet = lotesExistentesDb
-            .Select(x => $"{x.ProductoId}|{x.NumeroLote.ToUpperInvariant()}")
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        // 5. Estructuras para seguimiento en memoria durante el procesamiento
+        // 4. Estructuras para seguimiento en memoria durante el procesamiento
         var productosNuevosMap = new Dictionary<string, ProductoEntity>(StringComparer.OrdinalIgnoreCase);
-        var lotesNuevos = new List<LoteEntity>();
-        var lotesProcesadosPorProducto = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var fila in filas)
         {
             ProcesarFila(
                 fila,
                 productosNuevosMap,
-                lotesNuevos,
                 categoriasMap,
                 marcasMap,
                 proveedoresMap,
                 unidadesMap,
                 productosExistentesMap,
-                lotesExistentesDbSet,
-                lotesProcesadosPorProducto,
                 resultado);
         }
 
-        if (productosNuevosMap.Count == 0 && lotesNuevos.Count == 0)
+        if (productosNuevosMap.Count == 0)
             return resultado;
 
-        // 6. Persistir entidades
-        if (productosNuevosMap.Count > 0)
-        {
-            await dbContext.Productos.AddRangeAsync(productosNuevosMap.Values, cancellationToken);
-        }
-
-        if (lotesNuevos.Count > 0)
-        {
-            await dbContext.Lotes.AddRangeAsync(lotesNuevos, cancellationToken);
-        }
-
+        // 5. Persistir entidades
+        await dbContext.Productos.AddRangeAsync(productosNuevosMap.Values, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
 
         resultado.Importados = productosNuevosMap.Count;
@@ -145,14 +118,11 @@ public sealed class ProductoImportacionService(
     private static void ProcesarFila(
         ExcelRow fila,
         Dictionary<string, ProductoEntity> productosNuevosMap,
-        List<LoteEntity> lotesNuevos,
         Dictionary<string, int> categoriasMap,
         Dictionary<string, int> marcasMap,
         Dictionary<string, int> proveedoresMap,
         Dictionary<string, int> unidadesMap,
         Dictionary<string, ProductoEntity> productosExistentesMap,
-        HashSet<string> lotesExistentesDbSet,
-        HashSet<string> lotesProcesadosPorProducto,
         ExcelImportResult resultado)
     {
         var tieneError = false;
@@ -165,16 +135,9 @@ public sealed class ProductoImportacionService(
         var marcaTexto = NormalizarTexto(fila.Get("MARCA"));
         var proveedorTexto = NormalizarTexto(fila.Get("PROVEEDOR"));
         var unidadTexto = NormalizarTexto(fila.Get("UNIDAD_MEDIDA"));
-        var controlaLoteTexto = NormalizarTexto(fila.Get("CONTROLA_LOTE"));
         var controlaVencimientoTexto = NormalizarTexto(fila.Get("CONTROLA_VENCIMIENTO"));
         var stockMinimoTexto = NormalizarTexto(fila.Get("STOCK_MINIMO"));
         var stockMaximoTexto = NormalizarTexto(fila.Get("STOCK_MAXIMO"));
-
-        // Lectura de campos de Lote
-        var numeroLote = NormalizarNumeroLote(fila.Get("NUMERO_LOTE"));
-        var fechaFabricacionTexto = NormalizarTexto(fila.Get("FECHA_FABRICACION"));
-        var fechaVencimientoTexto = NormalizarTexto(fila.Get("FECHA_VENCIMIENTO"));
-        var costoUnitarioTexto = NormalizarTexto(fila.Get("COSTO_UNITARIO"));
 
         // Validación Producto: Código
         if (string.IsNullOrWhiteSpace(codigo))
@@ -287,7 +250,6 @@ public sealed class ProductoImportacionService(
         }
 
         // Parsing Booleans
-        var controlaLote = ParsearBooleano(controlaLoteTexto);
         var controlaVencimiento = ParsearBooleano(controlaVencimientoTexto);
 
         // Parsing Stock Mínimo
@@ -358,209 +320,51 @@ public sealed class ProductoImportacionService(
             }
         }
 
-        // Parsing Fechas Lote
-        DateOnly? fechaFabricacion = null;
-        if (!string.IsNullOrWhiteSpace(fechaFabricacionTexto))
-        {
-            if (!TryParseFecha(fechaFabricacionTexto, out fechaFabricacion))
-            {
-                AgregarError(
-                    resultado,
-                    fila.RowNumber,
-                    "FECHA_FABRICACION",
-                    fechaFabricacionTexto,
-                    "La fecha de fabricación no tiene un formato válido (ej: yyyy-MM-dd, dd/MM/yyyy).");
-                tieneError = true;
-            }
-            else if (fechaFabricacion > DateOnly.FromDateTime(DateTime.Today))
-            {
-                AgregarError(
-                    resultado,
-                    fila.RowNumber,
-                    "FECHA_FABRICACION",
-                    fechaFabricacionTexto,
-                    "La fecha de fabricación no puede ser futura.");
-                tieneError = true;
-            }
-        }
-
-        DateOnly? fechaVencimiento = null;
-        if (!string.IsNullOrWhiteSpace(fechaVencimientoTexto))
-        {
-            if (!TryParseFecha(fechaVencimientoTexto, out fechaVencimiento))
-            {
-                AgregarError(
-                    resultado,
-                    fila.RowNumber,
-                    "FECHA_VENCIMIENTO",
-                    fechaVencimientoTexto,
-                    "La fecha de vencimiento no tiene un formato válido (ej: yyyy-MM-dd, dd/MM/yyyy).");
-                tieneError = true;
-            }
-        }
-
-        if (controlaVencimiento && !string.IsNullOrWhiteSpace(numeroLote) && fechaVencimiento is null)
-        {
-            AgregarError(
-                resultado,
-                fila.RowNumber,
-                "FECHA_VENCIMIENTO",
-                fechaVencimientoTexto,
-                "La fecha de vencimiento es obligatoria cuando el producto controla vencimiento.");
-            tieneError = true;
-        }
-
-        if (fechaFabricacion.HasValue && fechaVencimiento.HasValue && fechaVencimiento < fechaFabricacion)
-        {
-            AgregarError(
-                resultado,
-                fila.RowNumber,
-                "FECHA_VENCIMIENTO",
-                fechaVencimientoTexto,
-                "La fecha de vencimiento no puede ser anterior a la fecha de fabricación.");
-            tieneError = true;
-        }
-
-        // Parsing Costo Unitario
-        decimal? costoUnitario = null;
-        if (!string.IsNullOrWhiteSpace(costoUnitarioTexto))
-        {
-            if (!decimal.TryParse(costoUnitarioTexto, NumberStyles.Number, CultureInfo.InvariantCulture, out var parsedCosto) &&
-                !decimal.TryParse(costoUnitarioTexto, NumberStyles.Number, CultureInfo.CurrentCulture, out parsedCosto))
-            {
-                AgregarError(
-                    resultado,
-                    fila.RowNumber,
-                    "COSTO_UNITARIO",
-                    costoUnitarioTexto,
-                    "El costo unitario debe ser un número válido.");
-                tieneError = true;
-            }
-            else if (parsedCosto < 0)
-            {
-                AgregarError(
-                    resultado,
-                    fila.RowNumber,
-                    "COSTO_UNITARIO",
-                    costoUnitarioTexto,
-                    "El costo unitario no puede ser negativo.");
-                tieneError = true;
-            }
-            else
-            {
-                costoUnitario = parsedCosto;
-            }
-        }
-
         if (tieneError || string.IsNullOrWhiteSpace(codigo))
             return;
 
-        // Gestión del Producto (Nuevo vs Existente en memoria vs Existente en BD)
-        ProductoEntity productoEntity;
-        var productoYaEnBd = productosExistentesMap.TryGetValue(codigo, out var productoExistenteBd);
-
-        if (productoYaEnBd && productoExistenteBd != null)
+        // Gestión del Producto (Nuevo vs Existente en BD vs Duplicado en Excel)
+        if (productosExistentesMap.ContainsKey(codigo))
         {
-            productoEntity = productoExistenteBd;
-
-            // Si el producto ya existe en BD y no viene lote para agregar, se cuenta como omitido
-            if (string.IsNullOrWhiteSpace(numeroLote))
-            {
-                resultado.Omitidos++;
-                AgregarError(
-                    resultado,
-                    fila.RowNumber,
-                    "CODIGO",
-                    codigo,
-                    "Ya existe un producto registrado con este código en la base de datos.");
-                return;
-            }
-        }
-        else if (productosNuevosMap.TryGetValue(codigo, out var productoExistenteEnMemoria))
-        {
-            // Producto ya registrado en una fila anterior del mismo Excel (ej. para agregar múltiples lotes)
-            productoEntity = productoExistenteEnMemoria;
-        }
-        else
-        {
-            // Nuevo Producto
-            productoEntity = new ProductoEntity
-            {
-                Codigo = codigo,
-                Nombre = nombre!,
-                Descripcion = descripcion,
-                CategoriaProductoId = categoriaId,
-                MarcaId = marcaId,
-                ProveedorId = proveedorId,
-                UnidadMedidaId = unidadMedidaId,
-                ControlaLote = controlaLote,
-                ControlaVencimiento = controlaVencimiento,
-                StockMinimo = stockMinimo,
-                StockMaximo = stockMaximo,
-                Activo = true
-            };
-
-            productosNuevosMap[codigo] = productoEntity;
+            resultado.Omitidos++;
+            AgregarError(
+                resultado,
+                fila.RowNumber,
+                "CODIGO",
+                codigo,
+                "Ya existe un producto registrado con este código en la base de datos.");
+            return;
         }
 
-        // Gestión del Lote (si aplica)
-        if (!string.IsNullOrWhiteSpace(numeroLote))
+        if (productosNuevosMap.ContainsKey(codigo))
         {
-            var claveLoteExcel = $"{codigo}|{numeroLote}";
-
-            // Duplicado dentro del mismo archivo Excel
-            if (!lotesProcesadosPorProducto.Add(claveLoteExcel))
-            {
-                AgregarError(
-                    resultado,
-                    fila.RowNumber,
-                    "NUMERO_LOTE",
-                    numeroLote,
-                    $"El número de lote '{numeroLote}' está repetido para este producto en el archivo Excel.");
-                return;
-            }
-
-            // Ya existe en BD para este producto
-            if (productoYaEnBd && productoExistenteBd != null)
-            {
-                var claveLoteDb = $"{productoExistenteBd.Id}|{numeroLote}";
-                if (lotesExistentesDbSet.Contains(claveLoteDb))
-                {
-                    AgregarError(
-                        resultado,
-                        fila.RowNumber,
-                        "NUMERO_LOTE",
-                        numeroLote,
-                        $"Ya existe un lote '{numeroLote}' registrado para este producto en la base de datos.");
-                    return;
-                }
-            }
-
-            var lote = new LoteEntity
-            {
-                NumeroLote = numeroLote,
-                FechaFabricacion = fechaFabricacion,
-                FechaVencimiento = fechaVencimiento,
-                CostoUnitario = costoUnitario,
-                Activo = true
-            };
-
-            if (productoYaEnBd && productoExistenteBd != null)
-            {
-                lote.ProductoId = productoExistenteBd.Id;
-            }
-            else
-            {
-                lote.Producto = productoEntity;
-            }
-
-            lotesNuevos.Add(lote);
+            resultado.Omitidos++;
+            AgregarError(
+                resultado,
+                fila.RowNumber,
+                "CODIGO",
+                codigo,
+                "El código del producto está repetido en el archivo Excel.");
+            return;
         }
-        else if (productoEntity.ControlaLote)
+
+        // Nuevo Producto
+        var productoEntity = new ProductoEntity
         {
-            // Si el producto controla lote pero no se especificó un lote en la fila
-            // Se puede permitir la creación del producto sin lote inicial (quedará sin existencias)
-        }
+            Codigo = codigo,
+            Nombre = nombre!,
+            Descripcion = descripcion,
+            CategoriaProductoId = categoriaId,
+            MarcaId = marcaId,
+            ProveedorId = proveedorId,
+            UnidadMedidaId = unidadMedidaId,
+            ControlaVencimiento = controlaVencimiento,
+            StockMinimo = stockMinimo,
+            StockMaximo = stockMaximo,
+            Activo = true
+        };
+
+        productosNuevosMap[codigo] = productoEntity;
     }
 
     private static void RegistrarVariaciones(Dictionary<string, int> map, string? valor, int id)
@@ -672,13 +476,6 @@ public sealed class ProductoImportacionService(
         return codigo.Trim().ToUpperInvariant();
     }
 
-    private static string? NormalizarNumeroLote(string? numeroLote)
-    {
-        if (string.IsNullOrWhiteSpace(numeroLote))
-            return null;
-
-        return numeroLote.Trim().ToUpperInvariant();
-    }
 
     private static string? NormalizarTexto(string? valor)
     {

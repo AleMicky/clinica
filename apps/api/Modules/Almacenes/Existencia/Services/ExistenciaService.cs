@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 using AlmacenEntity = Clinica.Api.Modules.Almacenes.Almacen.Entity.Almacen;
 using ExistenciaEntity = Clinica.Api.Modules.Almacenes.Existencia.Entity.Existencia;
 using ExistenciaMapper = Clinica.Api.Modules.Almacenes.Existencia.Mappers.ExistenciaMapper;
-using LoteEntity = Clinica.Api.Modules.Almacenes.Lote.Entity.Lote;
 using ProductoEntity = Clinica.Api.Modules.Almacenes.Producto.Entity.Producto;
 
 namespace Clinica.Api.Modules.Almacenes.Existencia.Services;
@@ -40,14 +39,12 @@ public interface IExistenciaService
     Task AumentarStockAsync(
         int almacenId,
         int productoId,
-        int? loteId,
         decimal cantidad,
         CancellationToken cancellationToken = default);
 
     Task DisminuirStockAsync(
         int almacenId,
         int productoId,
-        int? loteId,
         decimal cantidad,
         CancellationToken cancellationToken = default);
 }
@@ -81,8 +78,7 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
             var termino = search.Trim();
             query = query.Where(x =>
                 x.Producto.Codigo.Contains(termino) ||
-                x.Producto.Nombre.Contains(termino) ||
-                (x.Lote != null && x.Lote.NumeroLote.Contains(termino)));
+                x.Producto.Nombre.Contains(termino));
         }
 
         var totalItems = await query.CountAsync(cancellationToken);
@@ -96,7 +92,6 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
             .Take(pageSize)
             .Include(x => x.Almacen)
             .Include(x => x.Producto)
-            .Include(x => x.Lote)
             .ToListAsync(cancellationToken);
 
         var items = existencias
@@ -104,8 +99,7 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
                 x,
                 x.Almacen?.Nombre,
                 x.Producto?.Nombre,
-                x.Producto?.Codigo,
-                x.Lote?.NumeroLote))
+                x.Producto?.Codigo))
             .ToList();
 
         return new PagedResult<ExistenciaResponse>(
@@ -124,7 +118,6 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
             .AsNoTracking()
             .Include(x => x.Almacen)
             .Include(x => x.Producto)
-            .Include(x => x.Lote)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (existencia is null || !existencia.Activo)
@@ -136,8 +129,7 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
             existencia,
             existencia.Almacen?.Nombre,
             existencia.Producto?.Nombre,
-            existencia.Producto?.Codigo,
-            existencia.Lote?.NumeroLote);
+            existencia.Producto?.Codigo);
     }
 
     public async Task<ExistenciaResponse> CrearAsync(
@@ -147,13 +139,11 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
         await ValidarReferenciasAsync(
             request.AlmacenId,
             request.ProductoId,
-            request.LoteId,
             cancellationToken);
 
         await ValidarCombinacionUnicaAsync(
             request.AlmacenId,
             request.ProductoId,
-            request.LoteId,
             idExcluido: null,
             cancellationToken);
 
@@ -175,7 +165,6 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
         await ValidarReferenciasAsync(
             request.AlmacenId,
             request.ProductoId,
-            request.LoteId,
             cancellationToken);
 
         var entity = await dbContext.Existencias
@@ -189,7 +178,6 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
         await ValidarCombinacionUnicaAsync(
             request.AlmacenId,
             request.ProductoId,
-            request.LoteId,
             idExcluido: id,
             cancellationToken);
 
@@ -221,7 +209,6 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
     public async Task AumentarStockAsync(
         int almacenId,
         int productoId,
-        int? loteId,
         decimal cantidad,
         CancellationToken cancellationToken = default)
     {
@@ -234,14 +221,12 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
         await ValidarReferenciasAsync(
             almacenId,
             productoId,
-            loteId,
             cancellationToken);
 
         var existencia = await dbContext.Existencias
             .FirstOrDefaultAsync(
                 x => x.AlmacenId == almacenId &&
                      x.ProductoId == productoId &&
-                     x.LoteId == loteId &&
                      x.Activo,
                 cancellationToken);
 
@@ -251,7 +236,6 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
             {
                 AlmacenId = almacenId,
                 ProductoId = productoId,
-                LoteId = loteId,
                 Cantidad = cantidad,
                 CantidadReservada = 0
             };
@@ -267,7 +251,6 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
     public async Task DisminuirStockAsync(
         int almacenId,
         int productoId,
-        int? loteId,
         decimal cantidad,
         CancellationToken cancellationToken = default)
     {
@@ -281,7 +264,6 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
             .FirstOrDefaultAsync(
                 x => x.AlmacenId == almacenId &&
                      x.ProductoId == productoId &&
-                     x.LoteId == loteId &&
                      x.Activo,
                 cancellationToken);
 
@@ -305,7 +287,6 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
     private async Task ValidarReferenciasAsync(
         int almacenId,
         int productoId,
-        int? loteId,
         CancellationToken cancellationToken)
     {
         var existeAlmacen = await dbContext.Almacenes
@@ -327,29 +308,11 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
         {
             throw new NotFoundException(nameof(ProductoEntity), productoId);
         }
-
-        if (!loteId.HasValue)
-        {
-            return;
-        }
-
-        var existeLote = await dbContext.Lotes
-            .AnyAsync(
-                x => x.Id == loteId.Value &&
-                     x.ProductoId == productoId &&
-                     x.Activo,
-                cancellationToken);
-
-        if (!existeLote)
-        {
-            throw new NotFoundException(nameof(LoteEntity), loteId.Value);
-        }
     }
 
     private async Task ValidarCombinacionUnicaAsync(
         int almacenId,
         int productoId,
-        int? loteId,
         int? idExcluido,
         CancellationToken cancellationToken)
     {
@@ -357,14 +320,13 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
             .AnyAsync(
                 x => x.AlmacenId == almacenId &&
                      x.ProductoId == productoId &&
-                     x.LoteId == loteId &&
                      (!idExcluido.HasValue || x.Id != idExcluido.Value),
                 cancellationToken);
 
         if (existe)
         {
             throw new ConflictException(
-                "Ya existe una existencia para esa combinación de almacén, producto y lote.");
+                "Ya existe una existencia para esa combinación de almacén y producto.");
         }
     }
 
@@ -392,8 +354,7 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
         ExistenciaEntity entity,
         string? nombreAlmacen,
         string? nombreProducto,
-        string? codigoProducto,
-        string? numeroLote)
+        string? codigoProducto)
     {
         var response = ExistenciaMapper.ToResponse(entity);
         return response with
@@ -401,7 +362,6 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
             AlmacenNombre = nombreAlmacen,
             ProductoNombre = nombreProducto,
             ProductoCodigo = codigoProducto,
-            LoteNumero = numeroLote,
             CantidadDisponible = entity.CantidadDisponible
         };
     }

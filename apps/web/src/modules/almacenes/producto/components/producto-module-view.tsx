@@ -4,14 +4,13 @@ import * as React from "react";
 import { ProductoHeader } from "./producto-header";
 import { ProductoMetricsCards } from "./producto-metrics";
 import { ProductoMasterList } from "./producto-master-list";
-import { ProductoDetailLotesView } from "./producto-detail-lotes-view";
+import { ProductoDetailView } from "./producto-detail-view";
 import { ProductoFormDialog } from "./producto-form-dialog";
 import { ProductoDeleteDialog } from "./producto-delete-dialog";
 import { ProductoImportDialog } from "./producto-import-dialog";
 import { useProductos } from "../hooks/use-producto";
 import { useCategoriasProducto } from "../../categoria-producto/hooks/use-categoria-producto";
 import type { ProductoMetrics, ProductoResponse } from "../types/producto.types";
-import type { LoteResponse } from "../../lote/types/lote.types";
 import { AuditDialog, type AuditInfo } from "@/components/shared";
 import { useDebounce } from "@/hooks/use-debounce";
 
@@ -87,13 +86,11 @@ export function ProductoModuleView() {
   // Metrics computation
   const metrics: ProductoMetrics = React.useMemo(() => {
     const rawItems = productosData?.items ?? [];
-    const conLote = rawItems.filter((p) => p.controlaLote).length;
     const conVence = rawItems.filter((p) => p.controlaVencimiento).length;
     const uniqueCats = new Set(rawItems.map((p) => p.categoriaProductoId));
 
     return {
       totalProductos: productosData?.totalItems ?? rawItems.length,
-      controlaLoteCount: conLote,
       controlaVencimientoCount: conVence,
       categoriasCount: uniqueCats.size || (categorias.length > 0 ? categorias.length : 0),
     };
@@ -138,11 +135,6 @@ export function ProductoModuleView() {
     setAuditDialogOpen(true);
   }, []);
 
-  const handleViewAuditLote = React.useCallback((lote: LoteResponse) => {
-    setAuditInfo(buildLoteAuditInfo(lote));
-    setAuditDialogOpen(true);
-  }, []);
-
   return (
     <div className="flex flex-col gap-3 w-full">
       <ProductoHeader />
@@ -178,14 +170,13 @@ export function ProductoModuleView() {
           />
         </div>
 
-        {/* Detail Panel (Ficha técnica del Producto y Lotes) */}
+        {/* Detail Panel (Ficha técnica del Producto) */}
         <div className="lg:col-span-8 xl:col-span-8 h-full">
-          <ProductoDetailLotesView
+          <ProductoDetailView
             producto={selectedProducto}
             onEditProducto={handleOpenEdit}
             onDeleteProducto={handleOpenDelete}
             onViewAuditProducto={handleViewAuditProducto}
-            onViewAuditLote={handleViewAuditLote}
           />
         </div>
       </div>
@@ -254,7 +245,6 @@ function buildProductoAuditInfo(producto: ProductoResponse): AuditInfo {
             },
           ]
         : []),
-      { label: "Controla Lote", value: producto.controlaLote ? "Sí" : "No" },
       {
         label: "Controla Vencimiento",
         value: producto.controlaVencimiento ? "Sí" : "No",
@@ -269,35 +259,6 @@ function buildProductoAuditInfo(producto: ProductoResponse): AuditInfo {
       },
       ...(producto.descripcion
         ? [{ label: "Descripción", value: producto.descripcion }]
-        : []),
-    ],
-  };
-}
-
-function buildLoteAuditInfo(lote: LoteResponse): AuditInfo {
-  const rawCreated = lote.fechaCreacion || lote.createdAt;
-  const rawUpdated = lote.fechaModificacion || lote.updatedAt;
-  const createdUser = lote.creadoPor || lote.createdBy;
-  const updatedUser = lote.modificadoPor || lote.updatedBy;
-
-  return {
-    title: "Auditoría de Lote",
-    entityName: `Lote ${lote.numeroLote}`,
-    entityCode: lote.numeroLote,
-    id: lote.id,
-    createdAt: rawCreated,
-    createdBy: createdUser,
-    updatedAt: rawUpdated,
-    updatedBy: updatedUser,
-    extraDetails: [
-      ...(lote.fechaFabricacion
-        ? [{ label: "Fabricación", value: lote.fechaFabricacion }]
-        : []),
-      ...(lote.fechaVencimiento
-        ? [{ label: "Vencimiento", value: lote.fechaVencimiento }]
-        : []),
-      ...(lote.costoUnitario !== null && lote.costoUnitario !== undefined
-        ? [{ label: "Costo Unitario", value: `Bs. ${Number(lote.costoUnitario).toFixed(2)}` }]
         : []),
     ],
   };

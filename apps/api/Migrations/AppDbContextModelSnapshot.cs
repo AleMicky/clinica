@@ -132,9 +132,6 @@ namespace Clinica.Api.Migrations
                     b.Property<DateTime?>("FechaModificacion")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("LoteId")
-                        .HasColumnType("int");
-
                     b.Property<string>("ModificadoPor")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -145,8 +142,6 @@ namespace Clinica.Api.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AjusteInventarioId");
-
-                    b.HasIndex("LoteId");
 
                     b.HasIndex("ProductoId");
 
@@ -316,9 +311,6 @@ namespace Clinica.Api.Migrations
                     b.Property<DateTime?>("FechaModificacion")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("LoteId")
-                        .HasColumnType("int");
-
                     b.Property<string>("ModificadoPor")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -333,8 +325,6 @@ namespace Clinica.Api.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("BajaInventarioId");
-
-                    b.HasIndex("LoteId");
 
                     b.HasIndex("ProductoId");
 
@@ -499,9 +489,6 @@ namespace Clinica.Api.Migrations
                     b.Property<DateTime?>("FechaModificacion")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("LoteId")
-                        .HasColumnType("int");
-
                     b.Property<string>("ModificadoPor")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -512,8 +499,6 @@ namespace Clinica.Api.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ConsumoInternoId");
-
-                    b.HasIndex("LoteId");
 
                     b.HasIndex("ProductoId");
 
@@ -554,9 +539,6 @@ namespace Clinica.Api.Migrations
                     b.Property<DateTime?>("FechaModificacion")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("LoteId")
-                        .HasColumnType("int");
-
                     b.Property<string>("ModificadoPor")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -566,13 +548,10 @@ namespace Clinica.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("LoteId");
-
                     b.HasIndex("ProductoId");
 
-                    b.HasIndex("AlmacenId", "ProductoId", "LoteId")
-                        .IsUnique()
-                        .HasFilter("[LoteId] IS NOT NULL");
+                    b.HasIndex("AlmacenId", "ProductoId")
+                        .IsUnique();
 
                     b.ToTable("Existencias", (string)null);
                 });
@@ -681,9 +660,6 @@ namespace Clinica.Api.Migrations
                     b.Property<int>("InventarioFisicoId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("LoteId")
-                        .HasColumnType("int");
-
                     b.Property<string>("ModificadoPor")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -695,64 +671,9 @@ namespace Clinica.Api.Migrations
 
                     b.HasIndex("InventarioFisicoId");
 
-                    b.HasIndex("LoteId");
-
                     b.HasIndex("ProductoId");
 
                     b.ToTable("InventariosFisicosDetalles", (string)null);
-                });
-
-            modelBuilder.Entity("Clinica.Api.Modules.Almacenes.Lote.Entity.Lote", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("Activo")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<decimal?>("CostoUnitario")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("CreadoPor")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("FechaCreacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateOnly?>("FechaFabricacion")
-                        .HasColumnType("date");
-
-                    b.Property<DateTime?>("FechaModificacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateOnly?>("FechaVencimiento")
-                        .HasColumnType("date");
-
-                    b.Property<string>("ModificadoPor")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("NumeroLote")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<int>("ProductoId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductoId", "NumeroLote")
-                        .IsUnique();
-
-                    b.ToTable("Lotes", (string)null);
                 });
 
             modelBuilder.Entity("Clinica.Api.Modules.Almacenes.Marca.Entity.Marca", b =>
@@ -914,9 +835,6 @@ namespace Clinica.Api.Migrations
                     b.Property<DateTime?>("FechaModificacion")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("LoteId")
-                        .HasColumnType("int");
-
                     b.Property<string>("ModificadoPor")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -928,8 +846,6 @@ namespace Clinica.Api.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("LoteId");
 
                     b.HasIndex("MovimientoInventarioId");
 
@@ -959,9 +875,6 @@ namespace Clinica.Api.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<bool>("ControlaLote")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("ControlaVencimiento")
                         .HasColumnType("bit");
 
@@ -990,6 +903,9 @@ namespace Clinica.Api.Migrations
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
+
+                    b.Property<decimal>("PrecioVenta")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int?>("ProveedorId")
                         .HasColumnType("int");
@@ -1125,9 +1041,6 @@ namespace Clinica.Api.Migrations
                     b.Property<DateTime?>("FechaModificacion")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("LoteId")
-                        .HasColumnType("int");
-
                     b.Property<string>("ModificadoPor")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -1139,8 +1052,6 @@ namespace Clinica.Api.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("LoteId");
 
                     b.HasIndex("ProductoId");
 
@@ -1323,9 +1234,6 @@ namespace Clinica.Api.Migrations
                     b.Property<DateTime?>("FechaModificacion")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("LoteId")
-                        .HasColumnType("int");
-
                     b.Property<string>("ModificadoPor")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -1337,8 +1245,6 @@ namespace Clinica.Api.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("LoteId");
 
                     b.HasIndex("ProductoId");
 
@@ -2137,9 +2043,6 @@ namespace Clinica.Api.Migrations
                     b.Property<DateTime?>("FechaModificacion")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("LoteId")
-                        .HasColumnType("int");
-
                     b.Property<string>("ModificadoPor")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -2158,8 +2061,6 @@ namespace Clinica.Api.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("DevolucionProveedorId");
-
-                    b.HasIndex("LoteId");
 
                     b.HasIndex("ProductoId");
 
@@ -2526,9 +2427,6 @@ namespace Clinica.Api.Migrations
                     b.Property<DateTime?>("FechaModificacion")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("LoteId")
-                        .HasColumnType("int");
-
                     b.Property<string>("ModificadoPor")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -2551,8 +2449,6 @@ namespace Clinica.Api.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("LoteId");
 
                     b.HasIndex("OrdenCompraDetalleId");
 
@@ -4899,11 +4795,6 @@ namespace Clinica.Api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Clinica.Api.Modules.Almacenes.Lote.Entity.Lote", "Lote")
-                        .WithMany()
-                        .HasForeignKey("LoteId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("Clinica.Api.Modules.Almacenes.Producto.Entity.Producto", "Producto")
                         .WithMany()
                         .HasForeignKey("ProductoId")
@@ -4911,8 +4802,6 @@ namespace Clinica.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("AjusteInventario");
-
-                    b.Navigation("Lote");
 
                     b.Navigation("Producto");
                 });
@@ -4943,11 +4832,6 @@ namespace Clinica.Api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Clinica.Api.Modules.Almacenes.Lote.Entity.Lote", "Lote")
-                        .WithMany()
-                        .HasForeignKey("LoteId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("Clinica.Api.Modules.Almacenes.Producto.Entity.Producto", "Producto")
                         .WithMany()
                         .HasForeignKey("ProductoId")
@@ -4955,8 +4839,6 @@ namespace Clinica.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("BajaInventario");
-
-                    b.Navigation("Lote");
 
                     b.Navigation("Producto");
                 });
@@ -5005,11 +4887,6 @@ namespace Clinica.Api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Clinica.Api.Modules.Almacenes.Lote.Entity.Lote", "Lote")
-                        .WithMany()
-                        .HasForeignKey("LoteId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("Clinica.Api.Modules.Almacenes.Producto.Entity.Producto", "Producto")
                         .WithMany()
                         .HasForeignKey("ProductoId")
@@ -5017,8 +4894,6 @@ namespace Clinica.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("ConsumoInterno");
-
-                    b.Navigation("Lote");
 
                     b.Navigation("Producto");
                 });
@@ -5031,11 +4906,6 @@ namespace Clinica.Api.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Clinica.Api.Modules.Almacenes.Lote.Entity.Lote", "Lote")
-                        .WithMany()
-                        .HasForeignKey("LoteId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("Clinica.Api.Modules.Almacenes.Producto.Entity.Producto", "Producto")
                         .WithMany()
                         .HasForeignKey("ProductoId")
@@ -5043,8 +4913,6 @@ namespace Clinica.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("Almacen");
-
-                    b.Navigation("Lote");
 
                     b.Navigation("Producto");
                 });
@@ -5078,11 +4946,6 @@ namespace Clinica.Api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Clinica.Api.Modules.Almacenes.Lote.Entity.Lote", "Lote")
-                        .WithMany()
-                        .HasForeignKey("LoteId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("Clinica.Api.Modules.Almacenes.Producto.Entity.Producto", "Producto")
                         .WithMany()
                         .HasForeignKey("ProductoId")
@@ -5090,19 +4953,6 @@ namespace Clinica.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("InventarioFisico");
-
-                    b.Navigation("Lote");
-
-                    b.Navigation("Producto");
-                });
-
-            modelBuilder.Entity("Clinica.Api.Modules.Almacenes.Lote.Entity.Lote", b =>
-                {
-                    b.HasOne("Clinica.Api.Modules.Almacenes.Producto.Entity.Producto", "Producto")
-                        .WithMany()
-                        .HasForeignKey("ProductoId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
 
                     b.Navigation("Producto");
                 });
@@ -5128,11 +4978,6 @@ namespace Clinica.Api.Migrations
 
             modelBuilder.Entity("Clinica.Api.Modules.Almacenes.MovimientoInventario.Entity.MovimientoInventarioDetalle", b =>
                 {
-                    b.HasOne("Clinica.Api.Modules.Almacenes.Lote.Entity.Lote", "Lote")
-                        .WithMany()
-                        .HasForeignKey("LoteId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("Clinica.Api.Modules.Almacenes.MovimientoInventario.Entity.MovimientoInventario", "MovimientoInventario")
                         .WithMany("Detalles")
                         .HasForeignKey("MovimientoInventarioId")
@@ -5144,8 +4989,6 @@ namespace Clinica.Api.Migrations
                         .HasForeignKey("ProductoId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("Lote");
 
                     b.Navigation("MovimientoInventario");
 
@@ -5198,11 +5041,6 @@ namespace Clinica.Api.Migrations
 
             modelBuilder.Entity("Clinica.Api.Modules.Almacenes.ReservaStock.Entity.ReservaStockDetalle", b =>
                 {
-                    b.HasOne("Clinica.Api.Modules.Almacenes.Lote.Entity.Lote", "Lote")
-                        .WithMany()
-                        .HasForeignKey("LoteId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("Clinica.Api.Modules.Almacenes.Producto.Entity.Producto", "Producto")
                         .WithMany()
                         .HasForeignKey("ProductoId")
@@ -5214,8 +5052,6 @@ namespace Clinica.Api.Migrations
                         .HasForeignKey("ReservaStockId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Lote");
 
                     b.Navigation("Producto");
 
@@ -5243,11 +5079,6 @@ namespace Clinica.Api.Migrations
 
             modelBuilder.Entity("Clinica.Api.Modules.Almacenes.TransferenciaAlmacen.Entity.TransferenciaAlmacenDetalle", b =>
                 {
-                    b.HasOne("Clinica.Api.Modules.Almacenes.Lote.Entity.Lote", "Lote")
-                        .WithMany()
-                        .HasForeignKey("LoteId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("Clinica.Api.Modules.Almacenes.Producto.Entity.Producto", "Producto")
                         .WithMany()
                         .HasForeignKey("ProductoId")
@@ -5259,8 +5090,6 @@ namespace Clinica.Api.Migrations
                         .HasForeignKey("TransferenciaAlmacenId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Lote");
 
                     b.Navigation("Producto");
 
@@ -5509,11 +5338,6 @@ namespace Clinica.Api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Clinica.Api.Modules.Almacenes.Lote.Entity.Lote", "Lote")
-                        .WithMany()
-                        .HasForeignKey("LoteId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("Clinica.Api.Modules.Almacenes.Producto.Entity.Producto", "Producto")
                         .WithMany()
                         .HasForeignKey("ProductoId")
@@ -5521,8 +5345,6 @@ namespace Clinica.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("DevolucionProveedor");
-
-                    b.Navigation("Lote");
 
                     b.Navigation("Producto");
                 });
@@ -5615,11 +5437,6 @@ namespace Clinica.Api.Migrations
 
             modelBuilder.Entity("Clinica.Api.Modules.Compras.RecepcionCompra.Entity.RecepcionCompraDetalle", b =>
                 {
-                    b.HasOne("Clinica.Api.Modules.Almacenes.Lote.Entity.Lote", "Lote")
-                        .WithMany()
-                        .HasForeignKey("LoteId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("Clinica.Api.Modules.Compras.OrdenCompra.Entity.OrdenCompraDetalle", "OrdenCompraDetalle")
                         .WithMany()
                         .HasForeignKey("OrdenCompraDetalleId")
@@ -5637,8 +5454,6 @@ namespace Clinica.Api.Migrations
                         .HasForeignKey("RecepcionCompraId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Lote");
 
                     b.Navigation("OrdenCompraDetalle");
 

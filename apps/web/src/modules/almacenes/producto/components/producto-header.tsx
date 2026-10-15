@@ -15,7 +15,7 @@ export function ProductoHeader() {
             Catálogo de Productos
           </h1>
           <span className="text-xs text-muted-foreground hidden sm:inline">
-            Gestión de artículos, medicamentos, insumos, lotes y niveles de stock
+            Gestión de artículos, medicamentos, insumos y niveles de stock
           </span>
         </div>
       </div>

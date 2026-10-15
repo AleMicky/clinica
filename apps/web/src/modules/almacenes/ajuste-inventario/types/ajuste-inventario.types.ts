@@ -11,7 +11,6 @@ export enum EstadoAjusteInventario {
 
 export interface AjusteInventarioDetalleRequest {
   productoId: number;
-  loteId?: number | null;
   cantidad: number;
 }
 
@@ -38,8 +37,6 @@ export interface AjusteInventarioDetalleResponse {
   id: number;
   productoId: number;
   productoNombre?: string | null;
-  loteId?: number | null;
-  loteNumero?: string | null;
   cantidad: number;
 }
 

@@ -6,7 +6,6 @@ namespace Clinica.Api.Modules.Almacenes.MovimientoInventario.Dtos;
 public sealed record MovimientoInventarioDetalleRequest
 {
     public required int ProductoId { get; init; }
-    public int? LoteId { get; init; }
     public required decimal Cantidad { get; init; }
     public decimal? CostoUnitario { get; init; }
 }
@@ -36,8 +35,6 @@ public sealed record MovimientoInventarioDetalleResponse
     public int Id { get; init; }
     public int ProductoId { get; init; }
     public string? ProductoNombre { get; init; }
-    public int? LoteId { get; init; }
-    public string? LoteNumero { get; init; }
     public decimal Cantidad { get; init; }
     public decimal? CostoUnitario { get; init; }
     public decimal CostoTotal { get; init; }

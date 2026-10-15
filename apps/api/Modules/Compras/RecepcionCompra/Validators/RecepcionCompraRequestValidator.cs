@@ -58,11 +58,6 @@ public sealed class RecepcionCompraDetalleRequestValidator
             .GreaterThan(0)
             .WithMessage("La cantidad recibida del detalle debe ser mayor que cero.");
 
-        RuleFor(x => x.LoteId)
-            .GreaterThan(0)
-            .WithMessage("El lote debe tener un identificador válido.")
-            .When(x => x.LoteId.HasValue);
-
         RuleFor(x => x.PrecioUnitario)
             .GreaterThanOrEqualTo(0)
             .WithMessage("El precio unitario no puede ser negativo.");

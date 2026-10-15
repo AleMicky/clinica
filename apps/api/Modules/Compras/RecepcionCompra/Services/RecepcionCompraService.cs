@@ -149,8 +149,6 @@ public sealed class RecepcionCompraService(
             .Include(x => x.Almacen)
             .Include(x => x.Detalles)
             .ThenInclude(d => d.Producto)
-            .Include(x => x.Detalles)
-            .ThenInclude(d => d.Lote)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (entity is null || !entity.Activo)
@@ -322,7 +320,6 @@ public sealed class RecepcionCompraService(
             .Select(x => new MovimientoInventarioDetalleRequest
             {
                 ProductoId = x.ProductoId,
-                LoteId = x.LoteId,
                 Cantidad = x.CantidadRecibida,
                 CostoUnitario = x.PrecioUnitario
             })
@@ -416,22 +413,6 @@ public sealed class RecepcionCompraService(
                 x.Activo)
             .ToListAsync(cancellationToken);
 
-        var loteIds = detalles
-            .Where(x => x.LoteId.HasValue)
-            .Select(x => x.LoteId!.Value)
-            .Distinct()
-            .ToList();
-
-        var loteIdsValidos = new HashSet<int>();
-        if (loteIds.Count > 0)
-        {
-            loteIdsValidos = (await dbContext.Lotes
-                    .Where(x => loteIds.Contains(x.Id) && x.Activo)
-                    .Select(x => x.Id)
-                    .ToListAsync(cancellationToken))
-                .ToHashSet();
-        }
-
         foreach (var detalle in detalles)
         {
             var ordenDetalle = ordenDetalles
@@ -449,11 +430,6 @@ public sealed class RecepcionCompraService(
                 throw new BusinessException(
                     "La cantidad recibida de cada detalle debe ser mayor que cero.");
             }
-
-            if (detalle.LoteId.HasValue && !loteIdsValidos.Contains(detalle.LoteId.Value))
-            {
-                throw new NotFoundException("Lote", detalle.LoteId.Value);
-            }
         }
     }
 
@@ -465,7 +441,6 @@ public sealed class RecepcionCompraService(
         {
             OrdenCompraDetalleId = request.OrdenCompraDetalleId,
             ProductoId = ordenDetalle.ProductoId,
-            LoteId = request.LoteId,
             CantidadRecibida = request.CantidadRecibida,
             PrecioUnitario = request.PrecioUnitario,
             Observacion = Limpiar(request.Observacion)
@@ -594,8 +569,7 @@ public sealed class RecepcionCompraService(
         return response with
         {
             ProductoNombre = entity.Producto?.Nombre,
-            ProductoCodigo = entity.Producto?.Codigo,
-            LoteNumero = entity.Lote?.NumeroLote
+            ProductoCodigo = entity.Producto?.Codigo
         };
     }
 

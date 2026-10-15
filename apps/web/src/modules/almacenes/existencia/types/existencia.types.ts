@@ -5,8 +5,6 @@ export interface ExistenciaResponse {
   productoId: number;
   productoNombre?: string | null;
   productoCodigo?: string | null;
-  loteId?: number | null;
-  loteNumero?: string | null;
   cantidad: number;
   cantidadReservada: number;
   cantidadDisponible: number;
@@ -19,7 +17,6 @@ export interface ExistenciaResponse {
 export interface CreateExistenciaRequest {
   almacenId: number;
   productoId: number;
-  loteId?: number | null;
   cantidad: number;
   cantidadReservada: number;
 }
@@ -27,7 +24,6 @@ export interface CreateExistenciaRequest {
 export interface UpdateExistenciaRequest {
   almacenId: number;
   productoId: number;
-  loteId?: number | null;
   cantidad: number;
   cantidadReservada: number;
 }

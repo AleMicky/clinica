@@ -6,7 +6,6 @@ namespace Clinica.Api.Modules.Almacenes.TransferenciaAlmacen.Dtos;
 public sealed record TransferenciaAlmacenDetalleRequest
 {
     public required int ProductoId { get; init; }
-    public int? LoteId { get; init; }
     public required decimal CantidadSolicitada { get; init; }
 }
 
@@ -56,8 +55,6 @@ public sealed record TransferenciaAlmacenDetalleResponse
     public int Id { get; init; }
     public int ProductoId { get; init; }
     public string? ProductoNombre { get; init; }
-    public int? LoteId { get; init; }
-    public string? LoteNumero { get; init; }
     public decimal CantidadSolicitada { get; init; }
     public decimal CantidadAprobada { get; init; }
     public decimal CantidadDespachada { get; init; }

@@ -29,7 +29,6 @@ public static partial class InventarioFisicoMapper
         CreateInventarioFisicoRequest request);
 
     [MapperIgnoreSource(nameof(InventarioFisicoDetalleEntity.Producto))]
-    [MapperIgnoreSource(nameof(InventarioFisicoDetalleEntity.Lote))]
     [MapperIgnoreSource(nameof(InventarioFisicoDetalleEntity.InventarioFisico))]
     public static partial InventarioFisicoDetalleResponse ToResponse(
         InventarioFisicoDetalleEntity entity);
