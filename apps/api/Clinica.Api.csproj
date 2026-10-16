@@ -51,6 +51,12 @@
     <Folder Include="Modules\Almacenes\ConsumoInterno\Mappers\" />
     <Folder Include="Modules\Almacenes\ConsumoInterno\Services\" />
     <Folder Include="Modules\Almacenes\ConsumoInterno\Validators\" />
+    <Folder Include="Modules\Almacenes\ExistenciaPartida\Dtos\" />
+    <Folder Include="Modules\Almacenes\ExistenciaPartida\Endpoints\" />
+    <Folder Include="Modules\Almacenes\ExistenciaPartida\Enums\" />
+    <Folder Include="Modules\Almacenes\ExistenciaPartida\Mappers\" />
+    <Folder Include="Modules\Almacenes\ExistenciaPartida\Services\" />
+    <Folder Include="Modules\Almacenes\ExistenciaPartida\Validators\" />
     <Folder Include="Modules\Almacenes\Existencia\Dtos\" />
     <Folder Include="Modules\Almacenes\Existencia\Entity\" />
     <Folder Include="Modules\Almacenes\Existencia\Mappers\" />
