@@ -195,9 +195,15 @@ public static class ProductoEndpoints
             "MARCA",
             "PROVEEDOR",
             "UNIDAD_MEDIDA",
+            "PRECIO_VENTA",
             "CONTROLA_VENCIMIENTO",
             "STOCK_MINIMO",
-            "STOCK_MAXIMO"
+            "STOCK_MAXIMO",
+            "NUMERO_PARTIDA",
+            "FECHA_VENCIMIENTO",
+            "COSTO_UNITARIO",
+            "ALMACEN",
+            "CANTIDAD"
         ];
 
         for (var i = 0; i < headers.Length; i++)
@@ -210,7 +216,7 @@ public static class ProductoEndpoints
             cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
         }
 
-        // Fila 1 de ejemplo: Producto con Marca, Proveedor y Vencimiento
+        // Fila 1 de ejemplo: Producto con Marca, Proveedor, Partida, Vencimiento y Stock inicial en Almacén
         worksheet.Cell(2, 1).Value = "MED-001";
         worksheet.Cell(2, 2).Value = "PARACETAMOL 500MG TABLETAS";
         worksheet.Cell(2, 3).Value = "CAJA CON 100 TABLETAS";
@@ -218,11 +224,17 @@ public static class ProductoEndpoints
         worksheet.Cell(2, 5).Value = "GENFAR";
         worksheet.Cell(2, 6).Value = "DROGUERIA INTI S.A.";
         worksheet.Cell(2, 7).Value = "CAJA";
-        worksheet.Cell(2, 8).Value = "SI";
-        worksheet.Cell(2, 9).Value = 10;
-        worksheet.Cell(2, 10).Value = 500;
+        worksheet.Cell(2, 8).Value = 25.50;
+        worksheet.Cell(2, 9).Value = "SI";
+        worksheet.Cell(2, 10).Value = 10;
+        worksheet.Cell(2, 11).Value = 500;
+        worksheet.Cell(2, 12).Value = "PAR-2026-001";
+        worksheet.Cell(2, 13).Value = "2027-12-31";
+        worksheet.Cell(2, 14).Value = 15.00;
+        worksheet.Cell(2, 15).Value = "ALMACEN CENTRAL";
+        worksheet.Cell(2, 16).Value = 50;
 
-        // Fila 2 de ejemplo: Insumo
+        // Fila 2 de ejemplo: Insumo con stock en Almacén
         worksheet.Cell(3, 1).Value = "INS-001";
         worksheet.Cell(3, 2).Value = "GASA ESTERIL 10X10 CM";
         worksheet.Cell(3, 3).Value = "PAQUETE POR 10 UNIDADES";
@@ -230,9 +242,15 @@ public static class ProductoEndpoints
         worksheet.Cell(3, 5).Value = "CRISVAL";
         worksheet.Cell(3, 6).Value = "";
         worksheet.Cell(3, 7).Value = "PAQUETE";
-        worksheet.Cell(3, 8).Value = "NO";
-        worksheet.Cell(3, 9).Value = 20;
-        worksheet.Cell(3, 10).Value = 1000;
+        worksheet.Cell(3, 8).Value = 5.00;
+        worksheet.Cell(3, 9).Value = "NO";
+        worksheet.Cell(3, 10).Value = 20;
+        worksheet.Cell(3, 11).Value = 1000;
+        worksheet.Cell(3, 12).Value = "";
+        worksheet.Cell(3, 13).Value = "";
+        worksheet.Cell(3, 14).Value = 3.50;
+        worksheet.Cell(3, 15).Value = "ALMACEN CENTRAL";
+        worksheet.Cell(3, 16).Value = 100;
 
         worksheet.Columns().AdjustToContents();
 
