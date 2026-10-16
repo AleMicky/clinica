@@ -71,7 +71,7 @@ export function ExistenciaPartidaFormDialog({
 
   // Load all active existencias for dropdown selection
   const { data: existenciasData, isLoading: isLoadingExistencias } = useExistencias({
-    pageSize: 200,
+    pageSize: 1000,
   });
   const existenciasList = existenciasData?.items ?? [];
 

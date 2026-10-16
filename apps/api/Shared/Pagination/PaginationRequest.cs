@@ -10,7 +10,7 @@ public sealed record PaginationRequest(
         PageSize switch
         {
             < 1 => 20,
-            > 100 => 100,
+            > 1000 => 1000,
             _ => PageSize
         };
 }

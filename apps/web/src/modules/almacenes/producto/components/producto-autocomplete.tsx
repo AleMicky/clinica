@@ -8,7 +8,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useProductos } from "../hooks/use-producto";
+import { useProductos, useProducto } from "../hooks/use-producto";
 import type { ProductoResponse } from "../types/producto.types";
 
 export interface ProductoAutocompleteProps {
@@ -32,31 +32,62 @@ export function ProductoAutocomplete({
 }: ProductoAutocompleteProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
+  const [debouncedSearch, setDebouncedSearch] = React.useState("");
   const searchInputRef = React.useRef<HTMLInputElement>(null);
 
-  const { data, isLoading } = useProductos({
-    pageSize: 200,
+  // Debounce search query to search across the entire database
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery.trim());
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Focus search input when popover opens
+  React.useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => searchInputRef.current?.focus(), 60);
+    }
+  }, [isOpen]);
+
+  // Load up to 1000 items, and query server with search parameter
+  const { data, isLoading, isFetching } = useProductos({
+    pageSize: 1000,
+    search: debouncedSearch || undefined,
   });
 
   const productos = React.useMemo(() => data?.items ?? [], [data]);
 
-  const selectedProducto = React.useMemo(() => {
-    if (!value || Number(value) <= 0) return null;
-    return productos.find((p) => String(p.id) === String(value)) || null;
-  }, [value, productos]);
+  const numericValue = Number(value) || 0;
+  const isValueInList = Boolean(
+    numericValue > 0 && productos.some((p) => p.id === numericValue)
+  );
 
+  // Fallback single product fetch if the selected ID is not currently in the loaded list
+  const { data: fallbackProducto } = useProducto(
+    !isValueInList && numericValue > 0 ? numericValue : 0
+  );
+
+  const selectedProducto = React.useMemo(() => {
+    if (!value || numericValue <= 0) return null;
+    const inList = productos.find((p) => p.id === numericValue);
+    if (inList) return inList;
+    if (fallbackProducto && fallbackProducto.id === numericValue) {
+      return fallbackProducto;
+    }
+    return null;
+  }, [value, numericValue, productos, fallbackProducto]);
+
+  // Multi-word client-side filter for instant response while typing
   const filteredProductos = React.useMemo(() => {
     if (!searchQuery.trim()) {
       return productos;
     }
-    const q = searchQuery.toLowerCase().trim();
-    return productos.filter(
-      (p) =>
-        p.nombre.toLowerCase().includes(q) ||
-        p.codigo.toLowerCase().includes(q) ||
-        (p.categoriaProductoNombre &&
-          p.categoriaProductoNombre.toLowerCase().includes(q))
-    );
+    const words = searchQuery.toLowerCase().trim().split(/\s+/).filter(Boolean);
+    return productos.filter((p) => {
+      const target = `${p.codigo} ${p.nombre} ${p.categoriaProductoNombre || ""} ${p.marcaNombre || ""}`.toLowerCase();
+      return words.every((w) => target.includes(w));
+    });
   }, [productos, searchQuery]);
 
   const handleSelect = (producto: ProductoResponse) => {
@@ -114,7 +145,7 @@ export function ProductoAutocomplete({
         </div>
 
         <div className="flex items-center gap-0.5 shrink-0 text-muted-foreground ml-1">
-          {isLoading ? (
+          {isLoading && !data ? (
             <Loader2 className="size-3 animate-spin text-primary" />
           ) : selectedProducto && !disabled ? (
             <span
@@ -141,7 +172,7 @@ export function ProductoAutocomplete({
 
       <PopoverContent
         align="start"
-        className="w-[320px] sm:w-[420px] p-1.5 max-h-80 overflow-hidden flex flex-col rounded-xl shadow-xl border-border/80 z-50"
+        className="w-[340px] sm:w-[440px] p-1.5 max-h-96 overflow-hidden flex flex-col rounded-xl shadow-xl border-border/80 z-50"
       >
         {/* Search header */}
         <div className="flex items-center gap-2 px-2 py-1.5 border-b border-border/50 bg-muted/20 rounded-md mb-1">
@@ -157,7 +188,7 @@ export function ProductoAutocomplete({
                 handleSelect(filteredProductos[0]);
               }
             }}
-            placeholder="Buscar por código, nombre o categoría..."
+            placeholder="Buscar por código, nombre, categoría o marca..."
             className="w-full text-xs bg-transparent outline-none placeholder:text-muted-foreground/70"
             autoFocus
           />
@@ -165,7 +196,7 @@ export function ProductoAutocomplete({
             <button
               type="button"
               onClick={() => setSearchQuery("")}
-              className="p-0.5 text-muted-foreground hover:text-foreground"
+              className="p-0.5 text-muted-foreground hover:text-foreground cursor-pointer"
             >
               <X className="size-3" />
             </button>
@@ -173,14 +204,14 @@ export function ProductoAutocomplete({
         </div>
 
         {/* Results list */}
-        <div className="overflow-y-auto max-h-56 pr-0.5 space-y-0.5">
-          {isLoading && filteredProductos.length === 0 ? (
-            <div className="flex items-center justify-center gap-2 px-3 py-4 text-xs text-muted-foreground">
+        <div className="overflow-y-auto max-h-64 pr-0.5 space-y-0.5">
+          {isLoading && !data ? (
+            <div className="flex items-center justify-center gap-2 px-3 py-6 text-xs text-muted-foreground">
               <Loader2 className="size-3.5 animate-spin text-primary" />
               <span>Cargando productos...</span>
             </div>
           ) : filteredProductos.length === 0 ? (
-            <div className="px-3 py-4 text-xs text-muted-foreground text-center">
+            <div className="px-3 py-6 text-xs text-muted-foreground text-center">
               No se encontraron productos coincidentes.
             </div>
           ) : (
@@ -212,6 +243,9 @@ export function ProductoAutocomplete({
                           {prod.categoriaProductoNombre && (
                             <span className="truncate">{prod.categoriaProductoNombre}</span>
                           )}
+                          {prod.marcaNombre && (
+                            <span className="truncate text-muted-foreground/75">• {prod.marcaNombre}</span>
+                          )}
                           {prod.unidadMedidaSimbolo && (
                             <span className="font-mono bg-muted/70 px-1 rounded text-[9px]">
                               {prod.unidadMedidaSimbolo}
@@ -227,6 +261,27 @@ export function ProductoAutocomplete({
                 );
               })}
             </ul>
+          )}
+        </div>
+
+        {/* Footer info & count */}
+        <div className="flex items-center justify-between px-2 pt-1.5 mt-1 border-t border-border/40 text-[10px] text-muted-foreground">
+          <span>
+            {isFetching ? (
+              <span className="inline-flex items-center gap-1 text-primary">
+                <Loader2 className="size-2.5 animate-spin" />
+                Buscando...
+              </span>
+            ) : (
+              `Mostrando ${filteredProductos.length} ${
+                data?.totalItems && data.totalItems > filteredProductos.length
+                  ? `de ${data.totalItems}`
+                  : ""
+              } producto${filteredProductos.length === 1 ? "" : "s"}`
+            )}
+          </span>
+          {data?.totalItems && data.totalItems > 1000 && !searchQuery && (
+            <span className="text-muted-foreground">Escriba para filtrar</span>
           )}
         </div>
       </PopoverContent>
