@@ -21,6 +21,14 @@ export interface ProductoAutocompleteProps {
   id?: string;
 }
 
+function normalizeText(value?: string | null): string {
+  if (!value) return "";
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
 export function ProductoAutocomplete({
   value,
   onValueChange,
@@ -50,9 +58,9 @@ export function ProductoAutocomplete({
     }
   }, [isOpen]);
 
-  // Load up to 1000 items, and query server with search parameter
+  // Load all items (up to 10000), and query server with search parameter
   const { data, isLoading, isFetching } = useProductos({
-    pageSize: 1000,
+    pageSize: 10000,
     search: debouncedSearch || undefined,
   });
 
@@ -78,14 +86,16 @@ export function ProductoAutocomplete({
     return null;
   }, [value, numericValue, productos, fallbackProducto]);
 
-  // Multi-word client-side filter for instant response while typing
+  // Multi-word accent-insensitive client-side filter for instant response while typing
   const filteredProductos = React.useMemo(() => {
     if (!searchQuery.trim()) {
       return productos;
     }
-    const words = searchQuery.toLowerCase().trim().split(/\s+/).filter(Boolean);
+    const words = normalizeText(searchQuery).split(/\s+/).filter(Boolean);
     return productos.filter((p) => {
-      const target = `${p.codigo} ${p.nombre} ${p.categoriaProductoNombre || ""} ${p.marcaNombre || ""}`.toLowerCase();
+      const target = normalizeText(
+        `${p.codigo} ${p.nombre} ${p.descripcion || ""} ${p.categoriaProductoNombre || ""} ${p.marcaNombre || ""} ${p.proveedorRazonSocial || ""} ${p.unidadMedidaSimbolo || ""}`
+      );
       return words.every((w) => target.includes(w));
     });
   }, [productos, searchQuery]);
@@ -94,6 +104,7 @@ export function ProductoAutocomplete({
     onValueChange(producto.id, producto);
     setIsOpen(false);
     setSearchQuery("");
+    setDebouncedSearch("");
   };
 
   const handleClear = (e: React.MouseEvent) => {
@@ -101,10 +112,19 @@ export function ProductoAutocomplete({
     e.stopPropagation();
     onValueChange(null, null);
     setSearchQuery("");
+    setDebouncedSearch("");
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (!open) {
+      setSearchQuery("");
+      setDebouncedSearch("");
+    }
   };
 
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
+    <Popover open={isOpen} onOpenChange={handleOpenChange}>
       <PopoverTrigger
         id={id}
         type="button"
@@ -280,7 +300,7 @@ export function ProductoAutocomplete({
               } producto${filteredProductos.length === 1 ? "" : "s"}`
             )}
           </span>
-          {data?.totalItems && data.totalItems > 1000 && !searchQuery && (
+          {data?.totalItems && data.totalItems > 10000 && !searchQuery && (
             <span className="text-muted-foreground">Escriba para filtrar</span>
           )}
         </div>

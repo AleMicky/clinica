@@ -60,10 +60,8 @@ export function MovimientoInventarioFormDialog({
 }: MovimientoInventarioFormDialogProps) {
   const isEditing = Boolean(movimientoToEdit);
 
-  const { data: fullMovimiento } = useMovimientoInventario(
-    movimientoToEdit?.id ?? 0,
-    open && isEditing
-  );
+  const { data: fullMovimiento, isLoading: isLoadingFull } =
+    useMovimientoInventario(movimientoToEdit?.id ?? 0, open && isEditing);
 
   const createMutation = useCreateMovimientoInventario();
   const updateMutation = useUpdateMovimientoInventario();
@@ -433,7 +431,21 @@ export function MovimientoInventarioFormDialog({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/30">
-                  {fields.length === 0 ? (
+                  {isEditing && isLoadingFull && !fullMovimiento ? (
+                    <tr>
+                      <td
+                        colSpan={6}
+                        className="px-3 py-8 text-center text-muted-foreground text-xs"
+                      >
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <Loader2 className="size-5 animate-spin text-primary" />
+                          <span className="font-medium text-xs">
+                            Cargando artículos del movimiento...
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : fields.length === 0 ? (
                     <tr>
                       <td
                         colSpan={6}
