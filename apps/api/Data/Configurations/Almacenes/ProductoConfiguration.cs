@@ -24,6 +24,9 @@ public sealed class ProductoConfiguration
         builder.Property(x => x.Descripcion)
             .HasMaxLength(500);
 
+        builder.Property(x => x.PrecioVenta)
+            .HasPrecision(18, 2);
+
         builder.Property(x => x.StockMinimo)
             .HasPrecision(18, 2)
             .IsRequired();

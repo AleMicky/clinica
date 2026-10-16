@@ -854,6 +854,55 @@ namespace Clinica.Api.Migrations
                     b.ToTable("MovimientosInventarioDetalles", (string)null);
                 });
 
+            modelBuilder.Entity("Clinica.Api.Modules.Almacenes.PartidaInventario.Entity.PartidaInventario", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<decimal>("CostoUnitario")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("CreadoPor")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateOnly?>("FechaVencimiento")
+                        .HasColumnType("date");
+
+                    b.Property<string>("ModificadoPor")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("NumeroPartida")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("ProductoId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductoId", "NumeroPartida")
+                        .HasFilter("[NumeroPartida] IS NOT NULL");
+
+                    b.ToTable("PartidasInventario", (string)null);
+                });
+
             modelBuilder.Entity("Clinica.Api.Modules.Almacenes.Producto.Entity.Producto", b =>
                 {
                     b.Property<int>("Id")
@@ -905,6 +954,7 @@ namespace Clinica.Api.Migrations
                         .HasColumnType("nvarchar(150)");
 
                     b.Property<decimal>("PrecioVenta")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int?>("ProveedorId")
@@ -4995,6 +5045,17 @@ namespace Clinica.Api.Migrations
                     b.Navigation("Producto");
                 });
 
+            modelBuilder.Entity("Clinica.Api.Modules.Almacenes.PartidaInventario.Entity.PartidaInventario", b =>
+                {
+                    b.HasOne("Clinica.Api.Modules.Almacenes.Producto.Entity.Producto", "Producto")
+                        .WithMany("PartidasInventario")
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Producto");
+                });
+
             modelBuilder.Entity("Clinica.Api.Modules.Almacenes.Producto.Entity.Producto", b =>
                 {
                     b.HasOne("Clinica.Api.Modules.Almacenes.CategoriaProducto.Entity.CategoriaProducto", "CategoriaProducto")
@@ -5991,6 +6052,11 @@ namespace Clinica.Api.Migrations
             modelBuilder.Entity("Clinica.Api.Modules.Almacenes.MovimientoInventario.Entity.MovimientoInventario", b =>
                 {
                     b.Navigation("Detalles");
+                });
+
+            modelBuilder.Entity("Clinica.Api.Modules.Almacenes.Producto.Entity.Producto", b =>
+                {
+                    b.Navigation("PartidasInventario");
                 });
 
             modelBuilder.Entity("Clinica.Api.Modules.Almacenes.ReservaStock.Entity.ReservaStock", b =>

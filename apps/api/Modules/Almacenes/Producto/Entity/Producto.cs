@@ -4,6 +4,7 @@ using Clinica.Api.Shared.Abstractions;
 
 using CategoriaProductoEntity = Clinica.Api.Modules.Almacenes.CategoriaProducto.Entity.CategoriaProducto;
 using MarcaEntity = Clinica.Api.Modules.Almacenes.Marca.Entity.Marca;
+using PartidaInventarioEntity = Clinica.Api.Modules.Almacenes.PartidaInventario.Entity.PartidaInventario;
 
 
 namespace Clinica.Api.Modules.Almacenes.Producto.Entity;
@@ -32,4 +33,6 @@ public sealed class Producto : AuditableEntity
     
     public decimal StockMinimo { get; set; } = 0;
     public decimal? StockMaximo { get; set; }
+
+    public ICollection<PartidaInventarioEntity> PartidasInventario { get; set; } = new List<PartidaInventarioEntity>();
 }

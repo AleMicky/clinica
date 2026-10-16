@@ -74,6 +74,12 @@
     <Folder Include="Modules\Almacenes\MovimientoInventario\Mappers\" />
     <Folder Include="Modules\Almacenes\MovimientoInventario\Services\" />
     <Folder Include="Modules\Almacenes\MovimientoInventario\Validators\" />
+    <Folder Include="Modules\Almacenes\PartidaInventario\Dtos\" />
+    <Folder Include="Modules\Almacenes\PartidaInventario\Endpoints\" />
+    <Folder Include="Modules\Almacenes\PartidaInventario\Enums\" />
+    <Folder Include="Modules\Almacenes\PartidaInventario\Mappers\" />
+    <Folder Include="Modules\Almacenes\PartidaInventario\Services\" />
+    <Folder Include="Modules\Almacenes\PartidaInventario\Validators\" />
     <Folder Include="Modules\Almacenes\Producto\Dtos\" />
     <Folder Include="Modules\Almacenes\Producto\Endpoints\" />
     <Folder Include="Modules\Almacenes\Producto\Mappers\" />
