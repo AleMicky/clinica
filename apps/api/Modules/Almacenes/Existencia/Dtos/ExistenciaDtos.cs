@@ -8,6 +8,7 @@ public abstract record ExistenciaRequest
     public required int ProductoId { get; init; }
     public decimal Cantidad { get; init; }
     public decimal CantidadReservada { get; init; }
+    public decimal CostoPromedio { get; init; }
 }
 
 public sealed record CreateExistenciaRequest : ExistenciaRequest;
@@ -28,4 +29,28 @@ public sealed record ExistenciaResponse : AuditableResponse
     public decimal Cantidad { get; init; }
     public decimal CantidadReservada { get; init; }
     public decimal CantidadDisponible { get; init; }
+    public decimal CostoPromedio { get; init; }
+    public decimal ValorInventario { get; init; }
+}
+
+public sealed record MovimientoStockExistenciaRequest
+{
+    public required int AlmacenId { get; init; }
+    public required int ProductoId { get; init; }
+    public required decimal Cantidad { get; init; }
+    public decimal? CostoUnitario { get; init; }
+}
+
+public sealed record ReservaStockExistenciaRequest
+{
+    public required int AlmacenId { get; init; }
+    public required int ProductoId { get; init; }
+    public required decimal Cantidad { get; init; }
+}
+
+public sealed record ActualizarCostoPromedioRequest
+{
+    public required int AlmacenId { get; init; }
+    public required int ProductoId { get; init; }
+    public required decimal CostoPromedio { get; init; }
 }

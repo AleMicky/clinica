@@ -10,6 +10,7 @@ import { useAlmacenes } from "../../almacen/hooks/use-almacen";
 import { useProductos } from "../../producto/hooks/use-producto";
 import type { ExistenciaResponse } from "../types/existencia.types";
 import { AuditDialog, type AuditInfo } from "@/components/shared";
+import { ExistenciaPartidasModal } from "../../existencia-partida/components/existencia-partidas-modal";
 
 export function ExistenciaModuleView() {
   // Query filters
@@ -134,6 +135,16 @@ export function ExistenciaModuleView() {
     setAuditDialogOpen(true);
   };
 
+  // Partidas Modal state
+  const [partidasModalOpen, setPartidasModalOpen] = React.useState(false);
+  const [selectedExistenciaForPartidas, setSelectedExistenciaForPartidas] =
+    React.useState<ExistenciaResponse | null>(null);
+
+  const handleOpenPartidas = (item: ExistenciaResponse) => {
+    setSelectedExistenciaForPartidas(item);
+    setPartidasModalOpen(true);
+  };
+
   return (
     <div className="flex flex-col gap-3.5 w-full">
       <ExistenciaHeader
@@ -164,6 +175,14 @@ export function ExistenciaModuleView() {
         onDelete={handleOpenDelete}
         onRefresh={() => refetch()}
         onViewAudit={handleViewAudit}
+        onViewPartidas={handleOpenPartidas}
+      />
+
+      {/* Partidas / Lotes Breakdown Modal */}
+      <ExistenciaPartidasModal
+        open={partidasModalOpen}
+        onOpenChange={setPartidasModalOpen}
+        existencia={selectedExistenciaForPartidas}
       />
 
       {/* Form Dialog (Create / Edit) */}

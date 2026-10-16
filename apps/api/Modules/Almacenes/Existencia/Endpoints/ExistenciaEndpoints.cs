@@ -21,6 +21,9 @@ public static class ExistenciaEndpoints
         group.MapGet("/{id:int}", ObtenerAsync)
             .WithName("ObtenerExistencia");
 
+        group.MapGet("/almacen/{almacenId:int}/producto/{productoId:int}", ObtenerPorAlmacenYProductoAsync)
+            .WithName("ObtenerExistenciaPorAlmacenYProducto");
+
         group.MapPost("/", CrearAsync)
             .WithName("CrearExistencia")
             .Validate<CreateExistenciaRequest>();
@@ -31,6 +34,26 @@ public static class ExistenciaEndpoints
 
         group.MapDelete("/{id:int}", EliminarAsync)
             .WithName("EliminarExistencia");
+
+        group.MapPost("/aumentar-stock", AumentarStockAsync)
+            .WithName("AumentarStockExistencia")
+            .Validate<MovimientoStockExistenciaRequest>();
+
+        group.MapPost("/disminuir-stock", DisminuirStockAsync)
+            .WithName("DisminuirStockExistencia")
+            .Validate<MovimientoStockExistenciaRequest>();
+
+        group.MapPost("/reservar-stock", ReservarStockAsync)
+            .WithName("ReservarStockExistencia")
+            .Validate<ReservaStockExistenciaRequest>();
+
+        group.MapPost("/liberar-stock", LiberarStockAsync)
+            .WithName("LiberarStockExistencia")
+            .Validate<ReservaStockExistenciaRequest>();
+
+        group.MapPut("/actualizar-costo", ActualizarCostoPromedioAsync)
+            .WithName("ActualizarCostoPromedioExistencia")
+            .Validate<ActualizarCostoPromedioRequest>();
 
         return app;
     }
@@ -61,6 +84,22 @@ public static class ExistenciaEndpoints
             await service.ObtenerAsync(
                 id,
                 cancellationToken));
+    }
+
+    private static async Task<IResult> ObtenerPorAlmacenYProductoAsync(
+        int almacenId,
+        int productoId,
+        IExistenciaService service,
+        CancellationToken cancellationToken)
+    {
+        var existencia = await service.ObtenerPorAlmacenYProductoAsync(
+            almacenId,
+            productoId,
+            cancellationToken);
+
+        return existencia is not null
+            ? Results.Ok(existencia)
+            : Results.NotFound();
     }
 
     private static async Task<IResult> CrearAsync(
@@ -100,5 +139,96 @@ public static class ExistenciaEndpoints
             cancellationToken);
 
         return Results.NoContent();
+    }
+
+    private static async Task<IResult> AumentarStockAsync(
+        MovimientoStockExistenciaRequest request,
+        IExistenciaService service,
+        CancellationToken cancellationToken)
+    {
+        await service.AumentarStockAsync(
+            request.AlmacenId,
+            request.ProductoId,
+            request.Cantidad,
+            request.CostoUnitario,
+            cancellationToken);
+
+        var existencia = await service.ObtenerPorAlmacenYProductoAsync(
+            request.AlmacenId,
+            request.ProductoId,
+            cancellationToken);
+
+        return Results.Ok(existencia);
+    }
+
+    private static async Task<IResult> DisminuirStockAsync(
+        MovimientoStockExistenciaRequest request,
+        IExistenciaService service,
+        CancellationToken cancellationToken)
+    {
+        await service.DisminuirStockAsync(
+            request.AlmacenId,
+            request.ProductoId,
+            request.Cantidad,
+            cancellationToken);
+
+        var existencia = await service.ObtenerPorAlmacenYProductoAsync(
+            request.AlmacenId,
+            request.ProductoId,
+            cancellationToken);
+
+        return Results.Ok(existencia);
+    }
+
+    private static async Task<IResult> ReservarStockAsync(
+        ReservaStockExistenciaRequest request,
+        IExistenciaService service,
+        CancellationToken cancellationToken)
+    {
+        await service.ReservarStockAsync(
+            request.AlmacenId,
+            request.ProductoId,
+            request.Cantidad,
+            cancellationToken);
+
+        var existencia = await service.ObtenerPorAlmacenYProductoAsync(
+            request.AlmacenId,
+            request.ProductoId,
+            cancellationToken);
+
+        return Results.Ok(existencia);
+    }
+
+    private static async Task<IResult> LiberarStockAsync(
+        ReservaStockExistenciaRequest request,
+        IExistenciaService service,
+        CancellationToken cancellationToken)
+    {
+        await service.LiberarStockReservadoAsync(
+            request.AlmacenId,
+            request.ProductoId,
+            request.Cantidad,
+            cancellationToken);
+
+        var existencia = await service.ObtenerPorAlmacenYProductoAsync(
+            request.AlmacenId,
+            request.ProductoId,
+            cancellationToken);
+
+        return Results.Ok(existencia);
+    }
+
+    private static async Task<IResult> ActualizarCostoPromedioAsync(
+        ActualizarCostoPromedioRequest request,
+        IExistenciaService service,
+        CancellationToken cancellationToken)
+    {
+        var existencia = await service.ActualizarCostoPromedioAsync(
+            request.AlmacenId,
+            request.ProductoId,
+            request.CostoPromedio,
+            cancellationToken);
+
+        return Results.Ok(existencia);
     }
 }

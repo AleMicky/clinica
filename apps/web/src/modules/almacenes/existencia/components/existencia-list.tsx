@@ -50,6 +50,7 @@ interface ExistenciaListProps {
   onDelete?: (existencia: ExistenciaResponse) => void;
   onRefresh?: () => void;
   onViewAudit?: (existencia: ExistenciaResponse) => void;
+  onViewPartidas?: (existencia: ExistenciaResponse) => void;
 }
 
 function formatDate(dateStr?: string | null) {
@@ -86,6 +87,7 @@ export function ExistenciaList({
   onDelete,
   onRefresh,
   onViewAudit,
+  onViewPartidas,
 }: ExistenciaListProps) {
   return (
     <div className="flex flex-col gap-3 w-full">
@@ -279,10 +281,50 @@ export function ExistenciaList({
                         {item.cantidadDisponible.toLocaleString()}
                       </Badge>
                     </div>
+
+                    {/* Costo Promedio */}
+                    {item.costoPromedio !== undefined && item.costoPromedio > 0 && (
+                      <div className="hidden lg:flex flex-col items-end pl-2 border-l border-border/40">
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                          Costo Prom.
+                        </span>
+                        <span className="font-mono font-medium text-xs text-foreground">
+                          ${item.costoPromedio.toFixed(2)}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Valor Total */}
+                    {item.valorInventario !== undefined && item.valorInventario > 0 && (
+                      <div className="hidden xl:flex flex-col items-end pl-2 border-l border-border/40">
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                          Valor Total
+                        </span>
+                        <span className="font-mono font-semibold text-xs text-primary">
+                          ${item.valorInventario.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Audit & Actions */}
                   <div className="flex items-center gap-1.5">
+                    {onViewPartidas && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onViewPartidas(item)}
+                        className="h-6 px-2 text-[10px] text-primary hover:text-primary bg-primary/5 hover:bg-primary/10 border border-primary/25 gap-1 cursor-pointer font-medium"
+                        title="Ver Partidas y Lotes asignados a esta existencia"
+                      >
+                        <Layers className="size-3 text-primary" />
+                        <span>Partidas</span>
+                      </Button>
+                    )}
+
                     {onViewAudit && (
                       <Button
                         variant="ghost"
@@ -305,7 +347,15 @@ export function ExistenciaList({
                       >
                         <MoreVertical className="size-3.5" />
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-40">
+                      <DropdownMenuContent align="end" className="w-44">
+                        {onViewPartidas && (
+                          <DropdownMenuItem
+                            onClick={() => onViewPartidas(item)}
+                            className="gap-2 text-xs cursor-pointer text-primary"
+                          >
+                            <Layers className="size-3.5 text-primary" /> Ver Partidas / Lotes
+                          </DropdownMenuItem>
+                        )}
                         {onViewAudit && (
                           <DropdownMenuItem
                             onClick={() => onViewAudit(item)}

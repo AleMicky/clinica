@@ -355,11 +355,19 @@ public static class OpcionMenuSeed
                 "ALMACENES_MODULO"),
 
             new(
+                "EXISTENCIAS_PARTIDAS",
+                "Stock por Partida / Lote",
+                "/almacenes/existencias-partidas",
+                "Layers",
+                7,
+                "ALMACENES_MODULO"),
+
+            new(
                 "TIPOS_MOVIMIENTO",
                 "Tipos de Movimiento",
                 "/almacenes/tipos-movimiento",
                 "SlidersHorizontal",
-                7,
+                8,
                 "ALMACENES_MODULO"),
 
             new(

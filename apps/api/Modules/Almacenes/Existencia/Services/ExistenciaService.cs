@@ -23,6 +23,11 @@ public interface IExistenciaService
         int id,
         CancellationToken cancellationToken = default);
 
+    Task<ExistenciaResponse?> ObtenerPorAlmacenYProductoAsync(
+        int almacenId,
+        int productoId,
+        CancellationToken cancellationToken = default);
+
     Task<ExistenciaResponse> CrearAsync(
         CreateExistenciaRequest request,
         CancellationToken cancellationToken = default);
@@ -42,10 +47,35 @@ public interface IExistenciaService
         decimal cantidad,
         CancellationToken cancellationToken = default);
 
+    Task AumentarStockAsync(
+        int almacenId,
+        int productoId,
+        decimal cantidad,
+        decimal? costoUnitario,
+        CancellationToken cancellationToken = default);
+
     Task DisminuirStockAsync(
         int almacenId,
         int productoId,
         decimal cantidad,
+        CancellationToken cancellationToken = default);
+
+    Task ReservarStockAsync(
+        int almacenId,
+        int productoId,
+        decimal cantidad,
+        CancellationToken cancellationToken = default);
+
+    Task LiberarStockReservadoAsync(
+        int almacenId,
+        int productoId,
+        decimal cantidad,
+        CancellationToken cancellationToken = default);
+
+    Task<ExistenciaResponse> ActualizarCostoPromedioAsync(
+        int almacenId,
+        int productoId,
+        decimal nuevoCostoPromedio,
         CancellationToken cancellationToken = default);
 }
 
@@ -132,6 +162,34 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
             existencia.Producto?.Codigo);
     }
 
+    public async Task<ExistenciaResponse?> ObtenerPorAlmacenYProductoAsync(
+        int almacenId,
+        int productoId,
+        CancellationToken cancellationToken = default)
+    {
+        var existencia = await dbContext
+            .Existencias
+            .AsNoTracking()
+            .Include(x => x.Almacen)
+            .Include(x => x.Producto)
+            .FirstOrDefaultAsync(
+                x => x.AlmacenId == almacenId &&
+                     x.ProductoId == productoId &&
+                     x.Activo,
+                cancellationToken);
+
+        if (existencia is null)
+        {
+            return null;
+        }
+
+        return Mapear(
+            existencia,
+            existencia.Almacen?.Nombre,
+            existencia.Producto?.Nombre,
+            existencia.Producto?.Codigo);
+    }
+
     public async Task<ExistenciaResponse> CrearAsync(
         CreateExistenciaRequest request,
         CancellationToken cancellationToken = default)
@@ -147,7 +205,7 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
             idExcluido: null,
             cancellationToken);
 
-        ValidarCantidades(request.Cantidad, request.CantidadReservada);
+        ValidarCantidades(request.Cantidad, request.CantidadReservada, request.CostoPromedio);
 
         var entity = ExistenciaMapper.ToEntity(request);
 
@@ -181,7 +239,7 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
             idExcluido: id,
             cancellationToken);
 
-        ValidarCantidades(request.Cantidad, request.CantidadReservada);
+        ValidarCantidades(request.Cantidad, request.CantidadReservada, request.CostoPromedio);
 
         ExistenciaMapper.UpdateEntity(request, entity);
 
@@ -206,16 +264,37 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
+    public Task AumentarStockAsync(
+        int almacenId,
+        int productoId,
+        decimal cantidad,
+        CancellationToken cancellationToken = default)
+    {
+        return AumentarStockAsync(
+            almacenId,
+            productoId,
+            cantidad,
+            costoUnitario: null,
+            cancellationToken);
+    }
+
     public async Task AumentarStockAsync(
         int almacenId,
         int productoId,
         decimal cantidad,
+        decimal? costoUnitario,
         CancellationToken cancellationToken = default)
     {
         if (cantidad <= 0)
         {
             throw new BusinessException(
                 "La cantidad debe ser mayor que cero.");
+        }
+
+        if (costoUnitario.HasValue && costoUnitario.Value < 0)
+        {
+            throw new BusinessException(
+                "El costo unitario no puede ser negativo.");
         }
 
         await ValidarReferenciasAsync(
@@ -237,12 +316,25 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
                 AlmacenId = almacenId,
                 ProductoId = productoId,
                 Cantidad = cantidad,
-                CantidadReservada = 0
+                CantidadReservada = 0,
+                CostoPromedio = costoUnitario.GetValueOrDefault(0)
             };
 
             dbContext.Existencias.Add(existencia);
-
             return;
+        }
+
+        if (costoUnitario.HasValue && costoUnitario.Value > 0)
+        {
+            var stockPrevio = existencia.Cantidad;
+            var costoPrevio = existencia.CostoPromedio;
+            var valorPrevio = stockPrevio > 0 ? stockPrevio * costoPrevio : 0;
+            var valorEntrada = cantidad * costoUnitario.Value;
+            var totalCantidad = stockPrevio + cantidad;
+
+            existencia.CostoPromedio = totalCantidad > 0
+                ? Math.Round((valorPrevio + valorEntrada) / totalCantidad, 4)
+                : costoUnitario.Value;
         }
 
         existencia.Cantidad += cantidad;
@@ -282,6 +374,108 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
         }
 
         existencia.Cantidad -= cantidad;
+    }
+
+    public async Task ReservarStockAsync(
+        int almacenId,
+        int productoId,
+        decimal cantidad,
+        CancellationToken cancellationToken = default)
+    {
+        if (cantidad <= 0)
+        {
+            throw new BusinessException("La cantidad a reservar debe ser mayor que cero.");
+        }
+
+        var existencia = await dbContext.Existencias
+            .FirstOrDefaultAsync(
+                x => x.AlmacenId == almacenId &&
+                     x.ProductoId == productoId &&
+                     x.Activo,
+                cancellationToken);
+
+        if (existencia is null)
+        {
+            throw new BusinessException(
+                $"No existe existencia registrada para el almacén {almacenId} y producto {productoId}.");
+        }
+
+        if (existencia.CantidadDisponible < cantidad)
+        {
+            throw new BusinessException(
+                $"Stock disponible insuficiente para reservar. Disponible: {existencia.CantidadDisponible}, solicitado: {cantidad}.");
+        }
+
+        existencia.CantidadReservada += cantidad;
+    }
+
+    public async Task LiberarStockReservadoAsync(
+        int almacenId,
+        int productoId,
+        decimal cantidad,
+        CancellationToken cancellationToken = default)
+    {
+        if (cantidad <= 0)
+        {
+            throw new BusinessException("La cantidad a liberar debe ser mayor que cero.");
+        }
+
+        var existencia = await dbContext.Existencias
+            .FirstOrDefaultAsync(
+                x => x.AlmacenId == almacenId &&
+                     x.ProductoId == productoId &&
+                     x.Activo,
+                cancellationToken);
+
+        if (existencia is null)
+        {
+            throw new BusinessException(
+                $"No existe existencia registrada para el almacén {almacenId} y producto {productoId}.");
+        }
+
+        if (existencia.CantidadReservada < cantidad)
+        {
+            throw new BusinessException(
+                $"No se puede liberar más stock del reservado. Reservado actual: {existencia.CantidadReservada}, solicitado: {cantidad}.");
+        }
+
+        existencia.CantidadReservada -= cantidad;
+    }
+
+    public async Task<ExistenciaResponse> ActualizarCostoPromedioAsync(
+        int almacenId,
+        int productoId,
+        decimal nuevoCostoPromedio,
+        CancellationToken cancellationToken = default)
+    {
+        if (nuevoCostoPromedio < 0)
+        {
+            throw new BusinessException("El costo promedio no puede ser negativo.");
+        }
+
+        var existencia = await dbContext.Existencias
+            .Include(x => x.Almacen)
+            .Include(x => x.Producto)
+            .FirstOrDefaultAsync(
+                x => x.AlmacenId == almacenId &&
+                     x.ProductoId == productoId &&
+                     x.Activo,
+                cancellationToken);
+
+        if (existencia is null)
+        {
+            throw new NotFoundException(
+                $"No existe existencia activa para el almacén {almacenId} y producto {productoId}.");
+        }
+
+        existencia.CostoPromedio = nuevoCostoPromedio;
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return Mapear(
+            existencia,
+            existencia.Almacen?.Nombre,
+            existencia.Producto?.Nombre,
+            existencia.Producto?.Codigo);
     }
 
     private async Task ValidarReferenciasAsync(
@@ -332,7 +526,8 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
 
     private static void ValidarCantidades(
         decimal cantidad,
-        decimal cantidadReservada)
+        decimal cantidadReservada,
+        decimal costoPromedio)
     {
         if (cantidad < 0)
         {
@@ -348,6 +543,11 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
         {
             throw new BusinessException("La cantidad reservada no puede ser mayor que la cantidad.");
         }
+
+        if (costoPromedio < 0)
+        {
+            throw new BusinessException("El costo promedio no puede ser negativo.");
+        }
     }
 
     private static ExistenciaResponse Mapear(
@@ -362,7 +562,8 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
             AlmacenNombre = nombreAlmacen,
             ProductoNombre = nombreProducto,
             ProductoCodigo = codigoProducto,
-            CantidadDisponible = entity.CantidadDisponible
+            CantidadDisponible = entity.CantidadDisponible,
+            ValorInventario = entity.ValorInventario
         };
     }
 }

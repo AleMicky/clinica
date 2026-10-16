@@ -28,6 +28,10 @@ public abstract class ExistenciaRequestValidator<TRequest>
         RuleFor(x => x.CantidadReservada)
             .LessThanOrEqualTo(x => x.Cantidad)
             .WithMessage("La cantidad reservada no puede ser mayor que la cantidad.");
+
+        RuleFor(x => x.CostoPromedio)
+            .GreaterThanOrEqualTo(0)
+            .WithMessage("El costo promedio no puede ser negativo.");
     }
 }
 
@@ -36,3 +40,66 @@ public sealed class CreateExistenciaRequestValidator
 
 public sealed class UpdateExistenciaRequestValidator
     : ExistenciaRequestValidator<UpdateExistenciaRequest>;
+
+public sealed class MovimientoStockExistenciaRequestValidator
+    : AbstractValidator<MovimientoStockExistenciaRequest>
+{
+    public MovimientoStockExistenciaRequestValidator()
+    {
+        RuleFor(x => x.AlmacenId)
+            .GreaterThan(0)
+            .WithMessage("El almacén es obligatorio.");
+
+        RuleFor(x => x.ProductoId)
+            .GreaterThan(0)
+            .WithMessage("El producto es obligatorio.");
+
+        RuleFor(x => x.Cantidad)
+            .GreaterThan(0)
+            .WithMessage("La cantidad debe ser mayor que cero.");
+
+        RuleFor(x => x.CostoUnitario)
+            .GreaterThanOrEqualTo(0)
+            .When(x => x.CostoUnitario.HasValue)
+            .WithMessage("El costo unitario no puede ser negativo.");
+    }
+}
+
+public sealed class ReservaStockExistenciaRequestValidator
+    : AbstractValidator<ReservaStockExistenciaRequest>
+{
+    public ReservaStockExistenciaRequestValidator()
+    {
+        RuleFor(x => x.AlmacenId)
+            .GreaterThan(0)
+            .WithMessage("El almacén es obligatorio.");
+
+        RuleFor(x => x.ProductoId)
+            .GreaterThan(0)
+            .WithMessage("El producto es obligatorio.");
+
+        RuleFor(x => x.Cantidad)
+            .GreaterThan(0)
+            .WithMessage("La cantidad debe ser mayor que cero.");
+    }
+}
+
+public sealed class ActualizarCostoPromedioRequestValidator
+    : AbstractValidator<ActualizarCostoPromedioRequest>
+{
+    public ActualizarCostoPromedioRequestValidator()
+    {
+        RuleFor(x => x.AlmacenId)
+            .GreaterThan(0)
+            .WithMessage("El almacén es obligatorio.");
+
+        RuleFor(x => x.ProductoId)
+            .GreaterThan(0)
+            .WithMessage("El producto es obligatorio.");
+
+        RuleFor(x => x.CostoPromedio)
+            .GreaterThanOrEqualTo(0)
+            .WithMessage("El costo promedio no puede ser negativo.");
+    }
+}
+

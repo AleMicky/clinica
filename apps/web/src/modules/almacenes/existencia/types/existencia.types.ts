@@ -8,6 +8,8 @@ export interface ExistenciaResponse {
   cantidad: number;
   cantidadReservada: number;
   cantidadDisponible: number;
+  costoPromedio?: number;
+  valorInventario?: number;
   fechaCreacion?: string | null;
   creadoPor?: string | null;
   fechaModificacion?: string | null;
@@ -19,6 +21,7 @@ export interface CreateExistenciaRequest {
   productoId: number;
   cantidad: number;
   cantidadReservada: number;
+  costoPromedio?: number;
 }
 
 export interface UpdateExistenciaRequest {
@@ -26,6 +29,7 @@ export interface UpdateExistenciaRequest {
   productoId: number;
   cantidad: number;
   cantidadReservada: number;
+  costoPromedio?: number;
 }
 
 export interface ExistenciaQueryParams {

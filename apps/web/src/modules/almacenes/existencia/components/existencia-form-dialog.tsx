@@ -75,6 +75,7 @@ export function ExistenciaFormDialog({
       productoId: 0,
       cantidad: 0,
       cantidadReservada: 0,
+      costoPromedio: 0,
     },
   });
 
@@ -82,7 +83,9 @@ export function ExistenciaFormDialog({
   const selectedProductoId = watch("productoId");
   const watchedCantidad = watch("cantidad") || 0;
   const watchedReservada = watch("cantidadReservada") || 0;
+  const watchedCostoPromedio = watch("costoPromedio") || 0;
   const calculatedDisponible = Math.max(0, watchedCantidad - watchedReservada);
+  const calculatedValorInventario = watchedCantidad * watchedCostoPromedio;
 
   const { data: existenciasData } = useExistencias(
     !isEditing && selectedAlmacenId && selectedProductoId
@@ -111,6 +114,7 @@ export function ExistenciaFormDialog({
           productoId: existenciaToEdit.productoId,
           cantidad: existenciaToEdit.cantidad,
           cantidadReservada: existenciaToEdit.cantidadReservada,
+          costoPromedio: existenciaToEdit.costoPromedio ?? 0,
         });
       } else {
         reset({
@@ -118,6 +122,7 @@ export function ExistenciaFormDialog({
           productoId: 0,
           cantidad: 0,
           cantidadReservada: 0,
+          costoPromedio: 0,
         });
       }
     }
@@ -133,6 +138,7 @@ export function ExistenciaFormDialog({
             productoId: Number(values.productoId),
             cantidad: Number(values.cantidad),
             cantidadReservada: Number(values.cantidadReservada),
+            costoPromedio: Number(values.costoPromedio ?? 0),
           },
         });
         toast.success("Existencia actualizada correctamente.");
@@ -144,6 +150,7 @@ export function ExistenciaFormDialog({
           productoId: Number(values.productoId),
           cantidad: Number(values.cantidad),
           cantidadReservada: Number(values.cantidadReservada),
+          costoPromedio: Number(values.costoPromedio ?? 0),
         });
         toast.success("Existencia registrada exitosamente.");
         onSuccessCallback?.();
@@ -154,6 +161,7 @@ export function ExistenciaFormDialog({
             productoId: 0,
             cantidad: 0,
             cantidadReservada: 0,
+            costoPromedio: 0,
           });
         } else {
           onOpenChange(false);
@@ -343,6 +351,51 @@ export function ExistenciaFormDialog({
                     {errors.cantidadReservada.message}
                   </p>
                 )}
+              </div>
+            </div>
+
+            {/* Costo y Valorización */}
+            <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border/40">
+              <div className="space-y-1">
+                <Label
+                  htmlFor="costoPromedio"
+                  className="text-xs font-medium text-foreground flex items-center justify-between"
+                >
+                  <span>Costo Promedio ($)</span>
+                </Label>
+                <Input
+                  id="costoPromedio"
+                  type="number"
+                  step="any"
+                  min={0}
+                  placeholder="0.00"
+                  {...register("costoPromedio", { valueAsNumber: true })}
+                  disabled={isLoading}
+                  className={cn(
+                    "font-mono text-xs h-8 bg-background border-border/60",
+                    errors.costoPromedio && "border-destructive focus-visible:ring-destructive"
+                  )}
+                />
+                {errors.costoPromedio && (
+                  <p className="text-destructive text-[10px]">
+                    {errors.costoPromedio.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs font-medium text-muted-foreground">
+                  <span>Valor Total Estimado</span>
+                </Label>
+                <div className="h-8 rounded-md bg-muted/60 border border-border/50 px-3 flex items-center justify-between">
+                  <span className="text-[11px] text-muted-foreground font-mono">$</span>
+                  <span className="font-mono text-xs font-bold text-foreground">
+                    {calculatedValorInventario.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </span>
+                </div>
               </div>
             </div>
           </div>

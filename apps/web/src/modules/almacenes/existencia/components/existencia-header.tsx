@@ -1,8 +1,11 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { Boxes, PackageCheck, AlertCircle, Layers } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ROUTES } from "@/config/routes";
 
 interface ExistenciaHeaderProps {
   totalItems?: number;
@@ -66,6 +69,17 @@ export function ExistenciaHeader({
           <PackageCheck className="size-3.5" />
           <span>Disponible: <strong className="font-semibold">{totalDisponible.toLocaleString()}</strong></span>
         </Badge>
+
+        <Link href={ROUTES.ALMACENES.EXISTENCIAS_PARTIDAS}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs gap-1.5 cursor-pointer ml-1"
+          >
+            <Layers className="size-3.5 text-primary" />
+            <span>Stock por Partida</span>
+          </Button>
+        </Link>
       </div>
     </div>
   );

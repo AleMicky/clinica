@@ -364,6 +364,7 @@ public sealed class MovimientoInventarioService(
                         entity.AlmacenId,
                         detalle.ProductoId,
                         detalle.Cantidad,
+                        detalle.CostoUnitario,
                         cancellationToken);
                     break;
 

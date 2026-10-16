@@ -21,6 +21,14 @@ public sealed class ExistenciaConfiguration
             .HasPrecision(18, 2)
             .IsRequired();
 
+        builder.Property(x => x.CostoPromedio)
+            .HasPrecision(18, 2)
+            .HasDefaultValue(0)
+            .IsRequired();
+
+        builder.Ignore(x => x.CantidadDisponible);
+        builder.Ignore(x => x.ValorInventario);
+
         builder.HasIndex(x => new { x.AlmacenId, x.ProductoId })
             .IsUnique();
 
@@ -32,6 +40,11 @@ public sealed class ExistenciaConfiguration
         builder.HasOne(x => x.Producto)
             .WithMany()
             .HasForeignKey(x => x.ProductoId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasMany(x => x.ExistenciasPartidas)
+            .WithOne(x => x.Existencia)
+            .HasForeignKey(x => x.ExistenciaId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

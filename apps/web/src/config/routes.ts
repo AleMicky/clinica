@@ -71,6 +71,7 @@ export const ROUTES = {
     REPORTES_PRODUCTOS: "/almacenes/reportes-productos",
     TIPOS_MOVIMIENTO: "/almacenes/tipos-movimiento",
     EXISTENCIAS: "/almacenes/existencias",
+    EXISTENCIAS_PARTIDAS: "/almacenes/existencias-partidas",
     MOVIMIENTOS: "/almacenes/movimientos",
     TRANSFERENCIAS: "/almacenes/transferencias",
     INVENTARIOS_FISICOS: "/almacenes/inventarios-fisicos",

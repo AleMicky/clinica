@@ -529,6 +529,12 @@ namespace Clinica.Api.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<decimal>("CostoPromedio")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)")
+                        .HasDefaultValue(0m);
+
                     b.Property<string>("CreadoPor")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
