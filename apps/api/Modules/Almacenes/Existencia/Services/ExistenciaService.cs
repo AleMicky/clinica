@@ -199,13 +199,30 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
             request.ProductoId,
             cancellationToken);
 
-        await ValidarCombinacionUnicaAsync(
-            request.AlmacenId,
-            request.ProductoId,
-            idExcluido: null,
-            cancellationToken);
-
         ValidarCantidades(request.Cantidad, request.CantidadReservada, request.CostoPromedio);
+
+        var existingEntity = await dbContext.Existencias
+            .FirstOrDefaultAsync(
+                x => x.AlmacenId == request.AlmacenId &&
+                     x.ProductoId == request.ProductoId,
+                cancellationToken);
+
+        if (existingEntity is not null)
+        {
+            if (existingEntity.Activo)
+            {
+                throw new ConflictException(
+                    "Ya existe una existencia para esa combinación de almacén y producto.");
+            }
+
+            existingEntity.Activo = true;
+            existingEntity.Cantidad = request.Cantidad;
+            existingEntity.CantidadReservada = request.CantidadReservada;
+            existingEntity.CostoPromedio = request.CostoPromedio;
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            return await ObtenerAsync(existingEntity.Id, cancellationToken);
+        }
 
         var entity = ExistenciaMapper.ToEntity(request);
 
@@ -260,6 +277,12 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
             throw new NotFoundException(nameof(ExistenciaEntity), id);
         }
 
+        if (entity.Cantidad > 0 || entity.CantidadReservada > 0)
+        {
+            throw new ConflictException(
+                "No se puede eliminar una existencia que tiene stock disponible o reservado.");
+        }
+
         entity.Activo = false;
         await dbContext.SaveChangesAsync(cancellationToken);
     }
@@ -305,8 +328,7 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
         var existencia = await dbContext.Existencias
             .FirstOrDefaultAsync(
                 x => x.AlmacenId == almacenId &&
-                     x.ProductoId == productoId &&
-                     x.Activo,
+                     x.ProductoId == productoId,
                 cancellationToken);
 
         if (existencia is null)
@@ -317,11 +339,21 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
                 ProductoId = productoId,
                 Cantidad = cantidad,
                 CantidadReservada = 0,
-                CostoPromedio = costoUnitario.GetValueOrDefault(0)
+                CostoPromedio = costoUnitario.GetValueOrDefault(0),
+                Activo = true
             };
 
             dbContext.Existencias.Add(existencia);
+            await dbContext.SaveChangesAsync(cancellationToken);
             return;
+        }
+
+        if (!existencia.Activo)
+        {
+            existencia.Activo = true;
+            existencia.Cantidad = 0;
+            existencia.CantidadReservada = 0;
+            existencia.CostoPromedio = 0;
         }
 
         if (costoUnitario.HasValue && costoUnitario.Value > 0)
@@ -338,6 +370,7 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
         }
 
         existencia.Cantidad += cantidad;
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task DisminuirStockAsync(
@@ -374,6 +407,7 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
         }
 
         existencia.Cantidad -= cantidad;
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task ReservarStockAsync(
@@ -407,6 +441,7 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
         }
 
         existencia.CantidadReservada += cantidad;
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task LiberarStockReservadoAsync(
@@ -440,6 +475,7 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
         }
 
         existencia.CantidadReservada -= cantidad;
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<ExistenciaResponse> ActualizarCostoPromedioAsync(

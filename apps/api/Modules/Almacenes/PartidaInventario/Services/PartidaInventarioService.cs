@@ -117,11 +117,29 @@ public sealed class PartidaInventarioService(AppDbContext dbContext)
 
         if (!string.IsNullOrWhiteSpace(request.NumeroPartida))
         {
-            await ValidarNumeroUnicoAsync(
-                request.ProductoId,
-                request.NumeroPartida,
-                idExcluido: null,
-                cancellationToken);
+            var numeroNormalizado = NormalizarNumero(request.NumeroPartida);
+
+            var existingEntity = await dbContext.PartidasInventario
+                .FirstOrDefaultAsync(
+                    x => x.ProductoId == request.ProductoId &&
+                         x.NumeroPartida == numeroNormalizado,
+                    cancellationToken);
+
+            if (existingEntity is not null)
+            {
+                if (existingEntity.Activo)
+                {
+                    throw new ConflictException(
+                        $"Ya existe una partida con el número '{numeroNormalizado}' para ese producto.");
+                }
+
+                existingEntity.Activo = true;
+                existingEntity.FechaVencimiento = request.FechaVencimiento;
+                existingEntity.CostoUnitario = request.CostoUnitario;
+                await dbContext.SaveChangesAsync(cancellationToken);
+
+                return await ObtenerAsync(existingEntity.Id, cancellationToken);
+            }
         }
 
         var entity = PartidaInventarioMapper.ToEntity(request);
@@ -177,7 +195,15 @@ public sealed class PartidaInventarioService(AppDbContext dbContext)
             throw new NotFoundException(nameof(PartidaInventarioEntity), id);
         }
 
-        dbContext.PartidasInventario.Remove(entity);
+        var tieneStock = await dbContext.ExistenciasPartidas
+            .AnyAsync(x => x.PartidaInventarioId == id && x.Activo && (x.Cantidad > 0 || x.CantidadReservada > 0), cancellationToken);
+
+        if (tieneStock)
+        {
+            throw new ConflictException("No se puede eliminar la partida de inventario porque tiene existencias con stock mayor a cero.");
+        }
+
+        entity.Activo = false;
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 

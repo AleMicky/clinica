@@ -355,6 +355,8 @@ public sealed class MovimientoInventarioService(
             throw new BusinessException("El movimiento no tiene detalles activos.");
         }
 
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
         foreach (var detalle in detallesActivos)
         {
             switch (entity.TipoMovimientoInventario.Naturaleza)
@@ -386,6 +388,7 @@ public sealed class MovimientoInventarioService(
         entity.FechaAnulacion = null;
         entity.MotivoAnulacion = null;
         await dbContext.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
         return await ObtenerAsync(id, cancellationToken);
     }
 
@@ -415,6 +418,8 @@ public sealed class MovimientoInventarioService(
             default:
                 throw new ArgumentOutOfRangeException();
         }
+
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
         foreach (var detalle in entity.Detalles.Where(x => x.Activo))
         {
@@ -453,6 +458,7 @@ public sealed class MovimientoInventarioService(
         entity.FechaAnulacion = DateTime.UtcNow;
         entity.MotivoAnulacion = request.MotivoAnulacion.Trim();
         await dbContext.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
         return await ObtenerAsync(id, cancellationToken);
     }
 

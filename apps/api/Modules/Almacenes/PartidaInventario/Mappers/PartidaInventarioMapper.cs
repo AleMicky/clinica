@@ -8,6 +8,7 @@ namespace Clinica.Api.Modules.Almacenes.PartidaInventario.Mappers;
 public static partial class PartidaInventarioMapper
 {
     [MapperIgnoreSource(nameof(PartidaInventarioEntity.Producto))]
+    [MapperIgnoreSource(nameof(PartidaInventarioEntity.ExistenciasPartidas))]
     public static partial PartidaInventarioResponse ToResponse(
         PartidaInventarioEntity entity);
 
@@ -21,6 +22,7 @@ public static partial class PartidaInventarioMapper
     [MapperIgnoreTarget(nameof(PartidaInventarioEntity.CreadoPor))]
     [MapperIgnoreTarget(nameof(PartidaInventarioEntity.ModificadoPor))]
     [MapperIgnoreTarget(nameof(PartidaInventarioEntity.Producto))]
+    [MapperIgnoreTarget(nameof(PartidaInventarioEntity.ExistenciasPartidas))]
     public static partial PartidaInventarioEntity ToEntity(
         CreatePartidaInventarioRequest request);
 
@@ -31,6 +33,7 @@ public static partial class PartidaInventarioMapper
     [MapperIgnoreTarget(nameof(PartidaInventarioEntity.CreadoPor))]
     [MapperIgnoreTarget(nameof(PartidaInventarioEntity.ModificadoPor))]
     [MapperIgnoreTarget(nameof(PartidaInventarioEntity.Producto))]
+    [MapperIgnoreTarget(nameof(PartidaInventarioEntity.ExistenciasPartidas))]
     public static partial void UpdateEntity(
         UpdatePartidaInventarioRequest request,
         PartidaInventarioEntity entity);

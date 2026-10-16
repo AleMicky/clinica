@@ -156,13 +156,29 @@ public sealed class ExistenciaPartidaService(AppDbContext dbContext)
             request.PartidaInventarioId,
             cancellationToken);
 
-        await ValidarCombinacionUnicaAsync(
-            request.ExistenciaId,
-            request.PartidaInventarioId,
-            idExcluido: null,
-            cancellationToken);
-
         ValidarCantidades(request.Cantidad, request.CantidadReservada);
+
+        var existingEntity = await dbContext.ExistenciasPartidas
+            .FirstOrDefaultAsync(
+                x => x.ExistenciaId == request.ExistenciaId &&
+                     x.PartidaInventarioId == request.PartidaInventarioId,
+                cancellationToken);
+
+        if (existingEntity is not null)
+        {
+            if (existingEntity.Activo)
+            {
+                throw new ConflictException(
+                    "Ya existe una existencia registrada para esa combinación de existencia y partida de inventario.");
+            }
+
+            existingEntity.Activo = true;
+            existingEntity.Cantidad = request.Cantidad;
+            existingEntity.CantidadReservada = request.CantidadReservada;
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            return await ObtenerAsync(existingEntity.Id, cancellationToken);
+        }
 
         var entity = ExistenciaPartidaMapper.ToEntity(request);
 
@@ -217,6 +233,11 @@ public sealed class ExistenciaPartidaService(AppDbContext dbContext)
             throw new NotFoundException(nameof(ExistenciaPartidaEntity), id);
         }
 
+        if (entity.Cantidad > 0 || entity.CantidadReservada > 0)
+        {
+            throw new ConflictException("No se puede desvincular o eliminar la partida de la existencia porque tiene stock registrado.");
+        }
+
         entity.Activo = false;
         await dbContext.SaveChangesAsync(cancellationToken);
     }
@@ -240,8 +261,7 @@ public sealed class ExistenciaPartidaService(AppDbContext dbContext)
         var existenciaPartida = await dbContext.ExistenciasPartidas
             .FirstOrDefaultAsync(
                 x => x.ExistenciaId == existenciaId &&
-                     x.PartidaInventarioId == partidaInventarioId &&
-                     x.Activo,
+                     x.PartidaInventarioId == partidaInventarioId,
                 cancellationToken);
 
         if (existenciaPartida is null)
@@ -251,13 +271,21 @@ public sealed class ExistenciaPartidaService(AppDbContext dbContext)
                 ExistenciaId = existenciaId,
                 PartidaInventarioId = partidaInventarioId,
                 Cantidad = cantidad,
-                CantidadReservada = 0
+                CantidadReservada = 0,
+                Activo = true
             };
 
             dbContext.ExistenciasPartidas.Add(existenciaPartida);
         }
         else
         {
+            if (!existenciaPartida.Activo)
+            {
+                existenciaPartida.Activo = true;
+                existenciaPartida.Cantidad = 0;
+                existenciaPartida.CantidadReservada = 0;
+            }
+
             existenciaPartida.Cantidad += cantidad;
         }
 
