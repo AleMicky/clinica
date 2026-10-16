@@ -10,6 +10,8 @@ using Clinica.Api.Modules.Almacenes.ConsumoInterno.Endpoints;
 using Clinica.Api.Modules.Almacenes.ConsumoInterno.Services;
 using Clinica.Api.Modules.Almacenes.Existencia.Endpoints;
 using Clinica.Api.Modules.Almacenes.Existencia.Services;
+using Clinica.Api.Modules.Almacenes.ExistenciaPartida.Endpoints;
+using Clinica.Api.Modules.Almacenes.ExistenciaPartida.Services;
 using Clinica.Api.Modules.Almacenes.InventarioFisico.Endpoints;
 using Clinica.Api.Modules.Almacenes.InventarioFisico.Services;
 using Clinica.Api.Modules.Almacenes.Marca.Endpoints;
@@ -41,6 +43,7 @@ public static class AlmacenesModule
         services.AddScoped<IProductoImportacionService, ProductoImportacionService>();
         services.AddScoped<IPartidaInventarioService, PartidaInventarioService>();
         services.AddScoped<IExistenciaService, ExistenciaService>();
+        services.AddScoped<IExistenciaPartidaService, ExistenciaPartidaService>();
         services.AddScoped<ITipoMovimientoInventarioService, TipoMovimientoInventarioService>();
         services.AddScoped<IMovimientoInventarioService, MovimientoInventarioService>();
         services.AddScoped<ITransferenciaAlmacenService, TransferenciaAlmacenService>();
@@ -62,6 +65,7 @@ public static class AlmacenesModule
         app.MapProductoEndpoints();
         app.MapPartidaInventarioEndpoints();
         app.MapExistenciaEndpoints();
+        app.MapExistenciaPartidaEndpoints();
         app.MapTipoMovimientoInventarioEndpoints();
         app.MapMovimientoInventarioEndpoints();
         app.MapTransferenciaAlmacenEndpoints();

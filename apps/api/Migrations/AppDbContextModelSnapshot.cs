@@ -556,6 +556,57 @@ namespace Clinica.Api.Migrations
                     b.ToTable("Existencias", (string)null);
                 });
 
+            modelBuilder.Entity("Clinica.Api.Modules.Almacenes.ExistenciaPartida.Entity.ExistenciaPartida", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<decimal>("Cantidad")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("CantidadReservada")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("CreadoPor")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("ExistenciaId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModificadoPor")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("PartidaInventarioId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PartidaInventarioId");
+
+                    b.HasIndex("ExistenciaId", "PartidaInventarioId")
+                        .IsUnique();
+
+                    b.ToTable("ExistenciasPartidas", (string)null);
+                });
+
             modelBuilder.Entity("Clinica.Api.Modules.Almacenes.InventarioFisico.Entity.InventarioFisico", b =>
                 {
                     b.Property<int>("Id")
@@ -4967,6 +5018,25 @@ namespace Clinica.Api.Migrations
                     b.Navigation("Producto");
                 });
 
+            modelBuilder.Entity("Clinica.Api.Modules.Almacenes.ExistenciaPartida.Entity.ExistenciaPartida", b =>
+                {
+                    b.HasOne("Clinica.Api.Modules.Almacenes.Existencia.Entity.Existencia", "Existencia")
+                        .WithMany("ExistenciasPartidas")
+                        .HasForeignKey("ExistenciaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Clinica.Api.Modules.Almacenes.PartidaInventario.Entity.PartidaInventario", "PartidaInventario")
+                        .WithMany("ExistenciasPartidas")
+                        .HasForeignKey("PartidaInventarioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Existencia");
+
+                    b.Navigation("PartidaInventario");
+                });
+
             modelBuilder.Entity("Clinica.Api.Modules.Almacenes.InventarioFisico.Entity.InventarioFisico", b =>
                 {
                     b.HasOne("Clinica.Api.Modules.Almacenes.Almacen.Entity.Almacen", "Almacen")
@@ -6039,6 +6109,11 @@ namespace Clinica.Api.Migrations
                     b.Navigation("Detalles");
                 });
 
+            modelBuilder.Entity("Clinica.Api.Modules.Almacenes.Existencia.Entity.Existencia", b =>
+                {
+                    b.Navigation("ExistenciasPartidas");
+                });
+
             modelBuilder.Entity("Clinica.Api.Modules.Almacenes.InventarioFisico.Entity.InventarioFisico", b =>
                 {
                     b.Navigation("Detalles");
@@ -6052,6 +6127,11 @@ namespace Clinica.Api.Migrations
             modelBuilder.Entity("Clinica.Api.Modules.Almacenes.MovimientoInventario.Entity.MovimientoInventario", b =>
                 {
                     b.Navigation("Detalles");
+                });
+
+            modelBuilder.Entity("Clinica.Api.Modules.Almacenes.PartidaInventario.Entity.PartidaInventario", b =>
+                {
+                    b.Navigation("ExistenciasPartidas");
                 });
 
             modelBuilder.Entity("Clinica.Api.Modules.Almacenes.Producto.Entity.Producto", b =>
