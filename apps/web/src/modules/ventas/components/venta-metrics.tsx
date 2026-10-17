@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle2, Clock, DollarSign, Receipt, Send } from "lucide-react";
 import type { VentaMetrics } from "../types/ventas.types";
@@ -9,7 +8,7 @@ interface VentaMetricsCardsProps {
   metrics: VentaMetrics;
 }
 
-export function VentaMetricsCards({ metrics }: VentaMetricsCardsProps) {
+export function VentaMetricsCards({ metrics }: Readonly<VentaMetricsCardsProps>) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
       {/* 1. Total Ventas del Día */}

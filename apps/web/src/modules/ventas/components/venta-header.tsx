@@ -14,7 +14,7 @@ export function VentaHeader({
   onAddClick,
   onRefresh,
   isRefreshing = false,
-}: VentaHeaderProps) {
+}: Readonly<VentaHeaderProps>) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-card via-card to-primary/5 px-4 py-2.5 rounded-xl border border-border/70 shadow-2xs">
       <div className="flex items-center gap-2.5">

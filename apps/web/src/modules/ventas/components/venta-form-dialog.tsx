@@ -47,23 +47,43 @@ import { useCategoriasServicio } from "@/modules/servicios/categoria-servicio/ho
 
 interface ServiceItemFormState extends CreateVentaDetalleRequest {
   id: string;
+  porcentajeMedico?: number;
 }
 
 interface PagadorItemFormState extends CreateVentaPagadorRequest {
   id: string;
 }
 
-interface VentaFormDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+function createInitialDetalle(servicioId = 1): ServiceItemFormState {
+  return {
+    id: crypto.randomUUID(),
+    servicioId,
+    medicoId: undefined,
+    cantidad: 1,
+    precioUnitario: 100,
+    descuento: 0,
+    porcentajeMedico: 0,
+  };
+}
+
+function createInitialPagador(monto = 100): PagadorItemFormState {
+  return {
+    id: crypto.randomUUID(),
+    tipo: TipoPagador.Paciente,
+    convenioId: undefined,
+    monto,
+  };
+}
+
+interface VentaFormContentProps {
+  onClose: () => void;
   onSuccessCallback?: () => void;
 }
 
-export function VentaFormDialog({
-  open,
-  onOpenChange,
+function VentaFormContent({
+  onClose,
   onSuccessCallback,
-}: VentaFormDialogProps) {
+}: Readonly<VentaFormContentProps>) {
   // Direct APIs via React Query
   const { data: admisionesData, isLoading: isLoadingAdmisiones } = useAdmisiones({ pageSize: 100 });
   const { data: pacientesData } = usePacientes({ pageSize: 100 });
@@ -77,7 +97,7 @@ export function VentaFormDialog({
   const { data: serviciosData } = useServicios(
     firstCatId ?? 0,
     { pageSize: 100 },
-    Boolean(open && firstCatId)
+    Boolean(firstCatId)
   );
 
   const createMutation = useCreateVenta();
@@ -85,51 +105,24 @@ export function VentaFormDialog({
   // Form State
   const [admisionId, setAdmisionId] = React.useState<string>("");
   const [pacienteId, setPacienteId] = React.useState<string>("");
-  const [vendedorId, setVendedorId] = React.useState<string>("");
-  const [monedaId, setMonedaId] = React.useState<string>("");
-  const [fecha, setFecha] = React.useState<string>(
+  const [userVendedorId, setUserVendedorId] = React.useState<string>("");
+  const [userMonedaId, setUserMonedaId] = React.useState<string>("");
+  const [fecha, setFecha] = React.useState<string>(() =>
     new Date().toISOString().slice(0, 16)
   );
 
-  const [detalles, setDetalles] = React.useState<ServiceItemFormState[]>([]);
-  const [pagadores, setPagadores] = React.useState<PagadorItemFormState[]>([]);
+  const defaultMonedaId = monedasData?.items?.[0]?.id?.toString() ?? "";
+  const monedaId = userMonedaId || defaultMonedaId;
 
-  // Initialize or reset form state when dialog opens
-  React.useEffect(() => {
-    if (open) {
-      setAdmisionId("");
-      setPacienteId("");
+  const defaultVendedorId = empleadosData?.items?.[0]?.id?.toString() ?? "";
+  const vendedorId = userVendedorId || defaultVendedorId;
 
-      const defaultMoneda = monedasData?.items?.[0];
-      setMonedaId(defaultMoneda ? defaultMoneda.id.toString() : "");
-
-      const defaultEmpleado = empleadosData?.items?.[0];
-      setVendedorId(defaultEmpleado ? defaultEmpleado.id.toString() : "");
-
-      setFecha(new Date().toISOString().slice(0, 16));
-
-      const firstServ = serviciosData?.items?.[0];
-      setDetalles([
-        {
-          id: Math.random().toString(),
-          servicioId: firstServ?.id ?? 1,
-          medicoId: undefined,
-          cantidad: 1,
-          precioUnitario: 100,
-          descuento: 0,
-        },
-      ]);
-
-      setPagadores([
-        {
-          id: Math.random().toString(),
-          tipo: TipoPagador.Paciente,
-          convenioId: undefined,
-          monto: 100,
-        },
-      ]);
-    }
-  }, [open, monedasData, empleadosData, serviciosData]);
+  const [detalles, setDetalles] = React.useState<ServiceItemFormState[]>(() => [
+    createInitialDetalle(serviciosData?.items?.[0]?.id ?? 1),
+  ]);
+  const [pagadores, setPagadores] = React.useState<PagadorItemFormState[]>(() => [
+    createInitialPagador(100),
+  ]);
 
   // Handle Admission selection: auto pick patient & prefill services if available
   const handleSelectAdmision = (admIdStr: string | null) => {
@@ -143,7 +136,7 @@ export function VentaFormDialog({
 
       if (selectedAdm.detalles && selectedAdm.detalles.length > 0) {
         const loadedDetalles: ServiceItemFormState[] = selectedAdm.detalles.map((d) => ({
-          id: Math.random().toString(),
+          id: crypto.randomUUID(),
           servicioId: d.servicioId ?? 1,
           medicoId: d.medicoId ?? undefined,
           cantidad: d.cantidad || 1,
@@ -155,12 +148,7 @@ export function VentaFormDialog({
 
         const sub = loadedDetalles.reduce((acc, x) => acc + x.cantidad * x.precioUnitario - x.descuento, 0);
         setPagadores([
-          {
-            id: Math.random().toString(),
-            tipo: TipoPagador.Paciente,
-            convenioId: undefined,
-            monto: Math.max(0, sub),
-          },
+          createInitialPagador(Math.max(0, sub)),
         ]);
       }
     }
@@ -171,15 +159,7 @@ export function VentaFormDialog({
     const firstServ = serviciosData?.items?.[0];
     setDetalles((prev) => [
       ...prev,
-      {
-        id: Math.random().toString(),
-        servicioId: firstServ?.id ?? 1,
-        medicoId: undefined,
-        cantidad: 1,
-        precioUnitario: 100,
-        descuento: 0,
-        porcentajeMedico: 0,
-      },
+      createInitialDetalle(firstServ?.id ?? 1),
     ]);
   };
 
@@ -205,12 +185,7 @@ export function VentaFormDialog({
   const handleAddPagador = () => {
     setPagadores((prev) => [
       ...prev,
-      {
-        id: Math.random().toString(),
-        tipo: TipoPagador.Paciente,
-        convenioId: undefined,
-        monto: 0,
-      },
+      createInitialPagador(0),
     ]);
   };
 
@@ -261,8 +236,8 @@ export function VentaFormDialog({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.SyntheticEvent) => {
+    e?.preventDefault();
 
     if (!admisionId) {
       toast.error("Por favor seleccione una admisión válida.");
@@ -317,7 +292,7 @@ export function VentaFormDialog({
     try {
       const res = await createMutation.mutateAsync(payload);
       toast.success(`Venta #${res.numero || res.id} registrada exitosamente.`);
-      onOpenChange(false);
+      onClose();
       onSuccessCallback?.();
     } catch {
       toast.error("No se pudo registrar la venta en el backend.");
@@ -333,9 +308,8 @@ export function VentaFormDialog({
   const serviciosList = serviciosData?.items ?? [];
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl w-full max-h-[92vh] flex flex-col p-0 border-border/80 shadow-2xl overflow-hidden">
-        <DialogHeader className="p-5 border-b border-border/70 bg-gradient-to-r from-muted/50 via-background to-primary/5">
+    <>
+      <DialogHeader className="p-5 border-b border-border/70 bg-gradient-to-r from-muted/50 via-background to-primary/5">
           <div className="flex items-center gap-3">
             <div className="size-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center border border-primary/20">
               <Sparkles className="size-5" />
@@ -416,7 +390,7 @@ export function VentaFormDialog({
                   <User className="size-3 text-muted-foreground" />
                   Cajero / Vendedor <span className="text-rose-500">*</span>
                 </Label>
-                <Select value={vendedorId} onValueChange={(val) => setVendedorId(val || "")}>
+                <Select value={vendedorId} onValueChange={(val) => setUserVendedorId(val || "")}>
                   <SelectTrigger className="h-9 text-xs bg-background">
                     <SelectValue placeholder={isLoadingEmpleados ? "Cargando..." : "Seleccionar cajero..."} />
                   </SelectTrigger>
@@ -438,7 +412,7 @@ export function VentaFormDialog({
                   <Coins className="size-3 text-muted-foreground" />
                   Moneda <span className="text-rose-500">*</span>
                 </Label>
-                <Select value={monedaId} onValueChange={(val) => setMonedaId(val || "")}>
+                <Select value={monedaId} onValueChange={(val) => setUserMonedaId(val || "")}>
                   <SelectTrigger className="h-9 text-xs bg-background">
                     <SelectValue placeholder={isLoadingMonedas ? "Cargando..." : "Moneda..."} />
                   </SelectTrigger>
@@ -765,7 +739,7 @@ export function VentaFormDialog({
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => onOpenChange(false)}
+              onClick={onClose}
               disabled={createMutation.isPending}
               className="h-8 text-xs"
             >
@@ -783,6 +757,30 @@ export function VentaFormDialog({
             </Button>
           </div>
         </DialogFooter>
+    </>
+  );
+}
+
+interface VentaFormDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccessCallback?: () => void;
+}
+
+export function VentaFormDialog({
+  open,
+  onOpenChange,
+  onSuccessCallback,
+}: Readonly<VentaFormDialogProps>) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-3xl w-full max-h-[92vh] flex flex-col p-0 border-border/80 shadow-2xl overflow-hidden">
+        {open && (
+          <VentaFormContent
+            onClose={() => onOpenChange(false)}
+            onSuccessCallback={onSuccessCallback}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );

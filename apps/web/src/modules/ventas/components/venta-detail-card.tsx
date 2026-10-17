@@ -9,7 +9,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Building2,
   Calendar,
-  CheckCircle2,
   Coins,
   Receipt,
   RefreshCw,
@@ -33,10 +32,23 @@ import {
 } from "../hooks/use-ventas";
 import { useConvenios } from "@/modules/servicios/convenio/hooks/use-convenio";
 
+function resolveCollection<T>(
+  primaryItems?: T[] | null,
+  secondaryItems?: T[] | null,
+  fallbackItems?: T[] | null
+): T[] {
+  if (primaryItems && primaryItems.length > 0) {
+    return primaryItems;
+  }
+  if (secondaryItems && secondaryItems.length > 0) {
+    return secondaryItems;
+  }
+  return fallbackItems ?? [];
+}
+
 interface VentaDetailCardProps {
   venta: VentaResponse | null;
   onEnviarACajaClick?: (venta: VentaResponse) => void;
-  onDirectChangeStatus?: (venta: VentaResponse, nuevoEstado: EstadoVenta) => void;
   onChangeStatusClick?: (venta: VentaResponse) => void;
   onAnularClick?: (id: number) => void;
 }
@@ -44,10 +56,9 @@ interface VentaDetailCardProps {
 export function VentaDetailCard({
   venta: initialVenta,
   onEnviarACajaClick,
-  onDirectChangeStatus,
   onChangeStatusClick,
   onAnularClick,
-}: VentaDetailCardProps) {
+}: Readonly<VentaDetailCardProps>) {
   const ventaId = initialVenta?.id ?? 0;
 
   // Consultas directas del recurso y sub-recursos
@@ -83,19 +94,17 @@ export function VentaDetailCard({
   }
 
   // Agrupación limpia de detalles y pagadores (priorizando endpoint directo /ventas/{id}/detalles)
-  const detalles =
-    detallesResult?.items && detallesResult.items.length > 0
-      ? detallesResult.items
-      : fullVentaData?.detalles && fullVentaData.detalles.length > 0
-      ? fullVentaData.detalles
-      : initialVenta?.detalles ?? [];
+  const detalles = resolveCollection(
+    detallesResult?.items,
+    fullVentaData?.detalles,
+    initialVenta?.detalles
+  );
 
-  const pagadores =
-    pagadoresResult?.items && pagadoresResult.items.length > 0
-      ? pagadoresResult.items
-      : fullVentaData?.pagadores && fullVentaData.pagadores.length > 0
-      ? fullVentaData.pagadores
-      : initialVenta?.pagadores ?? [];
+  const pagadores = resolveCollection(
+    pagadoresResult?.items,
+    fullVentaData?.pagadores,
+    initialVenta?.pagadores
+  );
 
   const pacienteNombre = venta.paciente?.nombreCompleto || "Paciente";
   const docPaciente = venta.paciente?.numeroHistoriaClinica
@@ -103,6 +112,104 @@ export function VentaDetailCard({
     : "";
 
   const monedaSimbolo = venta.moneda?.simbolo || (venta.moneda?.codigo === "USD" ? "$" : "Bs.");
+
+  let detallesContent: React.ReactNode;
+  if (isLoadingDetalles) {
+    detallesContent = (
+      <div className="p-3 space-y-2">
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-3/4" />
+      </div>
+    );
+  } else if (detalles.length === 0) {
+    detallesContent = (
+      <div className="p-3 text-center text-muted-foreground text-xs">
+        No hay servicios registrados en este comprobante.
+      </div>
+    );
+  } else {
+    detallesContent = detalles.map((det, index) => {
+      const servicioNombre = formatVentaServicioNombre(det);
+      const medicoNombre = formatVentaMedicoNombre(det);
+
+      return (
+        <div
+          key={det.id || index}
+          className="p-2 grid grid-cols-12 gap-1.5 items-center text-[11px]"
+        >
+          <div className="col-span-6">
+            <p className="font-semibold text-foreground line-clamp-1">
+              {servicioNombre}
+            </p>
+            {det.descuento > 0 && (
+              <span className="text-[10px] text-emerald-600 font-medium">
+                Desc: -{monedaSimbolo} {det.descuento.toFixed(2)}
+              </span>
+            )}
+          </div>
+          <div className="col-span-3 text-[10px] text-muted-foreground truncate">
+            {medicoNombre}
+          </div>
+          <div className="col-span-1 text-center font-medium">
+            {det.cantidad}
+          </div>
+          <div className="col-span-2 text-right font-bold text-foreground font-mono">
+            {monedaSimbolo} {det.total.toFixed(2)}
+          </div>
+        </div>
+      );
+    });
+  }
+
+  let pagadoresContent: React.ReactNode;
+  if (isLoadingPagadores) {
+    pagadoresContent = (
+      <div className="p-3 space-y-2">
+        <Skeleton className="h-4 w-full" />
+      </div>
+    );
+  } else if (pagadores.length === 0) {
+    pagadoresContent = (
+      <div className="p-4 text-center text-xs text-muted-foreground border rounded-lg">
+        No hay pagadores configurados.
+      </div>
+    );
+  } else {
+    pagadoresContent = pagadores.map((pag, index) => {
+      const convenioObj = conveniosData?.items?.find((c) => c.id === pag.convenioId);
+      const convenioNombre =
+        convenioObj?.nombre || (pag.convenioId ? `Convenio #${pag.convenioId}` : null);
+
+      return (
+        <div
+          key={pag.id || index}
+          className="p-2.5 rounded-lg border border-border/60 bg-card flex items-center justify-between text-xs"
+        >
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5 font-semibold text-foreground">
+              {pag.tipo === TipoPagador.Paciente ? (
+                <span className="flex items-center gap-1 text-primary text-xs">
+                  <Users className="size-3.5" /> Paciente (Directo)
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 text-blue-600 text-xs">
+                  <Building2 className="size-3.5" /> {convenioNombre || "Convenio Institucional"}
+                </span>
+              )}
+            </div>
+            <PagadorStatusBadge estado={pag.estado} />
+          </div>
+
+          <div className="text-right">
+            <span className="text-[10px] text-muted-foreground block">Monto Cobertura:</span>
+            <span className="text-xs font-bold text-foreground font-mono">
+              {monedaSimbolo} {pag.monto.toFixed(2)}
+            </span>
+          </div>
+        </div>
+      );
+    });
+  }
 
   return (
     <Card className="border border-border/70 shadow-xs bg-card rounded-xl overflow-hidden flex flex-col">
@@ -239,48 +346,7 @@ export function VentaDetailCard({
               </div>
 
               <div className="divide-y divide-border/50">
-                {isLoadingDetalles ? (
-                  <div className="p-3 space-y-2">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-3/4" />
-                  </div>
-                ) : detalles.length === 0 ? (
-                  <div className="p-3 text-center text-muted-foreground text-xs">
-                    No hay servicios registrados en este comprobante.
-                  </div>
-                ) : (
-                  detalles.map((det, index) => {
-                    const servicioNombre = formatVentaServicioNombre(det);
-                    const medicoNombre = formatVentaMedicoNombre(det);
-
-                    return (
-                      <div
-                        key={det.id || index}
-                        className="p-2 grid grid-cols-12 gap-1.5 items-center text-[11px]"
-                      >
-                        <div className="col-span-6">
-                          <p className="font-semibold text-foreground line-clamp-1">
-                            {servicioNombre}
-                          </p>
-                          {det.descuento > 0 && (
-                            <span className="text-[10px] text-emerald-600 font-medium">
-                              Desc: -{monedaSimbolo} {det.descuento.toFixed(2)}
-                            </span>
-                          )}
-                        </div>
-                        <div className="col-span-3 text-[10px] text-muted-foreground truncate">
-                          {medicoNombre}
-                        </div>
-                        <div className="col-span-1 text-center font-medium">
-                          {det.cantidad}
-                        </div>
-                        <div className="col-span-2 text-right font-bold text-foreground font-mono">
-                          {monedaSimbolo} {det.total.toFixed(2)}
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
+                {detallesContent}
               </div>
             </div>
           </TabsContent>
@@ -288,50 +354,7 @@ export function VentaDetailCard({
           {/* TAB PAGADORES */}
           <TabsContent value="pagadores" className="space-y-2 mt-2.5">
             <div className="space-y-1.5">
-              {isLoadingPagadores ? (
-                <div className="p-3 space-y-2">
-                  <Skeleton className="h-4 w-full" />
-                </div>
-              ) : pagadores.length === 0 ? (
-                <div className="p-4 text-center text-xs text-muted-foreground border rounded-lg">
-                  No hay pagadores configurados.
-                </div>
-              ) : (
-                pagadores.map((pag, index) => {
-                  const convenioObj = conveniosData?.items?.find((c) => c.id === pag.convenioId);
-                  const convenioNombre =
-                    convenioObj?.nombre || (pag.convenioId ? `Convenio #${pag.convenioId}` : null);
-
-                  return (
-                    <div
-                      key={pag.id || index}
-                      className="p-2.5 rounded-lg border border-border/60 bg-card flex items-center justify-between text-xs"
-                    >
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-1.5 font-semibold text-foreground">
-                          {pag.tipo === TipoPagador.Paciente ? (
-                            <span className="flex items-center gap-1 text-primary text-xs">
-                              <Users className="size-3.5" /> Paciente (Directo)
-                            </span>
-                          ) : (
-                            <span className="flex items-center gap-1 text-blue-600 text-xs">
-                              <Building2 className="size-3.5" /> {convenioNombre || "Convenio Institucional"}
-                            </span>
-                          )}
-                        </div>
-                        <PagadorStatusBadge estado={pag.estado} />
-                      </div>
-
-                      <div className="text-right">
-                        <span className="text-[10px] text-muted-foreground block">Monto Cobertura:</span>
-                        <span className="text-xs font-bold text-foreground font-mono">
-                          {monedaSimbolo} {pag.monto.toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
+              {pagadoresContent}
             </div>
           </TabsContent>
         </Tabs>

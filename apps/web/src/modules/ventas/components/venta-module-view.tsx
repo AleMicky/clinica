@@ -9,7 +9,6 @@ import { VentaFormDialog } from "./venta-form-dialog";
 import { VentaDetailSheet } from "./venta-detail-sheet";
 import { VentaDetailCard } from "./venta-detail-card";
 import { VentaStatusDialog } from "./venta-status-dialog";
-import { VentaConfirmStatusDialog } from "./venta-confirm-status-dialog";
 import { VentaEnviarCajaDialog } from "./venta-enviar-caja-dialog";
 import { ConfirmDeleteDialog } from "@/components/shared";
 
@@ -31,8 +30,7 @@ export function VentaModuleView() {
 
   // Modal State: Ficha Detalle Venta
   const [detailSheetOpen, setDetailSheetOpen] = React.useState(false);
-  const [selectedVentaForDetail, setSelectedVentaForDetail] =
-    React.useState<VentaResponse | null>(null);
+  const [selectedVentaId, setSelectedVentaId] = React.useState<number | null>(null);
 
   // Modal State: Enviar Venta a Caja
   const [enviarCajaDialogOpen, setEnviarCajaDialogOpen] = React.useState(false);
@@ -43,14 +41,6 @@ export function VentaModuleView() {
   const [statusDialogOpen, setStatusDialogOpen] = React.useState(false);
   const [selectedVentaForStatus, setSelectedVentaForStatus] =
     React.useState<VentaResponse | null>(null);
-
-  // Modal State: Alerta de Confirmación de Cambio de Estado
-  const [confirmStatusDialogOpen, setConfirmStatusDialogOpen] = React.useState(false);
-  const [statusChangeCandidate, setStatusChangeCandidate] = React.useState<{
-    venta: VentaResponse;
-    targetEstado: EstadoVenta;
-    motivo?: string;
-  } | null>(null);
 
   // Modal State: Anular Venta
   const [anularDialogOpen, setAnularDialogOpen] = React.useState(false);
@@ -100,7 +90,10 @@ export function VentaModuleView() {
     setCurrentPage(1);
   };
 
-  const ventas: VentaResponse[] = apiData?.items ?? [];
+  const ventas: VentaResponse[] = React.useMemo(
+    () => apiData?.items ?? [],
+    [apiData?.items]
+  );
   const allVentasList: VentaResponse[] = allVentasData?.items ?? ventas;
 
   // Metrics calculation
@@ -124,19 +117,15 @@ export function VentaModuleView() {
     montoTotal,
   };
 
-  // Auto-seleccionar la primera venta para la vista Master-Detail en pantallas grandes
-  React.useEffect(() => {
-    if (ventas.length > 0) {
-      if (!selectedVentaForDetail) {
-        setSelectedVentaForDetail(ventas[0]);
-      } else {
-        const updated = ventas.find((v) => v.id === selectedVentaForDetail.id);
-        if (updated) {
-          setSelectedVentaForDetail(updated);
-        }
-      }
+  // Auto-seleccionar la venta para la vista Master-Detail en pantallas grandes
+  const selectedVentaForDetail = React.useMemo(() => {
+    if (ventas.length === 0) return null;
+    if (selectedVentaId !== null) {
+      const found = ventas.find((v) => v.id === selectedVentaId);
+      if (found) return found;
     }
-  }, [ventas]);
+    return ventas[0] ?? null;
+  }, [ventas, selectedVentaId]);
 
   // Handlers
   const handleOpenAdd = () => {
@@ -144,7 +133,7 @@ export function VentaModuleView() {
   };
 
   const handleViewDetail = (venta: VentaResponse) => {
-    setSelectedVentaForDetail(venta);
+    setSelectedVentaId(venta.id);
     // En móviles/tablets abre el panel sheet deslizable
     if (typeof window !== "undefined" && window.innerWidth < 1024) {
       setDetailSheetOpen(true);
@@ -171,11 +160,15 @@ export function VentaModuleView() {
       toast.success(
         `Venta #${selectedVentaForEnviarCaja.numero} enviada a caja exitosamente.`
       );
-      refetch();
-    } catch (error: any) {
+      await refetch();
+    } catch (error: unknown) {
+      const err = error as {
+        response?: { data?: { detail?: string } };
+        message?: string;
+      };
       const msg =
-        error?.response?.data?.detail ||
-        error?.message ||
+        err?.response?.data?.detail ||
+        err?.message ||
         "No se pudo enviar la venta a caja.";
       toast.error(msg);
     }
@@ -189,46 +182,6 @@ export function VentaModuleView() {
   const handleOpenAnular = (id: number) => {
     setVentaToAnularId(id);
     setAnularDialogOpen(true);
-  };
-
-  const handleRequestDirectChangeStatus = (
-    venta: VentaResponse,
-    nuevoEstado: EstadoVenta
-  ) => {
-    setStatusChangeCandidate({
-      venta,
-      targetEstado: nuevoEstado,
-      motivo: `Cambio a ${EstadoVentaLabels[nuevoEstado]}`,
-    });
-    setConfirmStatusDialogOpen(true);
-  };
-
-  const handleExecuteStatusChange = async () => {
-    if (!statusChangeCandidate) return;
-    const { venta, targetEstado, motivo } = statusChangeCandidate;
-
-    try {
-      await cambiarEstadoMutation.mutateAsync({
-        id: venta.id,
-        data: {
-          estadoDestino: targetEstado,
-          motivo: motivo || `Cambio de estado a ${EstadoVentaLabels[targetEstado]}`,
-        },
-      });
-      toast.success(
-        `Venta #${venta.numero} actualizada a "${EstadoVentaLabels[targetEstado]}".`
-      );
-      refetch();
-    } catch (error: any) {
-      const msg =
-        error?.response?.data?.detail ||
-        error?.message ||
-        "No se pudo actualizar el estado de la venta.";
-      toast.error(msg);
-    } finally {
-      setStatusChangeCandidate(null);
-      setConfirmStatusDialogOpen(false);
-    }
   };
 
   const handleConfirmStatusChange = async (
@@ -250,11 +203,15 @@ export function VentaModuleView() {
       toast.success(
         `Estado de la venta #${selectedVentaForStatus.numero} actualizado.`
       );
-      refetch();
-    } catch (error: any) {
+      await refetch();
+    } catch (error: unknown) {
+      const err = error as {
+        response?: { data?: { detail?: string } };
+        message?: string;
+      };
       const msg =
-        error?.response?.data?.detail ||
-        error?.message ||
+        err?.response?.data?.detail ||
+        err?.message ||
         "No se pudo actualizar el estado de la venta.";
       toast.error(msg);
     }
@@ -266,11 +223,15 @@ export function VentaModuleView() {
     try {
       await anularMutation.mutateAsync(ventaToAnularId);
       toast.success("Comprobante de venta anulado correctamente.");
-      refetch();
-    } catch (error: any) {
+      await refetch();
+    } catch (error: unknown) {
+      const err = error as {
+        response?: { data?: { detail?: string } };
+        message?: string;
+      };
       const msg =
-        error?.response?.data?.detail ||
-        error?.message ||
+        err?.response?.data?.detail ||
+        err?.message ||
         "Ocurrió un error al anular el comprobante de venta.";
       toast.error(msg);
     } finally {
@@ -310,7 +271,6 @@ export function VentaModuleView() {
             onPageSizeChange={handlePageSizeChange}
             onViewDetail={handleViewDetail}
             onEnviarACaja={handleOpenEnviarCaja}
-            onDirectChangeStatus={handleRequestDirectChangeStatus}
             onChangeStatus={handleOpenStatusDialog}
             onAnular={handleOpenAnular}
             onRefresh={() => refetch()}
@@ -322,7 +282,6 @@ export function VentaModuleView() {
           <VentaDetailCard
             venta={selectedVentaForDetail}
             onEnviarACajaClick={handleOpenEnviarCaja}
-            onDirectChangeStatus={handleRequestDirectChangeStatus}
             onChangeStatusClick={handleOpenStatusDialog}
             onAnularClick={handleOpenAnular}
           />
@@ -363,15 +322,6 @@ export function VentaModuleView() {
         isLoading={cambiarEstadoMutation.isPending}
       />
 
-      {/* Alert Dialog: Confirmación Rápida de Cambio de Estado */}
-      <VentaConfirmStatusDialog
-        open={confirmStatusDialogOpen}
-        onOpenChange={setConfirmStatusDialogOpen}
-        venta={statusChangeCandidate?.venta ?? null}
-        targetEstado={statusChangeCandidate?.targetEstado ?? null}
-        onConfirm={handleExecuteStatusChange}
-        isLoading={cambiarEstadoMutation.isPending}
-      />
 
       {/* Modal: Confirmación de Anulación */}
       <ConfirmDeleteDialog

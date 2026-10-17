@@ -9,7 +9,7 @@ interface VentaStatusBadgeProps {
   className?: string;
 }
 
-export function VentaStatusBadge({ estado, className }: VentaStatusBadgeProps) {
+export function VentaStatusBadge({ estado, className }: Readonly<VentaStatusBadgeProps>) {
   switch (estado) {
     case EstadoVenta.Pendiente:
       return (
@@ -75,7 +75,7 @@ interface PagadorStatusBadgeProps {
   className?: string;
 }
 
-export function PagadorStatusBadge({ estado, className }: PagadorStatusBadgeProps) {
+export function PagadorStatusBadge({ estado, className }: Readonly<PagadorStatusBadgeProps>) {
   switch (estado) {
     case EstadoVentaPagador.Pendiente:
       return (

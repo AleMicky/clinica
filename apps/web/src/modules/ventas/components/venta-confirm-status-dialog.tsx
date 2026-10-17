@@ -91,7 +91,7 @@ export function VentaConfirmStatusDialog({
             <span className="block">
               ¿Está seguro de cambiar el estado de la venta{" "}
               <strong className="font-mono font-bold text-foreground">#{venta.numero}</strong> a{" "}
-              <strong className="font-bold text-foreground">"{targetLabel}"</strong>?
+              <strong className="font-bold text-foreground">&quot;{targetLabel}&quot;</strong>?
             </span>
             <span className="block text-[11px] text-muted-foreground">
               Total: <span className="font-mono font-bold text-foreground">Bs. {venta.total.toFixed(2)}</span>
