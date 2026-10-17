@@ -1,11 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { Search, X, Calendar, AlertTriangle } from "lucide-react";
+import { Search, X, Calendar, AlertTriangle, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -64,188 +63,205 @@ export function AdmisionReporteFilters({
 }: AdmisionReporteFiltersProps) {
   const isDateInverted = Boolean(fechaDesde && fechaHasta && fechaDesde > fechaHasta);
 
+  const isToday = fechaDesde === todayIso && fechaHasta === todayIso;
+  const isYesterday = fechaDesde === yesterdayIso && fechaHasta === yesterdayIso;
+  const isMonth = fechaDesde === startOfMonthIso && fechaHasta === todayIso;
+  const isAll = !fechaDesde && !fechaHasta;
+
   return (
-    <Card className="border border-border/70 bg-card shadow-2xs">
-      <CardContent className="p-3 space-y-2.5">
-        {/* Quick Presets Bar */}
-        <div className="flex items-center gap-1 flex-wrap pb-2 border-b border-border/40 text-xs">
-          <span className="text-[11px] font-semibold text-muted-foreground mr-1 flex items-center gap-1">
-            <Calendar className="size-3 text-primary" /> Período rápido:
+    <div className="bg-card/80 backdrop-blur-sm border border-border/40 rounded-2xl p-4 shadow-xs space-y-3.5 transition-all">
+      {/* 1. Quick Presets Pill Bar */}
+      <div className="flex items-center justify-between gap-2 flex-wrap pb-3 border-b border-border/30">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-[11px] font-semibold text-muted-foreground mr-1 flex items-center gap-1.5">
+            <Calendar className="size-3.5 text-primary" /> Período rápido:
           </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onApplyPreset("hoy")}
-            className={cn(
-              "h-6.5 px-2 text-[11px] rounded-md cursor-pointer",
-              fechaDesde === todayIso && fechaHasta === todayIso && "bg-primary/10 text-primary border-primary/30 font-semibold"
-            )}
-          >
-            Hoy
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onApplyPreset("ayer")}
-            className={cn(
-              "h-6.5 px-2 text-[11px] rounded-md cursor-pointer",
-              fechaDesde === yesterdayIso && fechaHasta === yesterdayIso && "bg-primary/10 text-primary border-primary/30 font-semibold"
-            )}
-          >
-            Ayer
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onApplyPreset("semana")}
-            className="h-6.5 px-2 text-[11px] rounded-md cursor-pointer"
-          >
-            Esta Semana
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onApplyPreset("mes")}
-            className={cn(
-              "h-6.5 px-2 text-[11px] rounded-md cursor-pointer",
-              fechaDesde === startOfMonthIso && fechaHasta === todayIso && "bg-primary/10 text-primary border-primary/30 font-semibold"
-            )}
-          >
-            Este Mes
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onApplyPreset("30dias")}
-            className="h-6.5 px-2 text-[11px] rounded-md cursor-pointer"
-          >
-            Últimos 30 días
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onApplyPreset("todo")}
-            className={cn(
-              "h-6.5 px-2 text-[11px] rounded-md cursor-pointer",
-              !fechaDesde && !fechaHasta && "bg-primary/10 text-primary border-primary/30 font-semibold"
-            )}
-          >
-            Todo el Historial
-          </Button>
-
-          {hasActiveFilters && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClearFilters}
-              className="h-6.5 px-1.5 text-[11px] text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 ml-auto gap-1 cursor-pointer"
-            >
-              <X className="size-3" />
-              Limpiar filtros
-            </Button>
-          )}
-        </div>
-
-        {/* Date Validation Alert if inverted */}
-        {isDateInverted && (
-          <div className="flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] font-medium bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30 rounded-lg">
-            <AlertTriangle className="size-3.5 shrink-0" />
-            <span>Atención: La fecha inicial es posterior a la fecha final. Por favor verifique el rango.</span>
-          </div>
-        )}
-
-        {/* Form Filter Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5 items-end">
-          {/* Search Input */}
-          <div className="space-y-1">
-            <Label className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
-              <Search className="size-3" /> Búsqueda General
-            </Label>
-            <div className="relative">
-              <Input
-                placeholder="N° admisión, paciente, DNI, HC..."
-                value={searchTerm}
-                onChange={(e) => onSearchChange(e.target.value)}
-                className="h-8 text-xs pl-7.5 pr-7"
-              />
-              <Search className="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-              {searchTerm && (
-                <button
-                  type="button"
-                  onClick={() => onSearchChange("")}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 cursor-pointer"
-                >
-                  <X className="size-3" />
-                </button>
+          <div className="inline-flex items-center gap-1 p-0.5 bg-muted/40 rounded-xl">
+            <button
+              type="button"
+              onClick={() => onApplyPreset("hoy")}
+              className={cn(
+                "h-7 px-2.5 text-xs font-medium rounded-lg transition-all cursor-pointer",
+                isToday
+                  ? "bg-primary text-primary-foreground shadow-2xs font-semibold"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
               )}
-            </div>
-          </div>
-
-          {/* Fecha Desde */}
-          <div className="space-y-1">
-            <Label className="text-[11px] font-medium text-muted-foreground">Fecha Desde</Label>
-            <Input
-              type="date"
-              value={fechaDesde}
-              onChange={(e) => onFechaDesdeChange(e.target.value)}
-              className={cn("h-8 text-xs", isDateInverted && "border-amber-500 focus-visible:ring-amber-500")}
-            />
-          </div>
-
-          {/* Fecha Hasta */}
-          <div className="space-y-1">
-            <Label className="text-[11px] font-medium text-muted-foreground">Fecha Hasta</Label>
-            <Input
-              type="date"
-              value={fechaHasta}
-              onChange={(e) => onFechaHastaChange(e.target.value)}
-              className={cn("h-8 text-xs", isDateInverted && "border-amber-500 focus-visible:ring-amber-500")}
-            />
-          </div>
-
-          {/* Estado Selector */}
-          <div className="space-y-1">
-            <Label className="text-[11px] font-medium text-muted-foreground">Estado</Label>
-            <Select
-              value={selectedEstado}
-              onValueChange={(val) => onSelectedEstadoChange(val ?? "TODOS")}
             >
-              <SelectTrigger className="h-8 text-xs w-full">
-                <SelectValue placeholder="Todos los Estados" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="TODOS">Todos los Estados</SelectItem>
-                <SelectItem value={String(EstadoAdmision.Registrada)}>Registrada</SelectItem>
-                <SelectItem value={String(EstadoAdmision.Confirmada)}>Confirmada</SelectItem>
-                <SelectItem value={String(EstadoAdmision.EnviadaVenta)}>Enviada a Venta</SelectItem>
-                <SelectItem value={String(EstadoAdmision.Cancelada)}>Cancelada</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Convenio / Cobertura */}
-          <div className="space-y-1">
-            <Label className="text-[11px] font-medium text-muted-foreground">Convenio / Seguro</Label>
-            <Select
-              value={selectedConvenioId}
-              onValueChange={(val) => onSelectedConvenioIdChange(val ?? "TODOS")}
+              Hoy
+            </button>
+            <button
+              type="button"
+              onClick={() => onApplyPreset("ayer")}
+              className={cn(
+                "h-7 px-2.5 text-xs font-medium rounded-lg transition-all cursor-pointer",
+                isYesterday
+                  ? "bg-primary text-primary-foreground shadow-2xs font-semibold"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
+              )}
             >
-              <SelectTrigger className="h-8 text-xs w-full">
-                <SelectValue placeholder="Todas las Coberturas" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="TODOS">Todas las Coberturas</SelectItem>
-                <SelectItem value="-1">Particular (Sin Convenio)</SelectItem>
-                {convenios.map((c) => (
-                  <SelectItem key={c.id} value={String(c.id)}>
-                    {c.nombre}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              Ayer
+            </button>
+            <button
+              type="button"
+              onClick={() => onApplyPreset("semana")}
+              className="h-7 px-2.5 text-xs font-medium rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-all cursor-pointer"
+            >
+              Esta Semana
+            </button>
+            <button
+              type="button"
+              onClick={() => onApplyPreset("mes")}
+              className={cn(
+                "h-7 px-2.5 text-xs font-medium rounded-lg transition-all cursor-pointer",
+                isMonth
+                  ? "bg-primary text-primary-foreground shadow-2xs font-semibold"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
+              )}
+            >
+              Este Mes
+            </button>
+            <button
+              type="button"
+              onClick={() => onApplyPreset("30dias")}
+              className="h-7 px-2.5 text-xs font-medium rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-all cursor-pointer"
+            >
+              Últimos 30 días
+            </button>
+            <button
+              type="button"
+              onClick={() => onApplyPreset("todo")}
+              className={cn(
+                "h-7 px-2.5 text-xs font-medium rounded-lg transition-all cursor-pointer",
+                isAll
+                  ? "bg-primary text-primary-foreground shadow-2xs font-semibold"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
+              )}
+            >
+              Todo el Historial
+            </button>
           </div>
         </div>
-      </CardContent>
-    </Card>
+
+        {hasActiveFilters && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClearFilters}
+            className="h-7 px-2.5 text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 rounded-lg gap-1.5 cursor-pointer font-medium"
+          >
+            <RotateCcw className="size-3" />
+            Restablecer filtros
+          </Button>
+        )}
+      </div>
+
+      {/* Date Validation Alert if inverted */}
+      {isDateInverted && (
+        <div className="flex items-center gap-2 px-3 py-2 text-xs font-medium bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/20 rounded-xl animate-in fade-in">
+          <AlertTriangle className="size-4 shrink-0 text-amber-600 dark:text-amber-400" />
+          <span>La fecha inicial es posterior a la final. Ajuste el rango de fechas para ver resultados coherentes.</span>
+        </div>
+      )}
+
+      {/* 2. Main Filter Inputs Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 items-end">
+        {/* Search Input */}
+        <div className="space-y-1.5">
+          <Label className="text-[11px] font-medium text-muted-foreground flex items-center gap-1.5">
+            <Search className="size-3 text-muted-foreground" /> Búsqueda General
+          </Label>
+          <div className="relative">
+            <Input
+              placeholder="N° admisión, paciente, DNI, HC..."
+              value={searchTerm}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="h-8.5 text-xs pl-8 pr-7 rounded-xl bg-muted/30 hover:bg-muted/50 focus:bg-background border-border/50 transition-colors"
+            />
+            <Search className="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => onSearchChange("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 cursor-pointer rounded-full hover:bg-muted"
+                title="Limpiar búsqueda"
+              >
+                <X className="size-3" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Fecha Desde */}
+        <div className="space-y-1.5">
+          <Label className="text-[11px] font-medium text-muted-foreground">Fecha Inicial</Label>
+          <Input
+            type="date"
+            value={fechaDesde}
+            onChange={(e) => onFechaDesdeChange(e.target.value)}
+            className={cn(
+              "h-8.5 text-xs rounded-xl bg-muted/30 hover:bg-muted/50 focus:bg-background border-border/50 transition-colors",
+              isDateInverted && "border-amber-500 focus-visible:ring-amber-500"
+            )}
+          />
+        </div>
+
+        {/* Fecha Hasta */}
+        <div className="space-y-1.5">
+          <Label className="text-[11px] font-medium text-muted-foreground">Fecha Final</Label>
+          <Input
+            type="date"
+            value={fechaHasta}
+            onChange={(e) => onFechaHastaChange(e.target.value)}
+            className={cn(
+              "h-8.5 text-xs rounded-xl bg-muted/30 hover:bg-muted/50 focus:bg-background border-border/50 transition-colors",
+              isDateInverted && "border-amber-500 focus-visible:ring-amber-500"
+            )}
+          />
+        </div>
+
+        {/* Estado Selector */}
+        <div className="space-y-1.5">
+          <Label className="text-[11px] font-medium text-muted-foreground">Estado de Admisión</Label>
+          <Select
+            value={selectedEstado}
+            onValueChange={(val) => onSelectedEstadoChange(val ?? "TODOS")}
+          >
+            <SelectTrigger className="h-8.5 text-xs w-full rounded-xl bg-muted/30 hover:bg-muted/50 focus:bg-background border-border/50 transition-colors">
+              <SelectValue placeholder="Todos los Estados" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="TODOS">Todos los Estados</SelectItem>
+              <SelectItem value={String(EstadoAdmision.Registrada)}>Registrada</SelectItem>
+              <SelectItem value={String(EstadoAdmision.Confirmada)}>Confirmada</SelectItem>
+              <SelectItem value={String(EstadoAdmision.EnviadaVenta)}>Enviada a Venta</SelectItem>
+              <SelectItem value={String(EstadoAdmision.Cancelada)}>Cancelada</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Convenio / Cobertura */}
+        <div className="space-y-1.5">
+          <Label className="text-[11px] font-medium text-muted-foreground">Convenio / Seguro</Label>
+          <Select
+            value={selectedConvenioId}
+            onValueChange={(val) => onSelectedConvenioIdChange(val ?? "TODOS")}
+          >
+            <SelectTrigger className="h-8.5 text-xs w-full rounded-xl bg-muted/30 hover:bg-muted/50 focus:bg-background border-border/50 transition-colors">
+              <SelectValue placeholder="Todas las Coberturas" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="TODOS">Todas las Coberturas</SelectItem>
+              <SelectItem value="-1">Particular (Sin Convenio)</SelectItem>
+              {convenios.map((c) => (
+                <SelectItem key={c.id} value={String(c.id)}>
+                  {c.nombre}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+    </div>
   );
 }
+

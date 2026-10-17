@@ -256,7 +256,7 @@ export function AdmisionReporteView() {
   };
 
   return (
-    <div className="space-y-2.5 max-w-[1600px] mx-auto pb-4">
+    <div className="space-y-3.5 max-w-[1600px] mx-auto pb-8">
       {/* 1. Header & Quick Actions */}
       <AdmisionReporteHeader
         totalItems={totalItems}

@@ -35,22 +35,26 @@ export function AdmisionReporteHeader({
   const isBusy = isLoading || isFetching;
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-card via-card to-primary/5 px-4 py-2.5 rounded-xl border border-border/70 shadow-2xs">
-      <div className="flex items-center gap-3">
-        <div className="size-8.5 rounded-xl bg-gradient-to-br from-emerald-500/20 via-emerald-500/10 to-teal-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/30 shadow-2xs shrink-0">
-          <FileSpreadsheet className="size-4.5" />
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-card/80 backdrop-blur-sm px-5 py-4 rounded-2xl border border-border/40 shadow-xs transition-all">
+      <div className="flex items-center gap-3.5">
+        <div className="size-11 rounded-xl bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-emerald-500/5 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20 shadow-xs shrink-0">
+          <FileSpreadsheet className="size-5.5" />
         </div>
-        <div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-base font-bold text-foreground tracking-tight">
-              Reporte de Admisiones y Prestaciones
+        <div className="space-y-0.5">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <h1 className="text-lg font-bold text-foreground tracking-tight">
+              Reporte General de Admisiones
             </h1>
-            <span className="text-[10px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/20">
-              Auditoría & Analítica en Vivo
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+              <span className="relative flex size-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full size-2 bg-emerald-500" />
+              </span>
+              Analítica en Vivo
             </span>
           </div>
-          <p className="text-[11px] text-muted-foreground line-clamp-1">
-            Filtre por período, estado, cobertura médica y exporte los registros oficiales a Excel (.xlsx).
+          <p className="text-xs text-muted-foreground line-clamp-1">
+            Consolidado asistencial, trazabilidad de pacientes, prestaciones médicas y exportación contable oficial.
           </p>
         </div>
       </div>
@@ -60,11 +64,15 @@ export function AdmisionReporteHeader({
           variant="outline"
           size="sm"
           onClick={onToggleCharts}
-          className="h-8 px-2.5 text-xs gap-1.5 border-border/80 hover:bg-accent transition-all cursor-pointer"
+          className="h-8.5 px-3 text-xs gap-1.5 rounded-lg border-border/60 hover:bg-muted/60 transition-all cursor-pointer font-medium"
           title={showCharts ? "Ocultar panel gráfico" : "Mostrar panel gráfico"}
         >
-          {showCharts ? <EyeOff className="size-3.5 text-muted-foreground" /> : <BarChart3 className="size-3.5 text-primary" />}
-          <span className="hidden sm:inline">{showCharts ? "Ocultar Gráficos" : "Ver Gráficos"}</span>
+          {showCharts ? (
+            <EyeOff className="size-3.5 text-muted-foreground" />
+          ) : (
+            <BarChart3 className="size-3.5 text-primary" />
+          )}
+          <span>{showCharts ? "Ocultar Gráficos" : "Ver Gráficos"}</span>
         </Button>
 
         <Button
@@ -72,7 +80,8 @@ export function AdmisionReporteHeader({
           size="sm"
           onClick={onRefresh}
           disabled={isBusy}
-          className="h-8 px-2.5 text-xs gap-1.5 border-border/80 hover:bg-accent transition-all cursor-pointer"
+          className="h-8.5 px-3 text-xs gap-1.5 rounded-lg border-border/60 hover:bg-muted/60 transition-all cursor-pointer font-medium"
+          title="Actualizar datos del servidor"
         >
           <RefreshCw className={cn("size-3.5", isBusy && "animate-spin text-primary")} />
           <span className="hidden md:inline">Actualizar</span>
@@ -82,11 +91,11 @@ export function AdmisionReporteHeader({
           size="sm"
           onClick={onExportExcel}
           disabled={isExporting || isLoading || totalItems === 0}
-          className="h-8 px-3 text-xs font-semibold gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-xs shadow-emerald-600/25 transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          className="h-8.5 px-3.5 text-xs font-semibold gap-2 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-xs shadow-emerald-600/25 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           title={totalItems === 0 ? "No hay registros disponibles para exportar" : "Descargar archivo Excel"}
         >
           <Download className={cn("size-3.5", isExporting && "animate-bounce")} />
-          <span>Exportar Excel (.xlsx)</span>
+          <span>Exportar Excel</span>
           {totalItems > 0 && (
             <span className="text-[10px] font-bold bg-white/20 px-1.5 py-0.2 rounded-full">
               {totalItems}
@@ -97,3 +106,4 @@ export function AdmisionReporteHeader({
     </div>
   );
 }
+

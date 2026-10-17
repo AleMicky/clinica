@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { BarChart3, ShieldCheck } from "lucide-react";
+import { BarChart3, ShieldCheck, PieChart as PieChartIcon } from "lucide-react";
 import {
   ResponsiveContainer,
   BarChart,
@@ -13,15 +13,10 @@ import {
   Pie,
   Rectangle,
   Sector,
+  CartesianGrid,
   type BarShapeProps,
   type PieSectorShapeProps,
 } from "recharts";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import type { AdmisionMetrics } from "../../types/admision.types";
 
 interface AdmisionReporteChartsProps {
@@ -29,7 +24,7 @@ interface AdmisionReporteChartsProps {
   isLoading: boolean;
 }
 
-const PIE_COLORS = ["#2563EB", "#10B981", "#8B5CF6", "#F59E0B", "#06B6D4"];
+const PIE_COLORS = ["#2563EB", "#10B981", "#8B5CF6", "#F59E0B", "#06B6D4", "#EC4899"];
 
 export function AdmisionReporteCharts({
   metrics,
@@ -62,9 +57,9 @@ export function AdmisionReporteCharts({
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-2.5">
-        <div className="h-44 bg-muted/30 rounded-xl border border-border/50 animate-pulse lg:col-span-2" />
-        <div className="h-44 bg-muted/30 rounded-xl border border-border/50 animate-pulse" />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5">
+        <div className="h-48 bg-muted/20 rounded-2xl border border-border/30 animate-pulse lg:col-span-2" />
+        <div className="h-48 bg-muted/20 rounded-2xl border border-border/30 animate-pulse" />
       </div>
     );
   }
@@ -74,43 +69,53 @@ export function AdmisionReporteCharts({
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-2.5">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5">
       {/* Chart 1: Distribución por Estado */}
-      <Card className="border border-border/70 bg-card shadow-2xs lg:col-span-2">
-        <CardHeader className="py-2.5 px-3 border-b border-border/40">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <BarChart3 className="size-3.5 text-primary" />
-              <CardTitle className="text-xs font-bold text-foreground">
-                Volumen Total por Estado (Datos del Servidor)
-              </CardTitle>
+      <div className="bg-card/90 backdrop-blur-sm rounded-2xl border border-border/40 p-4 shadow-xs lg:col-span-2 transition-all">
+        <div className="flex items-center justify-between pb-3 border-b border-border/30">
+          <div className="flex items-center gap-2">
+            <div className="size-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+              <BarChart3 className="size-4" />
             </div>
-            <span className="text-[10px] text-muted-foreground font-mono">
-              {total} admisiones
-            </span>
+            <div>
+              <h3 className="text-xs font-bold text-foreground">
+                Distribución de Admisiones por Estado
+              </h3>
+              <p className="text-[11px] text-muted-foreground">
+                Volumen acumulado evaluado en el período
+              </p>
+            </div>
           </div>
-        </CardHeader>
-        <CardContent className="p-2.5 pt-3">
-          <div className="h-32 w-full">
+          <span className="text-[11px] font-semibold font-mono bg-muted/60 text-muted-foreground px-2 py-0.5 rounded-md">
+            {total} totales
+          </span>
+        </div>
+
+        <div className="pt-3">
+          <div className="h-36 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={statusChartData} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
-                <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-                <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+              <BarChart data={statusChartData} margin={{ top: 8, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.15} />
+                <XAxis dataKey="name" tick={{ fontSize: 11 }} tickLine={false} axisLine={{ opacity: 0.2 }} />
+                <YAxis tick={{ fontSize: 11 }} allowDecimals={false} tickLine={false} axisLine={false} />
                 <Tooltip
+                  cursor={{ fill: "currentColor", opacity: 0.04 }}
                   contentStyle={{
                     backgroundColor: "var(--card)",
                     borderColor: "var(--border)",
-                    borderRadius: "8px",
-                    fontSize: "11px",
+                    borderRadius: "12px",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                    fontSize: "12px",
+                    padding: "6px 12px",
                   }}
                 />
                 <Bar
                   dataKey="cantidad"
-                  radius={[4, 4, 0, 0]}
+                  radius={[6, 6, 0, 0]}
                   shape={(props: BarShapeProps) => (
                     <Rectangle
                       {...props}
-                      radius={[4, 4, 0, 0]}
+                      radius={[6, 6, 0, 0]}
                       fill={statusChartData[props.index]?.color ?? props.fill}
                     />
                   )}
@@ -118,22 +123,31 @@ export function AdmisionReporteCharts({
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Chart 2: Top Coberturas / Convenios */}
-      <Card className="border border-border/70 bg-card shadow-2xs">
-        <CardHeader className="py-2.5 px-3 border-b border-border/40">
-          <div className="flex items-center gap-1.5">
-            <ShieldCheck className="size-3.5 text-emerald-600 dark:text-emerald-400" />
-            <CardTitle className="text-xs font-bold text-foreground">
-              Top Coberturas Médicas
-            </CardTitle>
+      <div className="bg-card/90 backdrop-blur-sm rounded-2xl border border-border/40 p-4 shadow-xs transition-all">
+        <div className="flex items-center justify-between pb-3 border-b border-border/30">
+          <div className="flex items-center gap-2">
+            <div className="size-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+              <ShieldCheck className="size-4" />
+            </div>
+            <div>
+              <h3 className="text-xs font-bold text-foreground">
+                Top Coberturas Médicas
+              </h3>
+              <p className="text-[11px] text-muted-foreground">
+                Participación por aseguradora
+              </p>
+            </div>
           </div>
-        </CardHeader>
-        <CardContent className="p-2.5 pt-3">
+          <PieChartIcon className="size-4 text-muted-foreground/60" />
+        </div>
+
+        <div className="pt-3">
           {convenioChartData.length > 0 ? (
-            <div className="h-32 w-full">
+            <div className="h-36 w-full flex items-center justify-center">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -142,7 +156,9 @@ export function AdmisionReporteCharts({
                     nameKey="name"
                     cx="50%"
                     cy="50%"
-                    outerRadius={46}
+                    innerRadius={32}
+                    outerRadius={52}
+                    paddingAngle={3}
                     label={({ percent }: { percent?: number }) =>
                       `${(((percent ?? 0) * 100)).toFixed(0)}%`
                     }
@@ -155,6 +171,14 @@ export function AdmisionReporteCharts({
                     )}
                   />
                   <Tooltip
+                    contentStyle={{
+                      backgroundColor: "var(--card)",
+                      borderColor: "var(--border)",
+                      borderRadius: "12px",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                      fontSize: "12px",
+                      padding: "6px 12px",
+                    }}
                     formatter={(value: unknown, name: unknown) => [
                       `${value} admisiones`,
                       String(name),
@@ -164,12 +188,14 @@ export function AdmisionReporteCharts({
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="h-32 flex items-center justify-center text-xs text-muted-foreground">
-              Sin datos de coberturas para el filtro
+            <div className="h-36 flex flex-col items-center justify-center text-xs text-muted-foreground gap-1">
+              <ShieldCheck className="size-6 text-muted-foreground/40" />
+              <span>Sin desglose de convenios en el período</span>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
+
