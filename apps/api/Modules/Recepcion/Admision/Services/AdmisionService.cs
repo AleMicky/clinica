@@ -39,6 +39,7 @@ public sealed class AdmisionService(
         EstadoAdmision? estado = null,
         DateOnly? fechaDesde = null,
         DateOnly? fechaHasta = null,
+        int? convenioId = null,
         CancellationToken cancellationToken = default)
     {
         var usuarioId = currentUserService.UserId ?? throw new UnauthorizedAccessException();
@@ -68,6 +69,13 @@ public sealed class AdmisionService(
         if (estado.HasValue)
         {
             query = query.Where(x => x.Estado == estado.Value);
+        }
+
+        if (convenioId.HasValue)
+        {
+            query = convenioId.Value <= 0
+                ? query.Where(x => x.ConvenioId == null)
+                : query.Where(x => x.ConvenioId == convenioId.Value);
         }
 
         if (fechaDesde.HasValue)
@@ -151,7 +159,9 @@ public sealed class AdmisionService(
 
         if (convenioId.HasValue)
         {
-            query = query.Where(x => x.ConvenioId == convenioId.Value);
+            query = convenioId.Value <= 0
+                ? query.Where(x => x.ConvenioId == null)
+                : query.Where(x => x.ConvenioId == convenioId.Value);
         }
 
         if (fechaDesde.HasValue)
@@ -223,8 +233,11 @@ public sealed class AdmisionService(
     }
 
     public async Task<AdmisionMetricsResponse> ObtenerMetricasAsync(
+        string? search = null,
+        EstadoAdmision? estado = null,
         DateOnly? fechaDesde = null,
         DateOnly? fechaHasta = null,
+        int? convenioId = null,
         CancellationToken cancellationToken = default)
     {
         var usuarioId = currentUserService.UserId ?? throw new UnauthorizedAccessException();
@@ -245,6 +258,18 @@ public sealed class AdmisionService(
             query = query.Where(x => x.RecepcionistaId == empleadoId);
         }
 
+        if (estado.HasValue)
+        {
+            query = query.Where(x => x.Estado == estado.Value);
+        }
+
+        if (convenioId.HasValue)
+        {
+            query = convenioId.Value <= 0
+                ? query.Where(x => x.ConvenioId == null)
+                : query.Where(x => x.ConvenioId == convenioId.Value);
+        }
+
         if (fechaDesde.HasValue)
         {
             var desdeDateTime = fechaDesde.Value.ToDateTime(TimeOnly.MinValue);
@@ -257,11 +282,26 @@ public sealed class AdmisionService(
             query = query.Where(x => x.FechaHora <= hastaDateTime);
         }
 
+        var normalizedSearch = search.TrimOrNull();
+        if (normalizedSearch is not null)
+        {
+            query = query.Where(x =>
+                x.Numero.Contains(normalizedSearch) ||
+                (x.Observacion != null && x.Observacion.Contains(normalizedSearch)) ||
+                x.Paciente.NumeroHistoriaClinica.Contains(normalizedSearch) ||
+                x.Paciente.Persona.Nombres.Contains(normalizedSearch) ||
+                x.Paciente.Persona.ApellidoPaterno.Contains(normalizedSearch) ||
+                (x.Paciente.Persona.ApellidoMaterno != null &&
+                 x.Paciente.Persona.ApellidoMaterno.Contains(normalizedSearch)) ||
+                x.Paciente.Persona.NumeroDocumento.Contains(normalizedSearch)
+            );
+        }
+
         var stats = await query
             .GroupBy(_ => 1)
             .Select(g => new
             {
-                TotalHoy = g.Count(),
+                Total = g.Count(),
                 Registradas = g.Count(x => x.Estado == EstadoAdmision.Registrada),
                 Confirmadas = g.Count(x => x.Estado == EstadoAdmision.Confirmada),
                 EnviadasVenta = g.Count(x => x.Estado == EstadoAdmision.EnviadaVenta),
@@ -274,19 +314,39 @@ public sealed class AdmisionService(
             return new AdmisionMetricsResponse();
         }
 
-        var montoTotalHoy = await query
+        var montoTotal = await query
             .Where(x => x.Estado != EstadoAdmision.Cancelada)
             .SelectMany(x => x.Detalles.Where(d => d.Activo))
             .SumAsync(d => (decimal?)d.Total, cancellationToken) ?? 0m;
 
+        var efectivas = stats.Confirmadas + stats.EnviadasVenta;
+        var tasaEfectividad = stats.Total > 0
+            ? Math.Round(((decimal)efectivas / stats.Total) * 100m, 1)
+            : 0m;
+
+        var topConvenios = await query
+            .GroupBy(x => new { x.ConvenioId, Nombre = x.Convenio != null ? x.Convenio.Nombre : "Particular" })
+            .Select(g => new TopConvenioMetricaDto
+            {
+                ConvenioId = g.Key.ConvenioId,
+                Nombre = g.Key.Nombre,
+                Cantidad = g.Count(),
+                Monto = 0m
+            })
+            .OrderByDescending(x => x.Cantidad)
+            .Take(5)
+            .ToListAsync(cancellationToken);
+
         return new AdmisionMetricsResponse
         {
-            TotalHoy = stats.TotalHoy,
+            TotalHoy = stats.Total,
             Registradas = stats.Registradas,
             Confirmadas = stats.Confirmadas,
             EnviadasVenta = stats.EnviadasVenta,
             Canceladas = stats.Canceladas,
-            MontoTotalHoy = montoTotalHoy
+            MontoTotalHoy = montoTotal,
+            TasaEfectividad = tasaEfectividad,
+            TopConvenios = topConvenios
         };
     }
 

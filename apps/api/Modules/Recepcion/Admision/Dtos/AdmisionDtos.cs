@@ -58,12 +58,24 @@ public sealed record ConvenioInfo
     public string Nombre { get; init; } = string.Empty;
 }
 
+public sealed record TopConvenioMetricaDto
+{
+    public int? ConvenioId { get; init; }
+    public string Nombre { get; init; } = string.Empty;
+    public int Cantidad { get; init; }
+    public decimal Monto { get; init; }
+}
+
 public sealed record AdmisionMetricsResponse
 {
     public int TotalHoy { get; init; }
+    public int Total => TotalHoy;
     public int Registradas { get; init; }
     public int Confirmadas { get; init; }
     public int EnviadasVenta { get; init; }
     public int Canceladas { get; init; }
     public decimal MontoTotalHoy { get; init; }
+    public decimal MontoTotal => MontoTotalHoy;
+    public decimal TasaEfectividad { get; init; }
+    public List<TopConvenioMetricaDto> TopConvenios { get; init; } = [];
 }

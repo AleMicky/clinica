@@ -234,16 +234,31 @@ export interface AdmisionCounts {
   canceladas: number;
 }
 
+export interface TopConvenioMetrica {
+  convenioId?: number | null;
+  nombre: string;
+  cantidad: number;
+  monto: number;
+}
+
 export interface AdmisionMetrics {
   totalHoy: number;
+  total?: number;
   registradas: number;
   confirmadas: number;
   enviadasVenta: number;
   canceladas?: number;
   montoTotalHoy: number;
+  montoTotal?: number;
+  tasaEfectividad?: number;
+  topConvenios?: TopConvenioMetrica[];
 }
 
 export interface AdmisionMetricsQueryParams {
+  search?: string;
+  estado?: EstadoAdmision;
   fechaDesde?: string;
   fechaHasta?: string;
+  convenioId?: number;
 }
+

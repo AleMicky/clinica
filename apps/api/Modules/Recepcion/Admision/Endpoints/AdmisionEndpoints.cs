@@ -82,6 +82,7 @@ public static class AdmisionEndpoints
         EstadoAdmision? estado,
         DateOnly? fechaDesde,
         DateOnly? fechaHasta,
+        int? convenioId,
         AdmisionService service,
         CancellationToken cancellationToken)
     {
@@ -92,19 +93,26 @@ public static class AdmisionEndpoints
                 estado,
                 fechaDesde,
                 fechaHasta,
+                convenioId,
                 cancellationToken));
     }
 
     private static async Task<IResult> ObtenerMetricasAsync(
+        string? search,
+        EstadoAdmision? estado,
         DateOnly? fechaDesde,
         DateOnly? fechaHasta,
+        int? convenioId,
         AdmisionService service,
         CancellationToken cancellationToken)
     {
         return Results.Ok(
             await service.ObtenerMetricasAsync(
+                search,
+                estado,
                 fechaDesde,
                 fechaHasta,
+                convenioId,
                 cancellationToken));
     }
 
