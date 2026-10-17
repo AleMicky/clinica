@@ -167,6 +167,17 @@ export function AppSidebar({
     });
   }, [menuTree]);
 
+  // Lista de todas las rutas del menú para desambiguar rutas que comparten prefijo (ej. /ventas vs /ventas/reportes)
+  const allRoutes = React.useMemo(() => {
+    const routes: string[] = [];
+    function collect(node: OpcionMenuTreeResponse) {
+      if (node.ruta) routes.push(node.ruta);
+      if (node.hijos && node.hijos.length > 0) node.hijos.forEach(collect);
+    }
+    enrichedMenuTree.forEach(collect);
+    return routes;
+  }, [enrichedMenuTree]);
+
   // Conjunto de IDs de grupos que contienen la ruta activa actual
   const activeGroupIds = React.useMemo(() => {
     if (!pathname || enrichedMenuTree.length === 0) return new Set<number>();
@@ -174,7 +185,7 @@ export function AppSidebar({
 
     function scanNode(node: OpcionMenuTreeResponse) {
       if (node.hijos && node.hijos.length > 0) {
-        const hasActive = node.hijos.some((child) => hasActiveDescendant(child, pathname));
+        const hasActive = node.hijos.some((child) => hasActiveDescendant(child, pathname, allRoutes));
         if (hasActive) {
           activeIds.add(node.id);
         }
@@ -184,7 +195,7 @@ export function AppSidebar({
 
     enrichedMenuTree.forEach(scanNode);
     return activeIds;
-  }, [pathname, enrichedMenuTree]);
+  }, [pathname, enrichedMenuTree, allRoutes]);
 
   const toggleGroup = (id: number) => {
     setToggledGroups((prev) => {
@@ -274,6 +285,7 @@ export function AppSidebar({
             toggledGroups={toggledGroups}
             activeGroupIds={activeGroupIds}
             onToggleGroup={toggleGroup}
+            allRoutes={allRoutes}
           />
         )}
       </SidebarContent>

@@ -15,19 +15,48 @@ import { getMenuLucideIcon } from "@/modules/seguridad/opcion-menu/components/op
 import type { OpcionMenuTreeResponse } from "@/modules/seguridad/opcion-menu/types/opcion-menu.types";
 import { cn } from "@/lib/utils";
 
-export function isRouteActive(pathname: string | null, route?: string | null): boolean {
+export function isRouteActive(
+  pathname: string | null,
+  route?: string | null,
+  allRoutes?: string[]
+): boolean {
   if (!pathname || !route) return false;
+  if (pathname === route) return true;
+
   if (route === "/dashboard") {
     return pathname === "/dashboard";
   }
-  return pathname === route || pathname.startsWith(route + "/");
+
+  // Verifica coincidencia por prefijo jerárquico (ej: /caja/arqueos/nuevo activa /caja/arqueos)
+  if (pathname.startsWith(route + "/")) {
+    // Si existe otra ruta más específica en el menú que coincide exactamente o como prefijo
+    // con el pathname actual, la ruta más específica tiene precedencia (ej: /ventas/reportes vs /ventas)
+    if (allRoutes && allRoutes.length > 0) {
+      const hasMoreSpecificMatch = allRoutes.some(
+        (otherRoute) =>
+          otherRoute !== route &&
+          otherRoute.length > route.length &&
+          (pathname === otherRoute || pathname.startsWith(otherRoute + "/"))
+      );
+      if (hasMoreSpecificMatch) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  return false;
 }
 
-export function hasActiveDescendant(node: OpcionMenuTreeResponse, pathname: string | null): boolean {
+export function hasActiveDescendant(
+  node: OpcionMenuTreeResponse,
+  pathname: string | null,
+  allRoutes?: string[]
+): boolean {
   if (!pathname) return false;
-  if (isRouteActive(pathname, node.ruta)) return true;
+  if (isRouteActive(pathname, node.ruta, allRoutes)) return true;
   if (node.hijos && node.hijos.length > 0) {
-    return node.hijos.some((child) => hasActiveDescendant(child, pathname));
+    return node.hijos.some((child) => hasActiveDescendant(child, pathname, allRoutes));
   }
   return false;
 }
@@ -39,6 +68,7 @@ interface SidebarNavProps {
   toggledGroups: Record<number, boolean>;
   activeGroupIds: Set<number>;
   onToggleGroup: (id: number) => void;
+  allRoutes?: string[];
 }
 
 export function SidebarNav({
@@ -48,7 +78,19 @@ export function SidebarNav({
   toggledGroups,
   activeGroupIds,
   onToggleGroup,
+  allRoutes,
 }: SidebarNavProps) {
+  const routesList = React.useMemo(() => {
+    if (allRoutes && allRoutes.length > 0) return allRoutes;
+    const routes: string[] = [];
+    function collect(node: OpcionMenuTreeResponse) {
+      if (node.ruta) routes.push(node.ruta);
+      if (node.hijos && node.hijos.length > 0) node.hijos.forEach(collect);
+    }
+    tree.forEach(collect);
+    return routes;
+  }, [allRoutes, tree]);
+
   return (
     <>
       {tree.map((category) => {
@@ -75,7 +117,7 @@ export function SidebarNav({
                       const GroupIcon = getMenuLucideIcon(item.icono);
                       const subItems = item.hijos || [];
                       const hasActiveChild = subItems.some((sub) =>
-                        hasActiveDescendant(sub, pathname)
+                        hasActiveDescendant(sub, pathname, routesList)
                       );
 
                       return (
@@ -121,7 +163,7 @@ export function SidebarNav({
                               {subItems.map((sub) => {
                                 const SubIcon = getMenuLucideIcon(sub.icono);
                                 const subHref = sub.ruta || "#";
-                                const isSubActive = isRouteActive(pathname, sub.ruta);
+                                const isSubActive = isRouteActive(pathname, sub.ruta, routesList);
 
                                 return (
                                   <SidebarMenuButton
@@ -139,8 +181,8 @@ export function SidebarNav({
                                     <div className="flex items-center gap-2 min-w-0">
                                       <SubIcon
                                         className={cn(
-                                          "size-3.5 shrink-0",
-                                          isSubActive ? "text-primary" : "text-muted-foreground/70"
+                                          "size-3.5 shrink-0 transition-colors",
+                                          isSubActive ? "text-primary" : "text-muted-foreground/70 group-hover/menu-button:text-sidebar-foreground"
                                         )}
                                       />
                                       <span className="truncate">{sub.nombre}</span>
@@ -157,7 +199,7 @@ export function SidebarNav({
                     // ====== NIVEL 2: ÍTEM DIRECTO ======
                     const Icon = getMenuLucideIcon(item.icono);
                     const itemHref = item.ruta || "#";
-                    const isActive = isRouteActive(pathname, item.ruta);
+                    const isActive = isRouteActive(pathname, item.ruta, routesList);
 
                     return (
                       <SidebarMenuItem key={item.id}>
@@ -176,7 +218,9 @@ export function SidebarNav({
                             <Icon
                               className={cn(
                                 "size-4 shrink-0 transition-colors",
-                                isActive ? "text-primary" : "text-primary/70"
+                                isActive
+                                  ? "text-primary"
+                                  : "text-muted-foreground group-hover/menu-button:text-sidebar-foreground"
                               )}
                             />
                             <span className="truncate">{item.nombre}</span>
@@ -190,7 +234,7 @@ export function SidebarNav({
                   (() => {
                     const Icon = getMenuLucideIcon(category.icono);
                     const itemHref = category.ruta || "#";
-                    const isActive = isRouteActive(pathname, category.ruta);
+                    const isActive = isRouteActive(pathname, category.ruta, routesList);
 
                     return (
                       <SidebarMenuItem key={category.id}>
@@ -209,7 +253,9 @@ export function SidebarNav({
                             <Icon
                               className={cn(
                                 "size-4 shrink-0 transition-colors",
-                                isActive ? "text-primary" : "text-primary/70"
+                                isActive
+                                  ? "text-primary"
+                                  : "text-muted-foreground group-hover/menu-button:text-sidebar-foreground"
                               )}
                             />
                             <span className="truncate">{category.nombre}</span>
