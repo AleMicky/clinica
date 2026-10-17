@@ -11,6 +11,7 @@ import {
   deleteVentaPagador,
   getVentaById,
   getVentaDetalles,
+  getVentaMetrics,
   getVentaPagadores,
   getVentas,
   updateVentaDetalle,
@@ -24,6 +25,7 @@ import type {
   CreateVentaRequest,
   UpdateVentaDetalleRequest,
   UpdateVentaPagadorRequest,
+  VentaMetricsQueryParams,
   VentaQueryParams,
 } from "../types/ventas.types";
 
@@ -31,6 +33,13 @@ export function useVentas(params?: VentaQueryParams) {
   return useQuery({
     queryKey: ventaKeys.list(params as Record<string, unknown>),
     queryFn: () => getVentas(params),
+  });
+}
+
+export function useVentaMetrics(params?: VentaMetricsQueryParams) {
+  return useQuery({
+    queryKey: ventaKeys.metrics(params as Record<string, unknown>),
+    queryFn: () => getVentaMetrics(params),
   });
 }
 

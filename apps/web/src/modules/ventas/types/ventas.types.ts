@@ -111,8 +111,8 @@ export interface VentaDetalleRequest {
   descuento: number;
 }
 
-export interface CreateVentaDetalleRequest extends VentaDetalleRequest { }
-export interface UpdateVentaDetalleRequest extends VentaDetalleRequest { }
+export type CreateVentaDetalleRequest = VentaDetalleRequest;
+export type UpdateVentaDetalleRequest = VentaDetalleRequest;
 
 export interface VentaPagadorRequest {
   tipo: TipoPagador;
@@ -120,8 +120,8 @@ export interface VentaPagadorRequest {
   monto: number;
 }
 
-export interface CreateVentaPagadorRequest extends VentaPagadorRequest { }
-export interface UpdateVentaPagadorRequest extends VentaPagadorRequest { }
+export type CreateVentaPagadorRequest = VentaPagadorRequest;
+export type UpdateVentaPagadorRequest = VentaPagadorRequest;
 
 export interface VentaRequest {
   admisionId: number;
@@ -133,8 +133,8 @@ export interface VentaRequest {
   pagadores: VentaPagadorRequest[];
 }
 
-export interface CreateVentaRequest extends VentaRequest { }
-export interface UpdateVentaRequest extends VentaRequest { }
+export type CreateVentaRequest = VentaRequest;
+export type UpdateVentaRequest = VentaRequest;
 
 export interface CambiarEstadoVentaRequest {
   estadoDestino: EstadoVenta;
@@ -155,6 +155,12 @@ export interface PagedResult<T> {
   pageNumber: number;
   pageSize: number;
   totalPages: number;
+}
+
+export interface VentaMetricsQueryParams {
+  search?: string;
+  fechaDesde?: string;
+  fechaHasta?: string;
 }
 
 export interface VentaMetrics {

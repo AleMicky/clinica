@@ -65,6 +65,59 @@ public sealed class VentaService(
             totalItems);
     }
 
+    public async Task<VentaMetricsResponse> ObtenerMetricasAsync(
+        string? search = null,
+        DateOnly? fechaDesde = null,
+        DateOnly? fechaHasta = null,
+        CancellationToken cancellationToken = default)
+    {
+        var query = Entities
+            .AsNoTracking()
+            .Where(x => x.Activo);
+
+        if (fechaDesde.HasValue)
+        {
+            var desdeDateTime = fechaDesde.Value.ToDateTime(TimeOnly.MinValue);
+            query = query.Where(x => x.Fecha >= desdeDateTime);
+        }
+
+        if (fechaHasta.HasValue)
+        {
+            var hastaDateTime = fechaHasta.Value.ToDateTime(TimeOnly.MaxValue);
+            query = query.Where(x => x.Fecha <= hastaDateTime);
+        }
+
+        query = ApplySearch(query, search?.Trim());
+
+        var stats = await query
+            .GroupBy(_ => 1)
+            .Select(g => new
+            {
+                Total = g.Count(),
+                Pendientes = g.Count(x => x.Estado == EstadoVenta.Pendiente),
+                PendientesCobro = g.Count(x => x.Estado == EstadoVenta.PendienteCobro),
+                Pagadas = g.Count(x => x.Estado == EstadoVenta.Pagada || x.Estado == EstadoVenta.ParcialmentePagada),
+                Anuladas = g.Count(x => x.Estado == EstadoVenta.Anulada),
+                MontoTotal = g.Sum(x => x.Estado != EstadoVenta.Anulada ? x.Total : 0m)
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (stats is null)
+        {
+            return new VentaMetricsResponse();
+        }
+
+        return new VentaMetricsResponse
+        {
+            TotalVentas = stats.Total,
+            Pendientes = stats.Pendientes,
+            PendientesCobro = stats.PendientesCobro,
+            Pagadas = stats.Pagadas,
+            Anuladas = stats.Anuladas,
+            MontoTotal = stats.MontoTotal
+        };
+    }
+
     public async Task<VentaResponse> ObtenerAsync(
         int id,
         CancellationToken cancellationToken = default)

@@ -20,6 +20,9 @@ public static class VentaEndpoints
         group.MapGet("/", ListarAsync)
             .WithName("ListarVentas");
 
+        group.MapGet("/metricas", ObtenerMetricasAsync)
+            .WithName("ObtenerMetricasVentas");
+
         group.MapGet("/{id:int}", ObtenerAsync)
             .WithName("ObtenerVenta");
 
@@ -92,6 +95,21 @@ public static class VentaEndpoints
                 pagination,
                 search,
                 estado,
+                cancellationToken));
+    }
+
+    private static async Task<IResult> ObtenerMetricasAsync(
+        string? search,
+        DateOnly? fechaDesde,
+        DateOnly? fechaHasta,
+        VentaService service,
+        CancellationToken cancellationToken)
+    {
+        return Results.Ok(
+            await service.ObtenerMetricasAsync(
+                search,
+                fechaDesde,
+                fechaHasta,
                 cancellationToken));
     }
 

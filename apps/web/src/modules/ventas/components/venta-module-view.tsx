@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { toast } from "sonner";
+import { useDebounce } from "@/hooks/use-debounce";
 import { VentaHeader } from "./venta-header";
 import { VentaMetricsCards } from "./venta-metrics";
 import { VentaList } from "./venta-list";
@@ -15,6 +16,7 @@ import { ConfirmDeleteDialog } from "@/components/shared";
 import {
   useAnularVenta,
   useCambiarEstadoVenta,
+  useVentaMetrics,
   useVentas,
 } from "../hooks/use-ventas";
 import {
@@ -23,6 +25,19 @@ import {
   type VentaMetrics,
   type VentaResponse,
 } from "../types/ventas.types";
+
+function extractErrorMessage(error: unknown, fallback: string): string {
+  const err = error as {
+    response?: { data?: { detail?: string; message?: string } };
+    message?: string;
+  };
+  return (
+    err?.response?.data?.detail ||
+    err?.response?.data?.message ||
+    err?.message ||
+    fallback
+  );
+}
 
 export function VentaModuleView() {
   // Modal State: Form Nueva Venta
@@ -54,6 +69,9 @@ export function VentaModuleView() {
     EstadoVenta.Pendiente
   );
 
+  // Debounce para evitar peticiones innecesarias en cada pulsación del buscador
+  const debouncedSearchTerm = useDebounce(searchTerm.trim(), 350);
+
   // React Query Fetch para la lista filtrada
   const {
     data: apiData,
@@ -63,14 +81,16 @@ export function VentaModuleView() {
   } = useVentas({
     pageNumber: currentPage,
     pageSize: pageSize,
-    search: searchTerm.trim() || undefined,
+    search: debouncedSearchTerm || undefined,
     estado: selectedEstadoTab,
   });
 
-  // Fetch para métricas globales
-  const { data: allVentasData } = useVentas({
-    pageSize: 100,
-  });
+  // Fetch para métricas globales desde el backend
+  const {
+    data: metricsData,
+    isLoading: isMetricsLoading,
+    refetch: refetchMetrics,
+  } = useVentaMetrics();
 
   const cambiarEstadoMutation = useCambiarEstadoVenta();
   const anularMutation = useAnularVenta();
@@ -94,28 +114,20 @@ export function VentaModuleView() {
     () => apiData?.items ?? [],
     [apiData?.items]
   );
-  const allVentasList: VentaResponse[] = allVentasData?.items ?? ventas;
 
-  // Metrics calculation
-  const totalVentas = allVentasData?.totalItems ?? allVentasList.length;
-  const pendientes = allVentasList.filter((v) => v.estado === EstadoVenta.Pendiente).length;
-  const pendientesCobro = allVentasList.filter(
-    (v) => v.estado === EstadoVenta.PendienteCobro
-  ).length;
-  const pagadas = allVentasList.filter(
-    (v) => v.estado === EstadoVenta.Pagada || v.estado === EstadoVenta.ParcialmentePagada
-  ).length;
-  const anuladas = allVentasList.filter((v) => v.estado === EstadoVenta.Anulada).length;
-  const montoTotal = allVentasList.reduce((acc, v) => acc + (v.total || 0), 0);
-
-  const metrics: VentaMetrics = {
-    totalVentas,
-    pendientes,
-    pendientesCobro,
-    pagadas,
-    anuladas,
-    montoTotal,
-  };
+  // Métricas obtenidas directamente de la base de datos a través de la API
+  const metrics: VentaMetrics = React.useMemo(() => {
+    return (
+      metricsData ?? {
+        totalVentas: 0,
+        pendientes: 0,
+        pendientesCobro: 0,
+        pagadas: 0,
+        anuladas: 0,
+        montoTotal: 0,
+      }
+    );
+  }, [metricsData]);
 
   // Auto-seleccionar la venta para la vista Master-Detail en pantallas grandes
   const selectedVentaForDetail = React.useMemo(() => {
@@ -134,8 +146,8 @@ export function VentaModuleView() {
 
   const handleViewDetail = (venta: VentaResponse) => {
     setSelectedVentaId(venta.id);
-    // En móviles/tablets abre el panel sheet deslizable
-    if (typeof window !== "undefined" && window.innerWidth < 1024) {
+    // En móviles/tablets (ancho menor a breakpoint lg: 1024px) abre el panel sheet deslizable
+    if (typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches) {
       setDetailSheetOpen(true);
     }
   };
@@ -160,17 +172,9 @@ export function VentaModuleView() {
       toast.success(
         `Venta #${selectedVentaForEnviarCaja.numero} enviada a caja exitosamente.`
       );
-      await refetch();
     } catch (error: unknown) {
-      const err = error as {
-        response?: { data?: { detail?: string } };
-        message?: string;
-      };
-      const msg =
-        err?.response?.data?.detail ||
-        err?.message ||
-        "No se pudo enviar la venta a caja.";
-      toast.error(msg);
+      toast.error(extractErrorMessage(error, "No se pudo enviar la venta a caja."));
+      throw error;
     }
   };
 
@@ -203,17 +207,9 @@ export function VentaModuleView() {
       toast.success(
         `Estado de la venta #${selectedVentaForStatus.numero} actualizado.`
       );
-      await refetch();
     } catch (error: unknown) {
-      const err = error as {
-        response?: { data?: { detail?: string } };
-        message?: string;
-      };
-      const msg =
-        err?.response?.data?.detail ||
-        err?.message ||
-        "No se pudo actualizar el estado de la venta.";
-      toast.error(msg);
+      toast.error(extractErrorMessage(error, "No se pudo actualizar el estado de la venta."));
+      throw error;
     }
   };
 
@@ -223,17 +219,8 @@ export function VentaModuleView() {
     try {
       await anularMutation.mutateAsync(ventaToAnularId);
       toast.success("Comprobante de venta anulado correctamente.");
-      await refetch();
     } catch (error: unknown) {
-      const err = error as {
-        response?: { data?: { detail?: string } };
-        message?: string;
-      };
-      const msg =
-        err?.response?.data?.detail ||
-        err?.message ||
-        "Ocurrió un error al anular el comprobante de venta.";
-      toast.error(msg);
+      toast.error(extractErrorMessage(error, "Ocurrió un error al anular el comprobante de venta."));
     } finally {
       setVentaToAnularId(null);
       setAnularDialogOpen(false);
@@ -245,12 +232,15 @@ export function VentaModuleView() {
       {/* Cabecera del Módulo */}
       <VentaHeader
         onAddClick={handleOpenAdd}
-        onRefresh={() => refetch()}
+        onRefresh={() => {
+          refetch();
+          refetchMetrics();
+        }}
         isRefreshing={isRefetching}
       />
 
       {/* Tarjetas de Métricas */}
-      <VentaMetricsCards metrics={metrics} />
+      <VentaMetricsCards metrics={metrics} isLoading={isMetricsLoading} />
 
       {/* CUERPO PRINCIPAL: MASTER - DETAIL SPLIT LAYOUT */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-start">
@@ -270,9 +260,6 @@ export function VentaModuleView() {
             onPageChange={setCurrentPage}
             onPageSizeChange={handlePageSizeChange}
             onViewDetail={handleViewDetail}
-            onEnviarACaja={handleOpenEnviarCaja}
-            onChangeStatus={handleOpenStatusDialog}
-            onAnular={handleOpenAnular}
             onRefresh={() => refetch()}
           />
         </div>
@@ -302,6 +289,7 @@ export function VentaModuleView() {
         venta={selectedVentaForDetail}
         onEnviarACajaClick={handleOpenEnviarCaja}
         onChangeStatusClick={handleOpenStatusDialog}
+        onAnularClick={handleOpenAnular}
       />
 
       {/* Modal: Enviar Venta a Caja */}

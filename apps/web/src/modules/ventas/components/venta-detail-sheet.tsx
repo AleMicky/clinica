@@ -23,6 +23,7 @@ import {
   Stethoscope,
   User,
   Users,
+  XCircle,
 } from "lucide-react";
 import {
   EstadoVenta,
@@ -59,6 +60,7 @@ interface VentaDetailSheetProps {
   venta: VentaResponse | null;
   onEnviarACajaClick?: (venta: VentaResponse) => void;
   onChangeStatusClick?: (venta: VentaResponse) => void;
+  onAnularClick?: (id: number) => void;
 }
 
 export function VentaDetailSheet({
@@ -67,6 +69,7 @@ export function VentaDetailSheet({
   venta: initialVenta,
   onEnviarACajaClick,
   onChangeStatusClick,
+  onAnularClick,
 }: Readonly<VentaDetailSheetProps>) {
   const ventaId = initialVenta?.id ?? 0;
 
@@ -387,6 +390,21 @@ export function VentaDetailSheet({
               >
                 <RefreshCw className="size-3.5" />
                 Cambiar Estado
+              </Button>
+            )}
+
+            {venta.estado !== EstadoVenta.Anulada && onAnularClick && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  onOpenChange(false);
+                  onAnularClick(venta.id);
+                }}
+                className="h-8 text-xs font-semibold gap-1.5 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
+              >
+                <XCircle className="size-3.5" />
+                Anular
               </Button>
             )}
           </div>

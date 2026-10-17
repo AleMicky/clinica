@@ -2,27 +2,15 @@
 
 import { type ReactNode } from "react";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   SearchInput,
   DataTablePagination,
 } from "@/components/shared";
 import {
-  MoreVertical,
-  Eye,
-  RefreshCw,
-  XCircle,
   FileText,
   Calendar,
   CreditCard,
   Receipt,
   Hash,
-  Send,
 } from "lucide-react";
 import {
   EstadoVenta,
@@ -46,8 +34,8 @@ interface VentaListProps {
   onPageSizeChange: (size: number) => void;
   onViewDetail: (venta: VentaResponse) => void;
   onEnviarACaja?: (venta: VentaResponse) => void;
-  onChangeStatus: (venta: VentaResponse) => void;
-  onAnular: (id: number) => void;
+  onChangeStatus?: (venta: VentaResponse) => void;
+  onAnular?: (id: number) => void;
   onRefresh?: () => void;
 }
 
@@ -219,75 +207,8 @@ export function VentaList({
                   )}
                 </div>
 
-                <div className="relative z-10 flex items-center gap-1.5">
+                <div className="relative z-10 flex items-center">
                   <VentaStatusBadge estado={venta.estado} />
-
-                  {/* Menú de Acciones Rápidas */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger
-                      onClick={(e) => e.stopPropagation()}
-                      onKeyDown={(e) => e.stopPropagation()}
-                      className="size-7 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground inline-flex items-center justify-center transition-colors border border-border/60 cursor-pointer"
-                    >
-                      <MoreVertical className="size-3.5" />
-                      <span className="sr-only">Más opciones</span>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48 text-xs">
-                      <DropdownMenuItem
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onViewDetail(venta);
-                        }}
-                        className="gap-2 cursor-pointer"
-                      >
-                        <Eye className="size-3.5 text-primary" />
-                        Ver Ficha Detalle
-                      </DropdownMenuItem>
-
-                      {venta.estado !== EstadoVenta.Anulada && (
-                        <>
-                          <DropdownMenuSeparator />
-                          {venta.estado === EstadoVenta.Pendiente && (
-                            <DropdownMenuItem
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (onEnviarACaja) {
-                                  onEnviarACaja(venta);
-                                } else {
-                                  onChangeStatus(venta);
-                                }
-                              }}
-                              className="gap-2 text-indigo-600 dark:text-indigo-400 cursor-pointer font-medium"
-                            >
-                              <Send className="size-3.5" />
-                              Mandar a Caja
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onChangeStatus(venta);
-                            }}
-                            className="gap-2 cursor-pointer"
-                          >
-                            <RefreshCw className="size-3.5 text-amber-500" />
-                            Cambiar Estado
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onAnular(venta.id);
-                            }}
-                            className="gap-2 text-rose-600 dark:text-rose-400 focus:text-rose-600 cursor-pointer"
-                          >
-                            <XCircle className="size-3.5" />
-                            Anular Comprobante
-                          </DropdownMenuItem>
-                        </>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
                 </div>
               </div>
             </div>
@@ -300,9 +221,9 @@ export function VentaList({
   return (
     <div className="space-y-2.5 w-full">
       {/* FILTROS EN FORMATO BADGE Y BUSCADOR */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 px-0.5">
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-2.5 px-0.5">
         {/* Badges interactivos de estado */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+        <div className="flex items-center gap-1.5 overflow-x-auto min-w-0 py-0.5 scrollbar-none">
           {tabs.map((t) => {
             const isActive = selectedEstadoTab === t.key;
             return (
@@ -310,7 +231,7 @@ export function VentaList({
                 key={t.key.toString()}
                 type="button"
                 onClick={() => onEstadoTabChange?.(t.key)}
-                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer select-none ${isActive
+                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 transition-all cursor-pointer select-none ${isActive
                     ? t.activeClasses
                     : "bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
@@ -322,12 +243,13 @@ export function VentaList({
         </div>
 
         {/* Buscador */}
-        <div className="w-full md:w-64">
+        <div className="w-full xl:w-64 shrink-0">
           <SearchInput
             value={searchTerm}
             onChange={onSearchChange}
             placeholder="Buscar por N° venta, paciente..."
-            className="h-8 text-xs bg-background shadow-2xs"
+            className="w-full sm:w-full"
+            inputClassName="h-8 text-xs bg-background shadow-2xs"
           />
         </div>
       </div>

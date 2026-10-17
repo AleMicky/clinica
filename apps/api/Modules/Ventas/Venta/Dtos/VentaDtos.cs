@@ -38,3 +38,13 @@ public sealed record VentaResponse : AuditableResponse
     public IReadOnlyCollection<VentaDetalleResponse> Detalles { get; init; } = [];
     public IReadOnlyCollection<VentaPagadorResponse> Pagadores { get; init; } = [];
 }
+
+public sealed record VentaMetricsResponse
+{
+    public int TotalVentas { get; init; }
+    public int Pendientes { get; init; }
+    public int PendientesCobro { get; init; }
+    public int Pagadas { get; init; }
+    public int Anuladas { get; init; }
+    public decimal MontoTotal { get; init; }
+}

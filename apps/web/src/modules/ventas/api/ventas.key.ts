@@ -9,4 +9,6 @@ export const ventaKeys = {
     [...ventaKeys.detail(ventaId), "detalles"] as const,
   pagadores: (ventaId: number) =>
     [...ventaKeys.detail(ventaId), "pagadores"] as const,
+  metrics: (params?: Record<string, unknown>) =>
+    [...ventaKeys.all, "metrics", params ?? {}] as const,
 };

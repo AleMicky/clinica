@@ -6,9 +6,13 @@ import type { VentaMetrics } from "../types/ventas.types";
 
 interface VentaMetricsCardsProps {
   metrics: VentaMetrics;
+  isLoading?: boolean;
 }
 
-export function VentaMetricsCards({ metrics }: Readonly<VentaMetricsCardsProps>) {
+export function VentaMetricsCards({
+  metrics,
+  isLoading = false,
+}: Readonly<VentaMetricsCardsProps>) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
       {/* 1. Total Ventas del Día */}
@@ -18,13 +22,19 @@ export function VentaMetricsCards({ metrics }: Readonly<VentaMetricsCardsProps>)
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
               Total Ventas
             </p>
-            <div className="flex items-baseline gap-1.5 mt-0.5">
-              <span className="text-xl font-extrabold text-foreground tracking-tight">
-                {metrics.totalVentas}
-              </span>
-              <span className="text-[10px] text-muted-foreground font-medium">
-                hoy
-              </span>
+            <div className="flex items-baseline gap-1.5 mt-0.5 min-h-[26px]">
+              {isLoading ? (
+                <div className="h-6 w-12 bg-muted/60 animate-pulse rounded" />
+              ) : (
+                <>
+                  <span className="text-xl font-extrabold text-foreground tracking-tight">
+                    {metrics.totalVentas}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground font-medium">
+                    hoy
+                  </span>
+                </>
+              )}
             </div>
           </div>
           <div className="size-8.5 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-500/20 shrink-0">
@@ -40,13 +50,19 @@ export function VentaMetricsCards({ metrics }: Readonly<VentaMetricsCardsProps>)
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
               Pendientes
             </p>
-            <div className="flex items-baseline gap-1.5 mt-0.5">
-              <span className="text-xl font-extrabold text-amber-600 dark:text-amber-400 tracking-tight">
-                {metrics.pendientes}
-              </span>
-              <span className="text-[10px] text-muted-foreground font-normal">
-                sin enviar
-              </span>
+            <div className="flex items-baseline gap-1.5 mt-0.5 min-h-[26px]">
+              {isLoading ? (
+                <div className="h-6 w-12 bg-muted/60 animate-pulse rounded" />
+              ) : (
+                <>
+                  <span className="text-xl font-extrabold text-amber-600 dark:text-amber-400 tracking-tight">
+                    {metrics.pendientes}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground font-normal">
+                    sin enviar
+                  </span>
+                </>
+              )}
             </div>
           </div>
           <div className="size-8.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20 shrink-0">
@@ -62,13 +78,19 @@ export function VentaMetricsCards({ metrics }: Readonly<VentaMetricsCardsProps>)
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
               En Caja
             </p>
-            <div className="flex items-baseline gap-1.5 mt-0.5">
-              <span className="text-xl font-extrabold text-indigo-600 dark:text-indigo-400 tracking-tight">
-                {metrics.pendientesCobro}
-              </span>
-              <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-medium">
-                por cobrar
-              </span>
+            <div className="flex items-baseline gap-1.5 mt-0.5 min-h-[26px]">
+              {isLoading ? (
+                <div className="h-6 w-12 bg-muted/60 animate-pulse rounded" />
+              ) : (
+                <>
+                  <span className="text-xl font-extrabold text-indigo-600 dark:text-indigo-400 tracking-tight">
+                    {metrics.pendientesCobro}
+                  </span>
+                  <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-medium">
+                    por cobrar
+                  </span>
+                </>
+              )}
             </div>
           </div>
           <div className="size-8.5 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-500/20 shrink-0">
@@ -84,13 +106,19 @@ export function VentaMetricsCards({ metrics }: Readonly<VentaMetricsCardsProps>)
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
               Pagadas
             </p>
-            <div className="flex items-baseline gap-1.5 mt-0.5">
-              <span className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight">
-                {metrics.pagadas}
-              </span>
-              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
-                cobradas
-              </span>
+            <div className="flex items-baseline gap-1.5 mt-0.5 min-h-[26px]">
+              {isLoading ? (
+                <div className="h-6 w-12 bg-muted/60 animate-pulse rounded" />
+              ) : (
+                <>
+                  <span className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight">
+                    {metrics.pagadas}
+                  </span>
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                    cobradas
+                  </span>
+                </>
+              )}
             </div>
           </div>
           <div className="size-8.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20 shrink-0">
@@ -106,11 +134,17 @@ export function VentaMetricsCards({ metrics }: Readonly<VentaMetricsCardsProps>)
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
               Monto del Día
             </p>
-            <div className="flex items-baseline gap-1 mt-0.5">
-              <span className="text-xs font-semibold text-emerald-600">Bs.</span>
-              <span className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight">
-                {metrics.montoTotal.toFixed(2)}
-              </span>
+            <div className="flex items-baseline gap-1 mt-0.5 min-h-[26px]">
+              {isLoading ? (
+                <div className="h-6 w-20 bg-muted/60 animate-pulse rounded" />
+              ) : (
+                <>
+                  <span className="text-xs font-semibold text-emerald-600">Bs.</span>
+                  <span className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight">
+                    {metrics.montoTotal.toFixed(2)}
+                  </span>
+                </>
+              )}
             </div>
           </div>
           <div className="size-8.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20 shrink-0">

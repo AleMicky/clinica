@@ -8,6 +8,8 @@ import type {
   UpdateVentaDetalleRequest,
   UpdateVentaPagadorRequest,
   VentaDetalleResponse,
+  VentaMetrics,
+  VentaMetricsQueryParams,
   VentaPagadorResponse,
   VentaQueryParams,
   VentaResponse,
@@ -17,6 +19,15 @@ export async function getVentas(
   params?: VentaQueryParams
 ): Promise<PagedResult<VentaResponse>> {
   const response = await apiClient.get<PagedResult<VentaResponse>>("/ventas", {
+    params,
+  });
+  return response.data;
+}
+
+export async function getVentaMetrics(
+  params?: VentaMetricsQueryParams
+): Promise<VentaMetrics> {
+  const response = await apiClient.get<VentaMetrics>("/ventas/metricas", {
     params,
   });
   return response.data;
@@ -54,7 +65,9 @@ export async function getVentaDetalles(
   ventaId: number,
   params?: VentaQueryParams
 ): Promise<PagedResult<VentaDetalleResponse>> {
-  const response = await apiClient.get<any>(
+  const response = await apiClient.get<
+    PagedResult<VentaDetalleResponse> | VentaDetalleResponse[]
+  >(
     `/ventas/${ventaId}/detalles`,
     { params }
   );
@@ -105,7 +118,9 @@ export async function getVentaPagadores(
   ventaId: number,
   params?: VentaQueryParams
 ): Promise<PagedResult<VentaPagadorResponse>> {
-  const response = await apiClient.get<any>(
+  const response = await apiClient.get<
+    PagedResult<VentaPagadorResponse> | VentaPagadorResponse[]
+  >(
     `/ventas/${ventaId}/pagadores`,
     { params }
   );
