@@ -23,7 +23,6 @@ import {
   FileEdit,
   Ban,
   X,
-  Plus,
   ChevronDown,
 } from "lucide-react";
 import {
@@ -85,9 +84,9 @@ function formatDisplayDate(isoStr?: string): string {
     "ene.", "feb.", "mar.", "abr.", "may.", "jun.",
     "jul.", "ago.", "sep.", "oct.", "nov.", "dic."
   ];
-  const mIndex = parseInt(month, 10) - 1;
+  const mIndex = Number.parseInt(month, 10) - 1;
   const mName = monthNames[mIndex] || month;
-  return `${parseInt(day, 10)} ${mName} ${year}`;
+  return `${Number.parseInt(day, 10)} ${mName} ${year}`;
 }
 
 function getRangeLabel(
@@ -116,6 +115,569 @@ function getRangeLabel(
   return "Seleccionar período";
 }
 
+function AdmisionSkeletonList() {
+  return (
+    <div className="space-y-2">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div
+          key={i}
+          className="p-3.5 rounded-xl border border-border/60 bg-card space-y-2.5"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <Skeleton className="size-9 rounded-xl" />
+              <div className="space-y-1">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-3 w-28" />
+              </div>
+            </div>
+            <Skeleton className="h-6 w-24 rounded-full" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+interface AdmisionEmptyStateProps {
+  hasActiveFilters: boolean;
+  onReset: () => void;
+}
+
+function AdmisionEmptyState({
+  hasActiveFilters,
+  onReset,
+}: Readonly<AdmisionEmptyStateProps>) {
+  return (
+    <div className="py-14 text-center border border-dashed border-border/70 rounded-2xl bg-muted/10 space-y-3 px-4">
+      <div className="size-12 rounded-2xl bg-muted flex items-center justify-center mx-auto text-muted-foreground/60 border border-border/50">
+        <FileText className="size-6" />
+      </div>
+      <div className="space-y-1">
+        <p className="font-bold text-sm text-foreground">No se encontraron admisiones</p>
+        <p className="text-xs max-w-sm mx-auto text-muted-foreground">
+          {hasActiveFilters
+            ? "No hay resultados para los filtros seleccionados. Intenta restablecer la búsqueda."
+            : "Aún no se han registrado admisiones para esta vista."}
+        </p>
+      </div>
+      {hasActiveFilters && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onReset}
+          className="text-xs gap-1.5 cursor-pointer mt-1"
+        >
+          <X className="size-3.5" />
+          Limpiar filtros
+        </Button>
+      )}
+    </div>
+  );
+}
+
+interface AdmisionAuditMetaProps {
+  creadoPor?: string | null;
+  fechaCreacion?: string | null;
+  modificadoPor?: string | null;
+  fechaModificacion?: string | null;
+}
+
+function AdmisionAuditMeta({
+  creadoPor,
+  fechaCreacion,
+  modificadoPor,
+  fechaModificacion,
+}: Readonly<AdmisionAuditMetaProps>) {
+  if (!creadoPor && !fechaCreacion && !modificadoPor) return null;
+
+  return (
+    <div className="flex items-center gap-2 text-[10px] text-muted-foreground/70 flex-wrap pt-1 border-t border-border/30 mt-1">
+      {creadoPor && (
+        <span className="flex items-center gap-1">
+          <ShieldCheck className="size-2.5 text-primary/70 shrink-0" />
+          <span>
+            Creado por: <strong className="text-foreground/75 font-medium">{creadoPor}</strong>
+          </span>
+          {fechaCreacion && (
+            <span className="font-mono text-[9.5px] text-muted-foreground/60">
+              ({new Date(fechaCreacion).toLocaleString("es-ES", {
+                dateStyle: "short",
+                timeStyle: "short",
+              })})
+            </span>
+          )}
+        </span>
+      )}
+
+      {modificadoPor && (
+        <>
+          <span className="text-muted-foreground/30">•</span>
+          <span className="flex items-center gap-1">
+            <History className="size-2.5 text-amber-600/70 shrink-0" />
+            <span>
+              Modificado por: <strong className="text-foreground/75 font-medium">{modificadoPor}</strong>
+            </span>
+            {fechaModificacion && (
+              <span className="font-mono text-[9.5px] text-muted-foreground/60">
+                ({new Date(fechaModificacion).toLocaleString("es-ES", {
+                  dateStyle: "short",
+                  timeStyle: "short",
+                })})
+              </span>
+            )}
+          </span>
+        </>
+      )}
+    </div>
+  );
+}
+
+interface AdmisionItemActionsProps {
+  adm: AdmisionResponse;
+  onViewDetail: (admision: AdmisionResponse) => void;
+  onEdit?: (admision: AdmisionResponse) => void;
+  onDirectChangeStatus?: (admision: AdmisionResponse, nuevoEstado: EstadoAdmision) => void;
+  onDelete: (id: number) => void;
+}
+
+function AdmisionItemActions({
+  adm,
+  onViewDetail,
+  onEdit,
+  onDirectChangeStatus,
+  onDelete,
+}: Readonly<AdmisionItemActionsProps>) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <AdmisionStatusBadge estado={adm.estado} />
+
+      {/* Botón directo de flujo según estado (Sin Modal) */}
+      {adm.estado === EstadoAdmision.Registrada && (
+        <Button
+          type="button"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDirectChangeStatus?.(adm, EstadoAdmision.Confirmada);
+          }}
+          className="h-7.5 px-2.5 text-[11px] font-semibold gap-1 bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs cursor-pointer transition-all hover:scale-[1.02]"
+          title="Confirmar admisión directamente"
+        >
+          <CheckCircle2 className="size-3" />
+          <span>Confirmar</span>
+        </Button>
+      )}
+
+      {adm.estado === EstadoAdmision.Confirmada && (
+        <Button
+          type="button"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDirectChangeStatus?.(adm, EstadoAdmision.EnviadaVenta);
+          }}
+          className="h-7.5 px-2.5 text-[11px] font-semibold gap-1 bg-purple-600 hover:bg-purple-700 text-white shadow-2xs cursor-pointer transition-all hover:scale-[1.02]"
+          title="Enviar admisión a Venta/Facturación"
+        >
+          <Send className="size-3" />
+          <span>Enviar a Venta</span>
+        </Button>
+      )}
+
+      {/* Botón Ver Ficha Visible */}
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        onClick={(e) => {
+          e.stopPropagation();
+          onViewDetail(adm);
+        }}
+        className="h-7.5 px-2.5 text-[11px] font-semibold gap-1 border-border/80 text-foreground hover:bg-accent hover:text-primary shadow-2xs cursor-pointer transition-all"
+        title="Ver Ficha y Detalle de Admisión"
+      >
+        <Eye className="size-3 text-primary" />
+        <span>Ver Ficha</span>
+      </Button>
+
+      {/* Botón Editar Visible (Solo en estado Registrada) */}
+      {adm.estado === EstadoAdmision.Registrada && onEdit && (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit(adm);
+          }}
+          className="h-7.5 px-2.5 text-[11px] font-semibold gap-1 border-amber-500/30 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10 shadow-2xs cursor-pointer transition-all"
+          title="Editar Admisión y Servicios"
+        >
+          <Pencil className="size-3" />
+          <span>Editar</span>
+        </Button>
+      )}
+
+      {/* Botón Cancelar Visible */}
+      {adm.estado !== EstadoAdmision.Cancelada && (
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(adm.id);
+          }}
+          className="h-7.5 px-2 text-[11px] font-semibold gap-1 text-destructive/80 hover:text-destructive hover:bg-destructive/10 cursor-pointer transition-all"
+          title="Cancelar admisión"
+        >
+          <Trash2 className="size-3" />
+          <span>Cancelar</span>
+        </Button>
+      )}
+    </div>
+  );
+}
+
+interface AdmisionListItemProps {
+  adm: AdmisionResponse;
+  onViewDetail: (admision: AdmisionResponse) => void;
+  onEdit?: (admision: AdmisionResponse) => void;
+  onDirectChangeStatus?: (admision: AdmisionResponse, nuevoEstado: EstadoAdmision) => void;
+  onDelete: (id: number) => void;
+}
+
+function AdmisionListItem({
+  adm,
+  onViewDetail,
+  onEdit,
+  onDirectChangeStatus,
+  onDelete,
+}: Readonly<AdmisionListItemProps>) {
+  const total =
+    adm.totalAdmision ??
+    adm.detalles.reduce((acc, d) => acc + (d.total || 0), 0);
+
+  const nombreCompleto = formatPacienteNombre(adm.paciente, adm.pacienteNombre);
+  const documento = formatPacienteDocumento(adm.paciente, adm.pacienteDocumento);
+  const convenio =
+    adm.convenio?.nombre || formatConvenioNombre(adm.convenio, adm.convenioNombre);
+
+  const numPrestaciones = adm.detalles.length;
+  const primeraPrestacion = adm.detalles[0]?.servicioNombre || "Consulta Médica";
+  const initials = getInitials(nombreCompleto);
+
+  return (
+    <div className="group p-3.5 rounded-xl border border-border/60 bg-card hover:border-primary/50 hover:shadow-xs transition-all duration-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative">
+      {/* Bloque Izquierdo: Avatar con Iniciales + Paciente + Documento + Convenio + Fecha + Prestaciones */}
+      <div className="flex items-start gap-3 min-w-0 flex-1">
+        {/* Badge / Avatar con Iniciales */}
+        <div className="size-9.5 rounded-xl bg-gradient-to-br from-primary/20 via-primary/10 to-blue-500/10 text-primary flex items-center justify-center font-bold text-xs shrink-0 border border-primary/25 mt-0.5 group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-all duration-200 shadow-2xs">
+          {initials}
+        </div>
+
+        <div className="min-w-0 flex-1 space-y-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-mono font-bold text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-md border border-primary/20">
+              #{adm.numero}
+            </span>
+
+            <button
+              type="button"
+              onClick={() => onViewDetail(adm)}
+              className="font-bold text-xs sm:text-sm text-foreground hover:text-primary transition-colors truncate text-left cursor-pointer focus-visible:outline-hidden focus-visible:underline"
+              title={`Ver detalle de admisión #${adm.numero}`}
+            >
+              {nombreCompleto}
+            </button>
+
+            <span className="text-[11px] text-muted-foreground font-mono bg-muted/60 px-1.5 py-0.2 rounded border border-border/40">
+              Doc: {documento}
+            </span>
+          </div>
+
+          {/* Detalles secundarios en línea compacta */}
+          <div className="flex items-center gap-2.5 text-[11px] text-muted-foreground flex-wrap pt-0.5">
+            <span className="flex items-center gap-1 font-medium text-foreground/90">
+              <Building2 className="size-3 text-primary/80 shrink-0" />
+              {convenio}
+            </span>
+
+            <span className="text-muted-foreground/40">•</span>
+
+            <span className="flex items-center gap-1">
+              <Calendar className="size-3 text-muted-foreground/70 shrink-0" />
+              <span>
+                {new Date(adm.fechaHora).toLocaleString("es-ES", {
+                  dateStyle: "short",
+                  timeStyle: "short",
+                })}
+              </span>
+            </span>
+
+            <span className="text-muted-foreground/40">•</span>
+
+            <span className="flex items-center gap-1">
+              <Stethoscope className="size-3 text-blue-600/80 shrink-0" />
+              <span className="truncate max-w-[200px]">
+                {numPrestaciones === 1
+                  ? primeraPrestacion
+                  : `${primeraPrestacion} (+${numPrestaciones - 1})`}
+              </span>
+            </span>
+
+            {adm.recepcionista && (
+              <>
+                <span className="text-muted-foreground/40">•</span>
+                <span className="flex items-center gap-1 text-[10.5px] text-foreground/80">
+                  <User className="size-3 text-emerald-600 shrink-0" />
+                  <span className="truncate max-w-[140px]" title={adm.recepcionista.nombreCompleto}>
+                    {adm.recepcionista.nombreCompleto}
+                  </span>
+                </span>
+              </>
+            )}
+          </div>
+
+          {/* Metadatos de Auditoría UX/UI */}
+          <AdmisionAuditMeta
+            creadoPor={adm.creadoPor}
+            fechaCreacion={adm.fechaCreacion}
+            modificadoPor={adm.modificadoPor}
+            fechaModificacion={adm.fechaModificacion}
+          />
+        </div>
+      </div>
+
+      {/* Bloque Derecho: Precio, Estado & Acciones */}
+      <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/30">
+        <div className="flex flex-col items-start sm:items-end pr-0.5">
+          <span className="text-sm font-black text-foreground font-mono tracking-tight">
+            Bs. {total.toFixed(2)}
+          </span>
+          <span className="text-[10px] text-muted-foreground font-medium">
+            {numPrestaciones} prestación{numPrestaciones !== 1 ? "es" : ""}
+          </span>
+        </div>
+
+        <AdmisionItemActions
+          adm={adm}
+          onViewDetail={onViewDetail}
+          onEdit={onEdit}
+          onDirectChangeStatus={onDirectChangeStatus}
+          onDelete={onDelete}
+        />
+      </div>
+    </div>
+  );
+}
+
+interface AdmisionDateFilterBarProps {
+  fechaDesde?: string;
+  fechaHasta?: string;
+  todayIso: string;
+  yesterdayIso: string;
+  last7DaysIso: string;
+  monthStartIso: string;
+  isTodayActive: boolean;
+  isYesterdayActive: boolean;
+  is7DaysActive: boolean;
+  isMonthActive: boolean;
+  isAllActive: boolean;
+  isCustomActive: boolean;
+  onDateRangeChange?: (desde: string, hasta: string) => void;
+  onFechaDesdeChange?: (value: string) => void;
+  onFechaHastaChange?: (value: string) => void;
+}
+
+function AdmisionDateFilterBar({
+  fechaDesde,
+  fechaHasta,
+  todayIso,
+  yesterdayIso,
+  last7DaysIso,
+  monthStartIso,
+  isTodayActive,
+  isYesterdayActive,
+  is7DaysActive,
+  isMonthActive,
+  isAllActive,
+  isCustomActive,
+  onDateRangeChange,
+  onFechaDesdeChange,
+  onFechaHastaChange,
+}: Readonly<AdmisionDateFilterBarProps>) {
+  const [isCustomDateOpen, setIsCustomDateOpen] = React.useState(false);
+
+  return (
+    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 px-3 py-2 rounded-xl bg-card border border-border/60 shadow-2xs">
+      {/* Presets rápidos */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 sm:pb-0 scrollbar-none">
+        <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground mr-1 shrink-0">
+          <Calendar className="size-3.5 text-primary" />
+          <span className="font-semibold text-foreground">Fecha:</span>
+        </div>
+        <button
+          type="button"
+          onClick={() => onDateRangeChange?.(todayIso, todayIso)}
+          className={cn(
+            "px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer select-none",
+            isTodayActive
+              ? "bg-primary text-primary-foreground font-semibold shadow-xs shadow-primary/20"
+              : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+          )}
+        >
+          Hoy
+        </button>
+        <button
+          type="button"
+          onClick={() => onDateRangeChange?.(yesterdayIso, yesterdayIso)}
+          className={cn(
+            "px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer select-none",
+            isYesterdayActive
+              ? "bg-primary text-primary-foreground font-semibold shadow-xs shadow-primary/20"
+              : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+          )}
+        >
+          Ayer
+        </button>
+        <button
+          type="button"
+          onClick={() => onDateRangeChange?.(last7DaysIso, todayIso)}
+          className={cn(
+            "px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer select-none",
+            is7DaysActive
+              ? "bg-primary text-primary-foreground font-semibold shadow-xs shadow-primary/20"
+              : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+          )}
+        >
+          Últimos 7 días
+        </button>
+        <button
+          type="button"
+          onClick={() => onDateRangeChange?.(monthStartIso, todayIso)}
+          className={cn(
+            "px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer select-none",
+            isMonthActive
+              ? "bg-primary text-primary-foreground font-semibold shadow-xs shadow-primary/20"
+              : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+          )}
+        >
+          Este mes
+        </button>
+        <button
+          type="button"
+          onClick={() => onDateRangeChange?.("", "")}
+          className={cn(
+            "px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer select-none",
+            isAllActive
+              ? "bg-primary text-primary-foreground font-semibold shadow-xs shadow-primary/20"
+              : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+          )}
+        >
+          Histórico (Todo)
+        </button>
+      </div>
+
+      {/* Botón selector de Rango Personalizado con Popover */}
+      <div className="flex items-center shrink-0">
+        <Popover open={isCustomDateOpen} onOpenChange={setIsCustomDateOpen}>
+          <PopoverTrigger
+            type="button"
+            className={cn(
+              "inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer border select-none w-full sm:w-auto justify-between sm:justify-start",
+              isCustomActive
+                ? "bg-primary text-primary-foreground border-primary font-semibold shadow-xs shadow-primary/20"
+                : "bg-background text-foreground border-border/70 hover:bg-muted/80 hover:text-foreground shadow-2xs"
+            )}
+          >
+            <div className="flex items-center gap-1.5">
+              <Calendar className="size-3.5 text-primary shrink-0" />
+              <span className="font-medium">
+                {getRangeLabel(fechaDesde, fechaHasta, isTodayActive, isYesterdayActive, is7DaysActive, isMonthActive, isAllActive)}
+              </span>
+            </div>
+            <ChevronDown className="size-3 opacity-60 ml-1 shrink-0" />
+          </PopoverTrigger>
+          <PopoverContent
+            align="end"
+            sideOffset={8}
+            className="w-[330px] p-4 space-y-3.5 bg-popover rounded-xl shadow-xl border border-border/80 text-xs"
+          >
+            <div className="flex items-center justify-between border-b border-border/50 pb-2">
+              <span className="font-semibold text-foreground flex items-center gap-1.5 text-xs">
+                <Calendar className="size-3.5 text-primary" />
+                Rango de Fechas Personalizado
+              </span>
+              {Boolean(fechaDesde || fechaHasta) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onDateRangeChange?.("", "");
+                    setIsCustomDateOpen(false);
+                  }}
+                  className="text-[11px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                >
+                  Ver Todo
+                </button>
+              )}
+            </div>
+
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <label htmlFor="admision-popover-fecha-desde" className="text-[11px] font-semibold text-muted-foreground block">
+                  Desde:
+                </label>
+                <DatePicker
+                  id="admision-popover-fecha-desde"
+                  value={fechaDesde || ""}
+                  onChange={(val) => onFechaDesdeChange?.(val)}
+                  placeholder="DD/MM/AAAA"
+                  allowClear
+                />
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="admision-popover-fecha-hasta" className="text-[11px] font-semibold text-muted-foreground block">
+                  Hasta:
+                </label>
+                <DatePicker
+                  id="admision-popover-fecha-hasta"
+                  value={fechaHasta || ""}
+                  onChange={(val) => onFechaHastaChange?.(val)}
+                  placeholder="DD/MM/AAAA"
+                  allowClear
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-2 border-t border-border/50">
+              <button
+                type="button"
+                onClick={() => {
+                  onDateRangeChange?.(todayIso, todayIso);
+                  setIsCustomDateOpen(false);
+                }}
+                className="text-[11px] font-medium text-primary hover:underline cursor-pointer"
+              >
+                Restablecer a Hoy
+              </button>
+              <Button
+                type="button"
+                size="sm"
+                className="h-7 text-xs px-3.5 cursor-pointer"
+                onClick={() => setIsCustomDateOpen(false)}
+              >
+                Aplicar
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+    </div>
+  );
+}
+
 export function AdmisionList({
   admisiones,
   isLoading,
@@ -139,7 +701,7 @@ export function AdmisionList({
   onDirectChangeStatus,
   onDelete,
   onResetFilters,
-}: AdmisionListProps) {
+}: Readonly<AdmisionListProps>) {
   const tabs: Array<{
     key: EstadoAdmisionTab;
     label: string;
@@ -147,42 +709,42 @@ export function AdmisionList({
     count?: number;
     activeClasses: string;
   }> = [
-    {
-      key: "TODOS",
-      label: "Todos",
-      icon: LayoutGrid,
-      count: counts?.todos,
-      activeClasses: "bg-primary text-primary-foreground shadow-xs shadow-primary/20",
-    },
-    {
-      key: EstadoAdmision.Registrada,
-      label: "Registradas",
-      icon: FileEdit,
-      count: counts?.registradas,
-      activeClasses: "bg-blue-600 text-white shadow-xs shadow-blue-600/20",
-    },
-    {
-      key: EstadoAdmision.Confirmada,
-      label: "Confirmadas",
-      icon: CheckCircle2,
-      count: counts?.confirmadas,
-      activeClasses: "bg-emerald-600 text-white shadow-xs shadow-emerald-600/20",
-    },
-    {
-      key: EstadoAdmision.EnviadaVenta,
-      label: "Enviadas a Venta",
-      icon: Send,
-      count: counts?.enviadasVenta,
-      activeClasses: "bg-purple-600 text-white shadow-xs shadow-purple-600/20",
-    },
-    {
-      key: EstadoAdmision.Cancelada,
-      label: "Canceladas",
-      icon: Ban,
-      count: counts?.canceladas,
-      activeClasses: "bg-rose-600 text-white shadow-xs shadow-rose-600/20",
-    },
-  ];
+      {
+        key: "TODOS",
+        label: "Todos",
+        icon: LayoutGrid,
+        count: counts?.todos,
+        activeClasses: "bg-primary text-primary-foreground shadow-xs shadow-primary/20",
+      },
+      {
+        key: EstadoAdmision.Registrada,
+        label: "Registradas",
+        icon: FileEdit,
+        count: counts?.registradas,
+        activeClasses: "bg-blue-600 text-white shadow-xs shadow-blue-600/20",
+      },
+      {
+        key: EstadoAdmision.Confirmada,
+        label: "Confirmadas",
+        icon: CheckCircle2,
+        count: counts?.confirmadas,
+        activeClasses: "bg-emerald-600 text-white shadow-xs shadow-emerald-600/20",
+      },
+      {
+        key: EstadoAdmision.EnviadaVenta,
+        label: "Enviadas a Venta",
+        icon: Send,
+        count: counts?.enviadasVenta,
+        activeClasses: "bg-purple-600 text-white shadow-xs shadow-purple-600/20",
+      },
+      {
+        key: EstadoAdmision.Cancelada,
+        label: "Canceladas",
+        icon: Ban,
+        count: counts?.canceladas,
+        activeClasses: "bg-rose-600 text-white shadow-xs shadow-rose-600/20",
+      },
+    ];
 
   // Helper dates (ISO strings YYYY-MM-DD)
   const todayIso = React.useMemo(() => {
@@ -215,8 +777,6 @@ export function AdmisionList({
   const isCustomActive =
     !isTodayActive && !isYesterdayActive && !is7DaysActive && !isMonthActive && !isAllActive;
 
-  const [isCustomDateOpen, setIsCustomDateOpen] = React.useState(false);
-
   const isDefaultDate = isTodayActive;
   const hasActiveFilters =
     Boolean(searchTerm.trim()) ||
@@ -246,21 +806,19 @@ export function AdmisionList({
                 key={t.key.toString()}
                 type="button"
                 onClick={() => onEstadoTabChange?.(t.key)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer select-none ${
-                  isActive
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer select-none ${isActive
                     ? t.activeClasses
                     : "bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground border border-border/40"
-                }`}
+                  }`}
               >
                 <Icon className="size-3.5 shrink-0 opacity-80" />
                 <span>{t.label}</span>
                 {typeof t.count === "number" && (
                   <span
-                    className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold font-mono transition-colors ${
-                      isActive
+                    className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold font-mono transition-colors ${isActive
                         ? "bg-white/20 text-white"
                         : "bg-background text-muted-foreground border border-border/50"
-                    }`}
+                      }`}
                   >
                     {t.count}
                   </span>
@@ -297,452 +855,47 @@ export function AdmisionList({
       </div>
 
       {/* BARRA DE PERÍODO Y FILTRO POR FECHA */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 px-3 py-2 rounded-xl bg-card border border-border/60 shadow-2xs">
-        {/* Presets rápidos */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 sm:pb-0 scrollbar-none">
-          <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground mr-1 shrink-0">
-            <Calendar className="size-3.5 text-primary" />
-            <span className="font-semibold text-foreground">Fecha:</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => onDateRangeChange?.(todayIso, todayIso)}
-            className={cn(
-              "px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer select-none",
-              isTodayActive
-                ? "bg-primary text-primary-foreground font-semibold shadow-xs shadow-primary/20"
-                : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
-            )}
-          >
-            Hoy
-          </button>
-          <button
-            type="button"
-            onClick={() => onDateRangeChange?.(yesterdayIso, yesterdayIso)}
-            className={cn(
-              "px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer select-none",
-              isYesterdayActive
-                ? "bg-primary text-primary-foreground font-semibold shadow-xs shadow-primary/20"
-                : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
-            )}
-          >
-            Ayer
-          </button>
-          <button
-            type="button"
-            onClick={() => onDateRangeChange?.(last7DaysIso, todayIso)}
-            className={cn(
-              "px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer select-none",
-              is7DaysActive
-                ? "bg-primary text-primary-foreground font-semibold shadow-xs shadow-primary/20"
-                : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
-            )}
-          >
-            Últimos 7 días
-          </button>
-          <button
-            type="button"
-            onClick={() => onDateRangeChange?.(monthStartIso, todayIso)}
-            className={cn(
-              "px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer select-none",
-              isMonthActive
-                ? "bg-primary text-primary-foreground font-semibold shadow-xs shadow-primary/20"
-                : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
-            )}
-          >
-            Este mes
-          </button>
-          <button
-            type="button"
-            onClick={() => onDateRangeChange?.("", "")}
-            className={cn(
-              "px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer select-none",
-              isAllActive
-                ? "bg-primary text-primary-foreground font-semibold shadow-xs shadow-primary/20"
-                : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
-            )}
-          >
-            Histórico (Todo)
-          </button>
-        </div>
-
-        {/* Botón selector de Rango Personalizado con Popover */}
-        <div className="flex items-center shrink-0">
-          <Popover open={isCustomDateOpen} onOpenChange={setIsCustomDateOpen}>
-            <PopoverTrigger
-              type="button"
-              className={cn(
-                "inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer border select-none w-full sm:w-auto justify-between sm:justify-start",
-                isCustomActive
-                  ? "bg-primary text-primary-foreground border-primary font-semibold shadow-xs shadow-primary/20"
-                  : "bg-background text-foreground border-border/70 hover:bg-muted/80 hover:text-foreground shadow-2xs"
-              )}
-            >
-              <div className="flex items-center gap-1.5">
-                <Calendar className="size-3.5 text-primary shrink-0" />
-                <span className="font-medium">
-                  {getRangeLabel(fechaDesde, fechaHasta, isTodayActive, isYesterdayActive, is7DaysActive, isMonthActive, isAllActive)}
-                </span>
-              </div>
-              <ChevronDown className="size-3 opacity-60 ml-1 shrink-0" />
-            </PopoverTrigger>
-            <PopoverContent
-              align="end"
-              sideOffset={8}
-              className="w-[330px] p-4 space-y-3.5 bg-popover rounded-xl shadow-xl border border-border/80 text-xs"
-            >
-              <div className="flex items-center justify-between border-b border-border/50 pb-2">
-                <span className="font-semibold text-foreground flex items-center gap-1.5 text-xs">
-                  <Calendar className="size-3.5 text-primary" />
-                  Rango de Fechas Personalizado
-                </span>
-                {Boolean(fechaDesde || fechaHasta) && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onDateRangeChange?.("", "");
-                      setIsCustomDateOpen(false);
-                    }}
-                    className="text-[11px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                  >
-                    Ver Todo
-                  </button>
-                )}
-              </div>
-
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <label htmlFor="admision-popover-fecha-desde" className="text-[11px] font-semibold text-muted-foreground block">
-                    Desde:
-                  </label>
-                  <DatePicker
-                    id="admision-popover-fecha-desde"
-                    value={fechaDesde || ""}
-                    onChange={(val) => onFechaDesdeChange?.(val)}
-                    placeholder="DD/MM/AAAA"
-                    allowClear
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label htmlFor="admision-popover-fecha-hasta" className="text-[11px] font-semibold text-muted-foreground block">
-                    Hasta:
-                  </label>
-                  <DatePicker
-                    id="admision-popover-fecha-hasta"
-                    value={fechaHasta || ""}
-                    onChange={(val) => onFechaHastaChange?.(val)}
-                    placeholder="DD/MM/AAAA"
-                    allowClear
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between pt-2 border-t border-border/50">
-                <button
-                  type="button"
-                  onClick={() => {
-                    onDateRangeChange?.(todayIso, todayIso);
-                    setIsCustomDateOpen(false);
-                  }}
-                  className="text-[11px] font-medium text-primary hover:underline cursor-pointer"
-                >
-                  Restablecer a Hoy
-                </button>
-                <Button
-                  type="button"
-                  size="sm"
-                  className="h-7 text-xs px-3.5 cursor-pointer"
-                  onClick={() => setIsCustomDateOpen(false)}
-                >
-                  Aplicar
-                </Button>
-              </div>
-            </PopoverContent>
-          </Popover>
-        </div>
-      </div>
+      <AdmisionDateFilterBar
+        fechaDesde={fechaDesde}
+        fechaHasta={fechaHasta}
+        todayIso={todayIso}
+        yesterdayIso={yesterdayIso}
+        last7DaysIso={last7DaysIso}
+        monthStartIso={monthStartIso}
+        isTodayActive={isTodayActive}
+        isYesterdayActive={isYesterdayActive}
+        is7DaysActive={is7DaysActive}
+        isMonthActive={isMonthActive}
+        isAllActive={isAllActive}
+        isCustomActive={isCustomActive}
+        onDateRangeChange={onDateRangeChange}
+        onFechaDesdeChange={onFechaDesdeChange}
+        onFechaHastaChange={onFechaHastaChange}
+      />
 
       {/* CONTENIDO DEL LISTADO */}
       <div className="space-y-1.5">
-        {isLoading ? (
+        {isLoading && <AdmisionSkeletonList />}
+
+        {!isLoading && admisiones.length === 0 && (
+          <AdmisionEmptyState
+            hasActiveFilters={hasActiveFilters}
+            onReset={handleReset}
+          />
+        )}
+
+        {!isLoading && admisiones.length > 0 && (
           <div className="space-y-2">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div
-                key={i}
-                className="p-3.5 rounded-xl border border-border/60 bg-card space-y-2.5"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <Skeleton className="size-9 rounded-xl" />
-                    <div className="space-y-1">
-                      <Skeleton className="h-4 w-40" />
-                      <Skeleton className="h-3 w-28" />
-                    </div>
-                  </div>
-                  <Skeleton className="h-6 w-24 rounded-full" />
-                </div>
-              </div>
+            {admisiones.map((adm) => (
+              <AdmisionListItem
+                key={adm.id}
+                adm={adm}
+                onViewDetail={onViewDetail}
+                onEdit={onEdit}
+                onDirectChangeStatus={onDirectChangeStatus}
+                onDelete={onDelete}
+              />
             ))}
-          </div>
-        ) : admisiones.length === 0 ? (
-          <div className="py-14 text-center border border-dashed border-border/70 rounded-2xl bg-muted/10 space-y-3 px-4">
-            <div className="size-12 rounded-2xl bg-muted flex items-center justify-center mx-auto text-muted-foreground/60 border border-border/50">
-              <FileText className="size-6" />
-            </div>
-            <div className="space-y-1">
-              <p className="font-bold text-sm text-foreground">No se encontraron admisiones</p>
-              <p className="text-xs max-w-sm mx-auto text-muted-foreground">
-                {hasActiveFilters
-                  ? "No hay resultados para los filtros seleccionados. Intenta restablecer la búsqueda."
-                  : "Aún no se han registrado admisiones para esta vista."}
-              </p>
-            </div>
-            {hasActiveFilters && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleReset}
-                className="text-xs gap-1.5 cursor-pointer mt-1"
-              >
-                <X className="size-3.5" />
-                Limpiar filtros
-              </Button>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {admisiones.map((adm) => {
-              const total =
-                adm.totalAdmision ??
-                adm.detalles.reduce((acc, d) => acc + (d.total || 0), 0);
-
-              const nombreCompleto = formatPacienteNombre(adm.paciente, adm.pacienteNombre);
-              const documento = formatPacienteDocumento(adm.paciente, adm.pacienteDocumento);
-              const convenio =
-                adm.convenio?.nombre || formatConvenioNombre(adm.convenio, adm.convenioNombre);
-
-              const numPrestaciones = adm.detalles.length;
-              const primeraPrestacion = adm.detalles[0]?.servicioNombre || "Consulta Médica";
-              const initials = getInitials(nombreCompleto);
-
-              return (
-                <div
-                  key={adm.id}
-                  onClick={() => onViewDetail(adm)}
-                  className="group cursor-pointer p-3.5 rounded-xl border border-border/60 bg-card hover:border-primary/50 hover:shadow-xs transition-all duration-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative"
-                >
-                  {/* Bloque Izquierdo: Avatar con Iniciales + Paciente + Documento + Convenio + Fecha + Prestaciones */}
-                  <div className="flex items-start gap-3 min-w-0 flex-1">
-                    {/* Badge / Avatar con Iniciales */}
-                    <div className="size-9.5 rounded-xl bg-gradient-to-br from-primary/20 via-primary/10 to-blue-500/10 text-primary flex items-center justify-center font-bold text-xs shrink-0 border border-primary/25 mt-0.5 group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-all duration-200 shadow-2xs">
-                      {initials}
-                    </div>
-
-                    <div className="min-w-0 flex-1 space-y-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-mono font-bold text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-md border border-primary/20">
-                          #{adm.numero}
-                        </span>
-
-                        <span className="font-bold text-xs sm:text-sm text-foreground group-hover:text-primary transition-colors truncate">
-                          {nombreCompleto}
-                        </span>
-
-                        <span className="text-[11px] text-muted-foreground font-mono bg-muted/60 px-1.5 py-0.2 rounded border border-border/40">
-                          Doc: {documento}
-                        </span>
-                      </div>
-
-                      {/* Detalles secundarios en línea compacta */}
-                      <div className="flex items-center gap-2.5 text-[11px] text-muted-foreground flex-wrap pt-0.5">
-                        <span className="flex items-center gap-1 font-medium text-foreground/90">
-                          <Building2 className="size-3 text-primary/80 shrink-0" />
-                          {convenio}
-                        </span>
-
-                        <span className="text-muted-foreground/40">•</span>
-
-                        <span className="flex items-center gap-1">
-                          <Calendar className="size-3 text-muted-foreground/70 shrink-0" />
-                          <span>
-                            {new Date(adm.fechaHora).toLocaleString("es-ES", {
-                              dateStyle: "short",
-                              timeStyle: "short",
-                            })}
-                          </span>
-                        </span>
-
-                        <span className="text-muted-foreground/40">•</span>
-
-                        <span className="flex items-center gap-1">
-                          <Stethoscope className="size-3 text-blue-600/80 shrink-0" />
-                          <span className="truncate max-w-[200px]">
-                            {numPrestaciones === 1
-                              ? primeraPrestacion
-                              : `${primeraPrestacion} (+${numPrestaciones - 1})`}
-                          </span>
-                        </span>
-
-                        {adm.recepcionista && (
-                          <>
-                            <span className="text-muted-foreground/40">•</span>
-                            <span className="flex items-center gap-1 text-[10.5px] text-foreground/80">
-                              <User className="size-3 text-emerald-600 shrink-0" />
-                              <span className="truncate max-w-[140px]" title={adm.recepcionista.nombreCompleto}>
-                                {adm.recepcionista.nombreCompleto}
-                              </span>
-                            </span>
-                          </>
-                        )}
-                      </div>
-
-                      {/* Metadatos de Auditoría UX/UI */}
-                      {(adm.creadoPor || adm.fechaCreacion || adm.modificadoPor) && (
-                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground/70 flex-wrap pt-1 border-t border-border/30 mt-1">
-                          {adm.creadoPor && (
-                            <span className="flex items-center gap-1">
-                              <ShieldCheck className="size-2.5 text-primary/70 shrink-0" />
-                              <span>
-                                Creado por: <strong className="text-foreground/75 font-medium">{adm.creadoPor}</strong>
-                              </span>
-                              {adm.fechaCreacion && (
-                                <span className="font-mono text-[9.5px] text-muted-foreground/60">
-                                  ({new Date(adm.fechaCreacion).toLocaleString("es-ES", {
-                                    dateStyle: "short",
-                                    timeStyle: "short",
-                                  })})
-                                </span>
-                              )}
-                            </span>
-                          )}
-
-                          {adm.modificadoPor && (
-                            <>
-                              <span className="text-muted-foreground/30">•</span>
-                              <span className="flex items-center gap-1">
-                                <History className="size-2.5 text-amber-600/70 shrink-0" />
-                                <span>
-                                  Modificado por: <strong className="text-foreground/75 font-medium">{adm.modificadoPor}</strong>
-                                </span>
-                                {adm.fechaModificacion && (
-                                  <span className="font-mono text-[9.5px] text-muted-foreground/60">
-                                    ({new Date(adm.fechaModificacion).toLocaleString("es-ES", {
-                                      dateStyle: "short",
-                                      timeStyle: "short",
-                                    })})
-                                  </span>
-                                )}
-                              </span>
-                            </>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Bloque Derecho: Precio, Estado & Acciones */}
-                  <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/30">
-                    <div className="flex flex-col items-start sm:items-end pr-0.5">
-                      <span className="text-sm font-black text-foreground font-mono tracking-tight">
-                        Bs. {total.toFixed(2)}
-                      </span>
-                      <span className="text-[10px] text-muted-foreground font-medium">
-                        {numPrestaciones} prestación{numPrestaciones !== 1 ? "es" : ""}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-1.5">
-                      <AdmisionStatusBadge estado={adm.estado} />
-
-                      {/* Botón directo de flujo según estado (Sin Modal) */}
-                      {adm.estado === EstadoAdmision.Registrada && (
-                        <Button
-                          type="button"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDirectChangeStatus?.(adm, EstadoAdmision.Confirmada);
-                          }}
-                          className="h-7.5 px-2.5 text-[11px] font-semibold gap-1 bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs cursor-pointer transition-all hover:scale-[1.02]"
-                          title="Confirmar admisión directamente"
-                        >
-                          <CheckCircle2 className="size-3" />
-                          <span>Confirmar</span>
-                        </Button>
-                      )}
-
-                      {adm.estado === EstadoAdmision.Confirmada && (
-                        <Button
-                          type="button"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDirectChangeStatus?.(adm, EstadoAdmision.EnviadaVenta);
-                          }}
-                          className="h-7.5 px-2.5 text-[11px] font-semibold gap-1 bg-purple-600 hover:bg-purple-700 text-white shadow-2xs cursor-pointer transition-all hover:scale-[1.02]"
-                          title="Enviar admisión a Venta/Facturación"
-                        >
-                          <Send className="size-3" />
-                          <span>Enviar a Venta</span>
-                        </Button>
-                      )}
-
-                      {/* Botón Ver Ficha Visible */}
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onViewDetail(adm);
-                        }}
-                        className="h-7.5 px-2.5 text-[11px] font-semibold gap-1 border-border/80 text-foreground hover:bg-accent hover:text-primary shadow-2xs cursor-pointer transition-all"
-                        title="Ver Ficha y Detalle de Admisión"
-                      >
-                        <Eye className="size-3 text-primary" />
-                        <span>Ver Ficha</span>
-                      </Button>
-
-                      {/* Botón Editar Visible (Solo en estado Registrada) */}
-                      {adm.estado === EstadoAdmision.Registrada && onEdit && (
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onEdit(adm);
-                          }}
-                          className="h-7.5 px-2.5 text-[11px] font-semibold gap-1 border-amber-500/30 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10 shadow-2xs cursor-pointer transition-all"
-                          title="Editar Admisión y Servicios"
-                        >
-                          <Pencil className="size-3" />
-                          <span>Editar</span>
-                        </Button>
-                      )}
-
-                      {/* Botón Cancelar Visible */}
-                      {adm.estado !== EstadoAdmision.Cancelada && (
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="ghost"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDelete(adm.id);
-                          }}
-                          className="h-7.5 px-2 text-[11px] font-semibold gap-1 text-destructive/80 hover:text-destructive hover:bg-destructive/10 cursor-pointer transition-all"
-                          title="Cancelar admisión"
-                        >
-                          <Trash2 className="size-3" />
-                          <span>Cancelar</span>
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
           </div>
         )}
 
