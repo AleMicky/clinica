@@ -262,8 +262,6 @@ function AdmisionItemActions({
 }: Readonly<AdmisionItemActionsProps>) {
   return (
     <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-      <AdmisionStatusBadge estado={adm.estado} />
-
       {/* Botón directo de flujo según estado (Sin Modal) */}
       {adm.estado === EstadoAdmision.Registrada && (
         <Button
@@ -417,11 +415,13 @@ function AdmisionListItem({
         </div>
 
         <div className="min-w-0 flex-1 space-y-1">
-          {/* Fila Principal: Número, Paciente, Doc, Convenio */}
+          {/* Fila Principal: Número, Estado, Paciente, Doc, Convenio */}
           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             <span className="font-mono font-bold text-[11px] text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20 shrink-0">
               #{adm.numero}
             </span>
+
+            <AdmisionStatusBadge estado={adm.estado} className="shrink-0" />
 
             <span
               className="font-bold text-xs sm:text-sm text-foreground group-hover:text-primary transition-colors truncate text-left"
