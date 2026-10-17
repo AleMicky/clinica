@@ -38,12 +38,74 @@ export function AdmisionCarritoSection({
   totalSubtotal,
   totalDescuentos,
   grandTotal,
-}: AdmisionCarritoSectionProps) {
+}: Readonly<AdmisionCarritoSectionProps>) {
+  let carritoContent: React.ReactNode;
+  if (!isPatientValid) {
+    carritoContent = (
+      /* ESTADO BLOQUEADO: FALTA PACIENTE */
+      <div className="py-10 px-4 text-center border border-dashed border-amber-500/30 rounded-xl bg-amber-500/5 space-y-2.5">
+        <div className="size-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center mx-auto shadow-2xs">
+          <Lock className="size-5" />
+        </div>
+        <div className="space-y-1">
+          <h4 className="font-bold text-xs sm:text-sm text-foreground">
+            Paso 3 Bloqueado: Selección de Paciente Requerida
+          </h4>
+          <p className="text-[11px] text-muted-foreground max-w-sm mx-auto leading-relaxed">
+            Para consultar precios de convenio y asignar prestaciones, por favor seleccione o registre al paciente en el <strong>Paso 1</strong>.
+          </p>
+        </div>
+      </div>
+    );
+  } else if (detalles.length === 0) {
+    carritoContent = (
+      /* ESTADO VACÍO: CARRITO SIN PRESTACIONES */
+      <div className="py-10 px-4 text-center border border-dashed border-border/70 rounded-xl bg-muted/5 space-y-3">
+        <div className="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center mx-auto shadow-2xs">
+          <ShoppingCart className="size-5" />
+        </div>
+        <div className="space-y-1">
+          <h4 className="font-bold text-xs sm:text-sm text-foreground">
+            No hay prestaciones agregadas aún
+          </h4>
+          <p className="text-[11px] text-muted-foreground max-w-sm mx-auto leading-relaxed">
+            Haga clic en <strong>&ldquo;Catálogo de Prestaciones&rdquo;</strong> para buscar y añadir consultas médicas, exámenes de laboratorio o procedimientos.
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={onOpenMultiPicker}
+          className="h-8 text-xs font-semibold gap-1.5 px-3.5 rounded-lg border-primary/30 text-primary hover:bg-primary/10 cursor-pointer shadow-2xs"
+        >
+          <PlusCircle className="size-3.5" />
+          <span>Explorar Catálogo</span>
+        </Button>
+      </div>
+    );
+  } else {
+    carritoContent = (
+      /* LISTA DE ITEMS DEL CARRITO */
+      <div className="space-y-2 max-h-[calc(100vh-340px)] overflow-y-auto pr-0.5 scrollbar-thin">
+        {detalles.map((row, idx) => (
+          <ServicioRowItem
+            key={row.id}
+            row={row}
+            index={idx}
+            medicos={medicosList}
+            onUpdate={updateDetalle}
+            onRemove={removeDetalle}
+          />
+        ))}
+      </div>
+    );
+  }
+
   return (
     <Card
-      className={`border shadow-2xs bg-card overflow-hidden transition-all ${
-        !isPatientValid ? "border-amber-500/30" : "border-border/80"
-      }`}
+      className={`border shadow-2xs bg-card overflow-hidden transition-all ${!isPatientValid ? "border-amber-500/30" : "border-border/80"
+        }`}
     >
       <CardHeader className="p-3 pb-2.5 border-b border-border/60 bg-muted/20 flex flex-row items-center justify-between space-y-0">
         <div className="flex items-center gap-2 min-w-0">
@@ -72,11 +134,10 @@ export function AdmisionCarritoSection({
             onOpenMultiPicker();
           }}
           disabled={!isPatientValid}
-          className={`h-7.5 text-xs font-semibold gap-1.5 px-3 rounded-lg shadow-xs transition-all cursor-pointer ${
-            !isPatientValid
+          className={`h-7.5 text-xs font-semibold gap-1.5 px-3 rounded-lg shadow-xs transition-all cursor-pointer ${!isPatientValid
               ? "bg-muted text-muted-foreground border-muted cursor-not-allowed opacity-50"
               : "bg-primary hover:bg-primary/90 text-primary-foreground"
-          }`}
+            }`}
           title={!isPatientValid ? "Seleccione un paciente primero" : "Abrir catálogo de prestaciones"}
         >
           {!isPatientValid ? (
@@ -89,61 +150,7 @@ export function AdmisionCarritoSection({
       </CardHeader>
 
       <CardContent className="p-3 space-y-3">
-        {!isPatientValid ? (
-          /* ESTADO BLOQUEADO: FALTA PACIENTE */
-          <div className="py-10 px-4 text-center border border-dashed border-amber-500/30 rounded-xl bg-amber-500/5 space-y-2.5">
-            <div className="size-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center mx-auto shadow-2xs">
-              <Lock className="size-5" />
-            </div>
-            <div className="space-y-1">
-              <h4 className="font-bold text-xs sm:text-sm text-foreground">
-                Paso 3 Bloqueado: Selección de Paciente Requerida
-              </h4>
-              <p className="text-[11px] text-muted-foreground max-w-sm mx-auto leading-relaxed">
-                Para consultar precios de convenio y asignar prestaciones, por favor seleccione o registre al paciente en el <strong>Paso 1</strong>.
-              </p>
-            </div>
-          </div>
-        ) : detalles.length === 0 ? (
-          /* ESTADO VACÍO: CARRITO SIN PRESTACIONES */
-          <div className="py-10 px-4 text-center border border-dashed border-border/70 rounded-xl bg-muted/5 space-y-3">
-            <div className="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center mx-auto shadow-2xs">
-              <ShoppingCart className="size-5" />
-            </div>
-            <div className="space-y-1">
-              <h4 className="font-bold text-xs sm:text-sm text-foreground">
-                No hay prestaciones agregadas aún
-              </h4>
-              <p className="text-[11px] text-muted-foreground max-w-sm mx-auto leading-relaxed">
-                Haga clic en <strong>&ldquo;Catálogo de Prestaciones&rdquo;</strong> para buscar y añadir consultas médicas, exámenes de laboratorio o procedimientos.
-              </p>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={onOpenMultiPicker}
-              className="h-8 text-xs font-semibold gap-1.5 px-3.5 rounded-lg border-primary/30 text-primary hover:bg-primary/10 cursor-pointer shadow-2xs"
-            >
-              <PlusCircle className="size-3.5" />
-              <span>Explorar Catálogo</span>
-            </Button>
-          </div>
-        ) : (
-          /* LISTA DE ITEMS DEL CARRITO */
-          <div className="space-y-2 max-h-[calc(100vh-340px)] overflow-y-auto pr-0.5 scrollbar-thin">
-            {detalles.map((row, idx) => (
-              <ServicioRowItem
-                key={row.id}
-                row={row}
-                index={idx}
-                medicos={medicosList}
-                onUpdate={updateDetalle}
-                onRemove={removeDetalle}
-              />
-            ))}
-          </div>
-        )}
+        {carritoContent}
 
         {/* PANEL DE LIQUIDACIÓN Y TOTALES (BILLING SUMMARY CARD) */}
         <div className="p-3 bg-linear-to-r from-card via-background to-card border border-border/80 rounded-xl shadow-2xs space-y-2.5">

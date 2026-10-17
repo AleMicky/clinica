@@ -52,58 +52,64 @@ export function MultiServicePickerModal({
   categorias,
   convenioId,
   tarifarioId,
-}: MultiServicePickerModalProps) {
-  const [activeCatId, setActiveCatId] = React.useState<number | undefined>(categorias[0]?.id);
+}: Readonly<MultiServicePickerModalProps>) {
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      {isOpen && (
+        <MultiServicePickerModalContent
+          onClose={onClose}
+          categorias={categorias}
+          convenioId={convenioId}
+          tarifarioId={tarifarioId}
+        />
+      )}
+    </Dialog>
+  );
+}
+
+function MultiServicePickerModalContent({
+  onClose,
+  categorias,
+  convenioId,
+  tarifarioId,
+}: Readonly<Omit<MultiServicePickerModalProps, "isOpen">>) {
+  const [selectedCatId, setSelectedCatId] = React.useState<number | undefined>(undefined);
   const [searchQuery, setSearchQuery] = React.useState<string>("");
 
   const { setServicesFromPicker, detalles, isServiceInCart } = useAdmisionStore();
 
-  const [selectedMap, setSelectedMap] = React.useState<Map<number, SelectedServiceCartItem>>(
-    new Map()
-  );
-
-  // Actualizar la categoría activa al cargar categorías o al abrir el modal
-  React.useEffect(() => {
-    if (categorias.length > 0) {
-      if (!activeCatId || !categorias.some((c) => c.id === activeCatId)) {
-        setActiveCatId(categorias[0].id);
-      }
+  const [selectedMap, setSelectedMap] = React.useState<Map<number, SelectedServiceCartItem>>(() => {
+    const initialMap = new Map<number, SelectedServiceCartItem>();
+    for (const d of detalles) {
+      initialMap.set(Number(d.servicioId), {
+        servicio: {
+          id: Number(d.servicioId),
+          codigo: d.servicioCodigo || "",
+          nombre: d.servicioNombre || "",
+          precio: Number(d.precioUnitario) || 0,
+          medicos: d.medicosDisponibles || [],
+        } as unknown as ServicioTarifarioResponse,
+        catId: d.categoriaId || 0,
+        catNombre: d.categoriaNombre || "Catálogo",
+        cantidad: d.cantidad || 1,
+        medicosDisponibles: d.medicosDisponibles || [],
+        medicoId: d.medicoId ?? undefined,
+      });
     }
-  }, [categorias, activeCatId]);
+    return initialMap;
+  });
 
-  // Cargar prestaciones existentes del carrito para conservar selecciones y totales
-  React.useEffect(() => {
-    if (isOpen) {
-      const initialMap = new Map<number, SelectedServiceCartItem>();
-      for (const d of detalles) {
-        initialMap.set(Number(d.servicioId), {
-          servicio: {
-            id: Number(d.servicioId),
-            codigo: d.servicioCodigo || "",
-            nombre: d.servicioNombre || "",
-            precio: Number(d.precioUnitario) || 0,
-            medicos: d.medicosDisponibles || [],
-          } as unknown as ServicioTarifarioResponse,
-          catId: d.categoriaId || 0,
-          catNombre: d.categoriaNombre || "Catálogo",
-          cantidad: d.cantidad || 1,
-          medicosDisponibles: d.medicosDisponibles || [],
-          medicoId: d.medicoId ?? undefined,
-        });
-      }
-      setSelectedMap(initialMap);
-      setSearchQuery("");
-      if (categorias.length > 0) {
-        setActiveCatId(categorias[0].id);
-      }
-    }
-  }, [isOpen, categorias, detalles]);
+  // Si selectedCatId no está definido o ya no existe en categorias, seleccionar la primera categoría disponible
+  const activeCatId =
+    (selectedCatId && categorias.some((c) => c.id === selectedCatId))
+      ? selectedCatId
+      : categorias[0]?.id;
 
   // Si se recibe un convenioId, consultar sus tarifarios para obtener el tarifarioId correspondiente
   const numericConvenioId = convenioId && convenioId !== "particular" ? Number(convenioId) : 0;
   const { data: convenioTarifariosData } = useConvenioTarifarios(
     numericConvenioId,
-    Boolean(isOpen && numericConvenioId)
+    Boolean(numericConvenioId)
   );
 
   const activeTarifarioId: number | undefined =
@@ -116,14 +122,14 @@ export function MultiServicePickerModal({
       : undefined) ||
     undefined;
 
-  const currentCatId = activeCatId ?? categorias[0]?.id ?? 0;
+  const currentCatId = activeCatId ?? 0;
 
   // Consulta a /api/v1/categorias-servicios/{categoriaId}/servicios/tarifario?tarifarioId={int?}
   const { data: serviciosData, isLoading } = useServiciosTarifario(
     currentCatId,
     activeTarifarioId,
     undefined,
-    Boolean(isOpen && currentCatId > 0)
+    Boolean(currentCatId > 0)
   );
 
   const serviciosList: ServicioTarifarioResponse[] = React.useMemo(() => {
@@ -138,15 +144,15 @@ export function MultiServicePickerModal({
   const activeCategory = categorias.find((c) => c.id === activeCatId) || categorias[0];
 
   const getServicePrice = (s: ServicioTarifarioResponse | ServicioResponse): number => {
-    if (typeof s.precio === "number" && !isNaN(s.precio)) return s.precio;
+    if (typeof s.precio === "number" && !Number.isNaN(s.precio)) return s.precio;
     const raw = s as unknown as Record<string, unknown>;
     const keys = ["precio", "Precio", "precioBase", "PrecioBase", "monto", "Monto", "price", "Price"];
     for (const key of keys) {
       const val = raw[key];
-      if (typeof val === "number" && !isNaN(val)) return val;
+      if (typeof val === "number" && !Number.isNaN(val)) return val;
       if (typeof val === "string" && val.trim() !== "") {
         const num = Number(val);
-        if (!isNaN(num)) return num;
+        if (!Number.isNaN(num)) return num;
       }
     }
     return 0;
@@ -166,8 +172,8 @@ export function MultiServicePickerModal({
     return serviciosList.filter(
       (s) =>
         s.nombre.toLowerCase().includes(q) ||
-        (s.codigo && s.codigo.toLowerCase().includes(q)) ||
-        (s.descripcion && s.descripcion.toLowerCase().includes(q))
+        (s.codigo?.toLowerCase().includes(q) ?? false) ||
+        (s.descripcion?.toLowerCase().includes(q) ?? false)
     );
   }, [serviciosList, searchQuery]);
 
@@ -235,11 +241,11 @@ export function MultiServicePickerModal({
   // Cantidad de seleccionados por categoría
   const selectedCountsByCat = React.useMemo(() => {
     const counts = new Map<number, number>();
-    for (const item of selectedItemsArray) {
+    for (const item of selectedMap.values()) {
       counts.set(item.catId, (counts.get(item.catId) || 0) + item.cantidad);
     }
     return counts;
-  }, [selectedItemsArray]);
+  }, [selectedMap]);
 
   const handleConfirm = () => {
     if (selectedItemsArray.length === 0) {
@@ -251,12 +257,215 @@ export function MultiServicePickerModal({
     onClose();
   };
 
+  const renderServiciosContent = () => {
+    if (isLoading) {
+      return (
+        <div className="p-8 text-center text-xs text-muted-foreground space-y-2">
+          <Loader2 className="size-6 animate-spin mx-auto text-primary" />
+          <p className="font-medium text-[11px]">Cargando prestaciones médicas...</p>
+        </div>
+      );
+    }
+
+    if (filteredServicios.length === 0) {
+      return (
+        <div className="p-8 text-center text-xs text-muted-foreground border border-dashed rounded-lg">
+          No se encontraron prestaciones en esta categoría{searchQuery ? ` para "${searchQuery}"` : ""}.
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 pb-2">
+        {filteredServicios.map((s) => {
+          const isSelectedInModal = selectedMap.has(s.id);
+          const isAlreadyInCart = isServiceInCart(s.id);
+          const selectedData = selectedMap.get(s.id);
+          const price = getServicePrice(s);
+          const medicos = getServiceMedicos(s);
+
+          let cardBorderBg = "border-border/70 bg-card hover:border-primary/50 hover:bg-muted/30";
+          if (isSelectedInModal) {
+            cardBorderBg = "border-primary bg-primary/8 ring-1.5 ring-primary/40 shadow-xs";
+          } else if (isAlreadyInCart) {
+            cardBorderBg = "border-emerald-500/40 bg-emerald-500/5 hover:border-emerald-500/70";
+          }
+
+          let badgeElement: React.ReactNode = null;
+          if (isSelectedInModal) {
+            badgeElement = (
+              <button
+                type="button"
+                onClick={() => handleToggleSelect(s)}
+                className="cursor-pointer group/badge focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-primary rounded"
+                title={`Desmarcar prestación ${s.nombre}`}
+              >
+                <Badge className="bg-primary text-primary-foreground group-hover/badge:bg-destructive transition-colors border-0 text-[9px] shrink-0 font-bold px-1.5 py-0 flex items-center gap-1">
+                  <Check className="size-2.5 group-hover/badge:hidden" />
+                  <X className="size-2.5 hidden group-hover/badge:inline-block" />
+                  <span className="group-hover/badge:hidden">ELEGIDO</span>
+                  <span className="hidden group-hover/badge:inline-block">QUITAR</span>
+                </Badge>
+              </button>
+            );
+          } else if (isAlreadyInCart) {
+            badgeElement = (
+              <Badge className="bg-emerald-600 text-white border-0 text-[9px] shrink-0 font-bold px-1.5 py-0">
+                ✓ En Carrito
+              </Badge>
+            );
+          }
+
+          let actionElement: React.ReactNode;
+          if (isSelectedInModal) {
+            actionElement = (
+              <div className="flex items-center gap-0.5 bg-background border border-primary/40 rounded-md p-0.5">
+                <button
+                  type="button"
+                  onClick={(e) => handleUpdateQuantity(s.id, -1, e)}
+                  className="size-5 rounded hover:bg-muted flex items-center justify-center text-foreground font-bold"
+                  aria-label={`Disminuir cantidad de ${s.nombre}`}
+                >
+                  <Minus className="size-2.5" />
+                </button>
+                <span className="text-[11px] font-bold text-primary px-1">
+                  {selectedData?.cantidad || 1}
+                </span>
+                <button
+                  type="button"
+                  onClick={(e) => handleUpdateQuantity(s.id, 1, e)}
+                  className="size-5 rounded hover:bg-muted flex items-center justify-center text-foreground font-bold"
+                  aria-label={`Aumentar cantidad de ${s.nombre}`}
+                >
+                  <Plus className="size-2.5" />
+                </button>
+              </div>
+            );
+          } else if (isAlreadyInCart) {
+            actionElement = (
+              <button
+                type="button"
+                onClick={() => handleToggleSelect(s)}
+                className="text-[9.5px] font-bold text-emerald-600 hover:text-emerald-700 hover:underline cursor-pointer transition-colors"
+                title={`Sumar otra fila de ${s.nombre}`}
+              >
+                + Sumar Fila
+              </button>
+            );
+          } else {
+            actionElement = (
+              <button
+                type="button"
+                onClick={() => handleToggleSelect(s)}
+                className="text-[10px] font-semibold text-primary hover:text-primary/80 hover:underline cursor-pointer transition-colors"
+                title={`Elegir ${s.nombre}`}
+              >
+                + Elegir
+              </button>
+            );
+          }
+
+          let medicoElement: React.ReactNode = null;
+          if (medicos.length > 0) {
+            if (isSelectedInModal) {
+              medicoElement = (
+                <div className="pt-0.5 space-y-0.5">
+                  <label className="text-[9.5px] font-bold text-primary flex items-center gap-1">
+                    🩺 Médico Responsable:
+                  </label>
+                  <select
+                    value={selectedData?.medicoId ?? ""}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      handleSelectMedico(s.id, val ? Number(val) : undefined);
+                    }}
+                    className="w-full h-6 text-[10.5px] font-medium rounded-md bg-background border border-primary/40 px-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs cursor-pointer"
+                  >
+                    <option value="">-- Sin Médico / Guardia --</option>
+                    {medicos.map((m) => (
+                      <option key={m.medicoId} value={m.medicoId}>
+                        {m.nombreMedico}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              );
+            } else {
+              const medicosCountText =
+                medicos.length === 1
+                  ? medicos[0].nombreMedico
+                  : `${medicos.length} médicos disponibles`;
+
+              medicoElement = (
+                <div className="flex items-center gap-1 text-[9.5px] text-muted-foreground font-medium bg-muted/40 px-1.5 py-0.5 rounded border border-border/50">
+                  <span className="shrink-0 text-primary">🩺</span>
+                  <span
+                    className="truncate"
+                    title={medicos.map((m) => m.nombreMedico).join(", ")}
+                  >
+                    {medicosCountText}
+                  </span>
+                </div>
+              );
+            }
+          }
+
+          return (
+            <div
+              key={s.id}
+              className={`p-2.5 rounded-lg border transition-all text-left flex flex-col justify-between space-y-2 shadow-2xs select-none ${cardBorderBg}`}
+            >
+              <div className="space-y-1.5">
+                {/* CÓDIGO, TÍTULO Y BADGE */}
+                <div className="flex items-start justify-between gap-1.5">
+                  <div className="space-y-0.5 min-w-0 flex-1">
+                    {s.codigo && (
+                      <span className="text-[9.5px] font-mono font-bold text-muted-foreground uppercase block leading-none">
+                        {s.codigo}
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleToggleSelect(s)}
+                      className="font-bold text-[11.5px] text-foreground hover:text-primary transition-colors leading-tight line-clamp-2 text-left cursor-pointer focus-visible:outline-hidden focus-visible:underline"
+                      title={s.nombre}
+                    >
+                      {s.nombre}
+                    </button>
+                  </div>
+                  {badgeElement}
+                </div>
+
+                {/* DESCRIPCIÓN OPCIONAL */}
+                {s.descripcion && (
+                  <p className="text-[10px] text-muted-foreground line-clamp-1 leading-tight">
+                    {s.descripcion}
+                  </p>
+                )}
+
+                {/* ASIGNACIÓN DE MÉDICO */}
+                {medicoElement}
+              </div>
+
+              {/* FOOTER DE LA TARJETA: PRECIO Y CONTROLES */}
+              <div className="flex items-center justify-between pt-1.5 border-t border-border/40 w-full">
+                <span className="text-xs font-bold text-primary">
+                  Bs. {price.toFixed(2)}
+                </span>
+                {actionElement}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent
-        showCloseButton={false}
-        className="sm:max-w-5xl md:max-w-6xl w-[94vw] h-[82vh] max-h-[82vh] flex flex-col p-0 gap-0 overflow-hidden bg-card border-border/80 shadow-2xl rounded-xl"
-      >
+    <DialogContent
+      showCloseButton={false}
+      className="sm:max-w-5xl md:max-w-6xl w-[94vw] h-[82vh] max-h-[82vh] flex flex-col p-0 gap-0 overflow-hidden bg-card border-border/80 shadow-2xl rounded-xl"
+    >
         {/* HEADER COMPACTO */}
         <DialogHeader className="shrink-0 px-4 py-2.5 bg-muted/40 border-b border-border/70 flex flex-row items-center justify-between gap-3 space-y-0">
           <div className="min-w-0">
@@ -318,7 +527,7 @@ export function MultiServicePickerModal({
                 <button
                   key={cat.id}
                   type="button"
-                  onClick={() => setActiveCatId(cat.id)}
+                  onClick={() => setSelectedCatId(cat.id)}
                   className={`w-full px-2.5 py-2 rounded-lg text-left transition-all flex items-center justify-between text-xs cursor-pointer ${isActive
                       ? "bg-primary text-primary-foreground shadow-xs font-semibold"
                       : "bg-background hover:bg-muted text-foreground border border-border/50 font-medium"
@@ -371,153 +580,7 @@ export function MultiServicePickerModal({
             </div>
 
             {/* ESTADOS: CARGANDO / VACÍO / GRILLA */}
-            {isLoading ? (
-              <div className="p-8 text-center text-xs text-muted-foreground space-y-2">
-                <Loader2 className="size-6 animate-spin mx-auto text-primary" />
-                <p className="font-medium text-[11px]">Cargando prestaciones médicas...</p>
-              </div>
-            ) : filteredServicios.length === 0 ? (
-              <div className="p-8 text-center text-xs text-muted-foreground border border-dashed rounded-lg">
-                No se encontraron prestaciones en esta categoría{searchQuery ? ` para "${searchQuery}"` : ""}.
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 pb-2">
-                {filteredServicios.map((s) => {
-                  const isSelectedInModal = selectedMap.has(s.id);
-                  const isAlreadyInCart = isServiceInCart(s.id);
-                  const selectedData = selectedMap.get(s.id);
-                  const price = getServicePrice(s);
-                  const medicos = getServiceMedicos(s);
-
-                  return (
-                    <div
-                      key={s.id}
-                      onClick={() => handleToggleSelect(s)}
-                      className={`p-2.5 rounded-lg border transition-all text-left flex flex-col justify-between cursor-pointer space-y-2 shadow-2xs select-none ${isSelectedInModal
-                          ? "border-primary bg-primary/8 ring-1.5 ring-primary/40 shadow-xs"
-                          : isAlreadyInCart
-                            ? "border-emerald-500/40 bg-emerald-500/5 hover:border-emerald-500/70"
-                            : "border-border/70 bg-card hover:border-primary/50 hover:bg-muted/30"
-                        }`}
-                    >
-                      <div className="space-y-1.5">
-                        {/* CÓDIGO, TÍTULO Y BADGE */}
-                        <div className="flex items-start justify-between gap-1.5">
-                          <div className="space-y-0.5 min-w-0 flex-1">
-                            {s.codigo && (
-                              <span className="text-[9.5px] font-mono font-bold text-muted-foreground uppercase block leading-none">
-                                {s.codigo}
-                              </span>
-                            )}
-                            <p
-                              className="font-bold text-[11.5px] text-foreground leading-tight line-clamp-2"
-                              title={s.nombre}
-                            >
-                              {s.nombre}
-                            </p>
-                          </div>
-                          {isSelectedInModal ? (
-                            <Badge className="bg-primary text-primary-foreground border-0 text-[9px] shrink-0 font-bold px-1.5 py-0">
-                              <Check className="size-2.5 mr-0.5" /> ELEGIDO
-                            </Badge>
-                          ) : isAlreadyInCart ? (
-                            <Badge className="bg-emerald-600 text-white border-0 text-[9px] shrink-0 font-bold px-1.5 py-0">
-                              ✓ En Carrito
-                            </Badge>
-                          ) : null}
-                        </div>
-
-                        {/* DESCRIPCIÓN OPCIONAL */}
-                        {s.descripcion && (
-                          <p className="text-[10px] text-muted-foreground line-clamp-1 leading-tight">
-                            {s.descripcion}
-                          </p>
-                        )}
-
-                        {/* ASIGNACIÓN DE MÉDICO */}
-                        {isSelectedInModal && medicos.length > 0 ? (
-                          <div
-                            onClick={(e) => e.stopPropagation()}
-                            className="pt-0.5 space-y-0.5"
-                          >
-                            <label className="text-[9.5px] font-bold text-primary flex items-center gap-1">
-                              🩺 Médico Responsable:
-                            </label>
-                            <select
-                              value={selectedData?.medicoId ?? ""}
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                handleSelectMedico(s.id, val ? Number(val) : undefined);
-                              }}
-                              className="w-full h-6 text-[10.5px] font-medium rounded-md bg-background border border-primary/40 px-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs cursor-pointer"
-                            >
-                              <option value="">-- Sin Médico / Guardia --</option>
-                              {medicos.map((m) => (
-                                <option key={m.medicoId} value={m.medicoId}>
-                                  {m.nombreMedico}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        ) : medicos.length > 0 ? (
-                          <div className="flex items-center gap-1 text-[9.5px] text-muted-foreground font-medium bg-muted/40 px-1.5 py-0.5 rounded border border-border/50">
-                            <span className="shrink-0 text-primary">🩺</span>
-                            <span
-                              className="truncate"
-                              title={medicos.map((m) => m.nombreMedico).join(", ")}
-                            >
-                              {medicos.length === 1
-                                ? medicos[0].nombreMedico
-                                : `${medicos.length} médicos disponibles`}
-                            </span>
-                          </div>
-                        ) : null}
-                      </div>
-
-                      {/* FOOTER DE LA TARJETA: PRECIO Y CONTROLES */}
-                      <div className="flex items-center justify-between pt-1.5 border-t border-border/40 w-full">
-                        <span className="text-xs font-bold text-primary">
-                          Bs. {price.toFixed(2)}
-                        </span>
-
-                        {isSelectedInModal ? (
-                          <div
-                            onClick={(e) => e.stopPropagation()}
-                            className="flex items-center gap-0.5 bg-background border border-primary/40 rounded-md p-0.5"
-                          >
-                            <button
-                              type="button"
-                              onClick={(e) => handleUpdateQuantity(s.id, -1, e)}
-                              className="size-5 rounded hover:bg-muted flex items-center justify-center text-foreground font-bold"
-                            >
-                              <Minus className="size-2.5" />
-                            </button>
-                            <span className="text-[11px] font-bold text-primary px-1">
-                              {selectedData?.cantidad || 1}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={(e) => handleUpdateQuantity(s.id, 1, e)}
-                              className="size-5 rounded hover:bg-muted flex items-center justify-center text-foreground font-bold"
-                            >
-                              <Plus className="size-2.5" />
-                            </button>
-                          </div>
-                        ) : isAlreadyInCart ? (
-                          <span className="text-[9.5px] font-bold text-emerald-600">
-                            + Sumar Fila
-                          </span>
-                        ) : (
-                          <span className="text-[10px] font-semibold text-primary">
-                            + Elegir
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            {renderServiciosContent()}
           </div>
         </div>
 
@@ -562,6 +625,5 @@ export function MultiServicePickerModal({
           </div>
         </div>
       </DialogContent>
-    </Dialog>
   );
 }

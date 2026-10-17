@@ -15,7 +15,7 @@ interface AdmisionStatusBadgeProps {
   className?: string;
 }
 
-export function AdmisionStatusBadge({ estado, className }: AdmisionStatusBadgeProps) {
+export function AdmisionStatusBadge({ estado, className }: Readonly<AdmisionStatusBadgeProps>) {
   switch (estado) {
     case EstadoAdmision.Registrada:
       return (

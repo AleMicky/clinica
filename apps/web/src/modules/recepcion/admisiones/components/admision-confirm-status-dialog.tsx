@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { Loader2, CheckCircle2, Send, XCircle, Clock } from "lucide-react";
 import {
   AlertDialog,
@@ -30,6 +29,19 @@ export interface AdmisionConfirmStatusDialogProps {
   isLoading?: boolean;
 }
 
+function getDialogTitle(targetEstado: EstadoAdmision): string {
+  switch (targetEstado) {
+    case EstadoAdmision.Confirmada:
+      return "¿Confirmar Admisión?";
+    case EstadoAdmision.EnviadaVenta:
+      return "¿Enviar Admisión a Venta?";
+    case EstadoAdmision.Cancelada:
+      return "¿Cancelar Admisión?";
+    default:
+      return "¿Cambiar Estado de la Admisión?";
+  }
+}
+
 export function AdmisionConfirmStatusDialog({
   open,
   onOpenChange,
@@ -37,11 +49,12 @@ export function AdmisionConfirmStatusDialog({
   targetEstado,
   onConfirm,
   isLoading = false,
-}: AdmisionConfirmStatusDialogProps) {
+}: Readonly<AdmisionConfirmStatusDialogProps>) {
   if (!admision || targetEstado === null) return null;
 
   const pacienteNombre = formatPacienteNombre(admision.paciente, admision.pacienteNombre);
   const targetLabel = EstadoAdmisionLabels[targetEstado];
+  const dialogTitle = getDialogTitle(targetEstado);
 
   let icon = <CheckCircle2 className="size-5 text-emerald-600" />;
   let mediaClass = "bg-emerald-500/10 text-emerald-600";
@@ -78,19 +91,13 @@ export function AdmisionConfirmStatusDialog({
             {icon}
           </AlertDialogMedia>
           <AlertDialogTitle className="text-base font-bold">
-            {targetEstado === EstadoAdmision.Confirmada
-              ? "¿Confirmar Admisión?"
-              : targetEstado === EstadoAdmision.EnviadaVenta
-              ? "¿Enviar Admisión a Venta?"
-              : targetEstado === EstadoAdmision.Cancelada
-              ? "¿Cancelar Admisión?"
-              : "¿Cambiar Estado de la Admisión?"}
+            {dialogTitle}
           </AlertDialogTitle>
           <AlertDialogDescription className="text-xs text-muted-foreground space-y-1.5">
             <span className="block">
               ¿Está seguro de cambiar el estado de la admisión{" "}
               <strong className="font-mono font-bold text-foreground">#{admision.numero}</strong> a{" "}
-              <strong className="font-bold text-foreground">"{targetLabel}"</strong>?
+              <strong className="font-bold text-foreground">&quot;{targetLabel}&quot;</strong>?
             </span>
             <span className="block text-[11px] text-muted-foreground">
               Paciente: <span className="font-medium text-foreground">{pacienteNombre}</span>

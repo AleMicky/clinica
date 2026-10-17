@@ -29,7 +29,7 @@ export function ServicioRowItem({
   medicos,
   onUpdate,
   onRemove,
-}: ServicioRowItemProps) {
+}: Readonly<ServicioRowItemProps>) {
   const cantidad = row.cantidad || 1;
   const precioUnitario = row.precioUnitario || 0;
   const descuento = row.descuento || 0;

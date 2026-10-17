@@ -39,7 +39,7 @@ function formatToLocalInputDate(dateInput?: string | Date): string {
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
-export function AdmisionPageForm({ admisionId }: AdmisionPageFormProps) {
+export function AdmisionPageForm({ admisionId }: Readonly<AdmisionPageFormProps>) {
   const isEditMode = Boolean(admisionId && admisionId > 0);
   const { data: existingAdmision, isLoading: isLoadingExistingAdmision } = useAdmision(
     admisionId ?? 0,
@@ -69,7 +69,7 @@ interface AdmisionFormContentProps {
   existingAdmision?: AdmisionResponse;
 }
 
-function AdmisionFormContent({ admisionId, existingAdmision }: AdmisionFormContentProps) {
+function AdmisionFormContent({ admisionId, existingAdmision }: Readonly<AdmisionFormContentProps>) {
   const router = useRouter();
   const isEditMode = Boolean(admisionId && admisionId > 0);
 

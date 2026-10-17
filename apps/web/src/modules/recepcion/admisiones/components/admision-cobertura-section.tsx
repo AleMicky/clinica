@@ -49,7 +49,7 @@ export function AdmisionCoberturaSection({
   empleadosList,
   isLoadingPacienteConvenios,
   isLoadingEmpleados,
-}: AdmisionCoberturaSectionProps) {
+}: Readonly<AdmisionCoberturaSectionProps>) {
   const recepcionistaOptions: AutocompleteOption[] = React.useMemo(() => {
     return empleadosList.map((emp) => ({
       value: String(emp.id),
@@ -102,6 +102,19 @@ export function AdmisionCoberturaSection({
     if (convenioId === "particular") return null;
     return pacienteConveniosList.find((pc) => pc.convenioId.toString() === convenioId);
   }, [convenioId, pacienteConveniosList]);
+
+  let conveniosStatusBadge: React.ReactNode = null;
+  if (isLoadingPacienteConvenios) {
+    conveniosStatusBadge = (
+      <span className="text-[9.5px] text-muted-foreground animate-pulse">Consultando convenios...</span>
+    );
+  } else if (pacienteConveniosList.length > 0) {
+    conveniosStatusBadge = (
+      <span className="text-[9.5px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.2 rounded border border-emerald-500/20">
+        {pacienteConveniosList.length} afiliado(s)
+      </span>
+    );
+  }
 
   return (
     <Card className="border border-border/70 shadow-2xs bg-card">
@@ -175,13 +188,7 @@ export function AdmisionCoberturaSection({
               <span>Convenio / Cobertura</span>
             </Label>
 
-            {isLoadingPacienteConvenios ? (
-              <span className="text-[9.5px] text-muted-foreground animate-pulse">Consultando convenios...</span>
-            ) : pacienteConveniosList.length > 0 ? (
-              <span className="text-[9.5px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.2 rounded border border-emerald-500/20">
-                {pacienteConveniosList.length} afiliado(s)
-              </span>
-            ) : null}
+            {conveniosStatusBadge}
           </div>
 
           <Autocomplete

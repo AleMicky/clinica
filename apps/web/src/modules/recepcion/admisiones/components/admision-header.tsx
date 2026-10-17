@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { FileText, Plus, RefreshCw } from "lucide-react";
@@ -12,7 +11,7 @@ interface AdmisionHeaderProps {
   isRefreshing?: boolean;
 }
 
-export function AdmisionHeader({ onAddClick, onRefresh, isRefreshing = false }: AdmisionHeaderProps) {
+export function AdmisionHeader({ onAddClick, onRefresh, isRefreshing = false }: Readonly<AdmisionHeaderProps>) {
   const router = useRouter();
 
   const handleAddClick = () => {

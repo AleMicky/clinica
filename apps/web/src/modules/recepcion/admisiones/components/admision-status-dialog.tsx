@@ -41,18 +41,39 @@ export function AdmisionStatusDialog({
   admision,
   onConfirm,
   isLoading = false,
-}: AdmisionStatusDialogProps) {
-  const [selectedEstado, setSelectedEstado] = React.useState<EstadoAdmision | null>(null);
-  const [observacion, setObservacion] = React.useState("");
+}: Readonly<AdmisionStatusDialogProps>) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      {open && admision && (
+        <AdmisionStatusDialogContent
+          key={admision.id}
+          admision={admision}
+          onOpenChange={onOpenChange}
+          onConfirm={onConfirm}
+          isLoading={isLoading}
+        />
+      )}
+    </Dialog>
+  );
+}
 
-  React.useEffect(() => {
-    if (admision) {
-      setSelectedEstado(admision.estado);
-      setObservacion(admision.observacion || "");
-    }
-  }, [admision, open]);
+interface AdmisionStatusDialogContentProps {
+  admision: AdmisionResponse;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: (targetEstado: EstadoAdmision, motivo?: string) => Promise<void>;
+  isLoading?: boolean;
+}
 
-  if (!admision) return null;
+function AdmisionStatusDialogContent({
+  admision,
+  onOpenChange,
+  onConfirm,
+  isLoading = false,
+}: Readonly<AdmisionStatusDialogContentProps>) {
+  const [selectedEstado, setSelectedEstado] = React.useState<EstadoAdmision | null>(
+    admision.estado
+  );
+  const [observacion, setObservacion] = React.useState(admision.observacion || "");
 
   const handleSave = async () => {
     if (!selectedEstado) return;
@@ -68,8 +89,7 @@ export function AdmisionStatusDialog({
   ];
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md border-border/80 shadow-lg">
+    <DialogContent className="sm:max-w-md border-border/80 shadow-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base font-bold">
             <RefreshCw className="size-4 text-primary" />
@@ -158,6 +178,5 @@ export function AdmisionStatusDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
   );
 }

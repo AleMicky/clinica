@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -47,7 +46,7 @@ export function AdmisionPacienteSection({
   filteredPacientes,
   isLoadingPacientes,
   onOpenRegisterModal,
-}: AdmisionPacienteSectionProps) {
+}: Readonly<AdmisionPacienteSectionProps>) {
   const fullName = selectedPaciente ? getPacienteFullName(selectedPaciente) : "";
   const initials = getInitials(fullName);
   const docInfo = selectedPaciente ? getPacienteDocument(selectedPaciente) : "";
