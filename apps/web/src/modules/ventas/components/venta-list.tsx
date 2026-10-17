@@ -33,9 +33,6 @@ interface VentaListProps {
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
   onViewDetail: (venta: VentaResponse) => void;
-  onEnviarACaja?: (venta: VentaResponse) => void;
-  onChangeStatus?: (venta: VentaResponse) => void;
-  onAnular?: (id: number) => void;
   onRefresh?: () => void;
 }
 
@@ -53,21 +50,18 @@ export function VentaList({
   onPageChange,
   onPageSizeChange,
   onViewDetail,
-  onEnviarACaja,
-  onChangeStatus,
-  onAnular,
 }: Readonly<VentaListProps>) {
   const tabs: Array<{
     key: EstadoVenta;
     label: string;
     activeClasses: string;
   }> = [
-      { key: EstadoVenta.Pendiente, label: "Pendientes", activeClasses: "bg-amber-600 text-white shadow-xs" },
-      { key: EstadoVenta.PendienteCobro, label: "En Caja", activeClasses: "bg-indigo-600 text-white shadow-xs" },
-      { key: EstadoVenta.ParcialmentePagada, label: "Parciales", activeClasses: "bg-blue-600 text-white shadow-xs" },
-      { key: EstadoVenta.Pagada, label: "Pagadas", activeClasses: "bg-emerald-600 text-white shadow-xs" },
-      { key: EstadoVenta.Anulada, label: "Anuladas", activeClasses: "bg-rose-600 text-white shadow-xs" },
-    ];
+    { key: EstadoVenta.Pendiente, label: "Pendientes", activeClasses: "bg-amber-600 text-white shadow-xs" },
+    { key: EstadoVenta.PendienteCobro, label: "En Caja", activeClasses: "bg-indigo-600 text-white shadow-xs" },
+    { key: EstadoVenta.ParcialmentePagada, label: "Parciales", activeClasses: "bg-blue-600 text-white shadow-xs" },
+    { key: EstadoVenta.Pagada, label: "Pagadas", activeClasses: "bg-emerald-600 text-white shadow-xs" },
+    { key: EstadoVenta.Anulada, label: "Anuladas", activeClasses: "bg-rose-600 text-white shadow-xs" },
+  ];
 
   let content: ReactNode;
   if (isLoading) {
@@ -98,7 +92,9 @@ export function VentaList({
         <FileText className="size-8 text-muted-foreground/40 mx-auto" />
         <p className="font-bold text-xs text-foreground">No se encontraron comprobantes de venta</p>
         <p className="text-[11px] max-w-xs mx-auto text-muted-foreground">
-          Intente ajustar los filtros de búsqueda o registre una nueva venta/cobro de atención.
+          {searchTerm.trim()
+            ? "No hay resultados para el término de búsqueda ingresado en este período."
+            : "No hay comprobantes registrados con este estado para el período seleccionado."}
         </p>
       </div>
     );
@@ -106,22 +102,22 @@ export function VentaList({
     content = (
       <div className="space-y-1.5">
         {ventas.map((venta) => {
-          const pacienteNombre = venta.paciente?.nombreCompleto || "Paciente";
-          const docPaciente = venta.paciente?.numeroHistoriaClinica
-            ? `(HC: ${venta.paciente.numeroHistoriaClinica})`
-            : "";
-
-          const monedaSimbolo = venta.moneda?.simbolo || (venta.moneda?.codigo === "USD" ? "$" : "Bs.");
-          const numDetalles = venta.detalles?.length || 0;
           const isSelected = selectedVentaId === venta.id;
+          const pacienteNombre = venta.paciente?.nombreCompleto || "Paciente sin asignar";
+          const docPaciente = venta.paciente?.numeroHistoriaClinica
+            ? `HC: ${venta.paciente.numeroHistoriaClinica}`
+            : null;
+          const monedaSimbolo = venta.moneda?.simbolo || "Bs.";
+          const numDetalles = venta.detalles?.length || 0;
 
           return (
             <div
               key={venta.id}
-              className={`group p-3 rounded-xl transition-all shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative ${isSelected
+              className={`group p-3 rounded-xl transition-all shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative ${
+                isSelected
                   ? "border-primary/80 bg-primary/5 dark:bg-primary/10 shadow-xs ring-1 ring-primary/40 border"
                   : "border border-border/50 bg-card hover:border-primary/40 hover:bg-muted/25"
-                }`}
+              }`}
             >
               <button
                 type="button"
@@ -194,9 +190,9 @@ export function VentaList({
                 </div>
               </div>
 
-              {/* Bloque Derecho: Monto, Estado & Acciones */}
-              <div className="flex items-center justify-between sm:justify-end gap-2.5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/30">
-                <div className="pointer-events-none flex flex-col items-start sm:items-end pr-0.5">
+              {/* Bloque Derecho: Total + Estado */}
+              <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/40">
+                <div className="flex flex-col items-start sm:items-end">
                   <span className="text-xs font-extrabold text-foreground font-mono">
                     {monedaSimbolo} {venta.total.toFixed(2)}
                   </span>
@@ -231,10 +227,11 @@ export function VentaList({
                 key={t.key.toString()}
                 type="button"
                 onClick={() => onEstadoTabChange?.(t.key)}
-                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 transition-all cursor-pointer select-none ${isActive
+                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 transition-all cursor-pointer select-none ${
+                  isActive
                     ? t.activeClasses
                     : "bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground"
-                  }`}
+                }`}
               >
                 <span>{t.label}</span>
               </button>

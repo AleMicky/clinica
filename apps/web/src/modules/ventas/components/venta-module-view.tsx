@@ -39,6 +39,11 @@ function extractErrorMessage(error: unknown, fallback: string): string {
   );
 }
 
+function getTodayIso(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 export function VentaModuleView() {
   // Modal State: Form Nueva Venta
   const [formDialogOpen, setFormDialogOpen] = React.useState(false);
@@ -68,6 +73,9 @@ export function VentaModuleView() {
   const [selectedEstadoTab, setSelectedEstadoTab] = React.useState<EstadoVenta>(
     EstadoVenta.Pendiente
   );
+  // Rango de fecha por defecto: el día de hoy
+  const [fechaDesde, setFechaDesde] = React.useState<string>(getTodayIso);
+  const [fechaHasta, setFechaHasta] = React.useState<string>(getTodayIso);
 
   // Debounce para evitar peticiones innecesarias en cada pulsación del buscador
   const debouncedSearchTerm = useDebounce(searchTerm.trim(), 350);
@@ -83,14 +91,20 @@ export function VentaModuleView() {
     pageSize: pageSize,
     search: debouncedSearchTerm || undefined,
     estado: selectedEstadoTab,
+    fechaDesde: fechaDesde || undefined,
+    fechaHasta: fechaHasta || undefined,
   });
 
-  // Fetch para métricas globales desde el backend
+  // Fetch para métricas globales desde el backend sincronizadas con el rango de fecha
   const {
     data: metricsData,
     isLoading: isMetricsLoading,
     refetch: refetchMetrics,
-  } = useVentaMetrics();
+  } = useVentaMetrics({
+    fechaDesde: fechaDesde || undefined,
+    fechaHasta: fechaHasta || undefined,
+    search: debouncedSearchTerm || undefined,
+  });
 
   const cambiarEstadoMutation = useCambiarEstadoVenta();
   const anularMutation = useAnularVenta();
@@ -107,6 +121,22 @@ export function VentaModuleView() {
 
   const handlePageSizeChange = (size: number) => {
     setPageSize(size);
+    setCurrentPage(1);
+  };
+
+  const handleDateRangeChange = (desde: string, hasta: string) => {
+    setFechaDesde(desde);
+    setFechaHasta(hasta);
+    setCurrentPage(1);
+  };
+
+  const handleFechaDesdeChange = (val: string) => {
+    setFechaDesde(val);
+    setCurrentPage(1);
+  };
+
+  const handleFechaHastaChange = (val: string) => {
+    setFechaHasta(val);
     setCurrentPage(1);
   };
 
@@ -227,20 +257,36 @@ export function VentaModuleView() {
     }
   };
 
+  let periodLabel = "período";
+  if (fechaDesde === getTodayIso() && fechaHasta === getTodayIso()) {
+    periodLabel = "hoy";
+  } else if (!fechaDesde && !fechaHasta) {
+    periodLabel = "histórico";
+  }
+
   return (
     <div className="flex flex-col gap-3 w-full animate-in fade-in-50 duration-300">
       {/* Cabecera del Módulo */}
       <VentaHeader
         onAddClick={handleOpenAdd}
         onRefresh={() => {
-          refetch();
-          refetchMetrics();
+          void refetch();
+          void refetchMetrics();
         }}
         isRefreshing={isRefetching}
+        fechaDesde={fechaDesde}
+        fechaHasta={fechaHasta}
+        onDateRangeChange={handleDateRangeChange}
+        onFechaDesdeChange={handleFechaDesdeChange}
+        onFechaHastaChange={handleFechaHastaChange}
       />
 
       {/* Tarjetas de Métricas */}
-      <VentaMetricsCards metrics={metrics} isLoading={isMetricsLoading} />
+      <VentaMetricsCards
+        metrics={metrics}
+        isLoading={isMetricsLoading}
+        periodLabel={periodLabel}
+      />
 
       {/* CUERPO PRINCIPAL: MASTER - DETAIL SPLIT LAYOUT */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-start">

@@ -87,6 +87,8 @@ public static class VentaEndpoints
         [AsParameters] PaginationRequest pagination,
         string? search,
         EstadoVenta? estado,
+        DateOnly? fechaDesde,
+        DateOnly? fechaHasta,
         VentaService service,
         CancellationToken cancellationToken)
     {
@@ -95,6 +97,8 @@ public static class VentaEndpoints
                 pagination,
                 search,
                 estado,
+                fechaDesde,
+                fechaHasta,
                 cancellationToken));
     }
 

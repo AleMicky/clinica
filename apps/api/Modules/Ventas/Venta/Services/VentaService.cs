@@ -36,6 +36,8 @@ public sealed class VentaService(
         PaginationRequest pagination,
         string? search,
         EstadoVenta? estado = null,
+        DateOnly? fechaDesde = null,
+        DateOnly? fechaHasta = null,
         CancellationToken cancellationToken = default)
     {
         var query = Entities
@@ -46,6 +48,18 @@ public sealed class VentaService(
         if (estado.HasValue)
         {
             query = query.Where(x => x.Estado == estado.Value);
+        }
+
+        if (fechaDesde.HasValue)
+        {
+            var desdeDateTime = fechaDesde.Value.ToDateTime(TimeOnly.MinValue);
+            query = query.Where(x => x.Fecha >= desdeDateTime);
+        }
+
+        if (fechaHasta.HasValue)
+        {
+            var hastaDateTime = fechaHasta.Value.ToDateTime(TimeOnly.MaxValue);
+            query = query.Where(x => x.Fecha <= hastaDateTime);
         }
 
         query = ApplySearch(query, search?.Trim());

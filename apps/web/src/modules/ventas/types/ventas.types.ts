@@ -147,6 +147,8 @@ export interface VentaQueryParams {
   pageSize?: number;
   search?: string;
   estado?: EstadoVenta;
+  fechaDesde?: string;
+  fechaHasta?: string;
 }
 
 export interface PagedResult<T> {

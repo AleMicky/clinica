@@ -7,11 +7,13 @@ import type { VentaMetrics } from "../types/ventas.types";
 interface VentaMetricsCardsProps {
   metrics: VentaMetrics;
   isLoading?: boolean;
+  periodLabel?: string;
 }
 
 export function VentaMetricsCards({
   metrics,
   isLoading = false,
+  periodLabel = "hoy",
 }: Readonly<VentaMetricsCardsProps>) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
@@ -31,7 +33,7 @@ export function VentaMetricsCards({
                     {metrics.totalVentas}
                   </span>
                   <span className="text-[10px] text-muted-foreground font-medium">
-                    hoy
+                    {periodLabel}
                   </span>
                 </>
               )}
