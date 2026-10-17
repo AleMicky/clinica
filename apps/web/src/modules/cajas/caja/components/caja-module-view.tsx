@@ -8,7 +8,7 @@ import { CajaMetrics } from "./caja-metrics";
 import { CajaList } from "./caja-list";
 import { CajaFormDialog } from "./caja-form-dialog";
 import { ConfirmDeleteDialog } from "@/components/shared";
-import type { CajaResponse } from "../types/caja.types";
+import type { CajaResponse, CajaStatusTab } from "../types/caja.types";
 
 export function CajaModuleView() {
   // Estado de Paginación y Filtros
@@ -16,9 +16,8 @@ export function CajaModuleView() {
   const [pageSize, setPageSize] = React.useState(10);
   const [searchTerm, setSearchTerm] = React.useState("");
   const [debouncedSearch, setDebouncedSearch] = React.useState("");
-  const [selectedStatusTab, setSelectedStatusTab] = React.useState<
-    "TODOS" | "ACTIVOS" | "INACTIVOS"
-  >("TODOS");
+  const [selectedStatusTab, setSelectedStatusTab] =
+    React.useState<CajaStatusTab>("TODOS");
 
   // Dialogs de Caja
   const [formDialogOpen, setFormDialogOpen] = React.useState(false);
@@ -78,7 +77,7 @@ export function CajaModuleView() {
     setSearchTerm(term);
   };
 
-  const handleStatusTabChange = (tab: "TODOS" | "ACTIVOS" | "INACTIVOS") => {
+  const handleStatusTabChange = (tab: CajaStatusTab) => {
     setSelectedStatusTab(tab);
     setCurrentPage(1);
   };

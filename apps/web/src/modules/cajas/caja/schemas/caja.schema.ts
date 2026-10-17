@@ -3,8 +3,10 @@ import { z } from "zod";
 export const cajaSchema = z.object({
   codigo: z
     .string()
+    .trim()
     .min(1, "El código es obligatorio.")
-    .max(20, "El código no puede superar los 20 caracteres."),
+    .max(20, "El código no puede superar los 20 caracteres.")
+    .toUpperCase(),
   nombre: z
     .string()
     .min(1, "El nombre es obligatorio.")

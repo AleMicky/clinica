@@ -34,7 +34,7 @@ export function CajaFormDialog({
   onOpenChange,
   cajaToEdit,
   onSuccessCallback,
-}: CajaFormDialogProps) {
+}: Readonly<CajaFormDialogProps>) {
   const isEditing = Boolean(cajaToEdit);
 
   const createMutation = useCreateCaja();
@@ -75,7 +75,7 @@ export function CajaFormDialog({
   const onSubmit = async (values: CajaFormValues) => {
     try {
       const payload = {
-        codigo: values.codigo.trim(),
+        codigo: values.codigo.trim().toUpperCase(),
         nombre: values.nombre.trim(),
         descripcion: values.descripcion?.trim() || null,
       };
@@ -140,12 +140,16 @@ export function CajaFormDialog({
               id="codigo"
               placeholder="Ej: CAJA-01"
               className={cn(
-                "h-9 text-sm font-mono",
+                "h-9 text-sm font-mono uppercase",
                 errors.codigo && "border-destructive focus-visible:ring-destructive"
               )}
               aria-invalid={Boolean(errors.codigo)}
               disabled={isLoading}
-              {...register("codigo")}
+              {...register("codigo", {
+                onChange: (e) => {
+                  e.target.value = e.target.value.toUpperCase();
+                },
+              })}
             />
             {errors.codigo && (
               <p className="text-[11px] text-destructive font-medium">{errors.codigo.message}</p>

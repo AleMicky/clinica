@@ -5,6 +5,7 @@ export type {
   UpdateCajaRequest,
   CajaQueryParams,
   CajaMetrics,
+  CajaStatusTab,
   PagedResult,
 } from "./caja/types/caja.types";
 export * from "./caja/hooks/use-cajas";

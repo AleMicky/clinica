@@ -34,6 +34,8 @@ export interface CajaMetrics {
   cajasInactivas: number;
 }
 
+export type CajaStatusTab = "TODOS" | "ACTIVOS" | "INACTIVOS";
+
 export interface PagedResult<T> {
   items: T[];
   page: number;

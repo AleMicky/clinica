@@ -7,7 +7,7 @@ interface CajaHeaderProps {
   onNewCajaClick: () => void;
 }
 
-export function CajaHeader({ onNewCajaClick }: CajaHeaderProps) {
+export function CajaHeader({ onNewCajaClick }: Readonly<CajaHeaderProps>) {
   return (
     <div className="flex items-center justify-between gap-3">
       <div className="flex items-center gap-2.5">
