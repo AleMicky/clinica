@@ -13,3 +13,4 @@ export { VentaDetailSheet } from "./components/venta-detail-sheet";
 export { VentaFormDialog } from "./components/venta-form-dialog";
 export { VentaStatusDialog } from "./components/venta-status-dialog";
 export { VentaModuleView } from "./components/venta-module-view";
+export { VentaReporteView } from "./components/venta-reporte-view";

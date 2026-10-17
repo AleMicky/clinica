@@ -4,6 +4,7 @@ import type {
   CreateVentaDetalleRequest,
   CreateVentaPagadorRequest,
   CreateVentaRequest,
+  ExportarVentasQueryParams,
   PagedResult,
   UpdateVentaDetalleRequest,
   UpdateVentaPagadorRequest,
@@ -20,6 +21,16 @@ export async function getVentas(
 ): Promise<PagedResult<VentaResponse>> {
   const response = await apiClient.get<PagedResult<VentaResponse>>("/ventas", {
     params,
+  });
+  return response.data;
+}
+
+export async function exportarVentasExcel(
+  params?: ExportarVentasQueryParams
+): Promise<Blob> {
+  const response = await apiClient.get<Blob>("/ventas/exportar-excel", {
+    params,
+    responseType: "blob",
   });
   return response.data;
 }

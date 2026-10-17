@@ -151,6 +151,13 @@ export interface VentaQueryParams {
   fechaHasta?: string;
 }
 
+export interface ExportarVentasQueryParams {
+  search?: string;
+  estado?: EstadoVenta;
+  fechaDesde?: string;
+  fechaHasta?: string;
+}
+
 export interface PagedResult<T> {
   items: T[];
   totalItems: number;
@@ -165,6 +172,26 @@ export interface VentaMetricsQueryParams {
   fechaHasta?: string;
 }
 
+export interface VentaDiaria {
+  fecha: string;
+  monto: number;
+  cantidad: number;
+}
+
+export interface TopServicio {
+  servicioId: number;
+  nombre: string;
+  cantidad: number;
+  total: number;
+}
+
+export interface TopVendedor {
+  vendedorId: number;
+  nombre: string;
+  cantidadVentas: number;
+  totalVendido: number;
+}
+
 export interface VentaMetrics {
   totalVentas: number;
   pendientes: number;
@@ -172,6 +199,14 @@ export interface VentaMetrics {
   pagadas: number;
   anuladas: number;
   montoTotal: number;
+  montoCobrado: number;
+  montoPorCobrar: number;
+  subtotalBruto: number;
+  totalDescuentos: number;
+  ticketPromedio: number;
+  tendenciaDiaria?: VentaDiaria[];
+  topServicios?: TopServicio[];
+  topVendedores?: TopVendedor[];
 }
 
 // Helpers de formateo limpio

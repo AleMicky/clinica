@@ -23,6 +23,9 @@ public static class VentaEndpoints
         group.MapGet("/metricas", ObtenerMetricasAsync)
             .WithName("ObtenerMetricasVentas");
 
+        group.MapGet("/exportar-excel", ExportarExcelAsync)
+            .WithName("ExportarVentasExcel");
+
         group.MapGet("/{id:int}", ObtenerAsync)
             .WithName("ObtenerVenta");
 
@@ -115,6 +118,28 @@ public static class VentaEndpoints
                 fechaDesde,
                 fechaHasta,
                 cancellationToken));
+    }
+
+    private static async Task<IResult> ExportarExcelAsync(
+        string? search,
+        EstadoVenta? estado,
+        DateOnly? fechaDesde,
+        DateOnly? fechaHasta,
+        VentaService service,
+        CancellationToken cancellationToken)
+    {
+        var bytes = await service.ExportarExcelAsync(
+            search,
+            estado,
+            fechaDesde,
+            fechaHasta,
+            cancellationToken);
+
+        var fileName = $"reporte_ventas_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+        return Results.File(
+            bytes,
+            contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            fileDownloadName: fileName);
     }
 
     private static async Task<IResult> ObtenerAsync(

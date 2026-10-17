@@ -248,6 +248,14 @@ public static class OpcionMenuSeed
                 "CAJA_VENTAS"),
 
             new(
+                "REPORTES_VENTAS",
+                "Reportes de Ventas",
+                "/ventas/reportes",
+                "FileSpreadsheet",
+                2,
+                "CAJA_VENTAS"),
+
+            new(
                 "COBROS",
                 "Cobros",
                 "/caja/cobros",

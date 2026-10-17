@@ -72,16 +72,19 @@ export function AppSidebar({
 
   const isLoading = isAuthLoading || isMenuLoading;
 
-  // Garantizar que la opción de Reportes de Admisión esté disponible en el menú lateral
+  // Garantizar que las opciones de Reportes de Admisión y Ventas estén disponibles en el menú lateral
   const enrichedMenuTree = React.useMemo(() => {
     if (!menuTree || menuTree.length === 0) return menuTree;
 
-    let hasReportes = false;
+    let hasReportesAdmision = false;
+    let hasReportesVentas = false;
     function checkReportes(nodes: OpcionMenuTreeResponse[]) {
       for (const n of nodes) {
         if (n.ruta === "/recepcion/reportes") {
-          hasReportes = true;
-          return;
+          hasReportesAdmision = true;
+        }
+        if (n.ruta === "/ventas/reportes") {
+          hasReportesVentas = true;
         }
         if (n.hijos && n.hijos.length > 0) {
           checkReportes(n.hijos);
@@ -89,35 +92,71 @@ export function AppSidebar({
       }
     }
     checkReportes(menuTree);
-    if (hasReportes) return menuTree;
+    if (hasReportesAdmision && hasReportesVentas) return menuTree;
 
     return menuTree.map((category) => {
-      const hasAdmisiones = category.hijos?.some(
-        (h) => h.ruta === "/recepcion/admisiones" || h.codigo === "ADMISIONES"
-      );
+      const hijos = [...(category.hijos || [])];
+      let changed = false;
 
-      if (category.codigo === "CLINICA_SERVICIOS" || hasAdmisiones) {
-        const hijos = [...(category.hijos || [])];
-        const admisionIdx = hijos.findIndex(
+      // 1. Reportes de Admisión
+      if (!hasReportesAdmision) {
+        const hasAdmisiones = hijos.some(
           (h) => h.ruta === "/recepcion/admisiones" || h.codigo === "ADMISIONES"
         );
+        if (category.codigo === "CLINICA_SERVICIOS" || hasAdmisiones) {
+          const admisionIdx = hijos.findIndex(
+            (h) => h.ruta === "/recepcion/admisiones" || h.codigo === "ADMISIONES"
+          );
 
-        const reporteNode: OpcionMenuTreeResponse = {
-          id: -9999,
-          codigo: "REPORTES_ADMISIONES",
-          nombre: "Reportes de Admisión",
-          ruta: "/recepcion/reportes",
-          icono: "FileSpreadsheet",
-          orden: admisionIdx >= 0 ? (hijos[admisionIdx].orden ?? 2) + 1 : 3,
-          hijos: [],
-        };
+          const reporteNode: OpcionMenuTreeResponse = {
+            id: -9999,
+            codigo: "REPORTES_ADMISIONES",
+            nombre: "Reportes de Admisión",
+            ruta: "/recepcion/reportes",
+            icono: "FileSpreadsheet",
+            orden: admisionIdx >= 0 ? (hijos[admisionIdx].orden ?? 2) + 1 : 3,
+            hijos: [],
+          };
 
-        if (admisionIdx >= 0) {
-          hijos.splice(admisionIdx + 1, 0, reporteNode);
-        } else {
-          hijos.push(reporteNode);
+          if (admisionIdx >= 0) {
+            hijos.splice(admisionIdx + 1, 0, reporteNode);
+          } else {
+            hijos.push(reporteNode);
+          }
+          changed = true;
         }
+      }
 
+      // 2. Reportes de Ventas
+      if (!hasReportesVentas) {
+        const hasVentas = hijos.some(
+          (h) => h.ruta === "/ventas" || h.codigo === "VENTAS"
+        );
+        if (category.codigo === "CAJA_VENTAS" || hasVentas) {
+          const ventaIdx = hijos.findIndex(
+            (h) => h.ruta === "/ventas" || h.codigo === "VENTAS"
+          );
+
+          const reporteVentaNode: OpcionMenuTreeResponse = {
+            id: -9998,
+            codigo: "REPORTES_VENTAS",
+            nombre: "Reportes de Ventas",
+            ruta: "/ventas/reportes",
+            icono: "FileSpreadsheet",
+            orden: ventaIdx >= 0 ? (hijos[ventaIdx].orden ?? 1) + 1 : 2,
+            hijos: [],
+          };
+
+          if (ventaIdx >= 0) {
+            hijos.splice(ventaIdx + 1, 0, reporteVentaNode);
+          } else {
+            hijos.push(reporteVentaNode);
+          }
+          changed = true;
+        }
+      }
+
+      if (changed) {
         return {
           ...category,
           hijos,

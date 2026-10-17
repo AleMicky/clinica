@@ -1,11 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { Calendar, ChevronDown, Coins, Plus, RefreshCw } from "lucide-react";
+import { Calendar, ChevronDown, Coins, FileSpreadsheet, Plus, RefreshCw } from "lucide-react";
+import { ROUTES } from "@/config/routes";
 
 function formatDisplayDate(isoStr?: string): string {
   if (!isoStr) return "";
@@ -311,6 +313,18 @@ export function VentaHeader({
             </div>
           </PopoverContent>
         </Popover>
+
+        <Link
+          href={ROUTES.VENTAS.REPORTES}
+          className={cn(
+            buttonVariants({ variant: "outline", size: "sm" }),
+            "h-8 px-2.5 text-xs gap-1.5 border-border/80 hover:bg-accent hover:text-accent-foreground transition-all cursor-pointer"
+          )}
+          title="Ver reporte general y exportación oficial a Excel"
+        >
+          <FileSpreadsheet className="size-3.5 text-teal-600 dark:text-teal-400" />
+          <span className="hidden sm:inline">Reportes</span>
+        </Link>
 
         <Button
           variant="outline"

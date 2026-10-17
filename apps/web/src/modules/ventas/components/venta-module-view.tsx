@@ -155,6 +155,11 @@ export function VentaModuleView() {
         pagadas: 0,
         anuladas: 0,
         montoTotal: 0,
+        montoCobrado: 0,
+        montoPorCobrar: 0,
+        subtotalBruto: 0,
+        totalDescuentos: 0,
+        ticketPromedio: 0,
       }
     );
   }, [metricsData]);

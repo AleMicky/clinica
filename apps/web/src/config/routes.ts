@@ -63,6 +63,7 @@ export const ROUTES = {
   },
   VENTAS: {
     ROOT: "/ventas",
+    REPORTES: "/ventas/reportes",
   },
   ALMACENES: {
     ROOT: "/almacenes",

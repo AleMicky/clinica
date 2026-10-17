@@ -9,6 +9,7 @@ import {
   createVentaPagador,
   deleteVentaDetalle,
   deleteVentaPagador,
+  exportarVentasExcel,
   getVentaById,
   getVentaDetalles,
   getVentaMetrics,
@@ -23,6 +24,7 @@ import type {
   CreateVentaDetalleRequest,
   CreateVentaPagadorRequest,
   CreateVentaRequest,
+  ExportarVentasQueryParams,
   UpdateVentaDetalleRequest,
   UpdateVentaPagadorRequest,
   VentaMetricsQueryParams,
@@ -228,5 +230,11 @@ export function useDeleteVentaPagador() {
       });
       queryClient.invalidateQueries({ queryKey: ventaKeys.all });
     },
+  });
+}
+
+export function useExportarVentasExcel() {
+  return useMutation({
+    mutationFn: (params?: ExportarVentasQueryParams) => exportarVentasExcel(params),
   });
 }

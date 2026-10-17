@@ -15,6 +15,8 @@ using Clinica.Api.Modules.Ventas.Venta.Dtos;
 using Clinica.Api.Modules.Ventas.Venta.Enums;
 using Clinica.Api.Modules.Ventas.Venta.Mappers;
 using Clinica.Api.Modules.Ventas.Venta.Rules;
+using Clinica.Api.Shared.Abstractions;
+using Clinica.Api.Shared.Excel;
 using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
@@ -27,7 +29,9 @@ namespace Clinica.Api.Modules.Ventas.Venta.Services;
 public sealed class VentaService(
     AppDbContext dbContext,
     ICorrelativoService correlativoService,
-    CobroService cobroService
+    CobroService cobroService,
+    IExcelReportGenerator excelReportGenerator,
+    ICurrentUserService currentUserService
 )
 {
     private DbSet<VentaEntity> Entities => dbContext.Set<VentaEntity>();
@@ -112,7 +116,11 @@ public sealed class VentaService(
                 PendientesCobro = g.Count(x => x.Estado == EstadoVenta.PendienteCobro),
                 Pagadas = g.Count(x => x.Estado == EstadoVenta.Pagada || x.Estado == EstadoVenta.ParcialmentePagada),
                 Anuladas = g.Count(x => x.Estado == EstadoVenta.Anulada),
-                MontoTotal = g.Sum(x => x.Estado != EstadoVenta.Anulada ? x.Total : 0m)
+                MontoTotal = g.Sum(x => x.Estado != EstadoVenta.Anulada ? x.Total : 0m),
+                MontoCobrado = g.Sum(x => x.Estado == EstadoVenta.Pagada || x.Estado == EstadoVenta.ParcialmentePagada ? x.Total : 0m),
+                MontoPorCobrar = g.Sum(x => x.Estado == EstadoVenta.Pendiente || x.Estado == EstadoVenta.PendienteCobro ? x.Total : 0m),
+                SubtotalBruto = g.Sum(x => x.Estado != EstadoVenta.Anulada ? x.Subtotal : 0m),
+                TotalDescuentos = g.Sum(x => x.Estado != EstadoVenta.Anulada ? x.Descuento : 0m)
             })
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -121,6 +129,58 @@ public sealed class VentaService(
             return new VentaMetricsResponse();
         }
 
+        var validSales = stats.Total - stats.Anuladas;
+        var ticket = validSales > 0 ? Math.Round(stats.MontoTotal / validSales, 2) : 0m;
+
+        var validQuery = query.Where(x => x.Estado != EstadoVenta.Anulada);
+
+        var rawTendencia = await validQuery
+            .GroupBy(x => x.Fecha.Date)
+            .Select(g => new
+            {
+                Fecha = g.Key,
+                Monto = g.Sum(x => x.Total),
+                Cantidad = g.Count()
+            })
+            .OrderBy(x => x.Fecha)
+            .ToListAsync(cancellationToken);
+
+        var tendenciaDiaria = rawTendencia
+            .Select(x => new VentaDiariaDto
+            {
+                Fecha = x.Fecha.ToString("yyyy-MM-dd"),
+                Monto = x.Monto,
+                Cantidad = x.Cantidad
+            })
+            .ToList();
+
+        var topServicios = await validQuery
+            .SelectMany(v => v.Detalles)
+            .GroupBy(d => new { d.ServicioId, d.Servicio.Nombre })
+            .Select(g => new TopServicioDto
+            {
+                ServicioId = g.Key.ServicioId,
+                Nombre = g.Key.Nombre,
+                Cantidad = g.Sum(d => d.Cantidad),
+                Total = g.Sum(d => d.Total)
+            })
+            .OrderByDescending(s => s.Total)
+            .Take(5)
+            .ToListAsync(cancellationToken);
+
+        var topVendedores = await validQuery
+            .GroupBy(v => new { v.VendedorId, v.Vendedor.Persona.Nombres, v.Vendedor.Persona.ApellidoPaterno })
+            .Select(g => new TopVendedorDto
+            {
+                VendedorId = g.Key.VendedorId,
+                Nombre = (g.Key.Nombres + " " + g.Key.ApellidoPaterno).Trim(),
+                CantidadVentas = g.Count(),
+                TotalVendido = g.Sum(v => v.Total)
+            })
+            .OrderByDescending(x => x.TotalVendido)
+            .Take(5)
+            .ToListAsync(cancellationToken);
+
         return new VentaMetricsResponse
         {
             TotalVentas = stats.Total,
@@ -128,8 +188,88 @@ public sealed class VentaService(
             PendientesCobro = stats.PendientesCobro,
             Pagadas = stats.Pagadas,
             Anuladas = stats.Anuladas,
-            MontoTotal = stats.MontoTotal
+            MontoTotal = stats.MontoTotal,
+            MontoCobrado = stats.MontoCobrado,
+            MontoPorCobrar = stats.MontoPorCobrar,
+            SubtotalBruto = stats.SubtotalBruto,
+            TotalDescuentos = stats.TotalDescuentos,
+            TicketPromedio = ticket,
+            TendenciaDiaria = tendenciaDiaria,
+            TopServicios = topServicios,
+            TopVendedores = topVendedores
         };
+    }
+
+    public async Task<byte[]> ExportarExcelAsync(
+        string? search,
+        EstadoVenta? estado = null,
+        DateOnly? fechaDesde = null,
+        DateOnly? fechaHasta = null,
+        CancellationToken cancellationToken = default)
+    {
+        var query = Entities
+            .AsNoTracking()
+            .WithFullDetails()
+            .Where(x => x.Activo);
+
+        if (estado.HasValue)
+        {
+            query = query.Where(x => x.Estado == estado.Value);
+        }
+
+        if (fechaDesde.HasValue)
+        {
+            var desdeDateTime = fechaDesde.Value.ToDateTime(TimeOnly.MinValue);
+            query = query.Where(x => x.Fecha >= desdeDateTime);
+        }
+
+        if (fechaHasta.HasValue)
+        {
+            var hastaDateTime = fechaHasta.Value.ToDateTime(TimeOnly.MaxValue);
+            query = query.Where(x => x.Fecha <= hastaDateTime);
+        }
+
+        query = ApplySearch(query, search?.Trim());
+
+        var ventas = await query
+            .OrderByDescending(x => x.Fecha)
+            .ThenByDescending(x => x.Id)
+            .ToListAsync(cancellationToken);
+
+        var options = new ExcelReportOptions
+        {
+            Title = "Reporte General de Ventas y Comprobantes",
+            Subtitle = "Área de Facturación & Punto de Venta",
+            SheetName = "Ventas",
+            HeaderColor = "#0D9488",
+            GeneratedBy = currentUserService.UserId?.ToString()
+        };
+
+        return excelReportGenerator.Generate(options, ventas, builder =>
+        {
+            builder.AddColumn("N° Venta", x => x.Numero, ExcelColumnAlignment.Center);
+            builder.AddDateTimeColumn("Fecha y Hora", x => x.Fecha);
+            builder.AddColumn("N° Historia", x => x.Paciente.NumeroHistoriaClinica, ExcelColumnAlignment.Center);
+            builder.AddColumn("Paciente", x => $"{x.Paciente.Persona.Nombres} {x.Paciente.Persona.ApellidoPaterno} {x.Paciente.Persona.ApellidoMaterno}".Trim());
+            builder.AddColumn("Tipo Doc.", x => x.Paciente.Persona.TipoDocumento, ExcelColumnAlignment.Center);
+            builder.AddColumn("N° Documento", x => x.Paciente.Persona.NumeroDocumento, ExcelColumnAlignment.Center);
+            builder.AddColumn("Moneda", x => x.Moneda != null ? x.Moneda.Codigo : "BOB", ExcelColumnAlignment.Center);
+            builder.AddColumn("Servicios / Ítems", x => string.Join(", ", x.Detalles.Select(d => d.Servicio != null ? d.Servicio.Nombre : $"Servicio #{d.ServicioId}")));
+            builder.AddNumberColumn("Cant. Ítems", x => x.Detalles.Count, "#,##0");
+            builder.AddCurrencyColumn("Subtotal", x => x.Subtotal);
+            builder.AddCurrencyColumn("Descuento", x => x.Descuento);
+            builder.AddCurrencyColumn("Total", x => x.Total);
+            builder.AddColumn("Estado", x => x.Estado switch
+            {
+                EstadoVenta.Pendiente => "Pendiente",
+                EstadoVenta.PendienteCobro => "Pendiente de Cobro",
+                EstadoVenta.ParcialmentePagada => "Parcialmente Pagada",
+                EstadoVenta.Pagada => "Pagada",
+                EstadoVenta.Anulada => "Anulada",
+                _ => x.Estado.ToString()
+            }, ExcelColumnAlignment.Center);
+            builder.AddColumn("Vendedor", x => x.Vendedor != null ? $"{x.Vendedor.Persona.Nombres} {x.Vendedor.Persona.ApellidoPaterno}".Trim() : "-");
+        });
     }
 
     public async Task<VentaResponse> ObtenerAsync(

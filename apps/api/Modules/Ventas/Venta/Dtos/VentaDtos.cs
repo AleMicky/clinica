@@ -39,6 +39,29 @@ public sealed record VentaResponse : AuditableResponse
     public IReadOnlyCollection<VentaPagadorResponse> Pagadores { get; init; } = [];
 }
 
+public sealed record VentaDiariaDto
+{
+    public required string Fecha { get; init; }
+    public decimal Monto { get; init; }
+    public int Cantidad { get; init; }
+}
+
+public sealed record TopServicioDto
+{
+    public int ServicioId { get; init; }
+    public required string Nombre { get; init; }
+    public decimal Cantidad { get; init; }
+    public decimal Total { get; init; }
+}
+
+public sealed record TopVendedorDto
+{
+    public int VendedorId { get; init; }
+    public required string Nombre { get; init; }
+    public int CantidadVentas { get; init; }
+    public decimal TotalVendido { get; init; }
+}
+
 public sealed record VentaMetricsResponse
 {
     public int TotalVentas { get; init; }
@@ -47,4 +70,13 @@ public sealed record VentaMetricsResponse
     public int Pagadas { get; init; }
     public int Anuladas { get; init; }
     public decimal MontoTotal { get; init; }
+    public decimal MontoCobrado { get; init; }
+    public decimal MontoPorCobrar { get; init; }
+    public decimal SubtotalBruto { get; init; }
+    public decimal TotalDescuentos { get; init; }
+    public decimal TicketPromedio { get; init; }
+
+    public IReadOnlyCollection<VentaDiariaDto> TendenciaDiaria { get; init; } = [];
+    public IReadOnlyCollection<TopServicioDto> TopServicios { get; init; } = [];
+    public IReadOnlyCollection<TopVendedorDto> TopVendedores { get; init; } = [];
 }
