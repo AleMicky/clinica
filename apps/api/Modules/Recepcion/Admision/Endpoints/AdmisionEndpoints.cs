@@ -74,6 +74,8 @@ public static class AdmisionEndpoints
         [AsParameters] PaginationRequest pagination,
         string? search,
         EstadoAdmision? estado,
+        DateOnly? fechaDesde,
+        DateOnly? fechaHasta,
         AdmisionService service,
         CancellationToken cancellationToken)
     {
@@ -82,6 +84,8 @@ public static class AdmisionEndpoints
                 pagination,
                 search,
                 estado,
+                fechaDesde,
+                fechaHasta,
                 cancellationToken));
     }
 

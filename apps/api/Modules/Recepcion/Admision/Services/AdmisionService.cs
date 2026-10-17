@@ -35,6 +35,8 @@ public sealed class AdmisionService(
         PaginationRequest pagination,
         string? search,
         EstadoAdmision? estado = null,
+        DateOnly? fechaDesde = null,
+        DateOnly? fechaHasta = null,
         CancellationToken cancellationToken = default)
     {
         var usuarioId = currentUserService.UserId ?? throw new UnauthorizedAccessException();
@@ -64,6 +66,18 @@ public sealed class AdmisionService(
         if (estado.HasValue)
         {
             query = query.Where(x => x.Estado == estado.Value);
+        }
+
+        if (fechaDesde.HasValue)
+        {
+            var desdeDateTime = fechaDesde.Value.ToDateTime(TimeOnly.MinValue);
+            query = query.Where(x => x.FechaHora >= desdeDateTime);
+        }
+
+        if (fechaHasta.HasValue)
+        {
+            var hastaDateTime = fechaHasta.Value.ToDateTime(TimeOnly.MaxValue);
+            query = query.Where(x => x.FechaHora <= hastaDateTime);
         }
 
         var normalizedSearch = search.TrimOrNull();

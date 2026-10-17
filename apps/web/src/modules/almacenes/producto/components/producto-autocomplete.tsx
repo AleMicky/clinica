@@ -107,9 +107,9 @@ export function ProductoAutocomplete({
     setDebouncedSearch("");
   };
 
-  const handleClear = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleClear = (e?: React.SyntheticEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
     onValueChange(null, null);
     setSearchQuery("");
     setDebouncedSearch("");
@@ -176,7 +176,7 @@ export function ProductoAutocomplete({
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
                   e.stopPropagation();
-                  handleClear(e as any);
+                  handleClear(e);
                 }
               }}
               className="rounded-full p-0.5 hover:bg-muted hover:text-foreground transition-colors cursor-pointer inline-flex items-center justify-center"

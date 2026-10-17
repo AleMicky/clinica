@@ -18,13 +18,10 @@ public sealed class Existencia : AuditableEntity
 
     public decimal CostoPromedio { get; set; } = 0;
 
-    public decimal CantidadDisponible =>
-        Cantidad - CantidadReservada;
+    public decimal CantidadDisponible => Cantidad - CantidadReservada;
 
-    public decimal ValorInventario =>
-        Cantidad * CostoPromedio;
+    public decimal ValorInventario => Cantidad * CostoPromedio;
 
-    public ICollection<ExistenciaPartidaEntity> ExistenciasPartidas { get; set; }
-        = new List<ExistenciaPartidaEntity>();
+    public ICollection<ExistenciaPartidaEntity> ExistenciasPartidas { get; set; } = new List<ExistenciaPartidaEntity>();
 }
 

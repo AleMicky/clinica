@@ -30,6 +30,11 @@ function getErrorMessage(error: unknown, fallback: string): string {
   return err?.response?.data?.detail || err?.message || fallback;
 }
 
+const getTodayIso = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+
 export function AdmisionModuleView() {
   const router = useRouter();
 
@@ -60,6 +65,8 @@ export function AdmisionModuleView() {
   const [pageSize, setPageSize] = React.useState(10);
   const [searchTerm, setSearchTerm] = React.useState("");
   const [selectedEstadoTab, setSelectedEstadoTab] = React.useState<EstadoAdmisionTab>("TODOS");
+  const [fechaDesde, setFechaDesde] = React.useState<string>(getTodayIso);
+  const [fechaHasta, setFechaHasta] = React.useState<string>(getTodayIso);
 
   // Búsqueda con debounce para reducir carga al servidor
   const debouncedSearch = useDebounce(searchTerm, 300);
@@ -75,11 +82,16 @@ export function AdmisionModuleView() {
     pageSize: pageSize,
     search: debouncedSearch.trim() || undefined,
     estado: selectedEstadoTab === "TODOS" ? undefined : selectedEstadoTab,
+    fechaDesde: fechaDesde || undefined,
+    fechaHasta: fechaHasta || undefined,
   });
 
-  // Fetch para métricas globales del día
+  // Fetch para métricas globales del día de hoy
+  const todayStr = React.useMemo(() => getTodayIso(), []);
   const { data: allAdmisionesData, isLoading: isAllAdmisionesLoading } = useAdmisiones({
     pageSize: 100,
+    fechaDesde: todayStr,
+    fechaHasta: todayStr,
   });
 
   const cambiarEstadoMutation = useCambiarEstadoAdmision();
@@ -95,14 +107,33 @@ export function AdmisionModuleView() {
     setCurrentPage(1);
   }, []);
 
+  const handleFechaDesdeChange = React.useCallback((val: string) => {
+    setFechaDesde(val);
+    setCurrentPage(1);
+  }, []);
+
+  const handleFechaHastaChange = React.useCallback((val: string) => {
+    setFechaHasta(val);
+    setCurrentPage(1);
+  }, []);
+
+  const handleDateRangeChange = React.useCallback((desde: string, hasta: string) => {
+    setFechaDesde(desde);
+    setFechaHasta(hasta);
+    setCurrentPage(1);
+  }, []);
+
   const handlePageSizeChange = React.useCallback((size: number) => {
     setPageSize(size);
     setCurrentPage(1);
   }, []);
 
   const handleResetFilters = React.useCallback(() => {
+    const today = getTodayIso();
     setSearchTerm("");
     setSelectedEstadoTab("TODOS");
+    setFechaDesde(today);
+    setFechaHasta(today);
     setCurrentPage(1);
   }, []);
 
@@ -291,6 +322,11 @@ export function AdmisionModuleView() {
         onEdit={handleEdit}
         onDirectChangeStatus={handleRequestDirectChangeStatus}
         onDelete={handleOpenDelete}
+        fechaDesde={fechaDesde}
+        fechaHasta={fechaHasta}
+        onFechaDesdeChange={handleFechaDesdeChange}
+        onFechaHastaChange={handleFechaHastaChange}
+        onDateRangeChange={handleDateRangeChange}
         onResetFilters={handleResetFilters}
       />
 
