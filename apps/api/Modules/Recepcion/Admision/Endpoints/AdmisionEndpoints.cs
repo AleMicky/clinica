@@ -31,6 +31,9 @@ public static class AdmisionEndpoints
         group.MapGet("/metricas", ObtenerMetricasAsync)
             .WithName("ObtenerMetricasAdmision");
 
+        group.MapGet("/exportar-excel", ExportarExcelAsync)
+            .WithName("ExportarAdmisionesExcel");
+
         group.MapGet("/{id:int}", ObtenerAsync)
             .WithName("ObtenerAdmision");
 
@@ -103,6 +106,30 @@ public static class AdmisionEndpoints
                 fechaDesde,
                 fechaHasta,
                 cancellationToken));
+    }
+
+    private static async Task<IResult> ExportarExcelAsync(
+        string? search,
+        EstadoAdmision? estado,
+        DateOnly? fechaDesde,
+        DateOnly? fechaHasta,
+        int? convenioId,
+        AdmisionService service,
+        CancellationToken cancellationToken)
+    {
+        var bytes = await service.ExportarExcelAsync(
+            search,
+            estado,
+            fechaDesde,
+            fechaHasta,
+            convenioId,
+            cancellationToken);
+
+        var fileName = $"reporte_admisiones_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+        return Results.File(
+            bytes,
+            contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            fileDownloadName: fileName);
     }
 
     private static async Task<IResult> ObtenerAsync(

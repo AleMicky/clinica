@@ -9,6 +9,7 @@ import {
   deleteAdmision,
   deleteAdmisionDetalle,
   downloadAdmisionPdf,
+  exportarAdmisionesExcel,
   getAdmisionById,
   getAdmisionDetalles,
   getAdmisionMetrics,
@@ -24,6 +25,7 @@ import type {
   CreateAdmisionDetalleRequest,
   CreateAdmisionRequest,
   CreateAdmisionConPacienteRequest,
+  ExportarAdmisionesQueryParams,
   UpdateAdmisionRequest,
 } from "../types/admision.types";
 
@@ -174,5 +176,12 @@ export function useDownloadAdmisionPdf() {
 export function useOpenAdmisionPdf() {
   return useMutation({
     mutationFn: (id: number) => openAdmisionPdfInNewTab(id),
+  });
+}
+
+export function useExportarAdmisionesExcel() {
+  return useMutation({
+    mutationFn: (params?: ExportarAdmisionesQueryParams) =>
+      exportarAdmisionesExcel(params),
   });
 }

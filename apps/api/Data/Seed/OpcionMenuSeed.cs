@@ -189,11 +189,19 @@ public static class OpcionMenuSeed
                 "CLINICA_SERVICIOS"),
 
             new(
+                "REPORTES_ADMISIONES",
+                "Reportes de Admisión",
+                "/recepcion/reportes",
+                "FileSpreadsheet",
+                3,
+                "CLINICA_SERVICIOS"),
+
+            new(
                 "SERVICIOS",
                 "Servicios Médicos",
                 null,
                 "Stethoscope",
-                3,
+                4,
                 "CLINICA_SERVICIOS"),
 
             new(

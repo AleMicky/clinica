@@ -17,6 +17,7 @@ using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Extensions;
 using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
+using Clinica.Api.Shared.Excel;
 using AdmisionEntity = Clinica.Api.Modules.Recepcion.Admision.Entity.Admision;
 using AdmisionDetalleEntity = Clinica.Api.Modules.Recepcion.Admision.Entity.AdmisionDetalle;
 
@@ -26,7 +27,8 @@ public sealed class AdmisionService(
     AppDbContext dbContext,
     VentaService ventaService,
     ICorrelativoService correlativoService,
-    ICurrentUserService currentUserService
+    ICurrentUserService currentUserService,
+    IExcelReportGenerator excelReportGenerator
 )
 {
     private DbSet<AdmisionEntity> Admisiones => dbContext.Set<AdmisionEntity>();
@@ -113,6 +115,111 @@ public sealed class AdmisionService(
             pagination.ValidPageSize,
             totalItems
         );
+    }
+
+    public async Task<byte[]> ExportarExcelAsync(
+        string? search,
+        EstadoAdmision? estado = null,
+        DateOnly? fechaDesde = null,
+        DateOnly? fechaHasta = null,
+        int? convenioId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var usuarioId = currentUserService.UserId ?? throw new UnauthorizedAccessException();
+
+        var query = Admisiones
+            .AsNoTracking()
+            .IncludeGrafoCompleto()
+            .Where(x => x.Activo);
+
+        if (!currentUserService.IsInRole("ADMINISTRADOR"))
+        {
+            var empleadoId = await ObtenerEmpleadoIdPorUsuarioAsync(usuarioId, cancellationToken);
+
+            if (empleadoId == 0)
+            {
+                return [];
+            }
+
+            query = query.Where(x => x.RecepcionistaId == empleadoId);
+        }
+
+        if (estado.HasValue)
+        {
+            query = query.Where(x => x.Estado == estado.Value);
+        }
+
+        if (convenioId.HasValue)
+        {
+            query = query.Where(x => x.ConvenioId == convenioId.Value);
+        }
+
+        if (fechaDesde.HasValue)
+        {
+            var desdeDateTime = fechaDesde.Value.ToDateTime(TimeOnly.MinValue);
+            query = query.Where(x => x.FechaHora >= desdeDateTime);
+        }
+
+        if (fechaHasta.HasValue)
+        {
+            var hastaDateTime = fechaHasta.Value.ToDateTime(TimeOnly.MaxValue);
+            query = query.Where(x => x.FechaHora <= hastaDateTime);
+        }
+
+        var normalizedSearch = search.TrimOrNull();
+        if (normalizedSearch is not null)
+        {
+            query = query.Where(x =>
+                x.Numero.Contains(normalizedSearch) ||
+                (x.Observacion != null && x.Observacion.Contains(normalizedSearch)) ||
+                x.Paciente.NumeroHistoriaClinica.Contains(normalizedSearch) ||
+                x.Paciente.Persona.Nombres.Contains(normalizedSearch) ||
+                x.Paciente.Persona.ApellidoPaterno.Contains(normalizedSearch) ||
+                (x.Paciente.Persona.ApellidoMaterno != null &&
+                 x.Paciente.Persona.ApellidoMaterno.Contains(normalizedSearch)) ||
+                x.Paciente.Persona.NumeroDocumento.Contains(normalizedSearch)
+            );
+        }
+
+        var admisiones = await query
+            .OrderByDescending(x => x.FechaHora)
+            .ThenByDescending(x => x.Id)
+            .ToListAsync(cancellationToken);
+
+        var options = new ExcelReportOptions
+        {
+            Title = "Reporte de Admisiones y Prestaciones Médicas",
+            Subtitle = "Área de Recepción & Admisión de Pacientes",
+            SheetName = "Admisiones",
+            HeaderColor = "#2563EB",
+            GeneratedBy = currentUserService.UserId?.ToString()
+        };
+
+        return excelReportGenerator.Generate(options, admisiones, builder =>
+        {
+            builder.AddColumn("N° Admisión", x => x.Numero, ExcelColumnAlignment.Center);
+            builder.AddDateTimeColumn("Fecha y Hora", x => x.FechaHora);
+            builder.AddColumn("N° Historia", x => x.Paciente.NumeroHistoriaClinica, ExcelColumnAlignment.Center);
+            builder.AddColumn("Paciente", x => $"{x.Paciente.Persona.Nombres} {x.Paciente.Persona.ApellidoPaterno} {x.Paciente.Persona.ApellidoMaterno}".Trim());
+            builder.AddColumn("Tipo Doc.", x => x.Paciente.Persona.TipoDocumento, ExcelColumnAlignment.Center);
+            builder.AddColumn("N° Documento", x => x.Paciente.Persona.NumeroDocumento, ExcelColumnAlignment.Center);
+            builder.AddColumn("Teléfono", x => x.Paciente.Persona.Telefono ?? "-", ExcelColumnAlignment.Center);
+            builder.AddColumn("Convenio / Cobertura", x => x.Convenio != null ? x.Convenio.Nombre : "Particular");
+            builder.AddColumn("Servicios Solicitados", x => string.Join(", ", x.Detalles.Select(d => d.Servicio.Nombre)));
+            builder.AddColumn("Médico(s)", x => string.Join(", ", x.Detalles.Where(d => d.Medico != null).Select(d => $"{d.Medico!.Empleado.Persona.Nombres} {d.Medico.Empleado.Persona.ApellidoPaterno}").Distinct()));
+            builder.AddNumberColumn("Cant. Servicios", x => x.Detalles.Count, "#,##0");
+            builder.AddColumn("Estado", x => x.Estado switch
+            {
+                EstadoAdmision.Registrada => "Registrada",
+                EstadoAdmision.Confirmada => "Confirmada",
+                EstadoAdmision.EnviadaVenta => "Enviada a Venta",
+                EstadoAdmision.Cancelada => "Cancelada",
+                _ => x.Estado.ToString()
+            }, ExcelColumnAlignment.Center);
+            builder.AddCurrencyColumn("Total (S/.)", x => x.Detalles.Sum(d => d.Total));
+            builder.AddColumn("Recepcionista", x => $"{x.Recepcionista.Persona.Nombres} {x.Recepcionista.Persona.ApellidoPaterno}");
+            builder.AddColumn("Observación", x => x.Observacion ?? string.Empty);
+        });
     }
 
     public async Task<AdmisionMetricsResponse> ObtenerMetricasAsync(

@@ -276,8 +276,8 @@ export function AdmisionModuleView() {
       <AdmisionHeader
         onAddClick={handleOpenAdd}
         onRefresh={() => {
-          refetch();
-          refetchMetrics();
+          void refetch();
+          void refetchMetrics();
         }}
         isRefreshing={isFetching || isMetricsLoading}
       />

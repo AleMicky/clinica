@@ -12,3 +12,4 @@ export * from "./components/admision-status-dialog";
 export * from "./components/admision-status-badge";
 export * from "./components/admision-confirm-status-dialog";
 export * from "./components/admision-page-form";
+export * from "./components/admision-reporte-view";

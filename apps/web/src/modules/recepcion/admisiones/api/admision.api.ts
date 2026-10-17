@@ -9,6 +9,7 @@ import type {
   CreateAdmisionDetalleRequest,
   CreateAdmisionRequest,
   CreateAdmisionConPacienteRequest,
+  ExportarAdmisionesQueryParams,
   PagedResult,
   UpdateAdmisionDetalleRequest,
   UpdateAdmisionRequest,
@@ -94,6 +95,16 @@ export async function openAdmisionPdfInNewTab(id: number): Promise<void> {
   const blob = new Blob([response.data], { type: "application/pdf" });
   const url = window.URL.createObjectURL(blob);
   window.open(url, "_blank");
+}
+
+export async function exportarAdmisionesExcel(
+  params?: ExportarAdmisionesQueryParams
+): Promise<Blob> {
+  const response = await apiClient.get<Blob>("/admisiones/exportar-excel", {
+    params,
+    responseType: "blob",
+  });
+  return response.data;
 }
 
 // Submódulo de detalles de admisión

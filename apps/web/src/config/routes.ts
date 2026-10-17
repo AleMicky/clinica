@@ -11,6 +11,7 @@ export const ROUTES = {
     ROOT: "/recepcion",
     PACIENTES: "/recepcion/pacientes",
     ADMISIONES: "/recepcion/admisiones",
+    REPORTES: "/recepcion/reportes",
   },
   SERVICIOS: {
     ROOT: "/servicios",

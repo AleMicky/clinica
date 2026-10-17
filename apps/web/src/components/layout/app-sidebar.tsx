@@ -72,9 +72,65 @@ export function AppSidebar({
 
   const isLoading = isAuthLoading || isMenuLoading;
 
+  // Garantizar que la opción de Reportes de Admisión esté disponible en el menú lateral
+  const enrichedMenuTree = React.useMemo(() => {
+    if (!menuTree || menuTree.length === 0) return menuTree;
+
+    let hasReportes = false;
+    function checkReportes(nodes: OpcionMenuTreeResponse[]) {
+      for (const n of nodes) {
+        if (n.ruta === "/recepcion/reportes") {
+          hasReportes = true;
+          return;
+        }
+        if (n.hijos && n.hijos.length > 0) {
+          checkReportes(n.hijos);
+        }
+      }
+    }
+    checkReportes(menuTree);
+    if (hasReportes) return menuTree;
+
+    return menuTree.map((category) => {
+      const hasAdmisiones = category.hijos?.some(
+        (h) => h.ruta === "/recepcion/admisiones" || h.codigo === "ADMISIONES"
+      );
+
+      if (category.codigo === "CLINICA_SERVICIOS" || hasAdmisiones) {
+        const hijos = [...(category.hijos || [])];
+        const admisionIdx = hijos.findIndex(
+          (h) => h.ruta === "/recepcion/admisiones" || h.codigo === "ADMISIONES"
+        );
+
+        const reporteNode: OpcionMenuTreeResponse = {
+          id: -9999,
+          codigo: "REPORTES_ADMISIONES",
+          nombre: "Reportes de Admisión",
+          ruta: "/recepcion/reportes",
+          icono: "FileSpreadsheet",
+          orden: admisionIdx >= 0 ? (hijos[admisionIdx].orden ?? 2) + 1 : 3,
+          hijos: [],
+        };
+
+        if (admisionIdx >= 0) {
+          hijos.splice(admisionIdx + 1, 0, reporteNode);
+        } else {
+          hijos.push(reporteNode);
+        }
+
+        return {
+          ...category,
+          hijos,
+        };
+      }
+
+      return category;
+    });
+  }, [menuTree]);
+
   // Conjunto de IDs de grupos que contienen la ruta activa actual
   const activeGroupIds = React.useMemo(() => {
-    if (!pathname || menuTree.length === 0) return new Set<number>();
+    if (!pathname || enrichedMenuTree.length === 0) return new Set<number>();
     const activeIds = new Set<number>();
 
     function scanNode(node: OpcionMenuTreeResponse) {
@@ -87,9 +143,9 @@ export function AppSidebar({
       }
     }
 
-    menuTree.forEach(scanNode);
+    enrichedMenuTree.forEach(scanNode);
     return activeIds;
-  }, [pathname, menuTree]);
+  }, [pathname, enrichedMenuTree]);
 
   const toggleGroup = (id: number) => {
     setToggledGroups((prev) => {
@@ -104,12 +160,12 @@ export function AppSidebar({
   // Filtrar el árbol completo según la búsqueda
   const filteredTree = React.useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    if (!query) return menuTree;
+    if (!query) return enrichedMenuTree;
 
-    return menuTree
+    return enrichedMenuTree
       .map((node) => filterTreeNode(node, query))
       .filter(Boolean) as OpcionMenuTreeResponse[];
-  }, [menuTree, searchQuery]);
+  }, [enrichedMenuTree, searchQuery]);
 
   // Calcular total de elementos coincidentes
   const totalResults = React.useMemo(() => {
@@ -169,7 +225,7 @@ export function AppSidebar({
           <SidebarError onRetry={() => refetch()} />
         ) : searchQuery && totalResults === 0 ? (
           <SidebarSearchEmpty searchQuery={searchQuery} />
-        ) : menuTree.length === 0 ? (
+        ) : enrichedMenuTree.length === 0 ? (
           <SidebarEmpty />
         ) : (
           <SidebarNav

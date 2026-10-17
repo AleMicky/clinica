@@ -213,6 +213,15 @@ export interface AdmisionQueryParams {
   estado?: EstadoAdmision;
   fechaDesde?: string;
   fechaHasta?: string;
+  convenioId?: number;
+}
+
+export interface ExportarAdmisionesQueryParams {
+  search?: string;
+  estado?: EstadoAdmision;
+  fechaDesde?: string;
+  fechaHasta?: string;
+  convenioId?: number;
 }
 
 export type EstadoAdmisionTab = EstadoAdmision | "TODOS";
