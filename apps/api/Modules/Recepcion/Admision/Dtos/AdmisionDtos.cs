@@ -57,3 +57,13 @@ public sealed record ConvenioInfo
     public string Codigo { get; init; } = string.Empty;
     public string Nombre { get; init; } = string.Empty;
 }
+
+public sealed record AdmisionMetricsResponse
+{
+    public int TotalHoy { get; init; }
+    public int Registradas { get; init; }
+    public int Confirmadas { get; init; }
+    public int EnviadasVenta { get; init; }
+    public int Canceladas { get; init; }
+    public decimal MontoTotalHoy { get; init; }
+}

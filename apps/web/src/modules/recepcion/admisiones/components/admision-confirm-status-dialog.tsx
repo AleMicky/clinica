@@ -52,7 +52,7 @@ export function AdmisionConfirmStatusDialog({
 }: Readonly<AdmisionConfirmStatusDialogProps>) {
   if (!admision || targetEstado === null) return null;
 
-  const pacienteNombre = formatPacienteNombre(admision.paciente, admision.pacienteNombre);
+  const pacienteNombre = formatPacienteNombre(admision.paciente, admision.pacienteNombre ?? undefined);
   const targetLabel = EstadoAdmisionLabels[targetEstado];
   const dialogTitle = getDialogTitle(targetEstado);
 

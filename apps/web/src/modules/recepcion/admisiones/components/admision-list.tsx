@@ -388,8 +388,8 @@ function AdmisionListItem({
     adm.totalAdmision ??
     adm.detalles.reduce((acc, d) => acc + (d.total || 0), 0);
 
-  const nombreCompleto = formatPacienteNombre(adm.paciente, adm.pacienteNombre);
-  const documento = formatPacienteDocumento(adm.paciente, adm.pacienteDocumento);
+  const nombreCompleto = formatPacienteNombre(adm.paciente, adm.pacienteNombre ?? undefined);
+  const documento = formatPacienteDocumento(adm.paciente, adm.pacienteDocumento ?? undefined);
   const convenio =
     adm.convenio?.nombre || formatConvenioNombre(adm.convenio, adm.convenioNombre);
 

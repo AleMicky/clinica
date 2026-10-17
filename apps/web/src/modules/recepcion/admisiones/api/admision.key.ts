@@ -3,6 +3,8 @@ export const admisionKeys = {
   lists: () => [...admisionKeys.all, "list"] as const,
   list: (params?: Record<string, unknown>) =>
     [...admisionKeys.lists(), params ?? {}] as const,
+  metrics: (params?: Record<string, unknown>) =>
+    [...admisionKeys.all, "metrics", params ?? {}] as const,
   details: () => [...admisionKeys.all, "detail"] as const,
   detail: (id: number) => [...admisionKeys.details(), id] as const,
   detalles: (admisionId: number) =>

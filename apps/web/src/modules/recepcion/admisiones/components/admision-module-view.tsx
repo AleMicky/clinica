@@ -13,6 +13,7 @@ import { AdmisionConfirmStatusDialog } from "./admision-confirm-status-dialog";
 import { ConfirmDeleteDialog } from "@/components/shared";
 import {
   useAdmisiones,
+  useAdmisionMetrics,
   useCambiarEstadoAdmision,
   useDeleteAdmision,
 } from "../hooks/use-admisiones";
@@ -86,10 +87,13 @@ export function AdmisionModuleView() {
     fechaHasta: fechaHasta || undefined,
   });
 
-  // Fetch para métricas globales del día de hoy
+  // Fetch de métricas en vivo desde el endpoint dedicado (optimizado y filtrado por rol/sesión)
   const todayStr = React.useMemo(() => getTodayIso(), []);
-  const { data: allAdmisionesData, isLoading: isAllAdmisionesLoading } = useAdmisiones({
-    pageSize: 100,
+  const {
+    data: apiMetrics,
+    isLoading: isMetricsLoading,
+    refetch: refetchMetrics,
+  } = useAdmisionMetrics({
     fechaDesde: todayStr,
     fechaHasta: todayStr,
   });
@@ -139,48 +143,25 @@ export function AdmisionModuleView() {
 
   const admisiones: AdmisionResponse[] = apiData?.items ?? [];
 
-  // Cálculo memoizado de Métricas y Contadores
-  const { counts, metrics } = React.useMemo(() => {
-    const list: AdmisionResponse[] = allAdmisionesData?.items ?? apiData?.items ?? [];
-    const totalHoy = allAdmisionesData?.totalItems ?? list.length;
+  // Métricas y contadores provenientes del endpoint
+  const defaultMetrics: AdmisionMetrics = React.useMemo(() => ({
+    totalHoy: 0,
+    registradas: 0,
+    confirmadas: 0,
+    enviadasVenta: 0,
+    canceladas: 0,
+    montoTotalHoy: 0,
+  }), []);
 
-    let registradas = 0;
-    let confirmadas = 0;
-    let enviadasVenta = 0;
-    let canceladas = 0;
-    let montoTotalHoy = 0;
+  const metrics: AdmisionMetrics = apiMetrics ?? defaultMetrics;
 
-    for (const a of list) {
-      if (a.estado === EstadoAdmision.Registrada) registradas++;
-      else if (a.estado === EstadoAdmision.Confirmada) confirmadas++;
-      else if (a.estado === EstadoAdmision.EnviadaVenta) enviadasVenta++;
-      else if (a.estado === EstadoAdmision.Cancelada) canceladas++;
-
-      const total =
-        a.totalAdmision ??
-        a.detalles.reduce((sub, d) => sub + (d.total || 0), 0);
-      montoTotalHoy += total;
-    }
-
-    const calculatedCounts: AdmisionCounts = {
-      todos: totalHoy,
-      registradas,
-      confirmadas,
-      enviadasVenta,
-      canceladas,
-    };
-
-    const calculatedMetrics: AdmisionMetrics = {
-      totalHoy,
-      registradas,
-      confirmadas,
-      enviadasVenta,
-      canceladas,
-      montoTotalHoy,
-    };
-
-    return { counts: calculatedCounts, metrics: calculatedMetrics };
-  }, [allAdmisionesData, apiData]);
+  const counts: AdmisionCounts = React.useMemo(() => ({
+    todos: metrics.totalHoy,
+    registradas: metrics.registradas,
+    confirmadas: metrics.confirmadas,
+    enviadasVenta: metrics.enviadasVenta,
+    canceladas: metrics.canceladas ?? 0,
+  }), [metrics]);
 
   // Handlers de navegación y modales
   const handleOpenAdd = React.useCallback(() => {
@@ -294,14 +275,17 @@ export function AdmisionModuleView() {
       {/* Cabecera del Módulo */}
       <AdmisionHeader
         onAddClick={handleOpenAdd}
-        onRefresh={() => refetch()}
-        isRefreshing={isFetching}
+        onRefresh={() => {
+          refetch();
+          refetchMetrics();
+        }}
+        isRefreshing={isFetching || isMetricsLoading}
       />
 
       {/* Tarjetas de Métricas en Vivo */}
       <AdmisionMetricsCards
         metrics={metrics}
-        isLoading={isAllAdmisionesLoading && !allAdmisionesData}
+        isLoading={isMetricsLoading && !apiMetrics}
       />
 
       {/* Listado Principal de Admisiones (Formato Lista) */}

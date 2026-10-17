@@ -1,6 +1,6 @@
-import type { CreatePacienteRequest, PacienteResponse, PagedResult } from "../../pacientes/types/paciente.types";
+import type { CreatePacienteRequest, PacienteResponse } from "../../pacientes/types/paciente.types";
 
-export type { PagedResult };
+export type { PagedResult } from "../../pacientes/types/paciente.types";
 
 export enum EstadoAdmision {
   Registrada = 1,
@@ -33,6 +33,8 @@ export interface PacienteInfoAdmision {
   numeroHistoriaClinica: string;
   persona: PersonaInfoAdmision;
 }
+
+export type PacienteAdmision = PacienteInfoAdmision | PacienteResponse;
 
 export interface ConvenioInfoAdmision {
   id: number;
@@ -84,7 +86,7 @@ export interface AdmisionDetalleResponse {
 export interface AdmisionResponse {
   id: number;
   numero: string;
-  paciente?: PacienteInfoAdmision | PacienteResponse | null;
+  paciente?: PacienteAdmision | null;
   pacienteId?: number;
   pacienteNombre?: string | null;
   pacienteDocumento?: string | null;
@@ -105,27 +107,25 @@ export interface AdmisionResponse {
 }
 
 export function formatPacienteNombre(
-  paciente?: PacienteInfoAdmision | PacienteResponse | null,
-  fallback?: string | null
+  paciente?: PacienteAdmision | null,
+  fallback = "Paciente sin registrar"
 ): string {
-  const safeFallback = fallback || "Paciente sin registrar";
-  if (!paciente) return safeFallback;
+  if (!paciente) return fallback;
   const persona = "persona" in paciente ? paciente.persona : paciente;
-  if (!persona) return safeFallback;
+  if (!persona) return fallback;
   const nombres = persona.nombres || "";
   const paterno = persona.apellidoPaterno || "";
   const materno = persona.apellidoMaterno || "";
-  return `${nombres} ${paterno} ${materno}`.trim() || safeFallback;
+  return `${nombres} ${paterno} ${materno}`.trim() || fallback;
 }
 
 export function formatPacienteDocumento(
-  paciente?: PacienteInfoAdmision | PacienteResponse | null,
-  fallback?: string | null
+  paciente?: PacienteAdmision | null,
+  fallback = "Sin Documento"
 ): string {
-  const safeFallback = fallback || "Sin Documento";
-  if (!paciente) return safeFallback;
+  if (!paciente) return fallback;
   const persona = "persona" in paciente ? paciente.persona : paciente;
-  if (!persona?.numeroDocumento) return safeFallback;
+  if (!persona?.numeroDocumento) return fallback;
   return persona.tipoDocumento
     ? `${persona.tipoDocumento}: ${persona.numeroDocumento}`
     : persona.numeroDocumento;
@@ -169,7 +169,7 @@ export interface CreateAdmisionDetalleRequest {
   descuento: number;
 }
 
-export interface UpdateAdmisionDetalleRequest extends CreateAdmisionDetalleRequest { }
+export type UpdateAdmisionDetalleRequest = CreateAdmisionDetalleRequest;
 
 export interface CreateAdmisionRequest {
   numero?: string;
@@ -232,4 +232,9 @@ export interface AdmisionMetrics {
   enviadasVenta: number;
   canceladas?: number;
   montoTotalHoy: number;
+}
+
+export interface AdmisionMetricsQueryParams {
+  fechaDesde?: string;
+  fechaHasta?: string;
 }

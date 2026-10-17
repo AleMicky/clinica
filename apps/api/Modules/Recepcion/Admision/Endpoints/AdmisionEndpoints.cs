@@ -28,6 +28,9 @@ public static class AdmisionEndpoints
         group.MapGet("/", ListarAsync)
             .WithName("ListarAdmisiones");
 
+        group.MapGet("/metricas", ObtenerMetricasAsync)
+            .WithName("ObtenerMetricasAdmision");
+
         group.MapGet("/{id:int}", ObtenerAsync)
             .WithName("ObtenerAdmision");
 
@@ -84,6 +87,19 @@ public static class AdmisionEndpoints
                 pagination,
                 search,
                 estado,
+                fechaDesde,
+                fechaHasta,
+                cancellationToken));
+    }
+
+    private static async Task<IResult> ObtenerMetricasAsync(
+        DateOnly? fechaDesde,
+        DateOnly? fechaHasta,
+        AdmisionService service,
+        CancellationToken cancellationToken)
+    {
+        return Results.Ok(
+            await service.ObtenerMetricasAsync(
                 fechaDesde,
                 fechaHasta,
                 cancellationToken));

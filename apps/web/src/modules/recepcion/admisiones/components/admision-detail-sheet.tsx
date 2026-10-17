@@ -568,11 +568,11 @@ export function AdmisionDetailSheet({
 
   const nombreCompleto = formatPacienteNombre(
     admision.paciente,
-    admision.pacienteNombre
+    admision.pacienteNombre ?? undefined
   );
   const documento = formatPacienteDocumento(
     admision.paciente,
-    admision.pacienteDocumento
+    admision.pacienteDocumento ?? undefined
   );
   const hcNumero = getPacienteHcNumero(admision.paciente, admision.pacienteId);
   const convenio =

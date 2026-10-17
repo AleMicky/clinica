@@ -11,12 +11,14 @@ import {
   downloadAdmisionPdf,
   getAdmisionById,
   getAdmisionDetalles,
+  getAdmisionMetrics,
   getAdmisiones,
   openAdmisionPdfInNewTab,
   updateAdmision,
 } from "../api/admision.api";
 import { admisionKeys } from "../api/admision.key";
 import type {
+  AdmisionMetricsQueryParams,
   AdmisionQueryParams,
   CambiarEstadoRequest,
   CreateAdmisionDetalleRequest,
@@ -29,6 +31,13 @@ export function useAdmisiones(params?: AdmisionQueryParams) {
   return useQuery({
     queryKey: admisionKeys.list(params as Record<string, unknown>),
     queryFn: () => getAdmisiones(params),
+  });
+}
+
+export function useAdmisionMetrics(params?: AdmisionMetricsQueryParams) {
+  return useQuery({
+    queryKey: admisionKeys.metrics(params as Record<string, unknown>),
+    queryFn: () => getAdmisionMetrics(params),
   });
 }
 

@@ -1,6 +1,8 @@
 import { apiClient } from "@/lib/api/api-client";
 import type {
   AdmisionDetalleResponse,
+  AdmisionMetrics,
+  AdmisionMetricsQueryParams,
   AdmisionQueryParams,
   AdmisionResponse,
   CambiarEstadoRequest,
@@ -16,6 +18,15 @@ export async function getAdmisiones(
   params?: AdmisionQueryParams
 ): Promise<PagedResult<AdmisionResponse>> {
   const response = await apiClient.get<PagedResult<AdmisionResponse>>("/admisiones", {
+    params,
+  });
+  return response.data;
+}
+
+export async function getAdmisionMetrics(
+  params?: AdmisionMetricsQueryParams
+): Promise<AdmisionMetrics> {
+  const response = await apiClient.get<AdmisionMetrics>("/admisiones/metricas", {
     params,
   });
   return response.data;

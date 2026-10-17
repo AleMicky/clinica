@@ -115,6 +115,74 @@ public sealed class AdmisionService(
         );
     }
 
+    public async Task<AdmisionMetricsResponse> ObtenerMetricasAsync(
+        DateOnly? fechaDesde = null,
+        DateOnly? fechaHasta = null,
+        CancellationToken cancellationToken = default)
+    {
+        var usuarioId = currentUserService.UserId ?? throw new UnauthorizedAccessException();
+
+        var query = Admisiones
+            .AsNoTracking()
+            .Where(x => x.Activo);
+
+        if (!currentUserService.IsInRole("ADMINISTRADOR"))
+        {
+            var empleadoId = await ObtenerEmpleadoIdPorUsuarioAsync(usuarioId, cancellationToken);
+
+            if (empleadoId == 0)
+            {
+                return new AdmisionMetricsResponse();
+            }
+
+            query = query.Where(x => x.RecepcionistaId == empleadoId);
+        }
+
+        if (fechaDesde.HasValue)
+        {
+            var desdeDateTime = fechaDesde.Value.ToDateTime(TimeOnly.MinValue);
+            query = query.Where(x => x.FechaHora >= desdeDateTime);
+        }
+
+        if (fechaHasta.HasValue)
+        {
+            var hastaDateTime = fechaHasta.Value.ToDateTime(TimeOnly.MaxValue);
+            query = query.Where(x => x.FechaHora <= hastaDateTime);
+        }
+
+        var stats = await query
+            .GroupBy(_ => 1)
+            .Select(g => new
+            {
+                TotalHoy = g.Count(),
+                Registradas = g.Count(x => x.Estado == EstadoAdmision.Registrada),
+                Confirmadas = g.Count(x => x.Estado == EstadoAdmision.Confirmada),
+                EnviadasVenta = g.Count(x => x.Estado == EstadoAdmision.EnviadaVenta),
+                Canceladas = g.Count(x => x.Estado == EstadoAdmision.Cancelada)
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (stats is null)
+        {
+            return new AdmisionMetricsResponse();
+        }
+
+        var montoTotalHoy = await query
+            .Where(x => x.Estado != EstadoAdmision.Cancelada)
+            .SelectMany(x => x.Detalles.Where(d => d.Activo))
+            .SumAsync(d => (decimal?)d.Total, cancellationToken) ?? 0m;
+
+        return new AdmisionMetricsResponse
+        {
+            TotalHoy = stats.TotalHoy,
+            Registradas = stats.Registradas,
+            Confirmadas = stats.Confirmadas,
+            EnviadasVenta = stats.EnviadasVenta,
+            Canceladas = stats.Canceladas,
+            MontoTotalHoy = montoTotalHoy
+        };
+    }
+
     public async Task<AdmisionResponse> ObtenerAsync(int id, CancellationToken cancellationToken = default)
     {
         var entity = await Admisiones
