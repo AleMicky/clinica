@@ -24,7 +24,15 @@ import {
   Ban,
   X,
   ChevronDown,
+  MoreVertical,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   EstadoAdmision,
   formatConvenioNombre,
@@ -117,21 +125,21 @@ function getRangeLabel(
 
 function AdmisionSkeletonList() {
   return (
-    <div className="space-y-2">
+    <div className="space-y-1.5">
       {Array.from({ length: 4 }).map((_, i) => (
         <div
           key={i}
-          className="p-3.5 rounded-xl border border-border/60 bg-card space-y-2.5"
+          className="p-2.5 sm:px-3 sm:py-2.5 rounded-xl border border-border/60 bg-card space-y-2"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <Skeleton className="size-9 rounded-xl" />
+              <Skeleton className="size-8 rounded-lg" />
               <div className="space-y-1">
-                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-3.5 w-36" />
                 <Skeleton className="h-3 w-28" />
               </div>
             </div>
-            <Skeleton className="h-6 w-24 rounded-full" />
+            <Skeleton className="h-6 w-20 rounded-full" />
           </div>
         </div>
       ))}
@@ -192,40 +200,44 @@ function AdmisionAuditMeta({
   if (!creadoPor && !fechaCreacion && !modificadoPor) return null;
 
   return (
-    <div className="flex items-center gap-2 text-[10px] text-muted-foreground/70 flex-wrap pt-1 border-t border-border/30 mt-1">
+    <div className="flex items-center gap-1.5 text-[9.5px] text-muted-foreground/60 flex-wrap">
       {creadoPor && (
-        <span className="flex items-center gap-1">
-          <ShieldCheck className="size-2.5 text-primary/70 shrink-0" />
+        <span
+          className="flex items-center gap-1 hover:text-foreground/80 transition-colors"
+          title={
+            fechaCreacion
+              ? `Creado el ${new Date(fechaCreacion).toLocaleString("es-ES", {
+                  dateStyle: "short",
+                  timeStyle: "short",
+                })}`
+              : undefined
+          }
+        >
+          <ShieldCheck className="size-2.5 text-primary/60 shrink-0" />
           <span>
-            Creado por: <strong className="text-foreground/75 font-medium">{creadoPor}</strong>
+            Por: <strong className="text-foreground/70 font-medium">{creadoPor}</strong>
           </span>
-          {fechaCreacion && (
-            <span className="font-mono text-[9.5px] text-muted-foreground/60">
-              ({new Date(fechaCreacion).toLocaleString("es-ES", {
-                dateStyle: "short",
-                timeStyle: "short",
-              })})
-            </span>
-          )}
         </span>
       )}
 
       {modificadoPor && (
         <>
           <span className="text-muted-foreground/30">•</span>
-          <span className="flex items-center gap-1">
-            <History className="size-2.5 text-amber-600/70 shrink-0" />
+          <span
+            className="flex items-center gap-1 hover:text-foreground/80 transition-colors"
+            title={
+              fechaModificacion
+                ? `Modificado el ${new Date(fechaModificacion).toLocaleString("es-ES", {
+                    dateStyle: "short",
+                    timeStyle: "short",
+                  })}`
+                : undefined
+            }
+          >
+            <History className="size-2.5 text-amber-600/60 shrink-0" />
             <span>
-              Modificado por: <strong className="text-foreground/75 font-medium">{modificadoPor}</strong>
+              Modif: <strong className="text-foreground/70 font-medium">{modificadoPor}</strong>
             </span>
-            {fechaModificacion && (
-              <span className="font-mono text-[9.5px] text-muted-foreground/60">
-                ({new Date(fechaModificacion).toLocaleString("es-ES", {
-                  dateStyle: "short",
-                  timeStyle: "short",
-                })})
-              </span>
-            )}
           </span>
         </>
       )}
@@ -249,7 +261,7 @@ function AdmisionItemActions({
   onDelete,
 }: Readonly<AdmisionItemActionsProps>) {
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
       <AdmisionStatusBadge estado={adm.estado} />
 
       {/* Botón directo de flujo según estado (Sin Modal) */}
@@ -261,10 +273,10 @@ function AdmisionItemActions({
             e.stopPropagation();
             onDirectChangeStatus?.(adm, EstadoAdmision.Confirmada);
           }}
-          className="h-7.5 px-2.5 text-[11px] font-semibold gap-1 bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs cursor-pointer transition-all hover:scale-[1.02]"
+          className="h-7 px-2 sm:px-2.5 text-[11px] font-semibold gap-1 bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs cursor-pointer transition-all hover:scale-[1.02]"
           title="Confirmar admisión directamente"
         >
-          <CheckCircle2 className="size-3" />
+          <CheckCircle2 className="size-3 shrink-0" />
           <span>Confirmar</span>
         </Button>
       )}
@@ -277,15 +289,15 @@ function AdmisionItemActions({
             e.stopPropagation();
             onDirectChangeStatus?.(adm, EstadoAdmision.EnviadaVenta);
           }}
-          className="h-7.5 px-2.5 text-[11px] font-semibold gap-1 bg-purple-600 hover:bg-purple-700 text-white shadow-2xs cursor-pointer transition-all hover:scale-[1.02]"
+          className="h-7 px-2 sm:px-2.5 text-[11px] font-semibold gap-1 bg-purple-600 hover:bg-purple-700 text-white shadow-2xs cursor-pointer transition-all hover:scale-[1.02]"
           title="Enviar admisión a Venta/Facturación"
         >
-          <Send className="size-3" />
-          <span>Enviar a Venta</span>
+          <Send className="size-3 shrink-0" />
+          <span>A Venta</span>
         </Button>
       )}
 
-      {/* Botón Ver Ficha Visible */}
+      {/* Botón Ver Ficha */}
       <Button
         type="button"
         size="sm"
@@ -294,48 +306,67 @@ function AdmisionItemActions({
           e.stopPropagation();
           onViewDetail(adm);
         }}
-        className="h-7.5 px-2.5 text-[11px] font-semibold gap-1 border-border/80 text-foreground hover:bg-accent hover:text-primary shadow-2xs cursor-pointer transition-all"
+        className="h-7 px-2 text-[11px] font-medium gap-1 border-border/70 text-foreground hover:bg-accent hover:text-primary shadow-2xs cursor-pointer transition-all"
         title="Ver Ficha y Detalle de Admisión"
       >
-        <Eye className="size-3 text-primary" />
-        <span>Ver Ficha</span>
+        <Eye className="size-3 text-primary shrink-0" />
+        <span className="hidden md:inline">Ver Ficha</span>
       </Button>
 
-      {/* Botón Editar Visible (Solo en estado Registrada) */}
-      {adm.estado === EstadoAdmision.Registrada && onEdit && (
-        <Button
+      {/* Menú de Acciones Adicionales (Editar, Cancelar) */}
+      <DropdownMenu>
+        <DropdownMenuTrigger
           type="button"
-          size="sm"
-          variant="outline"
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit(adm);
-          }}
-          className="h-7.5 px-2.5 text-[11px] font-semibold gap-1 border-amber-500/30 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10 shadow-2xs cursor-pointer transition-all"
-          title="Editar Admisión y Servicios"
+          onClick={(e) => e.stopPropagation()}
+          className="size-7 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground inline-flex items-center justify-center transition-colors border border-border/60 cursor-pointer"
+          title="Más opciones"
         >
-          <Pencil className="size-3" />
-          <span>Editar</span>
-        </Button>
-      )}
+          <MoreVertical className="size-3.5" />
+          <span className="sr-only">Más opciones</span>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-44 text-xs">
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              onViewDetail(adm);
+            }}
+            className="gap-2 cursor-pointer font-medium"
+          >
+            <Eye className="size-3.5 text-primary shrink-0" />
+            <span>Ver Ficha Detalle</span>
+          </DropdownMenuItem>
 
-      {/* Botón Cancelar Visible */}
-      {adm.estado !== EstadoAdmision.Cancelada && (
-        <Button
-          type="button"
-          size="sm"
-          variant="ghost"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(adm.id);
-          }}
-          className="h-7.5 px-2 text-[11px] font-semibold gap-1 text-destructive/80 hover:text-destructive hover:bg-destructive/10 cursor-pointer transition-all"
-          title="Cancelar admisión"
-        >
-          <Trash2 className="size-3" />
-          <span>Cancelar</span>
-        </Button>
-      )}
+          {adm.estado === EstadoAdmision.Registrada && onEdit && (
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(adm);
+              }}
+              className="gap-2 text-amber-700 dark:text-amber-400 cursor-pointer"
+            >
+              <Pencil className="size-3.5 shrink-0" />
+              <span>Editar Admisión</span>
+            </DropdownMenuItem>
+          )}
+
+          {adm.estado !== EstadoAdmision.Cancelada && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(adm.id);
+                }}
+                className="gap-2 text-rose-600 dark:text-rose-400 focus:text-rose-600 cursor-pointer"
+              >
+                <Trash2 className="size-3.5 shrink-0" />
+                <span>Cancelar Admisión</span>
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }
@@ -368,44 +399,53 @@ function AdmisionListItem({
   const primeraPrestacion = adm.detalles[0]?.servicioNombre || "Consulta Médica";
   const initials = getInitials(nombreCompleto);
 
+  const prestacionesLabel =
+    numPrestaciones > 1
+      ? `${primeraPrestacion} (+${numPrestaciones - 1})`
+      : primeraPrestacion;
+
   return (
-    <div className="group p-3.5 rounded-xl border border-border/60 bg-card hover:border-primary/50 hover:shadow-xs transition-all duration-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative">
+    <div
+      onClick={() => onViewDetail(adm)}
+      className="group cursor-pointer p-2.5 sm:px-3 sm:py-2.5 rounded-xl border border-border/60 bg-card hover:border-primary/40 hover:bg-muted/15 hover:shadow-xs transition-all duration-150 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 relative"
+    >
       {/* Bloque Izquierdo: Avatar con Iniciales + Paciente + Documento + Convenio + Fecha + Prestaciones */}
-      <div className="flex items-start gap-3 min-w-0 flex-1">
+      <div className="flex items-start gap-2.5 min-w-0 flex-1">
         {/* Badge / Avatar con Iniciales */}
-        <div className="size-9.5 rounded-xl bg-gradient-to-br from-primary/20 via-primary/10 to-blue-500/10 text-primary flex items-center justify-center font-bold text-xs shrink-0 border border-primary/25 mt-0.5 group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-all duration-200 shadow-2xs">
+        <div className="size-8.5 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0 border border-primary/20 mt-0.5 group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-colors shadow-2xs">
           {initials}
         </div>
 
         <div className="min-w-0 flex-1 space-y-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-mono font-bold text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-md border border-primary/20">
+          {/* Fila Principal: Número, Paciente, Doc, Convenio */}
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+            <span className="font-mono font-bold text-[11px] text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20 shrink-0">
               #{adm.numero}
             </span>
 
-            <button
-              type="button"
-              onClick={() => onViewDetail(adm)}
-              className="font-bold text-xs sm:text-sm text-foreground hover:text-primary transition-colors truncate text-left cursor-pointer focus-visible:outline-hidden focus-visible:underline"
-              title={`Ver detalle de admisión #${adm.numero}`}
+            <span
+              className="font-bold text-xs sm:text-sm text-foreground group-hover:text-primary transition-colors truncate text-left"
+              title={`Admisión #${adm.numero} - ${nombreCompleto}`}
             >
               {nombreCompleto}
-            </button>
-
-            <span className="text-[11px] text-muted-foreground font-mono bg-muted/60 px-1.5 py-0.2 rounded border border-border/40">
-              Doc: {documento}
             </span>
+
+            {documento && (
+              <span className="text-[10.5px] text-muted-foreground font-mono bg-muted/70 px-1.5 py-0.2 rounded border border-border/40 shrink-0">
+                CI: {documento}
+              </span>
+            )}
+
+            {convenio && (
+              <span className="text-[10px] font-medium text-blue-700 dark:text-blue-300 bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.2 rounded inline-flex items-center gap-1 shrink-0">
+                <Building2 className="size-2.5 shrink-0" />
+                <span className="truncate max-w-[130px]">{convenio}</span>
+              </span>
+            )}
           </div>
 
-          {/* Detalles secundarios en línea compacta */}
-          <div className="flex items-center gap-2.5 text-[11px] text-muted-foreground flex-wrap pt-0.5">
-            <span className="flex items-center gap-1 font-medium text-foreground/90">
-              <Building2 className="size-3 text-primary/80 shrink-0" />
-              {convenio}
-            </span>
-
-            <span className="text-muted-foreground/40">•</span>
-
+          {/* Fila Secundaria: Fecha, Prestación, Recepcionista, Auditoría */}
+          <div className="flex items-center gap-2 text-[11px] text-muted-foreground flex-wrap">
             <span className="flex items-center gap-1">
               <Calendar className="size-3 text-muted-foreground/70 shrink-0" />
               <span>
@@ -416,44 +456,51 @@ function AdmisionListItem({
               </span>
             </span>
 
-            <span className="text-muted-foreground/40">•</span>
+            <span className="text-muted-foreground/30">•</span>
 
             <span className="flex items-center gap-1">
               <Stethoscope className="size-3 text-blue-600/80 shrink-0" />
-              <span className="truncate max-w-[200px]">
-                {numPrestaciones === 1
-                  ? primeraPrestacion
-                  : `${primeraPrestacion} (+${numPrestaciones - 1})`}
+              <span
+                className="truncate max-w-[200px]"
+                title={adm.detalles.map((d) => d.servicioNombre).join(", ")}
+              >
+                {prestacionesLabel}
               </span>
             </span>
 
             {adm.recepcionista && (
               <>
-                <span className="text-muted-foreground/40">•</span>
-                <span className="flex items-center gap-1 text-[10.5px] text-foreground/80">
+                <span className="text-muted-foreground/30">•</span>
+                <span className="hidden md:inline-flex items-center gap-1 text-[10.5px] text-foreground/80">
                   <User className="size-3 text-emerald-600 shrink-0" />
-                  <span className="truncate max-w-[140px]" title={adm.recepcionista.nombreCompleto}>
+                  <span className="truncate max-w-[120px]" title={adm.recepcionista.nombreCompleto}>
                     {adm.recepcionista.nombreCompleto}
                   </span>
                 </span>
               </>
             )}
-          </div>
 
-          {/* Metadatos de Auditoría UX/UI */}
-          <AdmisionAuditMeta
-            creadoPor={adm.creadoPor}
-            fechaCreacion={adm.fechaCreacion}
-            modificadoPor={adm.modificadoPor}
-            fechaModificacion={adm.fechaModificacion}
-          />
+            {(adm.creadoPor || adm.modificadoPor) && (
+              <>
+                <span className="text-muted-foreground/30 hidden lg:inline">•</span>
+                <span className="hidden lg:inline-flex">
+                  <AdmisionAuditMeta
+                    creadoPor={adm.creadoPor}
+                    fechaCreacion={adm.fechaCreacion}
+                    modificadoPor={adm.modificadoPor}
+                    fechaModificacion={adm.fechaModificacion}
+                  />
+                </span>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Bloque Derecho: Precio, Estado & Acciones */}
-      <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/30">
+      <div className="flex items-center justify-between sm:justify-end gap-2.5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/30">
         <div className="flex flex-col items-start sm:items-end pr-0.5">
-          <span className="text-sm font-black text-foreground font-mono tracking-tight">
+          <span className="text-xs sm:text-sm font-black text-foreground font-mono tracking-tight">
             Bs. {total.toFixed(2)}
           </span>
           <span className="text-[10px] text-muted-foreground font-medium">
@@ -511,18 +558,18 @@ function AdmisionDateFilterBar({
   const [isCustomDateOpen, setIsCustomDateOpen] = React.useState(false);
 
   return (
-    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 px-3 py-2 rounded-xl bg-card border border-border/60 shadow-2xs">
+    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 px-2.5 py-1.5 rounded-xl bg-card border border-border/60 shadow-2xs">
       {/* Presets rápidos */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 sm:pb-0 scrollbar-none">
-        <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground mr-1 shrink-0">
-          <Calendar className="size-3.5 text-primary" />
-          <span className="font-semibold text-foreground">Fecha:</span>
+      <div className="flex items-center gap-1 overflow-x-auto pb-0.5 sm:pb-0 scrollbar-none">
+        <div className="flex items-center gap-1 text-xs font-medium text-muted-foreground mr-1 shrink-0">
+          <Calendar className="size-3 text-primary" />
+          <span className="font-semibold text-foreground text-xs">Fecha:</span>
         </div>
         <button
           type="button"
           onClick={() => onDateRangeChange?.(todayIso, todayIso)}
           className={cn(
-            "px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer select-none",
+            "px-2 py-0.5 rounded-md text-xs font-medium transition-all cursor-pointer select-none",
             isTodayActive
               ? "bg-primary text-primary-foreground font-semibold shadow-xs shadow-primary/20"
               : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -534,7 +581,7 @@ function AdmisionDateFilterBar({
           type="button"
           onClick={() => onDateRangeChange?.(yesterdayIso, yesterdayIso)}
           className={cn(
-            "px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer select-none",
+            "px-2 py-0.5 rounded-md text-xs font-medium transition-all cursor-pointer select-none",
             isYesterdayActive
               ? "bg-primary text-primary-foreground font-semibold shadow-xs shadow-primary/20"
               : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -546,7 +593,7 @@ function AdmisionDateFilterBar({
           type="button"
           onClick={() => onDateRangeChange?.(last7DaysIso, todayIso)}
           className={cn(
-            "px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer select-none",
+            "px-2 py-0.5 rounded-md text-xs font-medium transition-all cursor-pointer select-none",
             is7DaysActive
               ? "bg-primary text-primary-foreground font-semibold shadow-xs shadow-primary/20"
               : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -558,7 +605,7 @@ function AdmisionDateFilterBar({
           type="button"
           onClick={() => onDateRangeChange?.(monthStartIso, todayIso)}
           className={cn(
-            "px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer select-none",
+            "px-2 py-0.5 rounded-md text-xs font-medium transition-all cursor-pointer select-none",
             isMonthActive
               ? "bg-primary text-primary-foreground font-semibold shadow-xs shadow-primary/20"
               : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -570,7 +617,7 @@ function AdmisionDateFilterBar({
           type="button"
           onClick={() => onDateRangeChange?.("", "")}
           className={cn(
-            "px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer select-none",
+            "px-2 py-0.5 rounded-md text-xs font-medium transition-all cursor-pointer select-none",
             isAllActive
               ? "bg-primary text-primary-foreground font-semibold shadow-xs shadow-primary/20"
               : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -586,29 +633,29 @@ function AdmisionDateFilterBar({
           <PopoverTrigger
             type="button"
             className={cn(
-              "inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer border select-none w-full sm:w-auto justify-between sm:justify-start",
+              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all cursor-pointer border select-none w-full sm:w-auto justify-between sm:justify-start",
               isCustomActive
                 ? "bg-primary text-primary-foreground border-primary font-semibold shadow-xs shadow-primary/20"
                 : "bg-background text-foreground border-border/70 hover:bg-muted/80 hover:text-foreground shadow-2xs"
             )}
           >
             <div className="flex items-center gap-1.5">
-              <Calendar className="size-3.5 text-primary shrink-0" />
+              <Calendar className="size-3 text-primary shrink-0" />
               <span className="font-medium">
                 {getRangeLabel(fechaDesde, fechaHasta, isTodayActive, isYesterdayActive, is7DaysActive, isMonthActive, isAllActive)}
               </span>
             </div>
-            <ChevronDown className="size-3 opacity-60 ml-1 shrink-0" />
+            <ChevronDown className="size-3 opacity-60 ml-0.5 shrink-0" />
           </PopoverTrigger>
           <PopoverContent
             align="end"
-            sideOffset={8}
-            className="w-[330px] p-4 space-y-3.5 bg-popover rounded-xl shadow-xl border border-border/80 text-xs"
+            sideOffset={6}
+            className="w-[320px] p-3.5 space-y-3 bg-popover rounded-xl shadow-xl border border-border/80 text-xs"
           >
             <div className="flex items-center justify-between border-b border-border/50 pb-2">
               <span className="font-semibold text-foreground flex items-center gap-1.5 text-xs">
                 <Calendar className="size-3.5 text-primary" />
-                Rango de Fechas Personalizado
+                Rango de Fechas
               </span>
               {Boolean(fechaDesde || fechaHasta) && (
                 <button
@@ -624,7 +671,7 @@ function AdmisionDateFilterBar({
               )}
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               <div className="space-y-1">
                 <label htmlFor="admision-popover-fecha-desde" className="text-[11px] font-semibold text-muted-foreground block">
                   Desde:
@@ -665,7 +712,7 @@ function AdmisionDateFilterBar({
               <Button
                 type="button"
                 size="sm"
-                className="h-7 text-xs px-3.5 cursor-pointer"
+                className="h-7 text-xs px-3 cursor-pointer"
                 onClick={() => setIsCustomDateOpen(false)}
               >
                 Aplicar
@@ -793,11 +840,11 @@ export function AdmisionList({
   };
 
   return (
-    <div className="space-y-3 w-full">
+    <div className="space-y-2.5 w-full">
       {/* FILTROS EN FORMATO BADGE Y BUSCADOR */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 px-0.5">
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2 px-0.5">
         {/* Badges interactivos de estado */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+        <div className="flex items-center gap-1 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
           {tabs.map((t) => {
             const isActive = selectedEstadoTab === t.key;
             const Icon = t.icon;
@@ -806,7 +853,7 @@ export function AdmisionList({
                 key={t.key.toString()}
                 type="button"
                 onClick={() => onEstadoTabChange?.(t.key)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer select-none ${isActive
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer select-none ${isActive
                     ? t.activeClasses
                     : "bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground border border-border/40"
                   }`}
@@ -829,13 +876,13 @@ export function AdmisionList({
         </div>
 
         {/* Buscador y Limpiar */}
-        <div className="flex items-center gap-2 w-full md:w-auto">
+        <div className="flex items-center gap-1.5 w-full md:w-auto">
           <div className="w-full md:w-64">
             <SearchInput
               value={searchTerm}
               onChange={onSearchChange}
               placeholder="Buscar admisión, DNI, paciente..."
-              className="h-8.5 text-xs bg-background shadow-2xs"
+              className="h-8 text-xs bg-background shadow-2xs"
             />
           </div>
 
@@ -844,7 +891,7 @@ export function AdmisionList({
               variant="ghost"
               size="sm"
               onClick={handleReset}
-              className="h-8.5 px-2 text-xs text-muted-foreground hover:text-foreground shrink-0 cursor-pointer gap-1"
+              className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground shrink-0 cursor-pointer gap-1"
               title="Restablecer filtros"
             >
               <X className="size-3.5" />
@@ -885,7 +932,7 @@ export function AdmisionList({
         )}
 
         {!isLoading && admisiones.length > 0 && (
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {admisiones.map((adm) => (
               <AdmisionListItem
                 key={adm.id}
