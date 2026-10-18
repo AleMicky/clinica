@@ -5,6 +5,7 @@ import type {
   CobroQueryParams,
   CobroResponse,
   ConfirmarCobroRequest,
+  ExportarCobrosQueryParams,
   GenerarCobroDesdeVentaRequest,
   PagedResult,
 } from "../types/cobro.types";
@@ -25,6 +26,16 @@ export async function getCobroMetrics(params?: {
 }): Promise<CobroMetrics> {
   const response = await apiClient.get<CobroMetrics>("/cobros/metricas", {
     params,
+  });
+  return response.data;
+}
+
+export async function exportarCobrosExcel(
+  params?: ExportarCobrosQueryParams
+): Promise<Blob> {
+  const response = await apiClient.get<Blob>("/cobros/exportar-excel", {
+    params,
+    responseType: "blob",
   });
   return response.data;
 }

@@ -72,12 +72,13 @@ export function AppSidebar({
 
   const isLoading = isAuthLoading || isMenuLoading;
 
-  // Garantizar que las opciones de Reportes de Admisión y Ventas estén disponibles en el menú lateral
+  // Garantizar que las opciones de Reportes de Admisión, Ventas y Cobranzas estén disponibles en el menú lateral
   const enrichedMenuTree = React.useMemo(() => {
     if (!menuTree || menuTree.length === 0) return menuTree;
 
     let hasReportesAdmision = false;
     let hasReportesVentas = false;
+    let hasReportesCobros = false;
     function checkReportes(nodes: OpcionMenuTreeResponse[]) {
       for (const n of nodes) {
         if (n.ruta === "/recepcion/reportes") {
@@ -86,13 +87,16 @@ export function AppSidebar({
         if (n.ruta === "/ventas/reportes") {
           hasReportesVentas = true;
         }
+        if (n.ruta === "/caja/reportes") {
+          hasReportesCobros = true;
+        }
         if (n.hijos && n.hijos.length > 0) {
           checkReportes(n.hijos);
         }
       }
     }
     checkReportes(menuTree);
-    if (hasReportesAdmision && hasReportesVentas) return menuTree;
+    if (hasReportesAdmision && hasReportesVentas && hasReportesCobros) return menuTree;
 
     return menuTree.map((category) => {
       const hijos = [...(category.hijos || [])];
@@ -151,6 +155,35 @@ export function AppSidebar({
             hijos.splice(ventaIdx + 1, 0, reporteVentaNode);
           } else {
             hijos.push(reporteVentaNode);
+          }
+          changed = true;
+        }
+      }
+
+      // 3. Reportes de Cobranzas
+      if (!hasReportesCobros) {
+        const hasCobros = hijos.some(
+          (h) => h.ruta === "/caja/cobros" || h.codigo === "COBROS"
+        );
+        if (category.codigo === "CAJA_VENTAS" || hasCobros) {
+          const cobroIdx = hijos.findIndex(
+            (h) => h.ruta === "/caja/cobros" || h.codigo === "COBROS"
+          );
+
+          const reporteCobroNode: OpcionMenuTreeResponse = {
+            id: -9997,
+            codigo: "REPORTES_COBROS",
+            nombre: "Reportes de Cobranzas",
+            ruta: "/caja/reportes",
+            icono: "FileSpreadsheet",
+            orden: cobroIdx >= 0 ? (hijos[cobroIdx].orden ?? 2) + 1 : 3,
+            hijos: [],
+          };
+
+          if (cobroIdx >= 0) {
+            hijos.splice(cobroIdx + 1, 0, reporteCobroNode);
+          } else {
+            hijos.push(reporteCobroNode);
           }
           changed = true;
         }

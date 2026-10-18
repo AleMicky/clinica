@@ -78,6 +78,28 @@ public sealed record VentaPagadorInfo
     public EstadoVentaPagador Estado { get; init; }
 }
 
+public sealed record CobroDiarioDto
+{
+    public required string Fecha { get; init; }
+    public decimal Monto { get; init; }
+    public int Cantidad { get; init; }
+}
+
+public sealed record CobroMetodoPagoDto
+{
+    public required string MetodoPago { get; init; }
+    public decimal Monto { get; init; }
+    public int Cantidad { get; init; }
+    public decimal Porcentaje { get; init; }
+}
+
+public sealed record CobroPorCajaDto
+{
+    public required string CajaNombre { get; init; }
+    public decimal Monto { get; init; }
+    public int Cantidad { get; init; }
+}
+
 public sealed record CobroMetricsResponse
 {
     public int TotalCobros { get; init; }
@@ -89,4 +111,14 @@ public sealed record CobroMetricsResponse
     public int Anulados { get; init; }
 
     public decimal TotalMontoCobrado { get; init; }
+
+    public decimal TotalMontoPendiente { get; init; }
+
+    public decimal TicketPromedio { get; init; }
+
+    public IReadOnlyCollection<CobroDiarioDto> TendenciaDiaria { get; init; } = [];
+
+    public IReadOnlyCollection<CobroMetodoPagoDto> MetodosPago { get; init; } = [];
+
+    public IReadOnlyCollection<CobroPorCajaDto> PorCaja { get; init; } = [];
 }

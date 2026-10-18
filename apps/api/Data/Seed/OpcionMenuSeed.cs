@@ -264,6 +264,14 @@ public static class OpcionMenuSeed
                 "CAJA_VENTAS"),
 
             new(
+                "REPORTES_COBROS",
+                "Reportes de Cobranzas",
+                "/caja/reportes",
+                "FileSpreadsheet",
+                3,
+                "CAJA_VENTAS"),
+
+            new(
                 "ARQUEOS_CIERRES",
                 "Arqueos y Cierres",
                 "/caja/arqueos",

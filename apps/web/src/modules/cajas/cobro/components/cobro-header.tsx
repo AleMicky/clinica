@@ -1,10 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { ROUTES } from "@/config/routes";
 import {
   RefreshCw,
   Wallet,
@@ -13,6 +15,7 @@ import {
   DollarSign,
   Calendar,
   ChevronDown,
+  FileSpreadsheet,
 } from "lucide-react";
 import type { CobroMetrics as CobroMetricsType } from "../types/cobro.types";
 
@@ -343,6 +346,18 @@ export function CobroHeader({
             </div>
           </PopoverContent>
         </Popover>
+
+        <Link
+          href={ROUTES.CAJA.REPORTES}
+          className={cn(
+            buttonVariants({ variant: "outline", size: "sm" }),
+            "h-7 px-2.5 text-xs gap-1.5 cursor-pointer shadow-2xs font-semibold text-sky-700 dark:text-sky-400 bg-sky-500/10 border-sky-500/30 hover:bg-sky-500/20 shrink-0"
+          )}
+          title="Ver reportes y analítica de cobranzas"
+        >
+          <FileSpreadsheet className="size-3 text-sky-600 dark:text-sky-400" />
+          <span className="hidden sm:inline">Reportes</span>
+        </Link>
 
         {onRefresh && (
           <Button

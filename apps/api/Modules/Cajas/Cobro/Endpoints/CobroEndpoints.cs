@@ -23,6 +23,9 @@ public static class CobroEndpoints
         group.MapGet("/metricas", ObtenerMetricasAsync)
             .WithName("ObtenerMetricasCobros");
 
+        group.MapGet("/exportar-excel", ExportarExcelAsync)
+            .WithName("ExportarCobrosExcel");
+
         group.MapGet("/{id:int}", ObtenerAsync)
             .WithName("ObtenerCobro");
 
@@ -83,6 +86,32 @@ public static class CobroEndpoints
             cancellationToken);
 
         return Results.Ok(result);
+    }
+
+    // ============================================================
+    // EXPORTAR EXCEL
+    // ============================================================
+
+    private static async Task<IResult> ExportarExcelAsync(
+        string? search,
+        EstadoCobro? estado,
+        DateOnly? fechaDesde,
+        DateOnly? fechaHasta,
+        CobroService service,
+        CancellationToken cancellationToken)
+    {
+        var bytes = await service.ExportarExcelAsync(
+            search,
+            estado,
+            fechaDesde,
+            fechaHasta,
+            cancellationToken);
+
+        var fileName = $"reporte_cobranzas_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+        return Results.File(
+            bytes,
+            contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            fileDownloadName: fileName);
     }
 
     // ============================================================

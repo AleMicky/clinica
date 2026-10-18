@@ -15,6 +15,7 @@ import {
   Building2,
   CheckCircle2,
   ChevronsUpDown,
+  Clock,
   Coins,
   CreditCard,
   Loader2,
@@ -44,6 +45,7 @@ interface CobroDetailCardProps {
   onSuccessCobro?: () => void;
   onAnular?: (cobro: CobroResponse) => void;
   onBack?: () => void;
+  readOnly?: boolean;
 }
 
 function formatCurrency(amount?: number | null): string {
@@ -686,6 +688,7 @@ export function CobroDetailCard({
   onSuccessCobro,
   onAnular,
   onBack,
+  readOnly = false,
 }: Readonly<CobroDetailCardProps>) {
   const cobroId = initialCobro?.id ?? 0;
   const { data: fullCobro } = useCobro(cobroId, cobroId > 0);
@@ -717,9 +720,13 @@ export function CobroDetailCard({
         <div className="size-12 rounded-2xl bg-muted/60 flex items-center justify-center text-muted-foreground/50 mb-2">
           <Wallet className="size-6" />
         </div>
-        <h3 className="text-sm font-bold text-foreground">Terminal de Cobro Listo</h3>
+        <h3 className="text-sm font-bold text-foreground">
+          {readOnly ? "Detalle de Cobro" : "Terminal de Cobro Listo"}
+        </h3>
         <p className="text-xs text-muted-foreground max-w-xs mt-1">
-          Seleccione un ticket de la cola izquierda para liquidar formas de pago en un solo clic.
+          {readOnly
+            ? "Seleccione un registro para consultar el comprobante de cobranza."
+            : "Seleccione un ticket de la cola izquierda para liquidar formas de pago en un solo clic."}
         </p>
       </div>
     );
@@ -805,8 +812,8 @@ export function CobroDetailCard({
         </div>
       )}
 
-      {/* CUERPO DEL TERMINAL: LIQUIDACIÓN O RECIBO SELLADO */}
-      {cobro.estado === EstadoCobro.Registrado ? (
+      {/* CUERPO DEL TERMINAL: LIQUIDACIÓN O CONSULTA/RECIBO */}
+      {!readOnly && cobro.estado === EstadoCobro.Registrado ? (
         isLoadingMetodos || isLoadingMonedas ? (
           <div className="p-4 space-y-3">
             <Skeleton className="h-20 w-full rounded-xl" />
@@ -825,20 +832,54 @@ export function CobroDetailCard({
           />
         )
       ) : (
-        /* VISTA DE TICKET COBRADO O ANULADO (RECIBO FINAL) */
+        /* VISTA DE CONSULTA / RECIBO (READONLY O ESTADO SELLADO) */
         <div className="flex-1 min-h-0 p-4 sm:p-5 flex flex-col justify-between overflow-hidden">
           <div className="flex-1 min-h-0 overflow-y-auto space-y-3.5 pr-1 scrollbar-none">
-            <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 flex items-center justify-between">
-              <div>
-                <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">
-                  Cobro Confirmado y Liquidado
-                </span>
-                <span className="text-2xl font-mono font-extrabold text-foreground">
-                  {formatCurrency(cobro.total)}
-                </span>
+            {/* Banner según estado */}
+            {cobro.estado === EstadoCobro.Confirmado && (
+              <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 flex items-center justify-between">
+                <div>
+                  <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">
+                    Cobro Confirmado y Liquidado
+                  </span>
+                  <span className="text-2xl font-mono font-extrabold text-foreground">
+                    {formatCurrency(cobro.total)}
+                  </span>
+                </div>
+                <CheckCircle2 className="size-8 text-emerald-600 dark:text-emerald-400" />
               </div>
-              <CheckCircle2 className="size-8 text-emerald-600 dark:text-emerald-400" />
-            </div>
+            )}
+
+            {cobro.estado === EstadoCobro.Registrado && (
+              <div className="p-4 rounded-xl border border-amber-500/30 bg-amber-500/10 flex items-center justify-between">
+                <div>
+                  <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider block">
+                    Cobro Pendiente de Liquidación
+                  </span>
+                  <span className="text-2xl font-mono font-extrabold text-foreground">
+                    {formatCurrency(montoObjetivo)}
+                  </span>
+                  <span className="text-[11px] text-muted-foreground block mt-0.5">
+                    Ticket emitido a la espera de liquidación en el terminal de caja.
+                  </span>
+                </div>
+                <Clock className="size-8 text-amber-600 dark:text-amber-400" />
+              </div>
+            )}
+
+            {cobro.estado === EstadoCobro.Anulado && (
+              <div className="p-4 rounded-xl border border-rose-500/30 bg-rose-500/10 flex items-center justify-between">
+                <div>
+                  <span className="text-[11px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider block">
+                    Cobro Anulado
+                  </span>
+                  <span className="text-2xl font-mono font-extrabold text-foreground">
+                    {formatCurrency(cobro.total)}
+                  </span>
+                </div>
+                <Ban className="size-8 text-rose-600 dark:text-rose-400" />
+              </div>
+            )}
 
             {/* Desglose de pagos */}
             <div className="p-3 rounded-lg border border-border/70 bg-card space-y-2 text-xs">
@@ -869,7 +910,9 @@ export function CobroDetailCard({
                 </div>
               ) : (
                 <p className="text-muted-foreground text-center py-2">
-                  Detalles registrados en caja.
+                  {cobro.estado === EstadoCobro.Registrado
+                    ? "Sin formas de pago asignadas (aún en espera de cobro en caja)."
+                    : "Detalles registrados en caja."}
                 </p>
               )}
             </div>
@@ -884,7 +927,7 @@ export function CobroDetailCard({
             )}
           </div>
 
-          {onAnular && cobro.estado === EstadoCobro.Confirmado && (
+          {!readOnly && onAnular && cobro.estado === EstadoCobro.Confirmado && (
             <div className="shrink-0 pt-2 border-t border-border/50">
               <Button
                 type="button"

@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   anularCobro,
   confirmarCobro,
+  exportarCobrosExcel,
   generarCobroDesdeVenta,
   getCobroById,
   getCobroMetrics,
@@ -14,6 +15,7 @@ import type {
   AnularCobroRequest,
   CobroQueryParams,
   ConfirmarCobroRequest,
+  ExportarCobrosQueryParams,
   GenerarCobroDesdeVentaRequest,
 } from "../types/cobro.types";
 
@@ -94,5 +96,11 @@ export function useAnularCobro() {
       queryClient.invalidateQueries({ queryKey: ["cajas"], refetchType: "all" });
       queryClient.invalidateQueries({ queryKey: ["movimientos-caja"], refetchType: "all" });
     },
+  });
+}
+
+export function useExportarCobrosExcel() {
+  return useMutation({
+    mutationFn: (params?: ExportarCobrosQueryParams) => exportarCobrosExcel(params),
   });
 }

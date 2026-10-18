@@ -60,6 +60,7 @@ export const ROUTES = {
     ARQUEOS: "/caja/arqueos",
     ARQUEOS_NUEVO: "/caja/arqueos/nuevo",
     COBROS: "/caja/cobros",
+    REPORTES: "/caja/reportes",
   },
   VENTAS: {
     ROOT: "/ventas",

@@ -17,6 +17,7 @@ using Clinica.Api.Modules.Notificaciones.Enums;
 using Clinica.Api.Modules.Notificaciones.Services;
 using Clinica.Api.Modules.Seguridad.Usuarios.Entity;
 using CobroEntity = Clinica.Api.Modules.Cajas.Cobro.Entity.Cobro;
+using Clinica.Api.Shared.Excel;
 using TurnoCajaEntity = Clinica.Api.Modules.Cajas.TurnoCaja.Entity.TurnoCaja;
 using VentaPagadorEntity = Clinica.Api.Modules.Ventas.Venta.Entity.VentaPagador;
 
@@ -27,7 +28,8 @@ public sealed class CobroService(
     ICorrelativoService correlativoService,
     CobroDetalleService cobroDetalleService,
     ICurrentUserService currentUserService,
-    INotificacionService notificacionService
+    INotificacionService notificacionService,
+    IExcelReportGenerator excelReportGenerator
 )
 {
     private AppDbContext DbContext { get; } = dbContext;
@@ -175,7 +177,8 @@ public sealed class CobroService(
                 PendientesCobro = g.Count(x => x.Estado == EstadoCobro.Registrado),
                 Completados = g.Count(x => x.Estado == EstadoCobro.Confirmado),
                 Anulados = g.Count(x => x.Estado == EstadoCobro.Anulado),
-                TotalMontoCobrado = g.Sum(x => x.Estado == EstadoCobro.Confirmado ? x.Total : 0m)
+                TotalMontoCobrado = g.Sum(x => x.Estado == EstadoCobro.Confirmado ? x.Total : 0m),
+                TotalMontoPendiente = g.Sum(x => x.Estado == EstadoCobro.Registrado ? x.Total : 0m)
             })
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -184,14 +187,191 @@ public sealed class CobroService(
             return new CobroMetricsResponse();
         }
 
+        var confirmedQuery = query.Where(x => x.Estado == EstadoCobro.Confirmado);
+
+        var rawTendencia = await confirmedQuery
+            .GroupBy(x => x.FechaHora.Date)
+            .Select(g => new
+            {
+                Fecha = g.Key,
+                Monto = g.Sum(x => x.Total),
+                Cantidad = g.Count()
+            })
+            .OrderBy(x => x.Fecha)
+            .ToListAsync(cancellationToken);
+
+        var tendenciaDiaria = rawTendencia
+            .Select(x => new CobroDiarioDto
+            {
+                Fecha = x.Fecha.ToString("yyyy-MM-dd"),
+                Monto = x.Monto,
+                Cantidad = x.Cantidad
+            })
+            .ToList();
+
+        var rawMetodos = await confirmedQuery
+            .SelectMany(x => x.Detalles)
+            .GroupBy(d => d.MetodoPago != null ? d.MetodoPago.Nombre : "Otro")
+            .Select(g => new
+            {
+                MetodoPago = g.Key,
+                Monto = g.Sum(d => d.MontoMonedaBase > 0 ? d.MontoMonedaBase : d.Monto),
+                Cantidad = g.Count()
+            })
+            .OrderByDescending(x => x.Monto)
+            .ToListAsync(cancellationToken);
+
+        var totalMetodosMonto = rawMetodos.Sum(m => m.Monto);
+
+        var metodosPago = rawMetodos
+            .Select(x => new CobroMetodoPagoDto
+            {
+                MetodoPago = x.MetodoPago,
+                Monto = x.Monto,
+                Cantidad = x.Cantidad,
+                Porcentaje = totalMetodosMonto > 0 ? Math.Round((x.Monto / totalMetodosMonto) * 100m, 1) : 0m
+            })
+            .ToList();
+
+        var porCaja = await confirmedQuery
+            .Where(x => x.TurnoCaja != null && x.TurnoCaja.Caja != null)
+            .GroupBy(x => x.TurnoCaja!.Caja!.Nombre)
+            .Select(g => new CobroPorCajaDto
+            {
+                CajaNombre = g.Key,
+                Monto = g.Sum(x => x.Total),
+                Cantidad = g.Count()
+            })
+            .OrderByDescending(x => x.Monto)
+            .Take(5)
+            .ToListAsync(cancellationToken);
+
+        var ticketPromedio = stats.Completados > 0
+            ? Math.Round(stats.TotalMontoCobrado / stats.Completados, 2)
+            : 0m;
+
         return new CobroMetricsResponse
         {
             TotalCobros = stats.Total,
             PendientesCobro = stats.PendientesCobro,
             Completados = stats.Completados,
             Anulados = stats.Anulados,
-            TotalMontoCobrado = stats.TotalMontoCobrado
+            TotalMontoCobrado = stats.TotalMontoCobrado,
+            TotalMontoPendiente = stats.TotalMontoPendiente,
+            TicketPromedio = ticketPromedio,
+            TendenciaDiaria = tendenciaDiaria,
+            MetodosPago = metodosPago,
+            PorCaja = porCaja
         };
+    }
+
+    public async Task<byte[]> ExportarExcelAsync(
+        string? search,
+        EstadoCobro? estado = null,
+        DateOnly? fechaDesde = null,
+        DateOnly? fechaHasta = null,
+        CancellationToken cancellationToken = default)
+    {
+        var usuarioId = currentUserService.UserId;
+
+        if (usuarioId is null)
+            throw new UnauthorizedAccessException();
+
+        var query = BuildQuery().AsNoTracking();
+        var esAdministrador = currentUserService.IsInRole("ADMINISTRADOR") ||
+                              currentUserService.IsInRole("ADMIN_CAJA");
+
+        if (!esAdministrador)
+        {
+            var empleadoId = await DbContext.Users
+                .Where(x => x.Id == usuarioId.Value)
+                .Join(
+                    DbContext.Empleados,
+                    usuario => usuario.PersonaId,
+                    empleado => empleado.PersonaId,
+                    (_, empleado) => empleado.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (empleadoId == 0)
+            {
+                return [];
+            }
+
+            query = query.Where(x => x.TurnoCaja.EmpleadoId == empleadoId);
+        }
+
+        if (estado.HasValue)
+        {
+            query = query.Where(x => x.Estado == estado.Value);
+        }
+
+        if (fechaDesde.HasValue)
+        {
+            var desdeDateTime = fechaDesde.Value.ToDateTime(TimeOnly.MinValue);
+            query = query.Where(x => x.FechaHora >= desdeDateTime);
+        }
+
+        if (fechaHasta.HasValue)
+        {
+            var hastaDateTime = fechaHasta.Value.ToDateTime(TimeOnly.MaxValue);
+            query = query.Where(x => x.FechaHora <= hastaDateTime);
+        }
+
+        var normalizedSearch = string.IsNullOrWhiteSpace(search)
+            ? null
+            : search.Trim();
+
+        query = ApplySearch(query, normalizedSearch);
+
+        var cobros = await ApplyOrder(query)
+            .ToListAsync(cancellationToken);
+
+        var options = new ExcelReportOptions
+        {
+            Title = "Reporte General de Cobranzas y Recaudación",
+            Subtitle = "Módulo de Cajas & Tesorería",
+            SheetName = "Cobranzas",
+            HeaderColor = "#0284C7",
+            GeneratedBy = currentUserService.UserId?.ToString()
+        };
+
+        return excelReportGenerator.Generate(options, cobros, builder =>
+        {
+            builder.AddColumn("N° Cobro", x => x.Numero, ExcelColumnAlignment.Center);
+            builder.AddDateTimeColumn("Fecha y Hora", x => x.FechaHora);
+            builder.AddColumn("N° Venta", x => x.VentaPagador != null && x.VentaPagador.Venta != null ? x.VentaPagador.Venta.Numero : "-", ExcelColumnAlignment.Center);
+            builder.AddColumn("Paciente / Pagador", x =>
+            {
+                if (x.VentaPagador?.Venta?.Paciente?.Persona != null)
+                {
+                    var p = x.VentaPagador.Venta.Paciente.Persona;
+                    return $"{p.Nombres} {p.ApellidoPaterno} {p.ApellidoMaterno}".Trim();
+                }
+                if (x.VentaPagador?.Convenio != null)
+                {
+                    return x.VentaPagador.Convenio.Nombre;
+                }
+                return "Particular";
+            });
+            builder.AddColumn("N° Documento", x => x.VentaPagador?.Venta?.Paciente?.Persona?.NumeroDocumento ?? "-", ExcelColumnAlignment.Center);
+            builder.AddColumn("N° Historia", x => x.VentaPagador?.Venta?.Paciente?.NumeroHistoriaClinica ?? "-", ExcelColumnAlignment.Center);
+            builder.AddColumn("Caja", x => x.TurnoCaja?.Caja?.Nombre ?? "-", ExcelColumnAlignment.Center);
+            builder.AddColumn("Cajero", x => x.TurnoCaja?.Empleado?.Persona != null ? $"{x.TurnoCaja.Empleado.Persona.Nombres} {x.TurnoCaja.Empleado.Persona.ApellidoPaterno}".Trim() : "-");
+            builder.AddColumn("Métodos de Pago", x => x.Detalles != null && x.Detalles.Count > 0
+                ? string.Join(", ", x.Detalles.Select(d => d.MetodoPago != null ? $"{d.MetodoPago.Nombre}: Bs. {d.Monto:N2}" : $"Bs. {d.Monto:N2}"))
+                : "-");
+            builder.AddCurrencyColumn("Monto Total", x => x.Total);
+            builder.AddColumn("Estado", x => x.Estado switch
+            {
+                EstadoCobro.Registrado => "Por Cobrar",
+                EstadoCobro.Confirmado => "Cobrado",
+                EstadoCobro.Anulado => "Anulado",
+                EstadoCobro.DevueltoParcial => "Devuelto Parcial",
+                EstadoCobro.Devuelto => "Devuelto",
+                _ => x.Estado.ToString()
+            }, ExcelColumnAlignment.Center);
+            builder.AddColumn("Observación", x => x.Observacion ?? "-");
+        });
     }
 
 

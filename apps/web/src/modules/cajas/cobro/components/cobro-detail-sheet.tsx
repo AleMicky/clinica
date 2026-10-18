@@ -18,6 +18,7 @@ interface CobroDetailSheetProps {
   cobro: CobroResponse | null;
   onSuccessCobro?: () => void;
   onAnular?: (cobro: CobroResponse) => void;
+  readOnly?: boolean;
 }
 
 export function CobroDetailSheet({
@@ -26,10 +27,13 @@ export function CobroDetailSheet({
   cobro,
   onSuccessCobro,
   onAnular,
+  readOnly = false,
 }: Readonly<CobroDetailSheetProps>) {
   if (!cobro) return null;
 
-  let descripcion = "Registro de pagos de caja";
+  let descripcion = readOnly
+    ? "Consulta de comprobante e información de cobranza"
+    : "Registro de pagos de caja";
   if (cobro.ventaPagador?.pacienteNombreCompleto) {
     descripcion = `Paciente: ${cobro.ventaPagador.pacienteNombreCompleto} • Venta #${cobro.ventaPagador?.ventaNumero || ""}`;
   } else if (cobro.ventaPagador?.ventaNumero) {
@@ -46,7 +50,9 @@ export function CobroDetailSheet({
             </div>
             <div>
               <SheetTitle className="text-base font-bold text-foreground">
-                Terminal de Cobro #{cobro.numero}
+                {readOnly
+                  ? `Consulta de Cobro #${cobro.numero}`
+                  : `Terminal de Cobro #${cobro.numero}`}
               </SheetTitle>
               <SheetDescription className="text-xs text-muted-foreground">
                 {descripcion}
@@ -58,14 +64,23 @@ export function CobroDetailSheet({
         <div className="flex-1 overflow-y-auto p-4">
           <CobroDetailCard
             cobro={cobro}
-            onSuccessCobro={() => {
-              onSuccessCobro?.();
-              onOpenChange(false);
-            }}
-            onAnular={(c) => {
-              onAnular?.(c);
-              onOpenChange(false);
-            }}
+            readOnly={readOnly}
+            onSuccessCobro={
+              readOnly
+                ? undefined
+                : () => {
+                    onSuccessCobro?.();
+                    onOpenChange(false);
+                  }
+            }
+            onAnular={
+              readOnly
+                ? undefined
+                : (c) => {
+                    onAnular?.(c);
+                    onOpenChange(false);
+                  }
+            }
           />
         </div>
       </SheetContent>

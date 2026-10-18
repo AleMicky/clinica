@@ -113,12 +113,43 @@ export interface CobroQueryParams {
   fechaHasta?: string;
 }
 
+export interface CobroDiario {
+  fecha: string;
+  monto: number;
+  cantidad: number;
+}
+
+export interface CobroMetodoPagoStat {
+  metodoPago: string;
+  monto: number;
+  cantidad: number;
+  porcentaje?: number;
+}
+
+export interface CobroPorCajaStat {
+  cajaNombre: string;
+  monto: number;
+  cantidad: number;
+}
+
+export interface ExportarCobrosQueryParams {
+  search?: string;
+  estado?: EstadoCobro;
+  fechaDesde?: string;
+  fechaHasta?: string;
+}
+
 export interface CobroMetrics {
   totalCobros: number;
   pendientesCobro: number;
   completados: number;
   anulados: number;
   totalMontoCobrado: number;
+  totalMontoPendiente?: number;
+  ticketPromedio?: number;
+  tendenciaDiaria?: CobroDiario[];
+  metodosPago?: CobroMetodoPagoStat[];
+  porCaja?: CobroPorCajaStat[];
 }
 
 export interface PagedResult<T> {
