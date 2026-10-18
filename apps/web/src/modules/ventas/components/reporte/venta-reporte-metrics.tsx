@@ -45,9 +45,9 @@ export function VentaReporteMetrics({
     : "0.0";
 
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-2.5 w-full min-w-0">
       {/* 4 Main Commercial KPIs */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 w-full min-w-0">
         {/* Card 1: Facturación Neta Total */}
         <div className="bg-card/90 backdrop-blur-sm rounded-2xl border border-border/40 p-4.5 shadow-xs hover:border-emerald-500/40 hover:shadow-md transition-all group relative overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-emerald-500/10 via-transparent to-transparent rounded-bl-full pointer-events-none" />

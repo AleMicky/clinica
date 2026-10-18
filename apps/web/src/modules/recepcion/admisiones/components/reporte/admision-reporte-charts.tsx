@@ -69,9 +69,9 @@ export function AdmisionReporteCharts({
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5 w-full min-w-0">
       {/* Chart 1: Distribución por Estado */}
-      <div className="bg-card/90 backdrop-blur-sm rounded-2xl border border-border/40 p-4 shadow-xs lg:col-span-2 transition-all">
+      <div className="bg-card/90 backdrop-blur-sm rounded-2xl border border-border/40 p-4 shadow-xs lg:col-span-2 transition-all min-w-0">
         <div className="flex items-center justify-between pb-3 border-b border-border/30">
           <div className="flex items-center gap-2">
             <div className="size-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
@@ -92,7 +92,7 @@ export function AdmisionReporteCharts({
         </div>
 
         <div className="pt-3">
-          <div className="h-36 w-full">
+          <div className="h-36 w-full min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={statusChartData} margin={{ top: 8, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.15} />
@@ -127,7 +127,7 @@ export function AdmisionReporteCharts({
       </div>
 
       {/* Chart 2: Top Coberturas / Convenios */}
-      <div className="bg-card/90 backdrop-blur-sm rounded-2xl border border-border/40 p-4 shadow-xs transition-all">
+      <div className="bg-card/90 backdrop-blur-sm rounded-2xl border border-border/40 p-4 shadow-xs transition-all min-w-0">
         <div className="flex items-center justify-between pb-3 border-b border-border/30">
           <div className="flex items-center gap-2">
             <div className="size-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">

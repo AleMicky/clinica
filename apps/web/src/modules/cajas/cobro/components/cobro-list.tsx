@@ -101,7 +101,7 @@ export function CobroList({
 
   if (isLoading) {
     ticketListContent = (
-      <div className="space-y-1.5 p-2">
+      <div className="flex-1 min-h-0 overflow-y-auto space-y-1.5 p-2 custom-scrollbar">
         {Array.from({ length: 4 }).map((_, i) => (
           <Skeleton key={i} className="h-20 w-full rounded-lg" />
         ))}
@@ -109,7 +109,7 @@ export function CobroList({
     );
   } else if (cobros.length === 0) {
     ticketListContent = (
-      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-2 text-muted-foreground">
+      <div className="flex-1 min-h-0 flex flex-col items-center justify-center p-6 text-center space-y-2 text-muted-foreground">
         <CreditCard className="size-8 text-muted-foreground/30" />
         <p className="font-semibold text-xs text-foreground">
           Sin tickets en cola
@@ -121,7 +121,7 @@ export function CobroList({
     );
   } else {
     ticketListContent = (
-      <div className="flex-1 overflow-y-auto p-2 space-y-1.5 scrollbar-thin">
+      <div className="flex-1 min-h-0 overflow-y-auto p-2 space-y-1.5 custom-scrollbar">
         {cobros.map((cobro) => {
           const isSelected = selectedCobroId === cobro.id;
           const isPending = cobro.estado === EstadoCobro.Registrado;

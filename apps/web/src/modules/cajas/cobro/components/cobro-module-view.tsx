@@ -158,7 +158,7 @@ export function CobroModuleView() {
   const isGlobalRefreshing = isRefetchingCobros || isRefetchingMetrics;
 
   return (
-    <div className="h-[calc(100dvh-4.75rem)] sm:h-[calc(100vh-5.5rem)] flex flex-col gap-2 w-full animate-in fade-in-50 duration-200 overflow-hidden">
+    <div className="h-[calc(100dvh-5.75rem)] sm:h-[calc(100dvh-7.75rem)] lg:h-[calc(100dvh-9rem)] max-h-[calc(100dvh-9rem)] flex flex-col gap-2.5 w-full animate-in fade-in-50 duration-200 overflow-hidden">
       {/* Cabecera del Módulo con Métricas Integradas en Línea */}
       <CobroHeader
         metrics={metrics}

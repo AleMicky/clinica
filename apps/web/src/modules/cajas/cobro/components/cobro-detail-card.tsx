@@ -210,8 +210,8 @@ function CobroLiquidacionForm({
   };
 
   return (
-    <form onSubmit={handleConfirmarCobro} className="flex-1 flex flex-col justify-between gap-3 p-4">
-      <div className="space-y-3">
+    <form onSubmit={handleConfirmarCobro} className="flex-1 min-h-0 flex flex-col justify-between gap-3 p-3.5 sm:p-4 overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
         {/* PANTALLA HERO DEL MONTO A COBRAR (ESTILO CAJA POS) */}
         <div className="rounded-xl p-4 bg-gradient-to-r from-emerald-950/40 via-card to-emerald-950/20 border border-emerald-500/30 flex items-center justify-between shadow-xs">
           <div>
@@ -471,7 +471,7 @@ export function CobroDetailCard({
 
   if (!cobro) {
     return (
-      <div className="h-full flex flex-col items-center justify-center p-8 text-center text-muted-foreground border border-border/70 rounded-xl bg-card shadow-2xs">
+      <div className="h-full flex-1 min-h-0 flex flex-col items-center justify-center p-8 text-center text-muted-foreground border border-border/70 rounded-xl bg-card shadow-2xs">
         <div className="size-12 rounded-2xl bg-muted/60 flex items-center justify-center text-muted-foreground/50 mb-2">
           <Wallet className="size-6" />
         </div>
@@ -584,8 +584,8 @@ export function CobroDetailCard({
         )
       ) : (
         /* VISTA DE TICKET COBRADO O ANULADO (RECIBO FINAL) */
-        <div className="flex-1 p-6 flex flex-col justify-between space-y-4">
-          <div className="space-y-4">
+        <div className="flex-1 min-h-0 p-4 sm:p-5 flex flex-col justify-between overflow-hidden">
+          <div className="flex-1 min-h-0 overflow-y-auto space-y-3.5 pr-1 custom-scrollbar">
             <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 flex items-center justify-between">
               <div>
                 <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">
@@ -643,7 +643,7 @@ export function CobroDetailCard({
           </div>
 
           {onAnular && cobro.estado === EstadoCobro.Confirmado && (
-            <div className="pt-2 border-t border-border/50">
+            <div className="shrink-0 pt-2 border-t border-border/50">
               <Button
                 type="button"
                 variant="outline"

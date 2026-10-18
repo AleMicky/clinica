@@ -111,9 +111,9 @@ export function VentaReporteCharts({
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5 w-full min-w-0">
       {/* 1. Gráfico de Tendencia Temporal de Ventas en Bs. */}
-      <div className="bg-card/90 backdrop-blur-sm rounded-2xl border border-border/40 p-4 shadow-xs lg:col-span-2 flex flex-col justify-between transition-all">
+      <div className="bg-card/90 backdrop-blur-sm rounded-2xl border border-border/40 p-4 shadow-xs lg:col-span-2 flex flex-col justify-between transition-all min-w-0">
         <div>
           <div className="flex items-center justify-between pb-3 border-b border-border/30">
             <div className="flex items-center gap-2.5">
@@ -210,20 +210,20 @@ export function VentaReporteCharts({
       </div>
 
       {/* 2. Top Ventas por Servicios y por Vendedores */}
-      <div className="bg-card/90 backdrop-blur-sm rounded-2xl border border-border/40 p-4 shadow-xs flex flex-col justify-between transition-all">
+      <div className="bg-card/90 backdrop-blur-sm rounded-2xl border border-border/40 p-3.5 sm:p-4 shadow-xs flex flex-col justify-between transition-all min-w-0 overflow-hidden">
         <div>
-          <div className="flex items-center justify-between pb-3 border-b border-border/30">
-            <div className="flex items-center gap-2">
-              <div className="size-8 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
-                <Award className="size-4.5" />
+          <div className="flex items-center justify-between gap-1.5 pb-2.5 border-b border-border/30">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <div className="size-7 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
+                <Award className="size-4" />
               </div>
-              <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">
-                Líderes Comerciales
+              <h3 className="text-xs font-bold text-foreground uppercase tracking-wider truncate" title="Líderes Comerciales">
+                Líderes
               </h3>
             </div>
 
             {/* Toggle Tab */}
-            <div className="flex items-center bg-muted/60 p-0.5 rounded-lg border border-border/40 text-[11px]">
+            <div className="flex items-center bg-muted/60 p-0.5 rounded-lg border border-border/40 text-[10px] shrink-0">
               <button
                 type="button"
                 onClick={() => setActiveTab("servicios")}
@@ -332,9 +332,9 @@ export function VentaReporteCharts({
           </div>
         </div>
 
-        <div className="pt-2.5 border-t border-border/30 text-[11px] text-muted-foreground flex items-center justify-between">
+        <div className="pt-2 border-t border-border/30 text-[10px] text-muted-foreground flex items-center justify-between gap-1">
           <span>Ranking Top 5</span>
-          <span className="text-foreground/80 font-medium">Basado en volumen facturado</span>
+          <span className="text-foreground/80 font-medium truncate">Por volumen facturado</span>
         </div>
       </div>
     </div>

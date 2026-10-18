@@ -28,7 +28,7 @@ export function AdmisionReporteMetrics({
   const canceladas = metrics?.canceladas ?? 0;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 w-full min-w-0">
       {/* Card 1: Total Admisiones */}
       <div className="bg-card/90 backdrop-blur-sm rounded-2xl border border-border/40 p-4 shadow-xs hover:border-blue-500/30 hover:shadow-sm transition-all group">
         <div className="flex items-start justify-between gap-2">
