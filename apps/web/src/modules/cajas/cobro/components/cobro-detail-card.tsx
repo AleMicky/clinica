@@ -248,11 +248,11 @@ function CobroLiquidacionForm({
   };
 
   return (
-    <form onSubmit={handleConfirmarCobro} className="space-y-3.5">
+    <form onSubmit={handleConfirmarCobro} className="space-y-3">
       {/* PANEL DE CONTROL DE SALDOS EN TIEMPO REAL */}
-      <div className="p-3 rounded-xl border border-border/80 bg-gradient-to-r from-muted/30 via-card to-primary/5 space-y-2">
+      <div className="p-2.5 rounded-lg border border-border/70 bg-gradient-to-r from-muted/30 via-card to-primary/5 space-y-1.5">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
+          <span className="text-[11px] font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
             <Coins className="size-3.5 text-emerald-600" />
             Liquidación de Pago
           </span>
@@ -635,9 +635,9 @@ export function CobroDetailCard({
     );
 
   return (
-    <Card className="border border-border/70 shadow-xs bg-card rounded-xl overflow-hidden flex flex-col">
+    <Card className="border border-border/70 shadow-2xs bg-card rounded-xl overflow-hidden flex flex-col">
       {/* CABECERA DE DETALLE */}
-      <CardHeader className="p-3.5 border-b border-border/70 bg-muted/20 space-y-2">
+      <CardHeader className="p-3 border-b border-border/70 bg-muted/20 space-y-1.5">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className="font-mono font-bold text-xs bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20">
@@ -676,7 +676,7 @@ export function CobroDetailCard({
         </div>
       </CardHeader>
 
-      <CardContent className="p-3.5 space-y-3.5 overflow-y-auto max-h-[calc(100vh-280px)] scrollbar-thin">
+      <CardContent className="p-3 space-y-2.5 overflow-y-auto max-h-[calc(100vh-220px)] scrollbar-thin">
         {/* METADATOS BÁSICOS */}
         <div className="grid grid-cols-2 gap-2 text-xs p-2.5 rounded-lg border border-border/60 bg-muted/20">
           <div className="flex items-center gap-1.5 text-muted-foreground">
