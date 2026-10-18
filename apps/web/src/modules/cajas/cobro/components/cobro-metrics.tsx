@@ -9,7 +9,7 @@ interface CobroMetricsProps {
   isLoading?: boolean;
 }
 
-export function CobroMetrics({ metrics }: CobroMetricsProps) {
+export function CobroMetrics({ metrics }: Readonly<CobroMetricsProps>) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
       {/* 1. Total Cobros */}

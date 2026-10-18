@@ -8,7 +8,7 @@ interface CobroHeaderProps {
   isRefreshing?: boolean;
 }
 
-export function CobroHeader({ onRefresh, isRefreshing = false }: CobroHeaderProps) {
+export function CobroHeader({ onRefresh, isRefreshing = false }: Readonly<CobroHeaderProps>) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1">
       <div>

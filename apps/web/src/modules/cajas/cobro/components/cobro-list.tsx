@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import { type ReactNode } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,7 +46,6 @@ interface CobroListProps {
   onPageSizeChange: (size: number) => void;
   onSelectCobro: (cobro: CobroResponse) => void;
   onAnular: (cobro: CobroResponse) => void;
-  onRefresh?: () => void;
 }
 
 function formatCurrency(amount?: number | null): string {
@@ -71,135 +70,108 @@ export function CobroList({
   onPageSizeChange,
   onSelectCobro,
   onAnular,
-}: CobroListProps) {
+}: Readonly<CobroListProps>) {
   const tabs: Array<{
     key: EstadoCobro | "TODOS";
     label: string;
     activeClasses: string;
   }> = [
-    {
-      key: "TODOS",
-      label: "Todos",
-      activeClasses: "bg-primary text-primary-foreground shadow-xs",
-    },
-    {
-      key: EstadoCobro.Registrado,
-      label: "Por Cobrar",
-      activeClasses: "bg-amber-600 text-white shadow-xs",
-    },
-    {
-      key: EstadoCobro.Confirmado,
-      label: "Cobrados",
-      activeClasses: "bg-emerald-600 text-white shadow-xs",
-    },
-    {
-      key: EstadoCobro.Anulado,
-      label: "Anulados",
-      activeClasses: "bg-rose-600 text-white shadow-xs",
-    },
-  ];
+      {
+        key: "TODOS",
+        label: "Todos",
+        activeClasses: "bg-primary text-primary-foreground shadow-xs",
+      },
+      {
+        key: EstadoCobro.Registrado,
+        label: "Por Cobrar",
+        activeClasses: "bg-amber-600 text-white shadow-xs",
+      },
+      {
+        key: EstadoCobro.Confirmado,
+        label: "Cobrados",
+        activeClasses: "bg-emerald-600 text-white shadow-xs",
+      },
+      {
+        key: EstadoCobro.Anulado,
+        label: "Anulados",
+        activeClasses: "bg-rose-600 text-white shadow-xs",
+      },
+    ];
 
-  return (
-    <div className="space-y-2.5 w-full">
-      {/* FILTROS EN FORMATO BADGE Y BUSCADOR */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 px-0.5">
-        {/* Badges interactivos de pestañas */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
-          {tabs.map((t) => {
-            const isActive = selectedEstadoTab === t.key;
-            return (
-              <button
-                key={t.key.toString()}
-                type="button"
-                onClick={() => onEstadoTabChange?.(t.key)}
-                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer select-none ${
-                  isActive
-                    ? t.activeClasses
-                    : "bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`}
-              >
-                <span>{t.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Buscador */}
-        <div className="w-full md:w-64">
-          <SearchInput
-            value={searchTerm}
-            onChange={onSearchChange}
-            placeholder="Buscar por N° cobro, venta, paciente..."
-            className="h-8 text-xs bg-background shadow-2xs"
-          />
-        </div>
-      </div>
-
-      {/* CONTENIDO DEL LISTADO */}
+  let content: ReactNode;
+  if (isLoading) {
+    content = (
       <div className="space-y-1.5">
-        {isLoading ? (
-          <div className="space-y-1.5">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div
-                key={i}
-                className="p-3 rounded-xl border border-border/50 bg-card space-y-2"
-              >
-                <div className="flex items-center justify-between">
-                  <Skeleton className="h-4 w-28" />
-                  <Skeleton className="h-4 w-20" />
-                </div>
-                <Skeleton className="h-5 w-48" />
-                <div className="flex items-center gap-3">
-                  <Skeleton className="h-3.5 w-24" />
-                  <Skeleton className="h-3.5 w-32" />
-                  <Skeleton className="h-3.5 w-20 ml-auto" />
-                </div>
-              </div>
-            ))}
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div
+            key={i}
+            className="p-3 rounded-xl border border-border/50 bg-card space-y-2"
+          >
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-4 w-20" />
+            </div>
+            <Skeleton className="h-5 w-48" />
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-3.5 w-24" />
+              <Skeleton className="h-3.5 w-32" />
+              <Skeleton className="h-3.5 w-20 ml-auto" />
+            </div>
           </div>
-        ) : cobros.length === 0 ? (
-          <div className="py-12 text-center border border-dashed border-border/60 rounded-xl bg-muted/10 space-y-2">
-            <CreditCard className="size-8 text-muted-foreground/40 mx-auto" />
-            <p className="font-bold text-xs text-foreground">
-              No se encontraron registros de cobro
-            </p>
-            <p className="text-[11px] max-w-xs mx-auto text-muted-foreground">
-              Los cobros enviados desde Ventas o generados en caja aparecerán automáticamente aquí.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-1.5">
-            {cobros.map((cobro) => {
-              const isSelected = selectedCobroId === cobro.id;
-              const isPendingPayment = cobro.estado === EstadoCobro.Registrado;
+        ))}
+      </div>
+    );
+  } else if (cobros.length === 0) {
+    content = (
+      <div className="py-12 text-center border border-dashed border-border/60 rounded-xl bg-muted/10 space-y-2">
+        <CreditCard className="size-8 text-muted-foreground/40 mx-auto" />
+        <p className="font-bold text-xs text-foreground">
+          No se encontraron registros de cobro
+        </p>
+        <p className="text-[11px] max-w-xs mx-auto text-muted-foreground">
+          Los cobros enviados desde Ventas o generados en caja aparecerán automáticamente aquí.
+        </p>
+      </div>
+    );
+  } else {
+    content = (
+      <div className="space-y-1.5">
+        {cobros.map((cobro) => {
+          const isSelected = selectedCobroId === cobro.id;
+          const isPendingPayment = cobro.estado === EstadoCobro.Registrado;
 
-              const cajaNombre =
-                cobro.turnoCaja?.caja?.nombre ||
-                cobro.turnoCaja?.caja?.codigo ||
-                (cobro.turnoCajaId ? `Caja #${cobro.turnoCajaId}` : "-");
+          const cajaNombre =
+            cobro.turnoCaja?.caja?.nombre ||
+            cobro.turnoCaja?.caja?.codigo ||
+            (cobro.turnoCajaId ? `Caja #${cobro.turnoCajaId}` : "-");
 
-              const pagadorMonto = cobro.ventaPagador?.monto ?? 0;
-              const numDetalles = cobro.detalles?.length || 0;
-              const pacienteNombre = cobro.ventaPagador?.pacienteNombreCompleto;
+          const pagadorMonto = cobro.ventaPagador?.monto ?? 0;
+          const numDetalles = cobro.detalles?.length || 0;
+          const pacienteNombre = cobro.ventaPagador?.pacienteNombreCompleto;
 
               return (
                 <div
                   key={cobro.id}
-                  onClick={() => onSelectCobro(cobro)}
-                  className={`group cursor-pointer p-3 rounded-xl transition-all shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative ${
-                    isSelected
+                  className={`group p-3 rounded-xl transition-all shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative ${isSelected
                       ? "border-primary/80 bg-primary/5 dark:bg-primary/10 shadow-xs ring-1 ring-primary/40 border"
                       : "border border-border/50 bg-card hover:border-primary/40 hover:bg-muted/25"
-                  }`}
+                    }`}
                 >
+                  {/* Botón nativo accesible para selección del cobro */}
+                  <button
+                    type="button"
+                    onClick={() => onSelectCobro(cobro)}
+                    className="absolute inset-0 size-full rounded-xl cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                    aria-label={`Seleccionar cobro #${cobro.numero}${pacienteNombre ? ` de ${pacienteNombre}` : ""}`}
+                  />
+
                   {/* Bloque Izquierdo: Icono + Cobro # + Paciente + Venta # + Convenio + Fecha + Caja */}
-                  <div className="flex items-start gap-3 min-w-0 flex-1">
+                  <div className="flex items-start gap-3 min-w-0 flex-1 pointer-events-none relative">
                     <div
-                      className={`size-9 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 border mt-0.5 transition-colors ${
-                        isPendingPayment
+                      className={`size-9 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 border mt-0.5 transition-colors ${isPendingPayment
                           ? "bg-amber-500/10 text-amber-600 border-amber-500/20 group-hover:bg-amber-500 group-hover:text-white"
                           : "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 group-hover:bg-emerald-500 group-hover:text-white"
-                      }`}
+                        }`}
                     >
                       {isPendingPayment ? (
                         <Wallet className="size-4.5" />
@@ -279,7 +251,7 @@ export function CobroList({
                   </div>
 
                   {/* Bloque Derecho: Monto, Estado & Acciones */}
-                  <div className="flex items-center justify-between sm:justify-end gap-2.5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/30">
+                  <div className="flex items-center justify-between sm:justify-end gap-2.5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/30 relative z-10">
                     <div className="flex flex-col items-start sm:items-end pr-0.5">
                       {isPendingPayment ? (
                         <>
@@ -330,20 +302,20 @@ export function CobroList({
 
                           {(cobro.estado === EstadoCobro.Registrado ||
                             cobro.estado === EstadoCobro.Confirmado) && (
-                            <>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onAnular(cobro);
-                                }}
-                                className="gap-2 text-rose-600 dark:text-rose-400 focus:text-rose-600 cursor-pointer"
-                              >
-                                <Ban className="size-3.5" />
-                                Anular Cobro
-                              </DropdownMenuItem>
-                            </>
-                          )}
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onAnular(cobro);
+                                  }}
+                                  className="gap-2 text-rose-600 dark:text-rose-400 focus:text-rose-600 cursor-pointer"
+                                >
+                                  <Ban className="size-3.5" />
+                                  Anular Cobro
+                                </DropdownMenuItem>
+                              </>
+                            )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
@@ -352,7 +324,47 @@ export function CobroList({
               );
             })}
           </div>
-        )}
+    );
+  }
+
+  return (
+    <div className="space-y-2.5 w-full">
+      {/* FILTROS EN FORMATO BADGE Y BUSCADOR */}
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 px-0.5">
+        {/* Badges interactivos de pestañas */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+          {tabs.map((t) => {
+            const isActive = selectedEstadoTab === t.key;
+            return (
+              <button
+                key={t.key.toString()}
+                type="button"
+                onClick={() => onEstadoTabChange?.(t.key)}
+                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer select-none ${isActive
+                    ? t.activeClasses
+                    : "bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  }`}
+              >
+                <span>{t.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Buscador */}
+        <div className="w-full md:w-64">
+          <SearchInput
+            value={searchTerm}
+            onChange={onSearchChange}
+            placeholder="Buscar por N° cobro, venta, paciente..."
+            className="h-8 text-xs bg-background shadow-2xs"
+          />
+        </div>
+      </div>
+
+      {/* CONTENIDO DEL LISTADO */}
+      <div className="space-y-1.5">
+        {content}
 
         {/* PAGINACIÓN */}
         {totalItems > 10 && (

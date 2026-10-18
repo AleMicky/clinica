@@ -36,7 +36,7 @@ export function CobroAnularDialog({
   onOpenChange,
   cobro,
   onSuccessCallback,
-}: CobroAnularDialogProps) {
+}: Readonly<CobroAnularDialogProps>) {
   const anularMutation = useAnularCobro();
 
   const {

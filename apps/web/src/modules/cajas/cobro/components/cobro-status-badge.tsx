@@ -9,7 +9,7 @@ interface CobroStatusBadgeProps {
   className?: string;
 }
 
-export function CobroStatusBadge({ cobro, className }: CobroStatusBadgeProps) {
+export function CobroStatusBadge({ cobro, className }: Readonly<CobroStatusBadgeProps>) {
   const { estado } = cobro;
 
   switch (estado) {

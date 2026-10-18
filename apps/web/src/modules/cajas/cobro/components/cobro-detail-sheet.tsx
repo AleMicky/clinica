@@ -26,8 +26,15 @@ export function CobroDetailSheet({
   cobro,
   onSuccessCobro,
   onAnular,
-}: CobroDetailSheetProps) {
+}: Readonly<CobroDetailSheetProps>) {
   if (!cobro) return null;
+
+  let descripcion = "Registro de pagos de caja";
+  if (cobro.ventaPagador?.pacienteNombreCompleto) {
+    descripcion = `Paciente: ${cobro.ventaPagador.pacienteNombreCompleto} • Venta #${cobro.ventaPagador?.ventaNumero || ""}`;
+  } else if (cobro.ventaPagador?.ventaNumero) {
+    descripcion = `Vinculado a Venta #${cobro.ventaPagador.ventaNumero}`;
+  }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -42,11 +49,7 @@ export function CobroDetailSheet({
                 Terminal de Cobro #{cobro.numero}
               </SheetTitle>
               <SheetDescription className="text-xs text-muted-foreground">
-                {cobro.ventaPagador?.pacienteNombreCompleto
-                  ? `Paciente: ${cobro.ventaPagador.pacienteNombreCompleto} • Venta #${cobro.ventaPagador?.ventaNumero || ""}`
-                  : cobro.ventaPagador?.ventaNumero
-                  ? `Vinculado a Venta #${cobro.ventaPagador.ventaNumero}`
-                  : "Registro de pagos de caja"}
+                {descripcion}
               </SheetDescription>
             </div>
           </div>

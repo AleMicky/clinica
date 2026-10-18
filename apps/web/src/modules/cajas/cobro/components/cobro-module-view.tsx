@@ -25,8 +25,9 @@ export function CobroModuleView() {
   >("TODOS");
 
   // Estado Master-Detail
-  const [selectedCobroForDetail, setSelectedCobroForDetail] =
-    React.useState<CobroResponse | null>(null);
+  const [selectedCobroId, setSelectedCobroId] = React.useState<number | null>(
+    null
+  );
   const [detailSheetOpen, setDetailSheetOpen] = React.useState(false);
 
   // Modal Anular
@@ -62,17 +63,18 @@ export function CobroModuleView() {
     pageSize: 100,
   });
 
-  const cobros: CobroResponse[] = Array.isArray(apiData?.items)
-    ? apiData.items
-    : Array.isArray(apiData)
-    ? (apiData as unknown as CobroResponse[])
-    : [];
+  const cobros: CobroResponse[] = React.useMemo(() => {
+    if (Array.isArray(apiData?.items)) return apiData.items;
+    if (Array.isArray(apiData)) return apiData as unknown as CobroResponse[];
+    return [];
+  }, [apiData]);
 
   const totalItems = apiData?.totalItems ?? cobros.length;
 
-  const allCobrosList: CobroResponse[] = Array.isArray(allCobrosData?.items)
-    ? allCobrosData.items
-    : cobros;
+  const allCobrosList: CobroResponse[] = React.useMemo(() => {
+    if (Array.isArray(allCobrosData?.items)) return allCobrosData.items;
+    return cobros;
+  }, [allCobrosData, cobros]);
 
   const totalItemsCount = allCobrosData?.totalItems ?? allCobrosList.length;
 
@@ -103,23 +105,19 @@ export function CobroModuleView() {
     };
   }, [allCobrosList, totalItemsCount]);
 
-  // Auto-seleccionar primer cobro en pantallas grandes
-  React.useEffect(() => {
-    if (cobros.length > 0) {
-      if (!selectedCobroForDetail) {
-        setSelectedCobroForDetail(cobros[0]);
-      } else {
-        const updated = cobros.find((c) => c.id === selectedCobroForDetail.id);
-        if (updated) {
-          setSelectedCobroForDetail(updated);
-        }
-      }
+  // Cobro seleccionado calculado durante el render (auto-selecciona el primer cobro o el ID elegido)
+  const selectedCobroForDetail = React.useMemo(() => {
+    if (cobros.length === 0) return null;
+    if (selectedCobroId !== null) {
+      const found = cobros.find((c) => c.id === selectedCobroId);
+      if (found) return found;
     }
-  }, [cobros]);
+    return cobros[0] ?? null;
+  }, [cobros, selectedCobroId]);
 
   // Handlers
   const handleSelectCobro = (cobro: CobroResponse) => {
-    setSelectedCobroForDetail(cobro);
+    setSelectedCobroId(cobro.id);
     if (typeof window !== "undefined" && window.innerWidth < 1024) {
       setDetailSheetOpen(true);
     }
@@ -165,7 +163,6 @@ export function CobroModuleView() {
             }}
             onSelectCobro={handleSelectCobro}
             onAnular={handlePromptAnular}
-            onRefresh={() => refetch()}
           />
         </div>
 

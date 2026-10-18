@@ -44,7 +44,6 @@ import { CobroStatusBadge } from "./cobro-status-badge";
 import { useCobro, useConfirmarCobro } from "../hooks/use-cobros";
 import { useMetodosPago } from "@/modules/parametros/metodo-pago/hooks/use-metodos-pago";
 import { useMonedas } from "@/modules/parametros/moneda/hooks/use-monedas";
-import { useBancos } from "@/modules/parametros/banco/hooks/use-bancos";
 
 interface CobroDetailCardProps {
   cobro: CobroResponse | null;
@@ -59,99 +58,72 @@ function formatCurrency(amount?: number | null): string {
   })}`;
 }
 
-export function CobroDetailCard({
-  cobro: initialCobro,
-  onSuccessCobro,
-  onAnular,
-}: CobroDetailCardProps) {
-  const cobroId = initialCobro?.id ?? 0;
-  const { data: fullCobro } = useCobro(cobroId, cobroId > 0);
-  const cobro = fullCobro ?? initialCobro;
-
-  const confirmarCobroMutation = useConfirmarCobro();
-
-  // Queries para selects
-  const { data: metodosData, isLoading: isLoadingMetodos } = useMetodosPago({
-    pageSize: 50,
-  });
-  const { data: monedasData, isLoading: isLoadingMonedas } = useMonedas({
-    pageSize: 50,
-  });
-  const { data: bancosData } = useBancos({ pageSize: 50 });
-
-  const metodos = metodosData?.items?.filter((m) => m.activo) ?? [];
-  const monedas = monedasData?.items?.filter((m) => m.activo) ?? [];
-  const monedaBase = monedas.find((m) => m.esBase) ?? monedas[0];
-  const bancos = bancosData?.items?.filter((b) => b.activo) ?? [];
-
-  // Estado del Formulario de Cobro
-  const [detalles, setDetalles] = React.useState<CobroDetalleRequest[]>([]);
-  const [observacion, setObservacion] = React.useState("");
-
-  const isPendingCobro =
-    cobro?.estado === EstadoCobro.Registrado &&
-    (cobro.total === 0 || (cobro.detalles && cobro.detalles.length === 0));
-
-  const montoObjetivo =
-    cobro?.ventaPagador?.monto && cobro.ventaPagador.monto > 0
-      ? cobro.ventaPagador.monto
-      : cobro?.total || 0;
-
-  // Inicializar detalles de cobro cuando se selecciona un cobro
-  React.useEffect(() => {
-    if (cobro && isPendingCobro) {
-      const defaultMetodoId = metodos[0]?.id ?? 1;
-      const defaultMonedaId = monedaBase?.id ?? 1;
-
-      if (detalles.length === 0) {
-        setDetalles([
-          {
-            metodoPagoId: defaultMetodoId,
-            monedaId: defaultMonedaId,
-            cuentaBancariaId: null,
-            monto: montoObjetivo,
-            tipoCambio: 1,
-            referencia: "",
-            entidadFinanciera: "",
-            observacion: "",
-          },
-        ]);
-      }
-      setObservacion(cobro.observacion || "");
-    } else if (cobro && cobro.detalles && cobro.detalles.length > 0) {
-      setDetalles(
-        cobro.detalles.map((d) => ({
-          metodoPagoId: d.metodoPagoId || d.metodoPago?.id || 1,
-          monedaId: d.monedaId || d.moneda?.id || 1,
-          cuentaBancariaId: d.cuentaBancariaId,
-          monto: d.monto,
-          tipoCambio: d.tipoCambio,
-          referencia: d.referencia,
-          entidadFinanciera: d.entidadFinanciera,
-          observacion: d.observacion,
-        }))
-      );
-      setObservacion(cobro.observacion || "");
-    }
-  }, [cobroId, isPendingCobro, metodos.length, monedaBase?.id, montoObjetivo]);
-
-  if (!cobro) {
-    return (
-      <Card className="border border-border/70 shadow-2xs bg-card/60 rounded-xl p-8 text-center flex flex-col items-center justify-center min-h-[420px] space-y-3">
-        <div className="size-14 rounded-2xl bg-muted/60 flex items-center justify-center text-muted-foreground/60">
-          <Wallet className="size-7" />
-        </div>
-        <div>
-          <h3 className="text-sm font-bold text-foreground">Terminal de Cobro</h3>
-          <p className="text-xs text-muted-foreground max-w-xs mt-1">
-            Seleccione un cobro de la lista para liquidar formas de pago y emitir comprobantes.
-          </p>
-        </div>
-      </Card>
-    );
+function getInitialDetalles(
+  cobro: CobroResponse,
+  montoObjetivo: number,
+  metodos: Array<{ id: number }>,
+  monedaBase?: { id: number }
+): CobroDetalleRequest[] {
+  if (cobro.detalles && cobro.detalles.length > 0) {
+    return cobro.detalles.map((d) => ({
+      metodoPagoId: d.metodoPagoId || d.metodoPago?.id || metodos[0]?.id || 1,
+      monedaId: d.monedaId || d.moneda?.id || monedaBase?.id || 1,
+      cuentaBancariaId: d.cuentaBancariaId,
+      monto: d.monto,
+      tipoCambio: d.tipoCambio,
+      referencia: d.referencia,
+      entidadFinanciera: d.entidadFinanciera,
+      observacion: d.observacion,
+    }));
   }
 
-  // Cálculos en tiempo real
+  const defaultMetodoId = metodos[0]?.id ?? 1;
+  const defaultMonedaId = monedaBase?.id ?? 1;
+
+  return [
+    {
+      metodoPagoId: defaultMetodoId,
+      monedaId: defaultMonedaId,
+      cuentaBancariaId: null,
+      monto: montoObjetivo,
+      tipoCambio: 1,
+      referencia: "",
+      entidadFinanciera: "",
+      observacion: "",
+    },
+  ];
+}
+
+interface CobroLiquidacionFormProps {
+  cobro: CobroResponse;
+  montoObjetivo: number;
+  metodos: Array<{ id: number; nombre: string }>;
+  monedas: Array<{ id: number; nombre: string; codigo: string }>;
+  monedaBase?: { id: number; nombre: string; codigo: string };
+  onSuccessCobro?: () => void;
+  onAnular?: (cobro: CobroResponse) => void;
+}
+
+function CobroLiquidacionForm({
+  cobro,
+  montoObjetivo,
+  metodos,
+  monedas,
+  monedaBase,
+  onSuccessCobro,
+  onAnular,
+}: Readonly<CobroLiquidacionFormProps>) {
+  const confirmarCobroMutation = useConfirmarCobro();
+
+  const [detalles, setDetalles] = React.useState<CobroDetalleRequest[]>(() =>
+    getInitialDetalles(cobro, montoObjetivo, metodos, monedaBase)
+  );
+  const [observacion, setObservacion] = React.useState(cobro.observacion || "");
+
+  const isPendingCobro =
+    cobro.estado === EstadoCobro.Registrado &&
+    (cobro.total === 0 || cobro.detalles?.length === 0);
+
   const totalIngresado = detalles.reduce((acc, d) => {
     const monto = Number(d.monto) || 0;
     const tc = Number(d.tipoCambio) || 1;
@@ -161,7 +133,13 @@ export function CobroDetailCard({
   const saldoPendiente = Math.max(0, montoObjetivo - totalIngresado);
   const vuelto = Math.max(0, totalIngresado - montoObjetivo);
 
-  // Manejo de Líneas de Pago
+  let saldoTexto = "Bs. 0.00";
+  if (saldoPendiente > 0) {
+    saldoTexto = formatCurrency(saldoPendiente);
+  } else if (vuelto > 0) {
+    saldoTexto = `Vuelto: ${formatCurrency(vuelto)}`;
+  }
+
   const handleAddDetalle = () => {
     const defaultMetodoId = metodos[0]?.id ?? 1;
     const defaultMonedaId = monedaBase?.id ?? 1;
@@ -172,7 +150,7 @@ export function CobroDetailCard({
         metodoPagoId: defaultMetodoId,
         monedaId: defaultMonedaId,
         cuentaBancariaId: null,
-        monto: saldoPendiente > 0 ? saldoPendiente : 0,
+        monto: Math.max(0, saldoPendiente),
         tipoCambio: 1,
         referencia: "",
         entidadFinanciera: "",
@@ -216,9 +194,8 @@ export function CobroDetailCard({
     ]);
   };
 
-  const handleConfirmarCobro = async (e: React.FormEvent) => {
+  const handleConfirmarCobro = async (e: React.SubmitEvent) => {
     e.preventDefault();
-    if (!cobro) return;
 
     if (detalles.length === 0) {
       toast.error("Debe ingresar al menos una forma de pago.");
@@ -270,12 +247,392 @@ export function CobroDetailCard({
     }
   };
 
+  return (
+    <form onSubmit={handleConfirmarCobro} className="space-y-3.5">
+      {/* PANEL DE CONTROL DE SALDOS EN TIEMPO REAL */}
+      <div className="p-3 rounded-xl border border-border/80 bg-gradient-to-r from-muted/30 via-card to-primary/5 space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
+            <Coins className="size-3.5 text-emerald-600" />
+            Liquidación de Pago
+          </span>
+
+          {isPendingCobro && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handlePagarTodoEfectivo}
+              className="h-6 px-2 text-[11px] font-semibold gap-1 text-emerald-600 border-emerald-500/30 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 cursor-pointer"
+            >
+              <Zap className="size-3" />
+              Pagar Total Efectivo
+            </Button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 pt-1 border-t border-border/40 text-center font-mono">
+          <div className="p-1.5 rounded-lg bg-background border border-border/50">
+            <span className="text-[10px] text-muted-foreground block font-sans">
+              Objetivo
+            </span>
+            <span className="text-xs font-bold text-foreground">
+              {formatCurrency(montoObjetivo)}
+            </span>
+          </div>
+
+          <div className="p-1.5 rounded-lg bg-background border border-border/50">
+            <span className="text-[10px] text-muted-foreground block font-sans">
+              Ingresado
+            </span>
+            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+              {formatCurrency(totalIngresado)}
+            </span>
+          </div>
+
+          <div
+            className={`p-1.5 rounded-lg border ${
+              saldoPendiente === 0
+                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400"
+                : "bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-400"
+            }`}
+          >
+            <span className="text-[10px] font-sans block">
+              {saldoPendiente > 0 ? "Saldo Restante" : "Completado"}
+            </span>
+            <span className="text-xs font-extrabold">
+              {saldoTexto}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* LISTA DE FORMAS DE PAGO */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+            <CreditCard className="size-3.5 text-primary" />
+            Formas de Pago ({detalles.length})
+          </Label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleAddDetalle}
+            className="h-6 px-2 text-[11px] gap-1 cursor-pointer font-medium"
+          >
+            <Plus className="size-3" />
+            Agregar Pago
+          </Button>
+        </div>
+
+        {detalles.length === 0 ? (
+          <div className="p-4 border border-dashed rounded-lg text-center text-xs text-muted-foreground space-y-1">
+            <AlertCircle className="size-4 text-amber-500 mx-auto" />
+            <p>Haga click en &quot;Agregar Pago&quot; o &quot;Pagar Total Efectivo&quot;</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {detalles.map((det, index) => {
+              const currentMetodo = metodos.find(
+                (m) => m.id === det.metodoPagoId
+              );
+              const isBancoRequired =
+                currentMetodo?.nombre.toLowerCase().includes("transf") ||
+                currentMetodo?.nombre.toLowerCase().includes("qr") ||
+                currentMetodo?.nombre.toLowerCase().includes("dep") ||
+                currentMetodo?.nombre.toLowerCase().includes("tarj");
+
+              return (
+                <div
+                  key={index}
+                  className="p-2.5 rounded-lg border border-border/70 bg-card space-y-2 text-xs shadow-2xs"
+                >
+                  <div className="grid grid-cols-12 gap-1.5 items-center">
+                    {/* Método de Pago */}
+                    <div className="col-span-5 sm:col-span-4">
+                      <Label className="text-[10px] text-muted-foreground block mb-0.5">
+                        Método
+                      </Label>
+                      <Select
+                        value={det.metodoPagoId?.toString()}
+                        onValueChange={(val) =>
+                          handleUpdateDetalle(
+                            index,
+                            "metodoPagoId",
+                            Number(val)
+                          )
+                        }
+                      >
+                        <SelectTrigger className="h-7 text-xs bg-background w-full">
+                          <SelectValue placeholder="Seleccione método">
+                            {metodos.find((m) => m.id === det.metodoPagoId)?.nombre}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {metodos.map((m) => (
+                            <SelectItem
+                              key={m.id}
+                              value={m.id.toString()}
+                              className="text-xs"
+                            >
+                              {m.nombre}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Moneda */}
+                    <div className="col-span-3 sm:col-span-3">
+                      <Label className="text-[10px] text-muted-foreground block mb-0.5">
+                        Moneda
+                      </Label>
+                      <Select
+                        value={det.monedaId?.toString()}
+                        onValueChange={(val) =>
+                          handleUpdateDetalle(
+                            index,
+                            "monedaId",
+                            Number(val)
+                          )
+                        }
+                      >
+                        <SelectTrigger className="h-7 text-xs bg-background w-full">
+                          <SelectValue placeholder="Seleccione moneda">
+                            {(() => {
+                              const m = monedas.find((x) => x.id === det.monedaId);
+                              return m ? `${m.nombre} (${m.codigo})` : undefined;
+                            })()}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {monedas.map((m) => (
+                            <SelectItem
+                              key={m.id}
+                              value={m.id.toString()}
+                              className="text-xs"
+                            >
+                              {m.nombre} ({m.codigo})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Monto */}
+                    <div className="col-span-3 sm:col-span-4">
+                      <Label className="text-[10px] text-muted-foreground block mb-0.5">
+                        Monto
+                      </Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={det.monto || ""}
+                        onChange={(e) =>
+                          handleUpdateDetalle(
+                            index,
+                            "monto",
+                            Number(e.target.value)
+                          )
+                        }
+                        className="h-7 text-xs bg-background font-mono font-bold"
+                        placeholder="0.00"
+                      />
+                    </div>
+
+                    {/* Eliminar fila */}
+                    <div className="col-span-1 flex justify-end pt-3">
+                      {detalles.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleRemoveDetalle(index)}
+                          className="h-7 w-7 text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Campos bancarios y referencia si aplica */}
+                  {isBancoRequired && (
+                    <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/40 text-[11px]">
+                      <div>
+                        <Label className="text-[10px] text-muted-foreground block mb-0.5">
+                          Banco / Entidad
+                        </Label>
+                        <Input
+                          value={det.entidadFinanciera || ""}
+                          onChange={(e) =>
+                            handleUpdateDetalle(
+                              index,
+                              "entidadFinanciera",
+                              e.target.value
+                            )
+                          }
+                          placeholder="Ej: Banco Unión, BCP..."
+                          className="h-6 text-xs bg-background"
+                        />
+                      </div>
+
+                      <div>
+                        <Label className="text-[10px] text-muted-foreground block mb-0.5">
+                          N° Referencia / Voucher
+                        </Label>
+                        <Input
+                          value={det.referencia || ""}
+                          onChange={(e) =>
+                            handleUpdateDetalle(
+                              index,
+                              "referencia",
+                              e.target.value
+                            )
+                          }
+                          placeholder="N° Comprobante / Tx"
+                          className="h-6 text-xs bg-background font-mono"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Observación general */}
+      <div className="space-y-1">
+        <Label className="text-xs text-muted-foreground">
+          Nota u Observación del Cobro
+        </Label>
+        <Textarea
+          value={observacion}
+          onChange={(e) => setObservacion(e.target.value)}
+          placeholder="Observaciones de caja..."
+          rows={2}
+          className="text-xs bg-background resize-none"
+        />
+      </div>
+
+      {/* BOTONES DE ACCIÓN */}
+      <div className="pt-2 flex items-center justify-between gap-2">
+        {onAnular && cobro.estado === EstadoCobro.Registrado && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => onAnular(cobro)}
+            className="h-8 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 cursor-pointer"
+          >
+            <Ban className="size-3.5 mr-1" />
+            Anular Cobro
+          </Button>
+        )}
+
+        <Button
+          type="submit"
+          size="sm"
+          disabled={
+            confirmarCobroMutation.isPending ||
+            detalles.length === 0 ||
+            totalIngresado <= 0
+          }
+          className="h-8 text-xs font-semibold gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white ml-auto shadow-xs cursor-pointer"
+        >
+          {confirmarCobroMutation.isPending ? (
+            <Loader2 className="size-3.5 animate-spin" />
+          ) : (
+            <CheckCircle2 className="size-3.5" />
+          )}
+          Confirmar y Registrar Cobro
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+export function CobroDetailCard({
+  cobro: initialCobro,
+  onSuccessCobro,
+  onAnular,
+}: Readonly<CobroDetailCardProps>) {
+  const cobroId = initialCobro?.id ?? 0;
+  const { data: fullCobro } = useCobro(cobroId, cobroId > 0);
+  const cobro = fullCobro ?? initialCobro;
+
+  // Queries para selects
+  const { data: metodosData, isLoading: isLoadingMetodos } = useMetodosPago({
+    pageSize: 50,
+  });
+  const { data: monedasData, isLoading: isLoadingMonedas } = useMonedas({
+    pageSize: 50,
+  });
+
+  const metodos = React.useMemo(
+    () => metodosData?.items?.filter((m) => m.activo) ?? [],
+    [metodosData?.items]
+  );
+  const monedas = React.useMemo(
+    () => monedasData?.items?.filter((m) => m.activo) ?? [],
+    [monedasData?.items]
+  );
+  const monedaBase = React.useMemo(
+    () => monedas.find((m) => m.esBase) ?? monedas[0],
+    [monedas]
+  );
+
+  if (!cobro) {
+    return (
+      <Card className="border border-border/70 shadow-2xs bg-card/60 rounded-xl p-8 text-center flex flex-col items-center justify-center min-h-[420px] space-y-3">
+        <div className="size-14 rounded-2xl bg-muted/60 flex items-center justify-center text-muted-foreground/60">
+          <Wallet className="size-7" />
+        </div>
+        <div>
+          <h3 className="text-sm font-bold text-foreground">Terminal de Cobro</h3>
+          <p className="text-xs text-muted-foreground max-w-xs mt-1">
+            Seleccione un cobro de la lista para liquidar formas de pago y emitir comprobantes.
+          </p>
+        </div>
+      </Card>
+    );
+  }
+
+  const montoObjetivo =
+    cobro.ventaPagador?.monto && cobro.ventaPagador.monto > 0
+      ? cobro.ventaPagador.monto
+      : cobro.total || 0;
+
   const cajaNombre =
     cobro.turnoCaja?.caja?.nombre ||
     cobro.turnoCaja?.caja?.codigo ||
     `Caja #${cobro.turnoCajaId || "-"}`;
 
   const cajeroNombre = cobro.turnoCaja?.empleado?.nombreCompleto;
+
+  const terminalCobroContent =
+    isLoadingMetodos || isLoadingMonedas ? (
+      <div className="p-4 space-y-3">
+        <Skeleton className="h-24 w-full rounded-xl" />
+        <Skeleton className="h-16 w-full rounded-xl" />
+        <Skeleton className="h-10 w-full rounded-xl" />
+      </div>
+    ) : (
+      <CobroLiquidacionForm
+        key={cobro.id}
+        cobro={cobro}
+        montoObjetivo={montoObjetivo}
+        metodos={metodos}
+        monedas={monedas}
+        monedaBase={monedaBase}
+        onSuccessCobro={onSuccessCobro}
+        onAnular={onAnular}
+      />
+    );
 
   return (
     <Card className="border border-border/70 shadow-xs bg-card rounded-xl overflow-hidden flex flex-col">
@@ -380,320 +737,8 @@ export function CobroDetailCard({
         )}
 
         {/* TERMINAL DE COBRO INTERACTIVO (CUANDO ESTÁ EN REGISTRADO / PENDIENTE) */}
-        {isPendingCobro || (cobro.estado === EstadoCobro.Registrado && detalles.length > 0) ? (
-          <form onSubmit={handleConfirmarCobro} className="space-y-3.5">
-            {/* PANEL DE CONTROL DE SALDOS EN TIEMPO REAL */}
-            <div className="p-3 rounded-xl border border-border/80 bg-gradient-to-r from-muted/30 via-card to-primary/5 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
-                  <Coins className="size-3.5 text-emerald-600" />
-                  Liquidación de Pago
-                </span>
-
-                {isPendingCobro && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handlePagarTodoEfectivo}
-                    className="h-6 px-2 text-[11px] font-semibold gap-1 text-emerald-600 border-emerald-500/30 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 cursor-pointer"
-                  >
-                    <Zap className="size-3" />
-                    Pagar Total Efectivo
-                  </Button>
-                )}
-              </div>
-
-              <div className="grid grid-cols-3 gap-2 pt-1 border-t border-border/40 text-center font-mono">
-                <div className="p-1.5 rounded-lg bg-background border border-border/50">
-                  <span className="text-[10px] text-muted-foreground block font-sans">
-                    Objetivo
-                  </span>
-                  <span className="text-xs font-bold text-foreground">
-                    {formatCurrency(montoObjetivo)}
-                  </span>
-                </div>
-
-                <div className="p-1.5 rounded-lg bg-background border border-border/50">
-                  <span className="text-[10px] text-muted-foreground block font-sans">
-                    Ingresado
-                  </span>
-                  <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                    {formatCurrency(totalIngresado)}
-                  </span>
-                </div>
-
-                <div
-                  className={`p-1.5 rounded-lg border ${
-                    saldoPendiente === 0
-                      ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400"
-                      : "bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-400"
-                  }`}
-                >
-                  <span className="text-[10px] font-sans block">
-                    {saldoPendiente > 0 ? "Saldo Restante" : "Completado"}
-                  </span>
-                  <span className="text-xs font-extrabold">
-                    {saldoPendiente > 0
-                      ? formatCurrency(saldoPendiente)
-                      : vuelto > 0
-                      ? `Vuelto: ${formatCurrency(vuelto)}`
-                      : "Bs. 0.00"}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* LISTA DE FORMAS DE PAGO */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                  <CreditCard className="size-3.5 text-primary" />
-                  Formas de Pago ({detalles.length})
-                </Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAddDetalle}
-                  className="h-6 px-2 text-[11px] gap-1 cursor-pointer font-medium"
-                >
-                  <Plus className="size-3" />
-                  Agregar Pago
-                </Button>
-              </div>
-
-              {isLoadingMetodos || isLoadingMonedas ? (
-                <div className="p-3 space-y-2">
-                  <Skeleton className="h-9 w-full" />
-                </div>
-              ) : detalles.length === 0 ? (
-                <div className="p-4 border border-dashed rounded-lg text-center text-xs text-muted-foreground space-y-1">
-                  <AlertCircle className="size-4 text-amber-500 mx-auto" />
-                  <p>Haga click en &quot;Agregar Pago&quot; o &quot;Pagar Total Efectivo&quot;</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {detalles.map((det, index) => {
-                    const currentMetodo = metodos.find(
-                      (m) => m.id === det.metodoPagoId
-                    );
-                    const isBancoRequired =
-                      currentMetodo?.nombre.toLowerCase().includes("transf") ||
-                      currentMetodo?.nombre.toLowerCase().includes("qr") ||
-                      currentMetodo?.nombre.toLowerCase().includes("dep") ||
-                      currentMetodo?.nombre.toLowerCase().includes("tarj");
-
-                    return (
-                      <div
-                        key={index}
-                        className="p-2.5 rounded-lg border border-border/70 bg-card space-y-2 text-xs shadow-2xs"
-                      >
-                        <div className="grid grid-cols-12 gap-1.5 items-center">
-                          {/* Método de Pago */}
-                          <div className="col-span-5 sm:col-span-4">
-                            <Label className="text-[10px] text-muted-foreground block mb-0.5">
-                              Método
-                            </Label>
-                            <Select
-                              value={det.metodoPagoId?.toString()}
-                              onValueChange={(val) =>
-                                handleUpdateDetalle(
-                                  index,
-                                  "metodoPagoId",
-                                  Number(val)
-                                )
-                              }
-                            >
-                              <SelectTrigger className="h-7 text-xs bg-background w-full">
-                                <SelectValue placeholder="Seleccione método">
-                                  {metodos.find((m) => m.id === det.metodoPagoId)?.nombre}
-                                </SelectValue>
-                              </SelectTrigger>
-                              <SelectContent>
-                                {metodos.map((m) => (
-                                  <SelectItem
-                                    key={m.id}
-                                    value={m.id.toString()}
-                                    className="text-xs"
-                                  >
-                                    {m.nombre}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          {/* Moneda */}
-                          <div className="col-span-3 sm:col-span-3">
-                            <Label className="text-[10px] text-muted-foreground block mb-0.5">
-                              Moneda
-                            </Label>
-                            <Select
-                              value={det.monedaId?.toString()}
-                              onValueChange={(val) =>
-                                handleUpdateDetalle(
-                                  index,
-                                  "monedaId",
-                                  Number(val)
-                                )
-                              }
-                            >
-                              <SelectTrigger className="h-7 text-xs bg-background w-full">
-                                <SelectValue placeholder="Seleccione moneda">
-                                  {(() => {
-                                    const m = monedas.find((x) => x.id === det.monedaId);
-                                    return m ? `${m.nombre} (${m.codigo})` : undefined;
-                                  })()}
-                                </SelectValue>
-                              </SelectTrigger>
-                              <SelectContent>
-                                {monedas.map((m) => (
-                                  <SelectItem
-                                    key={m.id}
-                                    value={m.id.toString()}
-                                    className="text-xs"
-                                  >
-                                    {m.nombre} ({m.codigo})
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          {/* Monto */}
-                          <div className="col-span-3 sm:col-span-4">
-                            <Label className="text-[10px] text-muted-foreground block mb-0.5">
-                              Monto
-                            </Label>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              value={det.monto || ""}
-                              onChange={(e) =>
-                                handleUpdateDetalle(
-                                  index,
-                                  "monto",
-                                  Number(e.target.value)
-                                )
-                              }
-                              className="h-7 text-xs bg-background font-mono font-bold"
-                              placeholder="0.00"
-                            />
-                          </div>
-
-                          {/* Eliminar fila */}
-                          <div className="col-span-1 flex justify-end pt-3">
-                            {detalles.length > 1 && (
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleRemoveDetalle(index)}
-                                className="h-7 w-7 text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30"
-                              >
-                                <Trash2 className="size-3.5" />
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Campos bancarios y referencia si aplica */}
-                        {isBancoRequired && (
-                          <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/40 text-[11px]">
-                            <div>
-                              <Label className="text-[10px] text-muted-foreground block mb-0.5">
-                                Banco / Entidad
-                              </Label>
-                              <Input
-                                value={det.entidadFinanciera || ""}
-                                onChange={(e) =>
-                                  handleUpdateDetalle(
-                                    index,
-                                    "entidadFinanciera",
-                                    e.target.value
-                                  )
-                                }
-                                placeholder="Ej: Banco Unión, BCP..."
-                                className="h-6 text-xs bg-background"
-                              />
-                            </div>
-
-                            <div>
-                              <Label className="text-[10px] text-muted-foreground block mb-0.5">
-                                N° Referencia / Voucher
-                              </Label>
-                              <Input
-                                value={det.referencia || ""}
-                                onChange={(e) =>
-                                  handleUpdateDetalle(
-                                    index,
-                                    "referencia",
-                                    e.target.value
-                                  )
-                                }
-                                placeholder="N° Comprobante / Tx"
-                                className="h-6 text-xs bg-background font-mono"
-                              />
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* Observación general */}
-            <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">
-                Nota u Observación del Cobro
-              </Label>
-              <Textarea
-                value={observacion}
-                onChange={(e) => setObservacion(e.target.value)}
-                placeholder="Observaciones de caja..."
-                rows={2}
-                className="text-xs bg-background resize-none"
-              />
-            </div>
-
-            {/* BOTONES DE ACCIÓN */}
-            <div className="pt-2 flex items-center justify-between gap-2">
-              {onAnular && cobro.estado === EstadoCobro.Registrado && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onAnular(cobro)}
-                  className="h-8 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 cursor-pointer"
-                >
-                  <Ban className="size-3.5 mr-1" />
-                  Anular Cobro
-                </Button>
-              )}
-
-              <Button
-                type="submit"
-                size="sm"
-                disabled={
-                  confirmarCobroMutation.isPending ||
-                  detalles.length === 0 ||
-                  totalIngresado <= 0
-                }
-                className="h-8 text-xs font-semibold gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white ml-auto shadow-xs cursor-pointer"
-              >
-                {confirmarCobroMutation.isPending ? (
-                  <Loader2 className="size-3.5 animate-spin" />
-                ) : (
-                  <CheckCircle2 className="size-3.5" />
-                )}
-                Confirmar y Registrar Cobro
-              </Button>
-            </div>
-          </form>
+        {cobro.estado === EstadoCobro.Registrado ? (
+          terminalCobroContent
         ) : (
           /* VISTA DE LECTURA DE DETALLES PARA COBROS YA FINALIZADOS O ANULADOS */
           <div className="space-y-3">
@@ -780,7 +825,7 @@ export function CobroDetailCard({
               </div>
             )}
 
-            {onAnular && cobro.estado === EstadoCobro.Registrado && (
+            {onAnular && cobro.estado === EstadoCobro.Confirmado && (
               <div className="pt-2">
                 <Button
                   type="button"
