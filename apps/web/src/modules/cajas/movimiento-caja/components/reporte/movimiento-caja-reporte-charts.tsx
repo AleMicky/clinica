@@ -3,6 +3,8 @@
 import * as React from "react";
 import {
   TrendingUp,
+  BarChart3,
+  Activity,
   PieChart as PieChartIcon,
   Tag,
   Building2,
@@ -12,6 +14,8 @@ import {
   ResponsiveContainer,
   AreaChart,
   Area,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   Tooltip,
@@ -21,6 +25,7 @@ import {
   Cell,
 } from "recharts";
 import type { MovimientoCajaMetricsResponse } from "../../types/movimiento-caja.types";
+import { cn } from "@/lib/utils";
 
 interface MovimientoCajaReporteChartsProps {
   metrics: MovimientoCajaMetricsResponse | undefined;
@@ -77,7 +82,7 @@ function CustomTrendTooltip({ active, payload }: TrendTooltipProps) {
         <Calendar className="size-3 text-muted-foreground" />
         <span>{data.fecha}</span>
         <span className="ml-auto text-[10px] text-muted-foreground font-normal">
-          ({data.cantidad} ops)
+          ({data.cantidad} {data.cantidad === 1 ? "operación" : "operaciones"})
         </span>
       </div>
       <div className="space-y-1 font-mono text-[11px]">
@@ -90,8 +95,8 @@ function CustomTrendTooltip({ active, payload }: TrendTooltipProps) {
           <strong>-Bs. {data.egresos.toLocaleString("es-BO", { minimumFractionDigits: 2 })}</strong>
         </div>
         <div className="flex items-center justify-between pt-1 border-t border-border/40 font-bold text-foreground">
-          <span>Balance:</span>
-          <strong className={data.balance >= 0 ? "text-emerald-600" : "text-rose-600"}>
+          <span>Balance Neto:</span>
+          <strong className={data.balance >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}>
             {data.balance >= 0 ? "+" : ""}
             Bs. {data.balance.toLocaleString("es-BO", { minimumFractionDigits: 2 })}
           </strong>
@@ -110,6 +115,12 @@ export function MovimientoCajaReporteCharts({
   const porConcepto = metrics?.porConcepto ?? [];
   const porCaja = metrics?.porCaja ?? [];
 
+  // Cuando hay solo 1 día, el modo de barras muestra claramente las 2 columnas en lugar de puntos aislados
+  const [chartType, setChartType] = React.useState<"bar" | "area">("bar");
+
+  // Si cambia la cantidad de días y hay sólo 1 día, asegurarse de que se vea como barra para no quedar en puntos flotantes
+  const effectiveChartType = tendenciaDiaria.length <= 1 ? "bar" : chartType;
+
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -123,29 +134,73 @@ export function MovimientoCajaReporteCharts({
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
       {/* Chart 1: Flujo Diario de Efectivo (Ingresos vs Egresos) */}
       <div className="lg:col-span-2 bg-card/90 backdrop-blur-sm rounded-2xl border border-border/40 p-5 shadow-xs flex flex-col justify-between">
-        <div className="flex items-center justify-between pb-3 border-b border-border/30">
-          <div className="flex items-center gap-2">
-            <div className="size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border/30">
+          <div className="flex items-center gap-2.5">
+            <div className="size-8.5 rounded-xl bg-primary/10 text-primary flex items-center justify-center border border-primary/20 shrink-0">
               <TrendingUp className="size-4" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-foreground">
-                Flujo Diario de Efectivo (Entradas vs Salidas)
-              </h3>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-sm font-bold text-foreground">
+                  Flujo Diario de Efectivo (Entradas vs Salidas)
+                </h3>
+                {tendenciaDiaria.length === 1 && (
+                  <span className="text-[10px] font-semibold bg-primary/10 text-primary px-2 py-0.5 rounded-full border border-primary/20">
+                    Vista diaria
+                  </span>
+                )}
+              </div>
               <p className="text-[11px] text-muted-foreground">
-                Comparativo día a día de ingresos y egresos registrados en Bs.
+                Comparativo de volumen de ingresos y egresos registrados en Bs.
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3 text-xs font-medium">
-            <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
-              <span className="size-2 rounded-full bg-emerald-500" />
-              Ingresos
-            </span>
-            <span className="flex items-center gap-1.5 text-rose-600 dark:text-rose-400">
-              <span className="size-2 rounded-full bg-rose-500" />
-              Egresos
-            </span>
+
+          <div className="flex items-center gap-3 self-end sm:self-auto">
+            {/* Toggle Barras / Área (cuando hay más de 1 día) */}
+            {tendenciaDiaria.length > 1 && (
+              <div className="inline-flex items-center p-0.5 bg-muted/50 rounded-lg border border-border/40 text-[11px]">
+                <button
+                  type="button"
+                  onClick={() => setChartType("bar")}
+                  className={cn(
+                    "flex items-center gap-1 px-2 py-1 rounded-md font-medium transition-all cursor-pointer",
+                    effectiveChartType === "bar"
+                      ? "bg-background text-foreground shadow-2xs font-semibold"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                  title="Ver en gráfico de barras comparativo"
+                >
+                  <BarChart3 className="size-3" />
+                  <span>Barras</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setChartType("area")}
+                  className={cn(
+                    "flex items-center gap-1 px-2 py-1 rounded-md font-medium transition-all cursor-pointer",
+                    effectiveChartType === "area"
+                      ? "bg-background text-foreground shadow-2xs font-semibold"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                  title="Ver en gráfico de área continua"
+                >
+                  <Activity className="size-3" />
+                  <span>Área</span>
+                </button>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2.5 text-xs font-medium">
+              <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                <span className="size-2 rounded-full bg-emerald-500 shadow-2xs" />
+                Ingresos
+              </span>
+              <span className="flex items-center gap-1.5 text-rose-600 dark:text-rose-400">
+                <span className="size-2 rounded-full bg-rose-500 shadow-2xs" />
+                Egresos
+              </span>
+            </div>
           </div>
         </div>
 
@@ -154,9 +209,59 @@ export function MovimientoCajaReporteCharts({
             <div className="h-full flex items-center justify-center text-xs text-muted-foreground">
               No hay datos suficientes para mostrar el gráfico en el rango seleccionado.
             </div>
-          ) : (
+          ) : effectiveChartType === "bar" ? (
+            /* Modo Barras Comparativas (ideal para 1 o varios días, nunca queda en puntos flotantes) */
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={tendenciaDiaria} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <BarChart
+                data={tendenciaDiaria}
+                margin={{ top: 12, right: 15, left: 10, bottom: 0 }}
+                barGap={8}
+              >
+                <CartesianGrid strokeDasharray="3 3" opacity={0.15} vertical={false} />
+                <XAxis
+                  dataKey="fecha"
+                  tickFormatter={formatDateTick}
+                  tickLine={false}
+                  axisLine={{ stroke: "rgba(150, 150, 150, 0.2)" }}
+                  tick={{ fontSize: 11, fill: "currentColor" }}
+                  className="text-muted-foreground"
+                />
+                <YAxis
+                  width={75}
+                  tickLine={false}
+                  axisLine={false}
+                  tick={{ fontSize: 11, fill: "currentColor" }}
+                  className="text-muted-foreground"
+                  tickFormatter={(val) => {
+                    const n = Number(val);
+                    if (n >= 1000) return `Bs. ${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k`;
+                    return `Bs. ${n}`;
+                  }}
+                />
+                <Tooltip content={<CustomTrendTooltip />} cursor={{ fill: "rgba(150, 150, 150, 0.08)" }} />
+                <Bar
+                  dataKey="ingresos"
+                  name="Ingresos"
+                  fill="#10b981"
+                  radius={[6, 6, 0, 0]}
+                  maxBarSize={46}
+                />
+                <Bar
+                  dataKey="egresos"
+                  name="Egresos"
+                  fill="#f43f5e"
+                  radius={[6, 6, 0, 0]}
+                  maxBarSize={46}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            /* Modo Área Continua (ideal para múltiples días) */
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart
+                data={tendenciaDiaria}
+                margin={{ top: 12, right: 15, left: 10, bottom: 0 }}
+              >
                 <defs>
                   <linearGradient id="ingresosGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
@@ -172,16 +277,21 @@ export function MovimientoCajaReporteCharts({
                   dataKey="fecha"
                   tickFormatter={formatDateTick}
                   tickLine={false}
-                  axisLine={false}
+                  axisLine={{ stroke: "rgba(150, 150, 150, 0.2)" }}
                   tick={{ fontSize: 11, fill: "currentColor" }}
                   className="text-muted-foreground"
                 />
                 <YAxis
+                  width={75}
                   tickLine={false}
                   axisLine={false}
                   tick={{ fontSize: 11, fill: "currentColor" }}
                   className="text-muted-foreground"
-                  tickFormatter={(val) => `Bs.${val >= 1000 ? `${(val / 1000).toFixed(0)}k` : val}`}
+                  tickFormatter={(val) => {
+                    const n = Number(val);
+                    if (n >= 1000) return `Bs. ${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k`;
+                    return `Bs. ${n}`;
+                  }}
                 />
                 <Tooltip content={<CustomTrendTooltip />} />
                 <Area
@@ -191,6 +301,8 @@ export function MovimientoCajaReporteCharts({
                   strokeWidth={2.5}
                   fillOpacity={1}
                   fill="url(#ingresosGrad)"
+                  dot={{ r: 4, stroke: "#10b981", strokeWidth: 2, fill: "#ffffff" }}
+                  activeDot={{ r: 6 }}
                 />
                 <Area
                   type="monotone"
@@ -199,6 +311,8 @@ export function MovimientoCajaReporteCharts({
                   strokeWidth={2}
                   fillOpacity={1}
                   fill="url(#egresosGrad)"
+                  dot={{ r: 4, stroke: "#f43f5e", strokeWidth: 2, fill: "#ffffff" }}
+                  activeDot={{ r: 6 }}
                 />
               </AreaChart>
             </ResponsiveContainer>
