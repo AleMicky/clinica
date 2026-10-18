@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import {
   MoreHorizontal,
   Edit,
@@ -8,7 +7,6 @@ import {
   RefreshCw,
   Inbox,
   History,
-  Clock,
   CalendarClock,
   Filter,
 } from "lucide-react";
@@ -80,7 +78,183 @@ export function ProductoTable({
   onDelete,
   onViewAudit,
   onRefresh,
-}: ProductoTableProps) {
+}: Readonly<ProductoTableProps>) {
+  const renderTableContent = () => {
+    if (isLoading) {
+      return Array.from({ length: 5 }).map((_, idx) => (
+        <TableRow key={idx} className="h-12">
+          <TableCell className="pl-4 py-2">
+            <Skeleton className="h-4 w-16 rounded" />
+          </TableCell>
+          <TableCell className="py-2">
+            <Skeleton className="h-4 w-44 rounded mb-1" />
+            <Skeleton className="h-3 w-28 rounded" />
+          </TableCell>
+          <TableCell className="py-2">
+            <Skeleton className="h-5 w-24 rounded-full" />
+          </TableCell>
+          <TableCell className="py-2">
+            <Skeleton className="h-4 w-16 rounded" />
+          </TableCell>
+          <TableCell className="py-2">
+            <Skeleton className="h-5 w-20 rounded" />
+          </TableCell>
+          <TableCell className="py-2">
+            <Skeleton className="h-4 w-20 rounded" />
+          </TableCell>
+          <TableCell className="text-right pr-4 py-2">
+            <Skeleton className="h-7 w-7 rounded-md ml-auto" />
+          </TableCell>
+        </TableRow>
+      ));
+    }
+
+    if (productos.length === 0) {
+      const emptyMessage =
+        searchTerm || categoriaFilter !== null
+          ? "No hay productos coincidentes con los filtros aplicados."
+          : "No hay productos registrados en el sistema.";
+
+      return (
+        <TableRow>
+          <TableCell colSpan={7} className="h-36 text-center text-muted-foreground text-xs py-8">
+            <div className="flex flex-col items-center justify-center gap-1.5">
+              <Inbox className="size-8 text-muted-foreground/50 stroke-1" />
+              <p className="font-medium text-foreground text-sm">No se encontraron productos</p>
+              <p className="text-xs text-muted-foreground">{emptyMessage}</p>
+            </div>
+          </TableCell>
+        </TableRow>
+      );
+    }
+
+    return productos.map((producto) => (
+      <TableRow key={producto.id} className="hover:bg-muted/30 transition-colors h-12">
+        {/* Código */}
+        <TableCell className="pl-4 py-2 font-mono text-xs font-semibold text-primary">
+          <span className="bg-primary/5 border border-primary/20 px-2 py-0.5 rounded">
+            {producto.codigo}
+          </span>
+        </TableCell>
+
+        {/* Nombre y Descripción */}
+        <TableCell className="py-2 min-w-[180px]">
+          <div className="flex flex-col">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="font-medium text-xs text-foreground">
+                {producto.nombre}
+              </span>
+              {producto.marcaNombre && (
+                <Badge
+                  variant="secondary"
+                  className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary border-primary/20 font-normal"
+                >
+                  {producto.marcaNombre}
+                </Badge>
+              )}
+            </div>
+            {producto.descripcion ? (
+              <span className="text-[11px] text-muted-foreground line-clamp-1">
+                {producto.descripcion}
+              </span>
+            ) : (
+              <span className="text-[10px] text-muted-foreground/60 italic">
+                Sin descripción
+              </span>
+            )}
+          </div>
+        </TableCell>
+
+        {/* Categoría */}
+        <TableCell className="py-2">
+          <Badge
+            variant="outline"
+            className="text-xs font-medium bg-muted/40 border-border/70"
+          >
+            {producto.categoriaProductoNombre || "Sin categoría"}
+          </Badge>
+        </TableCell>
+
+        {/* Unidad de Medida */}
+        <TableCell className="py-2 text-xs font-medium text-foreground">
+          <div className="flex items-center gap-1">
+            <span>{producto.unidadMedidaNombre || "N/A"}</span>
+            {producto.unidadMedidaSimbolo && (
+              <span className="text-muted-foreground font-mono text-[11px]">
+                ({producto.unidadMedidaSimbolo})
+              </span>
+            )}
+          </div>
+        </TableCell>
+
+        {/* Control de Vencimiento */}
+        <TableCell className="py-2">
+          <div className="flex flex-wrap gap-1">
+            {producto.controlaVencimiento ? (
+              <Badge
+                variant="outline"
+                className="text-[10px] px-1.5 py-0 border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400 gap-1 font-medium"
+              >
+                <CalendarClock className="size-2.5" /> Vence
+              </Badge>
+            ) : (
+              <span className="text-[11px] text-muted-foreground/70">Estándar</span>
+            )}
+          </div>
+        </TableCell>
+
+        {/* Stock Min / Max */}
+        <TableCell className="py-2 text-xs font-mono">
+          <div className="flex items-center gap-1.5">
+            <span className="font-semibold text-foreground">
+              Min: {producto.stockMinimo}
+            </span>
+            <span className="text-muted-foreground/60">/</span>
+            <span className="text-muted-foreground">
+              Max: {producto.stockMaximo !== null && producto.stockMaximo !== undefined ? producto.stockMaximo : "—"}
+            </span>
+          </div>
+        </TableCell>
+
+        {/* Acciones */}
+        <TableCell className="text-right pr-4 py-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger className="inline-flex size-7 items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground text-muted-foreground transition-colors cursor-pointer">
+              <MoreHorizontal className="size-4" />
+              <span className="sr-only">Acciones</span>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44 text-xs">
+              <DropdownMenuGroup>
+                <DropdownMenuLabel className="text-[11px] text-muted-foreground font-normal">Acciones</DropdownMenuLabel>
+                {onViewAudit && (
+                  <DropdownMenuItem
+                    onClick={() => onViewAudit(producto)}
+                    className="gap-2 cursor-pointer text-xs"
+                  >
+                    <History className="size-3.5 text-muted-foreground" /> Ver Auditoría
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem
+                  onClick={() => onEdit?.(producto)}
+                  className="gap-2 cursor-pointer text-xs"
+                >
+                  <Edit className="size-3.5" /> Editar Producto
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => onDelete?.(producto)}
+                className="gap-2 text-destructive cursor-pointer text-xs"
+              >
+                <Trash2 className="size-3.5" /> Eliminar Producto
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </TableCell>
+      </TableRow>
+    ));
+  };
+
   return (
     <div className="space-y-3 w-full">
       {/* Toolbar Controls */}
@@ -152,174 +326,7 @@ export function ProductoTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading ? (
-              Array.from({ length: 5 }).map((_, idx) => (
-                <TableRow key={idx} className="h-12">
-                  <TableCell className="pl-4 py-2">
-                    <Skeleton className="h-4 w-16 rounded" />
-                  </TableCell>
-                  <TableCell className="py-2">
-                    <Skeleton className="h-4 w-44 rounded mb-1" />
-                    <Skeleton className="h-3 w-28 rounded" />
-                  </TableCell>
-                  <TableCell className="py-2">
-                    <Skeleton className="h-5 w-24 rounded-full" />
-                  </TableCell>
-                  <TableCell className="py-2">
-                    <Skeleton className="h-4 w-16 rounded" />
-                  </TableCell>
-                  <TableCell className="py-2">
-                    <Skeleton className="h-5 w-20 rounded" />
-                  </TableCell>
-                  <TableCell className="py-2">
-                    <Skeleton className="h-4 w-20 rounded" />
-                  </TableCell>
-                  <TableCell className="text-right pr-4 py-2">
-                    <Skeleton className="h-7 w-7 rounded-md ml-auto" />
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : productos.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="h-36 text-center text-muted-foreground text-xs py-8">
-                  <div className="flex flex-col items-center justify-center gap-1.5">
-                    <Inbox className="size-8 text-muted-foreground/50 stroke-1" />
-                    <p className="font-medium text-foreground text-sm">No se encontraron productos</p>
-                    <p className="text-xs text-muted-foreground">
-                      {searchTerm || categoriaFilter !== null
-                        ? "No hay productos coincidentes con los filtros aplicados."
-                        : "No hay productos registrados en el sistema."}
-                    </p>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : (
-              productos.map((producto) => (
-                <TableRow key={producto.id} className="hover:bg-muted/30 transition-colors h-12">
-                  {/* Código */}
-                  <TableCell className="pl-4 py-2 font-mono text-xs font-semibold text-primary">
-                    <span className="bg-primary/5 border border-primary/20 px-2 py-0.5 rounded">
-                      {producto.codigo}
-                    </span>
-                  </TableCell>
-
-                  {/* Nombre y Descripción */}
-                  <TableCell className="py-2 min-w-[180px]">
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="font-medium text-xs text-foreground">
-                          {producto.nombre}
-                        </span>
-                        {producto.marcaNombre && (
-                          <Badge
-                            variant="secondary"
-                            className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary border-primary/20 font-normal"
-                          >
-                            {producto.marcaNombre}
-                          </Badge>
-                        )}
-                      </div>
-                      {producto.descripcion ? (
-                        <span className="text-[11px] text-muted-foreground line-clamp-1">
-                          {producto.descripcion}
-                        </span>
-                      ) : (
-                        <span className="text-[10px] text-muted-foreground/60 italic">
-                          Sin descripción
-                        </span>
-                      )}
-                    </div>
-                  </TableCell>
-
-                  {/* Categoría */}
-                  <TableCell className="py-2">
-                    <Badge
-                      variant="outline"
-                      className="text-xs font-medium bg-muted/40 border-border/70"
-                    >
-                      {producto.categoriaProductoNombre || "Sin categoría"}
-                    </Badge>
-                  </TableCell>
-
-                  {/* Unidad de Medida */}
-                  <TableCell className="py-2 text-xs font-medium text-foreground">
-                    <div className="flex items-center gap-1">
-                      <span>{producto.unidadMedidaNombre || "N/A"}</span>
-                      {producto.unidadMedidaSimbolo && (
-                        <span className="text-muted-foreground font-mono text-[11px]">
-                          ({producto.unidadMedidaSimbolo})
-                        </span>
-                      )}
-                    </div>
-                  </TableCell>
-
-                  {/* Control de Vencimiento */}
-                  <TableCell className="py-2">
-                    <div className="flex flex-wrap gap-1">
-                      {producto.controlaVencimiento ? (
-                        <Badge
-                          variant="outline"
-                          className="text-[10px] px-1.5 py-0 border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400 gap-1 font-medium"
-                        >
-                          <CalendarClock className="size-2.5" /> Vence
-                        </Badge>
-                      ) : (
-                        <span className="text-[11px] text-muted-foreground/70">Estándar</span>
-                      )}
-                    </div>
-                  </TableCell>
-
-                  {/* Stock Min / Max */}
-                  <TableCell className="py-2 text-xs font-mono">
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-semibold text-foreground">
-                        Min: {producto.stockMinimo}
-                      </span>
-                      <span className="text-muted-foreground/60">/</span>
-                      <span className="text-muted-foreground">
-                        Max: {producto.stockMaximo !== null && producto.stockMaximo !== undefined ? producto.stockMaximo : "—"}
-                      </span>
-                    </div>
-                  </TableCell>
-
-                  {/* Acciones */}
-                  <TableCell className="text-right pr-4 py-2">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger className="inline-flex size-7 items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground text-muted-foreground transition-colors cursor-pointer">
-                        <MoreHorizontal className="size-4" />
-                        <span className="sr-only">Acciones</span>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-44 text-xs">
-                        <DropdownMenuGroup>
-                          <DropdownMenuLabel className="text-[11px] text-muted-foreground font-normal">Acciones</DropdownMenuLabel>
-                          {onViewAudit && (
-                            <DropdownMenuItem
-                              onClick={() => onViewAudit(producto)}
-                              className="gap-2 cursor-pointer text-xs"
-                            >
-                              <History className="size-3.5 text-muted-foreground" /> Ver Auditoría
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem
-                            onClick={() => onEdit?.(producto)}
-                            className="gap-2 cursor-pointer text-xs"
-                          >
-                            <Edit className="size-3.5" /> Editar Producto
-                          </DropdownMenuItem>
-                        </DropdownMenuGroup>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => onDelete?.(producto)}
-                          className="gap-2 text-destructive cursor-pointer text-xs"
-                        >
-                          <Trash2 className="size-3.5" /> Eliminar Producto
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
+            {renderTableContent()}
           </TableBody>
         </Table>
 
@@ -327,7 +334,7 @@ export function ProductoTable({
           totalItems={totalItems}
           currentPage={currentPage}
           pageSize={pageSize}
-          onPageChange={onPageChange || (() => {})}
+          onPageChange={onPageChange || (() => { })}
           onPageSizeChange={onPageSizeChange}
           isLoading={isLoading}
           itemLabel="productos"

@@ -3,6 +3,7 @@
 import * as React from "react";
 import { toast } from "sonner";
 import { ConfirmDeleteDialog } from "@/components/shared";
+import { getApiErrorMessage } from "@/lib/api/api-error";
 import { useDeleteProducto } from "../hooks/use-producto";
 import type { ProductoResponse } from "../types/producto.types";
 
@@ -18,7 +19,7 @@ export function ProductoDeleteDialog({
   onOpenChange,
   productoToDelete,
   onSuccessCallback,
-}: ProductoDeleteDialogProps) {
+}: Readonly<ProductoDeleteDialogProps>) {
   const deleteMutation = useDeleteProducto();
 
   const handleConfirmDelete = async () => {
@@ -28,13 +29,8 @@ export function ProductoDeleteDialog({
       toast.success(`Producto "${productoToDelete.nombre}" eliminado correctamente.`);
       onSuccessCallback?.();
       onOpenChange(false);
-    } catch (error: any) {
-      const errorMsg =
-        error?.response?.data?.message ||
-        error?.response?.data?.detail ||
-        error?.message ||
-        "No se pudo eliminar el producto.";
-      toast.error(errorMsg);
+    } catch (error) {
+      toast.error(getApiErrorMessage(error));
     }
   };
 

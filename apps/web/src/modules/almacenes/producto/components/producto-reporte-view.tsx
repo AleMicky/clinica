@@ -5,23 +5,18 @@ import Link from "next/link";
 import {
   FileSpreadsheet,
   Download,
-  Filter,
   RefreshCw,
   Search,
   X,
-  Package,
   Boxes,
   Tag,
   Building2,
   Scale,
-  Calendar,
   Layers,
   ArrowLeft,
   SlidersHorizontal,
   ChevronLeft,
   ChevronRight,
-  Sparkles,
-  Info,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -32,9 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import {
   Select,
@@ -100,7 +93,7 @@ export function ProductoReporteView() {
         categoriesSet.add(um.categoria.trim());
       }
     });
-    return Array.from(categoriesSet).sort();
+    return Array.from(categoriesSet).sort((a, b) => a.localeCompare(b));
   }, [unidadesMedida]);
 
   // Unidades de medida filtradas por el catálogo seleccionado (si aplica)
@@ -172,12 +165,12 @@ export function ProductoReporteView() {
 
   const hasActiveFilters = Boolean(
     searchTerm.trim() ||
-      categoriaId !== null ||
-      marcaId !== null ||
-      proveedorId !== null ||
-      catalogoUm !== null ||
-      unidadMedidaId !== null ||
-      controlaVence !== "TODOS"
+    categoriaId !== null ||
+    marcaId !== null ||
+    proveedorId !== null ||
+    catalogoUm !== null ||
+    unidadMedidaId !== null ||
+    controlaVence !== "TODOS"
   );
 
   const handleExportExcel = async () => {
@@ -204,7 +197,7 @@ export function ProductoReporteView() {
       link.download = `Reporte_Productos_${timestamp}.xlsx`;
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
+      link.remove();
       window.URL.revokeObjectURL(url);
 
       toast.success("Reporte Excel generado y descargado con éxito.");
@@ -212,6 +205,149 @@ export function ProductoReporteView() {
       console.error(error);
       toast.error("Ocurrió un error al generar el reporte Excel.");
     }
+  };
+
+  const renderTableContent = () => {
+    if (isLoading) {
+      return Array.from({ length: 5 }).map((_, i) => (
+        <TableRow key={i}>
+          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+          <TableCell><Skeleton className="h-4 w-40" /></TableCell>
+          <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+          <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+          <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+          <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+          <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+          <TableCell><Skeleton className="h-4 w-16 mx-auto" /></TableCell>
+          <TableCell><Skeleton className="h-4 w-12 ml-auto" /></TableCell>
+          <TableCell><Skeleton className="h-4 w-12 ml-auto" /></TableCell>
+        </TableRow>
+      ));
+    }
+
+    if (items.length === 0) {
+      return (
+        <TableRow>
+          <TableCell colSpan={10} className="h-48 text-center">
+            <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
+              <div className="p-3 rounded-full bg-muted/40 text-muted-foreground/60">
+                <Search className="size-6" />
+              </div>
+              <p className="text-sm font-medium">No se encontraron productos</p>
+              <p className="text-xs text-muted-foreground/80 max-w-sm">
+                No hay productos que coincidan con los filtros seleccionados. Intenta ajustar los criterios de búsqueda.
+              </p>
+              {hasActiveFilters && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleClearFilters}
+                  className="mt-2 h-8 text-xs"
+                >
+                  Restablecer todos los filtros
+                </Button>
+              )}
+            </div>
+          </TableCell>
+        </TableRow>
+      );
+    }
+
+    return items.map((prod) => (
+      <TableRow key={prod.id} className="hover:bg-muted/30">
+        <TableCell className="font-mono text-xs font-semibold text-primary">
+          {prod.codigo}
+        </TableCell>
+        <TableCell>
+          <div className="flex flex-col">
+            <span className="text-xs font-medium text-foreground">
+              {prod.nombre}
+            </span>
+            {prod.descripcion && (
+              <span className="text-[11px] text-muted-foreground line-clamp-1">
+                {prod.descripcion}
+              </span>
+            )}
+          </div>
+        </TableCell>
+        <TableCell>
+          <Badge variant="outline" className="text-[11px] font-normal py-0">
+            {prod.categoriaProductoNombre || "Sin categoría"}
+          </Badge>
+        </TableCell>
+        <TableCell className="text-xs text-muted-foreground">
+          {prod.marcaNombre ? (
+            <span className="font-medium text-foreground">{prod.marcaNombre}</span>
+          ) : (
+            "—"
+          )}
+        </TableCell>
+        <TableCell>
+          {prod.unidadMedidaCategoria ? (
+            <Badge
+              variant="secondary"
+              className="text-[10px] font-medium bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20 py-0"
+            >
+              {prod.unidadMedidaCategoria}
+            </Badge>
+          ) : (
+            "—"
+          )}
+        </TableCell>
+        <TableCell className="text-xs">
+          <span className="font-medium">{prod.unidadMedidaNombre}</span>{" "}
+          {prod.unidadMedidaSimbolo && (
+            <span className="text-muted-foreground font-mono text-[11px]">
+              ({prod.unidadMedidaSimbolo})
+            </span>
+          )}
+        </TableCell>
+        <TableCell className="text-xs">
+          {prod.proveedorRazonSocial ? (
+            <div className="flex flex-col">
+              <span className="font-medium text-foreground line-clamp-1">
+                {prod.proveedorRazonSocial}
+              </span>
+              {prod.proveedorCodigo && (
+                <span className="text-[10px] text-muted-foreground font-mono">
+                  {prod.proveedorCodigo}
+                </span>
+              )}
+            </div>
+          ) : (
+            <span className="text-muted-foreground">—</span>
+          )}
+        </TableCell>
+        <TableCell className="text-center">
+          <div className="flex items-center justify-center gap-1">
+            {prod.controlaVencimiento ? (
+              <Badge
+                variant="secondary"
+                className="text-[10px] px-1 py-0 bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/20"
+              >
+                Vence
+              </Badge>
+            ) : (
+              <span className="text-xs text-muted-foreground">—</span>
+            )}
+          </div>
+        </TableCell>
+        <TableCell className="text-right font-mono text-xs">
+          {Number(prod.stockMinimo).toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
+        </TableCell>
+        <TableCell className="text-right font-mono text-xs text-muted-foreground">
+          {prod.stockMaximo !== null && prod.stockMaximo !== undefined
+            ? Number(prod.stockMaximo).toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })
+            : "—"}
+        </TableCell>
+      </TableRow>
+    ));
   };
 
   return (
@@ -554,142 +690,7 @@ export function ProductoReporteView() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-40" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-16 mx-auto" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-12 ml-auto" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-12 ml-auto" /></TableCell>
-                  </TableRow>
-                ))
-              ) : items.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={10} className="h-48 text-center">
-                    <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
-                      <div className="p-3 rounded-full bg-muted/40 text-muted-foreground/60">
-                        <Search className="size-6" />
-                      </div>
-                      <p className="text-sm font-medium">No se encontraron productos</p>
-                      <p className="text-xs text-muted-foreground/80 max-w-sm">
-                        No hay productos que coincidan con los filtros seleccionados. Intenta ajustar los criterios de búsqueda.
-                      </p>
-                      {hasActiveFilters && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={handleClearFilters}
-                          className="mt-2 h-8 text-xs"
-                        >
-                          Restablecer todos los filtros
-                        </Button>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                items.map((prod) => (
-                  <TableRow key={prod.id} className="hover:bg-muted/30">
-                    <TableCell className="font-mono text-xs font-semibold text-primary">
-                      {prod.codigo}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="text-xs font-medium text-foreground">
-                          {prod.nombre}
-                        </span>
-                        {prod.descripcion && (
-                          <span className="text-[11px] text-muted-foreground line-clamp-1">
-                            {prod.descripcion}
-                          </span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="text-[11px] font-normal py-0">
-                        {prod.categoriaProductoNombre || "Sin categoría"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {prod.marcaNombre ? (
-                        <span className="font-medium text-foreground">{prod.marcaNombre}</span>
-                      ) : (
-                        "—"
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {prod.unidadMedidaCategoria ? (
-                        <Badge
-                          variant="secondary"
-                          className="text-[10px] font-medium bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20 py-0"
-                        >
-                          {prod.unidadMedidaCategoria}
-                        </Badge>
-                      ) : (
-                        "—"
-                      )}
-                    </TableCell>
-                    <TableCell className="text-xs">
-                      <span className="font-medium">{prod.unidadMedidaNombre}</span>{" "}
-                      {prod.unidadMedidaSimbolo && (
-                        <span className="text-muted-foreground font-mono text-[11px]">
-                          ({prod.unidadMedidaSimbolo})
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-xs">
-                      {prod.proveedorRazonSocial ? (
-                        <div className="flex flex-col">
-                          <span className="font-medium text-foreground line-clamp-1">
-                            {prod.proveedorRazonSocial}
-                          </span>
-                          {prod.proveedorCodigo && (
-                            <span className="text-[10px] text-muted-foreground font-mono">
-                              {prod.proveedorCodigo}
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex items-center justify-center gap-1">
-                        {prod.controlaVencimiento ? (
-                          <Badge
-                            variant="secondary"
-                            className="text-[10px] px-1 py-0 bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/20"
-                          >
-                            Vence
-                          </Badge>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-xs">
-                      {Number(prod.stockMinimo).toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-xs text-muted-foreground">
-                      {prod.stockMaximo !== null && prod.stockMaximo !== undefined
-                        ? Number(prod.stockMaximo).toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })
-                        : "—"}
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
+              {renderTableContent()}
             </TableBody>
           </Table>
         </div>

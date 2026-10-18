@@ -21,7 +21,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
@@ -42,7 +41,7 @@ export function ProductoImportDialog({
   open,
   onOpenChange,
   onSuccess,
-}: ProductoImportDialogProps) {
+}: Readonly<ProductoImportDialogProps>) {
   const [file, setFile] = React.useState<File | null>(null);
   const [isDragging, setIsDragging] = React.useState(false);
   const [showColumnsGuide, setShowColumnsGuide] = React.useState(false);
@@ -182,45 +181,48 @@ export function ProductoImportDialog({
         <div className="p-5 sm:p-6 space-y-4 max-h-[calc(85vh-130px)] overflow-y-auto">
           {!result ? (
             <>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".xlsx"
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files.length > 0) {
+                    handleFileSelect(e.target.files[0]);
+                  }
+                }}
+              />
+
               {/* Dropzone Container */}
-              <div
+              <button
+                type="button"
+                disabled={importMutation.isPending}
+                aria-label="Haz clic para seleccionar o arrastra tu archivo Excel"
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
                 onClick={() => !importMutation.isPending && fileInputRef.current?.click()}
                 className={cn(
-                  "border-2 border-dashed rounded-xl p-5 sm:p-6 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-2",
+                  "w-full border-2 border-dashed rounded-xl p-5 sm:p-6 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-2 select-none focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/40",
                   isDragging
                     ? "border-primary bg-primary/10 scale-[0.99]"
                     : "border-border/80 hover:border-primary/50 hover:bg-muted/40 bg-muted/15",
                   importMutation.isPending && "pointer-events-none opacity-60"
                 )}
               >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".xlsx"
-                  className="hidden"
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files.length > 0) {
-                      handleFileSelect(e.target.files[0]);
-                    }
-                  }}
-                />
-
                 <div className="size-11 rounded-full bg-primary/10 text-primary flex items-center justify-center border border-primary/20 shadow-2xs">
                   <UploadCloud className="size-5.5" />
                 </div>
 
                 <div className="space-y-0.5">
-                  <p className="text-xs sm:text-sm font-semibold text-foreground">
+                  <span className="block text-xs sm:text-sm font-semibold text-foreground">
                     Haz clic para seleccionar o arrastra tu archivo Excel
-                  </p>
-                  <p className="text-[11px] text-muted-foreground">
+                  </span>
+                  <span className="block text-[11px] text-muted-foreground">
                     Formato admitido: <strong className="text-foreground">.xlsx</strong> (máximo 10 MB)
-                  </p>
+                  </span>
                 </div>
-              </div>
+              </button>
 
               {/* Selected File Card */}
               {file && (

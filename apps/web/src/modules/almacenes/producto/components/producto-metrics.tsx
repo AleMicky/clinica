@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { Boxes, CalendarClock, FolderTree } from "lucide-react";
 import type { ProductoMetrics } from "../types/producto.types";
 
@@ -8,7 +7,7 @@ interface ProductoMetricsCardsProps {
   metrics: ProductoMetrics;
 }
 
-export function ProductoMetricsCards({ metrics }: ProductoMetricsCardsProps) {
+export function ProductoMetricsCards({ metrics }: Readonly<ProductoMetricsCardsProps>) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
       <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-card border border-border/40 shadow-2xs">

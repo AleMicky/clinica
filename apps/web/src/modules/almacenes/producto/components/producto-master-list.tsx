@@ -85,35 +85,194 @@ export function ProductoMasterList({
   onEdit,
   onDelete,
   onRefresh,
-}: ProductoMasterListProps) {
+}: Readonly<ProductoMasterListProps>) {
   const hasActiveFilters = Boolean(searchTerm.trim() || categoriaFilter !== null);
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const fromItem = totalItems === 0 ? 0 : (page - 1) * pageSize + 1;
   const toItem = Math.min(totalItems, page * pageSize);
 
   // Keyboard navigation through items
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (productos.length === 0) return;
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable ||
+          target.closest("button") ||
+          target.closest("[role='combobox']") ||
+          target.closest("[role='dialog']") ||
+          target.closest("[role='listbox']"))
+      ) {
+        return;
+      }
 
-    const currentIndex = productos.findIndex((p) => p.id === selectedProductoId);
+      if (productos.length === 0) return;
 
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      const nextIndex = currentIndex < productos.length - 1 ? currentIndex + 1 : 0;
-      onSelectProducto(productos[nextIndex]);
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      const prevIndex = currentIndex > 0 ? currentIndex - 1 : productos.length - 1;
-      onSelectProducto(productos[prevIndex]);
+      const currentIndex = productos.findIndex((p) => p.id === selectedProductoId);
+
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        const nextIndex = currentIndex < productos.length - 1 ? currentIndex + 1 : 0;
+        onSelectProducto(productos[nextIndex]);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        const prevIndex = currentIndex > 0 ? currentIndex - 1 : productos.length - 1;
+        onSelectProducto(productos[prevIndex]);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [productos, selectedProductoId, onSelectProducto]);
+
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="space-y-1.5 p-1">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="p-2.5 rounded-lg border border-border/30 bg-card/60 space-y-2">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-3.5 w-16 rounded" />
+                <Skeleton className="h-3 w-12 rounded" />
+              </div>
+              <Skeleton className="h-3 w-3/4 rounded" />
+              <div className="flex gap-1.5">
+                <Skeleton className="h-2.5 w-20 rounded" />
+                <Skeleton className="h-2.5 w-12 rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
+      );
     }
+
+    if (productos.length === 0) {
+      const emptyMessage = hasActiveFilters
+        ? "Sin coincidencias para los filtros aplicados."
+        : "No hay productos registrados en el sistema.";
+
+      return (
+        <div className="flex flex-col items-center justify-center p-6 text-center border border-dashed border-border/40 rounded-xl bg-card/40 my-3">
+          <Boxes className="size-7 text-muted-foreground/40 stroke-1 mb-2" />
+          <p className="text-xs font-semibold text-foreground">
+            No se encontraron productos
+          </p>
+          <p className="text-[11px] text-muted-foreground mt-0.5 max-w-[200px]">
+            {emptyMessage}
+          </p>
+          {hasActiveFilters && onClearFilters && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onClearFilters}
+              className="mt-3 h-7 text-xs gap-1.5 border-border/50 hover:bg-muted cursor-pointer rounded-lg"
+            >
+              <RotateCcw className="size-3" />
+              Limpiar filtros
+            </Button>
+          )}
+        </div>
+      );
+    }
+
+    return productos.map((prod) => {
+      const isSelected = prod.id === selectedProductoId;
+
+      return (
+        <div
+          key={prod.id}
+          className={cn(
+            "group relative rounded-lg border transition-all duration-150 text-left select-none",
+            isSelected
+              ? "bg-primary/[0.08] border-primary/40 shadow-2xs ring-1 ring-primary/20 border-l-[3px] border-l-primary"
+              : "bg-card/70 border-border/30 hover:bg-muted/40 hover:border-border/60"
+          )}
+        >
+          <button
+            type="button"
+            onClick={() => onSelectProducto(prod)}
+            aria-pressed={isSelected}
+            className="w-full flex flex-col gap-1 p-2.5 pr-9 text-left cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/40 rounded-lg"
+          >
+            <div className="flex items-center gap-1.5 min-w-0 w-full">
+              <span
+                className={cn(
+                  "font-mono text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 tracking-tight",
+                  isSelected
+                    ? "bg-primary text-primary-foreground shadow-2xs"
+                    : "bg-muted text-muted-foreground group-hover:text-foreground border border-border/40"
+                )}
+              >
+                {prod.codigo}
+              </span>
+              <h4
+                className={cn(
+                  "font-medium text-xs truncate",
+                  isSelected ? "text-primary font-semibold" : "text-foreground"
+                )}
+              >
+                {prod.nombre}
+              </h4>
+            </div>
+
+            {/* Sub details: Category, Brand & Feature Badges */}
+            <div className="flex items-center justify-between text-[10px] text-muted-foreground gap-2 pt-0.5 w-full">
+              <div className="flex items-center gap-1.5 truncate text-[10px] text-muted-foreground/90 min-w-0">
+                <span className="truncate">{prod.categoriaProductoNombre || "Sin categoría"}</span>
+                {prod.marcaNombre && (
+                  <>
+                    <span className="text-muted-foreground/40">•</span>
+                    <span className="text-primary/90 font-medium truncate">{prod.marcaNombre}</span>
+                  </>
+                )}
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                {prod.controlaVencimiento && (
+                  <span className="inline-flex items-center gap-0.5 text-[9px] px-1 py-0.2 rounded border border-amber-500/25 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium">
+                    <CalendarClock className="size-2.5" /> Vence
+                  </span>
+                )}
+              </div>
+            </div>
+          </button>
+
+          {/* Action Menu */}
+          <div className="absolute top-2 right-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                aria-label={`Acciones para ${prod.nombre}`}
+                className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
+              >
+                <MoreHorizontal className="size-3" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-36 text-xs">
+                <DropdownMenuItem
+                  onClick={() => onEdit(prod)}
+                  className="gap-2 text-xs cursor-pointer"
+                >
+                  <Edit2 className="size-3.5 text-muted-foreground" />
+                  Editar
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => onDelete(prod)}
+                  className="gap-2 text-xs text-destructive focus:text-destructive cursor-pointer"
+                >
+                  <Trash2 className="size-3.5" />
+                  Eliminar
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      );
+    });
   };
 
   return (
-    <div
-      className="flex flex-col h-full bg-card rounded-xl border border-border/40 shadow-2xs overflow-hidden outline-hidden"
-      tabIndex={0}
-      onKeyDown={handleKeyDown}
-      role="region"
+    <section
+      className="flex flex-col h-full bg-card rounded-xl border border-border/40 shadow-2xs overflow-hidden"
       aria-label="Catálogo de productos"
     >
       {/* Top Header */}
@@ -236,139 +395,7 @@ export function ProductoMasterList({
 
       {/* Items List */}
       <div className="flex-1 overflow-y-auto p-1.5 space-y-1 min-h-[380px] max-h-[calc(100vh-320px)]">
-        {isLoading ? (
-          <div className="space-y-1.5 p-1">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="p-2.5 rounded-lg border border-border/30 bg-card/60 space-y-2">
-                <div className="flex items-center justify-between">
-                  <Skeleton className="h-3.5 w-16 rounded" />
-                  <Skeleton className="h-3 w-12 rounded" />
-                </div>
-                <Skeleton className="h-3 w-3/4 rounded" />
-                <div className="flex gap-1.5">
-                  <Skeleton className="h-2.5 w-20 rounded" />
-                  <Skeleton className="h-2.5 w-12 rounded" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : productos.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-6 text-center border border-dashed border-border/40 rounded-xl bg-card/40 my-3">
-            <Boxes className="size-7 text-muted-foreground/40 stroke-1 mb-2" />
-            <p className="text-xs font-semibold text-foreground">
-              No se encontraron productos
-            </p>
-            <p className="text-[11px] text-muted-foreground mt-0.5 max-w-[200px]">
-              {hasActiveFilters
-                ? "Sin coincidencias para los filtros aplicados."
-                : "No hay productos registrados en el sistema."}
-            </p>
-            {hasActiveFilters && onClearFilters && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onClearFilters}
-                className="mt-3 h-7 text-xs gap-1.5 border-border/50 hover:bg-muted cursor-pointer rounded-lg"
-              >
-                <RotateCcw className="size-3" />
-                Limpiar filtros
-              </Button>
-            )}
-          </div>
-        ) : (
-          productos.map((prod) => {
-            const isSelected = prod.id === selectedProductoId;
-
-            return (
-              <div
-                key={prod.id}
-                onClick={() => onSelectProducto(prod)}
-                className={cn(
-                  "group relative flex flex-col gap-1 p-2.5 rounded-lg border transition-all duration-150 cursor-pointer text-left select-none",
-                  isSelected
-                    ? "bg-primary/[0.08] border-primary/40 shadow-2xs ring-1 ring-primary/20 border-l-[3px] border-l-primary"
-                    : "bg-card/70 border-border/30 hover:bg-muted/40 hover:border-border/60"
-                )}
-              >
-                <div className="flex items-center justify-between gap-1.5">
-                  <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                    <span
-                      className={cn(
-                        "font-mono text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 tracking-tight",
-                        isSelected
-                          ? "bg-primary text-primary-foreground shadow-2xs"
-                          : "bg-muted text-muted-foreground group-hover:text-foreground border border-border/40"
-                      )}
-                    >
-                      {prod.codigo}
-                    </span>
-                    <h4
-                      className={cn(
-                        "font-medium text-xs truncate",
-                        isSelected ? "text-primary font-semibold" : "text-foreground"
-                      )}
-                    >
-                      {prod.nombre}
-                    </h4>
-                  </div>
-
-                  <div className="flex items-center gap-0.5 shrink-0">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger
-                        onClick={(e) => e.stopPropagation()}
-                        className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
-                      >
-                        <MoreHorizontal className="size-3" />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-36 text-xs">
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onEdit(prod);
-                          }}
-                          className="gap-2 text-xs cursor-pointer"
-                        >
-                          <Edit2 className="size-3.5 text-muted-foreground" />
-                          Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDelete(prod);
-                          }}
-                          className="gap-2 text-xs text-destructive focus:text-destructive cursor-pointer"
-                        >
-                          <Trash2 className="size-3.5" />
-                          Eliminar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-
-                {/* Sub details: Category, Brand & Feature Badges */}
-                <div className="flex items-center justify-between text-[10px] text-muted-foreground gap-2 pt-0.5">
-                  <div className="flex items-center gap-1.5 truncate text-[10px] text-muted-foreground/90 min-w-0">
-                    <span className="truncate">{prod.categoriaProductoNombre || "Sin categoría"}</span>
-                    {prod.marcaNombre && (
-                      <>
-                        <span className="text-muted-foreground/40">•</span>
-                        <span className="text-primary/90 font-medium truncate">{prod.marcaNombre}</span>
-                      </>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    {prod.controlaVencimiento && (
-                      <span className="inline-flex items-center gap-0.5 text-[9px] px-1 py-0.2 rounded border border-amber-500/25 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium">
-                        <CalendarClock className="size-2.5" /> Vence
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })
-        )}
+        {renderContent()}
       </div>
 
       {/* Modern Compact Sidebar Pagination */}
@@ -421,7 +448,7 @@ export function ProductoMasterList({
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
 

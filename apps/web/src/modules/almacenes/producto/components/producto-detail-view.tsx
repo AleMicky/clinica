@@ -45,7 +45,7 @@ export function ProductoDetailView({
   onDeleteProducto,
   onViewAuditProducto,
   onViewAuditPartida,
-}: ProductoDetailViewProps) {
+}: Readonly<ProductoDetailViewProps>) {
   // ---------------------------------------------------------------------------
   // Partidas state & query
   // ---------------------------------------------------------------------------
