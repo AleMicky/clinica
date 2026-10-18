@@ -2,34 +2,22 @@
 
 import * as React from "react";
 import { toast } from "sonner";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  AlertCircle,
+  ArrowLeft,
   Ban,
   Building2,
-  Calendar,
   CheckCircle2,
   Coins,
   CreditCard,
-  Hash,
   Loader2,
-  Plus,
+  QrCode,
   Receipt,
   Store,
-  Trash2,
   User,
   Wallet,
   Zap,
@@ -49,6 +37,7 @@ interface CobroDetailCardProps {
   cobro: CobroResponse | null;
   onSuccessCobro?: () => void;
   onAnular?: (cobro: CobroResponse) => void;
+  onBack?: () => void;
 }
 
 function formatCurrency(amount?: number | null): string {
@@ -61,7 +50,7 @@ function formatCurrency(amount?: number | null): string {
 function getInitialDetalles(
   cobro: CobroResponse,
   montoObjetivo: number,
-  metodos: Array<{ id: number }>,
+  metodos: Array<{ id: number; nombre: string }>,
   monedaBase?: { id: number }
 ): CobroDetalleRequest[] {
   if (cobro.detalles && cobro.detalles.length > 0) {
@@ -77,7 +66,11 @@ function getInitialDetalles(
     }));
   }
 
-  const defaultMetodoId = metodos[0]?.id ?? 1;
+  // Por defecto buscar método de efectivo
+  const efectivoMetodo =
+    metodos.find((m) => m.nombre.toLowerCase().includes("efectivo")) ||
+    metodos[0];
+  const defaultMetodoId = efectivoMetodo?.id ?? 1;
   const defaultMonedaId = monedaBase?.id ?? 1;
 
   return [
@@ -98,7 +91,6 @@ interface CobroLiquidacionFormProps {
   cobro: CobroResponse;
   montoObjetivo: number;
   metodos: Array<{ id: number; nombre: string }>;
-  monedas: Array<{ id: number; nombre: string; codigo: string }>;
   monedaBase?: { id: number; nombre: string; codigo: string };
   onSuccessCobro?: () => void;
   onAnular?: (cobro: CobroResponse) => void;
@@ -108,7 +100,6 @@ function CobroLiquidacionForm({
   cobro,
   montoObjetivo,
   metodos,
-  monedas,
   monedaBase,
   onSuccessCobro,
   onAnular,
@@ -119,79 +110,56 @@ function CobroLiquidacionForm({
     getInitialDetalles(cobro, montoObjetivo, metodos, monedaBase)
   );
   const [observacion, setObservacion] = React.useState(cobro.observacion || "");
+  const [montoRecibidoEfectivo, setMontoRecibidoEfectivo] = React.useState<number>(montoObjetivo);
 
-  const isPendingCobro =
-    cobro.estado === EstadoCobro.Registrado &&
-    (cobro.total === 0 || cobro.detalles?.length === 0);
-
-  const totalIngresado = detalles.reduce((acc, d) => {
-    const monto = Number(d.monto) || 0;
-    const tc = Number(d.tipoCambio) || 1;
-    return acc + monto * tc;
-  }, 0);
-
-  const saldoPendiente = Math.max(0, montoObjetivo - totalIngresado);
-  const vuelto = Math.max(0, totalIngresado - montoObjetivo);
-
-  let saldoTexto = "Bs. 0.00";
-  if (saldoPendiente > 0) {
-    saldoTexto = formatCurrency(saldoPendiente);
-  } else if (vuelto > 0) {
-    saldoTexto = `Vuelto: ${formatCurrency(vuelto)}`;
-  }
-
-  const handleAddDetalle = () => {
-    const defaultMetodoId = metodos[0]?.id ?? 1;
-    const defaultMonedaId = monedaBase?.id ?? 1;
-
-    setDetalles((prev) => [
-      ...prev,
-      {
-        metodoPagoId: defaultMetodoId,
-        monedaId: defaultMonedaId,
-        cuentaBancariaId: null,
-        monto: Math.max(0, saldoPendiente),
-        tipoCambio: 1,
-        referencia: "",
-        entidadFinanciera: "",
-        observacion: "",
-      },
-    ]);
+  // Obtener método actual activo del primer detalle
+  const activeDetalle = detalles[0] || {
+    metodoPagoId: metodos[0]?.id || 1,
+    monedaId: monedaBase?.id || 1,
+    monto: montoObjetivo,
+    referencia: "",
+    entidadFinanciera: "",
   };
 
-  const handleRemoveDetalle = (index: number) => {
-    setDetalles((prev) => prev.filter((_, i) => i !== index));
-  };
+  const selectedMetodo = metodos.find((m) => m.id === activeDetalle.metodoPagoId);
+  const isEfectivo =
+    selectedMetodo?.nombre.toLowerCase().includes("efectivo") ?? true;
+  const isDigital =
+    selectedMetodo?.nombre.toLowerCase().includes("qr") ||
+    selectedMetodo?.nombre.toLowerCase().includes("tarj") ||
+    selectedMetodo?.nombre.toLowerCase().includes("transf") ||
+    selectedMetodo?.nombre.toLowerCase().includes("dep");
 
-  const handleUpdateDetalle = (
-    index: number,
-    field: keyof CobroDetalleRequest,
-    value: unknown
-  ) => {
-    setDetalles((prev) =>
-      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
-    );
-  };
+  // Cálculo de vuelto para efectivo
+  const vuelto = isEfectivo
+    ? Math.max(0, montoRecibidoEfectivo - montoObjetivo)
+    : 0;
 
-  const handlePagarTodoEfectivo = () => {
-    const defaultMetodoId =
-      metodos.find((m) => m.nombre.toLowerCase().includes("efectivo"))?.id ??
-      metodos[0]?.id ??
-      1;
-    const defaultMonedaId = monedaBase?.id ?? 1;
-
+  // Cambiar método de pago en un solo clic
+  const handleSelectMetodo = (metodoId: number) => {
     setDetalles([
       {
-        metodoPagoId: defaultMetodoId,
-        monedaId: defaultMonedaId,
-        cuentaBancariaId: null,
+        ...activeDetalle,
+        metodoPagoId: metodoId,
         monto: montoObjetivo,
-        tipoCambio: 1,
-        referencia: "",
-        entidadFinanciera: "",
-        observacion: "",
       },
     ]);
+  };
+
+  // Botones de efectivo rápido
+  const handleSetEfectivoExacto = () => {
+    setMontoRecibidoEfectivo(montoObjetivo);
+    setDetalles([
+      {
+        ...activeDetalle,
+        monto: montoObjetivo,
+      },
+    ]);
+  };
+
+  const handleAddBilletes = (extra: number) => {
+    const nuevoMonto = Math.ceil(montoObjetivo / extra) * extra;
+    setMontoRecibidoEfectivo(nuevoMonto);
   };
 
   const handleConfirmarCobro = async (e: React.SubmitEvent) => {
@@ -202,20 +170,14 @@ function CobroLiquidacionForm({
       return;
     }
 
-    const hasInvalidMonto = detalles.some((d) => !d.monto || Number(d.monto) <= 0);
-    if (hasInvalidMonto) {
-      toast.error("Todos los montos de pago deben ser mayores a 0.");
-      return;
-    }
-
     const payload: ConfirmarCobroRequest = {
       observacion: observacion.trim() || null,
       detalles: detalles.map((d) => ({
         metodoPagoId: Number(d.metodoPagoId),
         monedaId: Number(d.monedaId),
         cuentaBancariaId: d.cuentaBancariaId ? Number(d.cuentaBancariaId) : null,
-        monto: Number(d.monto),
-        tipoCambio: Number(d.tipoCambio) || 1,
+        monto: Number(montoObjetivo),
+        tipoCambio: 1,
         referencia: d.referencia?.trim() || null,
         entidadFinanciera: d.entidadFinanciera?.trim() || null,
         observacion: d.observacion?.trim() || null,
@@ -229,7 +191,7 @@ function CobroLiquidacionForm({
       });
 
       toast.success(
-        `Cobro #${cobro.numero} confirmado y registrado con éxito por ${formatCurrency(totalIngresado)}.`
+        `Cobro #${cobro.numero} registrado con éxito por ${formatCurrency(montoObjetivo)}.`
       );
       onSuccessCobro?.();
     } catch (error: unknown) {
@@ -248,308 +210,229 @@ function CobroLiquidacionForm({
   };
 
   return (
-    <form onSubmit={handleConfirmarCobro} className="space-y-3">
-      {/* PANEL DE CONTROL DE SALDOS EN TIEMPO REAL */}
-      <div className="p-2.5 rounded-lg border border-border/70 bg-gradient-to-r from-muted/30 via-card to-primary/5 space-y-1.5">
-        <div className="flex items-center justify-between">
-          <span className="text-[11px] font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
-            <Coins className="size-3.5 text-emerald-600" />
-            Liquidación de Pago
-          </span>
+    <form onSubmit={handleConfirmarCobro} className="flex-1 flex flex-col justify-between gap-3 p-4">
+      <div className="space-y-3">
+        {/* PANTALLA HERO DEL MONTO A COBRAR (ESTILO CAJA POS) */}
+        <div className="rounded-xl p-4 bg-gradient-to-r from-emerald-950/40 via-card to-emerald-950/20 border border-emerald-500/30 flex items-center justify-between shadow-xs">
+          <div>
+            <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">
+              Monto a Liquidar
+            </span>
+            <div className="flex items-baseline gap-1 mt-0.5">
+              <span className="text-sm font-semibold text-emerald-600">Bs.</span>
+              <span className="text-3xl font-extrabold text-foreground font-mono tracking-tight">
+                {montoObjetivo.toFixed(2)}
+              </span>
+            </div>
+          </div>
 
-          {isPendingCobro && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handlePagarTodoEfectivo}
-              className="h-6 px-2 text-[11px] font-semibold gap-1 text-emerald-600 border-emerald-500/30 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 cursor-pointer"
-            >
-              <Zap className="size-3" />
-              Pagar Total Efectivo
-            </Button>
-          )}
+          <div className="text-right">
+            <span className="text-[10px] text-muted-foreground uppercase font-semibold block">
+              Estado de Saldo
+            </span>
+            <Badge className="bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-semibold text-xs mt-1">
+              Exacto a Pagar
+            </Badge>
+          </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-2 pt-1 border-t border-border/40 text-center font-mono">
-          <div className="p-1.5 rounded-lg bg-background border border-border/50">
-            <span className="text-[10px] text-muted-foreground block font-sans">
-              Objetivo
-            </span>
-            <span className="text-xs font-bold text-foreground">
-              {formatCurrency(montoObjetivo)}
-            </span>
-          </div>
+        {/* SELECTOR RÁPIDO DE MÉTODO DE PAGO (CHIPS INTERACTIVOS) */}
+        <div className="space-y-1.5">
+          <Label className="text-xs font-bold text-foreground">
+            Forma de Pago
+          </Label>
 
-          <div className="p-1.5 rounded-lg bg-background border border-border/50">
-            <span className="text-[10px] text-muted-foreground block font-sans">
-              Ingresado
-            </span>
-            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
-              {formatCurrency(totalIngresado)}
-            </span>
-          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {metodos.slice(0, 4).map((m) => {
+              const isSelected = activeDetalle.metodoPagoId === m.id;
+              const isEfect = m.nombre.toLowerCase().includes("efectivo");
+              const isQr = m.nombre.toLowerCase().includes("qr");
+              const isTarj = m.nombre.toLowerCase().includes("tarj");
 
-          <div
-            className={`p-1.5 rounded-lg border ${
-              saldoPendiente === 0
-                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400"
-                : "bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-400"
-            }`}
-          >
-            <span className="text-[10px] font-sans block">
-              {saldoPendiente > 0 ? "Saldo Restante" : "Completado"}
-            </span>
-            <span className="text-xs font-extrabold">
-              {saldoTexto}
-            </span>
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => handleSelectMetodo(m.id)}
+                  className={`h-11 px-3 rounded-lg border flex items-center justify-center gap-2 text-xs font-semibold transition-all cursor-pointer select-none ${
+                    isSelected
+                      ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                      : "bg-muted/30 text-foreground border-border/70 hover:bg-muted/70 hover:border-border"
+                  }`}
+                >
+                  {isEfect && <Coins className="size-4 shrink-0" />}
+                  {isQr && <QrCode className="size-4 shrink-0" />}
+                  {isTarj && <CreditCard className="size-4 shrink-0" />}
+                  {!isEfect && !isQr && !isTarj && <Wallet className="size-4 shrink-0" />}
+                  <span className="truncate">{m.nombre}</span>
+                </button>
+              );
+            })}
           </div>
+        </div>
+
+        {/* PANEL DINÁMICO SEGÚN MÉTODO DE PAGO */}
+        {isEfectivo ? (
+          <div className="p-3 rounded-xl border border-border/60 bg-muted/20 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <Coins className="size-3.5 text-amber-500" />
+                Cálculo de Efectivo y Vuelto
+              </span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleSetEfectivoExacto}
+                className="h-6 px-2 text-[11px] gap-1 cursor-pointer font-medium"
+              >
+                <Zap className="size-3 text-amber-500" />
+                Monto Exacto
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 items-center">
+              <div>
+                <Label className="text-[11px] text-muted-foreground block mb-1">
+                  Efectivo Recibido (Bs.)
+                </Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={montoRecibidoEfectivo || ""}
+                  onChange={(e) => setMontoRecibidoEfectivo(Number(e.target.value))}
+                  className="h-9 font-mono font-bold text-sm bg-background"
+                />
+              </div>
+
+              <div className="p-2 rounded-lg bg-background border border-border/50 text-right">
+                <span className="text-[10px] text-muted-foreground block font-medium">
+                  Vuelto a Entregar
+                </span>
+                <span
+                  className={`text-lg font-mono font-extrabold ${
+                    vuelto > 0
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  {formatCurrency(vuelto)}
+                </span>
+              </div>
+            </div>
+
+            {/* Atajos de billetes comunes */}
+            <div className="flex items-center gap-1.5 pt-1">
+              <span className="text-[10px] text-muted-foreground">Billetes:</span>
+              <div className="flex items-center gap-1 flex-wrap">
+                {[50, 100, 200].map((billete) => (
+                  <button
+                    key={billete}
+                    type="button"
+                    onClick={() => handleAddBilletes(billete)}
+                    className="px-2 py-0.5 rounded bg-background border border-border/60 text-[10px] font-mono font-semibold hover:border-primary cursor-pointer"
+                  >
+                    Bs. {billete}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : isDigital ? (
+          <div className="p-3 rounded-xl border border-border/60 bg-muted/20 space-y-2">
+            <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+              <QrCode className="size-3.5 text-blue-500" />
+              Datos de Transacción / Comprobante
+            </span>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label className="text-[11px] text-muted-foreground block mb-0.5">
+                  N° de Referencia / Comprobante
+                </Label>
+                <Input
+                  type="text"
+                  placeholder="Ej: OP-983421"
+                  value={activeDetalle.referencia || ""}
+                  onChange={(e) =>
+                    setDetalles([
+                      {
+                        ...activeDetalle,
+                        referencia: e.target.value,
+                      },
+                    ])
+                  }
+                  className="h-8 text-xs font-mono bg-background"
+                />
+              </div>
+
+              <div>
+                <Label className="text-[11px] text-muted-foreground block mb-0.5">
+                  Banco / Entidad (Opcional)
+                </Label>
+                <Input
+                  type="text"
+                  placeholder="Ej: Banco Unión, BCP"
+                  value={activeDetalle.entidadFinanciera || ""}
+                  onChange={(e) =>
+                    setDetalles([
+                      {
+                        ...activeDetalle,
+                        entidadFinanciera: e.target.value,
+                      },
+                    ])
+                  }
+                  className="h-8 text-xs bg-background"
+                />
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {/* NOTA U OBSERVACIÓN DEL COBRO (UNA SOLA LÍNEA COMPACTA) */}
+        <div>
+          <Input
+            type="text"
+            placeholder="Nota u observación de caja (opcional)..."
+            value={observacion}
+            onChange={(e) => setObservacion(e.target.value)}
+            className="h-8 text-xs bg-muted/20 border-border/60"
+          />
         </div>
       </div>
 
-      {/* LISTA DE FORMAS DE PAGO */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
-            <CreditCard className="size-3.5 text-primary" />
-            Formas de Pago ({detalles.length})
-          </Label>
+      {/* PIE DE ACCIONES: CONFIRMAR COBRO EN UN BOTÓN PRINCIPAL */}
+      <div className="pt-2 border-t border-border/50 flex items-center gap-2">
+        {onAnular && (
           <Button
             type="button"
             variant="outline"
             size="sm"
-            onClick={handleAddDetalle}
-            className="h-6 px-2 text-[11px] gap-1 cursor-pointer font-medium"
-          >
-            <Plus className="size-3" />
-            Agregar Pago
-          </Button>
-        </div>
-
-        {detalles.length === 0 ? (
-          <div className="p-4 border border-dashed rounded-lg text-center text-xs text-muted-foreground space-y-1">
-            <AlertCircle className="size-4 text-amber-500 mx-auto" />
-            <p>Haga click en &quot;Agregar Pago&quot; o &quot;Pagar Total Efectivo&quot;</p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {detalles.map((det, index) => {
-              const currentMetodo = metodos.find(
-                (m) => m.id === det.metodoPagoId
-              );
-              const isBancoRequired =
-                currentMetodo?.nombre.toLowerCase().includes("transf") ||
-                currentMetodo?.nombre.toLowerCase().includes("qr") ||
-                currentMetodo?.nombre.toLowerCase().includes("dep") ||
-                currentMetodo?.nombre.toLowerCase().includes("tarj");
-
-              return (
-                <div
-                  key={index}
-                  className="p-2.5 rounded-lg border border-border/70 bg-card space-y-2 text-xs shadow-2xs"
-                >
-                  <div className="grid grid-cols-12 gap-1.5 items-center">
-                    {/* Método de Pago */}
-                    <div className="col-span-5 sm:col-span-4">
-                      <Label className="text-[10px] text-muted-foreground block mb-0.5">
-                        Método
-                      </Label>
-                      <Select
-                        value={det.metodoPagoId?.toString()}
-                        onValueChange={(val) =>
-                          handleUpdateDetalle(
-                            index,
-                            "metodoPagoId",
-                            Number(val)
-                          )
-                        }
-                      >
-                        <SelectTrigger className="h-7 text-xs bg-background w-full">
-                          <SelectValue placeholder="Seleccione método">
-                            {metodos.find((m) => m.id === det.metodoPagoId)?.nombre}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {metodos.map((m) => (
-                            <SelectItem
-                              key={m.id}
-                              value={m.id.toString()}
-                              className="text-xs"
-                            >
-                              {m.nombre}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Moneda */}
-                    <div className="col-span-3 sm:col-span-3">
-                      <Label className="text-[10px] text-muted-foreground block mb-0.5">
-                        Moneda
-                      </Label>
-                      <Select
-                        value={det.monedaId?.toString()}
-                        onValueChange={(val) =>
-                          handleUpdateDetalle(
-                            index,
-                            "monedaId",
-                            Number(val)
-                          )
-                        }
-                      >
-                        <SelectTrigger className="h-7 text-xs bg-background w-full">
-                          <SelectValue placeholder="Seleccione moneda">
-                            {(() => {
-                              const m = monedas.find((x) => x.id === det.monedaId);
-                              return m ? `${m.nombre} (${m.codigo})` : undefined;
-                            })()}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {monedas.map((m) => (
-                            <SelectItem
-                              key={m.id}
-                              value={m.id.toString()}
-                              className="text-xs"
-                            >
-                              {m.nombre} ({m.codigo})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Monto */}
-                    <div className="col-span-3 sm:col-span-4">
-                      <Label className="text-[10px] text-muted-foreground block mb-0.5">
-                        Monto
-                      </Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={det.monto || ""}
-                        onChange={(e) =>
-                          handleUpdateDetalle(
-                            index,
-                            "monto",
-                            Number(e.target.value)
-                          )
-                        }
-                        className="h-7 text-xs bg-background font-mono font-bold"
-                        placeholder="0.00"
-                      />
-                    </div>
-
-                    {/* Eliminar fila */}
-                    <div className="col-span-1 flex justify-end pt-3">
-                      {detalles.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleRemoveDetalle(index)}
-                          className="h-7 w-7 text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30"
-                        >
-                          <Trash2 className="size-3.5" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Campos bancarios y referencia si aplica */}
-                  {isBancoRequired && (
-                    <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/40 text-[11px]">
-                      <div>
-                        <Label className="text-[10px] text-muted-foreground block mb-0.5">
-                          Banco / Entidad
-                        </Label>
-                        <Input
-                          value={det.entidadFinanciera || ""}
-                          onChange={(e) =>
-                            handleUpdateDetalle(
-                              index,
-                              "entidadFinanciera",
-                              e.target.value
-                            )
-                          }
-                          placeholder="Ej: Banco Unión, BCP..."
-                          className="h-6 text-xs bg-background"
-                        />
-                      </div>
-
-                      <div>
-                        <Label className="text-[10px] text-muted-foreground block mb-0.5">
-                          N° Referencia / Voucher
-                        </Label>
-                        <Input
-                          value={det.referencia || ""}
-                          onChange={(e) =>
-                            handleUpdateDetalle(
-                              index,
-                              "referencia",
-                              e.target.value
-                            )
-                          }
-                          placeholder="N° Comprobante / Tx"
-                          className="h-6 text-xs bg-background font-mono"
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* Observación general */}
-      <div className="space-y-1">
-        <Label className="text-xs text-muted-foreground">
-          Nota u Observación del Cobro
-        </Label>
-        <Textarea
-          value={observacion}
-          onChange={(e) => setObservacion(e.target.value)}
-          placeholder="Observaciones de caja..."
-          rows={2}
-          className="text-xs bg-background resize-none"
-        />
-      </div>
-
-      {/* BOTONES DE ACCIÓN */}
-      <div className="pt-2 flex items-center justify-between gap-2">
-        {onAnular && cobro.estado === EstadoCobro.Registrado && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
             onClick={() => onAnular(cobro)}
-            className="h-8 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 cursor-pointer"
+            className="h-10 px-3 text-xs text-rose-600 border-rose-500/30 hover:bg-rose-50 dark:hover:bg-rose-950/30 cursor-pointer font-semibold gap-1.5 shrink-0"
           >
-            <Ban className="size-3.5 mr-1" />
-            Anular Cobro
+            <Ban className="size-3.5" />
+            <span className="hidden sm:inline">Anular</span>
           </Button>
         )}
 
         <Button
           type="submit"
-          size="sm"
-          disabled={
-            confirmarCobroMutation.isPending ||
-            detalles.length === 0 ||
-            totalIngresado <= 0
-          }
-          className="h-8 text-xs font-semibold gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white ml-auto shadow-xs cursor-pointer"
+          disabled={confirmarCobroMutation.isPending}
+          className="flex-1 h-10 text-xs sm:text-sm font-bold gap-2 cursor-pointer shadow-md bg-emerald-600 hover:bg-emerald-700 text-white"
         >
           {confirmarCobroMutation.isPending ? (
-            <Loader2 className="size-3.5 animate-spin" />
+            <>
+              <Loader2 className="size-4 animate-spin" />
+              <span>Procesando Cobro...</span>
+            </>
           ) : (
-            <CheckCircle2 className="size-3.5" />
+            <>
+              <CheckCircle2 className="size-4" />
+              <span>Confirmar y Registrar Cobro • {formatCurrency(montoObjetivo)}</span>
+            </>
           )}
-          Confirmar y Registrar Cobro
         </Button>
       </div>
     </form>
@@ -560,12 +443,12 @@ export function CobroDetailCard({
   cobro: initialCobro,
   onSuccessCobro,
   onAnular,
+  onBack,
 }: Readonly<CobroDetailCardProps>) {
   const cobroId = initialCobro?.id ?? 0;
   const { data: fullCobro } = useCobro(cobroId, cobroId > 0);
   const cobro = fullCobro ?? initialCobro;
 
-  // Queries para selects
   const { data: metodosData, isLoading: isLoadingMetodos } = useMetodosPago({
     pageSize: 50,
   });
@@ -588,17 +471,15 @@ export function CobroDetailCard({
 
   if (!cobro) {
     return (
-      <Card className="border border-border/70 shadow-2xs bg-card/60 rounded-xl p-8 text-center flex flex-col items-center justify-center min-h-[420px] space-y-3">
-        <div className="size-14 rounded-2xl bg-muted/60 flex items-center justify-center text-muted-foreground/60">
-          <Wallet className="size-7" />
+      <div className="h-full flex flex-col items-center justify-center p-8 text-center text-muted-foreground border border-border/70 rounded-xl bg-card shadow-2xs">
+        <div className="size-12 rounded-2xl bg-muted/60 flex items-center justify-center text-muted-foreground/50 mb-2">
+          <Wallet className="size-6" />
         </div>
-        <div>
-          <h3 className="text-sm font-bold text-foreground">Terminal de Cobro</h3>
-          <p className="text-xs text-muted-foreground max-w-xs mt-1">
-            Seleccione un cobro de la lista para liquidar formas de pago y emitir comprobantes.
-          </p>
-        </div>
-      </Card>
+        <h3 className="text-sm font-bold text-foreground">Terminal de Cobro Listo</h3>
+        <p className="text-xs text-muted-foreground max-w-xs mt-1">
+          Seleccione un ticket de la cola izquierda para liquidar formas de pago en un solo clic.
+        </p>
+      </div>
     );
   }
 
@@ -614,234 +495,169 @@ export function CobroDetailCard({
 
   const cajeroNombre = cobro.turnoCaja?.empleado?.nombreCompleto;
 
-  const terminalCobroContent =
-    isLoadingMetodos || isLoadingMonedas ? (
-      <div className="p-4 space-y-3">
-        <Skeleton className="h-24 w-full rounded-xl" />
-        <Skeleton className="h-16 w-full rounded-xl" />
-        <Skeleton className="h-10 w-full rounded-xl" />
-      </div>
-    ) : (
-      <CobroLiquidacionForm
-        key={cobro.id}
-        cobro={cobro}
-        montoObjetivo={montoObjetivo}
-        metodos={metodos}
-        monedas={monedas}
-        monedaBase={monedaBase}
-        onSuccessCobro={onSuccessCobro}
-        onAnular={onAnular}
-      />
-    );
-
   return (
-    <Card className="border border-border/70 shadow-2xs bg-card rounded-xl overflow-hidden flex flex-col">
-      {/* CABECERA DE DETALLE */}
-      <CardHeader className="p-3 border-b border-border/70 bg-muted/20 space-y-1.5">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="font-mono font-bold text-xs bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20">
-              #{cobro.numero}
+    <div className="h-full flex flex-col border border-border/70 rounded-xl bg-card overflow-hidden shadow-2xs">
+      {/* CABECERA INTEGRADA DEL TICKET (SIN CAJAS ANIDADAS) */}
+      <div className="p-3 border-b border-border/60 bg-muted/20 flex flex-wrap items-center justify-between gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {onBack && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onBack}
+              className="lg:hidden h-6.5 px-2 text-xs gap-1 cursor-pointer font-medium mr-1 border-border/70"
+            >
+              <ArrowLeft className="size-3" />
+              <span>Cola</span>
+            </Button>
+          )}
+          <span className="font-mono font-bold text-xs bg-primary/15 text-primary px-2 py-0.5 rounded border border-primary/25">
+            #{cobro.numero}
+          </span>
+          {cobro.ventaPagador?.ventaNumero && (
+            <span className="text-[11px] font-medium text-muted-foreground">
+              Venta #{cobro.ventaPagador.ventaNumero}
             </span>
-            {cobro.ventaPagador?.ventaNumero && (
-              <Badge variant="secondary" className="text-[10px] font-mono">
-                Venta #{cobro.ventaPagador.ventaNumero}
-              </Badge>
-            )}
-          </div>
+          )}
           <CobroStatusBadge cobro={cobro} />
         </div>
 
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <h3 className="font-bold text-sm text-foreground flex items-center gap-1.5">
-              <Store className="size-4 text-primary" />
-              {cajaNombre}
-            </h3>
-            {cobro.ventaPagador?.convenioNombre && (
-              <p className="text-[11px] text-blue-600 dark:text-blue-400 font-medium flex items-center gap-1 mt-0.5">
-                <Building2 className="size-3" />
-                Convenio: {cobro.ventaPagador.convenioNombre}
-              </p>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <Store className="size-3 text-primary" />
+            <strong className="text-foreground">{cajaNombre}</strong>
+          </span>
+          <span>•</span>
+          <span>Turno #{cobro.turnoCaja?.id || cobro.turnoCajaId || "-"}</span>
+          {cajeroNombre && (
+            <>
+              <span>•</span>
+              <span className="truncate max-w-[130px]">{cajeroNombre}</span>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* TIRA DE DATOS DEL PACIENTE */}
+      {cobro.ventaPagador?.pacienteNombreCompleto && (
+        <div className="px-4 py-2 border-b border-border/40 bg-background/50 flex items-center justify-between text-xs shrink-0 flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <User className="size-3.5 text-primary" />
+            <span className="font-bold text-foreground">
+              {cobro.ventaPagador.pacienteNombreCompleto}
+            </span>
+            {cobro.ventaPagador.pacienteDocumento && (
+              <span className="text-muted-foreground font-mono text-[11px]">
+                (CI: {cobro.ventaPagador.pacienteDocumento})
+              </span>
             )}
           </div>
-          <div className="text-right">
-            <span className="text-[10px] uppercase font-bold text-muted-foreground block">
-              Monto a Cobrar
-            </span>
-            <span className="text-base font-extrabold text-primary font-mono">
-              {formatCurrency(montoObjetivo)}
-            </span>
-          </div>
-        </div>
-      </CardHeader>
 
-      <CardContent className="p-3 space-y-2.5 overflow-y-auto max-h-[calc(100vh-220px)] scrollbar-thin">
-        {/* METADATOS BÁSICOS */}
-        <div className="grid grid-cols-2 gap-2 text-xs p-2.5 rounded-lg border border-border/60 bg-muted/20">
-          <div className="flex items-center gap-1.5 text-muted-foreground">
-            <Calendar className="size-3.5 text-primary/70 shrink-0" />
-            <span>
-              Fecha:{" "}
-              <strong className="text-foreground">
-                {new Date(cobro.fechaHora).toLocaleString("es-ES", {
-                  dateStyle: "short",
-                  timeStyle: "short",
-                })}
-              </strong>
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5 text-muted-foreground">
-            <Hash className="size-3.5 text-primary shrink-0" />
-            <span>
-              Turno: <strong className="text-foreground">#{cobro.turnoCaja?.id || cobro.turnoCajaId || "-"}</strong>
-            </span>
-          </div>
-          {cajeroNombre && (
-            <div className="col-span-2 flex items-center gap-1.5 text-muted-foreground pt-1 border-t border-border/40 text-[11px]">
-              <CreditCard className="size-3.5 text-primary shrink-0" />
-              <span>
-                Cajero: <strong className="text-foreground">{cajeroNombre}</strong>
-              </span>
+          {cobro.ventaPagador.convenioNombre && (
+            <div className="flex items-center gap-1 text-[11px] text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20 font-medium">
+              <Building2 className="size-3" />
+              <span>{cobro.ventaPagador.convenioNombre}</span>
             </div>
           )}
         </div>
+      )}
 
-        {/* FICHA PACIENTE & VENTA */}
-        {cobro.ventaPagador?.pacienteNombreCompleto && (
-          <div className="p-2.5 rounded-lg border border-primary/20 bg-primary/5 space-y-1.5 text-xs">
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-foreground flex items-center gap-1.5">
-                <User className="size-3.5 text-primary" />
-                {cobro.ventaPagador.pacienteNombreCompleto}
-              </span>
-              {cobro.ventaPagador.numeroHistoriaClinica && (
-                <Badge variant="outline" className="text-[10px] font-mono bg-background">
-                  HC: {cobro.ventaPagador.numeroHistoriaClinica}
-                </Badge>
-              )}
-            </div>
-            <div className="flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap">
-              {cobro.ventaPagador.pacienteDocumento && (
-                <span>
-                  CI/Doc: <strong className="text-foreground font-mono">{cobro.ventaPagador.pacienteDocumento}</strong>
-                </span>
-              )}
-              {cobro.ventaPagador.ventaTotal !== undefined && cobro.ventaPagador.ventaTotal > 0 && (
-                <span>
-                  Total Venta: <strong className="text-foreground font-mono">{formatCurrency(cobro.ventaPagador.ventaTotal)}</strong>
-                </span>
-              )}
-            </div>
+      {/* CUERPO DEL TERMINAL: LIQUIDACIÓN O RECIBO SELLADO */}
+      {cobro.estado === EstadoCobro.Registrado ? (
+        isLoadingMetodos || isLoadingMonedas ? (
+          <div className="p-4 space-y-3">
+            <Skeleton className="h-20 w-full rounded-xl" />
+            <Skeleton className="h-12 w-full rounded-xl" />
+            <Skeleton className="h-16 w-full rounded-xl" />
           </div>
-        )}
-
-        {/* TERMINAL DE COBRO INTERACTIVO (CUANDO ESTÁ EN REGISTRADO / PENDIENTE) */}
-        {cobro.estado === EstadoCobro.Registrado ? (
-          terminalCobroContent
         ) : (
-          /* VISTA DE LECTURA DE DETALLES PARA COBROS YA FINALIZADOS O ANULADOS */
-          <div className="space-y-3">
+          <CobroLiquidacionForm
+            key={cobro.id}
+            cobro={cobro}
+            montoObjetivo={montoObjetivo}
+            metodos={metodos}
+            monedaBase={monedaBase}
+            onSuccessCobro={onSuccessCobro}
+            onAnular={onAnular}
+          />
+        )
+      ) : (
+        /* VISTA DE TICKET COBRADO O ANULADO (RECIBO FINAL) */
+        <div className="flex-1 p-6 flex flex-col justify-between space-y-4">
+          <div className="space-y-4">
+            <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 flex items-center justify-between">
+              <div>
+                <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">
+                  Cobro Confirmado y Liquidado
+                </span>
+                <span className="text-2xl font-mono font-extrabold text-foreground">
+                  {formatCurrency(cobro.total)}
+                </span>
+              </div>
+              <CheckCircle2 className="size-8 text-emerald-600 dark:text-emerald-400" />
+            </div>
+
+            {/* Desglose de pagos */}
             <div className="p-3 rounded-lg border border-border/70 bg-card space-y-2 text-xs">
               <span className="font-bold text-foreground flex items-center gap-1.5">
                 <Receipt className="size-3.5 text-primary" />
-                Pagos Registrados ({cobro.detalles?.length || 0})
+                Formas de Pago Registradas
               </span>
 
               {cobro.detalles && cobro.detalles.length > 0 ? (
                 <div className="divide-y divide-border/40">
-                  {cobro.detalles.map((det) => {
-                    const metodoNombre =
-                      det.metodoPago?.nombre ||
-                      metodos.find((m) => m.id === det.metodoPagoId)?.nombre ||
-                      "Método de Pago";
-                    const monedaNombre =
-                      det.moneda?.nombre ||
-                      monedas.find((m) => m.id === det.monedaId)?.nombre ||
-                      "";
-                    const monedaCodigo =
-                      det.moneda?.codigo ||
-                      monedas.find((m) => m.id === det.monedaId)?.codigo ||
-                      "BOB";
-
-                    return (
-                      <div
-                        key={det.id}
-                        className="py-2 flex items-center justify-between text-xs"
-                      >
-                        <div>
-                          <p className="font-semibold text-foreground flex items-center gap-1.5 flex-wrap">
-                            <span>{metodoNombre}</span>
-                            {monedaNombre && (
-                              <span className="text-[10px] text-muted-foreground font-normal">
-                                • {monedaNombre} ({monedaCodigo})
-                              </span>
-                            )}
+                  {cobro.detalles.map((det) => (
+                    <div key={det.id} className="py-2 flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold text-foreground">
+                          {det.metodoPago?.nombre || "Método de Pago"}
+                        </p>
+                        {det.referencia && (
+                          <p className="text-[10px] text-muted-foreground font-mono">
+                            Ref: {det.referencia}
                           </p>
-                          {(det.referencia || det.entidadFinanciera) && (
-                            <p className="text-[10px] text-muted-foreground">
-                              {det.entidadFinanciera ? `${det.entidadFinanciera} - ` : ""}
-                              Ref: {det.referencia || "-"}
-                            </p>
-                          )}
-                        </div>
-                        <div className="text-right font-mono">
-                          <span className="font-bold text-foreground block">
-                            {monedaCodigo} {Number(det.monto).toFixed(2)}
-                          </span>
-                          {det.tipoCambio !== 1 && (
-                            <span className="text-[10px] text-muted-foreground">
-                              (TC: {det.tipoCambio} = {formatCurrency(det.montoMonedaBase)})
-                            </span>
-                          )}
-                        </div>
+                        )}
                       </div>
-                    );
-                  })}
+                      <span className="font-mono font-bold text-foreground">
+                        {det.moneda?.codigo || "BOB"} {Number(det.monto).toFixed(2)}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <p className="text-muted-foreground text-center py-2">
-                  No hay detalles de pago registrados.
+                  Detalles registrados en caja.
                 </p>
               )}
-            </div>
-
-            {/* Total Cobrado */}
-            <div className="p-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 flex justify-between items-center text-xs">
-              <span className="font-bold text-foreground uppercase">
-                Total Cobrado:
-              </span>
-              <span className="text-base font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
-                {formatCurrency(cobro.total)}
-              </span>
             </div>
 
             {cobro.observacion && (
               <div className="p-2.5 rounded-lg border border-border/60 bg-muted/20 text-xs">
                 <span className="font-semibold text-muted-foreground block text-[10px]">
-                  Observación:
+                  Observación de caja:
                 </span>
                 <p className="text-foreground mt-0.5">{cobro.observacion}</p>
               </div>
             )}
-
-            {onAnular && cobro.estado === EstadoCobro.Confirmado && (
-              <div className="pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onAnular(cobro)}
-                  className="w-full h-8 text-xs text-rose-600 border-rose-500/30 hover:bg-rose-50 dark:hover:bg-rose-950/30 cursor-pointer font-semibold gap-1.5"
-                >
-                  <Ban className="size-3.5" />
-                  Anular Cobro
-                </Button>
-              </div>
-            )}
           </div>
-        )}
-      </CardContent>
-    </Card>
+
+          {onAnular && cobro.estado === EstadoCobro.Confirmado && (
+            <div className="pt-2 border-t border-border/50">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => onAnular(cobro)}
+                className="w-full h-9 text-xs text-rose-600 border-rose-500/30 hover:bg-rose-50 dark:hover:bg-rose-950/30 cursor-pointer font-semibold gap-1.5"
+              >
+                <Ban className="size-3.5" />
+                Anular Cobro Realizado
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }

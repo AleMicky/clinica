@@ -6,11 +6,13 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { cobroKeys } from "../api/cobro.key";
 import { useCobros } from "../hooks/use-cobros";
 import { CobroHeader } from "./cobro-header";
-import { CobroMetrics } from "./cobro-metrics";
 import { CobroList } from "./cobro-list";
 import { CobroDetailCard } from "./cobro-detail-card";
-import { CobroDetailSheet } from "./cobro-detail-sheet";
 import { CobroAnularDialog } from "./cobro-anular-dialog";
+import {
+  CreditCard,
+  ListOrdered,
+} from "lucide-react";
 import {
   EstadoCobro,
   type CobroMetrics as CobroMetricsType,
@@ -20,23 +22,18 @@ import {
 export function CobroModuleView() {
   const queryClient = useQueryClient();
 
-  // Estados visuales y de densidad
-  const [isCompact, setIsCompact] = React.useState(true);
-  const [showMetrics, setShowMetrics] = React.useState(true);
-  const [showDetailPanel, setShowDetailPanel] = React.useState(true);
-
   // Paginación y filtros
   const [currentPage, setCurrentPage] = React.useState(1);
-  const [pageSize, setPageSize] = React.useState(10);
+  const [pageSize, setPageSize] = React.useState(20);
   const [searchTerm, setSearchTerm] = React.useState("");
   const debouncedSearch = useDebounce(searchTerm, 300);
   const [selectedEstadoTab, setSelectedEstadoTab] = React.useState<
     EstadoCobro | "TODOS"
   >("TODOS");
 
-  // Estado Master-Detail
+  // Estado del ticket activo y switcher móvil
   const [selectedCobroId, setSelectedCobroId] = React.useState<number | null>(null);
-  const [detailSheetOpen, setDetailSheetOpen] = React.useState(false);
+  const [mobileTab, setMobileTab] = React.useState<"cola" | "terminal">("cola");
 
   // Modal Anular
   const [anularDialogOpen, setAnularDialogOpen] = React.useState(false);
@@ -57,7 +54,6 @@ export function CobroModuleView() {
   // Consulta para métricas globales
   const {
     data: allCobrosData,
-    isLoading: isLoadingMetrics,
     isRefetching: isRefetchingMetrics,
   } = useCobros({
     pageSize: 100,
@@ -81,7 +77,7 @@ export function CobroModuleView() {
 
   const totalItemsCount = allCobrosData?.totalItems ?? allCobrosList.length;
 
-  // Cálculo de Métricas
+  // Cálculo de Métricas en vivo
   const metrics: CobroMetricsType = React.useMemo(() => {
     let montoTotal = 0;
     let pendientesCobroCount = 0;
@@ -108,7 +104,7 @@ export function CobroModuleView() {
     };
   }, [allCobrosList, totalItemsCount]);
 
-  // Selección automática o manual
+  // Selección automática o manual del ticket activo
   const selectedCobroForDetail = React.useMemo(() => {
     if (cobros.length === 0) return null;
     if (selectedCobroId !== null) {
@@ -120,14 +116,13 @@ export function CobroModuleView() {
 
   // Refresca todas las consultas del módulo
   const handleRefreshAll = React.useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: cobroKeys.all });
+    void queryClient.invalidateQueries({ queryKey: cobroKeys.all });
   }, [queryClient]);
 
   // Handlers memoizados
   const handleSearchChange = React.useCallback((term: string) => {
     setSearchTerm(term);
     setCurrentPage(1);
-    setSelectedCobroId(null);
   }, []);
 
   const handleEstadoTabChange = React.useCallback((tab: EstadoCobro | "TODOS") => {
@@ -138,25 +133,22 @@ export function CobroModuleView() {
 
   const handlePageChange = React.useCallback((page: number) => {
     setCurrentPage(page);
-    setSelectedCobroId(null);
   }, []);
 
   const handlePageSizeChange = React.useCallback((size: number) => {
     setPageSize(size);
     setCurrentPage(1);
-    setSelectedCobroId(null);
   }, []);
 
   const handleSelectCobro = React.useCallback((cobro: CobroResponse) => {
     setSelectedCobroId(cobro.id);
-    const isMobileOrTablet =
-      typeof window !== "undefined" &&
-      window.matchMedia("(max-width: 1023px)").matches;
+    setMobileTab("terminal");
+  }, []);
 
-    if (isMobileOrTablet || !showDetailPanel) {
-      setDetailSheetOpen(true);
-    }
-  }, [showDetailPanel]);
+  const handleSuccessCobro = React.useCallback(() => {
+    handleRefreshAll();
+    setMobileTab("cola");
+  }, [handleRefreshAll]);
 
   const handlePromptAnular = React.useCallback((cobro: CobroResponse) => {
     setCobroToAnular(cobro);
@@ -164,49 +156,55 @@ export function CobroModuleView() {
   }, []);
 
   const isGlobalRefreshing = isRefetchingCobros || isRefetchingMetrics;
-  const isGlobalLoading = isLoadingCobros || isLoadingMetrics;
 
   return (
-    <div className="flex flex-col gap-2.5 w-full animate-in fade-in-50 duration-200">
-      {/* Cabecera del Módulo con Barra de Controles Compactos */}
+    <div className="h-[calc(100dvh-4.75rem)] sm:h-[calc(100vh-5.5rem)] flex flex-col gap-2 w-full animate-in fade-in-50 duration-200 overflow-hidden">
+      {/* Cabecera del Módulo con Métricas Integradas en Línea */}
       <CobroHeader
+        metrics={metrics}
         onRefresh={handleRefreshAll}
         isRefreshing={isGlobalRefreshing}
-        showMetrics={showMetrics}
-        onToggleMetrics={() => setShowMetrics((prev) => !prev)}
-        isCompact={isCompact}
-        onToggleCompact={() => setIsCompact((prev) => !prev)}
-        showDetailPanel={showDetailPanel}
-        onToggleDetailPanel={() => setShowDetailPanel((prev) => !prev)}
       />
 
-      {/* Tarjetas / Ribbon de Métricas (Colapsable y Compactable) */}
-      {showMetrics && (
-        <CobroMetrics
-          metrics={metrics}
-          isLoading={isGlobalLoading}
-          isCompact={isCompact}
-        />
-      )}
-
-      {/* CUERPO PRINCIPAL: MASTER - DETAIL SPLIT LAYOUT DINÁMICO */}
-      <div
-        className={`grid gap-2.5 items-start ${
-          showDetailPanel
-            ? "grid-cols-1 lg:grid-cols-12"
-            : "grid-cols-1"
-        }`}
-      >
-        {/* PANEL IZQUIERDO: MASTER LIST (Expandible a 12 o 7 cols) */}
-        <div
-          className={`${
-            showDetailPanel ? "lg:col-span-7 xl:col-span-7" : "w-full"
-          } space-y-2`}
+      {/* Selector de Pantalla para Móviles y Tablets (< lg) */}
+      <div className="flex lg:hidden items-center p-0.5 rounded-lg bg-muted/60 border border-border/50 gap-0.5 shrink-0">
+        <button
+          type="button"
+          onClick={() => setMobileTab("cola")}
+          className={`flex-1 py-1.5 px-3 text-xs font-semibold rounded-md transition-all cursor-pointer flex items-center justify-center gap-1.5 select-none ${
+            mobileTab === "cola"
+              ? "bg-background text-foreground shadow-2xs"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
         >
+          <ListOrdered className="size-3.5" />
+          <span>Tickets ({totalItems})</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setMobileTab("terminal")}
+          className={`flex-1 py-1.5 px-3 text-xs font-semibold rounded-md transition-all cursor-pointer flex items-center justify-center gap-1.5 select-none ${
+            mobileTab === "terminal"
+              ? "bg-background text-foreground shadow-2xs"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <CreditCard className="size-3.5" />
+          <span>
+            {selectedCobroForDetail
+              ? `Cobro #${selectedCobroForDetail.numero}`
+              : "Terminal"}
+          </span>
+        </button>
+      </div>
+
+      {/* DISPOSICIÓN ESCRITORIO (>= lg): PANTALLA DIVIDIDA LADO A LADO */}
+      <div className="hidden lg:grid lg:grid-cols-12 gap-3 flex-1 min-h-0 overflow-hidden">
+        {/* PANEL IZQUIERDO: COLA DE TICKETS (35% ANCHO) */}
+        <div className="lg:col-span-5 xl:col-span-4 h-full min-h-0 overflow-hidden">
           <CobroList
             cobros={cobros}
             isLoading={isLoadingCobros}
-            isCompact={isCompact}
             totalItems={totalItems}
             currentPage={currentPage}
             pageSize={pageSize}
@@ -222,28 +220,50 @@ export function CobroModuleView() {
           />
         </div>
 
-        {/* PANEL DERECHO: DETAIL / TERMINAL DE COBRO (Sticky en Desktop) */}
-        {showDetailPanel && (
-          <div className="hidden lg:block lg:col-span-5 xl:col-span-5 sticky top-3 space-y-2">
+        {/* PANEL DERECHO: TERMINAL DE COBRO DIRECTO (65% ANCHO) */}
+        <div className="lg:col-span-7 xl:col-span-8 h-full min-h-0 overflow-hidden">
+          <CobroDetailCard
+            cobro={selectedCobroForDetail}
+            onSuccessCobro={handleSuccessCobro}
+            onAnular={handlePromptAnular}
+          />
+        </div>
+      </div>
+
+      {/* DISPOSICIÓN MÓVIL Y TABLET (< lg): PANTALLA COMPLETA SEGÚN PESTAÑA */}
+      <div className="flex lg:hidden flex-1 min-h-0 overflow-hidden">
+        {mobileTab === "cola" ? (
+          <div className="size-full min-h-0 overflow-hidden">
+            <CobroList
+              cobros={cobros}
+              isLoading={isLoadingCobros}
+              totalItems={totalItems}
+              currentPage={currentPage}
+              pageSize={pageSize}
+              searchTerm={searchTerm}
+              selectedEstadoTab={selectedEstadoTab}
+              selectedCobroId={selectedCobroForDetail?.id ?? null}
+              onEstadoTabChange={handleEstadoTabChange}
+              onSearchChange={handleSearchChange}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+              onSelectCobro={handleSelectCobro}
+              onAnular={handlePromptAnular}
+            />
+          </div>
+        ) : (
+          <div className="size-full min-h-0 overflow-hidden">
             <CobroDetailCard
               cobro={selectedCobroForDetail}
-              onSuccessCobro={handleRefreshAll}
+              onSuccessCobro={handleSuccessCobro}
               onAnular={handlePromptAnular}
+              onBack={() => setMobileTab("cola")}
             />
           </div>
         )}
       </div>
 
-      {/* Sheet: Detalle Ficha Cobro (Para Móvil o cuando el panel lateral está colapsado) */}
-      <CobroDetailSheet
-        open={detailSheetOpen}
-        onOpenChange={setDetailSheetOpen}
-        cobro={selectedCobroForDetail}
-        onSuccessCobro={handleRefreshAll}
-        onAnular={handlePromptAnular}
-      />
-
-      {/* Modal: Confirmación de Anulación de Cobro */}
+      {/* Modal: Confirmación de Anulación */}
       <CobroAnularDialog
         open={anularDialogOpen}
         onOpenChange={setAnularDialogOpen}

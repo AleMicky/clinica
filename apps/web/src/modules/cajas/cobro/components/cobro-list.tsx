@@ -21,8 +21,8 @@ import {
   Building2,
   Vault,
   Wallet,
-  ArrowRight,
   User,
+  ChevronRight,
 } from "lucide-react";
 import {
   EstadoCobro,
@@ -34,7 +34,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 interface CobroListProps {
   cobros: CobroResponse[];
   isLoading?: boolean;
-  isCompact?: boolean;
   totalItems: number;
   currentPage: number;
   pageSize: number;
@@ -59,7 +58,6 @@ function formatCurrency(amount?: number | null): string {
 export function CobroList({
   cobros,
   isLoading = false,
-  isCompact = false,
   totalItems,
   currentPage,
   pageSize,
@@ -99,222 +97,143 @@ export function CobroList({
     },
   ];
 
-  let content: ReactNode;
+  let ticketListContent: ReactNode;
+
   if (isLoading) {
-    content = (
-      <div className={isCompact ? "space-y-1" : "space-y-1.5"}>
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton
-            key={i}
-            className={`${isCompact ? "h-12" : "h-16"} w-full rounded-lg`}
-          />
+    ticketListContent = (
+      <div className="space-y-1.5 p-2">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-20 w-full rounded-lg" />
         ))}
       </div>
     );
   } else if (cobros.length === 0) {
-    content = (
-      <div className="py-8 text-center border border-dashed border-border/60 rounded-xl bg-muted/10 space-y-1.5">
-        <CreditCard className="size-6 text-muted-foreground/40 mx-auto" />
-        <p className="font-bold text-xs text-foreground">
-          No se encontraron registros de cobro
+    ticketListContent = (
+      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-2 text-muted-foreground">
+        <CreditCard className="size-8 text-muted-foreground/30" />
+        <p className="font-semibold text-xs text-foreground">
+          Sin tickets en cola
         </p>
-        <p className="text-[11px] max-w-xs mx-auto text-muted-foreground">
-          Los cobros enviados desde Ventas o generados en caja aparecerán automáticamente aquí.
+        <p className="text-[11px] max-w-[200px]">
+          Los cobros generados aparecerán aquí para su liquidación.
         </p>
       </div>
     );
   } else {
-    content = (
-      <div className={isCompact ? "space-y-1" : "space-y-1.5"}>
+    ticketListContent = (
+      <div className="flex-1 overflow-y-auto p-2 space-y-1.5 scrollbar-thin">
         {cobros.map((cobro) => {
           const isSelected = selectedCobroId === cobro.id;
-          const isPendingPayment = cobro.estado === EstadoCobro.Registrado;
+          const isPending = cobro.estado === EstadoCobro.Registrado;
 
           const cajaNombre =
             cobro.turnoCaja?.caja?.nombre ||
             cobro.turnoCaja?.caja?.codigo ||
             (cobro.turnoCajaId ? `Caja #${cobro.turnoCajaId}` : "-");
 
-          const pagadorMonto = cobro.ventaPagador?.monto ?? 0;
-          const numDetalles = cobro.detalles?.length || 0;
           const pacienteNombre = cobro.ventaPagador?.pacienteNombreCompleto;
+          const pagadorMonto = cobro.ventaPagador?.monto ?? 0;
+          const montoTotal = isPending && pagadorMonto > 0 ? pagadorMonto : cobro.total;
 
           return (
             <div
               key={cobro.id}
-              className={`group transition-all rounded-lg relative flex flex-col sm:flex-row sm:items-center justify-between gap-2 ${
-                isCompact ? "p-2 px-2.5" : "p-2.5 sm:p-3"
-              } ${
+              className={`group relative rounded-lg border transition-all ${
                 isSelected
-                  ? "border-primary/80 bg-primary/5 dark:bg-primary/10 shadow-2xs border ring-1 ring-primary/30"
-                  : "border border-border/60 bg-card hover:border-primary/40 hover:bg-muted/20"
+                  ? "bg-primary/10 border-primary shadow-xs ring-1 ring-primary/40"
+                  : "bg-card/70 border-border/60 hover:bg-muted/40 hover:border-border"
               }`}
             >
-              {/* Botón nativo accesible para selección del cobro */}
               <button
                 type="button"
                 onClick={() => onSelectCobro(cobro)}
-                className="absolute inset-0 size-full rounded-lg cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-                aria-label={`Seleccionar cobro #${cobro.numero}${pacienteNombre ? ` de ${pacienteNombre}` : ""}`}
-              />
-
-              {/* Bloque Izquierdo: Icono + Cobro # + Paciente + Venta # + Convenio + Fecha + Caja */}
-              <div className="flex items-center gap-2.5 min-w-0 flex-1 pointer-events-none relative">
-                <div
-                  className={`rounded-md flex items-center justify-center font-bold shrink-0 border transition-colors ${
-                    isCompact ? "size-7 text-[10px]" : "size-8 text-xs"
-                  } ${
-                    isPendingPayment
-                      ? "bg-amber-500/10 text-amber-600 border-amber-500/20 group-hover:bg-amber-500 group-hover:text-white"
-                      : "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 group-hover:bg-emerald-500 group-hover:text-white"
-                  }`}
-                >
-                  {isPendingPayment ? (
-                    <Wallet className={isCompact ? "size-3.5" : "size-4"} />
-                  ) : (
-                    <Receipt className={isCompact ? "size-3.5" : "size-4"} />
-                  )}
-                </div>
-
-                <div className="min-w-0 flex-1 space-y-0.5">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="font-mono font-bold text-[11px] text-primary bg-primary/10 px-1.5 py-0.2 rounded border border-primary/20 shrink-0">
+                aria-pressed={isSelected}
+                className="w-full text-left p-2.5 rounded-lg cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {/* Línea 1: N° Cobro + Hora + Badge */}
+                <div className="flex items-center justify-between gap-1 text-[11px] pr-7">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-mono font-bold text-primary bg-primary/10 px-1.5 py-0.2 rounded border border-primary/20">
                       #{cobro.numero}
                     </span>
-
-                    {pacienteNombre && (
-                      <span className="font-semibold text-xs text-foreground flex items-center gap-1 group-hover:text-primary transition-colors truncate max-w-[200px] sm:max-w-[260px]">
-                        <User className="size-3 text-muted-foreground shrink-0" />
-                        <span className="truncate">{pacienteNombre}</span>
-                      </span>
-                    )}
-
-                    {cobro.ventaPagador?.ventaNumero ? (
-                      <span className="text-[11px] text-muted-foreground truncate">
-                        (Venta #{cobro.ventaPagador.ventaNumero})
-                      </span>
-                    ) : (
-                      <span className="text-[11px] font-medium text-foreground">
-                        Directo
-                      </span>
-                    )}
-
-                    {cobro.ventaPagador?.convenioNombre && (
-                      <span className="text-[10px] text-blue-600 dark:text-blue-400 bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.2 rounded flex items-center gap-1 font-medium truncate max-w-[130px]">
-                        <Building2 className="size-2.5 shrink-0" />
-                        <span className="truncate">{cobro.ventaPagador.convenioNombre}</span>
-                      </span>
-                    )}
+                    <span className="text-muted-foreground text-[10px]">
+                      {new Date(cobro.fechaHora).toLocaleTimeString("es-ES", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
                   </div>
 
-                  {/* Detalles secundarios en línea compacta */}
-                  <div className="flex items-center gap-2 text-[10px] sm:text-[11px] text-muted-foreground flex-wrap">
-                    {cobro.ventaPagador?.pacienteDocumento && (
-                      <>
-                        <span>CI: <strong className="text-foreground font-mono">{cobro.ventaPagador.pacienteDocumento}</strong></span>
-                        <span className="text-muted-foreground/40">•</span>
-                      </>
-                    )}
-
-                    <span className="flex items-center gap-1">
-                      <Vault className="size-2.5 text-muted-foreground/70 shrink-0" />
-                      <span>{cajaNombre}</span>
-                    </span>
-
-                    <span className="text-muted-foreground/40">•</span>
-
-                    <span className="flex items-center gap-1">
-                      <Calendar className="size-2.5 text-muted-foreground/70 shrink-0" />
-                      <span>
-                        {new Date(cobro.fechaHora).toLocaleString("es-ES", {
-                          dateStyle: "short",
-                          timeStyle: "short",
-                        })}
-                      </span>
-                    </span>
-
-                    {numDetalles > 0 && (
-                      <>
-                        <span className="text-muted-foreground/40">•</span>
-                        <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-                          {cobro.detalles.map((d) => d.metodoPago?.nombre).filter(Boolean).join(", ") ||
-                            `${numDetalles} pago${numDetalles !== 1 ? "s" : ""}`}
-                        </span>
-                      </>
-                    )}
-                  </div>
+                  <CobroStatusBadge cobro={cobro} />
                 </div>
-              </div>
 
-              {/* Bloque Derecho: Monto, Estado & Acciones */}
-              <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0 pt-1 sm:pt-0 border-t sm:border-t-0 border-border/30 relative z-10">
-                <div className="flex flex-col items-start sm:items-end pr-0.5">
-                  {isPendingPayment ? (
-                    <>
-                      <span className="text-xs font-bold text-amber-600 dark:text-amber-400 font-mono">
-                        {formatCurrency(pagadorMonto)}
-                      </span>
-                      <span className="text-[10px] text-muted-foreground">
-                        Por cobrar
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 font-mono">
-                        {formatCurrency(cobro.total)}
-                      </span>
-                      {pagadorMonto > 0 && pagadorMonto !== cobro.total && (
-                        <span className="text-[10px] text-muted-foreground font-mono">
-                          Asig: {formatCurrency(pagadorMonto)}
-                        </span>
-                      )}
-                    </>
+                {/* Línea 2: Paciente */}
+                <div className="mt-1">
+                  <p className="font-bold text-xs text-foreground truncate group-hover:text-primary transition-colors">
+                    {pacienteNombre || "Cobro directo sin paciente"}
+                  </p>
+                  {cobro.ventaPagador?.pacienteDocumento && (
+                    <p className="text-[10px] text-muted-foreground font-mono">
+                      CI: {cobro.ventaPagador.pacienteDocumento}
+                    </p>
                   )}
                 </div>
 
-                <div className="flex items-center gap-1">
-                  <CobroStatusBadge cobro={cobro} />
+                {/* Línea 3: Origen y Monto Destacado */}
+                <div className="flex items-center justify-between gap-2 mt-1.5 pt-1 border-t border-border/40">
+                  <span className="text-[10px] text-muted-foreground truncate">
+                    {cobro.ventaPagador?.ventaNumero
+                      ? `Venta #${cobro.ventaPagador.ventaNumero}`
+                      : cajaNombre}
+                  </span>
 
-                  {/* Menú de Acciones Rápidas */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger
-                      onClick={(e) => e.stopPropagation()}
-                      className="size-6.5 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground inline-flex items-center justify-center transition-colors border border-border/50 cursor-pointer"
+                  <div className="flex items-center gap-1 text-right">
+                    <span
+                      className={`font-mono font-extrabold text-xs ${
+                        isPending
+                          ? "text-amber-600 dark:text-amber-400"
+                          : "text-emerald-600 dark:text-emerald-400"
+                      }`}
                     >
-                      <MoreVertical className="size-3" />
-                      <span className="sr-only">Opciones</span>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-40 text-xs">
-                      <DropdownMenuItem
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onSelectCobro(cobro);
-                        }}
-                        className="gap-2 cursor-pointer font-medium"
-                      >
-                        <ArrowRight className="size-3.5 text-primary" />
-                        {isPendingPayment ? "Abrir y Cobrar" : "Ver Detalle"}
-                      </DropdownMenuItem>
-
-                      {(cobro.estado === EstadoCobro.Registrado ||
-                        cobro.estado === EstadoCobro.Confirmado) && (
-                        <>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onAnular(cobro);
-                            }}
-                            className="gap-2 text-rose-600 dark:text-rose-400 focus:text-rose-600 cursor-pointer"
-                          >
-                            <Ban className="size-3.5" />
-                            Anular Cobro
-                          </DropdownMenuItem>
-                        </>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                      {formatCurrency(montoTotal)}
+                    </span>
+                    <ChevronRight className="size-3.5 text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                  </div>
                 </div>
+              </button>
+
+              {/* Menú de opciones secundarias (fuera del botón nativo para evitar anidación interactiva) */}
+              <div className="absolute top-2 right-2 z-10">
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    className="size-6 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground inline-flex items-center justify-center transition-colors border border-transparent hover:border-border cursor-pointer"
+                  >
+                    <MoreVertical className="size-3" />
+                    <span className="sr-only">Opciones</span>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-36 text-xs">
+                    <DropdownMenuItem
+                      onClick={() => onSelectCobro(cobro)}
+                      className="cursor-pointer font-medium"
+                    >
+                      Seleccionar Ticket
+                    </DropdownMenuItem>
+
+                    {(cobro.estado === EstadoCobro.Registrado ||
+                      cobro.estado === EstadoCobro.Confirmado) && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => onAnular(cobro)}
+                          className="text-rose-600 dark:text-rose-400 focus:text-rose-600 cursor-pointer"
+                        >
+                          <Ban className="size-3.5 mr-1.5" />
+                          Anular Cobro
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           );
@@ -324,11 +243,18 @@ export function CobroList({
   }
 
   return (
-    <div className="space-y-2 w-full">
-      {/* FILTROS SEGMENTADOS Y BUSCADOR COMPACTO */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
-        {/* Segmented Control de Pestañas */}
-        <div className="inline-flex items-center p-0.5 rounded-lg bg-muted/60 border border-border/50 gap-0.5 overflow-x-auto max-w-full scrollbar-none">
+    <div className="h-full flex flex-col border border-border/70 rounded-xl bg-card overflow-hidden shadow-2xs">
+      {/* CABECERA DE LA COLA: BUSCADOR Y TABS */}
+      <div className="p-2 border-b border-border/60 bg-muted/20 space-y-1.5 shrink-0">
+        <SearchInput
+          value={searchTerm}
+          onChange={onSearchChange}
+          placeholder="Buscar paciente, N°..."
+          className="h-7.5 text-xs bg-background shadow-2xs w-full"
+        />
+
+        {/* Tabs Segmentados de Estado */}
+        <div className="flex items-center p-0.5 rounded-lg bg-muted/60 border border-border/50 gap-0.5 w-full">
           {tabs.map((t) => {
             const isActive = selectedEstadoTab === t.key;
             return (
@@ -336,10 +262,10 @@ export function CobroList({
                 key={t.key.toString()}
                 type="button"
                 onClick={() => onEstadoTabChange?.(t.key)}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all cursor-pointer whitespace-nowrap select-none ${
+                className={`flex-1 inline-flex items-center justify-center gap-1 py-1 rounded-md text-[11px] font-medium transition-all cursor-pointer whitespace-nowrap select-none ${
                   isActive
                     ? "bg-background text-foreground shadow-2xs font-semibold"
-                    : "text-muted-foreground hover:text-foreground hover:bg-background/40"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {t.dotColor && (
@@ -352,36 +278,24 @@ export function CobroList({
             );
           })}
         </div>
+      </div>
 
-        {/* Buscador Rápido Compacto */}
-        <div className="w-full sm:w-56 md:w-64">
-          <SearchInput
-            value={searchTerm}
-            onChange={onSearchChange}
-            placeholder="Buscar cobro, venta, paciente..."
-            className="h-7.5 text-xs bg-background shadow-2xs"
+      {/* CONTENIDO DE LA COLA DE TICKETS */}
+      {ticketListContent}
+
+      {/* PIE DE PAGINACIÓN */}
+      {totalItems > pageSize && (
+        <div className="p-1.5 border-t border-border/50 bg-muted/10 shrink-0">
+          <DataTablePagination
+            currentPage={currentPage}
+            pageSize={pageSize}
+            totalItems={totalItems}
+            onPageChange={onPageChange}
+            onPageSizeChange={onPageSizeChange}
+            itemLabel="tickets"
           />
         </div>
-      </div>
-
-      {/* CONTENIDO DEL LISTADO */}
-      <div className="space-y-1.5">
-        {content}
-
-        {/* PAGINACIÓN */}
-        {totalItems > pageSize && (
-          <div className="pt-1.5 px-0.5">
-            <DataTablePagination
-              currentPage={currentPage}
-              pageSize={pageSize}
-              totalItems={totalItems}
-              onPageChange={onPageChange}
-              onPageSizeChange={onPageSizeChange}
-              itemLabel="cobros"
-            />
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 }
