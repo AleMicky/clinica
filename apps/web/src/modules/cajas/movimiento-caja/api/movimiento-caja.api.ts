@@ -1,13 +1,15 @@
 import { apiClient } from "@/lib/api/api-client";
 import type {
-  ConceptoMovimientoCajaInfo,
   CreateMovimientoCajaRequest,
   MovimientoCajaQueryParams,
   MovimientoCajaResponse,
   PagedResult,
-  TipoMovimientoCajaInfo,
   UpdateMovimientoCajaRequest,
 } from "../types/movimiento-caja.types";
+
+/**
+ * Operaciones principales para Movimientos de Caja (/movimientos-caja)
+ */
 
 export async function getMovimientosCaja(
   params?: MovimientoCajaQueryParams
@@ -15,26 +17,6 @@ export async function getMovimientosCaja(
   const response = await apiClient.get<PagedResult<MovimientoCajaResponse>>(
     "/movimientos-caja",
     { params }
-  );
-  return response.data;
-}
-
-export async function getTiposMovimientoCaja(
-  naturaleza?: string
-): Promise<TipoMovimientoCajaInfo[]> {
-  const response = await apiClient.get<TipoMovimientoCajaInfo[]>(
-    "/movimientos-caja/tipos",
-    { params: { naturaleza } }
-  );
-  return response.data;
-}
-
-export async function getConceptosMovimientoCaja(
-  tipoMovimientoCajaId?: number
-): Promise<ConceptoMovimientoCajaInfo[]> {
-  const response = await apiClient.get<ConceptoMovimientoCajaInfo[]>(
-    "/movimientos-caja/conceptos",
-    { params: { tipoMovimientoCajaId } }
   );
   return response.data;
 }
@@ -72,3 +54,9 @@ export async function updateMovimientoCaja(
 export async function deleteMovimientoCaja(id: number): Promise<void> {
   await apiClient.delete(`/movimientos-caja/${id}`);
 }
+
+// Re-exportar tipos y conceptos desde el módulo especializado tipo-movimiento
+export {
+  getTiposMovimientoCaja,
+  getConceptosMovimientoCaja,
+} from "../../tipo-movimiento";

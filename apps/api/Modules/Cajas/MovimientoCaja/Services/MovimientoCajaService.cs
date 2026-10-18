@@ -182,7 +182,7 @@ public sealed class MovimientoCajaService(
     }
 
     // ============================================================
-    // LISTAR TIPOS
+    // TIPOS DE MOVIMIENTO CRUD
     // ============================================================
 
     public async Task<IReadOnlyCollection<TipoMovimientoCajaInfo>> ListarTiposAsync(
@@ -206,13 +206,147 @@ public sealed class MovimientoCajaService(
                 Id = x.Id,
                 Codigo = x.Codigo,
                 Nombre = x.Nombre,
-                Naturaleza = x.Naturaleza
+                Descripcion = x.Descripcion,
+                Naturaleza = x.Naturaleza,
+                Activo = x.Activo
             })
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<TipoMovimientoCajaInfo> ObtenerTipoAsync(
+        int id,
+        CancellationToken cancellationToken = default)
+    {
+        var tipo = await DbContext.TiposMovimientoCaja
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == id && x.Activo, cancellationToken);
+
+        if (tipo is null)
+        {
+            throw new NotFoundException("TipoMovimientoCaja", id);
+        }
+
+        return new TipoMovimientoCajaInfo
+        {
+            Id = tipo.Id,
+            Codigo = tipo.Codigo,
+            Nombre = tipo.Nombre,
+            Descripcion = tipo.Descripcion,
+            Naturaleza = tipo.Naturaleza,
+            Activo = tipo.Activo
+        };
+    }
+
+    public async Task<TipoMovimientoCajaInfo> CrearTipoAsync(
+        CreateTipoMovimientoCajaRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var codigo = request.Codigo.Trim().ToUpperInvariant();
+        var existe = await DbContext.TiposMovimientoCaja
+            .AnyAsync(x => x.Codigo == codigo && x.Activo, cancellationToken);
+
+        if (existe)
+        {
+            throw new ConflictException($"Ya existe un tipo de movimiento con el código '{codigo}'.");
+        }
+
+        var entity = new TipoMovimientoCaja
+        {
+            Codigo = codigo,
+            Nombre = request.Nombre.Trim(),
+            Descripcion = string.IsNullOrWhiteSpace(request.Descripcion) ? null : request.Descripcion.Trim(),
+            Naturaleza = request.Naturaleza.Trim().ToUpperInvariant(),
+            Activo = true
+        };
+
+        await DbContext.TiposMovimientoCaja.AddAsync(entity, cancellationToken);
+        await DbContext.SaveChangesAsync(cancellationToken);
+
+        return new TipoMovimientoCajaInfo
+        {
+            Id = entity.Id,
+            Codigo = entity.Codigo,
+            Nombre = entity.Nombre,
+            Descripcion = entity.Descripcion,
+            Naturaleza = entity.Naturaleza,
+            Activo = entity.Activo
+        };
+    }
+
+    public async Task<TipoMovimientoCajaInfo> ActualizarTipoAsync(
+        int id,
+        UpdateTipoMovimientoCajaRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await DbContext.TiposMovimientoCaja
+            .FirstOrDefaultAsync(x => x.Id == id && x.Activo, cancellationToken);
+
+        if (entity is null)
+        {
+            throw new NotFoundException("TipoMovimientoCaja", id);
+        }
+
+        var codigo = request.Codigo.Trim().ToUpperInvariant();
+        var existe = await DbContext.TiposMovimientoCaja
+            .AnyAsync(x => x.Id != id && x.Codigo == codigo && x.Activo, cancellationToken);
+
+        if (existe)
+        {
+            throw new ConflictException($"Ya existe otro tipo de movimiento con el código '{codigo}'.");
+        }
+
+        entity.Codigo = codigo;
+        entity.Nombre = request.Nombre.Trim();
+        entity.Descripcion = string.IsNullOrWhiteSpace(request.Descripcion) ? null : request.Descripcion.Trim();
+        entity.Naturaleza = request.Naturaleza.Trim().ToUpperInvariant();
+
+        await DbContext.SaveChangesAsync(cancellationToken);
+
+        return new TipoMovimientoCajaInfo
+        {
+            Id = entity.Id,
+            Codigo = entity.Codigo,
+            Nombre = entity.Nombre,
+            Descripcion = entity.Descripcion,
+            Naturaleza = entity.Naturaleza,
+            Activo = entity.Activo
+        };
+    }
+
+    public async Task EliminarTipoAsync(
+        int id,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await DbContext.TiposMovimientoCaja
+            .FirstOrDefaultAsync(x => x.Id == id && x.Activo, cancellationToken);
+
+        if (entity is null)
+        {
+            throw new NotFoundException("TipoMovimientoCaja", id);
+        }
+
+        var tieneMovimientos = await DbContext.MovimientosCaja
+            .AnyAsync(x => x.TipoMovimientoCajaId == id && x.Activo, cancellationToken);
+
+        if (tieneMovimientos)
+        {
+            throw new ConflictException("No se puede eliminar el tipo de movimiento porque tiene movimientos registrados en caja.");
+        }
+
+        var tieneConceptos = await DbContext.ConceptosMovimientoCaja
+            .AnyAsync(x => x.TipoMovimientoCajaId == id && x.Activo, cancellationToken);
+
+        if (tieneConceptos)
+        {
+            throw new ConflictException("No se puede eliminar el tipo de movimiento porque tiene conceptos asociados. Elimine o reasigne los conceptos primero.");
+        }
+
+        entity.Activo = false;
+        await DbContext.SaveChangesAsync(cancellationToken);
+    }
+
     // ============================================================
-    // LISTAR CONCEPTOS
+    // CONCEPTOS DE MOVIMIENTO CRUD
     // ============================================================
 
     public async Task<IReadOnlyCollection<ConceptoMovimientoCajaInfo>> ListarConceptosAsync(
@@ -233,10 +367,158 @@ public sealed class MovimientoCajaService(
             .Select(x => new ConceptoMovimientoCajaInfo
             {
                 Id = x.Id,
+                TipoMovimientoCajaId = x.TipoMovimientoCajaId,
                 Codigo = x.Codigo,
-                Nombre = x.Nombre
+                Nombre = x.Nombre,
+                Descripcion = x.Descripcion,
+                Activo = x.Activo
             })
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<ConceptoMovimientoCajaInfo> ObtenerConceptoAsync(
+        int id,
+        CancellationToken cancellationToken = default)
+    {
+        var concepto = await DbContext.ConceptosMovimientoCaja
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == id && x.Activo, cancellationToken);
+
+        if (concepto is null)
+        {
+            throw new NotFoundException("ConceptoMovimientoCaja", id);
+        }
+
+        return new ConceptoMovimientoCajaInfo
+        {
+            Id = concepto.Id,
+            TipoMovimientoCajaId = concepto.TipoMovimientoCajaId,
+            Codigo = concepto.Codigo,
+            Nombre = concepto.Nombre,
+            Descripcion = concepto.Descripcion,
+            Activo = concepto.Activo
+        };
+    }
+
+    public async Task<ConceptoMovimientoCajaInfo> CrearConceptoAsync(
+        CreateConceptoMovimientoCajaRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var tipoExiste = await DbContext.TiposMovimientoCaja
+            .AnyAsync(x => x.Id == request.TipoMovimientoCajaId && x.Activo, cancellationToken);
+
+        if (!tipoExiste)
+        {
+            throw new NotFoundException("TipoMovimientoCaja", request.TipoMovimientoCajaId);
+        }
+
+        var codigo = request.Codigo.Trim().ToUpperInvariant();
+        var existe = await DbContext.ConceptosMovimientoCaja
+            .AnyAsync(x => x.TipoMovimientoCajaId == request.TipoMovimientoCajaId &&
+                           x.Codigo == codigo &&
+                           x.Activo, cancellationToken);
+
+        if (existe)
+        {
+            throw new ConflictException($"Ya existe un concepto con el código '{codigo}' para este tipo de movimiento.");
+        }
+
+        var entity = new ConceptoMovimientoCaja
+        {
+            TipoMovimientoCajaId = request.TipoMovimientoCajaId,
+            Codigo = codigo,
+            Nombre = request.Nombre.Trim(),
+            Descripcion = string.IsNullOrWhiteSpace(request.Descripcion) ? null : request.Descripcion.Trim(),
+            Activo = true
+        };
+
+        await DbContext.ConceptosMovimientoCaja.AddAsync(entity, cancellationToken);
+        await DbContext.SaveChangesAsync(cancellationToken);
+
+        return new ConceptoMovimientoCajaInfo
+        {
+            Id = entity.Id,
+            TipoMovimientoCajaId = entity.TipoMovimientoCajaId,
+            Codigo = entity.Codigo,
+            Nombre = entity.Nombre,
+            Descripcion = entity.Descripcion,
+            Activo = entity.Activo
+        };
+    }
+
+    public async Task<ConceptoMovimientoCajaInfo> ActualizarConceptoAsync(
+        int id,
+        UpdateConceptoMovimientoCajaRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await DbContext.ConceptosMovimientoCaja
+            .FirstOrDefaultAsync(x => x.Id == id && x.Activo, cancellationToken);
+
+        if (entity is null)
+        {
+            throw new NotFoundException("ConceptoMovimientoCaja", id);
+        }
+
+        var tipoExiste = await DbContext.TiposMovimientoCaja
+            .AnyAsync(x => x.Id == request.TipoMovimientoCajaId && x.Activo, cancellationToken);
+
+        if (!tipoExiste)
+        {
+            throw new NotFoundException("TipoMovimientoCaja", request.TipoMovimientoCajaId);
+        }
+
+        var codigo = request.Codigo.Trim().ToUpperInvariant();
+        var existe = await DbContext.ConceptosMovimientoCaja
+            .AnyAsync(x => x.Id != id &&
+                           x.TipoMovimientoCajaId == request.TipoMovimientoCajaId &&
+                           x.Codigo == codigo &&
+                           x.Activo, cancellationToken);
+
+        if (existe)
+        {
+            throw new ConflictException($"Ya existe otro concepto con el código '{codigo}' para este tipo de movimiento.");
+        }
+
+        entity.TipoMovimientoCajaId = request.TipoMovimientoCajaId;
+        entity.Codigo = codigo;
+        entity.Nombre = request.Nombre.Trim();
+        entity.Descripcion = string.IsNullOrWhiteSpace(request.Descripcion) ? null : request.Descripcion.Trim();
+
+        await DbContext.SaveChangesAsync(cancellationToken);
+
+        return new ConceptoMovimientoCajaInfo
+        {
+            Id = entity.Id,
+            TipoMovimientoCajaId = entity.TipoMovimientoCajaId,
+            Codigo = entity.Codigo,
+            Nombre = entity.Nombre,
+            Descripcion = entity.Descripcion,
+            Activo = entity.Activo
+        };
+    }
+
+    public async Task EliminarConceptoAsync(
+        int id,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await DbContext.ConceptosMovimientoCaja
+            .FirstOrDefaultAsync(x => x.Id == id && x.Activo, cancellationToken);
+
+        if (entity is null)
+        {
+            throw new NotFoundException("ConceptoMovimientoCaja", id);
+        }
+
+        var tieneMovimientos = await DbContext.MovimientosCaja
+            .AnyAsync(x => x.ConceptoMovimientoCajaId == id && x.Activo, cancellationToken);
+
+        if (tieneMovimientos)
+        {
+            throw new ConflictException("No se puede eliminar el concepto de movimiento porque tiene movimientos registrados en caja.");
+        }
+
+        entity.Activo = false;
+        await DbContext.SaveChangesAsync(cancellationToken);
     }
 
     // ============================================================

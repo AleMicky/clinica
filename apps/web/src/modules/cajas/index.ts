@@ -61,3 +61,24 @@ export type {
 export { EstadoCobro } from "./cobro/types/cobro.types";
 export * from "./cobro/hooks/use-cobros";
 export * from "./cobro/components/cobro-module-view";
+
+export type {
+  TipoMovimientoCajaInfo as TipoMovimientoCatalogoInfo,
+  ConceptoMovimientoCajaInfo as ConceptoMovimientoCatalogoInfo,
+  CreateTipoMovimientoCajaRequest,
+  UpdateTipoMovimientoCajaRequest,
+  CreateConceptoMovimientoCajaRequest,
+  UpdateConceptoMovimientoCajaRequest,
+  NaturalezaTipoMovimiento,
+} from "./tipo-movimiento/types/tipo-movimiento.types";
+export * from "./tipo-movimiento/schemas/tipo-movimiento.schema";
+export * from "./tipo-movimiento/schemas/concepto-movimiento.schema";
+export * from "./tipo-movimiento/hooks/use-tipo-movimiento";
+export * from "./tipo-movimiento/hooks/use-concepto-movimiento";
+export * from "./tipo-movimiento/components/tipo-movimiento-caja-module-view";
+export * from "./tipo-movimiento/components/tipo-movimiento-caja-form-dialog";
+export * from "./tipo-movimiento/components/tipo-movimiento-caja-delete-dialog";
+export * from "./tipo-movimiento/components/concepto-movimiento-caja-form-dialog";
+export * from "./tipo-movimiento/components/concepto-movimiento-caja-delete-dialog";
+
+

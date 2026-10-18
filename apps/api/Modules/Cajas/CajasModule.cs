@@ -35,6 +35,8 @@ public static class CajasModule
         app.MapCajaEndpoints();
         app.MapTurnoCajaEndpoints();
         app.MapMovimientoCajaEndpoints();
+        app.MapTipoMovimientoCajaEndpoints();
+        app.MapConceptoMovimientoCajaEndpoints();
         app.MapCobroEndpoints();
         app.MapDevolucionCobroEndpoints();
         app.MapArqueoCajaEndpoints();

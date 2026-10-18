@@ -23,19 +23,56 @@ public sealed record RegistrarMovimientoCajaRequest
     public string? Observacion { get; init; }
 }
 
+public sealed record CreateTipoMovimientoCajaRequest
+{
+    public required string Codigo { get; init; }
+    public required string Nombre { get; init; }
+    public string? Descripcion { get; init; }
+    public required string Naturaleza { get; init; }
+}
+
+public sealed record UpdateTipoMovimientoCajaRequest
+{
+    public required string Codigo { get; init; }
+    public required string Nombre { get; init; }
+    public string? Descripcion { get; init; }
+    public required string Naturaleza { get; init; }
+}
+
+public sealed record CreateConceptoMovimientoCajaRequest
+{
+    public required int TipoMovimientoCajaId { get; init; }
+    public required string Codigo { get; init; }
+    public required string Nombre { get; init; }
+    public string? Descripcion { get; init; }
+}
+
+public sealed record UpdateConceptoMovimientoCajaRequest
+{
+    public required int TipoMovimientoCajaId { get; init; }
+    public required string Codigo { get; init; }
+    public required string Nombre { get; init; }
+    public string? Descripcion { get; init; }
+}
+
 public sealed record TipoMovimientoCajaInfo
 {
     public int Id { get; init; }
     public string Codigo { get; init; } = string.Empty;
     public string Nombre { get; init; } = string.Empty;
+    public string? Descripcion { get; init; }
     public string Naturaleza { get; init; } = string.Empty;
+    public bool Activo { get; init; } = true;
 }
 
 public sealed record ConceptoMovimientoCajaInfo
 {
     public int Id { get; init; }
+    public int TipoMovimientoCajaId { get; init; }
     public string Codigo { get; init; } = string.Empty;
     public string Nombre { get; init; } = string.Empty;
+    public string? Descripcion { get; init; }
+    public bool Activo { get; init; } = true;
 }
 
 public sealed record MovimientoCajaResponse : AuditableResponse

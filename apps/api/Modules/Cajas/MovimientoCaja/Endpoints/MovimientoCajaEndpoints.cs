@@ -19,12 +19,6 @@ public static class MovimientoCajaEndpoints
         group.MapGet("/", ListarAsync)
             .WithName("ListarMovimientosCaja");
 
-        group.MapGet("/tipos", ListarTiposAsync)
-            .WithName("ListarTiposMovimientoCaja");
-
-        group.MapGet("/conceptos", ListarConceptosAsync)
-            .WithName("ListarConceptosMovimientoCaja");
-
         group.MapGet("/{id:int}", ObtenerAsync)
             .WithName("ObtenerMovimientoCaja");
 
@@ -49,30 +43,6 @@ public static class MovimientoCajaEndpoints
             pagination,
             search,
             turnoCajaId,
-            cancellationToken);
-
-        return Results.Ok(result);
-    }
-
-    private static async Task<IResult> ListarTiposAsync(
-        string? naturaleza,
-        MovimientoCajaService service,
-        CancellationToken cancellationToken)
-    {
-        var result = await service.ListarTiposAsync(
-            naturaleza,
-            cancellationToken);
-
-        return Results.Ok(result);
-    }
-
-    private static async Task<IResult> ListarConceptosAsync(
-        int? tipoMovimientoCajaId,
-        MovimientoCajaService service,
-        CancellationToken cancellationToken)
-    {
-        var result = await service.ListarConceptosAsync(
-            tipoMovimientoCajaId,
             cancellationToken);
 
         return Results.Ok(result);

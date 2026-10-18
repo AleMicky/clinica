@@ -26,7 +26,7 @@ export function MovimientoCajaDeleteDialog({
   movimiento,
   onConfirm,
   isLoading = false,
-}: MovimientoCajaDeleteDialogProps) {
+}: Readonly<MovimientoCajaDeleteDialogProps>) {
   if (!movimiento) return null;
 
   const conceptoNombre =
@@ -45,7 +45,7 @@ export function MovimientoCajaDeleteDialog({
           </div>
           <DialogDescription className="pt-2 text-xs">
             ¿Está seguro de que desea eliminar el movimiento de caja{" "}
-            <strong className="text-foreground">"{conceptoNombre}"</strong> por un monto de{" "}
+            <strong className="text-foreground">&quot;{conceptoNombre}&quot;</strong> por un monto de{" "}
             <strong className="text-foreground">
               {simbolo} {Number(movimiento.monto).toFixed(2)}
             </strong>? Esta acción no se puede deshacer.
