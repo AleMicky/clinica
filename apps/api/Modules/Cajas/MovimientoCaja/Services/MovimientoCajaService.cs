@@ -1,5 +1,6 @@
 using Clinica.Api.Data;
 using Clinica.Api.Modules.Cajas.MovimientoCaja.Dtos;
+using Clinica.Api.Modules.Cajas.MovimientoCaja.Entity;
 using Clinica.Api.Modules.Cajas.MovimientoCaja.Mappers;
 using Clinica.Api.Modules.Cajas.TurnoCaja.Dtos;
 using Clinica.Api.Modules.Cajas.TurnoCaja.Entity;
@@ -121,6 +122,20 @@ public sealed class MovimientoCajaService(
             moneda,
             request.TipoCambio);
 
+        var tipoMovimiento = await ObtenerTipoMovimientoAsync(
+            request.TipoMovimientoCajaId,
+            cancellationToken);
+
+        var concepto = await ObtenerConceptoMovimientoAsync(
+            request.ConceptoMovimientoCajaId,
+            cancellationToken);
+
+        if (concepto.TipoMovimientoCajaId != tipoMovimiento.Id)
+        {
+            throw new ConflictException(
+                "El concepto seleccionado no corresponde al tipo de movimiento especificado.");
+        }
+
         var entity =
             MovimientoCajaMapper.ToEntity(request);
 
@@ -140,8 +155,8 @@ public sealed class MovimientoCajaService(
                 entity.Monto,
                 entity.TipoCambio);
 
-        entity.Concepto =
-            request.Concepto.Trim();
+        entity.NaturalezaAplicada =
+            tipoMovimiento.Naturaleza;
 
         entity.Referencia =
             NormalizarOpcional(
@@ -164,6 +179,93 @@ public sealed class MovimientoCajaService(
         return await ObtenerAsync(
             entity.Id,
             cancellationToken);
+    }
+
+    // ============================================================
+    // LISTAR TIPOS
+    // ============================================================
+
+    public async Task<IReadOnlyCollection<TipoMovimientoCajaInfo>> ListarTiposAsync(
+        string? naturaleza = null,
+        CancellationToken cancellationToken = default)
+    {
+        var query = DbContext.TiposMovimientoCaja
+            .AsNoTracking()
+            .Where(x => x.Activo);
+
+        if (!string.IsNullOrWhiteSpace(naturaleza))
+        {
+            var natUpper = naturaleza.Trim().ToUpperInvariant();
+            query = query.Where(x => x.Naturaleza == natUpper);
+        }
+
+        return await query
+            .OrderBy(x => x.Nombre)
+            .Select(x => new TipoMovimientoCajaInfo
+            {
+                Id = x.Id,
+                Codigo = x.Codigo,
+                Nombre = x.Nombre,
+                Naturaleza = x.Naturaleza
+            })
+            .ToListAsync(cancellationToken);
+    }
+
+    // ============================================================
+    // LISTAR CONCEPTOS
+    // ============================================================
+
+    public async Task<IReadOnlyCollection<ConceptoMovimientoCajaInfo>> ListarConceptosAsync(
+        int? tipoMovimientoCajaId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var query = DbContext.ConceptosMovimientoCaja
+            .AsNoTracking()
+            .Where(x => x.Activo);
+
+        if (tipoMovimientoCajaId.HasValue && tipoMovimientoCajaId.Value > 0)
+        {
+            query = query.Where(x => x.TipoMovimientoCajaId == tipoMovimientoCajaId.Value);
+        }
+
+        return await query
+            .OrderBy(x => x.Nombre)
+            .Select(x => new ConceptoMovimientoCajaInfo
+            {
+                Id = x.Id,
+                Codigo = x.Codigo,
+                Nombre = x.Nombre
+            })
+            .ToListAsync(cancellationToken);
+    }
+
+    // ============================================================
+    // ELIMINAR
+    // ============================================================
+
+    public async Task EliminarAsync(
+        int id,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await Entities
+            .Include(x => x.TurnoCaja)
+            .FirstOrDefaultAsync(
+                x => x.Id == id && x.Activo,
+                cancellationToken);
+
+        if (entity is null)
+        {
+            throw CreateNotFoundException(id);
+        }
+
+        if (entity.TurnoCaja.Estado != EstadoTurnoCaja.Abierto)
+        {
+            throw new ConflictException(
+                "No se pueden anular o eliminar movimientos de un turno de caja cerrado.");
+        }
+
+        entity.Activo = false;
+        await DbContext.SaveChangesAsync(cancellationToken);
     }
 
     // ============================================================
@@ -224,6 +326,58 @@ public sealed class MovimientoCajaService(
     }
 
     // ============================================================
+    // OBTENER TIPO MOVIMIENTO
+    // ============================================================
+
+    private async Task<TipoMovimientoCaja> ObtenerTipoMovimientoAsync(
+        int tipoMovimientoCajaId,
+        CancellationToken cancellationToken)
+    {
+        var tipo = await DbContext.TiposMovimientoCaja
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                x =>
+                    x.Id == tipoMovimientoCajaId &&
+                    x.Activo,
+                cancellationToken);
+
+        if (tipo is null)
+        {
+            throw new NotFoundException(
+                "TipoMovimientoCaja",
+                tipoMovimientoCajaId);
+        }
+
+        return tipo;
+    }
+
+    // ============================================================
+    // OBTENER CONCEPTO MOVIMIENTO
+    // ============================================================
+
+    private async Task<ConceptoMovimientoCaja> ObtenerConceptoMovimientoAsync(
+        int conceptoMovimientoCajaId,
+        CancellationToken cancellationToken)
+    {
+        var concepto = await DbContext.ConceptosMovimientoCaja
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                x =>
+                    x.Id == conceptoMovimientoCajaId &&
+                    x.Activo,
+                cancellationToken);
+
+        if (concepto is null)
+        {
+            throw new NotFoundException(
+                "ConceptoMovimientoCaja",
+                conceptoMovimientoCajaId);
+        }
+
+        return concepto;
+    }
+
+    // ============================================================
     // VALIDAR TIPO DE CAMBIO
     // ============================================================
 
@@ -281,14 +435,13 @@ public sealed class MovimientoCajaService(
     private IQueryable<MovimientoCajaEntity> BuildQuery()
     {
         return Entities
-
             .Include(x => x.TurnoCaja)
                 .ThenInclude(x => x.Caja)
-
             .Include(x => x.TurnoCaja)
                 .ThenInclude(x => x.Empleado)
                 .ThenInclude(x => x.Persona)
-
+            .Include(x => x.TipoMovimientoCaja)
+            .Include(x => x.ConceptoMovimientoCaja)
             .Include(x => x.Moneda);
     }
 
@@ -316,24 +469,21 @@ public sealed class MovimientoCajaService(
             return query;
 
         return query.Where(x =>
-            x.Concepto.Contains(search) ||
-
+            x.TipoMovimientoCaja.Nombre.Contains(search) ||
+            x.TipoMovimientoCaja.Codigo.Contains(search) ||
+            x.ConceptoMovimientoCaja.Nombre.Contains(search) ||
+            x.ConceptoMovimientoCaja.Codigo.Contains(search) ||
             (
                 x.Referencia != null &&
                 x.Referencia.Contains(search)
             ) ||
-
             (
                 x.Observacion != null &&
                 x.Observacion.Contains(search)
             ) ||
-
             x.TurnoCaja.Caja.Codigo.Contains(search) ||
-
             x.TurnoCaja.Caja.Nombre.Contains(search) ||
-
             x.Moneda.Codigo.Contains(search) ||
-
             x.Moneda.Nombre.Contains(search));
     }
 
@@ -353,8 +503,28 @@ public sealed class MovimientoCajaService(
                 MapTurnoCajaInfo(
                     entity.TurnoCaja),
 
-            Tipo =
-                entity.Tipo,
+            TipoMovimientoCajaId =
+                entity.TipoMovimientoCajaId,
+
+            TipoMovimientoCaja =
+                new TipoMovimientoCajaInfo
+                {
+                    Id = entity.TipoMovimientoCaja.Id,
+                    Codigo = entity.TipoMovimientoCaja.Codigo,
+                    Nombre = entity.TipoMovimientoCaja.Nombre,
+                    Naturaleza = entity.TipoMovimientoCaja.Naturaleza
+                },
+
+            ConceptoMovimientoCajaId =
+                entity.ConceptoMovimientoCajaId,
+
+            ConceptoMovimientoCaja =
+                new ConceptoMovimientoCajaInfo
+                {
+                    Id = entity.ConceptoMovimientoCaja.Id,
+                    Codigo = entity.ConceptoMovimientoCaja.Codigo,
+                    Nombre = entity.ConceptoMovimientoCaja.Nombre
+                },
 
             FechaHora =
                 entity.FechaHora,
@@ -375,8 +545,8 @@ public sealed class MovimientoCajaService(
             MontoMonedaBase =
                 entity.MontoMonedaBase,
 
-            Concepto =
-                entity.Concepto,
+            NaturalezaAplicada =
+                entity.NaturalezaAplicada,
 
             Referencia =
                 entity.Referencia,

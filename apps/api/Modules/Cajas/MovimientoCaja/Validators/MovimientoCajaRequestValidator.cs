@@ -12,9 +12,13 @@ public sealed class RegistrarMovimientoCajaRequestValidator
             .GreaterThan(0)
             .WithMessage("El turno de caja es obligatorio.");
 
-        RuleFor(x => x.Tipo)
-            .IsInEnum()
-            .WithMessage("El tipo de movimiento no es válido.");
+        RuleFor(x => x.TipoMovimientoCajaId)
+            .GreaterThan(0)
+            .WithMessage("El tipo de movimiento es obligatorio.");
+
+        RuleFor(x => x.ConceptoMovimientoCajaId)
+            .GreaterThan(0)
+            .WithMessage("El concepto de movimiento es obligatorio.");
 
         RuleFor(x => x.MonedaId)
             .GreaterThan(0)
@@ -27,12 +31,6 @@ public sealed class RegistrarMovimientoCajaRequestValidator
         RuleFor(x => x.TipoCambio)
             .GreaterThan(0)
             .WithMessage("El tipo de cambio debe ser mayor que cero.");
-
-        RuleFor(x => x.Concepto)
-            .NotEmpty()
-            .WithMessage("El concepto es obligatorio.")
-            .MaximumLength(250)
-            .WithMessage("El concepto no puede superar los 250 caracteres.");
 
         RuleFor(x => x.Referencia)
             .MaximumLength(100)

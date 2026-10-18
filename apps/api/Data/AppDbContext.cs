@@ -117,6 +117,8 @@ public class AppDbContext(
     public DbSet<TurnoCaja> TurnosCaja => Set<TurnoCaja>();
     public DbSet<ArqueoCaja> ArqueosCaja => Set<ArqueoCaja>();
     public DbSet<DetalleArqueoCaja> DetalleArqueosCaja => Set<DetalleArqueoCaja>();
+    public DbSet<TipoMovimientoCaja> TiposMovimientoCaja => Set<TipoMovimientoCaja>();
+    public DbSet<ConceptoMovimientoCaja> ConceptosMovimientoCaja => Set<ConceptoMovimientoCaja>();
     public DbSet<MovimientoCaja> MovimientosCaja => Set<MovimientoCaja>();
     public DbSet<Cobro> Cobros => Set<Cobro>();
     public DbSet<CobroDetalle> CobroDetalles => Set<CobroDetalle>();

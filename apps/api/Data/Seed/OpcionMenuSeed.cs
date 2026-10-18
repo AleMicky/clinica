@@ -311,6 +311,14 @@ public static class OpcionMenuSeed
                 1,
                 "CONF"),
 
+            new(
+                "TIPOS_MOVIMIENTO_CAJA",
+                "Tipos de Movimiento",
+                "/caja/configuracion/tipos-movimiento",
+                "SlidersHorizontal",
+                2,
+                "CONF"),
+
             // =========================================================
             // 4. LOGÍSTICA & ALMACENES
             // =========================================================

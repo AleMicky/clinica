@@ -54,6 +54,7 @@ export const ROUTES = {
     CONFIGURACION: {
       ROOT: "/caja/configuracion",
       CAJAS: "/caja/configuracion/cajas",
+      TIPOS_MOVIMIENTO: "/caja/configuracion/tipos-movimiento",
     },
     TURNOS: "/caja/turnos",
     MOVIMIENTOS: "/caja/movimientos",

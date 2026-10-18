@@ -182,6 +182,7 @@ if (app.Configuration.GetValue<bool>("RunSeeds", false))
     await UnidadesMedidaSeed.SeedAsync(app.Services);
     await ProveedorSeed.SeedAsync(app.Services);
     await TipoMovimientoInventarioSeed.SeedAsync(app.Services);
+    await TipoMovimientoCajaSeed.SeedAsync(app.Services);
     await OpcionMenuSeed.SeedAsync(app.Services);
     await RolOpcionMenuSeed.SeedAsync(app.Services);
 }

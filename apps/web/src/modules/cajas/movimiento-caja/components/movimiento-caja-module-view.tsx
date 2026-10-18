@@ -11,10 +11,7 @@ import { MovimientoCajaMetrics } from "./movimiento-caja-metrics";
 import { MovimientoCajaTable } from "./movimiento-caja-table";
 import { MovimientoCajaFormDialog } from "./movimiento-caja-form-dialog";
 import { MovimientoCajaDeleteDialog } from "./movimiento-caja-delete-dialog";
-import {
-  TipoMovimientoCaja,
-  type MovimientoCajaResponse,
-} from "../types/movimiento-caja.types";
+import type { MovimientoCajaResponse } from "../types/movimiento-caja.types";
 
 export function MovimientoCajaModuleView() {
   const [currentPage, setCurrentPage] = React.useState(1);
@@ -63,14 +60,12 @@ export function MovimientoCajaModuleView() {
     let egresos = 0;
 
     movimientos.forEach((m) => {
-      const monto = Number(m.monto);
-      if (
-        [
-          TipoMovimientoCaja.Ingreso,
-          TipoMovimientoCaja.Reposicion,
-          TipoMovimientoCaja.AjustePositivo,
-        ].includes(m.tipo)
-      ) {
+      const monto = Number(m.montoMonedaBase ?? m.monto);
+      const isIngreso =
+        m.naturalezaAplicada?.toUpperCase() === "ENTRADA" ||
+        m.tipoMovimientoCaja?.naturaleza?.toUpperCase() === "ENTRADA";
+
+      if (isIngreso) {
         ingresos += monto;
       } else {
         egresos += monto;

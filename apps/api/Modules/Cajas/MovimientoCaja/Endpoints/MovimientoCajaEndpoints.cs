@@ -19,12 +19,21 @@ public static class MovimientoCajaEndpoints
         group.MapGet("/", ListarAsync)
             .WithName("ListarMovimientosCaja");
 
+        group.MapGet("/tipos", ListarTiposAsync)
+            .WithName("ListarTiposMovimientoCaja");
+
+        group.MapGet("/conceptos", ListarConceptosAsync)
+            .WithName("ListarConceptosMovimientoCaja");
+
         group.MapGet("/{id:int}", ObtenerAsync)
             .WithName("ObtenerMovimientoCaja");
 
         group.MapPost("/", RegistrarAsync)
             .WithName("RegistrarMovimientoCaja")
             .Validate<RegistrarMovimientoCajaRequest>();
+
+        group.MapDelete("/{id:int}", EliminarAsync)
+            .WithName("EliminarMovimientoCaja");
 
         return app;
     }
@@ -40,6 +49,30 @@ public static class MovimientoCajaEndpoints
             pagination,
             search,
             turnoCajaId,
+            cancellationToken);
+
+        return Results.Ok(result);
+    }
+
+    private static async Task<IResult> ListarTiposAsync(
+        string? naturaleza,
+        MovimientoCajaService service,
+        CancellationToken cancellationToken)
+    {
+        var result = await service.ListarTiposAsync(
+            naturaleza,
+            cancellationToken);
+
+        return Results.Ok(result);
+    }
+
+    private static async Task<IResult> ListarConceptosAsync(
+        int? tipoMovimientoCajaId,
+        MovimientoCajaService service,
+        CancellationToken cancellationToken)
+    {
+        var result = await service.ListarConceptosAsync(
+            tipoMovimientoCajaId,
             cancellationToken);
 
         return Results.Ok(result);
@@ -69,5 +102,17 @@ public static class MovimientoCajaEndpoints
         return Results.Created(
             $"{ApiRoutes.Prefix}/movimientos-caja/{result.Id}",
             result);
+    }
+
+    private static async Task<IResult> EliminarAsync(
+        int id,
+        MovimientoCajaService service,
+        CancellationToken cancellationToken)
+    {
+        await service.EliminarAsync(
+            id,
+            cancellationToken);
+
+        return Results.NoContent();
     }
 }

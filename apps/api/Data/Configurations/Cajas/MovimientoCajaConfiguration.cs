@@ -16,7 +16,10 @@ public sealed class MovimientoCajaConfiguration
         builder.Property(x => x.TurnoCajaId)
             .IsRequired();
 
-        builder.Property(x => x.Tipo)
+        builder.Property(x => x.TipoMovimientoCajaId)
+            .IsRequired();
+
+        builder.Property(x => x.ConceptoMovimientoCajaId)
             .IsRequired();
 
         builder.Property(x => x.FechaHora)
@@ -37,8 +40,8 @@ public sealed class MovimientoCajaConfiguration
             .HasPrecision(18, 2)
             .IsRequired();
 
-        builder.Property(x => x.Concepto)
-            .HasMaxLength(250)
+        builder.Property(x => x.NaturalezaAplicada)
+            .HasMaxLength(20)
             .IsRequired();
 
         builder.Property(x => x.Referencia)
@@ -51,10 +54,14 @@ public sealed class MovimientoCajaConfiguration
 
         builder.HasIndex(x => x.MonedaId);
 
+        builder.HasIndex(x => x.TipoMovimientoCajaId);
+
+        builder.HasIndex(x => x.ConceptoMovimientoCajaId);
+
         builder.HasIndex(x => new
         {
             x.TurnoCajaId,
-            x.Tipo
+            x.TipoMovimientoCajaId
         });
 
         builder.HasIndex(x => new
@@ -66,6 +73,16 @@ public sealed class MovimientoCajaConfiguration
         builder.HasOne(x => x.TurnoCaja)
             .WithMany()
             .HasForeignKey(x => x.TurnoCajaId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(x => x.TipoMovimientoCaja)
+            .WithMany(x => x.Movimientos)
+            .HasForeignKey(x => x.TipoMovimientoCajaId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(x => x.ConceptoMovimientoCaja)
+            .WithMany(x => x.Movimientos)
+            .HasForeignKey(x => x.ConceptoMovimientoCajaId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(x => x.Moneda)

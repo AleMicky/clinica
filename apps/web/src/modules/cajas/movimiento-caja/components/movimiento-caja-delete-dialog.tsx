@@ -29,6 +29,12 @@ export function MovimientoCajaDeleteDialog({
 }: MovimientoCajaDeleteDialogProps) {
   if (!movimiento) return null;
 
+  const conceptoNombre =
+    movimiento.conceptoMovimientoCaja?.nombre ||
+    movimiento.tipoMovimientoCaja?.nombre ||
+    "Movimiento";
+  const simbolo = movimiento.moneda?.simbolo || "S/";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[420px]">
@@ -39,9 +45,10 @@ export function MovimientoCajaDeleteDialog({
           </div>
           <DialogDescription className="pt-2 text-xs">
             ¿Está seguro de que desea eliminar el movimiento de caja{" "}
-            <strong className="text-foreground">"{movimiento.concepto}"</strong> por un monto de{" "}
-            <strong className="text-foreground">S/ {Number(movimiento.monto).toFixed(2)}</strong>?
-            Esta acción no se puede deshacer.
+            <strong className="text-foreground">"{conceptoNombre}"</strong> por un monto de{" "}
+            <strong className="text-foreground">
+              {simbolo} {Number(movimiento.monto).toFixed(2)}
+            </strong>? Esta acción no se puede deshacer.
           </DialogDescription>
         </DialogHeader>
 

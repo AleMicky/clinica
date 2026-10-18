@@ -10,8 +10,11 @@ public static partial class MovimientoCajaMapper
 {
     [MapperIgnoreTarget(nameof(MovimientoCajaEntity.Id))]
     [MapperIgnoreTarget(nameof(MovimientoCajaEntity.TurnoCaja))]
+    [MapperIgnoreTarget(nameof(MovimientoCajaEntity.TipoMovimientoCaja))]
+    [MapperIgnoreTarget(nameof(MovimientoCajaEntity.ConceptoMovimientoCaja))]
     [MapperIgnoreTarget(nameof(MovimientoCajaEntity.FechaHora))]
     [MapperIgnoreTarget(nameof(MovimientoCajaEntity.MontoMonedaBase))]
+    [MapperIgnoreTarget(nameof(MovimientoCajaEntity.NaturalezaAplicada))]
     [MapperIgnoreTarget(nameof(MovimientoCajaEntity.Moneda))]
     [MapperIgnoreTarget(nameof(MovimientoCajaEntity.Activo))]
     [MapperIgnoreTarget(nameof(MovimientoCajaEntity.FechaCreacion))]

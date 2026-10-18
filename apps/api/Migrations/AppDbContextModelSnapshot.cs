@@ -1745,6 +1745,58 @@ namespace Clinica.Api.Migrations
                     b.ToTable("DevolucionesCobro", (string)null);
                 });
 
+            modelBuilder.Entity("Clinica.Api.Modules.Cajas.MovimientoCaja.Entity.ConceptoMovimientoCaja", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("CreadoPor")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModificadoPor")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("TipoMovimientoCajaId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TipoMovimientoCajaId", "Codigo")
+                        .IsUnique();
+
+                    b.ToTable("ConceptosMovimientoCaja", (string)null);
+                });
+
             modelBuilder.Entity("Clinica.Api.Modules.Cajas.MovimientoCaja.Entity.MovimientoCaja", b =>
                 {
                     b.Property<int>("Id")
@@ -1758,10 +1810,8 @@ namespace Clinica.Api.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
 
-                    b.Property<string>("Concepto")
-                        .IsRequired()
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)");
+                    b.Property<int>("ConceptoMovimientoCajaId")
+                        .HasColumnType("int");
 
                     b.Property<string>("CreadoPor")
                         .HasMaxLength(100)
@@ -1791,6 +1841,11 @@ namespace Clinica.Api.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<string>("NaturalezaAplicada")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.Property<string>("Observacion")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -1799,27 +1854,85 @@ namespace Clinica.Api.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("Tipo")
-                        .HasColumnType("int");
-
                     b.Property<decimal>("TipoCambio")
                         .HasPrecision(18, 6)
                         .HasColumnType("decimal(18,6)");
+
+                    b.Property<int>("TipoMovimientoCajaId")
+                        .HasColumnType("int");
 
                     b.Property<int>("TurnoCajaId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ConceptoMovimientoCajaId");
+
                     b.HasIndex("MonedaId");
+
+                    b.HasIndex("TipoMovimientoCajaId");
 
                     b.HasIndex("TurnoCajaId");
 
                     b.HasIndex("TurnoCajaId", "MonedaId");
 
-                    b.HasIndex("TurnoCajaId", "Tipo");
+                    b.HasIndex("TurnoCajaId", "TipoMovimientoCajaId");
 
                     b.ToTable("MovimientosCaja", (string)null);
+                });
+
+            modelBuilder.Entity("Clinica.Api.Modules.Cajas.MovimientoCaja.Entity.TipoMovimientoCaja", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("CreadoPor")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModificadoPor")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Naturaleza")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Codigo")
+                        .IsUnique();
+
+                    b.ToTable("TiposMovimientoCaja", (string)null);
                 });
 
             modelBuilder.Entity("Clinica.Api.Modules.Cajas.TurnoCaja.Entity.TurnoCaja", b =>
@@ -5359,11 +5472,34 @@ namespace Clinica.Api.Migrations
                     b.Navigation("TurnoCaja");
                 });
 
+            modelBuilder.Entity("Clinica.Api.Modules.Cajas.MovimientoCaja.Entity.ConceptoMovimientoCaja", b =>
+                {
+                    b.HasOne("Clinica.Api.Modules.Cajas.MovimientoCaja.Entity.TipoMovimientoCaja", "TipoMovimientoCaja")
+                        .WithMany("Conceptos")
+                        .HasForeignKey("TipoMovimientoCajaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("TipoMovimientoCaja");
+                });
+
             modelBuilder.Entity("Clinica.Api.Modules.Cajas.MovimientoCaja.Entity.MovimientoCaja", b =>
                 {
+                    b.HasOne("Clinica.Api.Modules.Cajas.MovimientoCaja.Entity.ConceptoMovimientoCaja", "ConceptoMovimientoCaja")
+                        .WithMany("Movimientos")
+                        .HasForeignKey("ConceptoMovimientoCajaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("Clinica.Api.Modules.Parametros.Moneda.Entity.Moneda", "Moneda")
                         .WithMany()
                         .HasForeignKey("MonedaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Clinica.Api.Modules.Cajas.MovimientoCaja.Entity.TipoMovimientoCaja", "TipoMovimientoCaja")
+                        .WithMany("Movimientos")
+                        .HasForeignKey("TipoMovimientoCajaId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -5373,7 +5509,11 @@ namespace Clinica.Api.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.Navigation("ConceptoMovimientoCaja");
+
                     b.Navigation("Moneda");
+
+                    b.Navigation("TipoMovimientoCaja");
 
                     b.Navigation("TurnoCaja");
                 });
@@ -6168,6 +6308,18 @@ namespace Clinica.Api.Migrations
             modelBuilder.Entity("Clinica.Api.Modules.Cajas.Cobro.Entity.Cobro", b =>
                 {
                     b.Navigation("Detalles");
+                });
+
+            modelBuilder.Entity("Clinica.Api.Modules.Cajas.MovimientoCaja.Entity.ConceptoMovimientoCaja", b =>
+                {
+                    b.Navigation("Movimientos");
+                });
+
+            modelBuilder.Entity("Clinica.Api.Modules.Cajas.MovimientoCaja.Entity.TipoMovimientoCaja", b =>
+                {
+                    b.Navigation("Conceptos");
+
+                    b.Navigation("Movimientos");
                 });
 
             modelBuilder.Entity("Clinica.Api.Modules.Compras.CotizacionCompra.Entity.CotizacionCompra", b =>

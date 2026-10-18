@@ -4,8 +4,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createMovimientoCaja,
   deleteMovimientoCaja,
+  getConceptosMovimientoCaja,
   getMovimientoCajaById,
   getMovimientosCaja,
+  getTiposMovimientoCaja,
   updateMovimientoCaja,
 } from "../api/movimiento-caja.api";
 import { movimientoCajaKeys } from "../api/movimiento-caja.key";
@@ -23,6 +25,28 @@ export function useMovimientosCaja(
     queryKey: movimientoCajaKeys.list(params as Record<string, unknown>),
     queryFn: () => getMovimientosCaja(params),
     enabled,
+  });
+}
+
+export function useTiposMovimientoCaja(
+  naturaleza?: string,
+  enabled = true
+) {
+  return useQuery({
+    queryKey: movimientoCajaKeys.tipos(naturaleza),
+    queryFn: () => getTiposMovimientoCaja(naturaleza),
+    enabled,
+  });
+}
+
+export function useConceptosMovimientoCaja(
+  tipoMovimientoCajaId?: number,
+  enabled = true
+) {
+  return useQuery({
+    queryKey: movimientoCajaKeys.conceptos(tipoMovimientoCajaId),
+    queryFn: () => getConceptosMovimientoCaja(tipoMovimientoCajaId),
+    enabled: enabled && (tipoMovimientoCajaId === undefined || tipoMovimientoCajaId > 0),
   });
 }
 

@@ -5,4 +5,8 @@ export const movimientoCajaKeys = {
     [...movimientoCajaKeys.lists(), params] as const,
   details: () => [...movimientoCajaKeys.all, "detail"] as const,
   detail: (id: number) => [...movimientoCajaKeys.details(), id] as const,
+  tipos: (naturaleza?: string) =>
+    [...movimientoCajaKeys.all, "tipos", naturaleza] as const,
+  conceptos: (tipoMovimientoCajaId?: number) =>
+    [...movimientoCajaKeys.all, "conceptos", tipoMovimientoCajaId] as const,
 };

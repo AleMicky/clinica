@@ -10,13 +10,40 @@ export enum TipoMovimientoCaja {
   AjusteNegativo = 7,
 }
 
+export interface TipoMovimientoCajaInfo {
+  id: number;
+  codigo: string;
+  nombre: string;
+  naturaleza: string;
+}
+
+export interface ConceptoMovimientoCajaInfo {
+  id: number;
+  codigo: string;
+  nombre: string;
+}
+
+export interface MonedaInfo {
+  id: number;
+  codigo: string;
+  nombre: string;
+  simbolo: string;
+}
+
 export interface MovimientoCajaResponse {
   id: number;
   turnoCaja?: TurnoCajaInfo | null;
-  tipo: TipoMovimientoCaja;
+  tipoMovimientoCajaId: number;
+  tipoMovimientoCaja: TipoMovimientoCajaInfo;
+  conceptoMovimientoCajaId: number;
+  conceptoMovimientoCaja: ConceptoMovimientoCajaInfo;
   fechaHora: string;
+  monedaId: number;
+  moneda?: MonedaInfo | null;
   monto: number;
-  concepto: string;
+  tipoCambio: number;
+  montoMonedaBase: number;
+  naturalezaAplicada: string;
   referencia?: string | null;
   observacion?: string | null;
   activo: boolean;
@@ -28,20 +55,22 @@ export interface MovimientoCajaResponse {
 
 export interface CreateMovimientoCajaRequest {
   turnoCajaId: number;
-  tipo: TipoMovimientoCaja;
-  fechaHora: string;
+  tipoMovimientoCajaId: number;
+  conceptoMovimientoCajaId: number;
+  monedaId: number;
   monto: number;
-  concepto: string;
+  tipoCambio?: number;
   referencia?: string | null;
   observacion?: string | null;
 }
 
 export interface UpdateMovimientoCajaRequest {
   turnoCajaId: number;
-  tipo: TipoMovimientoCaja;
-  fechaHora: string;
+  tipoMovimientoCajaId: number;
+  conceptoMovimientoCajaId: number;
+  monedaId: number;
   monto: number;
-  concepto: string;
+  tipoCambio?: number;
   referencia?: string | null;
   observacion?: string | null;
 }
@@ -51,7 +80,7 @@ export interface MovimientoCajaQueryParams {
   pageSize?: number;
   search?: string;
   turnoCajaId?: number;
-  tipo?: TipoMovimientoCaja;
+  tipoMovimientoCajaId?: number;
 }
 
 export interface MovimientoCajaMetrics {

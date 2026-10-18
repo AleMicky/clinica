@@ -1,9 +1,11 @@
 import { apiClient } from "@/lib/api/api-client";
 import type {
+  ConceptoMovimientoCajaInfo,
   CreateMovimientoCajaRequest,
   MovimientoCajaQueryParams,
   MovimientoCajaResponse,
   PagedResult,
+  TipoMovimientoCajaInfo,
   UpdateMovimientoCajaRequest,
 } from "../types/movimiento-caja.types";
 
@@ -13,6 +15,26 @@ export async function getMovimientosCaja(
   const response = await apiClient.get<PagedResult<MovimientoCajaResponse>>(
     "/movimientos-caja",
     { params }
+  );
+  return response.data;
+}
+
+export async function getTiposMovimientoCaja(
+  naturaleza?: string
+): Promise<TipoMovimientoCajaInfo[]> {
+  const response = await apiClient.get<TipoMovimientoCajaInfo[]>(
+    "/movimientos-caja/tipos",
+    { params: { naturaleza } }
+  );
+  return response.data;
+}
+
+export async function getConceptosMovimientoCaja(
+  tipoMovimientoCajaId?: number
+): Promise<ConceptoMovimientoCajaInfo[]> {
+  const response = await apiClient.get<ConceptoMovimientoCajaInfo[]>(
+    "/movimientos-caja/conceptos",
+    { params: { tipoMovimientoCajaId } }
   );
   return response.data;
 }

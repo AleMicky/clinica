@@ -27,6 +27,7 @@ import {
 import { Autocomplete, type AutocompleteOption } from "@/components/ui/autocomplete";
 
 import { useTurnosCaja } from "../../turno-caja/hooks/use-turnos-caja";
+import { useMonedas } from "@/modules/parametros/moneda/hooks/use-monedas";
 import {
   movimientoCajaSchema,
   type MovimientoCajaFormValues,
@@ -34,28 +35,16 @@ import {
 import {
   useCreateMovimientoCaja,
   useUpdateMovimientoCaja,
+  useTiposMovimientoCaja,
+  useConceptosMovimientoCaja,
 } from "../hooks/use-movimientos-caja";
-import {
-  TipoMovimientoCaja,
-  type MovimientoCajaResponse,
-} from "../types/movimiento-caja.types";
+import type { MovimientoCajaResponse } from "../types/movimiento-caja.types";
 
 interface MovimientoCajaFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   movimientoToEdit?: MovimientoCajaResponse | null;
   onSuccessCallback?: () => void;
-}
-
-function toLocalDatetimeString(dateInput?: string | Date | null): string {
-  const d = dateInput ? new Date(dateInput) : new Date();
-  if (isNaN(d.getTime())) return "";
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  const hours = String(d.getHours()).padStart(2, "0");
-  const minutes = String(d.getMinutes()).padStart(2, "0");
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
 export function MovimientoCajaFormDialog({
@@ -66,15 +55,25 @@ export function MovimientoCajaFormDialog({
 }: MovimientoCajaFormDialogProps) {
   const isEditing = !!movimientoToEdit;
 
-  // Fetch real Turnos de Caja
+  // Turnos de Caja
   const { data: turnosData, isLoading: isLoadingTurnos } = useTurnosCaja(
     { page: 1, pageSize: 100 },
     open
   );
 
+  // Monedas
+  const { data: monedasData, isLoading: isLoadingMonedas } = useMonedas(
+    { page: 1, pageSize: 50 }
+  );
+
+  // Tipos de Movimiento de Caja
+  const { data: tiposData, isLoading: isLoadingTipos } = useTiposMovimientoCaja(
+    undefined,
+    open
+  );
+
   const createMutation = useCreateMovimientoCaja();
   const updateMutation = useUpdateMovimientoCaja();
-
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   const {
@@ -88,18 +87,24 @@ export function MovimientoCajaFormDialog({
     resolver: zodResolver(movimientoCajaSchema),
     defaultValues: {
       turnoCajaId: 0,
-      tipo: TipoMovimientoCaja.Ingreso,
-      fechaHora: toLocalDatetimeString(),
+      tipoMovimientoCajaId: 0,
+      conceptoMovimientoCajaId: 0,
+      monedaId: 0,
       monto: 0,
-      concepto: "",
+      tipoCambio: 1,
       referencia: "",
       observacion: "",
     },
   });
 
   const selectedTurnoId = watch("turnoCajaId");
-  const tipoVal = watch("tipo");
-  const fechaHoraVal = watch("fechaHora");
+  const selectedTipoId = watch("tipoMovimientoCajaId");
+  const selectedConceptoId = watch("conceptoMovimientoCajaId");
+  const selectedMonedaId = watch("monedaId");
+
+  // Conceptos filtrados por Tipo
+  const { data: conceptosData, isLoading: isLoadingConceptos } =
+    useConceptosMovimientoCaja(selectedTipoId ? Number(selectedTipoId) : undefined, open && !!selectedTipoId);
 
   const turnosList = React.useMemo(() => {
     return Array.isArray(turnosData?.items)
@@ -113,7 +118,8 @@ export function MovimientoCajaFormDialog({
     return turnosList.map((t) => {
       const cName = t.caja?.nombre || "Caja";
       const cCode = t.caja?.codigo || "CAJA";
-      const empName = t.empleado?.nombreCompleto || `Cajero #${t.empleado?.id || t.id}`;
+      const empName =
+        t.empleado?.nombreCompleto || `Cajero #${t.empleado?.id || t.id}`;
       return {
         value: String(t.id),
         label: empName,
@@ -122,41 +128,73 @@ export function MovimientoCajaFormDialog({
     });
   }, [turnosList]);
 
+  const monedasList = React.useMemo(() => {
+    return Array.isArray(monedasData?.items)
+      ? monedasData.items
+      : Array.isArray(monedasData)
+      ? monedasData
+      : [];
+  }, [monedasData]);
+
+  const monedaBase = React.useMemo(() => {
+    return monedasList.find((m) => m.esBase) || monedasList[0];
+  }, [monedasList]);
+
+  const selectedMoneda = React.useMemo(() => {
+    return monedasList.find((m) => m.id === Number(selectedMonedaId));
+  }, [monedasList, selectedMonedaId]);
+
+  const isMonedaBase = !selectedMoneda || selectedMoneda.esBase;
+
+  // Selected Tipo info
+  const selectedTipo = React.useMemo(() => {
+    return tiposData?.find((t) => t.id === Number(selectedTipoId));
+  }, [tiposData, selectedTipoId]);
+
+  // Set default moneda when loaded and creating
+  React.useEffect(() => {
+    if (open && !isEditing && monedaBase && !selectedMonedaId) {
+      setValue("monedaId", monedaBase.id, { shouldValidate: true });
+    }
+  }, [open, isEditing, monedaBase, selectedMonedaId, setValue]);
+
   React.useEffect(() => {
     if (open) {
       if (movimientoToEdit) {
         reset({
           turnoCajaId: movimientoToEdit.turnoCaja?.id || 0,
-          tipo: movimientoToEdit.tipo,
-          fechaHora: toLocalDatetimeString(movimientoToEdit.fechaHora),
+          tipoMovimientoCajaId: movimientoToEdit.tipoMovimientoCajaId,
+          conceptoMovimientoCajaId: movimientoToEdit.conceptoMovimientoCajaId,
+          monedaId: movimientoToEdit.monedaId,
           monto: Number(movimientoToEdit.monto),
-          concepto: movimientoToEdit.concepto,
+          tipoCambio: Number(movimientoToEdit.tipoCambio || 1),
           referencia: movimientoToEdit.referencia || "",
           observacion: movimientoToEdit.observacion || "",
         });
       } else {
         reset({
           turnoCajaId: 0,
-          tipo: TipoMovimientoCaja.Ingreso,
-          fechaHora: toLocalDatetimeString(),
+          tipoMovimientoCajaId: 0,
+          conceptoMovimientoCajaId: 0,
+          monedaId: monedaBase?.id || 0,
           monto: 0,
-          concepto: "",
+          tipoCambio: 1,
           referencia: "",
           observacion: "",
         });
       }
     }
-  }, [open, movimientoToEdit, reset]);
+  }, [open, movimientoToEdit, monedaBase, reset]);
 
   const onSubmit = async (values: MovimientoCajaFormValues) => {
     try {
-      const fechaHoraIso = new Date(values.fechaHora).toISOString();
       const payload = {
         turnoCajaId: Number(values.turnoCajaId),
-        tipo: Number(values.tipo) as TipoMovimientoCaja,
-        fechaHora: fechaHoraIso,
+        tipoMovimientoCajaId: Number(values.tipoMovimientoCajaId),
+        conceptoMovimientoCajaId: Number(values.conceptoMovimientoCajaId),
+        monedaId: Number(values.monedaId),
         monto: Number(values.monto),
-        concepto: values.concepto.trim(),
+        tipoCambio: Number(values.tipoCambio || 1),
         referencia: values.referencia?.trim() || null,
         observacion: values.observacion?.trim() || null,
       };
@@ -175,7 +213,10 @@ export function MovimientoCajaFormDialog({
       onSuccessCallback?.();
       onOpenChange(false);
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { detail?: string; title?: string } }; message?: string };
+      const err = error as {
+        response?: { data?: { detail?: string; title?: string } };
+        message?: string;
+      };
       const message =
         err?.response?.data?.detail ||
         err?.response?.data?.title ||
@@ -187,15 +228,17 @@ export function MovimientoCajaFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[520px]">
         <DialogHeader>
           <DialogTitle>
-            {isEditing ? "Editar Movimiento de Caja" : "Nuevo Movimiento de Caja"}
+            {isEditing
+              ? "Editar Movimiento de Caja"
+              : "Nuevo Movimiento de Caja"}
           </DialogTitle>
           <DialogDescription>
             {isEditing
               ? "Modifique los datos del movimiento de caja."
-              : "Ingrese la información para registrar un ingreso, egreso o ajuste en el turno."}
+              : "Seleccione el tipo y concepto para registrar un movimiento en el turno."}
           </DialogDescription>
         </DialogHeader>
 
@@ -220,45 +263,134 @@ export function MovimientoCajaFormDialog({
               error={Boolean(errors.turnoCajaId)}
             />
             {errors.turnoCajaId && (
-              <p className="text-xs text-destructive">{errors.turnoCajaId.message}</p>
+              <p className="text-xs text-destructive">
+                {errors.turnoCajaId.message}
+              </p>
             )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             {/* Tipo de Movimiento */}
             <div className="space-y-1.5">
-              <Label htmlFor="tipo" className="required font-medium text-xs">
-                Tipo Movimiento
+              <Label htmlFor="tipoMovimientoCajaId" className="required font-medium text-xs">
+                Tipo de Movimiento
               </Label>
               <Select
-                value={String(tipoVal)}
-                onValueChange={(val) =>
-                  setValue("tipo", Number(val), { shouldValidate: true })
-                }
-                disabled={isSubmitting}
+                value={selectedTipoId ? String(selectedTipoId) : ""}
+                onValueChange={(val) => {
+                  setValue("tipoMovimientoCajaId", Number(val), {
+                    shouldValidate: true,
+                  });
+                  // Reset concepto when type changes
+                  setValue("conceptoMovimientoCajaId", 0, {
+                    shouldValidate: true,
+                  });
+                }}
+                disabled={isSubmitting || isLoadingTipos}
               >
-                <SelectTrigger id="tipo" className="h-9 text-xs">
+                <SelectTrigger id="tipoMovimientoCajaId" className="h-9 text-xs">
                   <SelectValue placeholder="Seleccionar tipo..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={String(TipoMovimientoCaja.Ingreso)}>Ingreso (+)</SelectItem>
-                  <SelectItem value={String(TipoMovimientoCaja.Egreso)}>Egreso (-)</SelectItem>
-                  <SelectItem value={String(TipoMovimientoCaja.Retiro)}>Retiro (-)</SelectItem>
-                  <SelectItem value={String(TipoMovimientoCaja.Reposicion)}>Reposición (+)</SelectItem>
-                  <SelectItem value={String(TipoMovimientoCaja.Devolucion)}>Devolución (-)</SelectItem>
-                  <SelectItem value={String(TipoMovimientoCaja.AjustePositivo)}>Ajuste Positivo (+)</SelectItem>
-                  <SelectItem value={String(TipoMovimientoCaja.AjusteNegativo)}>Ajuste Negativo (-)</SelectItem>
+                  {tiposData?.map((tipo) => (
+                    <SelectItem key={tipo.id} value={String(tipo.id)}>
+                      <span className="font-medium">{tipo.nombre}</span>{" "}
+                      <span className="text-[10px] text-muted-foreground">
+                        ({tipo.naturaleza})
+                      </span>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
-              {errors.tipo && (
-                <p className="text-xs text-destructive">{errors.tipo.message}</p>
+              {errors.tipoMovimientoCajaId && (
+                <p className="text-xs text-destructive">
+                  {errors.tipoMovimientoCajaId.message}
+                </p>
+              )}
+            </div>
+
+            {/* Concepto de Movimiento */}
+            <div className="space-y-1.5">
+              <Label
+                htmlFor="conceptoMovimientoCajaId"
+                className="required font-medium text-xs"
+              >
+                Concepto / Motivo
+              </Label>
+              <Select
+                value={selectedConceptoId ? String(selectedConceptoId) : ""}
+                onValueChange={(val) =>
+                  setValue("conceptoMovimientoCajaId", Number(val), {
+                    shouldValidate: true,
+                  })
+                }
+                disabled={isSubmitting || !selectedTipoId || isLoadingConceptos}
+              >
+                <SelectTrigger id="conceptoMovimientoCajaId" className="h-9 text-xs">
+                  <SelectValue
+                    placeholder={
+                      !selectedTipoId
+                        ? "Primero elija tipo..."
+                        : isLoadingConceptos
+                        ? "Cargando conceptos..."
+                        : "Seleccionar concepto..."
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {conceptosData?.map((conc) => (
+                    <SelectItem key={conc.id} value={String(conc.id)}>
+                      {conc.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.conceptoMovimientoCajaId && (
+                <p className="text-xs text-destructive">
+                  {errors.conceptoMovimientoCajaId.message}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            {/* Moneda */}
+            <div className="space-y-1.5">
+              <Label htmlFor="monedaId" className="required font-medium text-xs">
+                Moneda
+              </Label>
+              <Select
+                value={selectedMonedaId ? String(selectedMonedaId) : ""}
+                onValueChange={(val) => {
+                  const mId = Number(val);
+                  setValue("monedaId", mId, { shouldValidate: true });
+                  const m = monedasList.find((x) => x.id === mId);
+                  if (m?.esBase) {
+                    setValue("tipoCambio", 1, { shouldValidate: true });
+                  }
+                }}
+                disabled={isSubmitting || isLoadingMonedas}
+              >
+                <SelectTrigger id="monedaId" className="h-9 text-xs">
+                  <SelectValue placeholder="Seleccionar moneda..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {monedasList.map((m) => (
+                    <SelectItem key={m.id} value={String(m.id)}>
+                      {m.codigo} - {m.nombre} ({m.simbolo})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.monedaId && (
+                <p className="text-xs text-destructive">{errors.monedaId.message}</p>
               )}
             </div>
 
             {/* Monto */}
             <div className="space-y-1.5">
               <Label htmlFor="monto" className="required font-medium text-xs">
-                Monto (S/)
+                Monto {selectedMoneda ? `(${selectedMoneda.simbolo})` : ""}
               </Label>
               <Input
                 id="monto"
@@ -276,47 +408,35 @@ export function MovimientoCajaFormDialog({
             </div>
           </div>
 
-          {/* Fecha y Hora */}
-          <div className="space-y-1.5">
-            <Label htmlFor="fechaHora" className="required font-medium text-xs">
-              Fecha y Hora
-            </Label>
-            <Input
-              id="fechaHora"
-              type="datetime-local"
-              value={fechaHoraVal}
-              onChange={(e) =>
-                setValue("fechaHora", e.target.value, { shouldValidate: true })
-              }
-              className="h-9 text-xs font-mono"
-              disabled={isSubmitting}
-            />
-            {errors.fechaHora && (
-              <p className="text-xs text-destructive">{errors.fechaHora.message}</p>
-            )}
-          </div>
-
-          {/* Concepto */}
-          <div className="space-y-1.5">
-            <Label htmlFor="concepto" className="required font-medium text-xs">
-              Concepto / Motivo
-            </Label>
-            <Input
-              id="concepto"
-              placeholder="Ej: Pago de transporte de mensajería"
-              {...register("concepto")}
-              className="h-9 text-xs"
-              disabled={isSubmitting}
-            />
-            {errors.concepto && (
-              <p className="text-xs text-destructive">{errors.concepto.message}</p>
-            )}
-          </div>
+          {/* Tipo de cambio si moneda no es base */}
+          {!isMonedaBase && (
+            <div className="space-y-1.5">
+              <Label htmlFor="tipoCambio" className="required font-medium text-xs">
+                Tipo de Cambio
+              </Label>
+              <Input
+                id="tipoCambio"
+                type="number"
+                step="0.0001"
+                min="0.0001"
+                placeholder="1.0000"
+                {...register("tipoCambio", { valueAsNumber: true })}
+                className="h-9 text-xs font-mono"
+                disabled={isSubmitting}
+              />
+              {errors.tipoCambio && (
+                <p className="text-xs text-destructive">
+                  {errors.tipoCambio.message}
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Referencia */}
           <div className="space-y-1.5">
             <Label htmlFor="referencia" className="font-medium text-xs">
-              Referencia / Comprobante <span className="text-[11px] text-muted-foreground">(Opcional)</span>
+              Referencia / Comprobante{" "}
+              <span className="text-[11px] text-muted-foreground">(Opcional)</span>
             </Label>
             <Input
               id="referencia"
@@ -330,11 +450,12 @@ export function MovimientoCajaFormDialog({
           {/* Observación */}
           <div className="space-y-1.5">
             <Label htmlFor="observacion" className="font-medium text-xs">
-              Observaciones <span className="text-[11px] text-muted-foreground">(Opcional)</span>
+              Observaciones{" "}
+              <span className="text-[11px] text-muted-foreground">(Opcional)</span>
             </Label>
             <Textarea
               id="observacion"
-              placeholder="Ej: Autorizado por la jefatura de administración..."
+              placeholder="Ej: Autorizado por la administración..."
               {...register("observacion")}
               className="min-h-[60px] text-xs resize-none"
               disabled={isSubmitting}
@@ -351,9 +472,15 @@ export function MovimientoCajaFormDialog({
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={isSubmitting} className="h-9 gap-2 text-xs">
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="h-9 gap-2 text-xs"
+            >
               {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-              <span>{isEditing ? "Guardar Cambios" : "Registrar Movimiento"}</span>
+              <span>
+                {isEditing ? "Guardar Cambios" : "Registrar Movimiento"}
+              </span>
             </Button>
           </DialogFooter>
         </form>
