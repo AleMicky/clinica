@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createProveedor,
   deleteProveedor,
+  deleteProveedoresMultiple,
   getProveedorById,
   getProveedores,
   importarProveedoresExcel,
@@ -60,6 +61,17 @@ export function useDeleteProveedor() {
 
   return useMutation({
     mutationFn: (id: number) => deleteProveedor(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: proveedorKeys.all });
+    },
+  });
+}
+
+export function useDeleteProveedoresMultiple() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (ids: number[]) => deleteProveedoresMultiple(ids),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: proveedorKeys.all });
     },

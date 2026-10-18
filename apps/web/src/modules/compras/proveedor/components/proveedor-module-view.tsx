@@ -16,6 +16,12 @@ export function ProveedorModuleView() {
   const [page, setPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(10);
 
+  // Selection state
+  const [selectedIds, setSelectedIds] = React.useState<number[]>([]);
+  const [selectedProveedoresMap, setSelectedProveedoresMap] = React.useState<
+    Map<number, ProveedorResponse>
+  >(new Map());
+
   // Main proveedores query
   const {
     data: proveedoresData,
@@ -28,6 +34,25 @@ export function ProveedorModuleView() {
   });
 
   const proveedores = proveedoresData?.items ?? [];
+
+  // Keep map updated with current page proveedores
+  const handleSelectionChange = (newSelectedIds: number[]) => {
+    setSelectedIds(newSelectedIds);
+    setSelectedProveedoresMap((prev) => {
+      const next = new Map(prev);
+      proveedores.forEach((p) => {
+        if (newSelectedIds.includes(p.id)) {
+          next.set(p.id, p);
+        }
+      });
+      for (const id of next.keys()) {
+        if (!newSelectedIds.includes(id)) {
+          next.delete(id);
+        }
+      }
+      return next;
+    });
+  };
 
   // Metrics calculation
   const totalWithNit = React.useMemo(
@@ -61,6 +86,9 @@ export function ProveedorModuleView() {
   const [deleteOpen, setDeleteOpen] = React.useState(false);
   const [proveedorToDelete, setProveedorToDelete] =
     React.useState<ProveedorResponse | null>(null);
+  const [proveedoresToDelete, setProveedoresToDelete] = React.useState<
+    ProveedorResponse[]
+  >([]);
 
   const [auditDialogOpen, setAuditDialogOpen] = React.useState(false);
   const [auditInfo, setAuditInfo] = React.useState<AuditInfo | null>(null);
@@ -77,6 +105,21 @@ export function ProveedorModuleView() {
 
   const handleOpenDelete = (item: ProveedorResponse) => {
     setProveedorToDelete(item);
+    setProveedoresToDelete([]);
+    setDeleteOpen(true);
+  };
+
+  const handleOpenDeleteMultiple = (ids: number[]) => {
+    const items = ids
+      .map(
+        (id) =>
+          selectedProveedoresMap.get(id) ??
+          proveedores.find((p) => p.id === id)
+      )
+      .filter((item): item is ProveedorResponse => Boolean(item));
+
+    setProveedorToDelete(null);
+    setProveedoresToDelete(items);
     setDeleteOpen(true);
   };
 
@@ -144,6 +187,9 @@ export function ProveedorModuleView() {
         onDelete={handleOpenDelete}
         onRefresh={() => refetch()}
         onViewAudit={handleViewAudit}
+        selectedIds={selectedIds}
+        onSelectionChange={handleSelectionChange}
+        onDeleteMultiple={handleOpenDeleteMultiple}
       />
 
       {/* Form Dialog (Create / Edit) */}
@@ -161,12 +207,17 @@ export function ProveedorModuleView() {
         onSuccess={() => refetch()}
       />
 
-      {/* Delete Dialog */}
+      {/* Delete Dialog (Single & Multiple) */}
       <ProveedorDeleteDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
         proveedorToDelete={proveedorToDelete}
-        onSuccessCallback={() => refetch()}
+        proveedoresToDelete={proveedoresToDelete}
+        onSuccessCallback={() => {
+          setSelectedIds([]);
+          setSelectedProveedoresMap(new Map());
+          refetch();
+        }}
       />
 
       {/* Shared Audit Dialog */}

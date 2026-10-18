@@ -61,3 +61,17 @@ public sealed class CreateProveedorRequestValidator
 
 public sealed class UpdateProveedorRequestValidator
     : ProveedorRequestValidator<UpdateProveedorRequest>;
+
+public sealed class DeleteProveedoresRequestValidator
+    : AbstractValidator<DeleteProveedoresRequest>
+{
+    public DeleteProveedoresRequestValidator()
+    {
+        RuleFor(x => x.Ids)
+            .NotEmpty()
+            .WithMessage("Debe proporcionar al menos un ID de proveedor.")
+            .Must(ids => ids != null && ids.Count > 0 && ids.All(id => id > 0))
+            .WithMessage("Todos los identificadores de proveedor deben ser válidos.");
+    }
+}
+

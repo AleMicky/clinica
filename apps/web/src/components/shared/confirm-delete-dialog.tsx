@@ -36,10 +36,28 @@ export function ConfirmDeleteDialog({
   confirmLabel = "Eliminar Registro",
   onConfirm,
   isLoading = false,
-}: ConfirmDeleteDialogProps) {
+}: Readonly<ConfirmDeleteDialogProps>) {
   const handleConfirm = async () => {
     await onConfirm();
     onOpenChange(false);
+  };
+
+  const renderDescription = () => {
+    if (description) {
+      return description;
+    }
+
+    if (itemName) {
+      return (
+        <>
+          Está a punto de eliminar{" "}
+          <span className="font-semibold text-foreground">{itemName}</span>. Esta
+          acción eliminará el registro del sistema.
+        </>
+      );
+    }
+
+    return "Esta acción no se puede deshacer. ¿Desea continuar?";
   };
 
   return (
@@ -52,18 +70,11 @@ export function ConfirmDeleteDialog({
           <AlertDialogTitle className="text-base font-semibold">
             {title}
           </AlertDialogTitle>
-          <AlertDialogDescription className="text-xs text-muted-foreground">
-            {description ? (
-              description
-            ) : itemName ? (
-              <>
-                Está a punto de eliminar{" "}
-                <span className="font-semibold text-foreground">{itemName}</span>. Esta
-                acción eliminará el registro del sistema.
-              </>
-            ) : (
-              "Esta acción no se puede deshacer. ¿Desea continuar?"
-            )}
+          <AlertDialogDescription
+            render={<div />}
+            className="text-xs text-muted-foreground"
+          >
+            {renderDescription()}
           </AlertDialogDescription>
         </AlertDialogHeader>
 

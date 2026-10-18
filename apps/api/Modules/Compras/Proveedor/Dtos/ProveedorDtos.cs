@@ -34,3 +34,15 @@ public sealed record ProveedorResponse : AuditableResponse
     public string? Contacto { get; init; }
     public string? Observacion { get; init; }
 }
+
+public sealed record DeleteProveedoresRequest
+{
+    public List<int> Ids { get; init; } = [];
+}
+
+public sealed record DeleteMultipleProveedoresResponse
+{
+    public int Eliminados { get; init; }
+    public string Message { get; init; } = string.Empty;
+}
+

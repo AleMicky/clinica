@@ -73,3 +73,13 @@ export interface ExcelImportResult {
   errores: number;
   errors: ExcelImportError[];
 }
+
+export interface DeleteMultipleProveedoresRequest {
+  ids: number[];
+}
+
+export interface DeleteMultipleProveedoresResponse {
+  eliminados: number;
+  message: string;
+}
+

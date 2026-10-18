@@ -3,6 +3,7 @@ using Clinica.Api.Modules.Compras.Proveedor.Services;
 using Clinica.Api.Shared.Pagination;
 using Clinica.Api.Shared.Validation;
 using ClosedXML.Excel;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Clinica.Api.Modules.Compras.Proveedor.Endpoints;
 
@@ -32,6 +33,10 @@ public static class ProveedorEndpoints
 
         group.MapDelete("/{id:int}", EliminarAsync)
             .WithName("EliminarProveedor");
+
+        group.MapPost("/eliminar-multiple", EliminarMultiplesAsync)
+            .WithName("EliminarMultiplesProveedores")
+            .Validate<DeleteProveedoresRequest>();
 
         group.MapPost("/importar-excel", ImportarExcelAsync)
             .WithName("ImportarProveedoresExcel")
@@ -104,6 +109,22 @@ public static class ProveedorEndpoints
             cancellationToken);
 
         return Results.NoContent();
+    }
+
+    private static async Task<IResult> EliminarMultiplesAsync(
+        [FromBody] DeleteProveedoresRequest request,
+        IProveedorService service,
+        CancellationToken cancellationToken)
+    {
+        var count = await service.EliminarMultiplesAsync(
+            request.Ids,
+            cancellationToken);
+
+        return Results.Ok(new DeleteMultipleProveedoresResponse
+        {
+            Eliminados = count,
+            Message = $"{count} {(count == 1 ? "proveedor eliminado" : "proveedores eliminados")} correctamente."
+        });
     }
 
     private static async Task<IResult> ImportarExcelAsync(

@@ -1,6 +1,7 @@
 import { apiClient } from "@/lib/api/api-client";
 import type {
   CreateProveedorRequest,
+  DeleteMultipleProveedoresResponse,
   ExcelImportResult,
   PagedResult,
   ProveedorQueryParams,
@@ -51,6 +52,17 @@ export async function updateProveedor(
 export async function deleteProveedor(id: number): Promise<void> {
   await apiClient.delete(`/proveedores/${id}`);
 }
+
+export async function deleteProveedoresMultiple(
+  ids: number[]
+): Promise<DeleteMultipleProveedoresResponse> {
+  const response = await apiClient.post<DeleteMultipleProveedoresResponse>(
+    "/proveedores/eliminar-multiple",
+    { ids }
+  );
+  return response.data;
+}
+
 
 // Importación masiva desde Excel
 export async function importarProveedoresExcel(

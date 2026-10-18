@@ -31,6 +31,10 @@ public interface IProveedorService
     Task EliminarAsync(
         int id,
         CancellationToken cancellationToken = default);
+
+    Task<int> EliminarMultiplesAsync(
+        IEnumerable<int> ids,
+        CancellationToken cancellationToken = default);
 }
 
 public sealed class ProveedorService(AppDbContext dbContext)
@@ -161,6 +165,34 @@ public sealed class ProveedorService(AppDbContext dbContext)
 
         entity.Activo = false;
         await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<int> EliminarMultiplesAsync(
+        IEnumerable<int> ids,
+        CancellationToken cancellationToken = default)
+    {
+        var idList = ids.Distinct().ToList();
+        if (idList.Count == 0)
+        {
+            return 0;
+        }
+
+        var entities = await dbContext.Proveedores
+            .Where(x => idList.Contains(x.Id) && x.Activo)
+            .ToListAsync(cancellationToken);
+
+        if (entities.Count == 0)
+        {
+            return 0;
+        }
+
+        foreach (var entity in entities)
+        {
+            entity.Activo = false;
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return entities.Count;
     }
 
     private async Task ValidarCodigoUnicoAsync(

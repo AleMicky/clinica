@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import {
   Plus,
   MoreHorizontal,
@@ -16,6 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -56,6 +58,9 @@ export interface ProveedorTableProps {
   onDelete?: (proveedor: ProveedorResponse) => void;
   onRefresh?: () => void;
   onViewAudit?: (proveedor: ProveedorResponse) => void;
+  selectedIds?: number[];
+  onSelectionChange?: (selectedIds: number[]) => void;
+  onDeleteMultiple?: (selectedIds: number[]) => void;
 }
 
 export function ProveedorTable({
@@ -74,18 +79,51 @@ export function ProveedorTable({
   onDelete,
   onRefresh,
   onViewAudit,
+  selectedIds = [],
+  onSelectionChange,
+  onDeleteMultiple,
 }: Readonly<ProveedorTableProps>) {
+  const isAllSelected =
+    proveedores.length > 0 &&
+    proveedores.every((item) => selectedIds.includes(item.id));
+
+  const handleToggleAll = () => {
+    if (!onSelectionChange) return;
+
+    if (isAllSelected) {
+      const currentPageIds = new Set(proveedores.map((p) => p.id));
+      onSelectionChange(selectedIds.filter((id) => !currentPageIds.has(id)));
+    } else {
+      const updated = new Set([...selectedIds, ...proveedores.map((p) => p.id)]);
+      onSelectionChange(Array.from(updated));
+    }
+  };
+
+  const handleToggleItem = (id: number) => {
+    if (!onSelectionChange) return;
+
+    if (selectedIds.includes(id)) {
+      onSelectionChange(selectedIds.filter((item) => item !== id));
+    } else {
+      onSelectionChange([...selectedIds, id]);
+    }
+  };
+
+  const handleClearSelection = () => {
+    onSelectionChange?.([]);
+  };
+
   const renderTableBody = () => {
     if (isLoading) {
       return (
-        <TableSkeletonRows rows={pageSize > 10 ? 10 : pageSize} columns={7} />
+        <TableSkeletonRows rows={pageSize > 10 ? 10 : pageSize} columns={8} />
       );
     }
 
     if (proveedores.length === 0) {
       return (
         <TableRow className="hover:bg-transparent">
-          <TableCell colSpan={7} className="h-64 p-0">
+          <TableCell colSpan={8} className="h-64 p-0">
             <EmptyState
               icon={Building2}
               title="No se encontraron proveedores"
@@ -97,10 +135,10 @@ export function ProveedorTable({
               action={
                 onAddProveedor && !searchTerm
                   ? {
-                    label: "Nuevo Proveedor",
-                    icon: Plus,
-                    onClick: onAddProveedor,
-                  }
+                      label: "Nuevo Proveedor",
+                      icon: Plus,
+                      onClick: onAddProveedor,
+                    }
                   : undefined
               }
               className="border-0 bg-transparent py-12"
@@ -112,12 +150,27 @@ export function ProveedorTable({
 
     return proveedores.map((item) => {
       const phone = item.celular || item.telefono;
+      const isSelected = selectedIds.includes(item.id);
 
       return (
         <TableRow
           key={item.id}
-          className="hover:bg-muted/30 transition-colors group"
+          data-state={isSelected ? "selected" : undefined}
+          className={cn(
+            "hover:bg-muted/30 transition-colors group",
+            isSelected && "bg-primary/5 dark:bg-primary/10 hover:bg-primary/10"
+          )}
         >
+          {/* Checkbox Selección */}
+          <TableCell className="w-[44px] px-3 py-3 align-top">
+            <Checkbox
+              checked={isSelected}
+              onCheckedChange={() => handleToggleItem(item.id)}
+              aria-label={`Seleccionar proveedor ${item.razonSocial}`}
+              className="cursor-pointer"
+            />
+          </TableCell>
+
           {/* Código */}
           <TableCell className="font-mono text-xs font-semibold py-3 align-top">
             <span className="inline-block px-1.5 py-0.5 rounded bg-muted/80 border border-border/50 text-foreground">
@@ -318,11 +371,58 @@ export function ProveedorTable({
         </div>
       </div>
 
+      {/* Bulk Selection Action Bar */}
+      {selectedIds.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-2.5 px-3.5 py-2 rounded-lg bg-primary/10 border border-primary/25 text-foreground animate-in fade-in slide-in-from-top-1 duration-200">
+          <div className="flex items-center gap-2">
+            <Badge variant="default" className="font-mono text-xs px-2 py-0.5">
+              {selectedIds.length}
+            </Badge>
+            <span className="text-xs font-medium">
+              {selectedIds.length === 1
+                ? "1 proveedor seleccionado"
+                : `${selectedIds.length} proveedores seleccionados`}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClearSelection}
+              className="h-7 px-2.5 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+            >
+              Deseleccionar
+            </Button>
+
+            {onDeleteMultiple && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => onDeleteMultiple(selectedIds)}
+                className="h-7 px-2.5 text-xs gap-1.5 cursor-pointer font-medium shadow-2xs"
+              >
+                <Trash2 className="size-3.5" />
+                <span>Eliminar seleccionados ({selectedIds.length})</span>
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Table Container */}
       <div className="rounded-lg border border-border/60 bg-card overflow-hidden shadow-2xs">
         <Table>
           <TableHeader className="bg-muted/40">
             <TableRow className="hover:bg-transparent">
+              <TableHead className="w-[44px] px-3">
+                <Checkbox
+                  checked={isAllSelected}
+                  onCheckedChange={handleToggleAll}
+                  aria-label="Seleccionar todos los proveedores de la página actual"
+                  className="cursor-pointer"
+                />
+              </TableHead>
               <TableHead className="w-[110px] text-xs font-semibold">
                 Código
               </TableHead>
