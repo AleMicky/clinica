@@ -104,3 +104,56 @@ public sealed record MovimientoCajaResponse : AuditableResponse
 
     public string? Observacion { get; init; }
 }
+
+public sealed record MovimientoCajaDiarioDto
+{
+    public string Fecha { get; init; } = string.Empty;
+    public decimal Ingresos { get; init; }
+    public decimal Egresos { get; init; }
+    public decimal Balance { get; init; }
+    public int Cantidad { get; init; }
+}
+
+public sealed record MovimientoPorTipoDto
+{
+    public string TipoNombre { get; init; } = string.Empty;
+    public string Naturaleza { get; init; } = string.Empty;
+    public decimal Monto { get; init; }
+    public int Cantidad { get; init; }
+    public decimal Porcentaje { get; init; }
+}
+
+public sealed record MovimientoPorConceptoDto
+{
+    public string ConceptoNombre { get; init; } = string.Empty;
+    public string TipoNombre { get; init; } = string.Empty;
+    public string Naturaleza { get; init; } = string.Empty;
+    public decimal Monto { get; init; }
+    public int Cantidad { get; init; }
+    public decimal Porcentaje { get; init; }
+}
+
+public sealed record MovimientoPorCajaDto
+{
+    public string CajaNombre { get; init; } = string.Empty;
+    public decimal Ingresos { get; init; }
+    public decimal Egresos { get; init; }
+    public decimal Balance { get; init; }
+    public int Cantidad { get; init; }
+}
+
+public sealed record MovimientoCajaMetricsResponse
+{
+    public int TotalMovimientos { get; init; }
+    public decimal TotalIngresos { get; init; }
+    public decimal TotalEgresos { get; init; }
+    public decimal BalanceNeto { get; init; }
+    public int CantidadIngresos { get; init; }
+    public int CantidadEgresos { get; init; }
+    public decimal PromedioIngreso { get; init; }
+    public decimal PromedioEgreso { get; init; }
+    public List<MovimientoCajaDiarioDto> TendenciaDiaria { get; init; } = [];
+    public List<MovimientoPorTipoDto> PorTipoMovimiento { get; init; } = [];
+    public List<MovimientoPorConceptoDto> PorConcepto { get; init; } = [];
+    public List<MovimientoPorCajaDto> PorCaja { get; init; } = [];
+}

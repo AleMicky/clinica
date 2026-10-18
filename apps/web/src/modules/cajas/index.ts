@@ -36,6 +36,7 @@ export type {
 export { TipoMovimientoCaja } from "./movimiento-caja/types/movimiento-caja.types";
 export * from "./movimiento-caja/hooks/use-movimientos-caja";
 export * from "./movimiento-caja/components/movimiento-caja-module-view";
+export * from "./movimiento-caja/components/movimiento-caja-reporte-view";
 
 export type {
   ArqueoCajaResponse,

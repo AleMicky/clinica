@@ -7,6 +7,7 @@ using Clinica.Api.Modules.Cajas.TurnoCaja.Entity;
 using Clinica.Api.Modules.Parametros.Moneda.Dtos;
 using Clinica.Api.Modules.Parametros.Moneda.Entity;
 using Clinica.Api.Shared.Exceptions;
+using Clinica.Api.Shared.Excel;
 using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
 using MovimientoCajaEntity =
@@ -17,9 +18,11 @@ using TurnoCajaEntity =
 namespace Clinica.Api.Modules.Cajas.MovimientoCaja.Services;
 
 public sealed class MovimientoCajaService(
-    AppDbContext dbContext)
+    AppDbContext dbContext,
+    IExcelReportGenerator excelReportGenerator)
 {
     private AppDbContext DbContext { get; } = dbContext;
+    private IExcelReportGenerator ExcelReportGenerator { get; } = excelReportGenerator;
 
     private DbSet<MovimientoCajaEntity> Entities =>
         DbContext.Set<MovimientoCajaEntity>();
@@ -32,6 +35,8 @@ public sealed class MovimientoCajaService(
         PaginationRequest pagination,
         string? search,
         int? turnoCajaId = null,
+        DateOnly? fechaDesde = null,
+        DateOnly? fechaHasta = null,
         CancellationToken cancellationToken = default)
     {
         var query = BuildQuery()
@@ -42,6 +47,18 @@ public sealed class MovimientoCajaService(
         {
             query = query.Where(
                 x => x.TurnoCajaId == turnoCajaId.Value);
+        }
+
+        if (fechaDesde.HasValue)
+        {
+            var desdeDateTime = fechaDesde.Value.ToDateTime(TimeOnly.MinValue);
+            query = query.Where(x => x.FechaHora >= desdeDateTime);
+        }
+
+        if (fechaHasta.HasValue)
+        {
+            var hastaDateTime = fechaHasta.Value.ToDateTime(TimeOnly.MaxValue);
+            query = query.Where(x => x.FechaHora <= hastaDateTime);
         }
 
         var normalizedSearch =
@@ -70,6 +87,285 @@ public sealed class MovimientoCajaService(
             pagination.ValidPage,
             pagination.ValidPageSize,
             totalItems);
+    }
+
+    // ============================================================
+    // MÉTRICAS Y ANALÍTICA
+    // ============================================================
+
+    public async Task<MovimientoCajaMetricsResponse> ObtenerMetricasAsync(
+        string? search = null,
+        int? turnoCajaId = null,
+        string? naturaleza = null,
+        DateOnly? fechaDesde = null,
+        DateOnly? fechaHasta = null,
+        CancellationToken cancellationToken = default)
+    {
+        var query = Entities
+            .Include(x => x.TipoMovimientoCaja)
+            .Include(x => x.ConceptoMovimientoCaja)
+            .Include(x => x.TurnoCaja).ThenInclude(x => x.Caja)
+            .AsNoTracking()
+            .Where(x => x.Activo);
+
+        if (turnoCajaId.HasValue)
+        {
+            query = query.Where(x => x.TurnoCajaId == turnoCajaId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(naturaleza) && !naturaleza.Equals("TODOS", StringComparison.OrdinalIgnoreCase))
+        {
+            var natUpper = naturaleza.Trim().ToUpperInvariant();
+            query = query.Where(x => x.NaturalezaAplicada == natUpper || (x.TipoMovimientoCaja != null && x.TipoMovimientoCaja.Naturaleza == natUpper));
+        }
+
+        if (fechaDesde.HasValue)
+        {
+            var desdeDateTime = fechaDesde.Value.ToDateTime(TimeOnly.MinValue);
+            query = query.Where(x => x.FechaHora >= desdeDateTime);
+        }
+
+        if (fechaHasta.HasValue)
+        {
+            var hastaDateTime = fechaHasta.Value.ToDateTime(TimeOnly.MaxValue);
+            query = query.Where(x => x.FechaHora <= hastaDateTime);
+        }
+
+        var normalizedSearch = string.IsNullOrWhiteSpace(search)
+            ? null
+            : search.Trim();
+
+        query = ApplySearch(query, normalizedSearch);
+
+        var allItems = await query.ToListAsync(cancellationToken);
+
+        if (allItems.Count == 0)
+        {
+            return new MovimientoCajaMetricsResponse();
+        }
+
+        int totalMovimientos = allItems.Count;
+        decimal totalIngresos = 0m;
+        decimal totalEgresos = 0m;
+        int cantIngresos = 0;
+        int cantEgresos = 0;
+
+        foreach (var item in allItems)
+        {
+            var monto = item.MontoMonedaBase > 0 ? item.MontoMonedaBase : item.Monto;
+            var isIngreso = item.NaturalezaAplicada.Equals("ENTRADA", StringComparison.OrdinalIgnoreCase) ||
+                            (item.TipoMovimientoCaja != null && item.TipoMovimientoCaja.Naturaleza.Equals("ENTRADA", StringComparison.OrdinalIgnoreCase));
+
+            if (isIngreso)
+            {
+                totalIngresos += monto;
+                cantIngresos++;
+            }
+            else
+            {
+                totalEgresos += monto;
+                cantEgresos++;
+            }
+        }
+
+        decimal balanceNeto = totalIngresos - totalEgresos;
+        decimal promIngreso = cantIngresos > 0 ? Math.Round(totalIngresos / cantIngresos, 2) : 0m;
+        decimal promEgreso = cantEgresos > 0 ? Math.Round(totalEgresos / cantEgresos, 2) : 0m;
+
+        // Tendencia diaria
+        var tendenciaDiaria = allItems
+            .GroupBy(x => x.FechaHora.Date)
+            .OrderBy(g => g.Key)
+            .Select(g =>
+            {
+                decimal diaIngresos = 0m;
+                decimal diaEgresos = 0m;
+                foreach (var m in g)
+                {
+                    var monto = m.MontoMonedaBase > 0 ? m.MontoMonedaBase : m.Monto;
+                    var isIng = m.NaturalezaAplicada.Equals("ENTRADA", StringComparison.OrdinalIgnoreCase) ||
+                                (m.TipoMovimientoCaja != null && m.TipoMovimientoCaja.Naturaleza.Equals("ENTRADA", StringComparison.OrdinalIgnoreCase));
+                    if (isIng) diaIngresos += monto;
+                    else diaEgresos += monto;
+                }
+                return new MovimientoCajaDiarioDto
+                {
+                    Fecha = g.Key.ToString("yyyy-MM-dd"),
+                    Ingresos = diaIngresos,
+                    Egresos = diaEgresos,
+                    Balance = diaIngresos - diaEgresos,
+                    Cantidad = g.Count()
+                };
+            })
+            .ToList();
+
+        // Por tipo movimiento
+        decimal totalVolumen = totalIngresos + totalEgresos;
+        var porTipoMovimiento = allItems
+            .GroupBy(x => new
+            {
+                Nombre = x.TipoMovimientoCaja != null ? x.TipoMovimientoCaja.Nombre : "Sin tipo",
+                Naturaleza = x.NaturalezaAplicada ?? (x.TipoMovimientoCaja != null ? x.TipoMovimientoCaja.Naturaleza : "OTRO")
+            })
+            .Select(g =>
+            {
+                var montoTipo = g.Sum(x => x.MontoMonedaBase > 0 ? x.MontoMonedaBase : x.Monto);
+                return new MovimientoPorTipoDto
+                {
+                    TipoNombre = g.Key.Nombre,
+                    Naturaleza = g.Key.Naturaleza,
+                    Monto = montoTipo,
+                    Cantidad = g.Count(),
+                    Porcentaje = totalVolumen > 0 ? Math.Round((montoTipo / totalVolumen) * 100m, 1) : 0m
+                };
+            })
+            .OrderByDescending(x => x.Monto)
+            .ToList();
+
+        // Por concepto
+        var porConcepto = allItems
+            .GroupBy(x => new
+            {
+                ConceptoNombre = x.ConceptoMovimientoCaja != null ? x.ConceptoMovimientoCaja.Nombre : "Sin concepto",
+                TipoNombre = x.TipoMovimientoCaja != null ? x.TipoMovimientoCaja.Nombre : "-",
+                Naturaleza = x.NaturalezaAplicada ?? (x.TipoMovimientoCaja != null ? x.TipoMovimientoCaja.Naturaleza : "-")
+            })
+            .Select(g =>
+            {
+                var montoConcepto = g.Sum(x => x.MontoMonedaBase > 0 ? x.MontoMonedaBase : x.Monto);
+                return new MovimientoPorConceptoDto
+                {
+                    ConceptoNombre = g.Key.ConceptoNombre,
+                    TipoNombre = g.Key.TipoNombre,
+                    Naturaleza = g.Key.Naturaleza,
+                    Monto = montoConcepto,
+                    Cantidad = g.Count(),
+                    Porcentaje = totalVolumen > 0 ? Math.Round((montoConcepto / totalVolumen) * 100m, 1) : 0m
+                };
+            })
+            .OrderByDescending(x => x.Monto)
+            .Take(10)
+            .ToList();
+
+        // Por caja
+        var porCaja = allItems
+            .Where(x => x.TurnoCaja?.Caja != null)
+            .GroupBy(x => x.TurnoCaja!.Caja!.Nombre)
+            .Select(g =>
+            {
+                decimal cajaIng = 0m;
+                decimal cajaEgr = 0m;
+                foreach (var m in g)
+                {
+                    var monto = m.MontoMonedaBase > 0 ? m.MontoMonedaBase : m.Monto;
+                    var isIng = m.NaturalezaAplicada.Equals("ENTRADA", StringComparison.OrdinalIgnoreCase) ||
+                                (m.TipoMovimientoCaja != null && m.TipoMovimientoCaja.Naturaleza.Equals("ENTRADA", StringComparison.OrdinalIgnoreCase));
+                    if (isIng) cajaIng += monto;
+                    else cajaEgr += monto;
+                }
+                return new MovimientoPorCajaDto
+                {
+                    CajaNombre = g.Key,
+                    Ingresos = cajaIng,
+                    Egresos = cajaEgr,
+                    Balance = cajaIng - cajaEgr,
+                    Cantidad = g.Count()
+                };
+            })
+            .OrderByDescending(x => x.Ingresos + x.Egresos)
+            .Take(5)
+            .ToList();
+
+        return new MovimientoCajaMetricsResponse
+        {
+            TotalMovimientos = totalMovimientos,
+            TotalIngresos = totalIngresos,
+            TotalEgresos = totalEgresos,
+            BalanceNeto = balanceNeto,
+            CantidadIngresos = cantIngresos,
+            CantidadEgresos = cantEgresos,
+            PromedioIngreso = promIngreso,
+            PromedioEgreso = promEgreso,
+            TendenciaDiaria = tendenciaDiaria,
+            PorTipoMovimiento = porTipoMovimiento,
+            PorConcepto = porConcepto,
+            PorCaja = porCaja
+        };
+    }
+
+    // ============================================================
+    // EXPORTAR EXCEL
+    // ============================================================
+
+    public async Task<byte[]> ExportarExcelAsync(
+        string? search,
+        int? turnoCajaId = null,
+        string? naturaleza = null,
+        DateOnly? fechaDesde = null,
+        DateOnly? fechaHasta = null,
+        CancellationToken cancellationToken = default)
+    {
+        var query = BuildQuery()
+            .AsNoTracking()
+            .Where(x => x.Activo);
+
+        if (turnoCajaId.HasValue)
+        {
+            query = query.Where(x => x.TurnoCajaId == turnoCajaId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(naturaleza) && !naturaleza.Equals("TODOS", StringComparison.OrdinalIgnoreCase))
+        {
+            var natUpper = naturaleza.Trim().ToUpperInvariant();
+            query = query.Where(x => x.NaturalezaAplicada == natUpper || (x.TipoMovimientoCaja != null && x.TipoMovimientoCaja.Naturaleza == natUpper));
+        }
+
+        if (fechaDesde.HasValue)
+        {
+            var desdeDateTime = fechaDesde.Value.ToDateTime(TimeOnly.MinValue);
+            query = query.Where(x => x.FechaHora >= desdeDateTime);
+        }
+
+        if (fechaHasta.HasValue)
+        {
+            var hastaDateTime = fechaHasta.Value.ToDateTime(TimeOnly.MaxValue);
+            query = query.Where(x => x.FechaHora <= hastaDateTime);
+        }
+
+        var normalizedSearch = string.IsNullOrWhiteSpace(search)
+            ? null
+            : search.Trim();
+
+        query = ApplySearch(query, normalizedSearch);
+
+        var movimientos = await ApplyOrder(query)
+            .ToListAsync(cancellationToken);
+
+        var options = new ExcelReportOptions
+        {
+            Title = "Reporte General de Movimientos de Caja",
+            Subtitle = "Módulo de Cajas & Tesorería - Control de Flujo de Efectivo",
+            SheetName = "MovimientosCaja",
+            HeaderColor = "#0284C7",
+            GeneratedBy = "Sistema Clínico"
+        };
+
+        return ExcelReportGenerator.Generate(options, movimientos, builder =>
+        {
+            builder.AddColumn("ID", x => x.Id.ToString(), ExcelColumnAlignment.Center);
+            builder.AddDateTimeColumn("Fecha y Hora", x => x.FechaHora);
+            builder.AddColumn("Caja", x => x.TurnoCaja?.Caja?.Nombre ?? "-", ExcelColumnAlignment.Center);
+            builder.AddColumn("Cajero / Usuario", x => x.TurnoCaja?.Empleado?.Persona != null ? $"{x.TurnoCaja.Empleado.Persona.Nombres} {x.TurnoCaja.Empleado.Persona.ApellidoPaterno}".Trim() : "-");
+            builder.AddColumn("Tipo de Movimiento", x => x.TipoMovimientoCaja?.Nombre ?? "-");
+            builder.AddColumn("Concepto", x => x.ConceptoMovimientoCaja?.Nombre ?? "-");
+            builder.AddColumn("Naturaleza", x => x.NaturalezaAplicada ?? x.TipoMovimientoCaja?.Naturaleza ?? "-", ExcelColumnAlignment.Center);
+            builder.AddColumn("Moneda", x => x.Moneda?.Simbolo ?? "Bs.", ExcelColumnAlignment.Center);
+            builder.AddCurrencyColumn("Monto Original", x => x.Monto);
+            builder.AddColumn("Tipo de Cambio", x => x.TipoCambio.ToString("N2"), ExcelColumnAlignment.Right);
+            builder.AddCurrencyColumn("Monto Base (Bs.)", x => x.MontoMonedaBase);
+            builder.AddColumn("Referencia", x => x.Referencia ?? "-");
+            builder.AddColumn("Observación", x => x.Observacion ?? "-");
+        });
     }
 
     // ============================================================

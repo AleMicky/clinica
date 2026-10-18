@@ -4,7 +4,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createMovimientoCaja,
   deleteMovimientoCaja,
+  exportarMovimientosCajaExcel,
   getMovimientoCajaById,
+  getMovimientoCajaMetrics,
   getMovimientosCaja,
   updateMovimientoCaja,
 } from "../api/movimiento-caja.api";
@@ -15,6 +17,7 @@ import {
 } from "../../tipo-movimiento";
 import type {
   CreateMovimientoCajaRequest,
+  ExportarMovimientosQueryParams,
   MovimientoCajaQueryParams,
   UpdateMovimientoCajaRequest,
 } from "../types/movimiento-caja.types";
@@ -27,6 +30,30 @@ export function useMovimientosCaja(
     queryKey: movimientoCajaKeys.list(params as Record<string, unknown>),
     queryFn: () => getMovimientosCaja(params),
     enabled,
+  });
+}
+
+export function useMovimientoCajaMetrics(
+  params?: {
+    search?: string;
+    turnoCajaId?: number;
+    naturaleza?: string;
+    fechaDesde?: string;
+    fechaHasta?: string;
+  },
+  enabled = true
+) {
+  return useQuery({
+    queryKey: movimientoCajaKeys.metric(params as Record<string, unknown>),
+    queryFn: () => getMovimientoCajaMetrics(params),
+    enabled,
+  });
+}
+
+export function useExportarMovimientosCajaExcel() {
+  return useMutation({
+    mutationFn: (params?: ExportarMovimientosQueryParams) =>
+      exportarMovimientosCajaExcel(params),
   });
 }
 

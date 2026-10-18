@@ -58,6 +58,7 @@ export const ROUTES = {
     },
     TURNOS: "/caja/turnos",
     MOVIMIENTOS: "/caja/movimientos",
+    REPORTES_MOVIMIENTOS: "/caja/movimientos/reportes",
     ARQUEOS: "/caja/arqueos",
     ARQUEOS_NUEVO: "/caja/arqueos/nuevo",
     COBROS: "/caja/cobros",

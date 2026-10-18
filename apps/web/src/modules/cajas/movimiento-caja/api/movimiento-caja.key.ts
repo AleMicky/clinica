@@ -9,4 +9,7 @@ export const movimientoCajaKeys = {
     [...movimientoCajaKeys.all, "tipos", naturaleza] as const,
   conceptos: (tipoMovimientoCajaId?: number) =>
     [...movimientoCajaKeys.all, "conceptos", tipoMovimientoCajaId] as const,
+  metrics: () => [...movimientoCajaKeys.all, "metrics"] as const,
+  metric: (params?: Record<string, unknown>) =>
+    [...movimientoCajaKeys.metrics(), params] as const,
 };

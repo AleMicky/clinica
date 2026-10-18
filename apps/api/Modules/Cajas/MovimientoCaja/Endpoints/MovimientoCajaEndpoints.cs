@@ -19,6 +19,12 @@ public static class MovimientoCajaEndpoints
         group.MapGet("/", ListarAsync)
             .WithName("ListarMovimientosCaja");
 
+        group.MapGet("/metricas", ObtenerMetricasAsync)
+            .WithName("ObtenerMetricasMovimientosCaja");
+
+        group.MapGet("/exportar-excel", ExportarExcelAsync)
+            .WithName("ExportarMovimientosCajaExcel");
+
         group.MapGet("/{id:int}", ObtenerAsync)
             .WithName("ObtenerMovimientoCaja");
 
@@ -36,6 +42,8 @@ public static class MovimientoCajaEndpoints
         [AsParameters] PaginationRequest pagination,
         string? search,
         int? turnoCajaId,
+        DateOnly? fechaDesde,
+        DateOnly? fechaHasta,
         MovimientoCajaService service,
         CancellationToken cancellationToken)
     {
@@ -43,9 +51,55 @@ public static class MovimientoCajaEndpoints
             pagination,
             search,
             turnoCajaId,
+            fechaDesde,
+            fechaHasta,
             cancellationToken);
 
         return Results.Ok(result);
+    }
+
+    private static async Task<IResult> ObtenerMetricasAsync(
+        string? search,
+        int? turnoCajaId,
+        string? naturaleza,
+        DateOnly? fechaDesde,
+        DateOnly? fechaHasta,
+        MovimientoCajaService service,
+        CancellationToken cancellationToken)
+    {
+        var result = await service.ObtenerMetricasAsync(
+            search,
+            turnoCajaId,
+            naturaleza,
+            fechaDesde,
+            fechaHasta,
+            cancellationToken);
+
+        return Results.Ok(result);
+    }
+
+    private static async Task<IResult> ExportarExcelAsync(
+        string? search,
+        int? turnoCajaId,
+        string? naturaleza,
+        DateOnly? fechaDesde,
+        DateOnly? fechaHasta,
+        MovimientoCajaService service,
+        CancellationToken cancellationToken)
+    {
+        var bytes = await service.ExportarExcelAsync(
+            search,
+            turnoCajaId,
+            naturaleza,
+            fechaDesde,
+            fechaHasta,
+            cancellationToken);
+
+        var fileName = $"reporte_movimientos_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+        return Results.File(
+            bytes,
+            contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            fileDownloadName: fileName);
     }
 
     private static async Task<IResult> ObtenerAsync(

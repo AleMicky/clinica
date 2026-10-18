@@ -296,11 +296,19 @@ public static class OpcionMenuSeed
                 "CAJA_VENTAS"),
 
             new(
+                "REPORTES_MOVIMIENTOS",
+                "Reportes de Movimientos",
+                "/caja/movimientos/reportes",
+                "FileSpreadsheet",
+                6,
+                "CAJA_VENTAS"),
+
+            new(
                 "CONF",
                 "Configuración de Caja",
                 null,
                 "Settings",
-                6,
+                7,
                 "CAJA_VENTAS"),
 
             new(

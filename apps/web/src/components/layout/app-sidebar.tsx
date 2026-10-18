@@ -79,6 +79,7 @@ export function AppSidebar({
     let hasReportesAdmision = false;
     let hasReportesVentas = false;
     let hasReportesCobros = false;
+    let hasReportesMovimientos = false;
     function checkReportes(nodes: OpcionMenuTreeResponse[]) {
       for (const n of nodes) {
         if (n.ruta === "/recepcion/reportes") {
@@ -90,13 +91,16 @@ export function AppSidebar({
         if (n.ruta === "/caja/reportes") {
           hasReportesCobros = true;
         }
+        if (n.ruta === "/caja/movimientos/reportes") {
+          hasReportesMovimientos = true;
+        }
         if (n.hijos && n.hijos.length > 0) {
           checkReportes(n.hijos);
         }
       }
     }
     checkReportes(menuTree);
-    if (hasReportesAdmision && hasReportesVentas && hasReportesCobros) return menuTree;
+    if (hasReportesAdmision && hasReportesVentas && hasReportesCobros && hasReportesMovimientos) return menuTree;
 
     return menuTree.map((category) => {
       const hijos = [...(category.hijos || [])];
@@ -184,6 +188,35 @@ export function AppSidebar({
             hijos.splice(cobroIdx + 1, 0, reporteCobroNode);
           } else {
             hijos.push(reporteCobroNode);
+          }
+          changed = true;
+        }
+      }
+
+      // 4. Reportes de Movimientos de Caja
+      if (!hasReportesMovimientos) {
+        const hasMovimientos = hijos.some(
+          (h) => h.ruta === "/caja/movimientos" || h.codigo === "MOVIMIENTOS_CAJA"
+        );
+        if (category.codigo === "CAJA_VENTAS" || hasMovimientos) {
+          const movIdx = hijos.findIndex(
+            (h) => h.ruta === "/caja/movimientos" || h.codigo === "MOVIMIENTOS_CAJA"
+          );
+
+          const reporteMovNode: OpcionMenuTreeResponse = {
+            id: -9996,
+            codigo: "REPORTES_MOVIMIENTOS",
+            nombre: "Reportes de Movimientos",
+            ruta: "/caja/movimientos/reportes",
+            icono: "FileSpreadsheet",
+            orden: movIdx >= 0 ? (hijos[movIdx].orden ?? 5) + 1 : 6,
+            hijos: [],
+          };
+
+          if (movIdx >= 0) {
+            hijos.splice(movIdx + 1, 0, reporteMovNode);
+          } else {
+            hijos.push(reporteMovNode);
           }
           changed = true;
         }

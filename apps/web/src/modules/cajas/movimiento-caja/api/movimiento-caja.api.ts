@@ -1,6 +1,8 @@
 import { apiClient } from "@/lib/api/api-client";
 import type {
   CreateMovimientoCajaRequest,
+  ExportarMovimientosQueryParams,
+  MovimientoCajaMetricsResponse,
   MovimientoCajaQueryParams,
   MovimientoCajaResponse,
   PagedResult,
@@ -53,6 +55,33 @@ export async function updateMovimientoCaja(
 
 export async function deleteMovimientoCaja(id: number): Promise<void> {
   await apiClient.delete(`/movimientos-caja/${id}`);
+}
+
+export async function getMovimientoCajaMetrics(params?: {
+  search?: string;
+  turnoCajaId?: number;
+  naturaleza?: string;
+  fechaDesde?: string;
+  fechaHasta?: string;
+}): Promise<MovimientoCajaMetricsResponse> {
+  const response = await apiClient.get<MovimientoCajaMetricsResponse>(
+    "/movimientos-caja/metricas",
+    { params }
+  );
+  return response.data;
+}
+
+export async function exportarMovimientosCajaExcel(
+  params?: ExportarMovimientosQueryParams
+): Promise<Blob> {
+  const response = await apiClient.get<Blob>(
+    "/movimientos-caja/exportar-excel",
+    {
+      params,
+      responseType: "blob",
+    }
+  );
+  return response.data;
 }
 
 // Re-exportar tipos y conceptos desde el módulo especializado tipo-movimiento

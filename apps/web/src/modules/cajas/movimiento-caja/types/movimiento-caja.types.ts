@@ -81,6 +81,8 @@ export interface MovimientoCajaQueryParams {
   search?: string;
   turnoCajaId?: number;
   tipoMovimientoCajaId?: number;
+  fechaDesde?: string;
+  fechaHasta?: string;
 }
 
 export interface MovimientoCajaMetrics {
@@ -88,6 +90,62 @@ export interface MovimientoCajaMetrics {
   totalIngresos: number;
   totalEgresos: number;
   balanceNeto: number;
+}
+
+export interface MovimientoCajaDiario {
+  fecha: string;
+  ingresos: number;
+  egresos: number;
+  balance: number;
+  cantidad: number;
+}
+
+export interface MovimientoPorTipo {
+  tipoNombre: string;
+  naturaleza: string;
+  monto: number;
+  cantidad: number;
+  porcentaje: number;
+}
+
+export interface MovimientoPorConcepto {
+  conceptoNombre: string;
+  tipoNombre: string;
+  naturaleza: string;
+  monto: number;
+  cantidad: number;
+  porcentaje: number;
+}
+
+export interface MovimientoPorCaja {
+  cajaNombre: string;
+  ingresos: number;
+  egresos: number;
+  balance: number;
+  cantidad: number;
+}
+
+export interface MovimientoCajaMetricsResponse {
+  totalMovimientos: number;
+  totalIngresos: number;
+  totalEgresos: number;
+  balanceNeto: number;
+  cantidadIngresos: number;
+  cantidadEgresos: number;
+  promedioIngreso: number;
+  promedioEgreso: number;
+  tendenciaDiaria: MovimientoCajaDiario[];
+  porTipoMovimiento: MovimientoPorTipo[];
+  porConcepto: MovimientoPorConcepto[];
+  porCaja: MovimientoPorCaja[];
+}
+
+export interface ExportarMovimientosQueryParams {
+  search?: string;
+  turnoCajaId?: number;
+  naturaleza?: string;
+  fechaDesde?: string;
+  fechaHasta?: string;
 }
 
 export interface PagedResult<T> {
@@ -98,3 +156,4 @@ export interface PagedResult<T> {
   hasPreviousPage?: boolean;
   hasNextPage?: boolean;
 }
+
