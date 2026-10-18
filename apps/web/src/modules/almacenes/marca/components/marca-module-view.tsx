@@ -15,6 +15,12 @@ export function MarcaModuleView() {
   const [page, setPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(10);
 
+  // Selection state
+  const [selectedIds, setSelectedIds] = React.useState<number[]>([]);
+  const [selectedMarcasMap, setSelectedMarcasMap] = React.useState<
+    Map<number, MarcaResponse>
+  >(new Map());
+
   const {
     data: marcasData,
     isLoading,
@@ -26,6 +32,25 @@ export function MarcaModuleView() {
   });
 
   const marcas = marcasData?.items ?? [];
+
+  // Keep map updated with current page marcas
+  const handleSelectionChange = (newSelectedIds: number[]) => {
+    setSelectedIds(newSelectedIds);
+    setSelectedMarcasMap((prev) => {
+      const next = new Map(prev);
+      marcas.forEach((m) => {
+        if (newSelectedIds.includes(m.id)) {
+          next.set(m.id, m);
+        }
+      });
+      for (const id of next.keys()) {
+        if (!newSelectedIds.includes(id)) {
+          next.delete(id);
+        }
+      }
+      return next;
+    });
+  };
 
   const handleSearchChange = (term: string) => {
     setSearchTerm(term);
@@ -49,9 +74,21 @@ export function MarcaModuleView() {
   // Delete Dialog state
   const [deleteOpen, setDeleteOpen] = React.useState(false);
   const [marcaToDelete, setMarcaToDelete] = React.useState<MarcaResponse | null>(null);
+  const [marcasToDelete, setMarcasToDelete] = React.useState<MarcaResponse[]>([]);
 
   const handleOpenDelete = (marca: MarcaResponse) => {
     setMarcaToDelete(marca);
+    setMarcasToDelete([]);
+    setDeleteOpen(true);
+  };
+
+  const handleOpenDeleteMultiple = (ids: number[]) => {
+    const items = ids
+      .map((id) => selectedMarcasMap.get(id) ?? marcas.find((m) => m.id === id))
+      .filter((item): item is MarcaResponse => Boolean(item));
+
+    setMarcaToDelete(null);
+    setMarcasToDelete(items);
     setDeleteOpen(true);
   };
 
@@ -119,6 +156,9 @@ export function MarcaModuleView() {
         onDelete={handleOpenDelete}
         onRefresh={() => refetch()}
         onViewAudit={handleViewAudit}
+        selectedIds={selectedIds}
+        onSelectionChange={handleSelectionChange}
+        onDeleteMultiple={handleOpenDeleteMultiple}
       />
 
       {/* Form Dialog (Create / Edit) */}
@@ -129,12 +169,17 @@ export function MarcaModuleView() {
         onSuccessCallback={() => refetch()}
       />
 
-      {/* Delete Dialog */}
+      {/* Delete Dialog (Single & Multiple) */}
       <MarcaDeleteDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
         marcaToDelete={marcaToDelete}
-        onSuccessCallback={() => refetch()}
+        marcasToDelete={marcasToDelete}
+        onSuccessCallback={() => {
+          setSelectedIds([]);
+          setSelectedMarcasMap(new Map());
+          refetch();
+        }}
       />
 
       {/* Shared Audit Dialog */}

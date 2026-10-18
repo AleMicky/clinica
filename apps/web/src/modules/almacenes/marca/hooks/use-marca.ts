@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createMarca,
   deleteMarca,
+  deleteMarcasMultiple,
   getMarcaById,
   getMarcas,
   updateMarca,
@@ -59,6 +60,17 @@ export function useDeleteMarca() {
 
   return useMutation({
     mutationFn: (id: number) => deleteMarca(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: marcaKeys.all });
+    },
+  });
+}
+
+export function useDeleteMarcasMultiple() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (ids: number[]) => deleteMarcasMultiple(ids),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: marcaKeys.all });
     },

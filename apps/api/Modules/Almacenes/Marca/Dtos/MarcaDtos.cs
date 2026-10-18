@@ -20,3 +20,14 @@ public sealed record MarcaResponse : AuditableResponse
     public string Nombre { get; init; } = string.Empty;
     public string? Descripcion { get; init; }
 }
+
+public sealed record DeleteMarcasRequest
+{
+    public List<int> Ids { get; init; } = [];
+}
+
+public sealed record DeleteMultipleMarcasResponse
+{
+    public int Eliminados { get; init; }
+    public string Message { get; init; } = string.Empty;
+}

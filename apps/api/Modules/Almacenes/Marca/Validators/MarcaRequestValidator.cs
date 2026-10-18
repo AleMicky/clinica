@@ -33,3 +33,16 @@ public sealed class CreateMarcaRequestValidator
 
 public sealed class UpdateMarcaRequestValidator
     : MarcaRequestValidator<UpdateMarcaRequest>;
+
+public sealed class DeleteMarcasRequestValidator
+    : AbstractValidator<DeleteMarcasRequest>
+{
+    public DeleteMarcasRequestValidator()
+    {
+        RuleFor(x => x.Ids)
+            .NotEmpty()
+            .WithMessage("Debe proporcionar al menos un ID de marca.")
+            .Must(ids => ids != null && ids.Count > 0 && ids.All(id => id > 0))
+            .WithMessage("Todos los identificadores de marca deben ser válidos.");
+    }
+}

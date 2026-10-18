@@ -45,3 +45,12 @@ export interface PagedResult<T> {
   hasPreviousPage?: boolean;
   hasNextPage?: boolean;
 }
+
+export interface DeleteMarcasRequest {
+  ids: number[];
+}
+
+export interface DeleteMultipleMarcasResponse {
+  eliminados: number;
+  message: string;
+}

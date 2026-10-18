@@ -93,6 +93,61 @@ public sealed class MarcaService(AppDbContext dbContext)
         }
     }
 
+    protected override async Task ValidateDeleteAsync(
+        MarcaEntity entity,
+        CancellationToken cancellationToken)
+    {
+        var tieneProductos = await DbContext.Productos
+            .AnyAsync(x => x.MarcaId == entity.Id, cancellationToken);
+
+        if (tieneProductos)
+        {
+            throw new ConflictException(
+                $"No se puede eliminar la marca '{entity.Nombre}' porque tiene productos asociados.");
+        }
+    }
+
+    public async Task<int> EliminarMultiplesAsync(
+        IEnumerable<int> ids,
+        CancellationToken cancellationToken = default)
+    {
+        var idList = ids.Distinct().ToList();
+        if (idList.Count == 0)
+        {
+            return 0;
+        }
+
+        var entities = await Entities
+            .Where(x => idList.Contains(x.Id))
+            .ToListAsync(cancellationToken);
+
+        if (entities.Count == 0)
+        {
+            return 0;
+        }
+
+        var idsConProductos = await DbContext.Productos
+            .Where(p => p.MarcaId.HasValue && idList.Contains(p.MarcaId.Value))
+            .Select(p => p.MarcaId!.Value)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        if (idsConProductos.Count != 0)
+        {
+            var marcasConProductos = entities
+                .Where(e => idsConProductos.Contains(e.Id))
+                .Select(e => e.Nombre)
+                .ToList();
+
+            throw new ConflictException(
+                $"No se pueden eliminar las siguientes marcas porque tienen productos asociados: {string.Join(", ", marcasConProductos)}");
+        }
+
+        Entities.RemoveRange(entities);
+        await DbContext.SaveChangesAsync(cancellationToken);
+        return entities.Count;
+    }
+
     protected override IQueryable<MarcaEntity> ApplySearch(
         IQueryable<MarcaEntity> query,
         string? search)

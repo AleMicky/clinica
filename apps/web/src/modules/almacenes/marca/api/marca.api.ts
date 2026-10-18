@@ -3,6 +3,7 @@ import type {
   MarcaQueryParams,
   MarcaResponse,
   CreateMarcaRequest,
+  DeleteMultipleMarcasResponse,
   PagedResult,
   UpdateMarcaRequest,
 } from "../types/marca.types";
@@ -49,4 +50,14 @@ export async function updateMarca(
 
 export async function deleteMarca(id: number): Promise<void> {
   await apiClient.delete(`/marcas/${id}`);
+}
+
+export async function deleteMarcasMultiple(
+  ids: number[]
+): Promise<DeleteMultipleMarcasResponse> {
+  const response = await apiClient.post<DeleteMultipleMarcasResponse>(
+    "/marcas/eliminar-multiple",
+    { ids }
+  );
+  return response.data;
 }

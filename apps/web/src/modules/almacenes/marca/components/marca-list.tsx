@@ -17,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import {
@@ -34,7 +35,7 @@ import {
 import { DataTablePagination } from "@/components/shared";
 import type { MarcaResponse } from "../types/marca.types";
 
-interface MarcaListProps {
+export interface MarcaListProps {
   marcas: MarcaResponse[];
   isLoading?: boolean;
   totalItems?: number;
@@ -49,13 +50,16 @@ interface MarcaListProps {
   onDelete?: (marca: MarcaResponse) => void;
   onRefresh?: () => void;
   onViewAudit?: (marca: MarcaResponse) => void;
+  selectedIds?: number[];
+  onSelectionChange?: (selectedIds: number[]) => void;
+  onDeleteMultiple?: (selectedIds: number[]) => void;
 }
 
 function formatDate(dateStr?: string | null) {
   if (!dateStr) return null;
   try {
     const d = new Date(dateStr);
-    return isNaN(d.getTime())
+    return Number.isNaN(d.getTime())
       ? dateStr
       : d.toLocaleDateString("es-ES", {
           day: "2-digit",
@@ -82,12 +86,53 @@ export function MarcaList({
   onDelete,
   onRefresh,
   onViewAudit,
+  selectedIds = [],
+  onSelectionChange,
+  onDeleteMultiple,
 }: Readonly<MarcaListProps>) {
+  const isAllSelected =
+    marcas.length > 0 &&
+    marcas.every((item) => selectedIds.includes(item.id));
+
+  const handleToggleAll = () => {
+    if (!onSelectionChange) return;
+
+    if (isAllSelected) {
+      const currentPageIds = new Set(marcas.map((m) => m.id));
+      onSelectionChange(selectedIds.filter((id) => !currentPageIds.has(id)));
+    } else {
+      const updated = new Set([...selectedIds, ...marcas.map((m) => m.id)]);
+      onSelectionChange(Array.from(updated));
+    }
+  };
+
+  const handleToggleItem = (id: number) => {
+    if (!onSelectionChange) return;
+
+    if (selectedIds.includes(id)) {
+      onSelectionChange(selectedIds.filter((item) => item !== id));
+    } else {
+      onSelectionChange([...selectedIds, id]);
+    }
+  };
+
+  const handleClearSelection = () => {
+    onSelectionChange?.([]);
+  };
+
   return (
     <div className="flex flex-col gap-2.5 bg-card border border-border/60 rounded-xl p-3 shadow-2xs">
       {/* Header */}
       <div className="flex items-center justify-between px-0.5 pt-0.5 border-b border-border/40 pb-2.5">
         <div className="flex items-center gap-2">
+          {marcas.length > 0 && onSelectionChange && (
+            <Checkbox
+              checked={isAllSelected}
+              onCheckedChange={handleToggleAll}
+              aria-label="Seleccionar todas las marcas de esta página"
+              className="cursor-pointer"
+            />
+          )}
           <Tag className="size-4 text-primary" />
           <h2 className="text-xs font-semibold text-foreground uppercase tracking-wider">
             Marcas Registradas
@@ -136,6 +181,45 @@ export function MarcaList({
         />
       </div>
 
+      {/* Bulk Selection Action Bar */}
+      {selectedIds.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-2.5 px-3 py-2 rounded-lg bg-primary/10 border border-primary/25 text-foreground animate-in fade-in slide-in-from-top-1 duration-200">
+          <div className="flex items-center gap-2">
+            <Badge variant="default" className="font-mono text-xs px-2 py-0.5">
+              {selectedIds.length}
+            </Badge>
+            <span className="text-xs font-medium">
+              {selectedIds.length === 1
+                ? "1 marca seleccionada"
+                : `${selectedIds.length} marcas seleccionadas`}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClearSelection}
+              className="h-7 px-2.5 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+            >
+              Deseleccionar
+            </Button>
+
+            {onDeleteMultiple && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => onDeleteMultiple(selectedIds)}
+                className="h-7 px-2.5 text-xs gap-1.5 cursor-pointer font-medium shadow-2xs"
+              >
+                <Trash2 className="size-3.5" />
+                <span>Eliminar seleccionadas ({selectedIds.length})</span>
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* List Items */}
       <div className="flex flex-col gap-1.5 overflow-y-auto max-h-[calc(100vh-220px)] min-h-0 pr-0.5">
         {isLoading ? (
@@ -173,6 +257,7 @@ export function MarcaList({
           </div>
         ) : (
           marcas.map((marca) => {
+            const isSelected = selectedIds.includes(marca.id);
             const rawCreated =
               marca.fechaCreacion ||
               marca.createdAt ||
@@ -200,10 +285,22 @@ export function MarcaList({
             return (
               <div
                 key={marca.id}
-                className="group border border-border/40 hover:border-border bg-background/60 hover:bg-muted/40 rounded-lg px-3 py-2 transition-colors flex items-center justify-between gap-3"
+                className={cn(
+                  "group border border-border/40 hover:border-border bg-background/60 hover:bg-muted/40 rounded-lg px-3 py-2 transition-colors flex items-center justify-between gap-3",
+                  isSelected && "bg-primary/5 dark:bg-primary/10 border-primary/40 hover:bg-primary/10"
+                )}
               >
-                {/* Code, Name & Description */}
+                {/* Checkbox, Code, Name & Description */}
                 <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                  {onSelectionChange && (
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={() => handleToggleItem(marca.id)}
+                      aria-label={`Seleccionar marca ${marca.nombre}`}
+                      className="cursor-pointer shrink-0"
+                    />
+                  )}
+
                   <span className="font-mono text-[11px] font-semibold text-foreground bg-muted px-1.5 py-0.5 rounded shrink-0">
                     {marca.codigo}
                   </span>

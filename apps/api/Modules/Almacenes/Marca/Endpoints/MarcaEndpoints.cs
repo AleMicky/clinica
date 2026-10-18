@@ -2,6 +2,7 @@ using Clinica.Api.Modules.Almacenes.Marca.Dtos;
 using Clinica.Api.Modules.Almacenes.Marca.Services;
 using Clinica.Api.Shared.Pagination;
 using Clinica.Api.Shared.Validation;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Clinica.Api.Modules.Almacenes.Marca.Endpoints;
 
@@ -31,6 +32,10 @@ public static class MarcaEndpoints
 
         group.MapDelete("/{id:int}", EliminarAsync)
             .WithName("EliminarMarca");
+
+        group.MapPost("/eliminar-multiple", EliminarMultiplesAsync)
+            .WithName("EliminarMultiplesMarcas")
+            .Validate<DeleteMarcasRequest>();
 
         return app;
     }
@@ -96,5 +101,21 @@ public static class MarcaEndpoints
             cancellationToken);
 
         return Results.NoContent();
+    }
+
+    private static async Task<IResult> EliminarMultiplesAsync(
+        [FromBody] DeleteMarcasRequest request,
+        MarcaService service,
+        CancellationToken cancellationToken)
+    {
+        var count = await service.EliminarMultiplesAsync(
+            request.Ids,
+            cancellationToken);
+
+        return Results.Ok(new DeleteMultipleMarcasResponse
+        {
+            Eliminados = count,
+            Message = $"{count} {(count == 1 ? "marca eliminada" : "marcas eliminadas")} correctamente."
+        });
     }
 }
