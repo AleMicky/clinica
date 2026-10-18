@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import {
   Plus,
   MoreHorizontal,
@@ -75,7 +74,195 @@ export function ProveedorTable({
   onDelete,
   onRefresh,
   onViewAudit,
-}: ProveedorTableProps) {
+}: Readonly<ProveedorTableProps>) {
+  const renderTableBody = () => {
+    if (isLoading) {
+      return (
+        <TableSkeletonRows rows={pageSize > 10 ? 10 : pageSize} columns={7} />
+      );
+    }
+
+    if (proveedores.length === 0) {
+      return (
+        <TableRow className="hover:bg-transparent">
+          <TableCell colSpan={7} className="h-64 p-0">
+            <EmptyState
+              icon={Building2}
+              title="No se encontraron proveedores"
+              description={
+                searchTerm
+                  ? `No hay resultados que coincidan con "${searchTerm}".`
+                  : "No hay registros de proveedores creados actualmente."
+              }
+              action={
+                onAddProveedor && !searchTerm
+                  ? {
+                    label: "Nuevo Proveedor",
+                    icon: Plus,
+                    onClick: onAddProveedor,
+                  }
+                  : undefined
+              }
+              className="border-0 bg-transparent py-12"
+            />
+          </TableCell>
+        </TableRow>
+      );
+    }
+
+    return proveedores.map((item) => {
+      const phone = item.celular || item.telefono;
+
+      return (
+        <TableRow
+          key={item.id}
+          className="hover:bg-muted/30 transition-colors group"
+        >
+          {/* Código */}
+          <TableCell className="font-mono text-xs font-semibold py-3 align-top">
+            <span className="inline-block px-1.5 py-0.5 rounded bg-muted/80 border border-border/50 text-foreground">
+              {item.codigo}
+            </span>
+          </TableCell>
+
+          {/* Razón Social y Nombre Comercial */}
+          <TableCell className="py-3 align-top">
+            <div className="flex flex-col gap-0.5">
+              <span className="font-medium text-xs text-foreground">
+                {item.razonSocial}
+              </span>
+              {item.nombreComercial && (
+                <span className="text-[11px] text-muted-foreground italic">
+                  {item.nombreComercial}
+                </span>
+              )}
+            </div>
+          </TableCell>
+
+          {/* NIT / RUC */}
+          <TableCell className="py-3 align-top">
+            {item.nit ? (
+              <Badge
+                variant="outline"
+                className="font-mono text-[10px] h-4.5 px-1.5 bg-secondary/40 text-secondary-foreground border-border/60"
+              >
+                {item.nit}
+              </Badge>
+            ) : (
+              <span className="text-xs text-muted-foreground/60">—</span>
+            )}
+          </TableCell>
+
+          {/* Contacto */}
+          <TableCell className="py-3 align-top">
+            {item.contacto ? (
+              <div className="flex items-center gap-1.5 text-xs text-foreground">
+                <User className="size-3 text-muted-foreground shrink-0" />
+                <span className="truncate max-w-[150px]" title={item.contacto}>
+                  {item.contacto}
+                </span>
+              </div>
+            ) : (
+              <span className="text-xs text-muted-foreground/60">—</span>
+            )}
+          </TableCell>
+
+          {/* Teléfono / Email */}
+          <TableCell className="py-3 align-top">
+            <div className="flex flex-col gap-1 text-xs">
+              {phone && (
+                <a
+                  href={`tel:${phone}`}
+                  className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
+                  title="Llamar"
+                >
+                  <Phone className="size-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span>{phone}</span>
+                </a>
+              )}
+
+              {item.email && (
+                <a
+                  href={`mailto:${item.email}`}
+                  className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
+                  title="Enviar correo"
+                >
+                  <Mail className="size-3 text-blue-600 dark:text-blue-400 shrink-0" />
+                  <span className="truncate max-w-[180px]">
+                    {item.email}
+                  </span>
+                </a>
+              )}
+
+              {!phone && !item.email && (
+                <span className="text-xs text-muted-foreground/60">—</span>
+              )}
+            </div>
+          </TableCell>
+
+          {/* Dirección */}
+          <TableCell className="py-3 align-top hidden md:table-cell">
+            {item.direccion ? (
+              <div
+                className="flex items-center gap-1.5 text-xs text-muted-foreground truncate max-w-[220px]"
+                title={item.direccion}
+              >
+                <MapPin className="size-3 text-muted-foreground shrink-0" />
+                <span className="truncate">{item.direccion}</span>
+              </div>
+            ) : (
+              <span className="text-xs text-muted-foreground/60">—</span>
+            )}
+          </TableCell>
+
+          {/* Acciones */}
+          <TableCell className="py-3 align-top text-right pr-3">
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                className="inline-flex size-7 items-center justify-center rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                aria-label="Acciones de proveedor"
+              >
+                <MoreHorizontal className="size-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                {onViewAudit && (
+                  <DropdownMenuItem
+                    onClick={() => onViewAudit(item)}
+                    className="gap-2 text-xs cursor-pointer"
+                  >
+                    <Clock className="size-3.5 text-muted-foreground" />
+                    <span>Ver Auditoría</span>
+                  </DropdownMenuItem>
+                )}
+                {onEdit && (
+                  <DropdownMenuItem
+                    onClick={() => onEdit(item)}
+                    className="gap-2 text-xs cursor-pointer"
+                  >
+                    <Edit className="size-3.5 text-muted-foreground" />
+                    <span>Editar Proveedor</span>
+                  </DropdownMenuItem>
+                )}
+                {onDelete && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => onDelete(item)}
+                      className="gap-2 text-xs text-destructive focus:text-destructive cursor-pointer"
+                    >
+                      <Trash2 className="size-3.5" />
+                      <span>Eliminar</span>
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </TableCell>
+        </TableRow>
+      );
+    });
+  };
+
   return (
     <div className="space-y-3 w-full">
       {/* Toolbar: Search & Action Buttons */}
@@ -161,185 +348,7 @@ export function ProveedorTable({
           </TableHeader>
 
           <TableBody>
-            {isLoading ? (
-              <TableSkeletonRows rows={pageSize > 10 ? 10 : pageSize} columns={7} />
-            ) : proveedores.length === 0 ? (
-              <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={7} className="h-64 p-0">
-                  <EmptyState
-                    icon={Building2}
-                    title="No se encontraron proveedores"
-                    description={
-                      searchTerm
-                        ? `No hay resultados que coincidan con "${searchTerm}".`
-                        : "No hay registros de proveedores creados actualmente."
-                    }
-                    action={
-                      onAddProveedor && !searchTerm
-                        ? {
-                            label: "Nuevo Proveedor",
-                            icon: Plus,
-                            onClick: onAddProveedor,
-                          }
-                        : undefined
-                    }
-                    className="border-0 bg-transparent py-12"
-                  />
-                </TableCell>
-              </TableRow>
-            ) : (
-              proveedores.map((item) => {
-                const phone = item.celular || item.telefono;
-
-                return (
-                  <TableRow
-                    key={item.id}
-                    className="hover:bg-muted/30 transition-colors group"
-                  >
-                    {/* Código */}
-                    <TableCell className="font-mono text-xs font-semibold py-3 align-top">
-                      <span className="inline-block px-1.5 py-0.5 rounded bg-muted/80 border border-border/50 text-foreground">
-                        {item.codigo}
-                      </span>
-                    </TableCell>
-
-                    {/* Razón Social y Nombre Comercial */}
-                    <TableCell className="py-3 align-top">
-                      <div className="flex flex-col gap-0.5">
-                        <span className="font-medium text-xs text-foreground">
-                          {item.razonSocial}
-                        </span>
-                        {item.nombreComercial && (
-                          <span className="text-[11px] text-muted-foreground italic">
-                            {item.nombreComercial}
-                          </span>
-                        )}
-                      </div>
-                    </TableCell>
-
-                    {/* NIT / RUC */}
-                    <TableCell className="py-3 align-top">
-                      {item.nit ? (
-                        <Badge
-                          variant="outline"
-                          className="font-mono text-[10px] h-4.5 px-1.5 bg-secondary/40 text-secondary-foreground border-border/60"
-                        >
-                          {item.nit}
-                        </Badge>
-                      ) : (
-                        <span className="text-xs text-muted-foreground/60">—</span>
-                      )}
-                    </TableCell>
-
-                    {/* Contacto */}
-                    <TableCell className="py-3 align-top">
-                      {item.contacto ? (
-                        <div className="flex items-center gap-1.5 text-xs text-foreground">
-                          <User className="size-3 text-muted-foreground shrink-0" />
-                          <span className="truncate max-w-[150px]" title={item.contacto}>
-                            {item.contacto}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-muted-foreground/60">—</span>
-                      )}
-                    </TableCell>
-
-                    {/* Teléfono / Email */}
-                    <TableCell className="py-3 align-top">
-                      <div className="flex flex-col gap-1 text-xs">
-                        {phone && (
-                          <a
-                            href={`tel:${phone}`}
-                            className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
-                            title="Llamar"
-                          >
-                            <Phone className="size-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                            <span>{phone}</span>
-                          </a>
-                        )}
-
-                        {item.email && (
-                          <a
-                            href={`mailto:${item.email}`}
-                            className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
-                            title="Enviar correo"
-                          >
-                            <Mail className="size-3 text-blue-600 dark:text-blue-400 shrink-0" />
-                            <span className="truncate max-w-[180px]">
-                              {item.email}
-                            </span>
-                          </a>
-                        )}
-
-                        {!phone && !item.email && (
-                          <span className="text-xs text-muted-foreground/60">—</span>
-                        )}
-                      </div>
-                    </TableCell>
-
-                    {/* Dirección */}
-                    <TableCell className="py-3 align-top hidden md:table-cell">
-                      {item.direccion ? (
-                        <div
-                          className="flex items-center gap-1.5 text-xs text-muted-foreground truncate max-w-[220px]"
-                          title={item.direccion}
-                        >
-                          <MapPin className="size-3 text-muted-foreground shrink-0" />
-                          <span className="truncate">{item.direccion}</span>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-muted-foreground/60">—</span>
-                      )}
-                    </TableCell>
-
-                    {/* Acciones */}
-                    <TableCell className="py-3 align-top text-right pr-3">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          className="inline-flex size-7 items-center justify-center rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                          aria-label="Acciones de proveedor"
-                        >
-                          <MoreHorizontal className="size-4" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-44">
-                          {onViewAudit && (
-                            <DropdownMenuItem
-                              onClick={() => onViewAudit(item)}
-                              className="gap-2 text-xs cursor-pointer"
-                            >
-                              <Clock className="size-3.5 text-muted-foreground" />
-                              <span>Ver Auditoría</span>
-                            </DropdownMenuItem>
-                          )}
-                          {onEdit && (
-                            <DropdownMenuItem
-                              onClick={() => onEdit(item)}
-                              className="gap-2 text-xs cursor-pointer"
-                            >
-                              <Edit className="size-3.5 text-muted-foreground" />
-                              <span>Editar Proveedor</span>
-                            </DropdownMenuItem>
-                          )}
-                          {onDelete && (
-                            <>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={() => onDelete(item)}
-                                className="gap-2 text-xs text-destructive focus:text-destructive cursor-pointer"
-                              >
-                                <Trash2 className="size-3.5" />
-                                <span>Eliminar</span>
-                              </DropdownMenuItem>
-                            </>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
+            {renderTableBody()}
           </TableBody>
         </Table>
       </div>
@@ -350,7 +359,7 @@ export function ProveedorTable({
           totalItems={totalItems}
           currentPage={currentPage}
           pageSize={pageSize}
-          onPageChange={onPageChange || (() => {})}
+          onPageChange={onPageChange || (() => { })}
           onPageSizeChange={onPageSizeChange}
           isLoading={isLoading}
           itemLabel="proveedores"

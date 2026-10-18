@@ -49,7 +49,7 @@ export function ProveedorFormDialog({
   onOpenChange,
   proveedorToEdit,
   onSuccessCallback,
-}: ProveedorFormDialogProps) {
+}: Readonly<ProveedorFormDialogProps>) {
   const isEditing = Boolean(proveedorToEdit);
   const [keepOpen, setKeepOpen] = React.useState(false);
 

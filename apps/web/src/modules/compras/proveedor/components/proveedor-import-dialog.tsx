@@ -21,7 +21,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
@@ -42,7 +41,7 @@ export function ProveedorImportDialog({
   open,
   onOpenChange,
   onSuccess,
-}: ProveedorImportDialogProps) {
+}: Readonly<ProveedorImportDialogProps>) {
   const [file, setFile] = React.useState<File | null>(null);
   const [isDragging, setIsDragging] = React.useState(false);
   const [showColumnsGuide, setShowColumnsGuide] = React.useState(false);
@@ -183,31 +182,34 @@ export function ProveedorImportDialog({
           {!result ? (
             <>
               {/* Dropzone Container */}
-              <div
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".xlsx"
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files.length > 0) {
+                    handleFileSelect(e.target.files[0]);
+                  }
+                }}
+              />
+
+              <button
+                type="button"
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
                 onClick={() => !importMutation.isPending && fileInputRef.current?.click()}
+                disabled={importMutation.isPending}
                 className={cn(
-                  "border-2 border-dashed rounded-xl p-5 sm:p-6 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-2",
+                  "w-full border-2 border-dashed rounded-xl p-5 sm:p-6 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-2",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
                   isDragging
                     ? "border-primary bg-primary/10 scale-[0.99]"
                     : "border-border/80 hover:border-primary/50 hover:bg-muted/40 bg-muted/15",
-                  importMutation.isPending && "pointer-events-none opacity-60"
+                  importMutation.isPending && "pointer-events-none opacity-60 cursor-not-allowed"
                 )}
               >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".xlsx"
-                  className="hidden"
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files.length > 0) {
-                      handleFileSelect(e.target.files[0]);
-                    }
-                  }}
-                />
-
                 <div className="size-11 rounded-full bg-primary/10 text-primary flex items-center justify-center border border-primary/20 shadow-2xs">
                   <UploadCloud className="size-5.5" />
                 </div>
@@ -220,7 +222,7 @@ export function ProveedorImportDialog({
                     Formato admitido: <strong className="text-foreground">.xlsx</strong> (máximo 10 MB)
                   </p>
                 </div>
-              </div>
+              </button>
 
               {/* Selected File Card */}
               {file && (

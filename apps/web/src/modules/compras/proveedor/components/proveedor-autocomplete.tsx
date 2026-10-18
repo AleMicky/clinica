@@ -29,7 +29,7 @@ export function ProveedorAutocomplete({
   error = false,
   className,
   id,
-}: ProveedorAutocompleteProps) {
+}: Readonly<ProveedorAutocompleteProps>) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
   const searchInputRef = React.useRef<HTMLInputElement>(null);
@@ -54,8 +54,8 @@ export function ProveedorAutocomplete({
       (p) =>
         p.razonSocial.toLowerCase().includes(q) ||
         p.codigo.toLowerCase().includes(q) ||
-        (p.nombreComercial && p.nombreComercial.toLowerCase().includes(q)) ||
-        (p.nit && p.nit.toLowerCase().includes(q))
+        p.nombreComercial?.toLowerCase().includes(q) ||
+        p.nit?.toLowerCase().includes(q)
     );
   }, [proveedores, searchQuery]);
 
@@ -80,23 +80,76 @@ export function ProveedorAutocomplete({
     }
   }, [isOpen]);
 
+  const renderList = () => {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center p-4 text-xs text-muted-foreground gap-2">
+          <Loader2 className="size-3.5 animate-spin" />
+          <span>Cargando proveedores...</span>
+        </div>
+      );
+    }
+
+    if (filteredProveedores.length === 0) {
+      return (
+        <div className="p-4 text-center text-xs text-muted-foreground">
+          No se encontraron proveedores.
+        </div>
+      );
+    }
+
+    return filteredProveedores.map((p) => {
+      const isSelected = selectedProveedor?.id === p.id;
+      return (
+        <button
+          key={p.id}
+          type="button"
+          onClick={() => handleSelect(p)}
+          className={cn(
+            "flex w-full items-center justify-between p-2 rounded-md text-xs text-left cursor-pointer transition-colors",
+            isSelected
+              ? "bg-primary/10 text-primary font-medium"
+              : "hover:bg-muted text-foreground"
+          )}
+        >
+          <div className="flex flex-col min-w-0 pr-2">
+            <div className="flex items-center gap-1.5">
+              <span className="font-mono text-[10px] bg-muted px-1 rounded border border-border/40 shrink-0">
+                {p.codigo}
+              </span>
+              <span className="truncate">{p.razonSocial}</span>
+            </div>
+            {p.nit && (
+              <span className="text-[10px] text-muted-foreground truncate">
+                NIT: {p.nit}
+              </span>
+            )}
+          </div>
+          {isSelected && <Check className="size-3.5 shrink-0 text-primary" />}
+        </button>
+      );
+    });
+  };
+
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger
-        type="button"
-        id={id}
-        aria-expanded={isOpen}
-        disabled={disabled}
-        className={cn(
-          "flex h-8 w-full items-center justify-between rounded-md border bg-background px-2.5 py-1 text-xs shadow-xs transition-colors cursor-pointer",
-          "focus:outline-none focus:ring-1 focus:ring-primary",
-          "disabled:cursor-not-allowed disabled:opacity-50",
-          error
-            ? "border-destructive focus:ring-destructive"
-            : "border-border/60 hover:border-border",
-          className
-        )}
-      >
+      <div className="relative flex items-center w-full">
+        <PopoverTrigger
+          type="button"
+          id={id}
+          aria-expanded={isOpen}
+          disabled={disabled}
+          className={cn(
+            "flex h-8 w-full items-center justify-between rounded-md border bg-background px-2.5 py-1 text-xs shadow-xs transition-colors cursor-pointer",
+            "focus:outline-none focus:ring-1 focus:ring-primary",
+            "disabled:cursor-not-allowed disabled:opacity-50",
+            error
+              ? "border-destructive focus:ring-destructive"
+              : "border-border/60 hover:border-border",
+            selectedProveedor && !disabled ? "pr-11" : "pr-6",
+            className
+          )}
+        >
           <div className="flex items-center gap-1.5 min-w-0 flex-1 text-left">
             <Building2 className="size-3.5 shrink-0 text-muted-foreground" />
             {selectedProveedor ? (
@@ -109,26 +162,21 @@ export function ProveedorAutocomplete({
             )}
           </div>
 
-          <div className="flex items-center gap-1 shrink-0 ml-1">
-            {selectedProveedor && !disabled && (
-              <span
-                role="button"
-                tabIndex={0}
-                onClick={handleClear}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    handleClear(e as unknown as React.MouseEvent);
-                  }
-                }}
-                className="rounded-full p-0.5 hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer"
-                title="Limpiar selección"
-              >
-                <X className="size-3" />
-              </span>
-            )}
-            <ChevronsUpDown className="size-3 text-muted-foreground" />
-          </div>
-      </PopoverTrigger>
+          <ChevronsUpDown className="size-3 text-muted-foreground shrink-0" />
+        </PopoverTrigger>
+
+        {selectedProveedor && !disabled && (
+          <button
+            type="button"
+            onClick={handleClear}
+            className="absolute right-6 top-1/2 -translate-y-1/2 rounded-full p-0.5 hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+            title="Limpiar selección"
+            aria-label="Limpiar selección"
+          >
+            <X className="size-3" />
+          </button>
+        )}
+      </div>
 
       <PopoverContent className="w-[320px] p-0 shadow-md border-border" align="start">
         <div className="p-2 border-b border-border/60">
@@ -146,47 +194,7 @@ export function ProveedorAutocomplete({
         </div>
 
         <div className="max-h-56 overflow-y-auto p-1">
-          {isLoading ? (
-            <div className="flex items-center justify-center p-4 text-xs text-muted-foreground gap-2">
-              <Loader2 className="size-3.5 animate-spin" />
-              <span>Cargando proveedores...</span>
-            </div>
-          ) : filteredProveedores.length === 0 ? (
-            <div className="p-4 text-center text-xs text-muted-foreground">
-              No se encontraron proveedores.
-            </div>
-          ) : (
-            filteredProveedores.map((p) => {
-              const isSelected = selectedProveedor?.id === p.id;
-              return (
-                <div
-                  key={p.id}
-                  onClick={() => handleSelect(p)}
-                  className={cn(
-                    "flex items-center justify-between p-2 rounded-md text-xs cursor-pointer transition-colors",
-                    isSelected
-                      ? "bg-primary/10 text-primary font-medium"
-                      : "hover:bg-muted text-foreground"
-                  )}
-                >
-                  <div className="flex flex-col min-w-0 pr-2">
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-mono text-[10px] bg-muted px-1 rounded border border-border/40 shrink-0">
-                        {p.codigo}
-                      </span>
-                      <span className="truncate">{p.razonSocial}</span>
-                    </div>
-                    {p.nit && (
-                      <span className="text-[10px] text-muted-foreground truncate">
-                        NIT: {p.nit}
-                      </span>
-                    )}
-                  </div>
-                  {isSelected && <Check className="size-3.5 shrink-0 text-primary" />}
-                </div>
-              );
-            })
-          )}
+          {renderList()}
         </div>
       </PopoverContent>
     </Popover>

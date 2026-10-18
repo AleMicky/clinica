@@ -18,7 +18,7 @@ export function ProveedorDeleteDialog({
   onOpenChange,
   proveedorToDelete,
   onSuccessCallback,
-}: ProveedorDeleteDialogProps) {
+}: Readonly<ProveedorDeleteDialogProps>) {
   const deleteMutation = useDeleteProveedor();
 
   const handleConfirmDelete = async () => {

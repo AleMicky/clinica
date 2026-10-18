@@ -37,7 +37,7 @@ export function useCreateProveedor() {
   return useMutation({
     mutationFn: (data: CreateProveedorRequest) => createProveedor(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: proveedorKeys.all });
+      void queryClient.invalidateQueries({ queryKey: proveedorKeys.all });
     },
   });
 }
@@ -49,8 +49,8 @@ export function useUpdateProveedor() {
     mutationFn: ({ id, data }: { id: number; data: UpdateProveedorRequest }) =>
       updateProveedor(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: proveedorKeys.all });
-      queryClient.invalidateQueries({ queryKey: proveedorKeys.detail(variables.id) });
+      void queryClient.invalidateQueries({ queryKey: proveedorKeys.all });
+      void queryClient.invalidateQueries({ queryKey: proveedorKeys.detail(variables.id) });
     },
   });
 }
@@ -61,7 +61,7 @@ export function useDeleteProveedor() {
   return useMutation({
     mutationFn: (id: number) => deleteProveedor(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: proveedorKeys.all });
+      void queryClient.invalidateQueries({ queryKey: proveedorKeys.all });
     },
   });
 }
@@ -72,7 +72,7 @@ export function useImportarProveedoresExcel() {
   return useMutation({
     mutationFn: (archivo: File) => importarProveedoresExcel(archivo),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: proveedorKeys.all });
+      void queryClient.invalidateQueries({ queryKey: proveedorKeys.all });
     },
   });
 }

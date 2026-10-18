@@ -14,7 +14,7 @@ export function ProveedorHeader({
   totalItems = 0,
   totalWithNit = 0,
   totalWithContact = 0,
-}: ProveedorHeaderProps) {
+}: Readonly<ProveedorHeaderProps>) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 bg-card border border-border/60 rounded-lg p-3 shadow-2xs">
       <div className="flex items-center gap-2.5">
