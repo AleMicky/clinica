@@ -88,7 +88,7 @@ public sealed class ProductoImportacionService(
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
 
-        // 3. Consultar productos existentes en BD
+        // 3. Consultar productos existentes en BD por código
         var productosExistentesDb = await dbContext.Productos
             .AsNoTracking()
             .Where(x => codigosExcel.Contains(x.Codigo))
@@ -96,6 +96,29 @@ public sealed class ProductoImportacionService(
 
         var productosExistentesMap = productosExistentesDb
             .ToDictionary(x => x.Codigo, x => x, StringComparer.OrdinalIgnoreCase);
+
+        // 3.1 Consultar productos existentes en BD por combinación de atributos (Nombre, Marca, Unidad de Medida, Proveedor)
+        // para prevenir duplicación de productos físicos bajo diferentes códigos
+        var productosAtributosDb = await dbContext.Productos
+            .AsNoTracking()
+            .Where(x => x.Activo)
+            .Select(x => new
+            {
+                x.Id,
+                x.Codigo,
+                x.Nombre,
+                x.MarcaId,
+                x.UnidadMedidaId,
+                x.ProveedorId
+            })
+            .ToListAsync(cancellationToken);
+
+        var productosPorAtributosDbMap = new Dictionary<string, (int Id, string Codigo)>(StringComparer.OrdinalIgnoreCase);
+        foreach (var p in productosAtributosDb)
+        {
+            var clave = GenerarClaveAtributosProducto(p.Nombre, p.MarcaId, p.UnidadMedidaId, p.ProveedorId);
+            productosPorAtributosDbMap.TryAdd(clave, (p.Id, p.Codigo));
+        }
 
         // 4. Consultar partidas de inventario existentes en BD para los productos existentes
         var productosExistentesIds = productosExistentesDb.Select(x => x.Id).ToList();
@@ -130,6 +153,7 @@ public sealed class ProductoImportacionService(
 
         // 6. Estructuras para seguimiento en memoria durante el procesamiento
         var productosNuevosMap = new Dictionary<string, ProductoEntity>(StringComparer.OrdinalIgnoreCase);
+        var productosNuevosPorAtributosMap = new Dictionary<string, (int Fila, string Codigo)>(StringComparer.OrdinalIgnoreCase);
         var partidasNuevas = new List<PartidaInventarioEntity>();
         var partidasProcesadasPorProducto = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var existenciasNuevasMap = new Dictionary<string, ExistenciaEntity>(StringComparer.OrdinalIgnoreCase);
@@ -140,6 +164,7 @@ public sealed class ProductoImportacionService(
             ProcesarFila(
                 fila,
                 productosNuevosMap,
+                productosNuevosPorAtributosMap,
                 partidasNuevas,
                 existenciasNuevasMap,
                 existenciasPartidasNuevas,
@@ -149,6 +174,7 @@ public sealed class ProductoImportacionService(
                 unidadesMap,
                 almacenesMap,
                 productosExistentesMap,
+                productosPorAtributosDbMap,
                 partidasExistentesDbSet,
                 partidasExistentesDbMap,
                 partidasProcesadasPorProducto,
@@ -199,6 +225,7 @@ public sealed class ProductoImportacionService(
     private static void ProcesarFila(
         ExcelRow fila,
         Dictionary<string, ProductoEntity> productosNuevosMap,
+        Dictionary<string, (int Fila, string Codigo)> productosNuevosPorAtributosMap,
         List<PartidaInventarioEntity> partidasNuevas,
         Dictionary<string, ExistenciaEntity> existenciasNuevasMap,
         List<ExistenciaPartidaEntity> existenciasPartidasNuevas,
@@ -208,6 +235,7 @@ public sealed class ProductoImportacionService(
         Dictionary<string, int> unidadesMap,
         Dictionary<string, int> almacenesMap,
         Dictionary<string, ProductoEntity> productosExistentesMap,
+        Dictionary<string, (int Id, string Codigo)> productosPorAtributosDbMap,
         HashSet<string> partidasExistentesDbSet,
         Dictionary<string, int> partidasExistentesDbMap,
         HashSet<string> partidasProcesadasPorProducto,
@@ -622,6 +650,38 @@ public sealed class ProductoImportacionService(
         var productoYaEnBd = productosExistentesMap.TryGetValue(codigo, out var productoExistenteBd);
         var tieneOperacionAdicional = tieneDatosPartida || (almacenId.HasValue && cantidad.HasValue && cantidad.Value > 0);
 
+        // Validación de no duplicidad por (Nombre + Marca + Unidad de Medida + Proveedor)
+        var claveAtributos = GenerarClaveAtributosProducto(nombre!, marcaId, unidadMedidaId, proveedorId);
+
+        // 1. Validar contra productos activos existentes en Base de Datos
+        if (productosPorAtributosDbMap.TryGetValue(claveAtributos, out var prodExistenteDb))
+        {
+            var esMismoProductoDb = productoYaEnBd && productoExistenteBd != null && prodExistenteDb.Id == productoExistenteBd.Id;
+            if (!esMismoProductoDb)
+            {
+                AgregarError(
+                    resultado,
+                    fila.RowNumber,
+                    "NOMBRE",
+                    nombre,
+                    $"Ya existe un producto registrado en el sistema con el mismo nombre, marca, unidad de medida y proveedor (Código: '{prodExistenteDb.Codigo}').");
+                return;
+            }
+        }
+
+        // 2. Validar contra productos procesados previamente en el mismo archivo Excel
+        if (productosNuevosPorAtributosMap.TryGetValue(claveAtributos, out var prodExcelPrevio) &&
+            !string.Equals(prodExcelPrevio.Codigo, codigo, StringComparison.OrdinalIgnoreCase))
+        {
+            AgregarError(
+                resultado,
+                fila.RowNumber,
+                "NOMBRE",
+                nombre,
+                $"El producto tiene el mismo nombre, marca, unidad de medida y proveedor que el registrado en la fila {prodExcelPrevio.Fila} (Código: '{prodExcelPrevio.Codigo}').");
+            return;
+        }
+
         if (productoYaEnBd && productoExistenteBd != null)
         {
             productoEntity = productoExistenteBd;
@@ -676,6 +736,7 @@ public sealed class ProductoImportacionService(
             };
 
             productosNuevosMap[codigo] = productoEntity;
+            productosNuevosPorAtributosMap[claveAtributos] = (fila.RowNumber, codigo);
         }
 
         // Gestión de la Partida de Inventario (si aplica)
@@ -979,6 +1040,22 @@ public sealed class ProductoImportacionService(
             return null;
 
         return valor.Trim();
+    }
+
+    private static string GenerarClaveAtributosProducto(
+        string nombre,
+        int? marcaId,
+        int unidadMedidaId,
+        int? proveedorId)
+    {
+        var nombreLimpio = NormalizarTexto(nombre) ?? string.Empty;
+        var nombreNorm = string.Join(" ", nombreLimpio.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            .ToUpperInvariant();
+        var marcaStr = marcaId.HasValue ? marcaId.Value.ToString() : "SIN_MARCA";
+        var umStr = unidadMedidaId.ToString();
+        var provStr = proveedorId.HasValue ? proveedorId.Value.ToString() : "SIN_PROVEEDOR";
+
+        return $"{nombreNorm}|{marcaStr}|{umStr}|{provStr}";
     }
 
     private static bool ParsearBooleano(string? valor)

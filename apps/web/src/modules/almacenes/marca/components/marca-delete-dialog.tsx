@@ -113,6 +113,7 @@ export function MarcaDeleteDialog({
       description={renderDescription()}
       confirmLabel={confirmLabel}
       isLoading={deleteMutation.isPending || deleteMultipleMutation.isPending}
+      size={isMultiple ? "md" : "default"}
     />
   );
 }

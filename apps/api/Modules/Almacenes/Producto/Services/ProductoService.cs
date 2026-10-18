@@ -297,6 +297,14 @@ public sealed class ProductoService(
             idExcluido: null,
             cancellationToken);
 
+        await ValidarProductoUnicoPorAtributosAsync(
+            request.Nombre,
+            request.MarcaId,
+            request.UnidadMedidaId,
+            request.ProveedorId,
+            idExcluido: null,
+            cancellationToken);
+
         var entity = ProductoMapper.ToEntity(request);
         Normalizar(entity, request, esNuevo: true);
 
@@ -328,6 +336,14 @@ public sealed class ProductoService(
 
         await ValidarCodigoUnicoAsync(
             request.Codigo,
+            idExcluido: id,
+            cancellationToken);
+
+        await ValidarProductoUnicoPorAtributosAsync(
+            request.Nombre,
+            request.MarcaId,
+            request.UnidadMedidaId,
+            request.ProveedorId,
             idExcluido: id,
             cancellationToken);
 
@@ -528,6 +544,34 @@ public sealed class ProductoService(
         {
             throw new ConflictException(
                 $"Ya existe un producto con el código '{codigoNormalizado}'.");
+        }
+    }
+
+    private async Task ValidarProductoUnicoPorAtributosAsync(
+        string nombre,
+        int? marcaId,
+        int unidadMedidaId,
+        int? proveedorId,
+        int? idExcluido,
+        CancellationToken cancellationToken)
+    {
+        var nombreLimpio = nombre?.Trim() ?? string.Empty;
+        var nombreNormalizado = string.Join(" ", nombreLimpio.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+
+        var existe = await dbContext.Productos
+            .AnyAsync(
+                x => x.Activo &&
+                     (!idExcluido.HasValue || x.Id != idExcluido.Value) &&
+                     x.Nombre.ToLower() == nombreNormalizado.ToLower() &&
+                     x.MarcaId == marcaId &&
+                     x.UnidadMedidaId == unidadMedidaId &&
+                     x.ProveedorId == proveedorId,
+                cancellationToken);
+
+        if (existe)
+        {
+            throw new ConflictException(
+                "Ya existe un producto registrado con el mismo nombre, marca, unidad de medida y proveedor.");
         }
     }
 

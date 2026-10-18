@@ -115,6 +115,7 @@ export function ProveedorDeleteDialog({
       confirmLabel={confirmLabel}
       description={renderDescription()}
       isLoading={deleteMutation.isPending || deleteMultipleMutation.isPending}
+      size={isMultiple ? "md" : "default"}
     />
   );
 }

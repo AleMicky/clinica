@@ -92,7 +92,7 @@ export function ProductoModuleView() {
     return {
       totalProductos: productosData?.totalItems ?? rawItems.length,
       controlaVencimientoCount: conVence,
-      categoriasCount: uniqueCats.size || (categorias.length > 0 ? categorias.length : 0),
+      categoriasCount: uniqueCats.size || Math.max(categorias.length, 0),
     };
   }, [productosData, categorias]);
 

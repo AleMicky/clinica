@@ -74,16 +74,16 @@ export function ProductoDeleteDialog({
               ? "Esta acción eliminará el producto seleccionado, sus partidas de inventario y existencias asociadas:"
               : `Esta acción eliminará ${multipleCount} productos seleccionados, junto con sus partidas de inventario y existencias asociadas:`}
           </p>
-          <div className="max-h-36 overflow-y-auto space-y-1.5 p-2 rounded-md bg-muted/40 border border-border/50 text-xs">
+          <div className="max-h-48 overflow-y-auto space-y-1 p-2 rounded-lg bg-muted/30 border border-border/50 text-xs">
             {productosToDelete.map((p) => (
               <div
                 key={p.id}
-                className="flex items-center justify-between gap-2 py-0.5 border-b border-border/20 last:border-0"
+                className="flex items-center justify-between gap-3 py-1 px-1.5 rounded hover:bg-muted/50 transition-colors border-b border-border/20 last:border-0"
               >
                 <span className="font-medium text-foreground truncate" title={p.nombre}>
                   {p.nombre}
                 </span>
-                <span className="font-mono text-[10px] text-muted-foreground px-1.5 py-0.2 rounded bg-background border border-border/50 shrink-0">
+                <span className="font-mono text-[10px] text-muted-foreground px-1.5 py-0.5 rounded bg-background border border-border/60 shrink-0">
                   {p.codigo}
                 </span>
               </div>
@@ -108,6 +108,7 @@ export function ProductoDeleteDialog({
       description={renderDescription()}
       confirmLabel={confirmLabel}
       isLoading={deleteMutation.isPending || deleteMultipleMutation.isPending}
+      size={isMultiple ? "md" : "default"}
     />
   );
 }
