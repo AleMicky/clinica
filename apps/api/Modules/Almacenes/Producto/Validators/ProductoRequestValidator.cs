@@ -64,3 +64,17 @@ public sealed class CreateProductoRequestValidator
 
 public sealed class UpdateProductoRequestValidator
     : ProductoRequestValidator<UpdateProductoRequest>;
+
+public sealed class DeleteProductosRequestValidator
+    : AbstractValidator<DeleteProductosRequest>
+{
+    public DeleteProductosRequestValidator()
+    {
+        RuleFor(x => x.Ids)
+            .NotEmpty()
+            .WithMessage("Debe proporcionar al menos un ID de producto.")
+            .Must(ids => ids != null && ids.Count > 0 && ids.All(id => id > 0))
+            .WithMessage("Todos los identificadores de producto deben ser válidos.");
+    }
+}
+

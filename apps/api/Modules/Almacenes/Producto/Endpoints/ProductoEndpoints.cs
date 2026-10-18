@@ -3,6 +3,7 @@ using Clinica.Api.Modules.Almacenes.Producto.Services;
 using Clinica.Api.Shared.Pagination;
 using Clinica.Api.Shared.Validation;
 using ClosedXML.Excel;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Clinica.Api.Modules.Almacenes.Producto.Endpoints;
 
@@ -36,11 +37,16 @@ public static class ProductoEndpoints
         group.MapDelete("/{id:int}", EliminarAsync)
             .WithName("EliminarProducto");
 
+        group.MapPost("/eliminar-multiple", EliminarMultiplesAsync)
+            .WithName("EliminarMultiplesProductos")
+            .Validate<DeleteProductosRequest>();
+
         group.MapPost(
                 "/importar-excel",
                 ImportarExcelAsync)
             .WithName("ImportarProductosExcel")
             .DisableAntiforgery();
+
 
         group.MapGet(
                 "/plantilla-excel",
@@ -152,6 +158,23 @@ public static class ProductoEndpoints
 
         return Results.NoContent();
     }
+
+    private static async Task<IResult> EliminarMultiplesAsync(
+        [FromBody] DeleteProductosRequest request,
+        IProductoService service,
+        CancellationToken cancellationToken)
+    {
+        var count = await service.EliminarMultiplesAsync(
+            request.Ids,
+            cancellationToken);
+
+        return Results.Ok(new DeleteMultipleProductosResponse
+        {
+            Eliminados = count,
+            Message = $"{count} {(count == 1 ? "producto eliminado" : "productos eliminados")} correctamente."
+        });
+    }
+
 
     private static async Task<IResult> ImportarExcelAsync(
         IFormFile archivo,

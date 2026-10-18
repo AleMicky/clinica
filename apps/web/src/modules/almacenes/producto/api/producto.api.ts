@@ -7,6 +7,7 @@ import type {
   PagedResult,
   UpdateProductoRequest,
   ExcelImportResult,
+  DeleteMultipleProductosResponse,
 } from "../types/producto.types";
 
 export async function getProductos(
@@ -52,6 +53,17 @@ export async function updateProducto(
 export async function deleteProducto(id: number): Promise<void> {
   await apiClient.delete(`/productos/${id}`);
 }
+
+export async function deleteProductosMultiple(
+  ids: number[]
+): Promise<DeleteMultipleProductosResponse> {
+  const response = await apiClient.post<DeleteMultipleProductosResponse>(
+    "/productos/eliminar-multiple",
+    { ids }
+  );
+  return response.data;
+}
+
 
 // Importación masiva desde Excel
 export async function importarProductosExcel(

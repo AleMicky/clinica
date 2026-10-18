@@ -51,3 +51,15 @@ public sealed record ProductoResponse : AuditableResponse
     public decimal StockMinimo { get; init; }
     public decimal? StockMaximo { get; init; }
 }
+
+public sealed record DeleteProductosRequest
+{
+    public List<int> Ids { get; init; } = [];
+}
+
+public sealed record DeleteMultipleProductosResponse
+{
+    public int Eliminados { get; init; }
+    public string Message { get; init; } = string.Empty;
+}
+

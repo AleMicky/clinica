@@ -138,42 +138,45 @@ function ProductoListItem({
   onSelect,
 }: Readonly<ProductoListItemProps>) {
   return (
-    <li
-      onClick={() => onSelect(producto)}
-      className={cn(
-        "flex cursor-pointer select-none items-center justify-between rounded-lg px-2 py-1.5 outline-hidden hover:bg-accent hover:text-accent-foreground transition-colors text-xs",
-        isSelected && "bg-accent/80 font-medium text-accent-foreground"
-      )}
-    >
-      <div className="flex items-center gap-2 min-w-0 flex-1">
-        <div className="size-5 rounded flex items-center justify-center shrink-0 border bg-violet-500/10 border-violet-500/30 text-violet-600 dark:text-violet-400">
-          <Package className="size-3" />
-        </div>
-        <div className="flex flex-col min-w-0 flex-1">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="font-mono font-bold text-[10px] text-foreground bg-muted px-1 py-0.2 rounded shrink-0">
-              {producto.codigo}
-            </span>
-            <span className="truncate font-medium text-xs">{producto.nombre}</span>
+    <li>
+      <button
+        type="button"
+        onClick={() => onSelect(producto)}
+        className={cn(
+          "w-full flex cursor-pointer select-none items-center justify-between rounded-lg px-2 py-1.5 outline-hidden hover:bg-accent hover:text-accent-foreground transition-colors text-xs text-left",
+          isSelected && "bg-accent/80 font-medium text-accent-foreground"
+        )}
+      >
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <div className="size-5 rounded flex items-center justify-center shrink-0 border bg-violet-500/10 border-violet-500/30 text-violet-600 dark:text-violet-400">
+            <Package className="size-3" />
           </div>
-          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-            {producto.categoriaProductoNombre && (
-              <span className="truncate">{producto.categoriaProductoNombre}</span>
-            )}
-            {producto.marcaNombre && (
-              <span className="truncate text-muted-foreground/75">
-                • {producto.marcaNombre}
+          <div className="flex flex-col min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="font-mono font-bold text-[10px] text-foreground bg-muted px-1 py-0.2 rounded shrink-0">
+                {producto.codigo}
               </span>
-            )}
-            {producto.unidadMedidaSimbolo && (
-              <span className="font-mono bg-muted/70 px-1 rounded text-[9px]">
-                {producto.unidadMedidaSimbolo}
-              </span>
-            )}
+              <span className="truncate font-medium text-xs">{producto.nombre}</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+              {producto.categoriaProductoNombre && (
+                <span className="truncate">{producto.categoriaProductoNombre}</span>
+              )}
+              {producto.marcaNombre && (
+                <span className="truncate text-muted-foreground/75">
+                  • {producto.marcaNombre}
+                </span>
+              )}
+              {producto.unidadMedidaSimbolo && (
+                <span className="font-mono bg-muted/70 px-1 rounded text-[9px]">
+                  {producto.unidadMedidaSimbolo}
+                </span>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-      {isSelected && <Check className="size-3.5 text-primary ml-1.5 shrink-0" />}
+        {isSelected && <Check className="size-3.5 text-primary ml-1.5 shrink-0" />}
+      </button>
     </li>
   );
 }

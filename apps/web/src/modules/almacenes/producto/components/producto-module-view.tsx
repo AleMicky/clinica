@@ -96,6 +96,28 @@ export function ProductoModuleView() {
     };
   }, [productosData, categorias]);
 
+  // Selection state for bulk actions
+  const [selectedIds, setSelectedIds] = React.useState<number[]>([]);
+  const [selectedProductosMap, setSelectedProductosMap] = React.useState<Map<number, ProductoResponse>>(new Map());
+
+  const handleSelectionChange = React.useCallback((newSelectedIds: number[]) => {
+    setSelectedIds(newSelectedIds);
+    setSelectedProductosMap((prev) => {
+      const next = new Map(prev);
+      productos.forEach((p) => {
+        if (newSelectedIds.includes(p.id)) {
+          next.set(p.id, p);
+        }
+      });
+      for (const id of next.keys()) {
+        if (!newSelectedIds.includes(id)) {
+          next.delete(id);
+        }
+      }
+      return next;
+    });
+  }, [productos]);
+
   // Form Dialog state (Producto)
   const [formOpen, setFormOpen] = React.useState(false);
   const [productoToEdit, setProductoToEdit] = React.useState<ProductoResponse | null>(null);
@@ -113,11 +135,30 @@ export function ProductoModuleView() {
   // Delete Dialog state (Producto)
   const [deleteOpen, setDeleteOpen] = React.useState(false);
   const [productoToDelete, setProductoToDelete] = React.useState<ProductoResponse | null>(null);
+  const [productosToDelete, setProductosToDelete] = React.useState<ProductoResponse[]>([]);
 
   const handleOpenDelete = React.useCallback((producto: ProductoResponse) => {
     setProductoToDelete(producto);
+    setProductosToDelete([]);
     setDeleteOpen(true);
   }, []);
+
+  const handleOpenDeleteMultiple = React.useCallback((ids: number[]) => {
+    const items = ids
+      .map((id) => selectedProductosMap.get(id) ?? productos.find((p) => p.id === id))
+      .filter((item): item is ProductoResponse => Boolean(item));
+
+    setProductoToDelete(null);
+    setProductosToDelete(items);
+    setDeleteOpen(true);
+  }, [productos, selectedProductosMap]);
+
+  const handleDeleteSuccess = React.useCallback(() => {
+    setSelectedIds([]);
+    setSelectedProductosMap(new Map());
+    refetch();
+  }, [refetch]);
+
 
   // Import Dialog state (Excel)
   const [importOpen, setImportOpen] = React.useState(false);
@@ -167,6 +208,9 @@ export function ProductoModuleView() {
             onEdit={handleOpenEdit}
             onDelete={handleOpenDelete}
             onRefresh={refetch}
+            selectedIds={selectedIds}
+            onSelectionChange={handleSelectionChange}
+            onDeleteMultiple={handleOpenDeleteMultiple}
           />
         </div>
 
@@ -194,8 +238,10 @@ export function ProductoModuleView() {
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
         productoToDelete={productoToDelete}
-        onSuccessCallback={refetch}
+        productosToDelete={productosToDelete}
+        onSuccessCallback={handleDeleteSuccess}
       />
+
 
       {/* Excel Import Dialog */}
       <ProductoImportDialog

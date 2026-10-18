@@ -53,6 +53,10 @@ public interface IProductoService
     Task EliminarAsync(
         int id,
         CancellationToken cancellationToken = default);
+
+    Task<int> EliminarMultiplesAsync(
+        IEnumerable<int> ids,
+        CancellationToken cancellationToken = default);
 }
 
 public sealed class ProductoService(
@@ -339,16 +343,110 @@ public sealed class ProductoService(
         int id,
         CancellationToken cancellationToken = default)
     {
-        var entity = await dbContext.Productos
-            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
-
-        if (entity is null || !entity.Activo)
+        var eliminados = await EliminarProductosInternoAsync([id], cancellationToken);
+        if (eliminados == 0)
         {
             throw new NotFoundException(nameof(ProductoEntity), id);
         }
+    }
 
-        dbContext.Productos.Remove(entity);
+    public async Task<int> EliminarMultiplesAsync(
+        IEnumerable<int> ids,
+        CancellationToken cancellationToken = default)
+    {
+        var idList = ids.Distinct().ToList();
+        if (idList.Count == 0)
+        {
+            return 0;
+        }
+
+        return await EliminarProductosInternoAsync(idList, cancellationToken);
+    }
+
+    private async Task<int> EliminarProductosInternoAsync(
+        List<int> ids,
+        CancellationToken cancellationToken)
+    {
+        var productos = await dbContext.Productos
+            .Where(x => ids.Contains(x.Id))
+            .ToListAsync(cancellationToken);
+
+        if (productos.Count == 0)
+        {
+            return 0;
+        }
+
+        var productosIds = productos.Select(x => x.Id).ToList();
+
+        // 1. Validar que no tengan movimientos o transacciones asociadas
+        var idsConMovimientos = await dbContext.MovimientosInventarioDetalles
+            .Where(d => productosIds.Contains(d.ProductoId))
+            .Select(d => d.ProductoId)
+            .Union(dbContext.BajasInventarioDetalles.Where(d => productosIds.Contains(d.ProductoId)).Select(d => d.ProductoId))
+            .Union(dbContext.ConsumosInternoDetalles.Where(d => productosIds.Contains(d.ProductoId)).Select(d => d.ProductoId))
+            .Union(dbContext.AjustesInventarioDetalles.Where(d => productosIds.Contains(d.ProductoId)).Select(d => d.ProductoId))
+            .Union(dbContext.TransferenciasAlmacenDetalles.Where(d => productosIds.Contains(d.ProductoId)).Select(d => d.ProductoId))
+            .Union(dbContext.InventariosFisicosDetalles.Where(d => productosIds.Contains(d.ProductoId)).Select(d => d.ProductoId))
+            .Union(dbContext.RecepcionesCompraDetalles.Where(d => productosIds.Contains(d.ProductoId)).Select(d => d.ProductoId))
+            .Union(dbContext.DevolucionesProveedorDetalles.Where(d => productosIds.Contains(d.ProductoId)).Select(d => d.ProductoId))
+            .Union(dbContext.OrdenesCompraDetalles.Where(d => productosIds.Contains(d.ProductoId)).Select(d => d.ProductoId))
+            .Union(dbContext.SolicitudesCompraDetalles.Where(d => productosIds.Contains(d.ProductoId)).Select(d => d.ProductoId))
+            .Union(dbContext.CotizacionesCompraDetalles.Where(d => productosIds.Contains(d.ProductoId)).Select(d => d.ProductoId))
+            .Union(dbContext.ReservasStockDetalles.Where(d => productosIds.Contains(d.ProductoId)).Select(d => d.ProductoId))
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        if (idsConMovimientos.Count != 0)
+        {
+            var productosConMovimientos = productos
+                .Where(p => idsConMovimientos.Contains(p.Id))
+                .Select(p => $"'{p.Nombre}'")
+                .ToList();
+
+            throw new ConflictException(
+                $"No se puede eliminar {(productosConMovimientos.Count == 1 ? "el producto" : "los productos")} {string.Join(", ", productosConMovimientos)} porque tiene(n) movimientos de inventario o compras asociados.");
+        }
+
+        // 2. Obtener partidas de inventario asociadas
+        var partidas = await dbContext.PartidasInventario
+            .Where(p => productosIds.Contains(p.ProductoId))
+            .ToListAsync(cancellationToken);
+
+        var partidaIds = partidas.Select(p => p.Id).ToList();
+
+        // 3. Obtener existencias asociadas
+        var existencias = await dbContext.Existencias
+            .Where(e => productosIds.Contains(e.ProductoId))
+            .ToListAsync(cancellationToken);
+
+        var existenciaIds = existencias.Select(e => e.Id).ToList();
+
+        // 4. Obtener existencias por partida asociadas
+        var existenciasPartidas = await dbContext.ExistenciasPartidas
+            .Where(ep => (partidaIds.Count > 0 && partidaIds.Contains(ep.PartidaInventarioId)) ||
+                         (existenciaIds.Count > 0 && existenciaIds.Contains(ep.ExistenciaId)))
+            .ToListAsync(cancellationToken);
+
+        // 5. Eliminar en cascada controlada: ExistenciasPartidas -> PartidasInventario -> Existencias -> Productos
+        if (existenciasPartidas.Count > 0)
+        {
+            dbContext.ExistenciasPartidas.RemoveRange(existenciasPartidas);
+        }
+
+        if (partidas.Count > 0)
+        {
+            dbContext.PartidasInventario.RemoveRange(partidas);
+        }
+
+        if (existencias.Count > 0)
+        {
+            dbContext.Existencias.RemoveRange(existencias);
+        }
+
+        dbContext.Productos.RemoveRange(productos);
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        return productos.Count;
     }
 
     private async Task ValidarReferenciasAsync(

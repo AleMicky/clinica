@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -61,7 +62,11 @@ interface ProductoMasterListProps {
   onEdit: (producto: ProductoResponse) => void;
   onDelete: (producto: ProductoResponse) => void;
   onRefresh: () => void;
+  selectedIds?: number[];
+  onSelectionChange?: (selectedIds: number[]) => void;
+  onDeleteMultiple?: (selectedIds: number[]) => void;
 }
+
 
 export function ProductoMasterList({
   productos,
@@ -85,11 +90,46 @@ export function ProductoMasterList({
   onEdit,
   onDelete,
   onRefresh,
+  selectedIds = [],
+  onSelectionChange,
+  onDeleteMultiple,
 }: Readonly<ProductoMasterListProps>) {
+  const isAllSelected =
+    productos.length > 0 &&
+    productos.every((item) => selectedIds.includes(item.id));
+
+  const handleToggleAll = () => {
+    if (!onSelectionChange) return;
+
+    if (isAllSelected) {
+      const currentPageIds = new Set(productos.map((p) => p.id));
+      onSelectionChange(selectedIds.filter((id) => !currentPageIds.has(id)));
+    } else {
+      const updated = new Set([...selectedIds, ...productos.map((p) => p.id)]);
+      onSelectionChange(Array.from(updated));
+    }
+  };
+
+  const handleToggleItem = (id: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!onSelectionChange) return;
+
+    if (selectedIds.includes(id)) {
+      onSelectionChange(selectedIds.filter((item) => item !== id));
+    } else {
+      onSelectionChange([...selectedIds, id]);
+    }
+  };
+
+  const handleClearSelection = () => {
+    onSelectionChange?.([]);
+  };
+
   const hasActiveFilters = Boolean(searchTerm.trim() || categoriaFilter !== null);
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const fromItem = totalItems === 0 ? 0 : (page - 1) * pageSize + 1;
   const toItem = Math.min(totalItems, page * pageSize);
+
 
   // Keyboard navigation through items
   React.useEffect(() => {
@@ -179,22 +219,39 @@ export function ProductoMasterList({
 
     return productos.map((prod) => {
       const isSelected = prod.id === selectedProductoId;
+      const isChecked = selectedIds.includes(prod.id);
 
       return (
         <div
           key={prod.id}
           className={cn(
-            "group relative rounded-lg border transition-all duration-150 text-left select-none",
+            "group relative rounded-lg border transition-all duration-150 text-left select-none flex items-stretch",
             isSelected
               ? "bg-primary/[0.08] border-primary/40 shadow-2xs ring-1 ring-primary/20 border-l-[3px] border-l-primary"
+              : isChecked
+              ? "bg-primary/[0.04] border-primary/30"
               : "bg-card/70 border-border/30 hover:bg-muted/40 hover:border-border/60"
           )}
         >
+          {onSelectionChange && (
+            <div
+              className="flex items-center pl-2.5 pr-0 cursor-pointer"
+              onClick={(e) => handleToggleItem(prod.id, e)}
+            >
+              <Checkbox
+                checked={isChecked}
+                onCheckedChange={() => {}}
+                aria-label={`Seleccionar ${prod.nombre}`}
+                className="cursor-pointer size-3.5"
+              />
+            </div>
+          )}
+
           <button
             type="button"
             onClick={() => onSelectProducto(prod)}
             aria-pressed={isSelected}
-            className="w-full flex flex-col gap-1 p-2.5 pr-9 text-left cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/40 rounded-lg"
+            className="w-full flex flex-col gap-1 p-2.5 pr-9 text-left cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/40 rounded-lg min-w-0"
           >
             <div className="flex items-center gap-1.5 min-w-0 w-full">
               <span
@@ -279,6 +336,14 @@ export function ProductoMasterList({
       <div className="p-3 border-b border-border/30 space-y-2 bg-card">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
+            {productos.length > 0 && onSelectionChange && (
+              <Checkbox
+                checked={isAllSelected}
+                onCheckedChange={handleToggleAll}
+                aria-label="Seleccionar todos los productos de esta página"
+                className="cursor-pointer size-4"
+              />
+            )}
             <div className="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0 border border-primary/20">
               <Boxes className="size-3.5" />
             </div>
@@ -291,6 +356,7 @@ export function ProductoMasterList({
               </Badge>
             </div>
           </div>
+
 
           <div className="flex items-center gap-1.5 shrink-0">
             {onImportClick && (
@@ -391,7 +457,47 @@ export function ProductoMasterList({
             )}
           </div>
         </div>
+
+        {/* Bulk Selection Action Bar */}
+        {selectedIds.length > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-primary/10 border border-primary/25 text-foreground animate-in fade-in slide-in-from-top-1 duration-200">
+            <div className="flex items-center gap-1.5">
+              <Badge variant="default" className="font-mono text-[10px] px-1.5 py-0">
+                {selectedIds.length}
+              </Badge>
+              <span className="text-[11px] font-medium">
+                {selectedIds.length === 1
+                  ? "1 seleccionado"
+                  : `${selectedIds.length} seleccionados`}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearSelection}
+                className="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground cursor-pointer"
+              >
+                Limpiar
+              </Button>
+
+              {onDeleteMultiple && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => onDeleteMultiple(selectedIds)}
+                  className="h-6 px-2 text-[11px] gap-1 cursor-pointer font-medium shadow-2xs"
+                >
+                  <Trash2 className="size-3" />
+                  <span>Eliminar ({selectedIds.length})</span>
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
+
 
       {/* Items List */}
       <div className="flex-1 overflow-y-auto p-1.5 space-y-1 min-h-[380px] max-h-[calc(100vh-320px)]">

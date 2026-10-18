@@ -7,6 +7,7 @@ import {
 import {
   createProducto,
   deleteProducto,
+  deleteProductosMultiple,
   exportarProductosExcel,
   getProductoById,
   getProductos,
@@ -94,6 +95,18 @@ export function useDeleteProducto() {
     },
   });
 }
+
+export function useDeleteProductosMultiple() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (ids: number[]) => deleteProductosMultiple(ids),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: productoKeys.lists() });
+    },
+  });
+}
+
 
 export function useImportarProductosExcel() {
   const queryClient = useQueryClient();
