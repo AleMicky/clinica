@@ -18,7 +18,7 @@ export function MarcaDeleteDialog({
   onOpenChange,
   marcaToDelete,
   onSuccessCallback,
-}: MarcaDeleteDialogProps) {
+}: Readonly<MarcaDeleteDialogProps>) {
   const deleteMutation = useDeleteMarca();
 
   const handleConfirmDelete = async () => {
@@ -28,11 +28,15 @@ export function MarcaDeleteDialog({
       toast.success(`Marca "${marcaToDelete.nombre}" eliminada correctamente.`);
       onSuccessCallback?.();
       onOpenChange(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as {
+        response?: { data?: { message?: string; detail?: string } };
+        message?: string;
+      };
       const errorMsg =
-        error?.response?.data?.message ||
-        error?.response?.data?.detail ||
-        error?.message ||
+        err?.response?.data?.message ||
+        err?.response?.data?.detail ||
+        err?.message ||
         "No se pudo eliminar la marca.";
       toast.error(errorMsg);
     }

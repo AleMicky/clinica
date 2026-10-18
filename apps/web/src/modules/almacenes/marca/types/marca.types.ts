@@ -12,6 +12,14 @@ export interface MarcaResponse {
   fechaModificacion?: string;
   creadoPor?: string;
   modificadoPor?: string;
+  created_at?: string;
+  updated_at?: string;
+  created_by?: string;
+  updated_by?: string;
+  creadoEn?: string;
+  actualizadoEn?: string;
+  usuarioCreacion?: string;
+  usuarioModificacion?: string;
 }
 
 export interface CreateMarcaRequest {
@@ -20,7 +28,7 @@ export interface CreateMarcaRequest {
   descripcion?: string | null;
 }
 
-export interface UpdateMarcaRequest extends CreateMarcaRequest {}
+export type UpdateMarcaRequest = CreateMarcaRequest;
 
 export interface MarcaQueryParams {
   page?: number;

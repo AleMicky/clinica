@@ -42,7 +42,7 @@ export function MarcaFormDialog({
   onOpenChange,
   marcaToEdit,
   onSuccessCallback,
-}: MarcaFormDialogProps) {
+}: Readonly<MarcaFormDialogProps>) {
   const isEditing = Boolean(marcaToEdit);
 
   const createMutation = useCreateMarca();
@@ -64,9 +64,15 @@ export function MarcaFormDialog({
 
   const [keepOpen, setKeepOpen] = React.useState(false);
 
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      setKeepOpen(false);
+    }
+    onOpenChange(nextOpen);
+  };
+
   React.useEffect(() => {
     if (open) {
-      setKeepOpen(false);
       if (marcaToEdit) {
         reset({
           codigo: marcaToEdit.codigo,
@@ -96,7 +102,7 @@ export function MarcaFormDialog({
         });
         toast.success(`Marca ${values.codigo} actualizada correctamente.`);
         onSuccessCallback?.();
-        onOpenChange(false);
+        handleOpenChange(false);
       } else {
         await createMutation.mutateAsync({
           codigo: values.codigo,
@@ -107,20 +113,25 @@ export function MarcaFormDialog({
         onSuccessCallback?.();
 
         if (keepOpen) {
+          setKeepOpen(false);
           reset({
             codigo: "",
             nombre: "",
             descripcion: "",
           });
         } else {
-          onOpenChange(false);
+          handleOpenChange(false);
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as {
+        response?: { data?: { message?: string; detail?: string } };
+        message?: string;
+      };
       const errorMsg =
-        error?.response?.data?.message ||
-        error?.response?.data?.detail ||
-        error?.message ||
+        err?.response?.data?.message ||
+        err?.response?.data?.detail ||
+        err?.message ||
         "Ocurrió un error al guardar la marca.";
       toast.error(errorMsg);
     }
@@ -129,7 +140,7 @@ export function MarcaFormDialog({
   const isLoading = createMutation.isPending || updateMutation.isPending || isSubmitting;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-lg p-6">
         <DialogHeader className="space-y-1">
           <DialogTitle className="flex items-center gap-2 text-xl">
@@ -221,7 +232,7 @@ export function MarcaFormDialog({
             <Button
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={() => handleOpenChange(false)}
               disabled={isLoading}
               className="text-xs w-full sm:w-auto"
             >

@@ -60,10 +60,26 @@ export function MarcaModuleView() {
   const [auditInfo, setAuditInfo] = React.useState<AuditInfo | null>(null);
 
   const handleViewAudit = (marca: MarcaResponse) => {
-    const rawCreated = marca.fechaCreacion || marca.createdAt || (marca as any).created_at || (marca as any).creadoEn;
-    const rawUpdated = marca.fechaModificacion || marca.updatedAt || (marca as any).updated_at || (marca as any).actualizadoEn;
-    const createdUser = marca.creadoPor || marca.createdBy || (marca as any).created_by || (marca as any).usuarioCreacion;
-    const updatedUser = marca.modificadoPor || marca.updatedBy || (marca as any).updated_by || (marca as any).usuarioModificacion;
+    const rawCreated =
+      marca.fechaCreacion ||
+      marca.createdAt ||
+      marca.created_at ||
+      marca.creadoEn;
+    const rawUpdated =
+      marca.fechaModificacion ||
+      marca.updatedAt ||
+      marca.updated_at ||
+      marca.actualizadoEn;
+    const createdUser =
+      marca.creadoPor ||
+      marca.createdBy ||
+      marca.created_by ||
+      marca.usuarioCreacion;
+    const updatedUser =
+      marca.modificadoPor ||
+      marca.updatedBy ||
+      marca.updated_by ||
+      marca.usuarioModificacion;
 
     setAuditInfo({
       title: "Auditoría de Marca",

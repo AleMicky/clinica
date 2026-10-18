@@ -29,7 +29,7 @@ export function MarcaAutocomplete({
   error = false,
   className,
   id,
-}: MarcaAutocompleteProps) {
+}: Readonly<MarcaAutocompleteProps>) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
   const searchInputRef = React.useRef<HTMLInputElement>(null);
@@ -64,78 +64,137 @@ export function MarcaAutocomplete({
   };
 
   const handleClear = (e: React.MouseEvent) => {
-    e.preventDefault();
     e.stopPropagation();
     onValueChange(null, null);
     setSearchQuery("");
   };
 
+  const renderResultsList = () => {
+    if (isLoading && filteredMarcas.length === 0) {
+      return (
+        <div className="flex items-center justify-center gap-2 px-3 py-4 text-xs text-muted-foreground">
+          <Loader2 className="size-3.5 animate-spin text-primary" />
+          <span>Cargando marcas...</span>
+        </div>
+      );
+    }
+
+    if (filteredMarcas.length === 0) {
+      return (
+        <div className="px-3 py-4 text-xs text-muted-foreground text-center">
+          No se encontraron marcas coincidentes.
+        </div>
+      );
+    }
+
+    return (
+      <ul className="space-y-0.5">
+        {filteredMarcas.map((marca) => {
+          const isSelected = selectedMarca?.id === marca.id;
+
+          return (
+            <li key={marca.id}>
+              <button
+                type="button"
+                onClick={() => handleSelect(marca)}
+                className={cn(
+                  "flex w-full cursor-pointer select-none items-center justify-between rounded-lg px-2 py-1.5 outline-hidden hover:bg-accent hover:text-accent-foreground transition-colors text-xs text-left",
+                  isSelected && "bg-accent/80 font-medium text-accent-foreground"
+                )}
+              >
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <div className="size-5 rounded flex items-center justify-center shrink-0 border bg-primary/10 border-primary/30 text-primary">
+                    <Tag className="size-3" />
+                  </div>
+                  <div className="flex flex-col min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="font-mono font-bold text-[10px] text-foreground bg-muted px-1 py-0.2 rounded shrink-0">
+                        {marca.codigo}
+                      </span>
+                      <span className="truncate font-medium text-xs">{marca.nombre}</span>
+                    </div>
+                    {marca.descripcion && (
+                      <span className="text-[10px] text-muted-foreground truncate">
+                        {marca.descripcion}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {isSelected && (
+                  <Check className="size-3.5 text-primary ml-1.5 shrink-0" />
+                )}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    );
+  };
+
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger
-        id={id}
-        type="button"
-        disabled={disabled}
-        aria-expanded={isOpen}
-        className={cn(
-          "w-full h-8 px-2.5 flex items-center justify-between gap-1.5 text-xs rounded-md border bg-background text-left transition-all cursor-pointer shadow-2xs focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring",
-          error
-            ? "border-destructive focus-visible:ring-destructive"
-            : "border-input hover:border-primary/50",
-          disabled && "opacity-50 cursor-not-allowed pointer-events-none",
-          className
-        )}
-      >
-        <div className="flex items-center gap-1.5 min-w-0 flex-1">
-          <Tag
-            className={cn(
-              "size-3.5 shrink-0",
-              selectedMarca
-                ? "text-primary"
-                : "text-muted-foreground"
+      <div className="relative flex items-center w-full">
+        <PopoverTrigger
+          id={id}
+          type="button"
+          disabled={disabled}
+          aria-expanded={isOpen}
+          className={cn(
+            "w-full h-8 px-2.5 flex items-center justify-between gap-1.5 text-xs rounded-md border bg-background text-left transition-all cursor-pointer shadow-2xs focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring",
+            error
+              ? "border-destructive focus-visible:ring-destructive"
+              : "border-input hover:border-primary/50",
+            disabled && "opacity-50 cursor-not-allowed pointer-events-none",
+            selectedMarca && !disabled ? "pr-11" : "pr-6",
+            className
+          )}
+        >
+          <div className="flex items-center gap-1.5 min-w-0 flex-1">
+            <Tag
+              className={cn(
+                "size-3.5 shrink-0",
+                selectedMarca
+                  ? "text-primary"
+                  : "text-muted-foreground"
+              )}
+            />
+            {selectedMarca ? (
+              <div className="flex items-center gap-1.5 min-w-0 flex-1 truncate">
+                <span className="font-mono font-bold text-[10px] text-primary bg-primary/10 px-1 py-0.5 rounded shrink-0">
+                  {selectedMarca.codigo}
+                </span>
+                <span className="font-medium text-foreground truncate text-xs">
+                  {selectedMarca.nombre}
+                </span>
+              </div>
+            ) : (
+              <span className="text-muted-foreground truncate text-xs">
+                {placeholder}
+              </span>
             )}
-          />
-          {selectedMarca ? (
-            <div className="flex items-center gap-1.5 min-w-0 flex-1 truncate">
-              <span className="font-mono font-bold text-[10px] text-primary bg-primary/10 px-1 py-0.5 rounded shrink-0">
-                {selectedMarca.codigo}
-              </span>
-              <span className="font-medium text-foreground truncate text-xs">
-                {selectedMarca.nombre}
-              </span>
-            </div>
-          ) : (
-            <span className="text-muted-foreground truncate text-xs">
-              {placeholder}
-            </span>
-          )}
-        </div>
+          </div>
 
-        <div className="flex items-center gap-0.5 shrink-0 text-muted-foreground ml-1">
-          {isLoading ? (
-            <Loader2 className="size-3 animate-spin text-primary" />
-          ) : selectedMarca && !disabled ? (
-            <span
-              role="button"
-              tabIndex={0}
-              onClick={handleClear}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleClear(e as any);
-                }
-              }}
-              className="rounded-full p-0.5 hover:bg-muted hover:text-foreground transition-colors cursor-pointer inline-flex items-center justify-center"
-              title="Quitar selección"
-            >
-              <X className="size-3" />
-            </span>
-          ) : (
-            <ChevronsUpDown className="size-3 opacity-60" />
-          )}
-        </div>
-      </PopoverTrigger>
+          <div className="flex items-center gap-0.5 shrink-0 text-muted-foreground ml-1">
+            {isLoading ? (
+              <Loader2 className="size-3 animate-spin text-primary" />
+            ) : (
+              <ChevronsUpDown className="size-3 opacity-60" />
+            )}
+          </div>
+        </PopoverTrigger>
+
+        {selectedMarca && !disabled && (
+          <button
+            type="button"
+            onClick={handleClear}
+            className="absolute right-6 top-1/2 -translate-y-1/2 rounded-full p-0.5 hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+            title="Quitar selección"
+            aria-label="Quitar selección"
+          >
+            <X className="size-3" />
+          </button>
+        )}
+      </div>
 
       <PopoverContent
         align="start"
@@ -172,55 +231,7 @@ export function MarcaAutocomplete({
 
         {/* Results list */}
         <div className="overflow-y-auto max-h-56 pr-0.5 space-y-0.5">
-          {isLoading && filteredMarcas.length === 0 ? (
-            <div className="flex items-center justify-center gap-2 px-3 py-4 text-xs text-muted-foreground">
-              <Loader2 className="size-3.5 animate-spin text-primary" />
-              <span>Cargando marcas...</span>
-            </div>
-          ) : filteredMarcas.length === 0 ? (
-            <div className="px-3 py-4 text-xs text-muted-foreground text-center">
-              No se encontraron marcas coincidentes.
-            </div>
-          ) : (
-            <ul className="space-y-0.5">
-              {filteredMarcas.map((marca) => {
-                const isSelected = selectedMarca?.id === marca.id;
-
-                return (
-                  <li
-                    key={marca.id}
-                    onClick={() => handleSelect(marca)}
-                    className={cn(
-                      "flex cursor-pointer select-none items-center justify-between rounded-lg px-2 py-1.5 outline-hidden hover:bg-accent hover:text-accent-foreground transition-colors text-xs",
-                      isSelected && "bg-accent/80 font-medium text-accent-foreground"
-                    )}
-                  >
-                    <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <div className="size-5 rounded flex items-center justify-center shrink-0 border bg-primary/10 border-primary/30 text-primary">
-                        <Tag className="size-3" />
-                      </div>
-                      <div className="flex flex-col min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="font-mono font-bold text-[10px] text-foreground bg-muted px-1 py-0.2 rounded shrink-0">
-                            {marca.codigo}
-                          </span>
-                          <span className="truncate font-medium text-xs">{marca.nombre}</span>
-                        </div>
-                        {marca.descripcion && (
-                          <span className="text-[10px] text-muted-foreground truncate">
-                            {marca.descripcion}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    {isSelected && (
-                      <Check className="size-3.5 text-primary ml-1.5 shrink-0" />
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+          {renderResultsList()}
         </div>
       </PopoverContent>
     </Popover>
