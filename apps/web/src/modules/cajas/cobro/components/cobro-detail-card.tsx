@@ -7,19 +7,24 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import {
   ArrowLeft,
   Ban,
   Building2,
   CheckCircle2,
+  ChevronsUpDown,
   Coins,
   CreditCard,
   Loader2,
   QrCode,
   Receipt,
+  Search,
   Store,
   User,
   Wallet,
+  X,
   Zap,
 } from "lucide-react";
 import {
@@ -32,6 +37,7 @@ import { CobroStatusBadge } from "./cobro-status-badge";
 import { useCobro, useConfirmarCobro } from "../hooks/use-cobros";
 import { useMetodosPago } from "@/modules/parametros/metodo-pago/hooks/use-metodos-pago";
 import { useMonedas } from "@/modules/parametros/moneda/hooks/use-monedas";
+import { useBancos } from "@/modules/parametros/banco/hooks/use-bancos";
 
 interface CobroDetailCardProps {
   cobro: CobroResponse | null;
@@ -96,6 +102,236 @@ interface CobroLiquidacionFormProps {
   onAnular?: (cobro: CobroResponse) => void;
 }
 
+interface BancoAutocompleteProps {
+  value?: string | null;
+  onValueChange: (value: string | null) => void;
+  bancos: Array<{ id: number; codigo: string; nombre: string; nombreCorto?: string | null }>;
+  isLoading?: boolean;
+  disabled?: boolean;
+  className?: string;
+  placeholder?: string;
+}
+
+function BancoAutocomplete({
+  value,
+  onValueChange,
+  bancos,
+  isLoading = false,
+  disabled = false,
+  className,
+  placeholder = "Ej: Banco Unión, BCP...",
+}: Readonly<BancoAutocompleteProps>) {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
+
+  const selectedBanco = React.useMemo(() => {
+    if (!value) return null;
+    return bancos.find(
+      (b) => b.nombre.toLowerCase() === value.toLowerCase()
+    );
+  }, [bancos, value]);
+
+  const filteredBancos = React.useMemo(() => {
+    if (!searchQuery.trim()) return bancos;
+    const q = searchQuery.toLowerCase().trim();
+    return bancos.filter(
+      (b) =>
+        b.nombre.toLowerCase().includes(q) ||
+        (b.nombreCorto && b.nombreCorto.toLowerCase().includes(q)) ||
+        b.codigo.toLowerCase().includes(q)
+    );
+  }, [bancos, searchQuery]);
+
+  const handleSelect = (banco: { nombre: string }) => {
+    onValueChange(banco.nombre);
+    setIsOpen(false);
+    setSearchQuery("");
+  };
+
+  const handleClear = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onValueChange(null);
+    setSearchQuery("");
+  };
+
+  const handleSelectCustom = () => {
+    if (searchQuery.trim()) {
+      onValueChange(searchQuery.trim());
+      setIsOpen(false);
+      setSearchQuery("");
+    }
+  };
+
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger
+        type="button"
+        disabled={disabled}
+        aria-expanded={isOpen}
+        className={cn(
+          "w-full h-8 px-2.5 flex items-center justify-between gap-1.5 text-xs rounded-md border border-input bg-background text-left transition-all cursor-pointer shadow-2xs hover:border-primary/50 focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring",
+          disabled && "opacity-50 cursor-not-allowed pointer-events-none",
+          className
+        )}
+      >
+        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+          <Building2
+            className={cn(
+              "size-3.5 shrink-0",
+              value ? "text-primary" : "text-muted-foreground"
+            )}
+          />
+          {selectedBanco ? (
+            <div className="flex items-center gap-1.5 min-w-0 flex-1 truncate">
+              {selectedBanco.nombreCorto && (
+                <span className="font-mono font-bold text-[10px] text-primary bg-primary/10 px-1 py-0.2 rounded shrink-0">
+                  {selectedBanco.nombreCorto}
+                </span>
+              )}
+              <span className="font-medium text-foreground truncate text-xs">
+                {selectedBanco.nombre}
+              </span>
+            </div>
+          ) : value ? (
+            <span className="font-medium text-foreground truncate text-xs">
+              {value}
+            </span>
+          ) : (
+            <span className="text-muted-foreground truncate text-xs">
+              {placeholder}
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-0.5 shrink-0 text-muted-foreground ml-1">
+          {isLoading ? (
+            <Loader2 className="size-3 animate-spin text-primary" />
+          ) : value && !disabled ? (
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={handleClear}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleClear(e as unknown as React.MouseEvent);
+                }
+              }}
+              className="rounded-full p-0.5 hover:bg-muted hover:text-foreground transition-colors cursor-pointer inline-flex items-center justify-center"
+              title="Quitar selección"
+            >
+              <X className="size-3" />
+            </span>
+          ) : (
+            <ChevronsUpDown className="size-3 opacity-60" />
+          )}
+        </div>
+      </PopoverTrigger>
+
+      <PopoverContent
+        align="start"
+        className="w-[280px] sm:w-[320px] p-1.5 max-h-72 overflow-hidden flex flex-col rounded-xl shadow-xl border-border/80 z-50 bg-popover text-popover-foreground"
+      >
+        {/* Search header */}
+        <div className="flex items-center gap-1.5 px-2 py-1.5 border-b border-border/50 bg-muted/20 rounded-md mb-1">
+          <Search className="size-3.5 text-muted-foreground shrink-0" />
+          <input
+            ref={searchInputRef}
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                if (filteredBancos.length > 0) {
+                  handleSelect(filteredBancos[0]);
+                } else if (searchQuery.trim()) {
+                  handleSelectCustom();
+                }
+              }
+            }}
+            placeholder="Buscar banco por nombre o código..."
+            className="w-full text-xs bg-transparent outline-none placeholder:text-muted-foreground/70"
+            autoFocus
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery("")}
+              className="p-0.5 text-muted-foreground hover:text-foreground cursor-pointer"
+            >
+              <X className="size-3" />
+            </button>
+          )}
+        </div>
+
+        {/* Results list */}
+        <div className="overflow-y-auto max-h-48 pr-0.5 space-y-0.5 scrollbar-none">
+          {isLoading && filteredBancos.length === 0 ? (
+            <div className="flex items-center justify-center gap-2 px-3 py-3 text-xs text-muted-foreground">
+              <Loader2 className="size-3.5 animate-spin text-primary" />
+              <span>Cargando bancos...</span>
+            </div>
+          ) : filteredBancos.length === 0 ? (
+            <div className="px-3 py-3 text-xs text-muted-foreground text-center space-y-2">
+              <p>No se encontraron bancos coincidentes.</p>
+              {searchQuery.trim() && (
+                <button
+                  type="button"
+                  onClick={handleSelectCustom}
+                  className="w-full text-left text-xs px-2 py-1.5 rounded-md bg-primary/10 text-primary hover:bg-primary/20 font-medium transition-colors"
+                >
+                  Usar &quot;{searchQuery.trim()}&quot;
+                </button>
+              )}
+            </div>
+          ) : (
+            <ul className="space-y-0.5">
+              {filteredBancos.map((banco) => {
+                const isSelected =
+                  value?.toLowerCase() === banco.nombre.toLowerCase();
+
+                return (
+                  <li
+                    key={banco.id}
+                    onClick={() => handleSelect(banco)}
+                    className={cn(
+                      "flex cursor-pointer select-none items-center justify-between rounded-lg px-2 py-1.5 outline-hidden hover:bg-accent hover:text-accent-foreground transition-colors text-xs",
+                      isSelected && "bg-accent/80 font-medium text-accent-foreground"
+                    )}
+                  >
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <div className="size-5 rounded flex items-center justify-center shrink-0 border bg-primary/10 border-primary/25 text-primary text-[10px] font-bold">
+                        {banco.codigo.slice(0, 2)}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <span className="truncate block font-medium">
+                          {banco.nombre}
+                        </span>
+                        {banco.nombreCorto && (
+                          <span className="text-[10px] text-muted-foreground block">
+                            {banco.nombreCorto}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {isSelected && (
+                      <CheckCircle2 className="size-3.5 text-primary shrink-0" />
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 function CobroLiquidacionForm({
   cobro,
   montoObjetivo,
@@ -105,6 +341,13 @@ function CobroLiquidacionForm({
   onAnular,
 }: Readonly<CobroLiquidacionFormProps>) {
   const confirmarCobroMutation = useConfirmarCobro();
+
+  const { data: bancosData, isLoading: isLoadingBancos } = useBancos({
+    pageSize: 100,
+  });
+  const bancos = React.useMemo(() => {
+    return bancosData?.items?.filter((b) => b.activo) ?? [];
+  }, [bancosData]);
 
   const [detalles, setDetalles] = React.useState<CobroDetalleRequest[]>(() =>
     getInitialDetalles(cobro, montoObjetivo, metodos, monedaBase)
@@ -210,8 +453,8 @@ function CobroLiquidacionForm({
   };
 
   return (
-    <form onSubmit={handleConfirmarCobro} className="flex-1 min-h-0 flex flex-col justify-between gap-3 p-3.5 sm:p-4 overflow-hidden">
-      <div className="flex-1 min-h-0 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
+    <form onSubmit={handleConfirmarCobro} className="flex-1 min-h-0 flex flex-col justify-between gap-2.5 p-3 sm:p-3.5 overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-y-auto space-y-2.5 pr-0.5 scrollbar-none">
         {/* PANTALLA HERO DEL MONTO A COBRAR (ESTILO CAJA POS) */}
         <div className="rounded-xl p-4 bg-gradient-to-r from-emerald-950/40 via-card to-emerald-950/20 border border-emerald-500/30 flex items-center justify-between shadow-xs">
           <div>
@@ -368,22 +611,21 @@ function CobroLiquidacionForm({
               </div>
 
               <div>
-                <Label className="text-[11px] text-muted-foreground block mb-0.5">
+                <Label htmlFor="banco-entidad-field" className="text-[11px] text-muted-foreground block mb-0.5">
                   Banco / Entidad (Opcional)
                 </Label>
-                <Input
-                  type="text"
-                  placeholder="Ej: Banco Unión, BCP"
+                <BancoAutocomplete
                   value={activeDetalle.entidadFinanciera || ""}
-                  onChange={(e) =>
+                  onValueChange={(val) =>
                     setDetalles([
                       {
                         ...activeDetalle,
-                        entidadFinanciera: e.target.value,
+                        entidadFinanciera: val,
                       },
                     ])
                   }
-                  className="h-8 text-xs bg-background"
+                  bancos={bancos}
+                  isLoading={isLoadingBancos}
                 />
               </div>
             </div>
@@ -585,7 +827,7 @@ export function CobroDetailCard({
       ) : (
         /* VISTA DE TICKET COBRADO O ANULADO (RECIBO FINAL) */
         <div className="flex-1 min-h-0 p-4 sm:p-5 flex flex-col justify-between overflow-hidden">
-          <div className="flex-1 min-h-0 overflow-y-auto space-y-3.5 pr-1 custom-scrollbar">
+          <div className="flex-1 min-h-0 overflow-y-auto space-y-3.5 pr-1 scrollbar-none">
             <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 flex items-center justify-between">
               <div>
                 <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">

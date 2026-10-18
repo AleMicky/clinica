@@ -38,6 +38,8 @@ public sealed class CobroService(
         PaginationRequest pagination,
         string? search,
         EstadoCobro? estado = null,
+        DateOnly? fechaDesde = null,
+        DateOnly? fechaHasta = null,
         CancellationToken cancellationToken = default)
     {
         var usuarioId = currentUserService.UserId;
@@ -77,6 +79,18 @@ public sealed class CobroService(
             query = query.Where(x => x.Estado == estado.Value);
         }
 
+        if (fechaDesde.HasValue)
+        {
+            var desdeDateTime = fechaDesde.Value.ToDateTime(TimeOnly.MinValue);
+            query = query.Where(x => x.FechaHora >= desdeDateTime);
+        }
+
+        if (fechaHasta.HasValue)
+        {
+            var hastaDateTime = fechaHasta.Value.ToDateTime(TimeOnly.MaxValue);
+            query = query.Where(x => x.FechaHora <= hastaDateTime);
+        }
+
         var normalizedSearch = string.IsNullOrWhiteSpace(search)
             ? null
             : search.Trim();
@@ -96,6 +110,88 @@ public sealed class CobroService(
             pagination.ValidPage,
             pagination.ValidPageSize,
             totalItems);
+    }
+
+    public async Task<CobroMetricsResponse> ObtenerMetricasAsync(
+        string? search = null,
+        DateOnly? fechaDesde = null,
+        DateOnly? fechaHasta = null,
+        CancellationToken cancellationToken = default)
+    {
+        var usuarioId = currentUserService.UserId;
+
+        if (usuarioId is null)
+            throw new UnauthorizedAccessException();
+
+        var query = Entities
+            .AsNoTracking()
+            .Where(x => x.Activo);
+
+        var esAdministrador = currentUserService.IsInRole("ADMINISTRADOR") ||
+                              currentUserService.IsInRole("ADMIN_CAJA");
+
+        if (!esAdministrador)
+        {
+            var empleadoId = await DbContext.Users
+                .Where(x => x.Id == usuarioId.Value)
+                .Join(
+                    DbContext.Empleados,
+                    usuario => usuario.PersonaId,
+                    empleado => empleado.PersonaId,
+                    (_, empleado) => empleado.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (empleadoId == 0)
+            {
+                return new CobroMetricsResponse();
+            }
+
+            query = query.Where(x => x.TurnoCaja.EmpleadoId == empleadoId);
+        }
+
+        if (fechaDesde.HasValue)
+        {
+            var desdeDateTime = fechaDesde.Value.ToDateTime(TimeOnly.MinValue);
+            query = query.Where(x => x.FechaHora >= desdeDateTime);
+        }
+
+        if (fechaHasta.HasValue)
+        {
+            var hastaDateTime = fechaHasta.Value.ToDateTime(TimeOnly.MaxValue);
+            query = query.Where(x => x.FechaHora <= hastaDateTime);
+        }
+
+        var normalizedSearch = string.IsNullOrWhiteSpace(search)
+            ? null
+            : search.Trim();
+
+        query = ApplySearch(query, normalizedSearch);
+
+        var stats = await query
+            .GroupBy(_ => 1)
+            .Select(g => new
+            {
+                Total = g.Count(),
+                PendientesCobro = g.Count(x => x.Estado == EstadoCobro.Registrado),
+                Completados = g.Count(x => x.Estado == EstadoCobro.Confirmado),
+                Anulados = g.Count(x => x.Estado == EstadoCobro.Anulado),
+                TotalMontoCobrado = g.Sum(x => x.Estado == EstadoCobro.Confirmado ? x.Total : 0m)
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (stats is null)
+        {
+            return new CobroMetricsResponse();
+        }
+
+        return new CobroMetricsResponse
+        {
+            TotalCobros = stats.Total,
+            PendientesCobro = stats.PendientesCobro,
+            Completados = stats.Completados,
+            Anulados = stats.Anulados,
+            TotalMontoCobrado = stats.TotalMontoCobrado
+        };
     }
 
 

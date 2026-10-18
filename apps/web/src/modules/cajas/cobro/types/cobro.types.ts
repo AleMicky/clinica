@@ -109,6 +109,8 @@ export interface CobroQueryParams {
   search?: string;
   turnoCajaId?: number;
   estado?: EstadoCobro;
+  fechaDesde?: string;
+  fechaHasta?: string;
 }
 
 export interface CobroMetrics {

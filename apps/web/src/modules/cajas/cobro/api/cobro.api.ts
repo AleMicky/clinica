@@ -1,6 +1,7 @@
 import { apiClient } from "@/lib/api/api-client";
 import type {
   AnularCobroRequest,
+  CobroMetrics,
   CobroQueryParams,
   CobroResponse,
   ConfirmarCobroRequest,
@@ -12,6 +13,17 @@ export async function getCobros(
   params?: CobroQueryParams
 ): Promise<PagedResult<CobroResponse>> {
   const response = await apiClient.get<PagedResult<CobroResponse>>("/cobros", {
+    params,
+  });
+  return response.data;
+}
+
+export async function getCobroMetrics(params?: {
+  search?: string;
+  fechaDesde?: string;
+  fechaHasta?: string;
+}): Promise<CobroMetrics> {
+  const response = await apiClient.get<CobroMetrics>("/cobros/metricas", {
     params,
   });
   return response.data;

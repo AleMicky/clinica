@@ -20,6 +20,9 @@ public static class CobroEndpoints
         group.MapGet("/", ListarAsync)
             .WithName("ListarCobros");
 
+        group.MapGet("/metricas", ObtenerMetricasAsync)
+            .WithName("ObtenerMetricasCobros");
+
         group.MapGet("/{id:int}", ObtenerAsync)
             .WithName("ObtenerCobro");
 
@@ -46,6 +49,8 @@ public static class CobroEndpoints
         [AsParameters] PaginationRequest pagination,
         string? search,
         EstadoCobro? estado,
+        DateOnly? fechaDesde,
+        DateOnly? fechaHasta,
         CobroService service,
         CancellationToken cancellationToken)
     {
@@ -53,6 +58,28 @@ public static class CobroEndpoints
             pagination,
             search,
             estado,
+            fechaDesde,
+            fechaHasta,
+            cancellationToken);
+
+        return Results.Ok(result);
+    }
+
+    // ============================================================
+    // MÉTRICAS
+    // ============================================================
+
+    private static async Task<IResult> ObtenerMetricasAsync(
+        string? search,
+        DateOnly? fechaDesde,
+        DateOnly? fechaHasta,
+        CobroService service,
+        CancellationToken cancellationToken)
+    {
+        var result = await service.ObtenerMetricasAsync(
+            search,
+            fechaDesde,
+            fechaHasta,
             cancellationToken);
 
         return Results.Ok(result);

@@ -77,3 +77,16 @@ public sealed record VentaPagadorInfo
 
     public EstadoVentaPagador Estado { get; init; }
 }
+
+public sealed record CobroMetricsResponse
+{
+    public int TotalCobros { get; init; }
+
+    public int PendientesCobro { get; init; }
+
+    public int Completados { get; init; }
+
+    public int Anulados { get; init; }
+
+    public decimal TotalMontoCobrado { get; init; }
+}

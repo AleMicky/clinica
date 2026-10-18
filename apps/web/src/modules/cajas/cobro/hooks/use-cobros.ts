@@ -6,6 +6,7 @@ import {
   confirmarCobro,
   generarCobroDesdeVenta,
   getCobroById,
+  getCobroMetrics,
   getCobros,
 } from "../api/cobro.api";
 import { cobroKeys } from "../api/cobro.key";
@@ -20,6 +21,17 @@ export function useCobros(params?: CobroQueryParams, enabled = true) {
   return useQuery({
     queryKey: cobroKeys.list(params as Record<string, unknown>),
     queryFn: () => getCobros(params),
+    enabled,
+  });
+}
+
+export function useCobroMetrics(
+  params?: { search?: string; fechaDesde?: string; fechaHasta?: string },
+  enabled = true
+) {
+  return useQuery({
+    queryKey: cobroKeys.metrics(params as Record<string, unknown>),
+    queryFn: () => getCobroMetrics(params),
     enabled,
   });
 }

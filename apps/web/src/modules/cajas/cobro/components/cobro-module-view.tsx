@@ -4,7 +4,7 @@ import * as React from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks/use-debounce";
 import { cobroKeys } from "../api/cobro.key";
-import { useCobros } from "../hooks/use-cobros";
+import { useCobroMetrics, useCobros } from "../hooks/use-cobros";
 import { CobroHeader } from "./cobro-header";
 import { CobroList } from "./cobro-list";
 import { CobroDetailCard } from "./cobro-detail-card";
@@ -19,6 +19,11 @@ import {
   type CobroResponse,
 } from "../types/cobro.types";
 
+function getTodayIso(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 export function CobroModuleView() {
   const queryClient = useQueryClient();
 
@@ -30,6 +35,9 @@ export function CobroModuleView() {
   const [selectedEstadoTab, setSelectedEstadoTab] = React.useState<
     EstadoCobro | "TODOS"
   >("TODOS");
+  // Rango de fechas por defecto: el día de hoy
+  const [fechaDesde, setFechaDesde] = React.useState<string>(getTodayIso);
+  const [fechaHasta, setFechaHasta] = React.useState<string>(getTodayIso);
 
   // Estado del ticket activo y switcher móvil
   const [selectedCobroId, setSelectedCobroId] = React.useState<number | null>(null);
@@ -39,7 +47,7 @@ export function CobroModuleView() {
   const [anularDialogOpen, setAnularDialogOpen] = React.useState(false);
   const [cobroToAnular, setCobroToAnular] = React.useState<CobroResponse | null>(null);
 
-  // Consulta de lista filtrada por estado y búsqueda
+  // Consulta de lista filtrada por estado, búsqueda y rango de fechas
   const {
     data: apiData,
     isLoading: isLoadingCobros,
@@ -49,14 +57,17 @@ export function CobroModuleView() {
     pageSize,
     search: debouncedSearch || undefined,
     estado: selectedEstadoTab === "TODOS" ? undefined : selectedEstadoTab,
+    fechaDesde: fechaDesde || undefined,
+    fechaHasta: fechaHasta || undefined,
   });
 
-  // Consulta para métricas globales
+  // Consulta de métricas calculadas en el backend
   const {
-    data: allCobrosData,
+    data: metricsData,
     isRefetching: isRefetchingMetrics,
-  } = useCobros({
-    pageSize: 100,
+  } = useCobroMetrics({
+    fechaDesde: fechaDesde || undefined,
+    fechaHasta: fechaHasta || undefined,
   });
 
   // Normalización de cobros de la página
@@ -68,41 +79,16 @@ export function CobroModuleView() {
 
   const totalItems = apiData?.totalItems ?? cobros.length;
 
-  // Normalización de cobros para métricas
-  const allCobrosList: CobroResponse[] = React.useMemo(() => {
-    if (Array.isArray(allCobrosData?.items)) return allCobrosData.items;
-    if (Array.isArray(allCobrosData)) return allCobrosData as unknown as CobroResponse[];
-    return [];
-  }, [allCobrosData]);
-
-  const totalItemsCount = allCobrosData?.totalItems ?? allCobrosList.length;
-
-  // Cálculo de Métricas en vivo
+  // Métricas obtenidas directamente del backend
   const metrics: CobroMetricsType = React.useMemo(() => {
-    let montoTotal = 0;
-    let pendientesCobroCount = 0;
-    let completadosCount = 0;
-    let anuladosCount = 0;
-
-    allCobrosList.forEach((c) => {
-      if (c.estado === EstadoCobro.Anulado) {
-        anuladosCount++;
-      } else if (c.estado === EstadoCobro.Registrado) {
-        pendientesCobroCount++;
-      } else if (c.estado === EstadoCobro.Confirmado) {
-        completadosCount++;
-        montoTotal += Number(c.total) || 0;
-      }
-    });
-
     return {
-      totalCobros: totalItemsCount,
-      pendientesCobro: pendientesCobroCount,
-      completados: completadosCount,
-      anulados: anuladosCount,
-      totalMontoCobrado: montoTotal,
+      totalCobros: metricsData?.totalCobros ?? 0,
+      pendientesCobro: metricsData?.pendientesCobro ?? 0,
+      completados: metricsData?.completados ?? 0,
+      anulados: metricsData?.anulados ?? 0,
+      totalMontoCobrado: metricsData?.totalMontoCobrado ?? 0,
     };
-  }, [allCobrosList, totalItemsCount]);
+  }, [metricsData]);
 
   // Selección automática o manual del ticket activo
   const selectedCobroForDetail = React.useMemo(() => {
@@ -155,15 +141,39 @@ export function CobroModuleView() {
     setAnularDialogOpen(true);
   }, []);
 
+  const handleDateRangeChange = React.useCallback((desde: string, hasta: string) => {
+    setFechaDesde(desde);
+    setFechaHasta(hasta);
+    setCurrentPage(1);
+    setSelectedCobroId(null);
+  }, []);
+
+  const handleFechaDesdeChange = React.useCallback((val: string) => {
+    setFechaDesde(val);
+    setCurrentPage(1);
+    setSelectedCobroId(null);
+  }, []);
+
+  const handleFechaHastaChange = React.useCallback((val: string) => {
+    setFechaHasta(val);
+    setCurrentPage(1);
+    setSelectedCobroId(null);
+  }, []);
+
   const isGlobalRefreshing = isRefetchingCobros || isRefetchingMetrics;
 
   return (
     <div className="h-[calc(100dvh-5.75rem)] sm:h-[calc(100dvh-7.75rem)] lg:h-[calc(100dvh-9rem)] max-h-[calc(100dvh-9rem)] flex flex-col gap-2.5 w-full animate-in fade-in-50 duration-200 overflow-hidden">
-      {/* Cabecera del Módulo con Métricas Integradas en Línea */}
+      {/* Cabecera del Módulo con Métricas Integradas en Línea y Filtro por Fecha */}
       <CobroHeader
         metrics={metrics}
         onRefresh={handleRefreshAll}
         isRefreshing={isGlobalRefreshing}
+        fechaDesde={fechaDesde}
+        fechaHasta={fechaHasta}
+        onDateRangeChange={handleDateRangeChange}
+        onFechaDesdeChange={handleFechaDesdeChange}
+        onFechaHastaChange={handleFechaHastaChange}
       />
 
       {/* Selector de Pantalla para Móviles y Tablets (< lg) */}
