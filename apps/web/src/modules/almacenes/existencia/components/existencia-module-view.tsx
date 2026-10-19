@@ -11,6 +11,8 @@ import { useProductos } from "../../producto/hooks/use-producto";
 import type { ExistenciaResponse } from "../types/existencia.types";
 import { AuditDialog, type AuditInfo } from "@/components/shared";
 import { ExistenciaPartidasModal } from "../../existencia-partida/components/existencia-partidas-modal";
+import { KardexModal } from "../../kardex";
+import { AlertasStockDialog, useAlertasStock } from "../../alertas-stock";
 
 export function ExistenciaModuleView() {
   // Query filters
@@ -145,6 +147,22 @@ export function ExistenciaModuleView() {
     setPartidasModalOpen(true);
   };
 
+  // Kardex Modal state
+  const [kardexModalOpen, setKardexModalOpen] = React.useState(false);
+  const [selectedExistenciaForKardex, setSelectedExistenciaForKardex] =
+    React.useState<ExistenciaResponse | null>(null);
+
+  const handleOpenKardex = (item: ExistenciaResponse) => {
+    setSelectedExistenciaForKardex(item);
+    setKardexModalOpen(true);
+  };
+
+  // Alertas Dialog state
+  const [alertasDialogOpen, setAlertasDialogOpen] = React.useState(false);
+  const { data: alertasStock = [] } = useAlertasStock({
+    almacenId: selectedAlmacenId ?? undefined,
+  });
+
   return (
     <div className="flex flex-col gap-3.5 w-full">
       <ExistenciaHeader
@@ -152,6 +170,8 @@ export function ExistenciaModuleView() {
         totalFisico={totalFisico}
         totalReservado={totalReservado}
         totalDisponible={totalDisponible}
+        alertasCount={alertasStock.length}
+        onOpenAlertas={() => setAlertasDialogOpen(true)}
       />
 
       <ExistenciaList
@@ -176,6 +196,34 @@ export function ExistenciaModuleView() {
         onRefresh={() => refetch()}
         onViewAudit={handleViewAudit}
         onViewPartidas={handleOpenPartidas}
+        onViewKardex={handleOpenKardex}
+      />
+
+      {/* Kardex Físico - Valorado Modal */}
+      <KardexModal
+        open={kardexModalOpen}
+        onOpenChange={setKardexModalOpen}
+        almacenId={selectedExistenciaForKardex?.almacenId}
+        productoId={selectedExistenciaForKardex?.productoId}
+        productoNombre={selectedExistenciaForKardex?.productoNombre}
+        productoCodigo={selectedExistenciaForKardex?.productoCodigo}
+        almacenNombre={selectedExistenciaForKardex?.almacenNombre}
+      />
+
+      {/* Alertas de Stock y Caducidad Dialog */}
+      <AlertasStockDialog
+        open={alertasDialogOpen}
+        onOpenChange={setAlertasDialogOpen}
+        selectedAlmacenId={selectedAlmacenId}
+        onSelectExistencia={(almId, prodId) => {
+          setSelectedAlmacenId(almId);
+          const found = existencias.find(
+            (e) => e.almacenId === almId && e.productoId === prodId
+          );
+          if (found) {
+            handleOpenKardex(found);
+          }
+        }}
       />
 
       {/* Partidas / Lotes Breakdown Modal */}

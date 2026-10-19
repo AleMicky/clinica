@@ -287,13 +287,28 @@ public sealed class AjusteInventarioService(
         
         if (detallesActivos.Count == 0)
         {
-            throw new BusinessException("El consumo interno no tiene detalles activos.");
+            throw new BusinessException("El ajuste de inventario no tiene detalles activos.");
         }
 
-        var detallesMovimiento = detallesActivos.Select(d => new MovimientoInventarioDetalleRequest
+        var productoIds = detallesActivos.Select(d => d.ProductoId).Distinct().ToList();
+        var existenciasCosto = await dbContext.Existencias
+            .Where(x => x.AlmacenId == entity.AlmacenId && productoIds.Contains(x.ProductoId) && x.Activo)
+            .ToDictionaryAsync(x => x.ProductoId, x => x.CostoPromedio, cancellationToken);
+
+        var detallesMovimiento = detallesActivos.Select(d =>
         {
-            ProductoId = d.ProductoId,
-            Cantidad = d.Cantidad,
+            decimal? costoUnitario = null;
+            if (entity.Tipo == TipoAjusteInventario.Positivo)
+            {
+                costoUnitario = existenciasCosto.TryGetValue(d.ProductoId, out var costo) ? costo : 0m;
+            }
+
+            return new MovimientoInventarioDetalleRequest
+            {
+                ProductoId = d.ProductoId,
+                Cantidad = d.Cantidad,
+                CostoUnitario = costoUnitario
+            };
         }).ToList();
 
         var (tipoMovimiento, observacion) = entity.Tipo switch

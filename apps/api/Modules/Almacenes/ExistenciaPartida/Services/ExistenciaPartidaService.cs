@@ -164,6 +164,9 @@ public sealed class ExistenciaPartidaService(AppDbContext dbContext)
                      x.PartidaInventarioId == request.PartidaInventarioId,
                 cancellationToken);
 
+        var existencia = await dbContext.Existencias
+            .FirstOrDefaultAsync(x => x.Id == request.ExistenciaId, cancellationToken);
+
         if (existingEntity is not null)
         {
             if (existingEntity.Activo)
@@ -172,9 +175,19 @@ public sealed class ExistenciaPartidaService(AppDbContext dbContext)
                     "Ya existe una existencia registrada para esa combinación de existencia y partida de inventario.");
             }
 
+            decimal deltaCantidad = request.Cantidad - existingEntity.Cantidad;
+            decimal deltaReservada = request.CantidadReservada - existingEntity.CantidadReservada;
+
             existingEntity.Activo = true;
             existingEntity.Cantidad = request.Cantidad;
             existingEntity.CantidadReservada = request.CantidadReservada;
+
+            if (existencia != null)
+            {
+                existencia.Cantidad += deltaCantidad;
+                existencia.CantidadReservada += deltaReservada;
+            }
+
             await dbContext.SaveChangesAsync(cancellationToken);
 
             return await ObtenerAsync(existingEntity.Id, cancellationToken);
@@ -183,6 +196,13 @@ public sealed class ExistenciaPartidaService(AppDbContext dbContext)
         var entity = ExistenciaPartidaMapper.ToEntity(request);
 
         dbContext.ExistenciasPartidas.Add(entity);
+
+        if (existencia != null)
+        {
+            existencia.Cantidad += request.Cantidad;
+            existencia.CantidadReservada += request.CantidadReservada;
+        }
+
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return await ObtenerAsync(entity.Id, cancellationToken);
@@ -214,7 +234,19 @@ public sealed class ExistenciaPartidaService(AppDbContext dbContext)
 
         ValidarCantidades(request.Cantidad, request.CantidadReservada);
 
+        decimal deltaCantidad = request.Cantidad - entity.Cantidad;
+        decimal deltaReservada = request.CantidadReservada - entity.CantidadReservada;
+
         ExistenciaPartidaMapper.UpdateEntity(request, entity);
+
+        var existencia = await dbContext.Existencias
+            .FirstOrDefaultAsync(x => x.Id == request.ExistenciaId, cancellationToken);
+
+        if (existencia != null)
+        {
+            existencia.Cantidad += deltaCantidad;
+            existencia.CantidadReservada += deltaReservada;
+        }
 
         await dbContext.SaveChangesAsync(cancellationToken);
 

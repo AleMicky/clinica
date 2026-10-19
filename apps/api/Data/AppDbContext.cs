@@ -19,6 +19,7 @@ using Clinica.Api.Modules.Almacenes.Producto.Entity;
 using Clinica.Api.Modules.Almacenes.ReservaStock.Entity;
 using Clinica.Api.Modules.Almacenes.TipoMovimientoInventario.Entity;
 using Clinica.Api.Modules.Almacenes.TransferenciaAlmacen.Entity;
+using Clinica.Api.Modules.Farmacia.Dispensacion.Entity;
 using Clinica.Api.Modules.Cajas.ArqueoCaja.Entity;
 using Clinica.Api.Modules.Cajas.Caja.Entity;
 using Clinica.Api.Modules.Cajas.Cobro.Entity;
@@ -136,6 +137,8 @@ public class AppDbContext(
     public DbSet<RecepcionCompraDetalle> RecepcionesCompraDetalles => Set<RecepcionCompraDetalle>();
     public DbSet<DevolucionProveedor> DevolucionesProveedor => Set<DevolucionProveedor>();
     public DbSet<DevolucionProveedorDetalle> DevolucionesProveedorDetalles => Set<DevolucionProveedorDetalle>();
+    public DbSet<Dispensacion> Dispensaciones => Set<Dispensacion>();
+    public DbSet<DispensacionDetalle> DispensacionesDetalles => Set<DispensacionDetalle>();
     
     protected override void OnModelCreating(ModelBuilder builder)
     {

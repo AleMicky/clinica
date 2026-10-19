@@ -28,16 +28,6 @@ public sealed class ExistenciaMovimientoService(AppDbContext dbContext)
         if (detalle.CostoUnitario is null || detalle.CostoUnitario < 0)
             throw new BusinessException("La entrada debe tener un costo unitario válido.");
 
-        // No confirmar medicamentos con caducidad sin recibir y validar su fecha de vencimiento.
-        // Para habilitarlos, agregar partidas/lotes al DTO y mapearlos al servicio.
-        bool controlaVencimiento = await dbContext.Productos
-            .Where(p => p.Id == detalle.ProductoId)
-            .Select(p => p.ControlaVencimiento)
-            .SingleAsync(cancellationToken);
-        if (controlaVencimiento)
-            throw new BusinessException(
-                "Este producto controla vencimiento. Falta incorporar número de lote y fecha de " +
-                "vencimiento al detalle de entrada antes de confirmar.");
 
         var existencia = await dbContext.Existencias.FirstOrDefaultAsync(
             x => x.AlmacenId == almacenId && x.ProductoId == detalle.ProductoId && x.Activo,

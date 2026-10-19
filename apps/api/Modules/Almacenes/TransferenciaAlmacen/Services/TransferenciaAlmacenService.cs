@@ -328,6 +328,8 @@ public sealed class TransferenciaAlmacenService(
         DespacharTransferenciaAlmacenRequest request,
         CancellationToken cancellationToken = default)
     {
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
         var entity = await ObtenerCabeceraConDetallesAsync(id, cancellationToken);
 
         if (entity.Estado != EstadoTransferenciaAlmacen.Aprobada)
@@ -348,6 +350,8 @@ public sealed class TransferenciaAlmacenService(
                 entity.Id,
                 cancellationToken);
 
+        await transaction.CommitAsync(cancellationToken);
+
         return await ObtenerAsync(id, cancellationToken);
     }
 
@@ -356,6 +360,8 @@ public sealed class TransferenciaAlmacenService(
         RecibirTransferenciaAlmacenRequest request,
         CancellationToken cancellationToken = default)
     {
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
         var entity = await ObtenerCabeceraConDetallesAsync(id, cancellationToken);
 
         if (entity.Estado != EstadoTransferenciaAlmacen.Despachada)
@@ -376,6 +382,8 @@ public sealed class TransferenciaAlmacenService(
             .GenerarMovimientoEntradaTransferenciaAsync(
                 entity.Id,
                 cancellationToken);
+
+        await transaction.CommitAsync(cancellationToken);
 
         return await ObtenerAsync(id, cancellationToken);
     }

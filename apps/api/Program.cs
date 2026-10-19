@@ -30,6 +30,7 @@ builder.Services.AddDbContext<AppDbContext>((sp, options) =>
 {
     options.UseSqlServer(connectionString);
     options.AddInterceptors(sp.GetRequiredService<AuditSaveChangesInterceptor>());
+    options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 });
 
 builder.Services.AddDataProtection();
@@ -185,6 +186,7 @@ if (app.Configuration.GetValue<bool>("RunSeeds", false))
     await TipoMovimientoCajaSeed.SeedAsync(app.Services);
     await OpcionMenuSeed.SeedAsync(app.Services);
     await RolOpcionMenuSeed.SeedAsync(app.Services);
+    await FarmaciaSeed.SeedAsync(app.Services);
 }
 
 app.Run();

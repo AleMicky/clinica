@@ -6,12 +6,15 @@ import { Boxes, PackageCheck, AlertCircle, Layers } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/config/routes";
+import { cn } from "@/lib/utils";
 
 interface ExistenciaHeaderProps {
   totalItems?: number;
   totalFisico?: number;
   totalReservado?: number;
   totalDisponible?: number;
+  alertasCount?: number;
+  onOpenAlertas?: () => void;
 }
 
 export function ExistenciaHeader({
@@ -19,6 +22,8 @@ export function ExistenciaHeader({
   totalFisico = 0,
   totalReservado = 0,
   totalDisponible = 0,
+  alertasCount = 0,
+  onOpenAlertas,
 }: ExistenciaHeaderProps) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 bg-card border border-border/60 rounded-lg p-3 shadow-2xs">
@@ -80,6 +85,32 @@ export function ExistenciaHeader({
             <span>Stock por Partida</span>
           </Button>
         </Link>
+
+        {onOpenAlertas && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onOpenAlertas}
+            className={cn(
+              "h-8 text-xs gap-1.5 cursor-pointer",
+              alertasCount > 0
+                ? "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20"
+                : "border-border/60"
+            )}
+            title="Ver monitor de alertas de stock y caducidad"
+          >
+            <AlertCircle className="size-3.5 text-amber-600 dark:text-amber-400" />
+            <span>Alertas de Stock</span>
+            {alertasCount > 0 && (
+              <Badge
+                variant="outline"
+                className="text-[9px] h-4 px-1 font-bold bg-amber-500 text-amber-950 dark:text-amber-950 border-0"
+              >
+                {alertasCount}
+              </Badge>
+            )}
+          </Button>
+        )}
       </div>
     </div>
   );

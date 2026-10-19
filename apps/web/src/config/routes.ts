@@ -84,6 +84,10 @@ export const ROUTES = {
     BAJAS: "/almacenes/bajas",
     CONSUMOS: "/almacenes/consumos",
   },
+  FARMACIA: {
+    ROOT: "/farmacia/dispensaciones",
+    DISPENSACIONES: "/farmacia/dispensaciones",
+  },
 } as const;
 
 export type AppRoutes = typeof ROUTES;

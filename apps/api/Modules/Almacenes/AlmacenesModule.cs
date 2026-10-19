@@ -26,6 +26,10 @@ using Clinica.Api.Modules.Almacenes.ReservaStock.Endpoints;
 using Clinica.Api.Modules.Almacenes.ReservaStock.Services;
 using Clinica.Api.Modules.Almacenes.TipoMovimientoInventario.Endpoints;
 using Clinica.Api.Modules.Almacenes.TipoMovimientoInventario.Services;
+using Clinica.Api.Modules.Almacenes.AlertasStock.Endpoints;
+using Clinica.Api.Modules.Almacenes.AlertasStock.Services;
+using Clinica.Api.Modules.Almacenes.Kardex.Endpoints;
+using Clinica.Api.Modules.Almacenes.Kardex.Services;
 using Clinica.Api.Modules.Almacenes.TransferenciaAlmacen.Endpoints;
 using Clinica.Api.Modules.Almacenes.TransferenciaAlmacen.Services;
 
@@ -53,6 +57,8 @@ public static class AlmacenesModule
         services.AddScoped<IReservaStockService, ReservaStockService>();
         services.AddScoped<IConsumoInternoService, ConsumoInternoService>();
         services.AddScoped<IBajaInventarioService, BajaInventarioService>();
+        services.AddScoped<IKardexService, KardexService>();
+        services.AddScoped<IAlertasStockService, AlertasStockService>();
 
         return services;
     }
@@ -75,6 +81,8 @@ public static class AlmacenesModule
         app.MapReservaStockEndpoints();
         app.MapConsumoInternoEndpoints();
         app.MapBajaInventarioEndpoints();
+        app.MapKardexEndpoints();
+        app.MapAlertasStockEndpoints();
 
         return app;
     }

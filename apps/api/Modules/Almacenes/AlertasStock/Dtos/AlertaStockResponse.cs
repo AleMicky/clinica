@@ -12,5 +12,7 @@ public sealed record AlertaStockResponse(
     decimal CantidadDisponible,
     decimal? StockMinimo,
     DateOnly? FechaVencimiento,
-    int? DiasParaVencer
+    int? DiasParaVencer,
+    string? AlmacenNombre = null,
+    string? ProductoCodigo = null
 );

@@ -95,6 +95,27 @@ public sealed class AlmacenService(AppDbContext dbContext)
         }
     }
 
+    protected override async Task ValidateDeleteAsync(
+        AlmacenEntity entity,
+        CancellationToken cancellationToken)
+    {
+        var tieneExistencias = await DbContext.Existencias
+            .AnyAsync(x => x.AlmacenId == entity.Id && x.Activo && (x.Cantidad > 0 || x.CantidadReservada > 0), cancellationToken);
+
+        if (tieneExistencias)
+        {
+            throw new ConflictException("No se puede eliminar el almacén porque contiene existencias con stock.");
+        }
+
+        var tieneMovimientos = await DbContext.MovimientosInventario
+            .AnyAsync(x => x.AlmacenId == entity.Id && x.Activo, cancellationToken);
+
+        if (tieneMovimientos)
+        {
+            throw new ConflictException("No se puede eliminar el almacén porque tiene movimientos registrados.");
+        }
+    }
+
     protected override IQueryable<AlmacenEntity> ApplySearch(
         IQueryable<AlmacenEntity> query,
         string? search)

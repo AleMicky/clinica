@@ -366,26 +366,183 @@ public sealed class MovimientoInventarioService(
         return await ObtenerAsync(id, cancellationToken);
     }
 
-    public Task<MovimientoInventarioResponse> AnularAsync(
+    public async Task<MovimientoInventarioResponse> AnularAsync(
         int id, AnularMovimientoInventarioRequest request,
         CancellationToken cancellationToken = default)
     {
-        // NO reponer stock genérico: perdería trazabilidad y corrompería PMP.
-        // Implementar reverso enlazado a las partidas originales antes de habilitarlo.
-        throw new BusinessException(
-            "Anulación de movimientos confirmados deshabilitada hasta implementar " +
-            "reversos por partida y valoración histórica.");
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(
+            System.Data.IsolationLevel.Serializable, cancellationToken);
+
+        var entity = await dbContext.MovimientosInventario
+            .Include(x => x.TipoMovimientoInventario)
+            .Include(x => x.Detalles)
+            .FirstOrDefaultAsync(x => x.Id == id && x.Activo, cancellationToken)
+            ?? throw new NotFoundException(nameof(MovimientoEntity), id);
+
+        if (entity.Estado == EstadoMovimientoInventario.Anulado)
+            throw new ConflictException("El movimiento ya se encuentra anulado.");
+
+        if (entity.Estado != EstadoMovimientoInventario.Confirmado)
+            throw new ConflictException("Solo se pueden anular movimientos que hayan sido confirmados previamente.");
+
+        if (entity.TipoMovimientoInventario is null)
+            throw new BusinessException("El tipo de movimiento no existe.");
+
+        var detalles = entity.Detalles.Where(x => x.Activo).ToList();
+
+        foreach (var detalle in detalles)
+        {
+            var existencia = await dbContext.Existencias.FirstOrDefaultAsync(
+                x => x.AlmacenId == entity.AlmacenId && x.ProductoId == detalle.ProductoId && x.Activo,
+                cancellationToken);
+
+            if (existencia is null)
+            {
+                throw new BusinessException($"No existe registro de existencia para el producto {detalle.ProductoId}.");
+            }
+
+            if (entity.TipoMovimientoInventario.Naturaleza == NaturalezaMovimiento.Entrada)
+            {
+                // Revertir Entrada: se debe descontar lo que entró
+                if (existencia.CantidadDisponible < detalle.Cantidad)
+                {
+                    throw new BusinessException(
+                        $"No se puede anular la entrada del producto {detalle.ProductoId}: el stock disponible ({existencia.CantidadDisponible}) es menor a la cantidad a revertir ({detalle.Cantidad}).");
+                }
+
+                existencia.Cantidad -= detalle.Cantidad;
+
+                // Descontar de la partida específica creada para este detalle si existe
+                var partidaPrefijo = $"MOVDET-{detalle.Id:D10}";
+                var partida = await dbContext.PartidasInventario
+                    .Include(p => p.ExistenciasPartidas)
+                    .FirstOrDefaultAsync(p => p.ProductoId == detalle.ProductoId && p.NumeroPartida == partidaPrefijo, cancellationToken);
+
+                if (partida != null)
+                {
+                    var existenciaPartida = partida.ExistenciasPartidas.FirstOrDefault(ep => ep.ExistenciaId == existencia.Id);
+                    if (existenciaPartida != null)
+                    {
+                        existenciaPartida.Cantidad = Math.Max(0m, existenciaPartida.Cantidad - detalle.Cantidad);
+                    }
+                }
+            }
+            else
+            {
+                // Revertir Salida: reponer la cantidad de salida
+                existencia.Cantidad += detalle.Cantidad;
+
+                var existenciaPartida = await dbContext.ExistenciasPartidas
+                    .FirstOrDefaultAsync(ep => ep.ExistenciaId == existencia.Id && ep.Activo, cancellationToken);
+
+                if (existenciaPartida != null)
+                {
+                    existenciaPartida.Cantidad += detalle.Cantidad;
+                }
+            }
+        }
+
+        entity.Estado = EstadoMovimientoInventario.Anulado;
+        entity.FechaAnulacion = DateTime.UtcNow;
+        entity.MotivoAnulacion = Limpiar(request.MotivoAnulacion);
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        return await ObtenerAsync(id, cancellationToken);
     }
 
-    public Task GenerarMovimientoSalidaTransferenciaAsync(
+    public async Task GenerarMovimientoSalidaTransferenciaAsync(
         int transferenciaId, CancellationToken cancellationToken = default)
-        => throw new BusinessException(
-            "Transferencia deshabilitada hasta conservar partidas de origen y sus costos.");
+    {
+        var transferencia = await dbContext.TransferenciasAlmacen
+            .Include(x => x.Detalles)
+            .FirstOrDefaultAsync(x => x.Id == transferenciaId && x.Activo, cancellationToken);
 
-    public Task GenerarMovimientoEntradaTransferenciaAsync(
+        if (transferencia is null)
+        {
+            throw new NotFoundException("TransferenciaAlmacen", transferenciaId);
+        }
+
+        var detallesDespachados = transferencia.Detalles
+            .Where(d => d.Activo && d.CantidadDespachada > 0)
+            .ToList();
+
+        if (detallesDespachados.Count == 0)
+        {
+            throw new BusinessException("La transferencia no tiene detalles con cantidad despachada válida.");
+        }
+
+        var detallesMovimiento = detallesDespachados.Select(d => new MovimientoInventarioDetalleRequest
+        {
+            ProductoId = d.ProductoId,
+            Cantidad = d.CantidadDespachada
+        }).ToList();
+
+        var requestIntegracion = new MovimientoInventarioIntegracionRequest
+        {
+            TipoMovimiento = "TRANSFERENCIA_SALIDA",
+            AlmacenId = transferencia.AlmacenOrigenId,
+            Fecha = transferencia.FechaDespacho ?? DateTime.UtcNow,
+            TipoReferencia = "TRANSFERENCIA_ALMACEN",
+            ReferenciaId = transferencia.Id,
+            Observacion = $"Despacho por transferencia {transferencia.Numero}",
+            Detalles = detallesMovimiento
+        };
+
+        await CrearIntegracionAsync(requestIntegracion, confirmar: true, cancellationToken);
+    }
+
+    public async Task GenerarMovimientoEntradaTransferenciaAsync(
         int transferenciaId, CancellationToken cancellationToken = default)
-        => throw new BusinessException(
-            "Transferencia deshabilitada hasta conservar partidas de origen y sus costos.");
+    {
+        var transferencia = await dbContext.TransferenciasAlmacen
+            .Include(x => x.Detalles)
+            .FirstOrDefaultAsync(x => x.Id == transferenciaId && x.Activo, cancellationToken);
+
+        if (transferencia is null)
+        {
+            throw new NotFoundException("TransferenciaAlmacen", transferenciaId);
+        }
+
+        var detallesRecibidos = transferencia.Detalles
+            .Where(d => d.Activo && d.CantidadRecibida > 0)
+            .ToList();
+
+        if (detallesRecibidos.Count == 0)
+        {
+            throw new BusinessException("La transferencia no tiene detalles con cantidad recibida válida.");
+        }
+
+        var productoIds = detallesRecibidos.Select(d => d.ProductoId).Distinct().ToList();
+        var costosOrigen = await dbContext.Existencias
+            .Where(x => x.AlmacenId == transferencia.AlmacenOrigenId && productoIds.Contains(x.ProductoId))
+            .ToDictionaryAsync(x => x.ProductoId, x => x.CostoPromedio, cancellationToken);
+
+        var detallesMovimiento = detallesRecibidos.Select(d =>
+        {
+            decimal costo = costosOrigen.TryGetValue(d.ProductoId, out var c) ? c : 0m;
+            return new MovimientoInventarioDetalleRequest
+            {
+                ProductoId = d.ProductoId,
+                Cantidad = d.CantidadRecibida,
+                CostoUnitario = costo
+            };
+        }).ToList();
+
+        var requestIntegracion = new MovimientoInventarioIntegracionRequest
+        {
+            TipoMovimiento = "TRANSFERENCIA_ENTRADA",
+            AlmacenId = transferencia.AlmacenDestinoId,
+            Fecha = transferencia.FechaRecepcion ?? DateTime.UtcNow,
+            TipoReferencia = "TRANSFERENCIA_ALMACEN",
+            ReferenciaId = transferencia.Id,
+            Observacion = $"Recepción por transferencia {transferencia.Numero}",
+            Detalles = detallesMovimiento
+        };
+
+        await CrearIntegracionAsync(requestIntegracion, confirmar: true, cancellationToken);
+    }
 
     private async Task<string> CorrelativoAsync(string codigo, string prefijo, CancellationToken cancellationToken)
     {

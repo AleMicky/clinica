@@ -290,7 +290,7 @@ public sealed class BajaInventarioService(
 
         if (detallesActivos.Count == 0)
         {
-            throw new BusinessException("El consumo interno no tiene detalles activos.");
+            throw new BusinessException("La baja de inventario no tiene detalles activos.");
         }
 
         var detallesMovimiento = detallesActivos.Select(d => new MovimientoInventarioDetalleRequest

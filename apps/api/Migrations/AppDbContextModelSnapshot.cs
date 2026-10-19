@@ -2808,6 +2808,196 @@ namespace Clinica.Api.Migrations
                     b.ToTable("SolicitudesCompraDetalles", (string)null);
                 });
 
+            modelBuilder.Entity("Clinica.Api.Modules.Farmacia.Dispensacion.Entity.Dispensacion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("AdmisionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("AlmacenId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ClienteDocumento")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ClienteNombre")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("ComprobanteCobro")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("CreadoPor")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Descuento")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Estado")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaCobro")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaEntrega")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("MedicoId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MetodoPago")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ModificadoPor")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MotivoAnulacion")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("MovimientoInventarioId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Numero")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Observaciones")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int?>("PacienteId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Subtotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Tipo")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Total")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("UsuarioCobro")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("UsuarioEntrega")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AdmisionId");
+
+                    b.HasIndex("AlmacenId");
+
+                    b.HasIndex("MedicoId");
+
+                    b.HasIndex("MovimientoInventarioId");
+
+                    b.HasIndex("Numero")
+                        .IsUnique();
+
+                    b.HasIndex("PacienteId");
+
+                    b.ToTable("Farmacia_Dispensaciones", (string)null);
+                });
+
+            modelBuilder.Entity("Clinica.Api.Modules.Farmacia.Dispensacion.Entity.DispensacionDetalle", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal>("Cantidad")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<string>("CreadoPor")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Descuento")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("DispensacionId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaVencimiento")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Indicaciones")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Lote")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("ModificadoPor")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("PartidaInventarioId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("PrecioUnitario")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<int>("ProductoId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Total")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DispensacionId");
+
+                    b.HasIndex("PartidaInventarioId");
+
+                    b.HasIndex("ProductoId");
+
+                    b.ToTable("Farmacia_DispensacionesDetalles", (string)null);
+                });
+
             modelBuilder.Entity("Clinica.Api.Modules.Notificaciones.Entity.Notificacion", b =>
                 {
                     b.Property<int>("Id")
@@ -5769,6 +5959,71 @@ namespace Clinica.Api.Migrations
                     b.Navigation("SolicitudCompra");
                 });
 
+            modelBuilder.Entity("Clinica.Api.Modules.Farmacia.Dispensacion.Entity.Dispensacion", b =>
+                {
+                    b.HasOne("Clinica.Api.Modules.Recepcion.Admision.Entity.Admision", "Admision")
+                        .WithMany()
+                        .HasForeignKey("AdmisionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Clinica.Api.Modules.Almacenes.Almacen.Entity.Almacen", "Almacen")
+                        .WithMany()
+                        .HasForeignKey("AlmacenId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Clinica.Api.Modules.RecursosHumanos.Medico.Entity.Medico", "Medico")
+                        .WithMany()
+                        .HasForeignKey("MedicoId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Clinica.Api.Modules.Almacenes.MovimientoInventario.Entity.MovimientoInventario", "MovimientoInventario")
+                        .WithMany()
+                        .HasForeignKey("MovimientoInventarioId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Clinica.Api.Modules.Recepcion.Pacientes.Entity.Paciente", "Paciente")
+                        .WithMany()
+                        .HasForeignKey("PacienteId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Admision");
+
+                    b.Navigation("Almacen");
+
+                    b.Navigation("Medico");
+
+                    b.Navigation("MovimientoInventario");
+
+                    b.Navigation("Paciente");
+                });
+
+            modelBuilder.Entity("Clinica.Api.Modules.Farmacia.Dispensacion.Entity.DispensacionDetalle", b =>
+                {
+                    b.HasOne("Clinica.Api.Modules.Farmacia.Dispensacion.Entity.Dispensacion", "Dispensacion")
+                        .WithMany("Detalles")
+                        .HasForeignKey("DispensacionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Clinica.Api.Modules.Almacenes.PartidaInventario.Entity.PartidaInventario", "PartidaInventario")
+                        .WithMany()
+                        .HasForeignKey("PartidaInventarioId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Clinica.Api.Modules.Almacenes.Producto.Entity.Producto", "Producto")
+                        .WithMany()
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Dispensacion");
+
+                    b.Navigation("PartidaInventario");
+
+                    b.Navigation("Producto");
+                });
+
             modelBuilder.Entity("Clinica.Api.Modules.Parametros.Banco.Entity.CuentaBancaria", b =>
                 {
                     b.HasOne("Clinica.Api.Modules.Parametros.Banco.Entity.Banco", "Banco")
@@ -6354,6 +6609,11 @@ namespace Clinica.Api.Migrations
                 });
 
             modelBuilder.Entity("Clinica.Api.Modules.Compras.SolicitudCompra.Entity.SolicitudCompra", b =>
+                {
+                    b.Navigation("Detalles");
+                });
+
+            modelBuilder.Entity("Clinica.Api.Modules.Farmacia.Dispensacion.Entity.Dispensacion", b =>
                 {
                     b.Navigation("Detalles");
                 });

@@ -15,6 +15,7 @@ import {
   Tag,
   Package,
   Layers,
+  Receipt,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,7 @@ interface ExistenciaListProps {
   onRefresh?: () => void;
   onViewAudit?: (existencia: ExistenciaResponse) => void;
   onViewPartidas?: (existencia: ExistenciaResponse) => void;
+  onViewKardex?: (existencia: ExistenciaResponse) => void;
 }
 
 function formatDate(dateStr?: string | null) {
@@ -88,6 +90,7 @@ export function ExistenciaList({
   onRefresh,
   onViewAudit,
   onViewPartidas,
+  onViewKardex,
 }: ExistenciaListProps) {
   return (
     <div className="flex flex-col gap-3 w-full">
@@ -312,6 +315,19 @@ export function ExistenciaList({
 
                   {/* Audit & Actions */}
                   <div className="flex items-center gap-1.5">
+                    {onViewKardex && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onViewKardex(item)}
+                        className="h-6 px-2 text-[10px] text-foreground hover:text-foreground bg-muted/40 hover:bg-muted border border-border/40 gap-1 cursor-pointer font-medium"
+                        title="Ver Kárdex Físico - Valorado del producto"
+                      >
+                        <Receipt className="size-3 text-primary" />
+                        <span>Kárdex</span>
+                      </Button>
+                    )}
+
                     {onViewPartidas && (
                       <Button
                         variant="ghost"
@@ -348,6 +364,14 @@ export function ExistenciaList({
                         <MoreVertical className="size-3.5" />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-44">
+                        {onViewKardex && (
+                          <DropdownMenuItem
+                            onClick={() => onViewKardex(item)}
+                            className="gap-2 text-xs cursor-pointer font-medium"
+                          >
+                            <Receipt className="size-3.5 text-primary" /> Ver Kárdex
+                          </DropdownMenuItem>
+                        )}
                         {onViewPartidas && (
                           <DropdownMenuItem
                             onClick={() => onViewPartidas(item)}

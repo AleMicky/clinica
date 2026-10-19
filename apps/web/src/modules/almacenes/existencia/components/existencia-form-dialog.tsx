@@ -277,7 +277,17 @@ export function ExistenciaFormDialog({
           </div>
 
           {/* Cantidades */}
+          {/* Cantidades */}
           <div className="p-3.5 bg-muted/30 rounded-xl border border-border/50 space-y-3">
+            <div className="p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-900 dark:text-blue-200 text-xs flex items-start gap-2">
+              <Info className="size-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+              <p className="text-[11px] leading-relaxed">
+                {isEditing
+                  ? "Los saldos y costos promedio son calculados y auditados automáticamente por el sistema. Para registrar ingresos, egresos o correcciones, utilice Movimientos o Ajustes de inventario."
+                  : "Las existencias se inicializan en 0. Para ingresar stock físico y valorado, utilice una Recepción de Compra, Movimiento o Ajuste de inventario."}
+              </p>
+            </div>
+
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
                 <Calculator className="size-3.5 text-primary" />
@@ -311,9 +321,9 @@ export function ExistenciaFormDialog({
                   min={0}
                   placeholder="0.00"
                   {...register("cantidad", { valueAsNumber: true })}
-                  disabled={isLoading}
+                  disabled={true}
                   className={cn(
-                    "font-mono text-xs h-8 bg-background border-border/60",
+                    "font-mono text-xs h-8 bg-background border-border/60 opacity-80 cursor-not-allowed",
                     errors.cantidad && "border-destructive focus-visible:ring-destructive"
                   )}
                 />
@@ -340,9 +350,9 @@ export function ExistenciaFormDialog({
                   min={0}
                   placeholder="0.00"
                   {...register("cantidadReservada", { valueAsNumber: true })}
-                  disabled={isLoading}
+                  disabled={true}
                   className={cn(
-                    "font-mono text-xs h-8 bg-background border-border/60",
+                    "font-mono text-xs h-8 bg-background border-border/60 opacity-80 cursor-not-allowed",
                     errors.cantidadReservada && "border-destructive focus-visible:ring-destructive"
                   )}
                 />
@@ -370,9 +380,9 @@ export function ExistenciaFormDialog({
                   min={0}
                   placeholder="0.00"
                   {...register("costoPromedio", { valueAsNumber: true })}
-                  disabled={isLoading}
+                  disabled={true}
                   className={cn(
-                    "font-mono text-xs h-8 bg-background border-border/60",
+                    "font-mono text-xs h-8 bg-background border-border/60 opacity-80 cursor-not-allowed",
                     errors.costoPromedio && "border-destructive focus-visible:ring-destructive"
                   )}
                 />

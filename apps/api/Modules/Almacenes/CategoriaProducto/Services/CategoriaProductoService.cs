@@ -72,6 +72,7 @@ public sealed class CategoriaProductoService(AppDbContext dbContext)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .Include(x => x.CategoriaPadre)
+            .Include(x => x.Subcategorias.Where(s => s.Activo))
             .ToListAsync(cancellationToken);
 
         var items = categorias
@@ -193,8 +194,17 @@ public sealed class CategoriaProductoService(AppDbContext dbContext)
             throw new ConflictException("No se puede eliminar la categoría porque tiene subcategorías asociadas.");
         }
 
-         
-        dbContext.CategoriasProducto.Remove(entity);
+        var tieneProductos = await dbContext.Productos
+            .AnyAsync(
+                x => x.CategoriaProductoId == id && x.Activo,
+                cancellationToken);
+
+        if (tieneProductos)
+        {
+            throw new ConflictException("No se puede eliminar la categoría porque tiene productos asociados.");
+        }
+
+        entity.Activo = false;
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 

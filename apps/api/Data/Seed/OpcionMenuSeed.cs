@@ -467,6 +467,25 @@ public static class OpcionMenuSeed
                 "OPERACIONES_ALMACEN"),
 
             // =========================================================
+            // 4.3. FARMACIA
+            // =========================================================
+            new(
+                "FARMACIA_OPERACIONES",
+                "Farmacia",
+                null,
+                "Pill",
+                3,
+                "LOGISTICA_ALMACENES"),
+
+            new(
+                "FARMACIA_DISPENSACIONES",
+                "Dispensación y Ventas",
+                "/farmacia/dispensaciones",
+                "Receipt",
+                1,
+                "FARMACIA_OPERACIONES"),
+
+            // =========================================================
             // 5. COMPRAS
             // =========================================================
             new(
