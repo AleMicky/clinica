@@ -460,10 +460,25 @@ public sealed class DevolucionProveedorService(
             throw new ConflictException("La devolución ya está anulada.");
         }
 
-        if (entity.Estado == EstadoDevolucionProveedor.Borrador)
+        if (entity.Estado == EstadoDevolucionProveedor.Confirmada)
         {
-            throw new ConflictException(
-                "Una devolución en estado Borrador debe eliminarse en lugar de anularse.");
+            var movimiento = await dbContext.MovimientosInventario
+                .FirstOrDefaultAsync(
+                    x => x.ReferenciaTipo == "DEVOLUCION_PROVEEDOR" &&
+                         x.ReferenciaId == entity.Id &&
+                         x.Activo,
+                    cancellationToken);
+
+            if (movimiento is not null && movimiento.Estado == Clinica.Api.Modules.Almacenes.MovimientoInventario.Enums.EstadoMovimientoInventario.Confirmado)
+            {
+                await movimientoInventarioService.AnularAsync(
+                    movimiento.Id,
+                    new Clinica.Api.Modules.Almacenes.MovimientoInventario.Dtos.AnularMovimientoInventarioRequest
+                    {
+                        MotivoAnulacion = $"Anulación de devolución {entity.Numero}: {request.MotivoAnulacion.Trim()}"
+                    },
+                    cancellationToken);
+            }
         }
 
         entity.Estado = EstadoDevolucionProveedor.Anulada;
@@ -498,16 +513,26 @@ public sealed class DevolucionProveedorService(
 
         if (recepcionCompraId.HasValue)
         {
-            var existeRecepcion = await dbContext.RecepcionesCompra
-                .AnyAsync(
+            var recepcion = await dbContext.RecepcionesCompra
+                .FirstOrDefaultAsync(
                     x => x.Id == recepcionCompraId.Value && x.Activo,
                     cancellationToken);
 
-            if (!existeRecepcion)
+            if (recepcion is null)
             {
                 throw new NotFoundException(
                     nameof(RecepcionCompraEntity),
                     recepcionCompraId.Value);
+            }
+
+            if (recepcion.ProveedorId != proveedorId)
+            {
+                throw new BusinessException("La recepción seleccionada no pertenece al proveedor indicado.");
+            }
+
+            if (recepcion.AlmacenId != almacenId)
+            {
+                throw new BusinessException("La recepción seleccionada no pertenece al almacén indicado.");
             }
         }
     }

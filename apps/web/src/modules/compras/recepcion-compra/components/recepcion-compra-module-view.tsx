@@ -105,7 +105,12 @@ export function RecepcionCompraModuleView() {
       );
       refetch();
     } catch (error: any) {
-      toast.error(error?.message || "Error al confirmar la recepción.");
+      const errorMsg =
+        error?.response?.data?.message ||
+        error?.response?.data?.detail ||
+        error?.message ||
+        "Error al confirmar la recepción.";
+      toast.error(errorMsg);
     }
   };
 

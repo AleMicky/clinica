@@ -41,6 +41,10 @@ import type { DevolucionProveedorResponse } from "../types/devolucion-proveedor.
 import { ProveedorAutocomplete } from "@/modules/compras/proveedor";
 import { AlmacenAutocomplete } from "@/modules/almacenes/almacen";
 import { ProductoAutocomplete } from "@/modules/almacenes/producto";
+import {
+  RecepcionCompraAutocomplete,
+  getRecepcionCompraById,
+} from "@/modules/compras/recepcion-compra";
 
 interface DevolucionProveedorFormDialogProps {
   open: boolean;
@@ -310,19 +314,61 @@ export function DevolucionProveedorFormDialog({
                 />
               </div>
 
-              {/* ID Recepcion Compra */}
-              <div className="space-y-1">
+              {/* Recepción de Compra Origen */}
+              <div className="space-y-1 sm:col-span-1">
                 <Label htmlFor="recepcionCompraId" className="text-xs font-medium">
-                  ID Recepción (Opcional)
+                  Recepción de Compra (Opcional)
                 </Label>
-                <Input
-                  id="recepcionCompraId"
-                  type="number"
-                  {...register("recepcionCompraId", {
-                    setValueAs: (v) => (v === "" ? null : Number(v)),
-                  })}
-                  placeholder="ID Recepción..."
-                  className="h-7.5 text-xs font-mono bg-background/50"
+                <Controller
+                  control={control}
+                  name="recepcionCompraId"
+                  render={({ field }) => (
+                    <RecepcionCompraAutocomplete
+                      value={field.value || null}
+                      proveedorId={watch("proveedorId") || undefined}
+                      almacenId={watch("almacenId") || undefined}
+                      placeholder="Buscar recepción..."
+                      className="h-7.5 text-xs"
+                      onValueChange={async (id) => {
+                        field.onChange(id || null);
+                        if (!id) return;
+                        try {
+                          const fullRecepcion = await getRecepcionCompraById(id);
+                          if (fullRecepcion) {
+                            if (fullRecepcion.proveedorId && !watch("proveedorId")) {
+                              setValue("proveedorId", fullRecepcion.proveedorId, {
+                                shouldValidate: true,
+                              });
+                            }
+                            if (fullRecepcion.almacenId && !watch("almacenId")) {
+                              setValue("almacenId", fullRecepcion.almacenId, {
+                                shouldValidate: true,
+                              });
+                            }
+                            if (
+                              fullRecepcion.detalles &&
+                              fullRecepcion.detalles.length > 0 &&
+                              watchedDetalles.length <= 1 &&
+                              (!watchedDetalles[0]?.productoId || watchedDetalles[0]?.productoId === 0)
+                            ) {
+                              const newDetalles = fullRecepcion.detalles.map((d) => ({
+                                productoId: d.productoId,
+                                productoNombre: d.productoNombre || "",
+                                productoCodigo: d.productoCodigo || "",
+                                cantidad: Number(d.cantidadRecibida),
+                                motivo: "Devolución por recepción",
+                                observacion: "",
+                              }));
+                              setValue("detalles", newDetalles, { shouldValidate: true });
+                              toast.info(`Se cargaron ${newDetalles.length} producto(s) desde la recepción ${fullRecepcion.numero}.`);
+                            }
+                          }
+                        } catch (err) {
+                          console.error("Error al cargar recepción", err);
+                        }
+                      }}
+                    />
+                  )}
                 />
               </div>
 

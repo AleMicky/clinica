@@ -102,6 +102,8 @@ export function RecepcionCompraFormDialog({
     0
   );
 
+  const [ordenCompraActual, setOrdenCompraActual] = React.useState<any>(null);
+
   React.useEffect(() => {
     if (!open) return;
 
@@ -129,6 +131,7 @@ export function RecepcionCompraFormDialog({
         });
       }
     } else {
+      setOrdenCompraActual(null);
       reset({
         ordenCompraId: 0,
         almacenId: 0,
@@ -136,31 +139,37 @@ export function RecepcionCompraFormDialog({
         numeroFactura: "",
         numeroRemision: "",
         observacion: "",
-        detalles: [
-          {
-            ordenCompraDetalleId: 1,
-            productoId: 0,
-            productoNombre: "",
-            productoCodigo: "",
-            cantidadRecibida: 1,
-            precioUnitario: 0,
-            observacion: "",
-          },
-        ],
+        detalles: [],
       });
     }
   }, [open, isEditing, fullRecepcion, recepcionToEdit, reset]);
 
   const handleAddDetalle = () => {
-    append({
-      ordenCompraDetalleId: 1,
-      productoId: 0,
-      productoNombre: "",
-      productoCodigo: "",
-      cantidadRecibida: 1,
-      precioUnitario: 0,
-      observacion: "",
-    });
+    if (!ordenCompraActual) {
+      toast.warning("Selecciona primero una orden de compra para cargar los productos.");
+      return;
+    }
+
+    const yaAgregados = new Set((watch("detalles") || []).map((d) => d.ordenCompraDetalleId));
+    const candidato = ordenCompraActual?.detalles?.find((d: any) => !yaAgregados.has(d.id));
+
+    if (candidato) {
+      const cantRecibidaPrevia = Number(candidato.cantidadRecibida || 0);
+      const pendiente = Math.max(0, Number(candidato.cantidad) - cantRecibidaPrevia) || Number(candidato.cantidad);
+
+      append({
+        ordenCompraDetalleId: candidato.id,
+        productoId: candidato.productoId,
+        productoNombre: candidato.productoNombre || "",
+        productoCodigo: candidato.productoCodigo || "",
+        cantidadRecibida: pendiente,
+        precioUnitario: Number(candidato.precioUnitario),
+        observacion: candidato.observacion || "",
+      });
+      toast.success(`Ítem "${candidato.productoNombre || candidato.productoId}" agregado.`);
+    } else {
+      toast.info("Todos los productos de la orden de compra ya se encuentran en la lista.");
+    }
   };
 
   const onSubmit = async (values: RecepcionCompraFormValues) => {
@@ -263,9 +272,9 @@ export function RecepcionCompraFormDialog({
                   </Label>
                   <Badge
                     variant="outline"
-                    className="text-[9px] h-4 px-1.5 font-normal text-blue-600 dark:text-blue-400 border-blue-500/30 bg-blue-500/5"
+                    className="text-[9px] h-4 px-1.5 font-normal text-emerald-600 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/5"
                   >
-                    Enviadas (Est. 4)
+                    Pendientes de Recibir
                   </Badge>
                 </div>
                 <Controller
@@ -274,13 +283,17 @@ export function RecepcionCompraFormDialog({
                   render={({ field }) => (
                     <OrdenCompraAutocomplete
                       value={field.value || null}
-                      estado={EstadoOrdenCompra.EnviadaProveedor}
+                      soloRecepcionables={true}
                       onValueChange={async (id) => {
                         field.onChange(id || 0);
-                        if (!id) return;
+                        if (!id) {
+                          setOrdenCompraActual(null);
+                          return;
+                        }
                         try {
                           const fullOrden = await getOrdenCompraById(id);
                           if (fullOrden) {
+                            setOrdenCompraActual(fullOrden);
                             if (fullOrden.almacenId) {
                               setValue("almacenId", fullOrden.almacenId, {
                                 shouldValidate: true,
@@ -290,26 +303,39 @@ export function RecepcionCompraFormDialog({
                               fullOrden.detalles &&
                               fullOrden.detalles.length > 0
                             ) {
-                              const newDetalles = fullOrden.detalles.map(
-                                (d) => ({
+                              const newDetalles = fullOrden.detalles
+                                .filter((d) => {
+                                  const cant = Number(d.cantidad);
+                                  const rec = Number(d.cantidadRecibida || 0);
+                                  return cant > rec;
+                                })
+                                .map((d) => ({
                                   ordenCompraDetalleId: d.id,
                                   productoId: d.productoId,
                                   productoNombre: d.productoNombre || "",
                                   productoCodigo: d.productoCodigo || "",
                                   cantidadRecibida: Math.max(
                                     0,
-                                    Number(d.cantidad) -
-                                      Number(d.cantidadRecibida || 0)
-                                  ) || Number(d.cantidad),
+                                    Number(d.cantidad) - Number(d.cantidadRecibida || 0)
+                                  ),
                                   precioUnitario: Number(d.precioUnitario),
                                   observacion: d.observacion || "",
-                                })
-                              );
-                              setValue("detalles", newDetalles, {
+                                }));
+
+                              setValue("detalles", newDetalles.length > 0 ? newDetalles : fullOrden.detalles.map(d => ({
+                                ordenCompraDetalleId: d.id,
+                                productoId: d.productoId,
+                                productoNombre: d.productoNombre || "",
+                                productoCodigo: d.productoCodigo || "",
+                                cantidadRecibida: Number(d.cantidad),
+                                precioUnitario: Number(d.precioUnitario),
+                                observacion: d.observacion || "",
+                              })), {
                                 shouldValidate: true,
                               });
+
                               toast.success(
-                                `Se cargaron ${newDetalles.length} producto(s) desde la orden ${fullOrden.numero}.`
+                                `Se cargaron ${newDetalles.length} producto(s) pendientes de la orden ${fullOrden.numero}.`
                               );
                             }
                           }
@@ -320,7 +346,7 @@ export function RecepcionCompraFormDialog({
                           );
                         }
                       }}
-                      placeholder="Seleccionar orden de compra enviada..."
+                      placeholder="Seleccionar orden de compra a recibir..."
                       className="h-7.5 text-xs"
                       error={Boolean(errors.ordenCompraId)}
                     />
@@ -472,21 +498,30 @@ export function RecepcionCompraFormDialog({
                         colSpan={6}
                         className="px-3 py-6 text-center text-muted-foreground text-xs"
                       >
-                        <div className="flex flex-col items-center justify-center gap-1.5">
+                        <div className="flex flex-col items-center justify-center gap-1.5 py-2">
                           <FileSpreadsheet className="size-5 text-muted-foreground/60" />
-                          <span className="font-medium text-xs">
-                            No hay productos en esta recepción
+                          <span className="font-medium text-xs text-foreground">
+                            {!watch("ordenCompraId")
+                              ? "Selecciona una orden de compra para cargar los ítems"
+                              : "No hay productos en esta recepción"}
                           </span>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            onClick={handleAddDetalle}
-                            className="h-6.5 text-xs px-2 gap-1 text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/5 cursor-pointer"
-                          >
-                            <Plus className="size-3" />
-                            <span>Agregar Primer Producto</span>
-                          </Button>
+                          <p className="text-[11px] text-muted-foreground max-w-sm text-center">
+                            {!watch("ordenCompraId")
+                              ? "Los productos y cantidades pendientes se cargarán automáticamente al elegir la orden."
+                              : "Puedes reincorporar los ítems pendientes de la orden de compra."}
+                          </p>
+                          {watch("ordenCompraId") > 0 && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={handleAddDetalle}
+                              className="h-6.5 text-xs px-2.5 gap-1 text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/5 cursor-pointer mt-1"
+                            >
+                              <Plus className="size-3" />
+                              <span>Agregar Producto de la Orden</span>
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>

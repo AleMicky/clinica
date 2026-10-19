@@ -283,8 +283,8 @@ public sealed class SolicitudCompraService(
             detalle.CantidadAprobada = detalle.CantidadSolicitada;
         }
 
-       
-        
+        await dbContext.SaveChangesAsync(cancellationToken);
+
         return await ObtenerAsync(id, cancellationToken);
     }
 

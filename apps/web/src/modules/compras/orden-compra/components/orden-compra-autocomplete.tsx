@@ -31,6 +31,7 @@ export interface OrdenCompraAutocompleteProps {
   className?: string;
   id?: string;
   estado?: EstadoOrdenCompra | null;
+  soloRecepcionables?: boolean;
 }
 
 export function OrdenCompraAutocomplete({
@@ -38,21 +39,30 @@ export function OrdenCompraAutocomplete({
   onValueChange,
   proveedorId,
   almacenId,
-  placeholder = "Seleccionar orden de compra (Enviada)...",
+  placeholder,
   disabled = false,
   error = false,
   className,
   id,
-  estado = EstadoOrdenCompra.EnviadaProveedor,
+  estado,
+  soloRecepcionables = false,
 }: OrdenCompraAutocompleteProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
   const searchInputRef = React.useRef<HTMLInputElement>(null);
 
+  const effectiveEstado = soloRecepcionables
+    ? undefined
+    : (estado !== undefined ? estado : EstadoOrdenCompra.EnviadaProveedor);
+
+  const defaultPlaceholder = soloRecepcionables
+    ? "Seleccionar orden a recibir..."
+    : "Seleccionar orden de compra...";
+
   const { data, isLoading } = useOrdenesCompra({
     proveedorId: proveedorId ?? undefined,
     almacenId: almacenId ?? undefined,
-    estado: estado ?? undefined,
+    estado: effectiveEstado ?? undefined,
     pageSize: 150,
   });
 
@@ -72,11 +82,20 @@ export function OrdenCompraAutocomplete({
   const selectedOrden = inList || fetchedOrden || null;
 
   const filteredOrdenes = React.useMemo(() => {
+    let list = ordenes;
+    if (soloRecepcionables) {
+      list = list.filter(
+        (o) =>
+          o.estado === EstadoOrdenCompra.Aprobada ||
+          o.estado === EstadoOrdenCompra.EnviadaProveedor ||
+          o.estado === EstadoOrdenCompra.ParcialmenteRecibida
+      );
+    }
     if (!searchQuery.trim()) {
-      return ordenes;
+      return list;
     }
     const q = searchQuery.toLowerCase().trim();
-    return ordenes.filter(
+    return list.filter(
       (o) =>
         o.numero.toLowerCase().includes(q) ||
         (o.proveedorRazonSocial &&
@@ -84,7 +103,7 @@ export function OrdenCompraAutocomplete({
         (o.almacenNombre && o.almacenNombre.toLowerCase().includes(q)) ||
         (o.observacion && o.observacion.toLowerCase().includes(q))
     );
-  }, [ordenes, searchQuery]);
+  }, [ordenes, searchQuery, soloRecepcionables]);
 
   const handleSelect = (orden: OrdenCompraResponse) => {
     onValueChange(orden.id, orden);
@@ -145,7 +164,7 @@ export function OrdenCompraAutocomplete({
             </div>
           ) : (
             <span className="text-muted-foreground truncate text-xs">
-              {placeholder}
+              {placeholder || defaultPlaceholder}
             </span>
           )}
         </div>

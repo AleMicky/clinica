@@ -341,7 +341,7 @@ public sealed class RecepcionCompraService(
             confirmar: true,
             cancellationToken);
 
-        ActualizarOrdenCompra(entity, detallesActivos, cancellationToken);
+        await ActualizarOrdenCompra(entity, detallesActivos, cancellationToken);
 
         entity.Estado = EstadoRecepcionCompra.Confirmada;
         entity.RecibidoPorId = currentUserService.UserName;
@@ -356,12 +356,71 @@ public sealed class RecepcionCompraService(
         AnularRecepcionCompraRequest request,
         CancellationToken cancellationToken = default)
     {
-        var entity = await ObtenerCabeceraAsync(id, cancellationToken);
+        var entity = await ObtenerCabeceraConDetallesAsync(id, cancellationToken);
 
         if (entity.Estado != EstadoRecepcionCompra.Confirmada)
         {
             throw new ConflictException(
                 $"No se puede anular una recepción en estado {entity.Estado}.");
+        }
+
+        // 1. Revertir el movimiento de inventario generado
+        var movimiento = await dbContext.MovimientosInventario
+            .FirstOrDefaultAsync(
+                x => x.ReferenciaTipo == "RECEPCION_COMPRA" &&
+                     x.ReferenciaId == entity.Id &&
+                     x.Activo,
+                cancellationToken);
+
+        if (movimiento is not null && movimiento.Estado == Clinica.Api.Modules.Almacenes.MovimientoInventario.Enums.EstadoMovimientoInventario.Confirmado)
+        {
+            await movimientoInventarioService.AnularAsync(
+                movimiento.Id,
+                new Clinica.Api.Modules.Almacenes.MovimientoInventario.Dtos.AnularMovimientoInventarioRequest
+                {
+                    MotivoAnulacion = $"Anulación de recepción {entity.Numero}: {request.MotivoAnulacion.Trim()}"
+                },
+                cancellationToken);
+        }
+
+        // 2. Revertir las cantidades recibidas en la orden de compra
+        var ordenCompra = await dbContext.OrdenesCompra
+            .Include(x => x.Detalles)
+            .FirstOrDefaultAsync(
+                x => x.Id == entity.OrdenCompraId,
+                cancellationToken);
+
+        if (ordenCompra is not null)
+        {
+            foreach (var detalle in entity.Detalles.Where(x => x.Activo))
+            {
+                var ordenDetalle = ordenCompra.Detalles
+                    .FirstOrDefault(x => x.Id == detalle.OrdenCompraDetalleId);
+
+                if (ordenDetalle is not null)
+                {
+                    ordenDetalle.CantidadRecibida = Math.Max(0m, ordenDetalle.CantidadRecibida - detalle.CantidadRecibida);
+                }
+            }
+
+            var algunaRecibida = ordenCompra.Detalles
+                .Where(x => x.Activo)
+                .Any(x => x.CantidadRecibida > 0);
+
+            var algunaPendiente = ordenCompra.Detalles
+                .Where(x => x.Activo)
+                .Any(x => x.CantidadRecibida < x.Cantidad);
+
+            if (ordenCompra.Estado is
+                Clinica.Api.Modules.Compras.OrdenCompra.Enums.EstadoOrdenCompra.Recibida or
+                Clinica.Api.Modules.Compras.OrdenCompra.Enums.EstadoOrdenCompra.ParcialmenteRecibida)
+            {
+                ordenCompra.Estado = algunaRecibida && algunaPendiente
+                    ? Clinica.Api.Modules.Compras.OrdenCompra.Enums.EstadoOrdenCompra.ParcialmenteRecibida
+                    : algunaRecibida
+                        ? Clinica.Api.Modules.Compras.OrdenCompra.Enums.EstadoOrdenCompra.Recibida
+                        : Clinica.Api.Modules.Compras.OrdenCompra.Enums.EstadoOrdenCompra.EnviadaProveedor;
+            }
         }
 
         entity.Estado = EstadoRecepcionCompra.Anulada;
@@ -394,6 +453,15 @@ public sealed class RecepcionCompraService(
         if (!existeAlmacen)
         {
             throw new NotFoundException(nameof(AlmacenEntity), almacenId);
+        }
+
+        if (ordenCompra.Estado is not (
+            Clinica.Api.Modules.Compras.OrdenCompra.Enums.EstadoOrdenCompra.Aprobada or
+            Clinica.Api.Modules.Compras.OrdenCompra.Enums.EstadoOrdenCompra.EnviadaProveedor or
+            Clinica.Api.Modules.Compras.OrdenCompra.Enums.EstadoOrdenCompra.ParcialmenteRecibida))
+        {
+            throw new ConflictException(
+                $"No se puede registrar una recepción para una orden de compra en estado '{ordenCompra.Estado}'. La orden debe estar Aprobada o Enviada al Proveedor.");
         }
 
         return ordenCompra;
@@ -429,6 +497,13 @@ public sealed class RecepcionCompraService(
             {
                 throw new BusinessException(
                     "La cantidad recibida de cada detalle debe ser mayor que cero.");
+            }
+
+            var pendiente = ordenDetalle.Cantidad - ordenDetalle.CantidadRecibida;
+            if (detalle.CantidadRecibida > pendiente)
+            {
+                throw new BusinessException(
+                    $"La cantidad a recibir ({detalle.CantidadRecibida}) supera la cantidad pendiente ({pendiente}) del ítem en la orden de compra.");
             }
         }
     }

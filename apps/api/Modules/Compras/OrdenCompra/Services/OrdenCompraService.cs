@@ -216,6 +216,18 @@ public sealed class OrdenCompraService(
 
         RecalcularTotales(entity);
 
+        if (request.SolicitudCompraId.HasValue)
+        {
+            var solicitud = await dbContext.SolicitudesCompra
+                .FirstOrDefaultAsync(x => x.Id == request.SolicitudCompraId.Value && x.Activo, cancellationToken);
+            if (solicitud is not null && solicitud.Estado is
+                Clinica.Api.Modules.Compras.SolicitudCompra.Enums.EstadoSolicitudCompra.Aprobada or
+                Clinica.Api.Modules.Compras.SolicitudCompra.Enums.EstadoSolicitudCompra.PendienteAprobacion)
+            {
+                solicitud.Estado = Clinica.Api.Modules.Compras.SolicitudCompra.Enums.EstadoSolicitudCompra.Atendida;
+            }
+        }
+
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return await ObtenerAsync(entity.Id, cancellationToken);
@@ -584,11 +596,6 @@ public sealed class OrdenCompraService(
             }
 
             detalle.CantidadRecibida = nuevaRecibida;
-        }
-
-        foreach (var detalle in entity.Detalles.Where(x => x.Activo && !vistos.Contains(x.Id)))
-        {
-            detalle.CantidadRecibida = 0;
         }
     }
 

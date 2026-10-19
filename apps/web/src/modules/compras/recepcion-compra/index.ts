@@ -10,4 +10,5 @@ export * from "./components/recepcion-compra-form-dialog";
 export * from "./components/recepcion-compra-detail-dialog";
 export * from "./components/recepcion-compra-anular-dialog";
 export * from "./components/recepcion-compra-delete-dialog";
+export * from "./components/recepcion-compra-autocomplete";
 export * from "./components/recepcion-compra-module-view";

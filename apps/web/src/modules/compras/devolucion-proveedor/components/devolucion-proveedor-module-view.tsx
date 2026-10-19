@@ -109,7 +109,8 @@ export function DevolucionProveedorModuleView() {
       toast.success(`Devolución "${d.numero}" enviada a Aprobación.`);
       refetch();
     } catch (error: any) {
-      toast.error(error?.message || "Error al enviar a aprobación.");
+      const msg = error?.response?.data?.message || error?.response?.data?.detail || error?.message || "Error al enviar a aprobación.";
+      toast.error(msg);
     }
   };
 
@@ -119,7 +120,8 @@ export function DevolucionProveedorModuleView() {
       toast.success(`Devolución "${d.numero}" aprobada.`);
       refetch();
     } catch (error: any) {
-      toast.error(error?.message || "Error al aprobar la devolución.");
+      const msg = error?.response?.data?.message || error?.response?.data?.detail || error?.message || "Error al aprobar la devolución.";
+      toast.error(msg);
     }
   };
 
@@ -129,7 +131,8 @@ export function DevolucionProveedorModuleView() {
       toast.success(`Devolución "${d.numero}" rechazada.`);
       refetch();
     } catch (error: any) {
-      toast.error(error?.message || "Error al rechazar la devolución.");
+      const msg = error?.response?.data?.message || error?.response?.data?.detail || error?.message || "Error al rechazar la devolución.";
+      toast.error(msg);
     }
   };
 
@@ -141,7 +144,8 @@ export function DevolucionProveedorModuleView() {
       );
       refetch();
     } catch (error: any) {
-      toast.error(error?.message || "Error al confirmar la devolución.");
+      const msg = error?.response?.data?.message || error?.response?.data?.detail || error?.message || "Error al confirmar la devolución.";
+      toast.error(msg);
     }
   };
 
