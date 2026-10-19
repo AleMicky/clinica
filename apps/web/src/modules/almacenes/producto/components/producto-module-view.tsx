@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { ProductoHeader } from "./producto-header";
-import { ProductoMetricsCards } from "./producto-metrics";
 import { ProductoMasterList } from "./producto-master-list";
 import { ProductoDetailView } from "./producto-detail-view";
 import { ProductoFormDialog } from "./producto-form-dialog";
@@ -156,7 +155,7 @@ export function ProductoModuleView() {
   const handleDeleteSuccess = React.useCallback(() => {
     setSelectedIds([]);
     setSelectedProductosMap(new Map());
-    refetch();
+    void refetch();
   }, [refetch]);
 
 
@@ -177,13 +176,11 @@ export function ProductoModuleView() {
   }, []);
 
   return (
-    <div className="flex flex-col gap-3 w-full">
-      <ProductoHeader />
-
-      <ProductoMetricsCards metrics={metrics} />
+    <div className="flex flex-col gap-2.5 w-full">
+      <ProductoHeader metrics={metrics} />
 
       {/* Master-Detail Split View */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-2.5 items-start">
         {/* Master Panel (Catálogo de Productos) */}
         <div className="lg:col-span-4 xl:col-span-4 h-full">
           <ProductoMasterList

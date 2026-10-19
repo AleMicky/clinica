@@ -1,12 +1,16 @@
-import Link from "next/link";
-import { Boxes, FileSpreadsheet } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { ROUTES } from "@/config/routes";
+"use client";
 
-export function ProductoHeader() {
+import { Boxes, CalendarClock, FolderTree } from "lucide-react";
+import type { ProductoMetrics } from "../types/producto.types";
+
+interface ProductoHeaderProps {
+  metrics?: ProductoMetrics;
+}
+
+export function ProductoHeader({ metrics }: Readonly<ProductoHeaderProps>) {
   return (
-    <div className="flex items-center justify-between gap-2.5 pb-1 border-b border-border/40">
-      <div className="flex items-center gap-2.5">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-1.5 border-b border-border/40">
+      <div className="flex items-center gap-2">
         <div className="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary border border-primary/20 shrink-0">
           <Boxes className="size-4" />
         </div>
@@ -14,22 +18,33 @@ export function ProductoHeader() {
           <h1 className="text-sm font-semibold text-foreground tracking-tight">
             Catálogo de Productos
           </h1>
-          <span className="text-xs text-muted-foreground hidden sm:inline">
+          <span className="text-xs text-muted-foreground hidden md:inline">
             Gestión de artículos, medicamentos, insumos y niveles de stock
           </span>
         </div>
       </div>
 
-      <Link href={ROUTES.ALMACENES.REPORTES_PRODUCTOS}>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-7 text-xs gap-1.5 border-emerald-500/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/10"
-        >
-          <FileSpreadsheet className="size-3.5 text-emerald-600 dark:text-emerald-400" />
-          <span>Generar Reportes</span>
-        </Button>
-      </Link>
+      {metrics && (
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/40 border border-border/50 text-[11px] font-medium text-muted-foreground">
+            <Boxes className="size-3.5 text-primary" />
+            <span>Total:</span>
+            <span className="font-bold text-foreground font-mono">{metrics.totalProductos}</span>
+          </div>
+
+          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/40 border border-border/50 text-[11px] font-medium text-muted-foreground">
+            <CalendarClock className="size-3.5 text-amber-500" />
+            <span>Con Vencimiento:</span>
+            <span className="font-bold text-foreground font-mono">{metrics.controlaVencimientoCount}</span>
+          </div>
+
+          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/40 border border-border/50 text-[11px] font-medium text-muted-foreground">
+            <FolderTree className="size-3.5 text-emerald-500" />
+            <span>Categorías:</span>
+            <span className="font-bold text-foreground font-mono">{metrics.categoriasCount}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

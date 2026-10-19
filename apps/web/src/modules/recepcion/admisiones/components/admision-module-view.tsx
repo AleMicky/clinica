@@ -271,7 +271,7 @@ export function AdmisionModuleView() {
   }, [admisionToDeleteId, deleteMutation]);
 
   return (
-    <div className="flex flex-col gap-3 w-full animate-in fade-in-50 duration-300">
+    <div className="flex flex-col gap-2.5 w-full animate-in fade-in-50 duration-300">
       {/* Cabecera del Módulo */}
       <AdmisionHeader
         onAddClick={handleOpenAdd}
@@ -282,7 +282,7 @@ export function AdmisionModuleView() {
         isRefreshing={isFetching || isMetricsLoading}
       />
 
-      {/* Tarjetas de Métricas en Vivo */}
+      {/* Tarjetas de Métricas en Vivo Compactas */}
       <AdmisionMetricsCards
         metrics={metrics}
         isLoading={isMetricsLoading && !apiMetrics}
