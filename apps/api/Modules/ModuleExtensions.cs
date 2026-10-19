@@ -4,6 +4,7 @@ using Clinica.Api.Modules.Compras;
 using Clinica.Api.Modules.Farmacia;
 using Clinica.Api.Modules.Notificaciones;
 using Clinica.Api.Modules.Parametros;
+using Clinica.Api.Modules.Quirofano;
 using Clinica.Api.Modules.Recepcion;
 using Clinica.Api.Modules.RecursosHumanos;
 using Clinica.Api.Modules.Seguridad;
@@ -21,6 +22,7 @@ public static class ModuleExtensions
     {
         services.AddAlmacenesModule();
         services.AddFarmaciaModule();
+        services.AddQuirofanoModule();
         services.AddSeguridadModule();
         services.AddParametrosModule();
         services.AddRecursosHumanosModule();
@@ -41,6 +43,7 @@ public static class ModuleExtensions
 
         api.MapAlmacenesModule();
         api.MapFarmaciaModule();
+        api.MapQuirofanoModule();
         api.MapSeguridadModule();
         api.MapParametrosModule();
         api.MapRecursosHumanosModule();

@@ -187,6 +187,7 @@ if (app.Configuration.GetValue<bool>("RunSeeds", false))
     await OpcionMenuSeed.SeedAsync(app.Services);
     await RolOpcionMenuSeed.SeedAsync(app.Services);
     await FarmaciaSeed.SeedAsync(app.Services);
+    await QuirofanoSeed.SeedAsync(app.Services);
 }
 
 app.Run();

@@ -88,6 +88,10 @@ export const ROUTES = {
     ROOT: "/farmacia/dispensaciones",
     DISPENSACIONES: "/farmacia/dispensaciones",
   },
+  QUIROFANO: {
+    ROOT: "/quirofano/cirugias",
+    CIRUGIAS: "/quirofano/cirugias",
+  },
 } as const;
 
 export type AppRoutes = typeof ROUTES;

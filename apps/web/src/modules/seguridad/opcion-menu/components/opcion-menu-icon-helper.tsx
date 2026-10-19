@@ -43,6 +43,7 @@ import {
   PieChart,
   Receipt,
   Scale,
+  Scissors,
   Settings,
   Settings2,
   Shield,
@@ -91,6 +92,7 @@ export const POPULAR_MENU_ICONS: IconOption[] = [
   // Clínica & Salud
   { name: "HeartPulse", label: "Atención Médica", category: "clinica", icon: HeartPulse },
   { name: "Stethoscope", label: "Estetoscopio / Consulta", category: "clinica", icon: Stethoscope },
+  { name: "Scissors", label: "Cirugía / Quirófano", category: "clinica", icon: Scissors },
   { name: "Activity", label: "Signos / Actividad", category: "clinica", icon: Activity },
   { name: "FileText", label: "Expediente / Documento", category: "clinica", icon: FileText },
   { name: "FileCheck", label: "Ficha Validada", category: "clinica", icon: FileCheck },

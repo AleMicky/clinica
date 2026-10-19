@@ -486,6 +486,25 @@ public static class OpcionMenuSeed
                 "FARMACIA_OPERACIONES"),
 
             // =========================================================
+            // 4.4. QUIRÓFANO
+            // =========================================================
+            new(
+                "QUIROFANO_OPERACIONES",
+                "Quirófano",
+                null,
+                "Activity",
+                4,
+                "LOGISTICA_ALMACENES"),
+
+            new(
+                "QUIROFANO_CIRUGIAS",
+                "Programación y Cirugías",
+                "/quirofano/cirugias",
+                "Scissors",
+                1,
+                "QUIROFANO_OPERACIONES"),
+
+            // =========================================================
             // 5. COMPRAS
             // =========================================================
             new(

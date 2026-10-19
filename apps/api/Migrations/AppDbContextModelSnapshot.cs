@@ -3534,6 +3534,192 @@ namespace Clinica.Api.Migrations
                     b.ToTable("UnidadesMedida", (string)null);
                 });
 
+            modelBuilder.Entity("Clinica.Api.Modules.Quirofano.Cirugia.Entity.Cirugia", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("AdmisionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("AlmacenId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("AnestesiologoId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Circulante")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int>("CirujanoPrincipalId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CreadoPor")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DiagnosticoPostOperatorio")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("DiagnosticoPreOperatorio")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<int>("Estado")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaFin")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaInicio")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FechaProgramada")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Instrumentista")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("ModificadoPor")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MotivoCancelacion")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<int?>("MovimientoInventarioId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Numero")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("Observaciones")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("PacienteId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PrimerAyudanteId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ProcedimientoQuirurgico")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("SalaOperaciones")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("Tipo")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TipoAnestesia")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AdmisionId");
+
+                    b.HasIndex("AlmacenId");
+
+                    b.HasIndex("AnestesiologoId");
+
+                    b.HasIndex("CirujanoPrincipalId");
+
+                    b.HasIndex("MovimientoInventarioId");
+
+                    b.HasIndex("Numero")
+                        .IsUnique();
+
+                    b.HasIndex("PacienteId");
+
+                    b.HasIndex("PrimerAyudanteId");
+
+                    b.ToTable("Quirofano_Cirugias", (string)null);
+                });
+
+            modelBuilder.Entity("Clinica.Api.Modules.Quirofano.Cirugia.Entity.CirugiaGastoMaterial", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal>("Cantidad")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("CirugiaId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("CostoUnitario")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("CreadoPor")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModificadoPor")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MomentoQuirurgico")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Observaciones")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<int?>("PartidaInventarioId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("PrecioUnitario")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("ProductoId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CirugiaId");
+
+                    b.HasIndex("PartidaInventarioId");
+
+                    b.HasIndex("ProductoId");
+
+                    b.ToTable("Quirofano_CirugiasGastosMateriales", (string)null);
+                });
+
             modelBuilder.Entity("Clinica.Api.Modules.Recepcion.Admision.Entity.Admision", b =>
                 {
                     b.Property<int>("Id")
@@ -6073,6 +6259,87 @@ namespace Clinica.Api.Migrations
                     b.Navigation("MonedaOrigen");
                 });
 
+            modelBuilder.Entity("Clinica.Api.Modules.Quirofano.Cirugia.Entity.Cirugia", b =>
+                {
+                    b.HasOne("Clinica.Api.Modules.Recepcion.Admision.Entity.Admision", "Admision")
+                        .WithMany()
+                        .HasForeignKey("AdmisionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Clinica.Api.Modules.Almacenes.Almacen.Entity.Almacen", "Almacen")
+                        .WithMany()
+                        .HasForeignKey("AlmacenId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Clinica.Api.Modules.RecursosHumanos.Medico.Entity.Medico", "Anestesiologo")
+                        .WithMany()
+                        .HasForeignKey("AnestesiologoId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Clinica.Api.Modules.RecursosHumanos.Medico.Entity.Medico", "CirujanoPrincipal")
+                        .WithMany()
+                        .HasForeignKey("CirujanoPrincipalId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Clinica.Api.Modules.Almacenes.MovimientoInventario.Entity.MovimientoInventario", "MovimientoInventario")
+                        .WithMany()
+                        .HasForeignKey("MovimientoInventarioId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Clinica.Api.Modules.Recepcion.Pacientes.Entity.Paciente", "Paciente")
+                        .WithMany()
+                        .HasForeignKey("PacienteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Clinica.Api.Modules.RecursosHumanos.Medico.Entity.Medico", "PrimerAyudante")
+                        .WithMany()
+                        .HasForeignKey("PrimerAyudanteId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Admision");
+
+                    b.Navigation("Almacen");
+
+                    b.Navigation("Anestesiologo");
+
+                    b.Navigation("CirujanoPrincipal");
+
+                    b.Navigation("MovimientoInventario");
+
+                    b.Navigation("Paciente");
+
+                    b.Navigation("PrimerAyudante");
+                });
+
+            modelBuilder.Entity("Clinica.Api.Modules.Quirofano.Cirugia.Entity.CirugiaGastoMaterial", b =>
+                {
+                    b.HasOne("Clinica.Api.Modules.Quirofano.Cirugia.Entity.Cirugia", "Cirugia")
+                        .WithMany("GastosMateriales")
+                        .HasForeignKey("CirugiaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Clinica.Api.Modules.Almacenes.PartidaInventario.Entity.PartidaInventario", "PartidaInventario")
+                        .WithMany()
+                        .HasForeignKey("PartidaInventarioId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Clinica.Api.Modules.Almacenes.Producto.Entity.Producto", "Producto")
+                        .WithMany()
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Cirugia");
+
+                    b.Navigation("PartidaInventario");
+
+                    b.Navigation("Producto");
+                });
+
             modelBuilder.Entity("Clinica.Api.Modules.Recepcion.Admision.Entity.Admision", b =>
                 {
                     b.HasOne("Clinica.Api.Modules.Servicios.Convenios.Entity.Convenio", "Convenio")
@@ -6626,6 +6893,11 @@ namespace Clinica.Api.Migrations
             modelBuilder.Entity("Clinica.Api.Modules.Parametros.Catalogo.Entity.CatalogoGrupo", b =>
                 {
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("Clinica.Api.Modules.Quirofano.Cirugia.Entity.Cirugia", b =>
+                {
+                    b.Navigation("GastosMateriales");
                 });
 
             modelBuilder.Entity("Clinica.Api.Modules.Recepcion.Admision.Entity.Admision", b =>
