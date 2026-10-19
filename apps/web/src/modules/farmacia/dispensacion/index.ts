@@ -11,3 +11,4 @@ export * from "./components/dispensacion-cobrar-dialog";
 export * from "./components/dispensacion-entregar-dialog";
 export * from "./components/dispensacion-anular-dialog";
 export * from "./components/dispensacion-module-view";
+export * from "./components/medicamento-autocomplete";

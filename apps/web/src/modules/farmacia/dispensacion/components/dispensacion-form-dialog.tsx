@@ -52,6 +52,7 @@ import {
   useCreateDispensacion,
   useMedicamentosStock,
 } from "../hooks/use-dispensacion";
+import { MedicamentoAutocomplete } from "./medicamento-autocomplete";
 import { useAlmacenes } from "@/modules/almacenes/almacen/hooks/use-almacen";
 import { usePacientes } from "@/modules/recepcion/pacientes/hooks/use-pacientes";
 import { useMedicos } from "@/modules/recursos-humanos/medico";
@@ -97,11 +98,13 @@ interface DetalleRowProps {
   readonly onDuplicate: () => void;
   readonly canRemove: boolean;
   readonly isDuplicate: boolean;
+  readonly almacenId: number;
   readonly stockMedicamentos: MedicamentoStockResponse[];
 }
 
 function DetalleRow({
   index,
+  almacenId,
   control,
   register,
   setValue,
@@ -131,9 +134,14 @@ function DetalleRow({
   const stockDisponible = selectedMed?.stockDisponible ?? 0;
   const isOutOfStock = stockDisponible > 0 && cantidad > stockDisponible;
 
-  const handleMedicineChange = (prodId: number) => {
-    const med = stockMedicamentos.find((m) => m.productoId === prodId);
-    if (!med) return;
+  const handleMedicineChange = (med: MedicamentoStockResponse | null) => {
+    if (!med) {
+      setValue(`detalles.${index}.productoId`, 0);
+      setValue(`detalles.${index}.partidaInventarioId`, undefined);
+      setValue(`detalles.${index}.precioUnitario`, 0);
+      setValue(`detalles.${index}.descuento`, 0);
+      return;
+    }
 
     setValue(`detalles.${index}.productoId`, med.productoId);
     setValue(`detalles.${index}.precioUnitario`, med.precioReferencial);
@@ -159,24 +167,26 @@ function DetalleRow({
         </span>
       </td>
 
-      {/* Producto Selector */}
+      {/* Producto Selector con Autocomplete y Paginado */}
       <td className="px-2 py-1 min-w-64">
         <div className="space-y-0.5">
-          <select
-            value={currentProductoId}
-            onChange={(e) => handleMedicineChange(Number(e.target.value))}
-            className={cn(
-              "w-full h-6.5 text-xs px-1.5 rounded-md border border-border/60 bg-background text-foreground font-medium shadow-2xs focus:ring-1 focus:ring-primary",
-              !currentProductoId && "text-muted-foreground border-destructive/50"
+          <Controller
+            name={`detalles.${index}.productoId`}
+            control={control}
+            render={({ field, fieldState }) => (
+              <MedicamentoAutocomplete
+                almacenId={almacenId}
+                value={field.value}
+                onValueChange={(val, med) => {
+                  field.onChange(val || 0);
+                  handleMedicineChange(med ?? null);
+                }}
+                error={Boolean(fieldState.error)}
+                placeholder="Buscar por código, nombre..."
+                className="h-6.5 text-xs"
+              />
             )}
-          >
-            <option value="0">Seleccionar medicamento...</option>
-            {stockMedicamentos.map((m) => (
-              <option key={m.productoId} value={m.productoId}>
-                {m.nombre} ({m.codigo}) - Stock: {m.stockDisponible} {m.unidadMedida || ""}
-              </option>
-            ))}
-          </select>
+          />
 
           {/* Badges metadata */}
           <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
@@ -990,6 +1000,7 @@ export function DispensacionFormDialog({
                           <DetalleRow
                             key={field.id}
                             index={idx}
+                            almacenId={selectedAlmacenId}
                             control={control}
                             register={register}
                             setValue={setValue}
