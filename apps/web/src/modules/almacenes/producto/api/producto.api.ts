@@ -103,3 +103,13 @@ export async function descargarPlantillaProductosExcel(): Promise<Blob> {
   return response.data;
 }
 
+// Obtener partidas asociadas a un producto
+export async function getPartidasByProducto(
+  productoId: number
+): Promise<import("@/modules/almacenes/partida-inventario").PartidaInventarioResponse[]> {
+  const response = await apiClient.get<
+    import("@/modules/almacenes/partida-inventario").PartidaInventarioResponse[]
+  >(`/productos/${productoId}/partidas`);
+  return response.data;
+}
+

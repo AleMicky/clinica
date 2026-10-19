@@ -11,6 +11,8 @@ public static partial class ProductoMapper
     [MapperIgnoreSource(nameof(ProductoEntity.Marca))]
     [MapperIgnoreSource(nameof(ProductoEntity.UnidadMedida))]
     [MapperIgnoreSource(nameof(ProductoEntity.Proveedor))]
+    [MapperIgnoreSource(nameof(ProductoEntity.PartidasInventario))]
+    [MapperIgnoreTarget(nameof(ProductoResponse.UltimoCostoUnitario))]
     public static partial ProductoResponse ToResponse(
         ProductoEntity entity);
 

@@ -132,26 +132,30 @@ export function MovimientoInventarioModuleView() {
   const [auditInfo, setAuditInfo] = React.useState<AuditInfo | null>(null);
 
   const handleViewAudit = (mov: MovimientoInventarioResponse) => {
+    const movRecord = mov as unknown as Record<
+      string,
+      string | null | undefined
+    >;
     const rawCreated =
       mov.fechaCreacion ||
-      (mov as any).createdAt ||
-      (mov as any).created_at ||
-      (mov as any).creadoEn;
+      movRecord.createdAt ||
+      movRecord.created_at ||
+      movRecord.creadoEn;
     const rawUpdated =
       mov.fechaModificacion ||
-      (mov as any).updatedAt ||
-      (mov as any).updated_at ||
-      (mov as any).actualizadoEn;
+      movRecord.updatedAt ||
+      movRecord.updated_at ||
+      movRecord.actualizadoEn;
     const createdUser =
       mov.creadoPor ||
-      (mov as any).createdBy ||
-      (mov as any).created_by ||
-      (mov as any).usuarioCreacion;
+      movRecord.createdBy ||
+      movRecord.created_by ||
+      movRecord.usuarioCreacion;
     const updatedUser =
       mov.modificadoPor ||
-      (mov as any).updatedBy ||
-      (mov as any).updated_by ||
-      (mov as any).usuarioModificacion;
+      movRecord.updatedBy ||
+      movRecord.updated_by ||
+      movRecord.usuarioModificacion;
 
     const estadoTexto =
       mov.estado === EstadoMovimientoInventario.Borrador

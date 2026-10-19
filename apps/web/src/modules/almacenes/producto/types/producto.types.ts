@@ -18,6 +18,7 @@ export interface ProductoResponse {
   controlaVencimiento: boolean;
   stockMinimo: number;
   stockMaximo?: number | null;
+  ultimoCostoUnitario?: number | null;
   createdAt?: string;
   updatedAt?: string;
   createdBy?: string;

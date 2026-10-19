@@ -7,10 +7,12 @@ using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
 using CategoriaProductoEntity = Clinica.Api.Modules.Almacenes.CategoriaProducto.Entity.CategoriaProducto;
 using MarcaEntity = Clinica.Api.Modules.Almacenes.Marca.Entity.Marca;
+using PartidaInventarioMapper = Clinica.Api.Modules.Almacenes.PartidaInventario.Mappers.PartidaInventarioMapper;
 using ProductoEntity = Clinica.Api.Modules.Almacenes.Producto.Entity.Producto;
 using ProductoMapper = Clinica.Api.Modules.Almacenes.Producto.Mappers.ProductoMapper;
 using ProveedorEntity = Clinica.Api.Modules.Compras.Proveedor.Entity.Proveedor;
 using UnidadesMedidaEntity = Clinica.Api.Modules.Parametros.UnidadesMedida.Entity.UnidadesMedida;
+using Clinica.Api.Modules.Almacenes.PartidaInventario.Dtos;
 
 namespace Clinica.Api.Modules.Almacenes.Producto.Services;
 
@@ -39,6 +41,10 @@ public interface IProductoService
 
     Task<ProductoResponse> ObtenerAsync(
         int id,
+        CancellationToken cancellationToken = default);
+
+    Task<List<PartidaInventarioResponse>> ObtenerPartidasAsync(
+        int productoId,
         CancellationToken cancellationToken = default);
 
     Task<ProductoResponse> CrearAsync(
@@ -136,6 +142,7 @@ public sealed class ProductoService(
             .Include(x => x.Marca)
             .Include(x => x.UnidadMedida)
             .Include(x => x.Proveedor)
+            .Include(x => x.PartidasInventario.Where(p => p.Activo))
             .ToListAsync(cancellationToken);
 
         var items = productos
@@ -148,7 +155,12 @@ public sealed class ProductoService(
                 x.UnidadMedida?.Simbolo,
                 x.UnidadMedida?.Categoria,
                 x.Proveedor?.RazonSocial,
-                x.Proveedor?.Codigo))
+                x.Proveedor?.Codigo,
+                x.PartidasInventario
+                    .Where(p => p.Activo)
+                    .OrderByDescending(p => p.FechaCreacion)
+                    .Select(p => (decimal?)p.CostoUnitario)
+                    .FirstOrDefault()))
             .ToList();
 
         return new PagedResult<ProductoResponse>(
@@ -169,6 +181,7 @@ public sealed class ProductoService(
             .Include(x => x.Marca)
             .Include(x => x.UnidadMedida)
             .Include(x => x.Proveedor)
+            .Include(x => x.PartidasInventario.Where(p => p.Activo))
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (producto is null || !producto.Activo)
@@ -185,7 +198,52 @@ public sealed class ProductoService(
             producto.UnidadMedida?.Simbolo,
             producto.UnidadMedida?.Categoria,
             producto.Proveedor?.RazonSocial,
-            producto.Proveedor?.Codigo);
+            producto.Proveedor?.Codigo,
+            producto.PartidasInventario
+                .Where(p => p.Activo)
+                .OrderByDescending(p => p.FechaCreacion)
+                .Select(p => (decimal?)p.CostoUnitario)
+                .FirstOrDefault());
+    }
+
+    public async Task<List<PartidaInventarioResponse>> ObtenerPartidasAsync(
+        int productoId,
+        CancellationToken cancellationToken = default)
+    {
+        var productoExiste = await dbContext
+            .Productos
+            .AnyAsync(x => x.Id == productoId && x.Activo, cancellationToken);
+
+        if (!productoExiste)
+        {
+            throw new NotFoundException(nameof(ProductoEntity), productoId);
+        }
+
+        var partidas = await dbContext
+            .PartidasInventario
+            .AsNoTracking()
+            .Where(x => x.ProductoId == productoId && x.Activo)
+            .OrderByDescending(x => x.FechaCreacion)
+            .Include(x => x.Producto)
+            .ToListAsync(cancellationToken);
+
+        return partidas
+            .Select(x => new PartidaInventarioResponse
+            {
+                Id = x.Id,
+                ProductoId = x.ProductoId,
+                ProductoNombre = x.Producto?.Nombre,
+                ProductoCodigo = x.Producto?.Codigo,
+                NumeroPartida = x.NumeroPartida,
+                FechaVencimiento = x.FechaVencimiento,
+                CostoUnitario = x.CostoUnitario,
+                Activo = x.Activo,
+                FechaCreacion = x.FechaCreacion,
+                FechaModificacion = x.FechaModificacion,
+                CreadoPor = x.CreadoPor,
+                ModificadoPor = x.ModificadoPor
+            })
+            .ToList();
     }
 
     public async Task<byte[]> ExportarExcelAsync(
@@ -584,7 +642,8 @@ public sealed class ProductoService(
         string? simboloUnidad,
         string? categoriaUnidad,
         string? razonSocialProveedor,
-        string? codigoProveedor)
+        string? codigoProveedor,
+        decimal? ultimoCostoUnitario = null)
     {
         var response = ProductoMapper.ToResponse(entity);
         return response with
@@ -598,7 +657,8 @@ public sealed class ProductoService(
             UnidadMedidaCategoria = categoriaUnidad,
             ProveedorId = entity.ProveedorId,
             ProveedorRazonSocial = razonSocialProveedor,
-            ProveedorCodigo = codigoProveedor
+            ProveedorCodigo = codigoProveedor,
+            UltimoCostoUnitario = ultimoCostoUnitario
         };
     }
 

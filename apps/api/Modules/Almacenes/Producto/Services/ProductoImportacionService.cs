@@ -2,10 +2,7 @@ using System.Globalization;
 using Clinica.Api.Data;
 using Clinica.Api.Shared.Excel;
 using Microsoft.EntityFrameworkCore;
-using AlmacenEntity = Clinica.Api.Modules.Almacenes.Almacen.Entity.Almacen;
 using CategoriaProductoEntity = Clinica.Api.Modules.Almacenes.CategoriaProducto.Entity.CategoriaProducto;
-using ExistenciaEntity = Clinica.Api.Modules.Almacenes.Existencia.Entity.Existencia;
-using ExistenciaPartidaEntity = Clinica.Api.Modules.Almacenes.ExistenciaPartida.Entity.ExistenciaPartida;
 using MarcaEntity = Clinica.Api.Modules.Almacenes.Marca.Entity.Marca;
 using PartidaInventarioEntity = Clinica.Api.Modules.Almacenes.PartidaInventario.Entity.PartidaInventario;
 using ProductoEntity = Clinica.Api.Modules.Almacenes.Producto.Entity.Producto;
@@ -69,16 +66,10 @@ public sealed class ProductoImportacionService(
             .Where(x => x.Activo)
             .ToListAsync(cancellationToken);
 
-        var almacenes = await dbContext.Almacenes
-            .AsNoTracking()
-            .Where(x => x.Activo)
-            .ToListAsync(cancellationToken);
-
         var categoriasMap = ConstruirCategoriasMap(categorias);
         var marcasMap = ConstruirMarcasMap(marcas);
         var proveedoresMap = ConstruirProveedoresMap(proveedores);
         var unidadesMap = ConstruirUnidadesMap(unidadesMedida);
-        var almacenesMap = ConstruirAlmacenesMap(almacenes);
 
         // 2. Extraer códigos de productos del Excel
         var codigosExcel = filas
@@ -135,29 +126,11 @@ public sealed class ProductoImportacionService(
         var partidasExistentesDbMap = partidasExistentesDb
             .ToDictionary(x => $"{x.ProductoId}|{x.NumeroPartida!.ToUpperInvariant()}", x => x.Id, StringComparer.OrdinalIgnoreCase);
 
-        // 5. Consultar existencias existentes en BD para los productos existentes (Tracked para actualizar cantidades)
-        var existenciasDb = await dbContext.Existencias
-            .Where(x => productosExistentesIds.Contains(x.ProductoId) && x.Activo)
-            .ToListAsync(cancellationToken);
-
-        var existenciasDbMap = existenciasDb
-            .ToDictionary(x => $"{x.AlmacenId}|{x.ProductoId}", x => x);
-
-        var existenciasIds = existenciasDb.Select(x => x.Id).ToList();
-        var existenciasPartidasDb = await dbContext.ExistenciasPartidas
-            .Where(x => existenciasIds.Contains(x.ExistenciaId) && x.Activo)
-            .ToListAsync(cancellationToken);
-
-        var existenciasPartidasDbMap = existenciasPartidasDb
-            .ToDictionary(x => $"{x.ExistenciaId}|{x.PartidaInventarioId}", x => x);
-
-        // 6. Estructuras para seguimiento en memoria durante el procesamiento
+        // 5. Estructuras para seguimiento en memoria durante el procesamiento
         var productosNuevosMap = new Dictionary<string, ProductoEntity>(StringComparer.OrdinalIgnoreCase);
         var productosNuevosPorAtributosMap = new Dictionary<string, (int Fila, string Codigo)>(StringComparer.OrdinalIgnoreCase);
         var partidasNuevas = new List<PartidaInventarioEntity>();
         var partidasProcesadasPorProducto = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var existenciasNuevasMap = new Dictionary<string, ExistenciaEntity>(StringComparer.OrdinalIgnoreCase);
-        var existenciasPartidasNuevas = new List<ExistenciaPartidaEntity>();
 
         foreach (var fila in filas)
         {
@@ -166,33 +139,26 @@ public sealed class ProductoImportacionService(
                 productosNuevosMap,
                 productosNuevosPorAtributosMap,
                 partidasNuevas,
-                existenciasNuevasMap,
-                existenciasPartidasNuevas,
                 categoriasMap,
                 marcasMap,
                 proveedoresMap,
                 unidadesMap,
-                almacenesMap,
                 productosExistentesMap,
                 productosPorAtributosDbMap,
                 partidasExistentesDbSet,
                 partidasExistentesDbMap,
                 partidasProcesadasPorProducto,
-                existenciasDbMap,
-                existenciasPartidasDbMap,
                 resultado);
         }
 
         if (productosNuevosMap.Count == 0 &&
             partidasNuevas.Count == 0 &&
-            existenciasNuevasMap.Count == 0 &&
-            existenciasPartidasNuevas.Count == 0 &&
             !dbContext.ChangeTracker.HasChanges())
         {
             return resultado;
         }
 
-        // 7. Persistir entidades
+        // 6. Persistir entidades
         if (productosNuevosMap.Count > 0)
         {
             await dbContext.Productos.AddRangeAsync(productosNuevosMap.Values, cancellationToken);
@@ -203,21 +169,11 @@ public sealed class ProductoImportacionService(
             await dbContext.PartidasInventario.AddRangeAsync(partidasNuevas, cancellationToken);
         }
 
-        if (existenciasNuevasMap.Count > 0)
-        {
-            await dbContext.Existencias.AddRangeAsync(existenciasNuevasMap.Values, cancellationToken);
-        }
-
-        if (existenciasPartidasNuevas.Count > 0)
-        {
-            await dbContext.ExistenciasPartidas.AddRangeAsync(existenciasPartidasNuevas, cancellationToken);
-        }
-
         await dbContext.SaveChangesAsync(cancellationToken);
 
         resultado.Importados = productosNuevosMap.Count > 0
             ? productosNuevosMap.Count
-            : (partidasNuevas.Count > 0 ? partidasNuevas.Count : (existenciasNuevasMap.Count + existenciasPartidasNuevas.Count));
+            : partidasNuevas.Count;
 
         return resultado;
     }
@@ -227,20 +183,15 @@ public sealed class ProductoImportacionService(
         Dictionary<string, ProductoEntity> productosNuevosMap,
         Dictionary<string, (int Fila, string Codigo)> productosNuevosPorAtributosMap,
         List<PartidaInventarioEntity> partidasNuevas,
-        Dictionary<string, ExistenciaEntity> existenciasNuevasMap,
-        List<ExistenciaPartidaEntity> existenciasPartidasNuevas,
         Dictionary<string, int> categoriasMap,
         Dictionary<string, int> marcasMap,
         Dictionary<string, int> proveedoresMap,
         Dictionary<string, int> unidadesMap,
-        Dictionary<string, int> almacenesMap,
         Dictionary<string, ProductoEntity> productosExistentesMap,
         Dictionary<string, (int Id, string Codigo)> productosPorAtributosDbMap,
         HashSet<string> partidasExistentesDbSet,
         Dictionary<string, int> partidasExistentesDbMap,
         HashSet<string> partidasProcesadasPorProducto,
-        Dictionary<string, ExistenciaEntity> existenciasDbMap,
-        Dictionary<string, ExistenciaPartidaEntity> existenciasPartidasDbMap,
         ExcelImportResult resultado)
     {
         var tieneError = false;
@@ -262,10 +213,6 @@ public sealed class ProductoImportacionService(
         var numeroPartida = NormalizarNumeroPartida(fila.Get("NUMERO_PARTIDA") ?? fila.Get("NUMERO_LOTE") ?? fila.Get("PARTIDA"));
         var fechaVencimientoTexto = NormalizarTexto(fila.Get("FECHA_VENCIMIENTO"));
         var costoUnitarioTexto = NormalizarTexto(fila.Get("COSTO_UNITARIO") ?? fila.Get("COSTO"));
-
-        // Lectura de campos de Existencia / Stock inicial
-        var almacenTexto = NormalizarTexto(fila.Get("ALMACEN"));
-        var cantidadTexto = NormalizarTexto(fila.Get("CANTIDAD") ?? fila.Get("CANTIDAD_INICIAL") ?? fila.Get("STOCK") ?? fila.Get("STOCK_INICIAL"));
 
         // Validación Producto: Código
         if (string.IsNullOrWhiteSpace(codigo))
@@ -581,74 +528,13 @@ public sealed class ProductoImportacionService(
             tieneError = true;
         }
 
-        // Parsing Almacén y Cantidad (Existencia y ExistenciaPartida)
-        int? almacenId = null;
-        if (!string.IsNullOrWhiteSpace(almacenTexto))
-        {
-            if (almacenesMap.TryGetValue(almacenTexto.ToUpperInvariant(), out var aId))
-            {
-                almacenId = aId;
-            }
-            else
-            {
-                AgregarError(
-                    resultado,
-                    fila.RowNumber,
-                    "ALMACEN",
-                    almacenTexto,
-                    $"No se encontró el almacén '{almacenTexto}'.");
-                tieneError = true;
-            }
-        }
-
-        decimal? cantidad = null;
-        if (!string.IsNullOrWhiteSpace(cantidadTexto))
-        {
-            if (!decimal.TryParse(cantidadTexto, NumberStyles.Number, CultureInfo.InvariantCulture, out var parsedCant) &&
-                !decimal.TryParse(cantidadTexto, NumberStyles.Number, CultureInfo.CurrentCulture, out parsedCant))
-            {
-                AgregarError(
-                    resultado,
-                    fila.RowNumber,
-                    "CANTIDAD",
-                    cantidadTexto,
-                    "La cantidad debe ser un número válido.");
-                tieneError = true;
-            }
-            else if (parsedCant < 0)
-            {
-                AgregarError(
-                    resultado,
-                    fila.RowNumber,
-                    "CANTIDAD",
-                    cantidadTexto,
-                    "La cantidad no puede ser negativa.");
-                tieneError = true;
-            }
-            else
-            {
-                cantidad = parsedCant;
-            }
-        }
-
-        if (cantidad.HasValue && cantidad.Value > 0 && !almacenId.HasValue)
-        {
-            AgregarError(
-                resultado,
-                fila.RowNumber,
-                "ALMACEN",
-                null,
-                "Debe especificar el almacén al ingresar una cantidad de stock.");
-            tieneError = true;
-        }
-
         if (tieneError || string.IsNullOrWhiteSpace(codigo))
             return;
 
         // Gestión del Producto (Nuevo vs Existente en memoria vs Existente en BD)
         ProductoEntity productoEntity;
         var productoYaEnBd = productosExistentesMap.TryGetValue(codigo, out var productoExistenteBd);
-        var tieneOperacionAdicional = tieneDatosPartida || (almacenId.HasValue && cantidad.HasValue && cantidad.Value > 0);
+        var tieneOperacionAdicional = tieneDatosPartida;
 
         // Validación de no duplicidad por (Nombre + Marca + Unidad de Medida + Proveedor)
         var claveAtributos = GenerarClaveAtributosProducto(nombre!, marcaId, unidadMedidaId, proveedorId);
@@ -795,113 +681,7 @@ public sealed class ProductoImportacionService(
             }
         }
 
-        // Gestión de Existencia (Almacén + Producto) y ExistenciaPartida (Existencia + Partida)
-        if (almacenId.HasValue && cantidad.HasValue && cantidad.Value > 0)
-        {
-            ExistenciaEntity existenciaEntity;
-            var claveExistenciaMemoria = $"{almacenId.Value}|{codigo}";
 
-            if (productoYaEnBd && existenciasDbMap.TryGetValue($"{almacenId.Value}|{productoExistenteBd!.Id}", out var existenciaDb))
-            {
-                existenciaEntity = existenciaDb;
-
-                // Actualizar costo promedio ponderado si viene costo unitario
-                if (costoUnitario.HasValue && costoUnitario.Value > 0)
-                {
-                    var stockPrevio = existenciaDb.Cantidad;
-                    var costoPrevio = existenciaDb.CostoPromedio;
-                    var valorPrevio = stockPrevio > 0 ? stockPrevio * costoPrevio : 0;
-                    var valorEntrada = cantidad.Value * costoUnitario.Value;
-                    var totalCantidad = stockPrevio + cantidad.Value;
-
-                    existenciaDb.CostoPromedio = totalCantidad > 0
-                        ? Math.Round((valorPrevio + valorEntrada) / totalCantidad, 4)
-                        : costoUnitario.Value;
-                }
-
-                existenciaDb.Cantidad += cantidad.Value;
-            }
-            else if (existenciasNuevasMap.TryGetValue(claveExistenciaMemoria, out var existenciaMemoria))
-            {
-                existenciaEntity = existenciaMemoria;
-
-                if (costoUnitario.HasValue && costoUnitario.Value > 0)
-                {
-                    var stockPrevio = existenciaMemoria.Cantidad;
-                    var costoPrevio = existenciaMemoria.CostoPromedio;
-                    var valorPrevio = stockPrevio > 0 ? stockPrevio * costoPrevio : 0;
-                    var valorEntrada = cantidad.Value * costoUnitario.Value;
-                    var totalCantidad = stockPrevio + cantidad.Value;
-
-                    existenciaMemoria.CostoPromedio = totalCantidad > 0
-                        ? Math.Round((valorPrevio + valorEntrada) / totalCantidad, 4)
-                        : costoUnitario.Value;
-                }
-
-                existenciaMemoria.Cantidad += cantidad.Value;
-            }
-            else
-            {
-                existenciaEntity = new ExistenciaEntity
-                {
-                    AlmacenId = almacenId.Value,
-                    Cantidad = cantidad.Value,
-                    CantidadReservada = 0,
-                    CostoPromedio = costoUnitario.GetValueOrDefault(0),
-                    Activo = true
-                };
-
-                if (productoYaEnBd && productoExistenteBd != null)
-                {
-                    existenciaEntity.ProductoId = productoExistenteBd.Id;
-                }
-                else
-                {
-                    existenciaEntity.Producto = productoEntity;
-                }
-
-                existenciasNuevasMap[claveExistenciaMemoria] = existenciaEntity;
-            }
-
-            // Si hay partida (nueva o existente), asociarla mediante ExistenciaPartida
-            if (partidaEntity != null || partidaExistenteBdId.HasValue)
-            {
-                if (existenciaEntity.Id > 0 && partidaExistenteBdId.HasValue &&
-                    existenciasPartidasDbMap.TryGetValue($"{existenciaEntity.Id}|{partidaExistenteBdId.Value}", out var epExistente))
-                {
-                    epExistente.Cantidad += cantidad.Value;
-                }
-                else
-                {
-                    var ep = new ExistenciaPartidaEntity
-                    {
-                        Cantidad = cantidad.Value,
-                        CantidadReservada = 0,
-                        Activo = true
-                    };
-
-                    if (existenciaEntity.Id > 0)
-                    {
-                        ep.ExistenciaId = existenciaEntity.Id;
-                    }
-                    else
-                    {
-                        ep.Existencia = existenciaEntity;
-                    }
-
-                    if (partidaExistenteBdId.HasValue)
-                    {
-                        ep.PartidaInventarioId = partidaExistenteBdId.Value;
-                    }
-                    else
-                    {
-                        ep.PartidaInventario = partidaEntity!;
-                    }
-
-                    existenciasPartidasNuevas.Add(ep);
-                }
-            }
-        }
     }
 
     private static void RegistrarVariaciones(Dictionary<string, int> map, string? valor, int id)
@@ -972,18 +752,7 @@ public sealed class ProductoImportacionService(
         return map;
     }
 
-    private static Dictionary<string, int> ConstruirAlmacenesMap(List<AlmacenEntity> almacenes)
-    {
-        var map = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
-        foreach (var a in almacenes)
-        {
-            RegistrarVariaciones(map, a.Codigo, a.Id);
-            RegistrarVariaciones(map, a.Nombre, a.Id);
-        }
-
-        return map;
-    }
 
     private static void ValidarColumnas(List<ExcelRow> filas, ExcelImportResult resultado)
     {

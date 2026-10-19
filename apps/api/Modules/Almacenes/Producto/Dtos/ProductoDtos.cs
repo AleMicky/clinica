@@ -50,6 +50,8 @@ public sealed record ProductoResponse : AuditableResponse
 
     public decimal StockMinimo { get; init; }
     public decimal? StockMaximo { get; init; }
+
+    public decimal? UltimoCostoUnitario { get; init; }
 }
 
 public sealed record DeleteProductosRequest

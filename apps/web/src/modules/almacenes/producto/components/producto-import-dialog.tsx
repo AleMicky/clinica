@@ -325,17 +325,15 @@ export function ProductoImportDialog({
 
                       <div className="p-2 rounded-lg bg-muted/40 border border-border/60 space-y-1">
                         <p className="font-semibold text-foreground flex items-center gap-1">
-                          <Package className="size-3 text-primary" /> Partida y Stock (Opcional)
+                          <Package className="size-3 text-primary" /> Partida / Lote (Opcional)
                         </p>
                         <ul className="list-disc list-inside space-y-0.5 text-muted-foreground">
                           <li><span className="font-mono">NUMERO_PARTIDA</span>: Código de partida/lote</li>
                           <li><span className="font-mono">FECHA_VENCIMIENTO</span>: yyyy-MM-dd</li>
                           <li><span className="font-mono">COSTO_UNITARIO</span>: Costo de adquisición</li>
-                          <li><span className="font-mono">ALMACEN</span>: Nombre o código de almacén</li>
-                          <li><span className="font-mono">CANTIDAD</span>: Stock inicial (genera existencia)</li>
                         </ul>
                         <p className="text-[10px] text-muted-foreground/80 mt-1">
-                          * Si se ingresa almacén y cantidad con partida, se genera la existencia física y la relación existencia-partida automáticamente.
+                          * Si se especifica número de partida, se registra el lote en el maestro de partidas. El stock y existencias se registran mediante movimientos de inventario.
                         </p>
                       </div>
                     </div>

@@ -26,6 +26,9 @@ public static class ProductoEndpoints
         group.MapGet("/{id:int}", ObtenerAsync)
             .WithName("ObtenerProducto");
 
+        group.MapGet("/{id:int}/partidas", ObtenerPartidasAsync)
+            .WithName("ObtenerPartidasDeProducto");
+
         group.MapPost("/", CrearAsync)
             .WithName("CrearProducto")
             .Validate<CreateProductoRequest>();
@@ -116,6 +119,17 @@ public static class ProductoEndpoints
     {
         return Results.Ok(
             await service.ObtenerAsync(
+                id,
+                cancellationToken));
+    }
+
+    private static async Task<IResult> ObtenerPartidasAsync(
+        int id,
+        IProductoService service,
+        CancellationToken cancellationToken)
+    {
+        return Results.Ok(
+            await service.ObtenerPartidasAsync(
                 id,
                 cancellationToken));
     }
@@ -224,9 +238,7 @@ public static class ProductoEndpoints
             "STOCK_MAXIMO",
             "NUMERO_PARTIDA",
             "FECHA_VENCIMIENTO",
-            "COSTO_UNITARIO",
-            "ALMACEN",
-            "CANTIDAD"
+            "COSTO_UNITARIO"
         ];
 
         for (var i = 0; i < headers.Length; i++)
@@ -239,7 +251,7 @@ public static class ProductoEndpoints
             cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
         }
 
-        // Fila 1 de ejemplo: Producto con Marca, Proveedor, Partida, Vencimiento y Stock inicial en Almacén
+        // Fila 1 de ejemplo: Producto con Marca, Proveedor, Partida y Vencimiento
         worksheet.Cell(2, 1).Value = "MED-001";
         worksheet.Cell(2, 2).Value = "PARACETAMOL 500MG TABLETAS";
         worksheet.Cell(2, 3).Value = "CAJA CON 100 TABLETAS";
@@ -254,10 +266,8 @@ public static class ProductoEndpoints
         worksheet.Cell(2, 12).Value = "PAR-2026-001";
         worksheet.Cell(2, 13).Value = "2027-12-31";
         worksheet.Cell(2, 14).Value = 15.00;
-        worksheet.Cell(2, 15).Value = "ALMACEN CENTRAL";
-        worksheet.Cell(2, 16).Value = 50;
 
-        // Fila 2 de ejemplo: Insumo con stock en Almacén
+        // Fila 2 de ejemplo: Insumo general
         worksheet.Cell(3, 1).Value = "INS-001";
         worksheet.Cell(3, 2).Value = "GASA ESTERIL 10X10 CM";
         worksheet.Cell(3, 3).Value = "PAQUETE POR 10 UNIDADES";
@@ -272,8 +282,6 @@ public static class ProductoEndpoints
         worksheet.Cell(3, 12).Value = "";
         worksheet.Cell(3, 13).Value = "";
         worksheet.Cell(3, 14).Value = 3.50;
-        worksheet.Cell(3, 15).Value = "ALMACEN CENTRAL";
-        worksheet.Cell(3, 16).Value = 100;
 
         worksheet.Columns().AdjustToContents();
 

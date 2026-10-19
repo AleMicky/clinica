@@ -77,6 +77,7 @@ public interface IExistenciaService
         int productoId,
         decimal nuevoCostoPromedio,
         CancellationToken cancellationToken = default);
+    
 }
 
 public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaService
