@@ -360,8 +360,7 @@ public sealed class ProductoImportacionService(
         decimal precioVenta = 0;
         if (!string.IsNullOrWhiteSpace(precioVentaTexto))
         {
-            if (!decimal.TryParse(precioVentaTexto, NumberStyles.Number, CultureInfo.InvariantCulture, out precioVenta) &&
-                !decimal.TryParse(precioVentaTexto, NumberStyles.Number, CultureInfo.CurrentCulture, out precioVenta))
+            if (!TryParseDecimal(precioVentaTexto, out precioVenta))
             {
                 AgregarError(
                     resultado,
@@ -390,8 +389,7 @@ public sealed class ProductoImportacionService(
         decimal stockMinimo = 0;
         if (!string.IsNullOrWhiteSpace(stockMinimoTexto))
         {
-            if (!decimal.TryParse(stockMinimoTexto, NumberStyles.Number, CultureInfo.InvariantCulture, out stockMinimo) &&
-                !decimal.TryParse(stockMinimoTexto, NumberStyles.Number, CultureInfo.CurrentCulture, out stockMinimo))
+            if (!TryParseDecimal(stockMinimoTexto, out stockMinimo))
             {
                 AgregarError(
                     resultado,
@@ -417,8 +415,7 @@ public sealed class ProductoImportacionService(
         decimal? stockMaximo = null;
         if (!string.IsNullOrWhiteSpace(stockMaximoTexto))
         {
-            if (!decimal.TryParse(stockMaximoTexto, NumberStyles.Number, CultureInfo.InvariantCulture, out var parsedMax) &&
-                !decimal.TryParse(stockMaximoTexto, NumberStyles.Number, CultureInfo.CurrentCulture, out parsedMax))
+            if (!TryParseDecimal(stockMaximoTexto, out var parsedMax))
             {
                 AgregarError(
                     resultado,
@@ -486,8 +483,7 @@ public sealed class ProductoImportacionService(
         decimal? costoUnitario = null;
         if (!string.IsNullOrWhiteSpace(costoUnitarioTexto))
         {
-            if (!decimal.TryParse(costoUnitarioTexto, NumberStyles.Number, CultureInfo.InvariantCulture, out var parsedCosto) &&
-                !decimal.TryParse(costoUnitarioTexto, NumberStyles.Number, CultureInfo.CurrentCulture, out parsedCosto))
+            if (!TryParseDecimal(costoUnitarioTexto, out var parsedCosto))
             {
                 AgregarError(
                     resultado,
@@ -872,6 +868,64 @@ public sealed class ProductoImportacionService(
         }
 
         return false;
+    }
+
+    private static bool TryParseDecimal(string? valor, out decimal resultado)
+    {
+        resultado = 0;
+        if (string.IsNullOrWhiteSpace(valor))
+            return false;
+
+        var clean = valor.Trim()
+            .Replace("$", "")
+            .Replace("Bs.", "")
+            .Replace("Bs", "")
+            .Replace("€", "")
+            .Replace(" ", "");
+
+        if (string.IsNullOrWhiteSpace(clean))
+            return false;
+
+        // Si contiene tanto punto como coma, determinar el separador decimal según la última posición
+        if (clean.Contains('.') && clean.Contains(','))
+        {
+            var lastDot = clean.LastIndexOf('.');
+            var lastComma = clean.LastIndexOf(',');
+
+            if (lastDot > lastComma)
+            {
+                // Formato 1,234.56 -> eliminar comas (miles)
+                clean = clean.Replace(",", "");
+            }
+            else
+            {
+                // Formato 1.234,56 -> eliminar puntos (miles) y cambiar coma por punto
+                clean = clean.Replace(".", "").Replace(',', '.');
+            }
+        }
+        else if (clean.Contains(','))
+        {
+            // Si contiene múltiples comas y ningún punto, son separadores de miles (ej: 1,000,000)
+            if (clean.Count(c => c == ',') > 1)
+            {
+                clean = clean.Replace(",", "");
+            }
+            else
+            {
+                // Una sola coma representa el separador decimal (ej: 12,50 o 0,5)
+                clean = clean.Replace(',', '.');
+            }
+        }
+        else if (clean.Contains('.'))
+        {
+            // Si contiene múltiples puntos y ninguna coma, son separadores de miles (ej: 1.000.000)
+            if (clean.Count(c => c == '.') > 1)
+            {
+                clean = clean.Replace(".", "");
+            }
+        }
+
+        return decimal.TryParse(clean, NumberStyles.Number, CultureInfo.InvariantCulture, out resultado);
     }
 
     private static void AgregarError(

@@ -60,7 +60,6 @@
     <Folder Include="Modules\Almacenes\Existencia\Dtos\" />
     <Folder Include="Modules\Almacenes\Existencia\Entity\" />
     <Folder Include="Modules\Almacenes\Existencia\Mappers\" />
-    <Folder Include="Modules\Almacenes\Existencia\Services\" />
     <Folder Include="Modules\Almacenes\Existencia\Validators\" />
     <Folder Include="Modules\Almacenes\InventarioFisico\Dtos\" />
     <Folder Include="Modules\Almacenes\InventarioFisico\Endpoints\" />

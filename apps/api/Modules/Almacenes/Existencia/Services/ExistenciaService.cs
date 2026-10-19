@@ -77,8 +77,8 @@ public interface IExistenciaService
         int productoId,
         decimal nuevoCostoPromedio,
         CancellationToken cancellationToken = default);
-    
 }
+
 
 public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaService
 {
@@ -201,6 +201,9 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
             cancellationToken);
 
         ValidarCantidades(request.Cantidad, request.CantidadReservada, request.CostoPromedio);
+        if (request.Cantidad != 0m || request.CantidadReservada != 0m || request.CostoPromedio != 0m)
+            throw new BusinessException(
+                "Crea existencias iniciales con cantidad cero; registra las cantidades mediante un movimiento de inventario.");
 
         var existingEntity = await dbContext.Existencias
             .FirstOrDefaultAsync(
@@ -259,6 +262,14 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
 
         ValidarCantidades(request.Cantidad, request.CantidadReservada, request.CostoPromedio);
 
+        if (request.AlmacenId != entity.AlmacenId ||
+            request.ProductoId != entity.ProductoId ||
+            request.Cantidad != entity.Cantidad ||
+            request.CantidadReservada != entity.CantidadReservada ||
+            request.CostoPromedio != entity.CostoPromedio)
+            throw new BusinessException(
+                "No se pueden modificar producto, almacén, saldos ni PMP directamente. Usa movimientos de inventario.");
+
         ExistenciaMapper.UpdateEntity(request, entity);
 
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -302,218 +313,38 @@ public sealed class ExistenciaService(AppDbContext dbContext) : IExistenciaServi
             cancellationToken);
     }
 
-    public async Task AumentarStockAsync(
-        int almacenId,
-        int productoId,
-        decimal cantidad,
-        decimal? costoUnitario,
+    // El stock debe cambiar solamente mediante confirmaciones transaccionales de movimientos,
+    // porque así se actualizan Existencia, ExistenciaPartida y PMP de manera coherente.
+    public Task AumentarStockAsync(
+        int almacenId, int productoId, decimal cantidad,
+        decimal? costoUnitario, CancellationToken cancellationToken = default)
+        => throw new BusinessException(
+            "Utiliza MovimientoInventarioService.ConfirmarAsync para registrar entradas con partida.");
+
+    public Task DisminuirStockAsync(
+        int almacenId, int productoId, decimal cantidad,
         CancellationToken cancellationToken = default)
-    {
-        if (cantidad <= 0)
-        {
-            throw new BusinessException(
-                "La cantidad debe ser mayor que cero.");
-        }
+        => throw new BusinessException(
+            "Utiliza MovimientoInventarioService.ConfirmarAsync para registrar salidas por partida.");
 
-        if (costoUnitario.HasValue && costoUnitario.Value < 0)
-        {
-            throw new BusinessException(
-                "El costo unitario no puede ser negativo.");
-        }
-
-        await ValidarReferenciasAsync(
-            almacenId,
-            productoId,
-            cancellationToken);
-
-        var existencia = await dbContext.Existencias
-            .FirstOrDefaultAsync(
-                x => x.AlmacenId == almacenId &&
-                     x.ProductoId == productoId,
-                cancellationToken);
-
-        if (existencia is null)
-        {
-            existencia = new ExistenciaEntity
-            {
-                AlmacenId = almacenId,
-                ProductoId = productoId,
-                Cantidad = cantidad,
-                CantidadReservada = 0,
-                CostoPromedio = costoUnitario.GetValueOrDefault(0),
-                Activo = true
-            };
-
-            dbContext.Existencias.Add(existencia);
-            await dbContext.SaveChangesAsync(cancellationToken);
-            return;
-        }
-
-        if (!existencia.Activo)
-        {
-            existencia.Activo = true;
-            existencia.Cantidad = 0;
-            existencia.CantidadReservada = 0;
-            existencia.CostoPromedio = 0;
-        }
-
-        if (costoUnitario.HasValue && costoUnitario.Value > 0)
-        {
-            var stockPrevio = existencia.Cantidad;
-            var costoPrevio = existencia.CostoPromedio;
-            var valorPrevio = stockPrevio > 0 ? stockPrevio * costoPrevio : 0;
-            var valorEntrada = cantidad * costoUnitario.Value;
-            var totalCantidad = stockPrevio + cantidad;
-
-            existencia.CostoPromedio = totalCantidad > 0
-                ? Math.Round((valorPrevio + valorEntrada) / totalCantidad, 4)
-                : costoUnitario.Value;
-        }
-
-        existencia.Cantidad += cantidad;
-        await dbContext.SaveChangesAsync(cancellationToken);
-    }
-
-    public async Task DisminuirStockAsync(
-        int almacenId,
-        int productoId,
-        decimal cantidad,
+    // Reserva por partida aún no integrada. Impedir modificar solo el total.
+    public Task ReservarStockAsync(
+        int almacenId, int productoId, decimal cantidad,
         CancellationToken cancellationToken = default)
-    {
-        if (cantidad <= 0)
-        {
-            throw new BusinessException(
-                "La cantidad debe ser mayor que cero.");
-        }
+        => throw new BusinessException(
+            "La reserva por partida debe implementarse antes de habilitar reservas.");
 
-        var existencia = await dbContext.Existencias
-            .FirstOrDefaultAsync(
-                x => x.AlmacenId == almacenId &&
-                     x.ProductoId == productoId &&
-                     x.Activo,
-                cancellationToken);
-
-        if (existencia is null)
-        {
-            throw new BusinessException(
-                "No existe stock para el producto seleccionado.");
-        }
-
-        if (existencia.CantidadDisponible < cantidad)
-        {
-            throw new BusinessException(
-                $"Stock insuficiente para el producto {productoId}. " +
-                $"Disponible: {existencia.CantidadDisponible}, " +
-                $"solicitado: {cantidad}.");
-        }
-
-        existencia.Cantidad -= cantidad;
-        await dbContext.SaveChangesAsync(cancellationToken);
-    }
-
-    public async Task ReservarStockAsync(
-        int almacenId,
-        int productoId,
-        decimal cantidad,
+    public Task LiberarStockReservadoAsync(
+        int almacenId, int productoId, decimal cantidad,
         CancellationToken cancellationToken = default)
-    {
-        if (cantidad <= 0)
-        {
-            throw new BusinessException("La cantidad a reservar debe ser mayor que cero.");
-        }
+        => throw new BusinessException(
+            "La liberación de reservas por partida aún no está implementada.");
 
-        var existencia = await dbContext.Existencias
-            .FirstOrDefaultAsync(
-                x => x.AlmacenId == almacenId &&
-                     x.ProductoId == productoId &&
-                     x.Activo,
-                cancellationToken);
-
-        if (existencia is null)
-        {
-            throw new BusinessException(
-                $"No existe existencia registrada para el almacén {almacenId} y producto {productoId}.");
-        }
-
-        if (existencia.CantidadDisponible < cantidad)
-        {
-            throw new BusinessException(
-                $"Stock disponible insuficiente para reservar. Disponible: {existencia.CantidadDisponible}, solicitado: {cantidad}.");
-        }
-
-        existencia.CantidadReservada += cantidad;
-        await dbContext.SaveChangesAsync(cancellationToken);
-    }
-
-    public async Task LiberarStockReservadoAsync(
-        int almacenId,
-        int productoId,
-        decimal cantidad,
+    public Task<ExistenciaResponse> ActualizarCostoPromedioAsync(
+        int almacenId, int productoId, decimal nuevoCostoPromedio,
         CancellationToken cancellationToken = default)
-    {
-        if (cantidad <= 0)
-        {
-            throw new BusinessException("La cantidad a liberar debe ser mayor que cero.");
-        }
-
-        var existencia = await dbContext.Existencias
-            .FirstOrDefaultAsync(
-                x => x.AlmacenId == almacenId &&
-                     x.ProductoId == productoId &&
-                     x.Activo,
-                cancellationToken);
-
-        if (existencia is null)
-        {
-            throw new BusinessException(
-                $"No existe existencia registrada para el almacén {almacenId} y producto {productoId}.");
-        }
-
-        if (existencia.CantidadReservada < cantidad)
-        {
-            throw new BusinessException(
-                $"No se puede liberar más stock del reservado. Reservado actual: {existencia.CantidadReservada}, solicitado: {cantidad}.");
-        }
-
-        existencia.CantidadReservada -= cantidad;
-        await dbContext.SaveChangesAsync(cancellationToken);
-    }
-
-    public async Task<ExistenciaResponse> ActualizarCostoPromedioAsync(
-        int almacenId,
-        int productoId,
-        decimal nuevoCostoPromedio,
-        CancellationToken cancellationToken = default)
-    {
-        if (nuevoCostoPromedio < 0)
-        {
-            throw new BusinessException("El costo promedio no puede ser negativo.");
-        }
-
-        var existencia = await dbContext.Existencias
-            .Include(x => x.Almacen)
-            .Include(x => x.Producto)
-            .FirstOrDefaultAsync(
-                x => x.AlmacenId == almacenId &&
-                     x.ProductoId == productoId &&
-                     x.Activo,
-                cancellationToken);
-
-        if (existencia is null)
-        {
-            throw new NotFoundException(
-                $"No existe existencia activa para el almacén {almacenId} y producto {productoId}.");
-        }
-
-        existencia.CostoPromedio = nuevoCostoPromedio;
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        return Mapear(
-            existencia,
-            existencia.Almacen?.Nombre,
-            existencia.Producto?.Nombre,
-            existencia.Producto?.Codigo);
-    }
+        => throw new BusinessException(
+            "El PMP no debe editarse directamente: registra un ajuste de valoración auditado.");
 
     private async Task ValidarReferenciasAsync(
         int almacenId,
