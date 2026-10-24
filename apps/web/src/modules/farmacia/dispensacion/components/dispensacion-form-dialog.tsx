@@ -55,7 +55,10 @@ import {
   useCreateDispensacion,
   useMedicamentosStock,
 } from "../hooks/use-dispensacion";
-import { MedicamentoAutocomplete } from "./medicamento-autocomplete";
+import {
+  MedicamentoAutocomplete,
+  getMedicineBrand,
+} from "./medicamento-autocomplete";
 import { useAlmacenes } from "@/modules/almacenes/almacen/hooks/use-almacen";
 import { usePacientes } from "@/modules/recepcion/pacientes/hooks/use-pacientes";
 import { useMedicos } from "@/modules/recursos-humanos/medico";
@@ -403,15 +406,11 @@ function DetalleRow({
                 {selectedMed.codigo}
               </span>
             )}
-            {selectedMed?.marca ? (
+            {selectedMed && (
               <span className="font-mono text-[9px] bg-teal-500/10 text-teal-700 dark:text-teal-300 px-1.5 py-0.5 rounded font-semibold">
-                {selectedMed.marca}
+                Marca: {getMedicineBrand(selectedMed)}
               </span>
-            ) : selectedMed?.categoria ? (
-              <span className="font-mono text-[9px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground font-medium">
-                {selectedMed.categoria}
-              </span>
-            ) : null}
+            )}
             {selectedMed?.unidadMedida && (
               <span className="font-mono text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-semibold">
                 {selectedMed.unidadMedida}
@@ -761,15 +760,11 @@ function DetalleMobileCard({
               {selectedMed.codigo}
             </span>
           )}
-          {selectedMed?.marca ? (
+          {selectedMed && (
             <span className="font-mono text-[9px] bg-teal-500/10 text-teal-700 dark:text-teal-300 px-1.5 py-0.5 rounded font-semibold">
-              {selectedMed.marca}
+              Marca: {getMedicineBrand(selectedMed)}
             </span>
-          ) : selectedMed?.categoria ? (
-            <span className="font-mono text-[9px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded">
-              {selectedMed.categoria}
-            </span>
-          ) : null}
+          )}
           <Badge
             variant="outline"
             className={cn(
@@ -1035,7 +1030,7 @@ export function DispensacionFormDialog({
       stockMedicamentos.map((med) => ({
         value: String(med.productoId),
         label: med.nombre,
-        description: `${med.codigo}${med.marca ? ` · ${med.marca}` : med.categoria ? ` · ${med.categoria}` : ""} · Bs. ${med.precioReferencial} · Stock ${med.stockDisponible}`,
+        description: `${med.codigo} · Marca: ${getMedicineBrand(med)} · Bs. ${med.precioReferencial} · Stock ${med.stockDisponible}`,
       })),
     [stockMedicamentos]
   );

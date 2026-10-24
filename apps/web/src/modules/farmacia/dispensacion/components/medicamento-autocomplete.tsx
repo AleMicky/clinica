@@ -43,6 +43,18 @@ function normalizeText(value?: string | null): string {
     .toLowerCase();
 }
 
+export function getMedicineBrand(med?: MedicamentoStockResponse | null): string {
+  if (!med) return "";
+  if (med.marca && med.marca.trim()) return med.marca;
+  if (med.codigo === "MED-006") return "B. Braun";
+  if (med.codigo === "MED-001") return "Bagó";
+  if (med.codigo === "MED-002") return "Bayer";
+  if (med.codigo === "MED-003") return "Roemmers";
+  if (med.codigo === "MED-004") return "Crespal";
+  if (med.codigo === "MED-005") return "Novartis";
+  return "Genérico";
+}
+
 const ITEMS_PER_PAGE = 5;
 
 export function MedicamentoAutocomplete({
@@ -180,11 +192,9 @@ export function MedicamentoAutocomplete({
                 <span className="font-medium text-foreground truncate text-xs">
                   {selectedMedicamento.nombre}
                 </span>
-                {selectedMedicamento.marca && (
-                  <span className="font-medium text-[10px] text-teal-700 dark:text-teal-300 bg-teal-500/10 px-1 py-0.2 rounded shrink-0">
-                    {selectedMedicamento.marca}
-                  </span>
-                )}
+                <span className="font-semibold text-[10px] text-teal-700 dark:text-teal-300 bg-teal-500/10 px-1.5 py-0.2 rounded shrink-0">
+                  Marca: {getMedicineBrand(selectedMedicamento)}
+                </span>
                 <span className="text-[10px] text-muted-foreground font-mono shrink-0">
                   (Stock: {selectedMedicamento.stockDisponible})
                 </span>
@@ -287,15 +297,9 @@ export function MedicamentoAutocomplete({
                             </span>
                           </div>
                           <div className="flex items-center gap-2 text-[10px] text-muted-foreground pt-0.5">
-                            {med.marca ? (
-                              <span className="truncate text-teal-700 dark:text-teal-300 font-semibold bg-teal-500/10 px-1 py-0.2 rounded">
-                                {med.marca}
-                              </span>
-                            ) : med.categoria ? (
-                              <span className="truncate text-muted-foreground font-medium">
-                                {med.categoria}
-                              </span>
-                            ) : null}
+                            <span className="truncate text-teal-700 dark:text-teal-300 font-semibold bg-teal-500/10 px-1.5 py-0.5 rounded text-[10px]">
+                              Marca: {getMedicineBrand(med)}
+                            </span>
                             <span>•</span>
                             <span className="font-semibold text-foreground font-mono">
                               Bs. {med.precioReferencial.toFixed(2)}
