@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAnularDispensacion } from "../hooks/use-dispensacion";
 import type { DispensacionResponse } from "../types/dispensacion.types";
+import { getApiErrorMessage } from "@/lib/api/api-error";
 
 interface DispensacionAnularDialogProps {
   open: boolean;
@@ -75,13 +76,8 @@ export function DispensacionAnularDialog({
       );
       onSuccessCallback?.();
       onOpenChange(false);
-    } catch (error: any) {
-      const errorMsg =
-        error?.response?.data?.message ||
-        error?.response?.data?.detail ||
-        error?.message ||
-        "Error al anular la dispensación.";
-      toast.error(errorMsg);
+    } catch (error: unknown) {
+      toast.error(getApiErrorMessage(error));
     }
   };
 

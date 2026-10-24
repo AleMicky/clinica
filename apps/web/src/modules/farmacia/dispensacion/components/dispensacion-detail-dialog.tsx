@@ -3,16 +3,8 @@
 import * as React from "react";
 import {
   Printer,
-  Pill,
-  User,
-  Stethoscope,
-  Warehouse,
-  Calendar,
   CreditCard,
   PackageCheck,
-  CheckCircle2,
-  Clock,
-  Ban,
   Receipt,
 } from "lucide-react";
 import {

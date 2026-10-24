@@ -172,21 +172,29 @@ public sealed class DispensacionService(
     {
         var existenciasQuery = dbContext.Existencias
             .AsNoTracking()
-            .Include(x => x.Producto).ThenInclude(p => p.Marca)
-            .Include(x => x.Producto).ThenInclude(p => p.CategoriaProducto)
-            .Include(x => x.Producto).ThenInclude(p => p.UnidadMedida)
+            .Include(x => x.Producto)
+                .ThenInclude(p => p.Marca)
+            .Include(x => x.Producto)
+                .ThenInclude(p => p.CategoriaProducto)
+            .Include(x => x.Producto)
+                .ThenInclude(p => p.UnidadMedida)
             .Where(x => x.AlmacenId == almacenId && x.Activo && x.Cantidad > 0);
 
         if (!string.IsNullOrWhiteSpace(search))
         {
-            var term = search.Trim().ToLower();
+            var term = search.Trim();
+            var pattern = $"%{term}%";
             existenciasQuery = existenciasQuery.Where(x =>
-                x.Producto.Codigo.ToLower().Contains(term) ||
-                x.Producto.Nombre.ToLower().Contains(term) ||
-                (x.Producto.Marca != null && x.Producto.Marca.Nombre.ToLower().Contains(term)));
+                EF.Functions.Like(x.Producto.Nombre ?? string.Empty, pattern) ||
+                EF.Functions.Like(x.Producto.Codigo ?? string.Empty, pattern) ||
+                EF.Functions.Like(x.Producto.Marca != null ? x.Producto.Marca.Nombre ?? string.Empty : string.Empty, pattern) ||
+                EF.Functions.Like(x.Producto.CategoriaProducto != null ? x.Producto.CategoriaProducto.Nombre ?? string.Empty : string.Empty, pattern));
         }
 
-        var existencias = await existenciasQuery.Take(100).ToListAsync(cancellationToken);
+        var existencias = await existenciasQuery
+            .OrderBy(x => x.Producto.Nombre)
+            .ToListAsync(cancellationToken);
+
         var existenciaIds = existencias.Select(e => e.Id).ToList();
 
         var partidas = await dbContext.ExistenciasPartidas
@@ -214,27 +222,14 @@ public sealed class DispensacionService(
 
             var precio = ex.Producto.PrecioVenta > 0
                 ? ex.Producto.PrecioVenta
-                : (ex.CostoPromedio > 0 ? Math.Round(ex.CostoPromedio * 1.30m, 2) : 10m);
-
-            var marcaNombre = !string.IsNullOrWhiteSpace(ex.Producto.Marca?.Nombre)
-                ? ex.Producto.Marca.Nombre
-                : ex.Producto.Codigo switch
-                {
-                    "MED-006" => "B. Braun",
-                    "MED-001" => "Bagó",
-                    "MED-002" => "Bayer",
-                    "MED-003" => "Roemmers",
-                    "MED-004" => "Crespal",
-                    "MED-005" => "Novartis",
-                    _ => "Genérico"
-                };
+                : (ex.CostoPromedio > 0 ? Math.Round(ex.CostoPromedio * 1.30m, 2) : 0m);
 
             result.Add(new MedicamentoStockResponse
             {
                 ProductoId = ex.ProductoId,
-                Codigo = ex.Producto.Codigo,
-                Nombre = ex.Producto.Nombre,
-                Marca = marcaNombre,
+                Codigo = ex.Producto.Codigo ?? string.Empty,
+                Nombre = ex.Producto.Nombre ?? string.Empty,
+                Marca = ex.Producto.Marca?.Nombre ?? string.Empty,
                 Categoria = ex.Producto.CategoriaProducto?.Nombre,
                 UnidadMedida = ex.Producto.UnidadMedida?.Nombre,
                 StockDisponible = ex.Cantidad - ex.CantidadReservada,

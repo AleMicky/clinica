@@ -1,5 +1,8 @@
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Clinica.Api.Data;
+using Microsoft.AspNetCore.Http.Json;
 using Clinica.Api.Data.Seed;
 using Clinica.Api.Modules;
 using Clinica.Api.Modules.Notificaciones.Extensions;
@@ -115,6 +118,22 @@ builder.Services.AddOpenApi();
 builder.Services.Configure<ClinicaOptions>(builder.Configuration.GetSection(ClinicaOptions.SectionName));
 builder.Services.AddShared();
 builder.Services.AddModules();
+
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+    options.SerializerOptions.PropertyNameCaseInsensitive = true;
+    options.SerializerOptions.ReadCommentHandling = System.Text.Json.JsonCommentHandling.Skip;
+    options.SerializerOptions.AllowTrailingCommas = true;
+});
+
+builder.Services.Configure<JsonOptions>(options =>
+{
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+    options.SerializerOptions.PropertyNameCaseInsensitive = true;
+    options.SerializerOptions.ReadCommentHandling = System.Text.Json.JsonCommentHandling.Skip;
+    options.SerializerOptions.AllowTrailingCommas = true;
+});
 
 builder.Services.AddHttpLogging(options =>
 {
