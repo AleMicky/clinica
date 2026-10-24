@@ -121,6 +121,7 @@ public sealed record MedicamentoStockResponse
     public int ProductoId { get; init; }
     public string Codigo { get; init; } = string.Empty;
     public string Nombre { get; init; } = string.Empty;
+    public string? Marca { get; init; }
     public string? Categoria { get; init; }
     public string? UnidadMedida { get; init; }
     public decimal StockDisponible { get; init; }

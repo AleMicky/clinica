@@ -10,7 +10,6 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
-  Package,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -90,7 +89,7 @@ export function MedicamentoAutocomplete({
     const words = normalizeText(q).split(/\s+/).filter(Boolean);
     return stockMedicamentos.filter((m) => {
       const target = normalizeText(
-        `${m.codigo} ${m.nombre} ${m.categoria || ""} ${m.unidadMedida || ""}`
+        `${m.codigo} ${m.nombre} ${m.marca || ""} ${m.categoria || ""} ${m.unidadMedida || ""}`
       );
       return words.every((w) => target.includes(w));
     });
@@ -181,6 +180,11 @@ export function MedicamentoAutocomplete({
                 <span className="font-medium text-foreground truncate text-xs">
                   {selectedMedicamento.nombre}
                 </span>
+                {selectedMedicamento.marca && (
+                  <span className="font-medium text-[10px] text-teal-700 dark:text-teal-300 bg-teal-500/10 px-1 py-0.2 rounded shrink-0">
+                    {selectedMedicamento.marca}
+                  </span>
+                )}
                 <span className="text-[10px] text-muted-foreground font-mono shrink-0">
                   (Stock: {selectedMedicamento.stockDisponible})
                 </span>
@@ -227,7 +231,7 @@ export function MedicamentoAutocomplete({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={handleSearchKeyDown}
-            placeholder="Buscar por código, nombre o categoría..."
+            placeholder="Buscar por código, nombre o marca..."
             className="w-full text-xs bg-transparent outline-none placeholder:text-muted-foreground/70"
             autoFocus
           />
@@ -283,11 +287,15 @@ export function MedicamentoAutocomplete({
                             </span>
                           </div>
                           <div className="flex items-center gap-2 text-[10px] text-muted-foreground pt-0.5">
-                            {med.categoria && (
-                              <span className="truncate text-teal-700 dark:text-teal-300 font-medium">
+                            {med.marca ? (
+                              <span className="truncate text-teal-700 dark:text-teal-300 font-semibold bg-teal-500/10 px-1 py-0.2 rounded">
+                                {med.marca}
+                              </span>
+                            ) : med.categoria ? (
+                              <span className="truncate text-muted-foreground font-medium">
                                 {med.categoria}
                               </span>
-                            )}
+                            ) : null}
                             <span>•</span>
                             <span className="font-semibold text-foreground font-mono">
                               Bs. {med.precioReferencial.toFixed(2)}
@@ -299,8 +307,8 @@ export function MedicamentoAutocomplete({
                                 med.stockDisponible > 10
                                   ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
                                   : med.stockDisponible > 0
-                                  ? "bg-amber-500/10 text-amber-700 dark:text-amber-300"
-                                  : "bg-destructive/10 text-destructive"
+                                    ? "bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                                    : "bg-destructive/10 text-destructive"
                               )}
                             >
                               Stock: {med.stockDisponible} {med.unidadMedida || ""}

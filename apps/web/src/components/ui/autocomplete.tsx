@@ -22,6 +22,7 @@ export interface AutocompleteProps {
   className?: string;
   id?: string;
   allowCustomValue?: boolean;
+  onSearchChange?: (val: string) => void;
 }
 
 export function Autocomplete({
@@ -36,6 +37,7 @@ export function Autocomplete({
   className,
   id,
   allowCustomValue = true,
+  onSearchChange,
 }: AutocompleteProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [query, setQuery] = React.useState(value);
@@ -147,11 +149,13 @@ export function Autocomplete({
           placeholder={placeholder}
           onFocus={() => setIsOpen(true)}
           onChange={(e) => {
-            setQuery(e.target.value);
+            const nextVal = e.target.value;
+            setQuery(nextVal);
             if (!isOpen) setIsOpen(true);
             if (allowCustomValue) {
-              onValueChange(e.target.value);
+              onValueChange(nextVal);
             }
+            onSearchChange?.(nextVal);
           }}
           onKeyDown={(e) => {
             if (e.key === "Escape") {
@@ -183,7 +187,10 @@ export function Autocomplete({
             <button
               type="button"
               onMouseDown={(e) => e.preventDefault()}
-              onClick={handleClear}
+              onClick={(e) => {
+                handleClear(e);
+                onSearchChange?.("");
+              }}
               className="rounded-full p-0.5 hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
             >
               <X className="size-3.5" />

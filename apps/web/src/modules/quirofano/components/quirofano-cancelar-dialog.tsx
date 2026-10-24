@@ -6,8 +6,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -15,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useCancelarCirugia } from "../hooks/use-quirofano";
 import type { CirugiaResponse } from "../types/quirofano.types";
+import { getApiErrorMessage } from "@/lib/api/api-error";
 import { toast } from "sonner";
 
 interface QuirofanoCancelarDialogProps {
@@ -27,19 +26,20 @@ export function QuirofanoCancelarDialog({
   open,
   onOpenChange,
   cirugia,
-}: QuirofanoCancelarDialogProps) {
+}: Readonly<QuirofanoCancelarDialogProps>) {
   const [motivo, setMotivo] = React.useState("");
   const cancelarMutation = useCancelarCirugia();
 
-  React.useEffect(() => {
-    if (open) {
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen) {
       setMotivo("");
     }
-  }, [open]);
+    onOpenChange(isOpen);
+  };
 
   if (!cirugia) return null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
     if (!motivo.trim()) {
       toast.error("Debe ingresar el motivo de la cancelación de la intervención quirúrgica");
@@ -54,18 +54,14 @@ export function QuirofanoCancelarDialog({
         },
       });
       toast.success(`Cirugía ${cirugia.numero} cancelada correctamente`);
-      onOpenChange(false);
-    } catch (error: any) {
-      toast.error(
-        error?.response?.data?.message ||
-          error?.message ||
-          "Error al cancelar la intervención quirúrgica"
-      );
+      handleOpenChange(false);
+    } catch (error: unknown) {
+      toast.error(getApiErrorMessage(error));
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-md p-0 overflow-hidden border border-red-500/20 bg-background shadow-2xl">
         <form onSubmit={handleSubmit}>
           {/* Header */}
@@ -85,7 +81,7 @@ export function QuirofanoCancelarDialog({
             </div>
             <button
               type="button"
-              onClick={() => onOpenChange(false)}
+              onClick={() => handleOpenChange(false)}
               className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-lg"
             >
               <X className="size-4" />
@@ -134,7 +130,7 @@ export function QuirofanoCancelarDialog({
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => onOpenChange(false)}
+              onClick={() => handleOpenChange(false)}
               disabled={cancelarMutation.isPending}
               className="h-8 text-xs"
             >

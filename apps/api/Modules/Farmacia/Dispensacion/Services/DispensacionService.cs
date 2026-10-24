@@ -172,6 +172,7 @@ public sealed class DispensacionService(
     {
         var existenciasQuery = dbContext.Existencias
             .AsNoTracking()
+            .Include(x => x.Producto).ThenInclude(p => p.Marca)
             .Include(x => x.Producto).ThenInclude(p => p.CategoriaProducto)
             .Include(x => x.Producto).ThenInclude(p => p.UnidadMedida)
             .Where(x => x.AlmacenId == almacenId && x.Activo && x.Cantidad > 0);
@@ -181,7 +182,8 @@ public sealed class DispensacionService(
             var term = search.Trim().ToLower();
             existenciasQuery = existenciasQuery.Where(x =>
                 x.Producto.Codigo.ToLower().Contains(term) ||
-                x.Producto.Nombre.ToLower().Contains(term));
+                x.Producto.Nombre.ToLower().Contains(term) ||
+                (x.Producto.Marca != null && x.Producto.Marca.Nombre.ToLower().Contains(term)));
         }
 
         var existencias = await existenciasQuery.Take(100).ToListAsync(cancellationToken);
@@ -219,6 +221,7 @@ public sealed class DispensacionService(
                 ProductoId = ex.ProductoId,
                 Codigo = ex.Producto.Codigo,
                 Nombre = ex.Producto.Nombre,
+                Marca = ex.Producto.Marca?.Nombre,
                 Categoria = ex.Producto.CategoriaProducto?.Nombre,
                 UnidadMedida = ex.Producto.UnidadMedida?.Nombre,
                 StockDisponible = ex.Cantidad - ex.CantidadReservada,

@@ -113,6 +113,7 @@ export interface MedicamentoStockResponse {
   productoId: number;
   codigo: string;
   nombre: string;
+  marca?: string | null;
   categoria?: string | null;
   unidadMedida?: string | null;
   stockDisponible: number;
