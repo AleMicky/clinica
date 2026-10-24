@@ -33,6 +33,7 @@ import {
   Unlock,
   Sparkles,
   Search,
+  Calendar,
 } from "lucide-react";
 
 import {
@@ -86,6 +87,7 @@ interface FormDetalle {
 
 interface FormValues {
   tipo: TipoDispensacion;
+  fecha: string;
   almacenId: number;
   isWalkIn: boolean;
   pacienteId?: number;
@@ -119,6 +121,12 @@ function formatBs(value: number): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
+}
+
+function getLocalCurrentDateTime(): string {
+  const now = new Date();
+  const offset = now.getTimezoneOffset() * 60000;
+  return new Date(now.getTime() - offset).toISOString().slice(0, 16);
 }
 
 function getRowDescuentoMonto(d?: FormDetalle): number {
@@ -982,6 +990,7 @@ export function DispensacionFormDialog({
   } = useForm<FormValues>({
     defaultValues: {
       tipo: "VentaAmbulatoria",
+      fecha: getLocalCurrentDateTime(),
       almacenId: defaultAlmacenId,
       isWalkIn: true,
       clienteNombre: "",
@@ -1051,6 +1060,7 @@ export function DispensacionFormDialog({
       setUnlockedPriceRows({});
       reset({
         tipo: "VentaAmbulatoria",
+        fecha: getLocalCurrentDateTime(),
         almacenId: defaultAlmacenId,
         isWalkIn: true,
         clienteNombre: "",
@@ -1395,6 +1405,7 @@ export function DispensacionFormDialog({
     try {
       const payload: CreateDispensacionRequest = {
         tipo: values.tipo,
+        fecha: values.fecha ? new Date(values.fecha).toISOString() : new Date().toISOString(),
         almacenId: Number(values.almacenId),
         pacienteId: !values.isWalkIn && values.pacienteId ? Number(values.pacienteId) : undefined,
         clienteNombre: values.isWalkIn ? values.clienteNombre?.trim() : undefined,
@@ -1472,6 +1483,7 @@ export function DispensacionFormDialog({
         setAttemptedSubmit(false);
         reset({
           tipo: "VentaAmbulatoria",
+          fecha: getLocalCurrentDateTime(),
           almacenId: defaultAlmacenId,
           isWalkIn: true,
           clienteNombre: "",
@@ -1688,8 +1700,8 @@ export function DispensacionFormDialog({
                 </span>
               </div>
 
-              {/* Fila 1: Almacén, Tipo, Modalidad y Médico */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+              {/* Fila 1: Almacén, Tipo, Fecha, Modalidad y Médico */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
                 {/* Almacén */}
                 <div className="space-y-1">
                   <Label
@@ -1734,6 +1746,23 @@ export function DispensacionFormDialog({
                     <option value="Hospitalaria">Hospitalización (Cargo Internación)</option>
                     <option value="Urgencia">Urgencias (Atención Inmediata)</option>
                   </select>
+                </div>
+
+                {/* Fecha y Hora de Emisión */}
+                <div className="space-y-1">
+                  <Label
+                    htmlFor="fecha"
+                    className="text-xs font-medium leading-none flex items-center gap-1"
+                  >
+                    <Calendar className="size-3 text-muted-foreground" />
+                    Fecha y Hora de Emisión <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="fecha"
+                    type="datetime-local"
+                    {...register("fecha")}
+                    className="h-7.5 text-xs font-mono bg-background shadow-2xs"
+                  />
                 </div>
 
                 {/* Selector Modo: Particular vs Registrado (Accesible con radiogroup) */}

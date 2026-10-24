@@ -16,6 +16,7 @@ public sealed record DispensacionDetalleRequest
 public sealed record CreateDispensacionRequest
 {
     public TipoDispensacion Tipo { get; init; } = TipoDispensacion.VentaAmbulatoria;
+    public DateTime? Fecha { get; init; }
     public required int AlmacenId { get; init; }
     public int? PacienteId { get; init; }
     public string? ClienteNombre { get; init; }

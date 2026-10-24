@@ -301,7 +301,7 @@ public sealed class DispensacionService(
             Numero = correlativo.NumeroFormateado,
             Tipo = request.Tipo,
             Estado = EstadoDispensacion.PendientePago,
-            Fecha = DateTime.UtcNow,
+            Fecha = request.Fecha.HasValue ? request.Fecha.Value.ToUniversalTime() : DateTime.UtcNow,
             AlmacenId = request.AlmacenId,
             PacienteId = request.PacienteId,
             ClienteNombre = clienteNombre,

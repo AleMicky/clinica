@@ -20,6 +20,7 @@ export interface DispensacionDetalleRequest {
 
 export interface CreateDispensacionRequest {
   tipo: TipoDispensacion;
+  fecha?: string;
   almacenId: number;
   pacienteId?: number | null;
   clienteNombre?: string | null;
