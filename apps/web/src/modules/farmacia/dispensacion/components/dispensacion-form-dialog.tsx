@@ -109,10 +109,10 @@ interface RowIssues {
 function hasIssues(issues?: RowIssues): boolean {
   return Boolean(
     issues &&
-      (issues.producto ||
-        issues.cantidad ||
-        issues.lote ||
-        issues.descuento)
+    (issues.producto ||
+      issues.cantidad ||
+      issues.lote ||
+      issues.descuento)
   );
 }
 
@@ -232,8 +232,8 @@ function printTicketDispensacion(data: {
           </thead>
           <tbody>
             ${data.detalles
-              .map(
-                (d) => `
+      .map(
+        (d) => `
               <tr>
                 <td>
                   <div class="bold">${d.nombre}</div>
@@ -244,16 +244,15 @@ function printTicketDispensacion(data: {
                 <td style="text-align: right;">${d.subtotal.toFixed(2)}</td>
               </tr>
             `
-              )
-              .join("")}
+      )
+      .join("")}
           </tbody>
         </table>
         <div class="divider"></div>
-        ${
-          data.totalDescuento > 0
-            ? `<div class="text-right">DESCUENTO TOTAL: -Bs. ${data.totalDescuento.toFixed(2)}</div>`
-            : ""
-        }
+        ${data.totalDescuento > 0
+      ? `<div class="text-right">DESCUENTO TOTAL: -Bs. ${data.totalDescuento.toFixed(2)}</div>`
+      : ""
+    }
         <div class="text-right bold" style="font-size: 13px;">TOTAL A PAGAR: Bs. ${data.total.toFixed(2)}</div>
         <div class="divider"></div>
         <div class="footer-note">
@@ -400,7 +399,11 @@ function DetalleRow({
                   handleMedicineChange(med ?? null);
                 }}
                 error={Boolean(fieldState.error) || Boolean(productoError)}
-                placeholder="Buscar por código, nombre..."
+                placeholder={
+                  !almacenId
+                    ? "Seleccione un almacén primero..."
+                    : "Buscar por código, nombre..."
+                }
                 className="h-7 text-xs"
               />
             )}
@@ -755,7 +758,11 @@ function DetalleMobileCard({
                 handleMedicineChange(med ?? null);
               }}
               error={Boolean(fieldState.error) || Boolean(productoError)}
-              placeholder="Buscar medicamento o insumo..."
+              placeholder={
+                !almacenId
+                  ? "Seleccione un almacén primero..."
+                  : "Buscar medicamento o insumo..."
+              }
               className="h-8 text-xs"
             />
           )}
@@ -910,11 +917,6 @@ export function DispensacionFormDialog({
   const { data: almacenesData } = useAlmacenes({ pageSize: 50 });
   const almacenes = almacenesData?.items ?? [];
 
-  // Default to Farmacia Central if exists
-  const defaultAlmacenId = React.useMemo(() => {
-    const farm = almacenes.find((a) => a.codigo === "ALM-FARM");
-    return farm?.id || (almacenes[0]?.id ?? 0);
-  }, [almacenes]);
 
   // Server-side search with debounce for Pacientes
   const [pacienteSearch, setPacienteSearch] = React.useState("");
@@ -991,7 +993,7 @@ export function DispensacionFormDialog({
     defaultValues: {
       tipo: "VentaAmbulatoria",
       fecha: getLocalCurrentDateTime(),
-      almacenId: defaultAlmacenId,
+      almacenId: 0,
       isWalkIn: true,
       clienteNombre: "",
       clienteDocumento: "",
@@ -1013,7 +1015,7 @@ export function DispensacionFormDialog({
     name: "detalles",
   });
 
-  const selectedAlmacenId = watch("almacenId") || defaultAlmacenId;
+  const selectedAlmacenId = Number(watch("almacenId")) || 0;
   const isWalkIn = watch("isWalkIn");
   const selectedTipo = watch("tipo");
   const watchedPacienteId = watch("pacienteId");
@@ -1045,13 +1047,6 @@ export function DispensacionFormDialog({
   );
   const [quickAddKey, setQuickAddKey] = React.useState(0);
 
-  // Set default warehouse when list loads
-  React.useEffect(() => {
-    if (defaultAlmacenId && !watch("almacenId")) {
-      setValue("almacenId", defaultAlmacenId);
-    }
-  }, [defaultAlmacenId, setValue, watch]);
-
   // Reset form when dialog opens
   React.useEffect(() => {
     if (open) {
@@ -1061,7 +1056,7 @@ export function DispensacionFormDialog({
       reset({
         tipo: "VentaAmbulatoria",
         fecha: getLocalCurrentDateTime(),
-        almacenId: defaultAlmacenId,
+        almacenId: 0,
         isWalkIn: true,
         clienteNombre: "",
         clienteDocumento: "",
@@ -1077,7 +1072,7 @@ export function DispensacionFormDialog({
         ],
       });
     }
-  }, [open, defaultAlmacenId, reset]);
+  }, [open, reset]);
 
   // Verificar si hay datos cargados en el formulario para evitar pérdida accidental
   const isFormDirty = React.useMemo(() => {
@@ -1145,7 +1140,9 @@ export function DispensacionFormDialog({
       const med = stockMedicamentos.find((m) => m.productoId === pid);
 
       // 1. Producto
-      if (!pid || pid <= 0) {
+      if (!selectedAlmacenId) {
+        issues.producto = "Seleccione un almacén emisor primero";
+      } else if (!pid || pid <= 0) {
         issues.producto = "Seleccione un medicamento";
       }
 
@@ -1193,6 +1190,7 @@ export function DispensacionFormDialog({
   }, [watchedDetalles, stockMedicamentos]);
 
   const hasAnyRowIssues = rowsIssues.some((issue) => hasIssues(issue));
+  const isAlmacenRequiredAndMissing = !selectedAlmacenId || Number(selectedAlmacenId) <= 0;
   const isPacienteRequiredAndMissing = !isWalkIn && (!watchedPacienteId || Number(watchedPacienteId) <= 0);
 
   // Agregar rápido sin duplicar (+1 a existente)
@@ -1387,6 +1385,11 @@ export function DispensacionFormDialog({
   const handleSaveOrder = async (values: FormValues, action: "close" | "new_order") => {
     setAttemptedSubmit(true);
 
+    if (isAlmacenRequiredAndMissing) {
+      toast.error("Debe seleccionar un almacén emisor.");
+      return;
+    }
+
     if (values.detalles.length === 0) {
       toast.error("Debe agregar al menos un medicamento a la orden.");
       return;
@@ -1484,7 +1487,7 @@ export function DispensacionFormDialog({
         reset({
           tipo: "VentaAmbulatoria",
           fecha: getLocalCurrentDateTime(),
-          almacenId: defaultAlmacenId,
+          almacenId: 0,
           isWalkIn: true,
           clienteNombre: "",
           clienteDocumento: "",
@@ -1717,15 +1720,25 @@ export function DispensacionFormDialog({
                     render={({ field }) => (
                       <Autocomplete
                         id="almacenId"
-                        value={field.value ? String(field.value) : ""}
+                        value={field.value && Number(field.value) > 0 ? String(field.value) : ""}
                         onValueChange={(v) => field.onChange(v ? Number(v) : 0)}
                         options={almacenOptions}
                         allowCustomValue={false}
-                        placeholder="Buscar almacén..."
-                        className="h-7.5 text-xs"
+                        placeholder="Seleccionar almacén..."
+                        className={cn(
+                          "h-7.5 text-xs",
+                          attemptedSubmit &&
+                          isAlmacenRequiredAndMissing &&
+                          "border-destructive focus-visible:ring-destructive"
+                        )}
                       />
                     )}
                   />
+                  {attemptedSubmit && isAlmacenRequiredAndMissing && (
+                    <p className="text-[11px] text-destructive">
+                      Debe seleccionar un almacén emisor.
+                    </p>
+                  )}
                 </div>
 
                 {/* Tipo de Dispensación */}
@@ -1947,6 +1960,7 @@ export function DispensacionFormDialog({
                     <Autocomplete
                       key={quickAddKey}
                       value=""
+                      disabled={!selectedAlmacenId}
                       onValueChange={(v) => {
                         if (!v) return;
                         handleAddMedicineQuick(Number(v));
@@ -1955,8 +1969,16 @@ export function DispensacionFormDialog({
                       options={quickAddOptions}
                       allowCustomValue={false}
                       isLoading={loadingStock}
-                      placeholder="➕ Agregar medicamento rápido..."
-                      emptyText="Sin medicamentos con stock."
+                      placeholder={
+                        !selectedAlmacenId
+                          ? "Seleccione un almacén primero..."
+                          : "➕ Agregar medicamento rápido..."
+                      }
+                      emptyText={
+                        !selectedAlmacenId
+                          ? "Seleccione un almacén primero."
+                          : "Sin medicamentos con stock."
+                      }
                       className="h-7 text-xs border-teal-500/40 bg-teal-500/5 placeholder:text-teal-700/70 dark:placeholder:text-teal-300/70"
                     />
                   </div>

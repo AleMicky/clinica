@@ -168,11 +168,13 @@ export function DispensacionModuleView() {
       />
 
       {/* Form Dialog */}
-      <DispensacionFormDialog
-        open={formOpen}
-        onOpenChange={setFormOpen}
-        onSuccessCallback={() => refetch()}
-      />
+      {formOpen && (
+        <DispensacionFormDialog
+          open={formOpen}
+          onOpenChange={setFormOpen}
+          onSuccessCallback={() => refetch()}
+        />
+      )}
 
       {/* Detail Dialog */}
       <DispensacionDetailDialog
