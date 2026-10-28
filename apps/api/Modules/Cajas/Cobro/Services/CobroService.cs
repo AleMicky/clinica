@@ -17,6 +17,10 @@ using Clinica.Api.Modules.Notificaciones.Enums;
 using Clinica.Api.Modules.Notificaciones.Services;
 using Clinica.Api.Modules.Seguridad.Usuarios.Entity;
 using CobroEntity = Clinica.Api.Modules.Cajas.Cobro.Entity.Cobro;
+using MovimientoCajaEntity = Clinica.Api.Modules.Cajas.MovimientoCaja.Entity.MovimientoCaja;
+using TipoMovimientoCajaEntity = Clinica.Api.Modules.Cajas.MovimientoCaja.Entity.TipoMovimientoCaja;
+using ConceptoMovimientoCajaEntity = Clinica.Api.Modules.Cajas.MovimientoCaja.Entity.ConceptoMovimientoCaja;
+using Clinica.Api.Modules.Parametros.Moneda.Entity;
 using Clinica.Api.Shared.Excel;
 using TurnoCajaEntity = Clinica.Api.Modules.Cajas.TurnoCaja.Entity.TurnoCaja;
 using VentaPagadorEntity = Clinica.Api.Modules.Ventas.Venta.Entity.VentaPagador;
@@ -661,6 +665,10 @@ public sealed class CobroService(
                 entity.VentaPagadorId,
                 cancellationToken);
 
+            await RegistrarMovimientoCajaPorCobroAsync(
+                entity,
+                cancellationToken);
+
             await DbContext.SaveChangesAsync(
                 cancellationToken);
 
@@ -736,6 +744,9 @@ public sealed class CobroService(
                     "Debe registrar una devolución.");
             }
 
+            var estabaConfirmado =
+                entity.Estado == EstadoCobro.Confirmado;
+
             entity.Estado =
                 EstadoCobro.Anulado;
 
@@ -754,6 +765,14 @@ public sealed class CobroService(
             await SincronizarEstadoVentaYPagadorAsync(
                 entity.VentaPagadorId,
                 cancellationToken);
+
+            if (estabaConfirmado)
+            {
+                await RegistrarReversionMovimientoCajaPorCobroAsync(
+                    entity,
+                    entity.MotivoAnulacion,
+                    cancellationToken);
+            }
 
             await DbContext.SaveChangesAsync(
                 cancellationToken);
@@ -908,6 +927,177 @@ public sealed class CobroService(
             dispensacion.UsuarioCobro = null;
             dispensacion.MetodoPago = null;
         }
+    }
+
+    private async Task RegistrarMovimientoCajaPorCobroAsync(
+        CobroEntity cobro,
+        CancellationToken cancellationToken)
+    {
+        if (cobro.Total <= 0)
+            return;
+
+        var yaExiste = await DbContext.MovimientosCaja
+            .AnyAsync(
+                x => x.Activo &&
+                     x.TurnoCajaId == cobro.TurnoCajaId &&
+                     x.NaturalezaAplicada == "ENTRADA" &&
+                     x.Referencia == cobro.Numero,
+                cancellationToken);
+
+        if (yaExiste)
+            return;
+
+        var esFarmacia = await DbContext.Dispensaciones
+            .AnyAsync(
+                x => x.Activo &&
+                     (x.ComprobanteCobro == cobro.Numero ||
+                      (cobro.Observacion != null && cobro.Observacion.Contains(x.Numero))),
+                cancellationToken);
+
+        var (tipoIngreso, conceptoIngreso) = await AsegurarConceptoCajaAsync(
+            tipoCodigo: "ING",
+            tipoNombre: "Ingreso a Caja",
+            naturaleza: "ENTRADA",
+            conceptoCodigo: esFarmacia ? "ING-FAR" : "ING-OTR",
+            conceptoNombre: esFarmacia ? "Cobro de Farmacia / Dispensación" : "Otros Ingresos",
+            cancellationToken);
+
+        var monedaId = cobro.Detalles
+            .Where(d => d.Activo)
+            .Select(d => d.MonedaId)
+            .FirstOrDefault();
+
+        if (monedaId == 0)
+        {
+            monedaId = await DbContext.Set<Moneda>()
+                .Where(m => m.EsBase && m.Activo)
+                .Select(m => m.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        if (monedaId == 0)
+            return;
+
+        DbContext.MovimientosCaja.Add(new MovimientoCajaEntity
+        {
+            TurnoCajaId = cobro.TurnoCajaId,
+            TipoMovimientoCajaId = tipoIngreso.Id,
+            ConceptoMovimientoCajaId = conceptoIngreso.Id,
+            MonedaId = monedaId,
+            FechaHora = DateTime.UtcNow,
+            Monto = cobro.Total,
+            TipoCambio = 1m,
+            MontoMonedaBase = cobro.Total,
+            NaturalezaAplicada = "ENTRADA",
+            Referencia = cobro.Numero,
+            Observacion = cobro.Observacion ?? $"Confirmación de cobro {cobro.Numero}",
+            Activo = true
+        });
+    }
+
+    private async Task RegistrarReversionMovimientoCajaPorCobroAsync(
+        CobroEntity cobro,
+        string motivoAnulacion,
+        CancellationToken cancellationToken)
+    {
+        if (cobro.Total <= 0)
+            return;
+
+        var yaExiste = await DbContext.MovimientosCaja
+            .AnyAsync(
+                x => x.Activo &&
+                     x.TurnoCajaId == cobro.TurnoCajaId &&
+                     x.NaturalezaAplicada == "SALIDA" &&
+                     x.Referencia == cobro.Numero,
+                cancellationToken);
+
+        if (yaExiste)
+            return;
+
+        var (tipoEgreso, conceptoDevolucion) = await AsegurarConceptoCajaAsync(
+            tipoCodigo: "EGR",
+            tipoNombre: "Egreso de Caja",
+            naturaleza: "SALIDA",
+            conceptoCodigo: "EGR-DEV",
+            conceptoNombre: "Devolución / Reembolso",
+            cancellationToken);
+
+        var monedaId = cobro.Detalles
+            .Where(d => d.Activo)
+            .Select(d => d.MonedaId)
+            .FirstOrDefault();
+
+        if (monedaId == 0)
+        {
+            monedaId = await DbContext.Set<Moneda>()
+                .Where(m => m.EsBase && m.Activo)
+                .Select(m => m.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        if (monedaId == 0)
+            return;
+
+        DbContext.MovimientosCaja.Add(new MovimientoCajaEntity
+        {
+            TurnoCajaId = cobro.TurnoCajaId,
+            TipoMovimientoCajaId = tipoEgreso.Id,
+            ConceptoMovimientoCajaId = conceptoDevolucion.Id,
+            MonedaId = monedaId,
+            FechaHora = DateTime.UtcNow,
+            Monto = cobro.Total,
+            TipoCambio = 1m,
+            MontoMonedaBase = cobro.Total,
+            NaturalezaAplicada = "SALIDA",
+            Referencia = cobro.Numero,
+            Observacion = $"Anulación de cobro {cobro.Numero}: {motivoAnulacion}",
+            Activo = true
+        });
+    }
+
+    private async Task<(TipoMovimientoCajaEntity Tipo, ConceptoMovimientoCajaEntity Concepto)> AsegurarConceptoCajaAsync(
+        string tipoCodigo,
+        string tipoNombre,
+        string naturaleza,
+        string conceptoCodigo,
+        string conceptoNombre,
+        CancellationToken cancellationToken)
+    {
+        var tipo = await DbContext.TiposMovimientoCaja
+            .FirstOrDefaultAsync(t => t.Codigo == tipoCodigo && t.Activo, cancellationToken);
+
+        if (tipo is null)
+        {
+            tipo = new TipoMovimientoCajaEntity
+            {
+                Codigo = tipoCodigo,
+                Nombre = tipoNombre,
+                Descripcion = tipoNombre,
+                Naturaleza = naturaleza,
+                Activo = true
+            };
+            DbContext.TiposMovimientoCaja.Add(tipo);
+            await DbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        var concepto = await DbContext.ConceptosMovimientoCaja
+            .FirstOrDefaultAsync(c => c.Codigo == conceptoCodigo && c.Activo, cancellationToken);
+
+        if (concepto is null)
+        {
+            concepto = new ConceptoMovimientoCajaEntity
+            {
+                TipoMovimientoCajaId = tipo.Id,
+                Codigo = conceptoCodigo,
+                Nombre = conceptoNombre,
+                Descripcion = conceptoNombre,
+                Activo = true
+            };
+            DbContext.ConceptosMovimientoCaja.Add(concepto);
+            await DbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        return (tipo, concepto);
     }
 
     // ============================================================
