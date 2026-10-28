@@ -58,7 +58,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { cn, formatDate } from "@/lib/utils";
-import { useAuth } from "@/providers/auth-provider";
 
 import {
   useCreateDispensacion,
@@ -182,7 +181,6 @@ interface DetalleRowProps {
   readonly showRequiredErrors: boolean;
   readonly almacenId: number;
   readonly stockMedicamentos: MedicamentoStockResponse[];
-  readonly canEditPriceRole: boolean;
   readonly isPriceUnlocked: boolean;
   readonly onTogglePriceUnlock: () => void;
 }
@@ -352,7 +350,6 @@ function DetalleRow({
   issues,
   showRequiredErrors,
   stockMedicamentos,
-  canEditPriceRole,
   isPriceUnlocked,
   onTogglePriceUnlock,
 }: DetalleRowProps) {
@@ -572,10 +569,8 @@ function DetalleRow({
             onClick={onTogglePriceUnlock}
             title={
               isPriceUnlocked
-                ? "Bloquear precio referencial"
-                : canEditPriceRole
-                  ? "Desbloquear para modificar precio unitario"
-                  : "Solo administradores o jefes de farmacia pueden editar precios"
+                ? "Bloquear edición de precio unitario"
+                : "Desbloquear para modificar precio unitario"
             }
             className={cn(
               "absolute right-1 p-0.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer rounded",
@@ -679,7 +674,6 @@ function DetalleItemCard({
   issues,
   showRequiredErrors,
   stockMedicamentos,
-  canEditPriceRole,
   isPriceUnlocked,
   onTogglePriceUnlock,
 }: DetalleRowProps) {
@@ -909,10 +903,8 @@ function DetalleItemCard({
               onClick={onTogglePriceUnlock}
               title={
                 isPriceUnlocked
-                  ? "Bloquear precio referencial"
-                  : canEditPriceRole
-                    ? "Desbloquear para modificar precio unitario"
-                    : "Solo administradores o jefes de farmacia pueden editar precios"
+                  ? "Bloquear edición de precio unitario"
+                  : "Desbloquear para modificar precio unitario"
               }
               className="text-muted-foreground hover:text-foreground cursor-pointer p-0.5"
             >
@@ -1004,14 +996,6 @@ function DetalleItemCard({
 
 export function DispensacionPageForm() {
   const router = useRouter();
-  const { hasAnyRole } = useAuth();
-  const canEditPriceRole = hasAnyRole([
-    "admin",
-    "administrador",
-    "farmaceutico_jefe",
-    "supervisor",
-    "gerente",
-  ]);
 
   const { data: almacenesData } = useAlmacenes({ pageSize: 50 });
   const almacenes = almacenesData?.items ?? [];
@@ -1728,18 +1712,11 @@ export function DispensacionPageForm() {
           issues={rowsIssues[idx]}
           showRequiredErrors={attemptedSubmit}
           stockMedicamentos={stockMedicamentos}
-          canEditPriceRole={canEditPriceRole}
-          isPriceUnlocked={Boolean(unlockedPriceRows[idx] || canEditPriceRole)}
+          isPriceUnlocked={unlockedPriceRows[idx] ?? true}
           onTogglePriceUnlock={() => {
-            if (!canEditPriceRole) {
-              toast.warning(
-                "Permiso restringido: solo administradores o farmacéuticos jefes pueden modificar precios de venta."
-              );
-              return;
-            }
             setUnlockedPriceRows((prev) => ({
               ...prev,
-              [idx]: !prev[idx],
+              [idx]: !(prev[idx] ?? true),
             }));
           }}
         />
@@ -2295,20 +2272,11 @@ export function DispensacionPageForm() {
                     issues={rowsIssues[idx]}
                     showRequiredErrors={attemptedSubmit}
                     stockMedicamentos={stockMedicamentos}
-                    canEditPriceRole={canEditPriceRole}
-                    isPriceUnlocked={Boolean(
-                      unlockedPriceRows[idx] || canEditPriceRole
-                    )}
+                    isPriceUnlocked={unlockedPriceRows[idx] ?? true}
                     onTogglePriceUnlock={() => {
-                      if (!canEditPriceRole) {
-                        toast.warning(
-                          "Solo administradores pueden modificar precios."
-                        );
-                        return;
-                      }
                       setUnlockedPriceRows((prev) => ({
                         ...prev,
-                        [idx]: !prev[idx],
+                        [idx]: !(prev[idx] ?? true),
                       }));
                     }}
                   />
@@ -2338,20 +2306,11 @@ export function DispensacionPageForm() {
                     issues={rowsIssues[idx]}
                     showRequiredErrors={attemptedSubmit}
                     stockMedicamentos={stockMedicamentos}
-                    canEditPriceRole={canEditPriceRole}
-                    isPriceUnlocked={Boolean(
-                      unlockedPriceRows[idx] || canEditPriceRole
-                    )}
+                    isPriceUnlocked={unlockedPriceRows[idx] ?? true}
                     onTogglePriceUnlock={() => {
-                      if (!canEditPriceRole) {
-                        toast.warning(
-                          "Solo administradores pueden modificar precios."
-                        );
-                        return;
-                      }
                       setUnlockedPriceRows((prev) => ({
                         ...prev,
-                        [idx]: !prev[idx],
+                        [idx]: !(prev[idx] ?? true),
                       }));
                     }}
                   />
