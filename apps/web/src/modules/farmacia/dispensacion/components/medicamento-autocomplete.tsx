@@ -165,13 +165,14 @@ export function MedicamentoAutocomplete({
           type="button"
           disabled={disabled || !almacenId}
           aria-expanded={isOpen}
+          title={selectedMedicamento ? `${selectedMedicamento.codigo} - ${selectedMedicamento.nombre} (${getMedicineBrand(selectedMedicamento)})` : undefined}
           className={cn(
-            "w-full h-6.5 px-2 flex items-center justify-between gap-1.5 text-xs rounded-md border bg-background text-left transition-all cursor-pointer shadow-2xs focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring",
+            "w-full h-7 px-2 flex items-center justify-between gap-1 text-xs rounded-md border bg-background text-left transition-all cursor-pointer shadow-2xs focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring",
             error
               ? "border-destructive focus-visible:ring-destructive"
               : "border-input hover:border-teal-500/50",
             disabled && "opacity-50 cursor-not-allowed pointer-events-none",
-            selectedMedicamento && !disabled ? "pr-11" : "pr-6",
+            selectedMedicamento && !disabled ? "pr-7" : "pr-5",
             className
           )}
         >
@@ -185,17 +186,20 @@ export function MedicamentoAutocomplete({
               )}
             />
             {selectedMedicamento ? (
-              <div className="flex items-center gap-1.5 min-w-0 flex-1 truncate">
+              <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden">
                 <span className="font-mono font-bold text-[9px] text-teal-700 dark:text-teal-300 bg-teal-500/10 px-1 py-0.2 rounded shrink-0">
                   {selectedMedicamento.codigo}
                 </span>
-                <span className="font-medium text-foreground truncate text-xs">
+                <span 
+                  className="font-medium text-foreground truncate text-xs flex-1 min-w-0"
+                  title={selectedMedicamento.nombre}
+                >
                   {selectedMedicamento.nombre}
                 </span>
-                <span className="font-semibold text-[10px] text-teal-700 dark:text-teal-300 bg-teal-500/10 px-1.5 py-0.2 rounded shrink-0">
-                  Marca: {getMedicineBrand(selectedMedicamento)}
+                <span className="hidden xl:inline-flex font-semibold text-[10px] text-teal-700 dark:text-teal-300 bg-teal-500/10 px-1.5 py-0.2 rounded shrink-0">
+                  {getMedicineBrand(selectedMedicamento)}
                 </span>
-                <span className="text-[10px] text-muted-foreground font-mono shrink-0">
+                <span className="hidden sm:inline-flex text-[10px] text-muted-foreground font-mono shrink-0">
                   (Stock: {selectedMedicamento.stockDisponible})
                 </span>
               </div>
@@ -219,18 +223,18 @@ export function MedicamentoAutocomplete({
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-6 top-1/2 -translate-y-1/2 rounded-full p-0.5 hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+            className="absolute right-5 top-1/2 -translate-y-1/2 rounded-full p-0.5 hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
             title="Quitar selección"
             aria-label="Quitar selección"
           >
-            <X className="size-3" />
+            <X className="size-2.5" />
           </button>
         )}
       </div>
 
       <PopoverContent
         align="start"
-        className="w-[360px] sm:w-[460px] p-1.5 max-h-[420px] overflow-hidden flex flex-col rounded-xl shadow-xl border-border/80 z-50"
+        className="w-[calc(100vw-2rem)] sm:w-[460px] max-w-[460px] p-1.5 max-h-[420px] overflow-hidden flex flex-col rounded-xl shadow-xl border-border/80 z-50"
       >
         {/* Search header */}
         <div className="flex items-center gap-2 px-2 py-1.5 border-b border-border/50 bg-muted/20 rounded-md mb-1 shrink-0">

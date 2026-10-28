@@ -5,7 +5,7 @@ export * from "./hooks/use-dispensacion";
 export * from "./components/dispensacion-header";
 export * from "./components/dispensacion-metrics";
 export * from "./components/dispensacion-list";
-export * from "./components/dispensacion-form-dialog";
+export * from "./components/dispensacion-page-form";
 export * from "./components/dispensacion-detail-dialog";
 export * from "./components/dispensacion-cobrar-dialog";
 export * from "./components/dispensacion-entregar-dialog";

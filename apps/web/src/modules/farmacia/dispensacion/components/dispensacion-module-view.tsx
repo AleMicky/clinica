@@ -1,10 +1,10 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { DispensacionHeader } from "./dispensacion-header";
 import { DispensacionMetrics } from "./dispensacion-metrics";
 import { DispensacionList } from "./dispensacion-list";
-import { DispensacionFormDialog } from "./dispensacion-form-dialog";
 import { DispensacionDetailDialog } from "./dispensacion-detail-dialog";
 import { DispensacionCobrarDialog } from "./dispensacion-cobrar-dialog";
 import { DispensacionEntregarDialog } from "./dispensacion-entregar-dialog";
@@ -21,6 +21,7 @@ import type {
 } from "../types/dispensacion.types";
 
 export function DispensacionModuleView() {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = React.useState("");
   const [selectedAlmacenId, setSelectedAlmacenId] = React.useState<number | null>(
     null
@@ -56,7 +57,6 @@ export function DispensacionModuleView() {
   });
 
   // Dialog states
-  const [formOpen, setFormOpen] = React.useState(false);
 
   const [detailOpen, setDetailOpen] = React.useState(false);
   const [selectedForDetail, setSelectedForDetail] =
@@ -125,7 +125,7 @@ export function DispensacionModuleView() {
         totalItems={dispensacionesData?.totalItems ?? 0}
         isLoading={isLoading || isFetching}
         onRefresh={() => refetch()}
-        onAddDispensacion={() => setFormOpen(true)}
+        onAddDispensacion={() => router.push("/farmacia/dispensaciones/nueva")}
       />
 
       {/* Metrics Bar */}
@@ -167,14 +167,7 @@ export function DispensacionModuleView() {
         onRefresh={() => refetch()}
       />
 
-      {/* Form Dialog */}
-      {formOpen && (
-        <DispensacionFormDialog
-          open={formOpen}
-          onOpenChange={setFormOpen}
-          onSuccessCallback={() => refetch()}
-        />
-      )}
+
 
       {/* Detail Dialog */}
       <DispensacionDetailDialog
