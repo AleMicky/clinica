@@ -85,6 +85,7 @@ export interface DispensacionResponse {
   fechaEntrega?: string | null;
   usuarioEntrega?: string | null;
   movimientoInventarioId?: number | null;
+  movimientoInventarioNumero?: string | null;
   motivoAnulacion?: string | null;
   activo: boolean;
   fechaCreacion?: string | null;
@@ -107,6 +108,8 @@ export interface LoteMedicamentoStockResponse {
   partidaInventarioId: number;
   lote: string;
   fechaVencimiento?: string | null;
+  cantidadFisica?: number;
+  cantidadReservada?: number;
   cantidadDisponible: number;
 }
 
@@ -117,6 +120,8 @@ export interface MedicamentoStockResponse {
   marca?: string | null;
   categoria?: string | null;
   unidadMedida?: string | null;
+  stockFisico?: number;
+  stockReservado?: number;
   stockDisponible: number;
   precioReferencial: number;
   lotes: LoteMedicamentoStockResponse[];

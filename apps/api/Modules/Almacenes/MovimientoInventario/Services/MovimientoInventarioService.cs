@@ -61,7 +61,7 @@ public interface IMovimientoInventarioService
         int transferenciaId,
         CancellationToken cancellationToken = default);
 
-    Task CrearIntegracionAsync(MovimientoInventarioIntegracionRequest request,
+    Task<MovimientoInventarioResponse> CrearIntegracionAsync(MovimientoInventarioIntegracionRequest request,
         bool confirmar = false,
         CancellationToken cancellationToken = default);
 }
@@ -184,7 +184,7 @@ public sealed class MovimientoInventarioService(
         return await ObtenerAsync(entity.Id, cancellationToken);
     }
 
-    public async Task CrearIntegracionAsync(
+    public async Task<MovimientoInventarioResponse> CrearIntegracionAsync(
         MovimientoInventarioIntegracionRequest request,
         bool confirmar = false,
         CancellationToken cancellationToken = default
@@ -240,8 +240,10 @@ public sealed class MovimientoInventarioService(
 
         if (confirmar)
         {
-            await ConfirmarAsync(entity.Id, cancellationToken);
+            return await ConfirmarAsync(entity.Id, cancellationToken);
         }
+
+        return await ObtenerAsync(entity.Id, cancellationToken);
     }
 
     public async Task<MovimientoInventarioResponse> ActualizarAsync(int id, UpdateMovimientoInventarioRequest request,
@@ -316,8 +318,11 @@ public sealed class MovimientoInventarioService(
         int id, CancellationToken cancellationToken = default)
     {
         // El bloqueo transaccional debe comenzar ANTES de consultar el estado.
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(
-            System.Data.IsolationLevel.Serializable, cancellationToken);
+        var ownsTransaction = dbContext.Database.CurrentTransaction is null;
+        await using var transaction = ownsTransaction
+            ? await dbContext.Database.BeginTransactionAsync(
+                System.Data.IsolationLevel.Serializable, cancellationToken)
+            : null;
 
         var entity = await dbContext.MovimientosInventario
             .Include(x => x.TipoMovimientoInventario)
@@ -362,7 +367,10 @@ public sealed class MovimientoInventarioService(
         entity.FechaAnulacion = null;
         entity.MotivoAnulacion = null;
         await dbContext.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+        if (transaction is not null)
+        {
+            await transaction.CommitAsync(cancellationToken);
+        }
         return await ObtenerAsync(id, cancellationToken);
     }
 
@@ -370,8 +378,11 @@ public sealed class MovimientoInventarioService(
         int id, AnularMovimientoInventarioRequest request,
         CancellationToken cancellationToken = default)
     {
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(
-            System.Data.IsolationLevel.Serializable, cancellationToken);
+        var ownsTransaction = dbContext.Database.CurrentTransaction is null;
+        await using var transaction = ownsTransaction
+            ? await dbContext.Database.BeginTransactionAsync(
+                System.Data.IsolationLevel.Serializable, cancellationToken)
+            : null;
 
         var entity = await dbContext.MovimientosInventario
             .Include(x => x.TipoMovimientoInventario)
@@ -432,7 +443,13 @@ public sealed class MovimientoInventarioService(
                 // Revertir Salida: reponer la cantidad de salida
                 existencia.Cantidad += detalle.Cantidad;
 
-                var existenciaPartida = await dbContext.ExistenciasPartidas
+                var existenciaPartida = detalle.PartidaInventarioId.HasValue
+                    ? await dbContext.ExistenciasPartidas.FirstOrDefaultAsync(
+                        ep => ep.ExistenciaId == existencia.Id && ep.PartidaInventarioId == detalle.PartidaInventarioId.Value && ep.Activo,
+                        cancellationToken)
+                    : null;
+
+                existenciaPartida ??= await dbContext.ExistenciasPartidas
                     .FirstOrDefaultAsync(ep => ep.ExistenciaId == existencia.Id && ep.Activo, cancellationToken);
 
                 if (existenciaPartida != null)
@@ -447,7 +464,10 @@ public sealed class MovimientoInventarioService(
         entity.MotivoAnulacion = Limpiar(request.MotivoAnulacion);
 
         await dbContext.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+        if (transaction is not null)
+        {
+            await transaction.CommitAsync(cancellationToken);
+        }
 
         return await ObtenerAsync(id, cancellationToken);
     }
@@ -620,7 +640,8 @@ public sealed class MovimientoInventarioService(
         {
             ProductoId = request.ProductoId,
             Cantidad = request.Cantidad,
-            CostoUnitario = request.CostoUnitario
+            CostoUnitario = request.CostoUnitario,
+            PartidaInventarioId = request.PartidaInventarioId
         };
     }
 

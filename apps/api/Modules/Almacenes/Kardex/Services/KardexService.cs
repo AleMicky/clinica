@@ -93,57 +93,61 @@ public sealed class KardexService(AppDbContext dbContext) : IKardexService
 
         foreach (var mov in movimientos)
         {
-            var detalle = mov.Detalles.FirstOrDefault(d => d.ProductoId == productoId);
-            if (detalle is null) continue;
+            var detallesProducto = mov.Detalles.Where(d => d.ProductoId == productoId && d.Activo).ToList();
+            if (detallesProducto.Count == 0) continue;
 
             var naturaleza = mov.TipoMovimientoInventario?.Naturaleza ?? NaturalezaMovimiento.Entrada;
-            decimal cantEntrada = 0m;
-            decimal? costoEntrada = null;
-            decimal totalEntrada = 0m;
 
-            decimal cantSalida = 0m;
-            decimal? costoSalida = null;
-            decimal totalSalida = 0m;
-
-            if (naturaleza == NaturalezaMovimiento.Entrada)
+            foreach (var detalle in detallesProducto)
             {
-                cantEntrada = detalle.Cantidad;
-                costoEntrada = detalle.CostoUnitario ?? 0m;
-                totalEntrada = cantEntrada * costoEntrada.Value;
+                decimal cantEntrada = 0m;
+                decimal? costoEntrada = null;
+                decimal totalEntrada = 0m;
 
-                saldoCantidad += cantEntrada;
-                saldoTotal += totalEntrada;
+                decimal cantSalida = 0m;
+                decimal? costoSalida = null;
+                decimal totalSalida = 0m;
+
+                if (naturaleza == NaturalezaMovimiento.Entrada)
+                {
+                    cantEntrada = detalle.Cantidad;
+                    costoEntrada = detalle.CostoUnitario ?? 0m;
+                    totalEntrada = cantEntrada * costoEntrada.Value;
+
+                    saldoCantidad += cantEntrada;
+                    saldoTotal += totalEntrada;
+                }
+                else
+                {
+                    cantSalida = detalle.Cantidad;
+                    costoSalida = detalle.CostoUnitario ?? (saldoCantidad > 0 ? saldoTotal / saldoCantidad : 0m);
+                    totalSalida = cantSalida * costoSalida.Value;
+
+                    saldoCantidad -= cantSalida;
+                    saldoTotal = Math.Max(0m, saldoTotal - totalSalida);
+                }
+
+                decimal saldoCostoUnitario = saldoCantidad > 0 ? saldoTotal / saldoCantidad : 0m;
+
+                items.Add(new KardexMovimientoItem(
+                    MovimientoId: mov.Id,
+                    NumeroDocumento: mov.Numero,
+                    Fecha: mov.FechaMovimiento,
+                    TipoMovimiento: mov.TipoMovimientoInventario?.Nombre ?? mov.TipoMovimientoInventario?.Codigo ?? "N/A",
+                    Naturaleza: naturaleza,
+                    ReferenciaTipo: mov.ReferenciaTipo,
+                    ReferenciaId: mov.ReferenciaId,
+                    CantidadEntrada: cantEntrada,
+                    CostoUnitarioEntrada: costoEntrada,
+                    TotalEntrada: totalEntrada,
+                    CantidadSalida: cantSalida,
+                    CostoUnitarioSalida: costoSalida,
+                    TotalSalida: totalSalida,
+                    SaldoCantidad: saldoCantidad,
+                    SaldoCostoUnitario: saldoCostoUnitario,
+                    SaldoTotal: saldoTotal
+                ));
             }
-            else
-            {
-                cantSalida = detalle.Cantidad;
-                costoSalida = detalle.CostoUnitario ?? (saldoCantidad > 0 ? saldoTotal / saldoCantidad : 0m);
-                totalSalida = cantSalida * costoSalida.Value;
-
-                saldoCantidad -= cantSalida;
-                saldoTotal = Math.Max(0m, saldoTotal - totalSalida);
-            }
-
-            decimal saldoCostoUnitario = saldoCantidad > 0 ? saldoTotal / saldoCantidad : 0m;
-
-            items.Add(new KardexMovimientoItem(
-                MovimientoId: mov.Id,
-                NumeroDocumento: mov.Numero,
-                Fecha: mov.FechaMovimiento,
-                TipoMovimiento: mov.TipoMovimientoInventario?.Nombre ?? mov.TipoMovimientoInventario?.Codigo ?? "N/A",
-                Naturaleza: naturaleza,
-                ReferenciaTipo: mov.ReferenciaTipo,
-                ReferenciaId: mov.ReferenciaId,
-                CantidadEntrada: cantEntrada,
-                CostoUnitarioEntrada: costoEntrada,
-                TotalEntrada: totalEntrada,
-                CantidadSalida: cantSalida,
-                CostoUnitarioSalida: costoSalida,
-                TotalSalida: totalSalida,
-                SaldoCantidad: saldoCantidad,
-                SaldoCostoUnitario: saldoCostoUnitario,
-                SaldoTotal: saldoTotal
-            ));
         }
 
         return new KardexReporteResponse(

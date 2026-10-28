@@ -111,8 +111,15 @@ export function DispensacionModuleView() {
         { label: "Almacén", value: item.almacenNombre },
         { label: "Tipo", value: item.tipo },
         { label: "Estado", value: item.estado },
-        { label: "Total", value: `$${item.total.toFixed(2)}` },
+        { label: "Total", value: `Bs. ${item.total.toFixed(2)}` },
+        { label: "Comprobante Caja", value: item.comprobanteCobro || "-" },
         { label: "Método de Pago", value: item.metodoPago || "-" },
+        {
+          label: "Movimiento Inventario",
+          value:
+            item.movimientoInventarioNumero ||
+            (item.movimientoInventarioId ? `#${item.movimientoInventarioId}` : "-"),
+        },
       ],
     });
     setAuditOpen(true);

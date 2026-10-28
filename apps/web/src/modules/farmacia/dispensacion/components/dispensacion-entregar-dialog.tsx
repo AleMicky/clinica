@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useEntregarMedicamentosDispensacion } from "../hooks/use-dispensacion";
 import type { DispensacionResponse } from "../types/dispensacion.types";
+import { getApiErrorMessage } from "@/lib/api/api-error";
 
 interface DispensacionEntregarDialogProps {
   open: boolean;
@@ -34,19 +35,14 @@ export function DispensacionEntregarDialog({
 
   const handleConfirm = async () => {
     try {
-      await entregarMutation.mutateAsync(dispensacion.id);
+      const res = await entregarMutation.mutateAsync(dispensacion.id);
       toast.success(
-        `Medicamentos de "${dispensacion.numero}" entregados. Stock descontado en ${dispensacion.almacenNombre}.`
+        `Medicamentos de "${dispensacion.numero}" entregados. Movimiento de salida ${res.movimientoInventarioNumero || `#${res.movimientoInventarioId}`} generado en ${dispensacion.almacenNombre}.`
       );
       onSuccessCallback?.();
       onOpenChange(false);
-    } catch (error: any) {
-      const errorMsg =
-        error?.response?.data?.message ||
-        error?.response?.data?.detail ||
-        error?.message ||
-        "Error al entregar los medicamentos.";
-      toast.error(errorMsg);
+    } catch (error: unknown) {
+      toast.error(getApiErrorMessage(error));
     }
   };
 
@@ -89,9 +85,16 @@ export function DispensacionEntregarDialog({
               Detalle a despachar ({dispensacion.detalles.length} ítems):
             </div>
             {dispensacion.detalles.map((d) => (
-              <div key={d.id} className="flex justify-between text-xs">
-                <span>{d.productoNombre}</span>
-                <span className="font-mono font-semibold">{d.cantidad} un.</span>
+              <div key={d.id} className="flex justify-between items-center text-xs gap-2">
+                <div className="truncate">
+                  <span className="font-medium text-foreground">{d.productoNombre}</span>
+                  {d.lote && (
+                    <span className="ml-1.5 text-[10px] font-mono text-muted-foreground">
+                      (Lote: {d.lote})
+                    </span>
+                  )}
+                </div>
+                <span className="font-mono font-semibold shrink-0">{d.cantidad} un.</span>
               </div>
             ))}
           </div>

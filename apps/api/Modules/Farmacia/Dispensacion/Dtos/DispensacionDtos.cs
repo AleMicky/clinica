@@ -93,6 +93,7 @@ public sealed record DispensacionResponse : AuditableResponse
     public DateTime? FechaEntrega { get; init; }
     public string? UsuarioEntrega { get; init; }
     public int? MovimientoInventarioId { get; init; }
+    public string? MovimientoInventarioNumero { get; init; }
 
     public string? MotivoAnulacion { get; init; }
 
@@ -114,6 +115,8 @@ public sealed record LoteMedicamentoStockResponse
     public int PartidaInventarioId { get; init; }
     public string Lote { get; init; } = string.Empty;
     public DateTime? FechaVencimiento { get; init; }
+    public decimal CantidadFisica { get; init; }
+    public decimal CantidadReservada { get; init; }
     public decimal CantidadDisponible { get; init; }
 }
 
@@ -125,6 +128,8 @@ public sealed record MedicamentoStockResponse
     public string? Marca { get; init; }
     public string? Categoria { get; init; }
     public string? UnidadMedida { get; init; }
+    public decimal StockFisico { get; init; }
+    public decimal StockReservado { get; init; }
     public decimal StockDisponible { get; init; }
     public decimal PrecioReferencial { get; init; }
     public List<LoteMedicamentoStockResponse> Lotes { get; init; } = [];

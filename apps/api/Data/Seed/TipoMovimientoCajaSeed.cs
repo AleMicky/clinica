@@ -20,6 +20,7 @@ public static class TipoMovimientoCajaSeed
                 Naturaleza = "ENTRADA",
                 Conceptos = new[]
                 {
+                    new { Codigo = "ING-FAR", Nombre = "Cobro de Farmacia / Dispensación", Descripcion = "Ingreso por venta o dispensación de medicamentos en farmacia" },
                     new { Codigo = "ING-REP", Nombre = "Reposición de Caja Chica", Descripcion = "Reposición o recarga de fondos" },
                     new { Codigo = "ING-AJU", Nombre = "Ajuste Positivo de Caja", Descripcion = "Ajuste de sobrante o regularización" },
                     new { Codigo = "ING-OTR", Nombre = "Otros Ingresos", Descripcion = "Otros ingresos varios de caja" }

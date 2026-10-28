@@ -21,8 +21,8 @@ export function DispensacionMetrics({
   isLoading = false,
 }: DispensacionMetricsProps) {
   const formatCurrency = (amount?: number) => {
-    if (amount === undefined || amount === null) return "$0.00";
-    return `$${Number(amount).toLocaleString(undefined, {
+    if (amount === undefined || amount === null) return "Bs. 0.00";
+    return `Bs. ${Number(amount).toLocaleString("es-ES", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })}`;

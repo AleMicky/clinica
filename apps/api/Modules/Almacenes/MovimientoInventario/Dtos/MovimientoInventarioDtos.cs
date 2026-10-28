@@ -8,6 +8,7 @@ public sealed record MovimientoInventarioDetalleRequest
     public required int ProductoId { get; init; }
     public required decimal Cantidad { get; init; }
     public decimal? CostoUnitario { get; init; }
+    public int? PartidaInventarioId { get; init; }
 }
 
 public abstract record MovimientoInventarioRequest

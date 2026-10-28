@@ -87,7 +87,8 @@ public sealed class ExistenciaMovimientoService(AppDbContext dbContext)
             .Include(x => x.PartidaInventario)
             .Where(x => x.ExistenciaId == existencia.Id && x.Activo &&
                         x.Cantidad > x.CantidadReservada)
-            .OrderBy(x => x.PartidaInventario.FechaVencimiento ?? DateOnly.MaxValue)
+            .OrderByDescending(x => detalle.PartidaInventarioId.HasValue && x.PartidaInventarioId == detalle.PartidaInventarioId.Value)
+            .ThenBy(x => x.PartidaInventario.FechaVencimiento ?? DateOnly.MaxValue)
             .ThenBy(x => x.Id)
             .ToListAsync(cancellationToken);
 
@@ -95,8 +96,10 @@ public sealed class ExistenciaMovimientoService(AppDbContext dbContext)
         foreach (var saldo in partidas)
         {
             if (pendiente == 0m) break;
+            var esLoteSeleccionado = detalle.PartidaInventarioId.HasValue &&
+                                     saldo.PartidaInventarioId == detalle.PartidaInventarioId.Value;
             var vencimiento = saldo.PartidaInventario.FechaVencimiento;
-            if (vencimiento.HasValue && vencimiento.Value < DateOnly.FromDateTime(DateTime.UtcNow))
+            if (!esLoteSeleccionado && vencimiento.HasValue && vencimiento.Value < DateOnly.FromDateTime(DateTime.UtcNow))
                 continue;
             decimal salida = Math.Min(pendiente, saldo.CantidadDisponible);
             if (salida <= 0m) continue;
@@ -106,7 +109,7 @@ public sealed class ExistenciaMovimientoService(AppDbContext dbContext)
             // persistir MovimientoInventarioPartida(detalle.Id, saldo.PartidaInventarioId, salida).
             // Sin esa relación NO habilitar anulaciones de salidas.
         }
-        if (pendiente > 0m)
+        if (partidas.Count > 0 && pendiente > 0m)
             throw new BusinessException("No hay suficiente stock despachable en partidas.");
 
         detalle.CostoUnitario = existencia.CostoPromedio;

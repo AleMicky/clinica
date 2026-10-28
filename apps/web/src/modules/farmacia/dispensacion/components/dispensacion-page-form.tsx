@@ -37,6 +37,8 @@ import {
   RotateCcw,
   LayoutList,
   Table as TableIcon,
+  CreditCard,
+  PackageCheck,
 } from "lucide-react";
 
 import {
@@ -66,11 +68,15 @@ import {
   MedicamentoAutocomplete,
   getMedicineBrand,
 } from "./medicamento-autocomplete";
+import { DispensacionCobrarDialog } from "./dispensacion-cobrar-dialog";
+import { DispensacionEntregarDialog } from "./dispensacion-entregar-dialog";
 import { useAlmacenes } from "@/modules/almacenes/almacen/hooks/use-almacen";
 import { usePacientes } from "@/modules/recepcion/pacientes/hooks/use-pacientes";
+import { useAdmisiones } from "@/modules/recepcion/admisiones/hooks/use-admisiones";
 import { useMedicos } from "@/modules/recursos-humanos/medico";
 import type {
   CreateDispensacionRequest,
+  DispensacionResponse,
   TipoDispensacion,
   MedicamentoStockResponse,
 } from "../types/dispensacion.types";
@@ -91,6 +97,7 @@ interface FormValues {
   almacenId: number;
   isWalkIn: boolean;
   pacienteId?: number;
+  admisionId?: number;
   clienteNombre?: string;
   clienteDocumento?: string;
   medicoId?: number;
@@ -475,7 +482,8 @@ function DetalleRow({
                   key={lt.partidaInventarioId}
                   value={lt.partidaInventarioId}
                 >
-                  {lt.lote || "S/N"} ({lt.cantidadDisponible})
+                  {lt.lote || "S/N"} ({lt.cantidadDisponible}
+                  {(lt.cantidadReservada ?? 0) > 0 ? ` · Res:${lt.cantidadReservada}` : ""})
                 </option>
               ))}
             </select>
@@ -768,8 +776,14 @@ function DetalleItemCard({
                 "font-mono text-[10px] px-2 py-0.5 font-semibold",
                 getStockBadgeClass(stockDisponible)
               )}
+              title={
+                (selectedMed?.stockReservado ?? 0) > 0
+                  ? `Físico: ${selectedMed?.stockFisico ?? stockDisponible} · Reservado en órdenes pendientes: ${selectedMed?.stockReservado}`
+                  : undefined
+              }
             >
-              Stock: {stockDisponible}
+              Disp: {stockDisponible}
+              {(selectedMed?.stockReservado ?? 0) > 0 && ` (Res: ${selectedMed?.stockReservado})`}
             </Badge>
           )}
 
@@ -823,7 +837,8 @@ function DetalleItemCard({
                     key={lt.partidaInventarioId}
                     value={lt.partidaInventarioId}
                   >
-                    {lt.lote || "S/N"} · {lt.fechaVencimiento ? formatDate(lt.fechaVencimiento) : "S/V"} (Disp: {lt.cantidadDisponible})
+                    {lt.lote || "S/N"} · {lt.fechaVencimiento ? formatDate(lt.fechaVencimiento) : "S/V"} (Disp: {lt.cantidadDisponible}
+                    {(lt.cantidadReservada ?? 0) > 0 ? ` · Res: ${lt.cantidadReservada}` : ""})
                   </option>
                 ))}
               </select>
@@ -1034,6 +1049,22 @@ export function DispensacionPageForm() {
     pageSize: 50,
   });
 
+  // Búsqueda de Admisiones hospitalarias / emergencias
+  const [admisionSearch, setAdmisionSearch] = React.useState("");
+  const [debouncedAdmisionSearch, setDebouncedAdmisionSearch] = React.useState("");
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedAdmisionSearch(admisionSearch.trim());
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [admisionSearch]);
+
+  const { data: admisionesData, isLoading: loadingAdmisiones } = useAdmisiones({
+    search: debouncedAdmisionSearch || undefined,
+    pageSize: 50,
+  });
+
   const almacenOptions = React.useMemo<AutocompleteOption[]>(
     () =>
       almacenes.map((alm) => ({
@@ -1103,15 +1134,53 @@ export function DispensacionPageForm() {
   const isWalkIn = watch("isWalkIn");
   const selectedTipo = watch("tipo");
   const watchedPacienteId = watch("pacienteId");
+  const watchedAdmisionId = watch("admisionId");
   const rawDetalles = useWatch({
     control,
     name: "detalles",
   });
   const watchedDetalles = React.useMemo(() => rawDetalles ?? [], [rawDetalles]);
 
+  // Si se cambia a Hospitalaria, cambiar automáticamente a modalidad Paciente con HC
+  React.useEffect(() => {
+    if (selectedTipo === "Hospitalaria" && isWalkIn) {
+      setValue("isWalkIn", false);
+    }
+  }, [selectedTipo, isWalkIn, setValue]);
+
+  const admisionOptions = React.useMemo<AutocompleteOption[]>(() => {
+    const items = admisionesData?.items ?? [];
+    const filtered = watchedPacienteId
+      ? items.filter(
+          (a) =>
+            a.pacienteId === Number(watchedPacienteId) ||
+            a.paciente?.id === Number(watchedPacienteId)
+        )
+      : items;
+
+    return filtered.map((a) => {
+      const pacNom =
+        a.pacienteNombre ||
+        (a.paciente?.persona
+          ? `${a.paciente.persona.nombres} ${a.paciente.persona.apellidoPaterno}`
+          : "Paciente");
+      return {
+        value: String(a.id),
+        label: `${a.numero} · ${pacNom}`,
+        description: `Fecha: ${formatDate(a.fechaHora)}${
+          a.convenioNombre ? ` · Convenio: ${a.convenioNombre}` : ""
+        }`,
+      };
+    });
+  }, [admisionesData, watchedPacienteId]);
+
   // Estados de control
   const [attemptedSubmit, setAttemptedSubmit] = React.useState(false);
   const [showConfirmClose, setShowConfirmClose] = React.useState(false);
+  const [createdForCobro, setCreatedForCobro] =
+    React.useState<DispensacionResponse | null>(null);
+  const [createdForEntrega, setCreatedForEntrega] =
+    React.useState<DispensacionResponse | null>(null);
   const [highlightedRowIndex, setHighlightedRowIndex] = React.useState<
     number | null
   >(null);
@@ -1443,7 +1512,7 @@ export function DispensacionPageForm() {
   // Guardado y emisión de la orden
   const handleSaveOrder = async (
     values: FormValues,
-    action: "close" | "new_order"
+    action: "close" | "new_order" | "pay_and_deliver"
   ) => {
     setAttemptedSubmit(true);
 
@@ -1482,6 +1551,10 @@ export function DispensacionPageForm() {
           !values.isWalkIn && values.pacienteId
             ? Number(values.pacienteId)
             : undefined,
+        admisionId:
+          !values.isWalkIn && values.admisionId
+            ? Number(values.admisionId)
+            : undefined,
         clienteNombre: values.isWalkIn
           ? values.clienteNombre?.trim()
           : undefined,
@@ -1506,8 +1579,26 @@ export function DispensacionPageForm() {
       };
 
       const res = await createMutation.mutateAsync(payload);
+
+      if (action === "pay_and_deliver") {
+        if (res.estado === "Pagado") {
+          toast.success(
+            `Dispensación "${res.numero}" autorizada con cargo a Admisión ${res.admisionNumero || ""}. Confirme la entrega física.`
+          );
+          setCreatedForEntrega(res);
+        } else {
+          toast.success(
+            `Dispensación "${res.numero}" emitida y stock reservado. Complete el cobro y despacho a continuación.`
+          );
+          setCreatedForCobro(res);
+        }
+        return;
+      }
+
       toast.success(
-        `Dispensación "${res.numero}" emitida exitosamente. Pase el ticket para cobro en Caja.`
+        res.estado === "Pagado"
+          ? `Dispensación "${res.numero}" emitida con cargo a Admisión ${res.admisionNumero || ""} y lista para entrega.`
+          : `Dispensación "${res.numero}" emitida con stock reservado y enviada a Cobros de Caja.`
       );
 
       if (action === "new_order") {
@@ -1517,6 +1608,8 @@ export function DispensacionPageForm() {
           fecha: getLocalCurrentDateTime(),
           almacenId: selectedAlmacenId,
           isWalkIn: true,
+          pacienteId: undefined,
+          admisionId: undefined,
           clienteNombre: "",
           clienteDocumento: "",
           observaciones: "",
@@ -1886,40 +1979,96 @@ export function DispensacionPageForm() {
                 </div>
               </>
             ) : (
-              <div className="space-y-1 sm:col-span-2 lg:col-span-2">
-                <Label
-                  htmlFor="pacienteId"
-                  className="text-xs font-medium leading-none flex items-center gap-1"
-                >
-                  Paciente de la Clínica <span className="text-destructive">*</span>
-                </Label>
-                <Controller
-                  name="pacienteId"
-                  control={control}
-                  render={({ field }) => (
-                    <Autocomplete
-                      id="pacienteId"
-                      value={field.value ? String(field.value) : ""}
-                      onValueChange={(v) =>
-                        field.onChange(v ? Number(v) : undefined)
-                      }
-                      onSearchChange={setPacienteSearch}
-                      isLoading={loadingPacientes}
-                      options={pacienteOptions}
-                      allowCustomValue={false}
-                      error={attemptedSubmit && isPacienteRequiredAndMissing}
-                      placeholder="Buscar por nombre, C.I. o N° de HC..."
-                      emptyText="No se encontró el paciente."
-                      className="h-8 text-xs"
-                    />
+              <>
+                <div className="space-y-1 sm:col-span-1">
+                  <Label
+                    htmlFor="pacienteId"
+                    className="text-xs font-medium leading-none flex items-center gap-1"
+                  >
+                    Paciente de la Clínica <span className="text-destructive">*</span>
+                  </Label>
+                  <Controller
+                    name="pacienteId"
+                    control={control}
+                    render={({ field }) => (
+                      <Autocomplete
+                        id="pacienteId"
+                        value={field.value ? String(field.value) : ""}
+                        onValueChange={(v) => {
+                          const nextPacId = v ? Number(v) : undefined;
+                          field.onChange(nextPacId);
+                          setValue("admisionId", undefined);
+                        }}
+                        onSearchChange={setPacienteSearch}
+                        isLoading={loadingPacientes}
+                        options={pacienteOptions}
+                        allowCustomValue={false}
+                        error={attemptedSubmit && isPacienteRequiredAndMissing}
+                        placeholder="Buscar por nombre, C.I. o N° de HC..."
+                        emptyText="No se encontró el paciente."
+                        className="h-8 text-xs"
+                      />
+                    )}
+                  />
+                  {attemptedSubmit && isPacienteRequiredAndMissing && (
+                    <IssueText>
+                      Debe seleccionar un paciente registrado con historia clínica.
+                    </IssueText>
                   )}
-                />
-                {attemptedSubmit && isPacienteRequiredAndMissing && (
-                  <IssueText>
-                    Debe seleccionar un paciente registrado con historia clínica.
-                  </IssueText>
-                )}
-              </div>
+                </div>
+
+                <div className="space-y-1 sm:col-span-1">
+                  <Label
+                    htmlFor="admisionId"
+                    className="text-xs font-medium leading-none flex items-center justify-between gap-1"
+                  >
+                    <span>
+                      Admisión Vinculada{" "}
+                      {selectedTipo === "Hospitalaria"
+                        ? "(Cargo a Cuenta)"
+                        : "(Opcional)"}
+                    </span>
+                    {watchedAdmisionId &&
+                      (selectedTipo === "Hospitalaria" ||
+                        selectedTipo === "Urgencia") && (
+                        <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                          ✓ Autoriza entrega
+                        </span>
+                      )}
+                  </Label>
+                  <Controller
+                    name="admisionId"
+                    control={control}
+                    render={({ field }) => (
+                      <Autocomplete
+                        id="admisionId"
+                        value={field.value ? String(field.value) : ""}
+                        onValueChange={(v) => {
+                          const admId = v ? Number(v) : undefined;
+                          field.onChange(admId);
+                          if (admId && !watchedPacienteId) {
+                            const found = (admisionesData?.items ?? []).find(
+                              (a) => a.id === admId
+                            );
+                            const pacId =
+                              found?.pacienteId ?? found?.paciente?.id;
+                            if (pacId) {
+                              setValue("pacienteId", pacId);
+                            }
+                          }
+                        }}
+                        onSearchChange={setAdmisionSearch}
+                        isLoading={loadingAdmisiones}
+                        options={admisionOptions}
+                        allowCustomValue={false}
+                        placeholder="Sin admisión / buscar N° ADM..."
+                        emptyText="No hay admisiones activas para este filtro."
+                        className="h-8 text-xs"
+                      />
+                    )}
+                  />
+                </div>
+              </>
             )}
 
             {/* Médico Prescriptor */}
@@ -2322,6 +2471,33 @@ export function DispensacionPageForm() {
 
               <Button
                 type="button"
+                variant="outline"
+                size="sm"
+                disabled={isSaving || fields.length === 0}
+                onClick={() =>
+                  handleSubmit((vals) =>
+                    handleSaveOrder(vals, "pay_and_deliver")
+                  )()
+                }
+                className="w-full sm:w-auto h-8.5 px-4 text-xs text-amber-700 dark:text-amber-300 border-amber-500/40 bg-amber-500/5 hover:bg-amber-500/15 font-semibold cursor-pointer gap-1.5"
+              >
+                {watchedAdmisionId &&
+                (selectedTipo === "Hospitalaria" ||
+                  selectedTipo === "Urgencia") ? (
+                  <>
+                    <PackageCheck className="size-3.5 text-emerald-600" />
+                    <span>Emitir y Entregar Stock</span>
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="size-3.5 text-amber-600" />
+                    <span>Emitir y Cobrar / Despachar</span>
+                  </>
+                )}
+              </Button>
+
+              <Button
+                type="button"
                 size="sm"
                 disabled={isSaving || fields.length === 0}
                 onClick={() =>
@@ -2348,6 +2524,38 @@ export function DispensacionPageForm() {
           </div>
         </div>
       </form>
+
+      {/* MODAL DIRECTO DE COBRO Y ENTREGA TRAS EMISIÓN */}
+      <DispensacionCobrarDialog
+        open={Boolean(createdForCobro)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setCreatedForCobro(null);
+            router.push("/farmacia/dispensaciones");
+          }
+        }}
+        dispensacion={createdForCobro}
+        onSuccessCallback={() => {
+          setCreatedForCobro(null);
+          router.push("/farmacia/dispensaciones");
+        }}
+      />
+
+      {/* MODAL DIRECTO DE ENTREGA (SI FUE AUTORIZADA POR ADMISIÓN HOSPITALARIA) */}
+      <DispensacionEntregarDialog
+        open={Boolean(createdForEntrega)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setCreatedForEntrega(null);
+            router.push("/farmacia/dispensaciones");
+          }
+        }}
+        dispensacion={createdForEntrega}
+        onSuccessCallback={() => {
+          setCreatedForEntrega(null);
+          router.push("/farmacia/dispensaciones");
+        }}
+      />
 
       {/* MODAL DE CONFIRMACIÓN PARA SALIR CON DATOS CARGADOS */}
       <Dialog open={showConfirmClose} onOpenChange={setShowConfirmClose}>

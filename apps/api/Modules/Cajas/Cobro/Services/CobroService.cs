@@ -836,6 +836,11 @@ public sealed class CobroService(
             ventaPagador.Venta.Estado =
                 EstadoVenta.Pagada;
 
+            await SincronizarDispensacionConCobroAsync(
+                ventaPagador.Id,
+                pagada: true,
+                cancellationToken);
+
             return;
         }
 
@@ -851,6 +856,58 @@ public sealed class CobroService(
 
         ventaPagador.Venta.Estado =
             EstadoVenta.PendienteCobro;
+
+        await SincronizarDispensacionConCobroAsync(
+            ventaPagador.Id,
+            pagada: false,
+            cancellationToken);
+    }
+
+    private async Task SincronizarDispensacionConCobroAsync(
+        int ventaPagadorId,
+        bool pagada,
+        CancellationToken cancellationToken)
+    {
+        var cobro = await Entities
+            .Include(x => x.Detalles)
+            .ThenInclude(d => d.MetodoPago)
+            .Where(x => x.VentaPagadorId == ventaPagadorId && x.Activo)
+            .OrderByDescending(x => x.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (cobro is null)
+            return;
+
+        var dispensacion = await DbContext.Dispensaciones
+            .FirstOrDefaultAsync(
+                x => x.Activo &&
+                     (x.ComprobanteCobro == cobro.Numero ||
+                      (cobro.Observacion != null && cobro.Observacion.Contains(x.Numero))),
+                cancellationToken);
+
+        if (dispensacion is null)
+            return;
+
+        if (pagada && dispensacion.Estado == Clinica.Api.Modules.Farmacia.Dispensacion.Enums.EstadoDispensacion.PendientePago)
+        {
+            var metodoNombre = cobro.Detalles
+                .Where(d => d.Activo && d.MetodoPago != null)
+                .Select(d => d.MetodoPago.Nombre)
+                .FirstOrDefault() ?? "Caja";
+
+            dispensacion.Estado = Clinica.Api.Modules.Farmacia.Dispensacion.Enums.EstadoDispensacion.Pagado;
+            dispensacion.FechaCobro = DateTime.UtcNow;
+            dispensacion.UsuarioCobro = currentUserService.UserId?.ToString() ?? "Caja";
+            dispensacion.MetodoPago = metodoNombre;
+            dispensacion.ComprobanteCobro = cobro.Numero;
+        }
+        else if (!pagada && dispensacion.Estado == Clinica.Api.Modules.Farmacia.Dispensacion.Enums.EstadoDispensacion.Pagado)
+        {
+            dispensacion.Estado = Clinica.Api.Modules.Farmacia.Dispensacion.Enums.EstadoDispensacion.PendientePago;
+            dispensacion.FechaCobro = null;
+            dispensacion.UsuarioCobro = null;
+            dispensacion.MetodoPago = null;
+        }
     }
 
     // ============================================================

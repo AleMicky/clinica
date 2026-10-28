@@ -105,11 +105,19 @@ export function DispensacionAnularDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 py-2 text-xs">
-          {dispensacion.estado === "Entregado" && (
+          {dispensacion.estado === "Entregado" ? (
             <div className="p-2.5 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-300 text-xs flex items-start gap-2">
               <AlertTriangle className="size-4 shrink-0 mt-0.5" />
               <span>
-                Los medicamentos ya habían sido entregados físicamente. Al anular, se restituirán automáticamente las unidades al stock del almacén.
+                Los medicamentos ya habían sido entregados. Al anular, se anulará el movimiento de inventario{" "}
+                <strong>{dispensacion.movimientoInventarioNumero || (dispensacion.movimientoInventarioId ? `#${dispensacion.movimientoInventarioId}` : "")}</strong>, se restituirá el stock en <strong>{dispensacion.almacenNombre}</strong> y se registrará la devolución en Caja (`EGR-DEV`).
+              </span>
+            </div>
+          ) : (
+            <div className="p-2.5 rounded-lg border border-border/60 bg-muted/30 text-muted-foreground text-xs flex items-start gap-2">
+              <AlertTriangle className="size-4 shrink-0 mt-0.5 text-amber-600" />
+              <span>
+                Se liberará inmediatamente el stock reservado en <strong>{dispensacion.almacenNombre}</strong> y se revertirá el cobro o cargo asociado en Caja.
               </span>
             </div>
           )}

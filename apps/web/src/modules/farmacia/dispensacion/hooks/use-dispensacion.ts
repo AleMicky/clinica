@@ -26,6 +26,11 @@ import type {
   RegistrarCobroDispensacionRequest,
 } from "../types/dispensacion.types";
 import { existenciaKeys } from "@/modules/almacenes/existencia/api/existencia.key";
+import { movimientoInventarioKeys } from "@/modules/almacenes/movimiento-inventario/api/movimiento-inventario.key";
+import { kardexKeys } from "@/modules/almacenes/kardex/api/kardex.key";
+import { cobroKeys } from "@/modules/cajas/cobro/api/cobro.key";
+import { movimientoCajaKeys } from "@/modules/cajas/movimiento-caja/api/movimiento-caja.key";
+import { admisionKeys } from "@/modules/recepcion/admisiones/api/admision.key";
 
 export function useDispensaciones(
   params?: DispensacionQueryParams,
@@ -95,6 +100,8 @@ export function useCreateDispensacion() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: dispensacionKeys.all });
       queryClient.invalidateQueries({ queryKey: existenciaKeys.all });
+      queryClient.invalidateQueries({ queryKey: cobroKeys.all });
+      queryClient.invalidateQueries({ queryKey: admisionKeys.all });
     },
   });
 }
@@ -115,6 +122,8 @@ export function useRegistrarCobroDispensacion() {
       queryClient.invalidateQueries({
         queryKey: dispensacionKeys.detail(variables.id),
       });
+      queryClient.invalidateQueries({ queryKey: cobroKeys.all });
+      queryClient.invalidateQueries({ queryKey: movimientoCajaKeys.all });
     },
   });
 }
@@ -128,6 +137,8 @@ export function useEntregarMedicamentosDispensacion() {
       queryClient.invalidateQueries({ queryKey: dispensacionKeys.all });
       queryClient.invalidateQueries({ queryKey: dispensacionKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: existenciaKeys.all });
+      queryClient.invalidateQueries({ queryKey: movimientoInventarioKeys.all });
+      queryClient.invalidateQueries({ queryKey: kardexKeys.all });
     },
   });
 }
@@ -149,6 +160,11 @@ export function useAnularDispensacion() {
         queryKey: dispensacionKeys.detail(variables.id),
       });
       queryClient.invalidateQueries({ queryKey: existenciaKeys.all });
+      queryClient.invalidateQueries({ queryKey: movimientoInventarioKeys.all });
+      queryClient.invalidateQueries({ queryKey: kardexKeys.all });
+      queryClient.invalidateQueries({ queryKey: cobroKeys.all });
+      queryClient.invalidateQueries({ queryKey: movimientoCajaKeys.all });
+      queryClient.invalidateQueries({ queryKey: admisionKeys.all });
     },
   });
 }

@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using Clinica.Api.Shared.Abstractions;
 using MovimientoEntity = Clinica.Api.Modules.Almacenes.MovimientoInventario.Entity.MovimientoInventario;
 using ProductoEntity = Clinica.Api.Modules.Almacenes.Producto.Entity.Producto;
@@ -15,4 +16,7 @@ public sealed class MovimientoInventarioDetalle : AuditableEntity
     public decimal Cantidad { get; set; }
     public decimal? CostoUnitario { get; set; }
     public decimal CostoTotal => Cantidad * (CostoUnitario ?? 0);
+
+    [NotMapped]
+    public int? PartidaInventarioId { get; set; }
 }

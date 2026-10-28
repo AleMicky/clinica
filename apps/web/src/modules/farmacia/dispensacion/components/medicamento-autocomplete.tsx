@@ -319,8 +319,13 @@ export function MedicamentoAutocomplete({
                                     : "bg-destructive/10 text-destructive"
                               )}
                             >
-                              Stock: {med.stockDisponible} {med.unidadMedida || ""}
+                              Disp: {med.stockDisponible} {med.unidadMedida || ""}
                             </span>
+                            {(med.stockReservado ?? 0) > 0 && (
+                              <span className="font-mono font-medium px-1 rounded text-[9px] bg-amber-500/10 text-amber-700 dark:text-amber-300">
+                                Res: {med.stockReservado}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>

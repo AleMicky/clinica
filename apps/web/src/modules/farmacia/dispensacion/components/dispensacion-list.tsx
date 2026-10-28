@@ -276,8 +276,42 @@ export function DispensacionList({
                       </span>
                       {getTipoBadge(item.tipo)}
                       {getEstadoBadge(item.estado)}
+                      {item.comprobanteCobro && (
+                        <Badge
+                          variant="outline"
+                          className="text-[9px] h-4 px-1.5 font-mono text-teal-700 dark:text-teal-400 border-teal-500/30 bg-teal-500/5"
+                          title={`Método: ${item.metodoPago || "Caja"}`}
+                        >
+                          Recibo: {item.comprobanteCobro}
+                        </Badge>
+                      )}
+                      {item.admisionNumero && (
+                        <Badge
+                          variant="outline"
+                          className="text-[9px] h-4 px-1.5 font-mono text-blue-700 dark:text-blue-400 border-blue-500/30 bg-blue-500/5"
+                        >
+                          Adm: {item.admisionNumero}
+                        </Badge>
+                      )}
+                      {item.movimientoInventarioId ? (
+                        <Badge
+                          variant="outline"
+                          className="text-[9px] h-4 px-1.5 font-mono text-emerald-700 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/5"
+                          title="Movimiento de salida confirmado en Kárdex"
+                        >
+                          Mov: {item.movimientoInventarioNumero || `#${item.movimientoInventarioId}`}
+                        </Badge>
+                      ) : item.estado === "PendientePago" || item.estado === "Pagado" ? (
+                        <Badge
+                          variant="outline"
+                          className="text-[9px] h-4 px-1.5 font-medium text-amber-700 dark:text-amber-400 border-amber-500/25 bg-amber-500/5"
+                          title="Stock reservado en almacén hasta su entrega"
+                        >
+                          Stock Reservado
+                        </Badge>
+                      ) : null}
                       <span className="text-[11px] text-muted-foreground">
-                        • {formatDate(item.fecha)}
+                        • {formatDate(item.fecha)} • {item.almacenNombre}
                       </span>
                     </div>
 
@@ -321,7 +355,7 @@ export function DispensacionList({
                       Total a Pagar
                     </div>
                     <div className="font-mono text-sm font-bold text-foreground">
-                      ${item.total.toFixed(2)}
+                      Bs. {item.total.toFixed(2)}
                     </div>
                   </div>
 

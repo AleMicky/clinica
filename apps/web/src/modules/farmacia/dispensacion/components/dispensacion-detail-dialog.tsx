@@ -1,11 +1,15 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import {
   Printer,
   CreditCard,
   PackageCheck,
   Receipt,
+  ArrowUpRight,
+  Boxes,
+  Lock,
 } from "lucide-react";
 import {
   Dialog,
@@ -133,33 +137,79 @@ export function DispensacionDetailDialog({
           </div>
 
           {/* Payment & Delivery Status Track */}
-          <div className="grid grid-cols-2 gap-3 p-2.5 bg-card border border-border/60 rounded-lg">
-            <div className="flex items-center gap-2">
-              <CreditCard className="size-4 text-primary" />
-              <div>
-                <span className="text-[10px] text-muted-foreground block">
-                  Estado en Cajas
-                </span>
-                <span className="font-semibold">
-                  {dispensacion.fechaCobro
-                    ? `Cobrado el ${formatDate(dispensacion.fechaCobro)} (${dispensacion.metodoPago || "Caja"})`
-                    : "Esperando pago en ventanilla de Caja"}
-                </span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-card border border-border/60 rounded-lg">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-start gap-2">
+                <CreditCard className="size-4 text-primary mt-0.5 shrink-0" />
+                <div>
+                  <span className="text-[10px] text-muted-foreground uppercase font-semibold block">
+                    Cobranza / Cajas
+                  </span>
+                  <span className="font-semibold block">
+                    {dispensacion.fechaCobro
+                      ? `Cobrado el ${formatDate(dispensacion.fechaCobro)} (${dispensacion.metodoPago || "Caja"})`
+                      : dispensacion.admisionNumero && dispensacion.estado === "Pagado"
+                        ? `Cargado a Admisión ${dispensacion.admisionNumero}`
+                        : "Pendiente de cobro en Caja"}
+                  </span>
+                  {dispensacion.comprobanteCobro && (
+                    <span className="text-[11px] font-mono text-teal-700 dark:text-teal-400 block mt-0.5">
+                      Comprobante: {dispensacion.comprobanteCobro}
+                    </span>
+                  )}
+                </div>
               </div>
+              <Link
+                href="/caja/cobros"
+                className="text-[10px] font-semibold text-primary hover:underline inline-flex items-center gap-0.5 shrink-0"
+              >
+                <span>Ir a Caja</span>
+                <ArrowUpRight className="size-3" />
+              </Link>
             </div>
 
-            <div className="flex items-center gap-2">
-              <PackageCheck className="size-4 text-emerald-600" />
-              <div>
-                <span className="text-[10px] text-muted-foreground block">
-                  Despacho de Farmacia
-                </span>
-                <span className="font-semibold">
-                  {dispensacion.fechaEntrega
-                    ? `Entregado el ${formatDate(dispensacion.fechaEntrega)}`
-                    : "Medicamentos no entregados"}
-                </span>
+            <div className="flex items-start justify-between gap-2 sm:border-l sm:border-border/50 sm:pl-3">
+              <div className="flex items-start gap-2">
+                <PackageCheck className="size-4 text-emerald-600 mt-0.5 shrink-0" />
+                <div>
+                  <span className="text-[10px] text-muted-foreground uppercase font-semibold block">
+                    Existencia y Movimiento Almacén
+                  </span>
+                  <span className="font-semibold block">
+                    {dispensacion.fechaEntrega
+                      ? `Entregado el ${formatDate(dispensacion.fechaEntrega)}`
+                      : dispensacion.estado === "Anulado"
+                        ? "Reserva / Salida revertida por anulación"
+                        : "Unidades reservadas en almacén"}
+                  </span>
+                  {dispensacion.movimientoInventarioId ? (
+                    <span className="text-[11px] font-mono text-emerald-700 dark:text-emerald-400 flex items-center gap-1 mt-0.5">
+                      <Boxes className="size-3" />
+                      Salida Kárdex:{" "}
+                      {dispensacion.movimientoInventarioNumero ||
+                        `#${dispensacion.movimientoInventarioId}`}
+                    </span>
+                  ) : dispensacion.estado !== "Anulado" ? (
+                    <span className="text-[11px] text-amber-700 dark:text-amber-400 flex items-center gap-1 mt-0.5">
+                      <Lock className="size-2.5" />
+                      Stock reservado en {dispensacion.almacenNombre}
+                    </span>
+                  ) : null}
+                </div>
               </div>
+              <Link
+                href={
+                  dispensacion.movimientoInventarioId
+                    ? "/almacenes/movimientos"
+                    : "/almacenes/existencias"
+                }
+                className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 hover:underline inline-flex items-center gap-0.5 shrink-0"
+              >
+                <span>
+                  {dispensacion.movimientoInventarioId ? "Ver Mov." : "Existencias"}
+                </span>
+                <ArrowUpRight className="size-3" />
+              </Link>
             </div>
           </div>
 
@@ -212,11 +262,11 @@ export function DispensacionDetailDialog({
                     </td>
 
                     <td className="py-2 px-2 text-right font-mono text-muted-foreground">
-                      ${d.precioUnitario.toFixed(2)}
+                      Bs. {d.precioUnitario.toFixed(2)}
                     </td>
 
                     <td className="py-2 px-2.5 text-right font-mono font-bold text-foreground">
-                      ${d.total.toFixed(2)}
+                      Bs. {d.total.toFixed(2)}
                     </td>
                   </tr>
                 ))}
@@ -228,18 +278,18 @@ export function DispensacionDetailDialog({
           <div className="p-3 bg-muted/30 rounded-lg border border-border/60 flex flex-col items-end gap-1">
             <div className="flex justify-between w-48 text-muted-foreground">
               <span>Subtotal:</span>
-              <span className="font-mono">${dispensacion.subtotal.toFixed(2)}</span>
+              <span className="font-mono">Bs. {dispensacion.subtotal.toFixed(2)}</span>
             </div>
             {dispensacion.descuento > 0 && (
               <div className="flex justify-between w-48 text-muted-foreground">
                 <span>Descuento:</span>
-                <span className="font-mono">-${dispensacion.descuento.toFixed(2)}</span>
+                <span className="font-mono">-Bs. {dispensacion.descuento.toFixed(2)}</span>
               </div>
             )}
             <div className="flex justify-between w-48 font-bold text-sm text-foreground pt-1 border-t border-border/60">
               <span>Total a Pagar:</span>
               <span className="font-mono text-teal-600 dark:text-teal-400">
-                ${dispensacion.total.toFixed(2)}
+                Bs. {dispensacion.total.toFixed(2)}
               </span>
             </div>
           </div>
