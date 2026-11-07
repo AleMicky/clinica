@@ -18,6 +18,12 @@ public static class TurnoCajaEndpoints
         group.MapGet("/", ListarAsync)
             .WithName("ListarTurnosCaja");
 
+        group.MapGet("/mis-turnos", ListarMisTurnosAsync)
+            .WithName("ListarMisTurnosCaja");
+
+        group.MapGet("/mi-sesion", ObtenerMiSesionAsync)
+            .WithName("ObtenerMiSesionTurnoCaja");
+
         group.MapGet("/{id:int}", ObtenerAsync)
             .WithName("ObtenerTurnoCaja");
 
@@ -34,6 +40,10 @@ public static class TurnoCajaEndpoints
             .WithName("AbrirTurnoCaja")
             .Validate<AbrirTurnoCajaRequest>();
 
+        group.MapPost("/mi-turno/abrir", AbrirMiTurnoAsync)
+            .WithName("AbrirMiTurnoCaja")
+            .Validate<AbrirMiTurnoCajaRequest>();
+
         group.MapPost("/{id:int}/cerrar", CerrarAsync)
             .WithName("CerrarTurnoCaja")
             .Validate<CerrarTurnoCajaRequest>();
@@ -44,15 +54,60 @@ public static class TurnoCajaEndpoints
     private static async Task<IResult> ListarAsync(
         [AsParameters] PaginationRequest pagination,
         string? search,
+        int? cajaId,
+        int? empleadoId,
         TurnoCajaService service,
         CancellationToken cancellationToken)
     {
         var result = await service.ListarAsync(
             pagination,
             search,
+            cajaId,
+            empleadoId,
             cancellationToken);
 
         return Results.Ok(result);
+    }
+
+    private static async Task<IResult> ListarMisTurnosAsync(
+        [AsParameters] PaginationRequest pagination,
+        string? search,
+        int? cajaId,
+        bool? soloPropio,
+        TurnoCajaService service,
+        CancellationToken cancellationToken)
+    {
+        var result = await service.ListarMisTurnosAsync(
+            pagination,
+            search,
+            cajaId,
+            soloPropio,
+            cancellationToken);
+
+        return Results.Ok(result);
+    }
+
+    private static async Task<IResult> ObtenerMiSesionAsync(
+        TurnoCajaService service,
+        CancellationToken cancellationToken)
+    {
+        var result = await service.ObtenerMiSesionAsync(cancellationToken);
+
+        return Results.Ok(result);
+    }
+
+    private static async Task<IResult> AbrirMiTurnoAsync(
+        AbrirMiTurnoCajaRequest request,
+        TurnoCajaService service,
+        CancellationToken cancellationToken)
+    {
+        var result = await service.AbrirMiTurnoAsync(
+            request,
+            cancellationToken);
+
+        return Results.Created(
+            $"/turnos-caja/{result.Id}",
+            result);
     }
 
     private static async Task<IResult> ObtenerAsync(

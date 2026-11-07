@@ -280,11 +280,19 @@ public static class OpcionMenuSeed
                 "CAJA_VENTAS"),
 
             new(
+                "MI_TURNO_CAJA",
+                "Mi Turno de Caja",
+                "/caja/mi-turno",
+                "UserCheck",
+                4,
+                "CAJA_VENTAS"),
+
+            new(
                 "TUR-CA",
                 "Turnos de Caja",
                 "/caja/turnos",
                 "Clock",
-                4,
+                5,
                 "CAJA_VENTAS"),
 
             new(
@@ -292,7 +300,7 @@ public static class OpcionMenuSeed
                 "Movimientos de Caja",
                 "/caja/movimientos",
                 "ArrowLeftRight",
-                5,
+                6,
                 "CAJA_VENTAS"),
 
             new(
@@ -300,7 +308,7 @@ public static class OpcionMenuSeed
                 "Reportes de Movimientos",
                 "/caja/movimientos/reportes",
                 "FileSpreadsheet",
-                6,
+                7,
                 "CAJA_VENTAS"),
 
             new(
@@ -308,7 +316,7 @@ public static class OpcionMenuSeed
                 "Configuración de Caja",
                 null,
                 "Settings",
-                7,
+                8,
                 "CAJA_VENTAS"),
 
             new(

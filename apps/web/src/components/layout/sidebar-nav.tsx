@@ -62,13 +62,13 @@ export function hasActiveDescendant(
 }
 
 interface SidebarNavProps {
-  tree: OpcionMenuTreeResponse[];
-  pathname: string | null;
-  searchQuery: string;
-  toggledGroups: Record<number, boolean>;
-  activeGroupIds: Set<number>;
-  onToggleGroup: (id: number) => void;
-  allRoutes?: string[];
+  readonly tree: OpcionMenuTreeResponse[];
+  readonly pathname: string | null;
+  readonly searchQuery: string;
+  readonly toggledGroups: Record<number, boolean>;
+  readonly activeGroupIds: Set<number>;
+  readonly onToggleGroup: (id: number) => void;
+  readonly allRoutes?: string[];
 }
 
 export function SidebarNav({
@@ -79,7 +79,7 @@ export function SidebarNav({
   activeGroupIds,
   onToggleGroup,
   allRoutes,
-}: SidebarNavProps) {
+}: Readonly<SidebarNavProps>) {
   const routesList = React.useMemo(() => {
     if (allRoutes && allRoutes.length > 0) return allRoutes;
     const routes: string[] = [];
@@ -95,6 +95,9 @@ export function SidebarNav({
     <>
       {tree.map((category) => {
         const categoryHasChildren = category.hijos && category.hijos.length > 0;
+        if (!categoryHasChildren && !category.ruta) {
+          return null;
+        }
 
         return (
           <SidebarGroup key={category.id} className="p-0">
@@ -161,8 +164,11 @@ export function SidebarNav({
                           {isExpanded && (
                             <div className="relative ml-4 pl-2.5 mt-0.5 mb-1 border-l border-sidebar-border/70 flex flex-col gap-0.5 animate-in fade-in-50 duration-200">
                               {subItems.map((sub) => {
+                                if (!sub.ruta) {
+                                  return null;
+                                }
                                 const SubIcon = getMenuLucideIcon(sub.icono);
-                                const subHref = sub.ruta || "#";
+                                const subHref = sub.ruta;
                                 const isSubActive = isRouteActive(pathname, sub.ruta, routesList);
 
                                 return (
@@ -197,8 +203,11 @@ export function SidebarNav({
                     }
 
                     // ====== NIVEL 2: ÍTEM DIRECTO ======
+                    if (!item.ruta) {
+                      return null;
+                    }
                     const Icon = getMenuLucideIcon(item.icono);
-                    const itemHref = item.ruta || "#";
+                    const itemHref = item.ruta;
                     const isActive = isRouteActive(pathname, item.ruta, routesList);
 
                     return (

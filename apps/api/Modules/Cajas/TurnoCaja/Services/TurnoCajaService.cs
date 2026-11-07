@@ -3,6 +3,7 @@ using Clinica.Api.Modules.Cajas.ArqueoCaja.Dtos;
 using Clinica.Api.Modules.Cajas.TurnoCaja.Dtos;
 using Clinica.Api.Modules.Cajas.TurnoCaja.Entity;
 using Clinica.Api.Modules.Cajas.TurnoCaja.Mappers;
+using Clinica.Api.Shared.Abstractions;
 using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +13,9 @@ using TurnoCajaEntity = Clinica.Api.Modules.Cajas.TurnoCaja.Entity.TurnoCaja;
 
 namespace Clinica.Api.Modules.Cajas.TurnoCaja.Services;
 
-public sealed class TurnoCajaService(AppDbContext dbContext)
+public sealed class TurnoCajaService(
+    AppDbContext dbContext,
+    ICurrentUserService currentUserService)
 {
     private AppDbContext DbContext { get; } = dbContext;
     private DbSet<TurnoCajaEntity> Entities => DbContext.Set<TurnoCajaEntity>();
@@ -20,11 +23,23 @@ public sealed class TurnoCajaService(AppDbContext dbContext)
     public async Task<PagedResult<TurnoCajaResponse>> ListarAsync(
         PaginationRequest pagination,
         string? search,
+        int? cajaId = null,
+        int? empleadoId = null,
         CancellationToken cancellationToken = default)
     {
         var query = BuildQuery()
             .AsNoTracking()
             .Where(x => x.Activo);
+
+        if (cajaId.HasValue && cajaId.Value > 0)
+        {
+            query = query.Where(x => x.CajaId == cajaId.Value);
+        }
+
+        if (empleadoId.HasValue && empleadoId.Value > 0)
+        {
+            query = query.Where(x => x.EmpleadoId == empleadoId.Value);
+        }
 
         var normalizedSearch = string.IsNullOrWhiteSpace(search)
             ? null
@@ -43,6 +58,138 @@ public sealed class TurnoCajaService(AppDbContext dbContext)
             pagination.ValidPage,
             pagination.ValidPageSize,
             totalItems);
+    }
+
+    public async Task<PagedResult<TurnoCajaResponse>> ListarMisTurnosAsync(
+        PaginationRequest pagination,
+        string? search,
+        int? cajaId = null,
+        bool? soloPropio = null,
+        CancellationToken cancellationToken = default)
+    {
+        var usuarioId = currentUserService.UserId
+            ?? throw new UnauthorizedAccessException();
+
+        var esAdministrador = EsUsuarioAdministrador();
+        var query = BuildQuery()
+            .AsNoTracking()
+            .Where(x => x.Activo);
+
+        if (!esAdministrador || soloPropio == true)
+        {
+            var empleado = await ObtenerEmpleadoPorUsuarioIdAsync(
+                usuarioId,
+                cancellationToken);
+
+            if (empleado is null)
+            {
+                if (!esAdministrador)
+                {
+                    return new PagedResult<TurnoCajaResponse>(
+                        [],
+                        pagination.ValidPage,
+                        pagination.ValidPageSize,
+                        0);
+                }
+            }
+            else
+            {
+                query = query.Where(x => x.EmpleadoId == empleado.Id);
+            }
+        }
+
+        if (cajaId.HasValue && cajaId.Value > 0)
+        {
+            query = query.Where(x => x.CajaId == cajaId.Value);
+        }
+
+        var normalizedSearch = string.IsNullOrWhiteSpace(search)
+            ? null
+            : search.Trim();
+
+        query = ApplySearch(query, normalizedSearch);
+        var totalItems = await query.CountAsync(cancellationToken);
+        var offset = (pagination.ValidPage - 1) * pagination.ValidPageSize;
+        var entities = await ApplyOrder(query)
+            .Skip(offset)
+            .Take(pagination.ValidPageSize)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<TurnoCajaResponse>(
+            MapToResponseList(entities),
+            pagination.ValidPage,
+            pagination.ValidPageSize,
+            totalItems);
+    }
+
+    public async Task<MiSesionTurnoCajaResponse> ObtenerMiSesionAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var usuarioId = currentUserService.UserId
+            ?? throw new UnauthorizedAccessException();
+
+        var usuario = await DbContext.Users
+            .AsNoTracking()
+            .Include(x => x.Persona)
+            .FirstOrDefaultAsync(x => x.Id == usuarioId, cancellationToken)
+            ?? throw new UnauthorizedAccessException();
+
+        var esAdministrador = EsUsuarioAdministrador();
+        var empleado = await ObtenerEmpleadoPorUsuarioIdAsync(
+            usuarioId,
+            cancellationToken);
+
+        var nombreCompletoUsuario = usuario.Persona is not null
+            ? string.Join(" ",
+                new[]
+                {
+                    usuario.Persona.Nombres,
+                    usuario.Persona.ApellidoPaterno,
+                    usuario.Persona.ApellidoMaterno
+                }.Where(x => !string.IsNullOrWhiteSpace(x)))
+            : usuario.UserName ?? string.Empty;
+
+        TurnoCajaResponse? turnoAbierto = null;
+        if (empleado is not null)
+        {
+            turnoAbierto = await ObtenerTurnoAbiertoEmpleadoAsync(
+                empleado.Id,
+                cancellationToken);
+        }
+
+        return new MiSesionTurnoCajaResponse
+        {
+            UsuarioId = usuario.Id,
+            UserName = usuario.UserName ?? string.Empty,
+            NombreCompleto = nombreCompletoUsuario,
+            EsAdministrador = esAdministrador,
+            Empleado = MapEmpleadoInfo(empleado),
+            TurnoAbierto = turnoAbierto
+        };
+    }
+
+    public async Task<TurnoCajaResponse> AbrirMiTurnoAsync(
+        AbrirMiTurnoCajaRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var usuarioId = currentUserService.UserId
+            ?? throw new UnauthorizedAccessException();
+
+        var empleado = await ObtenerEmpleadoPorUsuarioIdAsync(
+            usuarioId,
+            cancellationToken)
+            ?? throw new BusinessException(
+                "Su usuario no tiene una ficha de empleado activa vinculada para aperturar un turno de caja.");
+
+        return await AbrirAsync(
+            new AbrirTurnoCajaRequest
+            {
+                CajaId = request.CajaId,
+                EmpleadoId = empleado.Id,
+                MontoInicial = request.MontoInicial,
+                Observacion = request.Observacion
+            },
+            cancellationToken);
     }
 
     public async Task<TurnoCajaResponse> ObtenerAsync(int id, CancellationToken cancellationToken = default)
@@ -607,6 +754,34 @@ public sealed class TurnoCajaService(AppDbContext dbContext)
             CodigoEmpleado = empleado.CodigoEmpleado,
             NombreCompleto = nombreCompleto
         };
+    }
+
+    private bool EsUsuarioAdministrador()
+    {
+        return currentUserService.IsInRole("ADMINISTRADOR") ||
+               currentUserService.IsInRole("Administrador") ||
+               currentUserService.IsInRole("ADMIN_CAJA");
+    }
+
+    private async Task<EmpleadoEntity?> ObtenerEmpleadoPorUsuarioIdAsync(
+        int usuarioId,
+        CancellationToken cancellationToken)
+    {
+        var personaId = await DbContext.Users
+            .AsNoTracking()
+            .Where(x => x.Id == usuarioId)
+            .Select(x => (int?)x.PersonaId)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (!personaId.HasValue || personaId.Value <= 0)
+            return null;
+
+        return await DbContext.Empleados
+            .AsNoTracking()
+            .Include(x => x.Persona)
+            .FirstOrDefaultAsync(
+                x => x.PersonaId == personaId.Value && x.Activo,
+                cancellationToken);
     }
 
     private static NotFoundException CreateNotFoundException(int id)

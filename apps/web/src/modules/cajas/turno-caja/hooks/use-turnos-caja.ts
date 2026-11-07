@@ -2,8 +2,11 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  abrirMiTurnoCaja,
   abrirTurnoCaja,
   cerrarTurnoCaja,
+  getMiSesionTurnoCaja,
+  getMisTurnosCaja,
   getResumenCierreTurnoCaja,
   getTurnoCajaAbiertoCaja,
   getTurnoCajaAbiertoEmpleado,
@@ -12,6 +15,7 @@ import {
 } from "../api/turno-caja.api";
 import { turnoCajaKeys } from "../api/turno-caja.key";
 import type {
+  AbrirMiTurnoCajaRequest,
   AbrirTurnoCajaRequest,
   CerrarTurnoCajaRequest,
   TurnoCajaQueryParams,
@@ -21,6 +25,22 @@ export function useTurnosCaja(params?: TurnoCajaQueryParams, enabled = true) {
   return useQuery({
     queryKey: turnoCajaKeys.list(params as Record<string, unknown>),
     queryFn: () => getTurnosCaja(params),
+    enabled,
+  });
+}
+
+export function useMisTurnosCaja(params?: TurnoCajaQueryParams, enabled = true) {
+  return useQuery({
+    queryKey: [...turnoCajaKeys.all, "mis-turnos", params],
+    queryFn: () => getMisTurnosCaja(params),
+    enabled,
+  });
+}
+
+export function useMiSesionTurnoCaja(enabled = true) {
+  return useQuery({
+    queryKey: [...turnoCajaKeys.all, "mi-sesion"],
+    queryFn: () => getMiSesionTurnoCaja(),
     enabled,
   });
 }
@@ -63,6 +83,17 @@ export function useAbrirTurnoCaja() {
 
   return useMutation({
     mutationFn: (data: AbrirTurnoCajaRequest) => abrirTurnoCaja(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: turnoCajaKeys.all });
+    },
+  });
+}
+
+export function useAbrirMiTurnoCaja() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: AbrirMiTurnoCajaRequest) => abrirMiTurnoCaja(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: turnoCajaKeys.all });
     },

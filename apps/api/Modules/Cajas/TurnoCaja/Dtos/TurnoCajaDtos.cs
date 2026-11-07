@@ -30,6 +30,25 @@ public sealed class AbrirTurnoCajaRequest
     public string? Observacion { get; set; }
 }
 
+public sealed class AbrirMiTurnoCajaRequest
+{
+    public int CajaId { get; set; }
+
+    public decimal MontoInicial { get; set; }
+
+    public string? Observacion { get; set; }
+}
+
+public sealed record MiSesionTurnoCajaResponse
+{
+    public int UsuarioId { get; init; }
+    public string UserName { get; init; } = string.Empty;
+    public string NombreCompleto { get; init; } = string.Empty;
+    public bool EsAdministrador { get; init; }
+    public EmpleadoInfo? Empleado { get; init; }
+    public TurnoCajaResponse? TurnoAbierto { get; init; }
+}
+
 public sealed class CerrarTurnoCajaRequest
 {
     public string? Observacion { get; set; }

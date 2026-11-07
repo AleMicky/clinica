@@ -1,7 +1,9 @@
 import { apiClient } from "@/lib/api/api-client";
 import type {
+  AbrirMiTurnoCajaRequest,
   AbrirTurnoCajaRequest,
   CerrarTurnoCajaRequest,
+  MiSesionTurnoCajaResponse,
   PagedResult,
   ResumenCierreTurnoCajaResponse,
   TurnoCajaQueryParams,
@@ -14,6 +16,23 @@ export async function getTurnosCaja(
   const response = await apiClient.get<PagedResult<TurnoCajaResponse>>(
     "/turnos-caja",
     { params }
+  );
+  return response.data;
+}
+
+export async function getMisTurnosCaja(
+  params?: TurnoCajaQueryParams
+): Promise<PagedResult<TurnoCajaResponse>> {
+  const response = await apiClient.get<PagedResult<TurnoCajaResponse>>(
+    "/turnos-caja/mis-turnos",
+    { params }
+  );
+  return response.data;
+}
+
+export async function getMiSesionTurnoCaja(): Promise<MiSesionTurnoCajaResponse> {
+  const response = await apiClient.get<MiSesionTurnoCajaResponse>(
+    "/turnos-caja/mi-sesion"
   );
   return response.data;
 }
@@ -37,6 +56,16 @@ export async function abrirTurnoCaja(
 ): Promise<TurnoCajaResponse> {
   const response = await apiClient.post<TurnoCajaResponse>(
     "/turnos-caja/abrir",
+    request
+  );
+  return response.data;
+}
+
+export async function abrirMiTurnoCaja(
+  request: AbrirMiTurnoCajaRequest
+): Promise<TurnoCajaResponse> {
+  const response = await apiClient.post<TurnoCajaResponse>(
+    "/turnos-caja/mi-turno/abrir",
     request
   );
   return response.data;

@@ -13,6 +13,18 @@ export const abrirTurnoCajaSchema = z.object({
     .nullable(),
 });
 
+export const abrirMiTurnoCajaSchema = z.object({
+  cajaId: z.number().min(1, "Debe seleccionar una caja válida."),
+  montoInicial: z
+    .number()
+    .min(0, "El monto inicial no puede ser negativo."),
+  observacion: z
+    .string()
+    .max(500, "La observación no puede exceder 500 caracteres.")
+    .optional()
+    .nullable(),
+});
+
 export const cerrarTurnoCajaSchema = z.object({
   observacion: z
     .string()
@@ -22,4 +34,5 @@ export const cerrarTurnoCajaSchema = z.object({
 });
 
 export type AbrirTurnoCajaFormValues = z.infer<typeof abrirTurnoCajaSchema>;
+export type AbrirMiTurnoCajaFormValues = z.infer<typeof abrirMiTurnoCajaSchema>;
 export type CerrarTurnoCajaFormValues = z.infer<typeof cerrarTurnoCajaSchema>;

@@ -54,6 +54,32 @@ function filterTreeNode(
   return null;
 }
 
+/**
+ * Elimina ramas o categorías contenedoras que no tienen ruta navegable
+ * ni subopciones accesibles para el usuario según sus permisos de rol.
+ */
+function pruneEmptyBranches(
+  nodes: OpcionMenuTreeResponse[]
+): OpcionMenuTreeResponse[] {
+  return nodes
+    .map((node) => {
+      if (node.hijos && node.hijos.length > 0) {
+        const cleanedChildren = pruneEmptyBranches(node.hijos);
+        return {
+          ...node,
+          hijos: cleanedChildren,
+        };
+      }
+      return node;
+    })
+    .filter((node) => {
+      // Si tiene ruta navegable directa, se conserva
+      if (node.ruta) return true;
+      // Si no tiene ruta (es carpeta/categoría), solo se conserva si contiene hijos accesibles
+      return Boolean(node.hijos && node.hijos.length > 0);
+    });
+}
+
 export function AppSidebar({
   variant = "inset",
   ...props
@@ -72,165 +98,11 @@ export function AppSidebar({
 
   const isLoading = isAuthLoading || isMenuLoading;
 
-  // Garantizar que las opciones de Reportes de Admisión, Ventas y Cobranzas estén disponibles en el menú lateral
-  const enrichedMenuTree = React.useMemo(() => {
-    if (!menuTree || menuTree.length === 0) return menuTree;
-
-    let hasReportesAdmision = false;
-    let hasReportesVentas = false;
-    let hasReportesCobros = false;
-    let hasReportesMovimientos = false;
-    function checkReportes(nodes: OpcionMenuTreeResponse[]) {
-      for (const n of nodes) {
-        if (n.ruta === "/recepcion/reportes") {
-          hasReportesAdmision = true;
-        }
-        if (n.ruta === "/ventas/reportes") {
-          hasReportesVentas = true;
-        }
-        if (n.ruta === "/caja/reportes") {
-          hasReportesCobros = true;
-        }
-        if (n.ruta === "/caja/movimientos/reportes") {
-          hasReportesMovimientos = true;
-        }
-        if (n.hijos && n.hijos.length > 0) {
-          checkReportes(n.hijos);
-        }
-      }
-    }
-    checkReportes(menuTree);
-    if (hasReportesAdmision && hasReportesVentas && hasReportesCobros && hasReportesMovimientos) return menuTree;
-
-    return menuTree.map((category) => {
-      const hijos = [...(category.hijos || [])];
-      let changed = false;
-
-      // 1. Reportes de Admisión
-      if (!hasReportesAdmision) {
-        const hasAdmisiones = hijos.some(
-          (h) => h.ruta === "/recepcion/admisiones" || h.codigo === "ADMISIONES"
-        );
-        if (category.codigo === "CLINICA_SERVICIOS" || hasAdmisiones) {
-          const admisionIdx = hijos.findIndex(
-            (h) => h.ruta === "/recepcion/admisiones" || h.codigo === "ADMISIONES"
-          );
-
-          const reporteNode: OpcionMenuTreeResponse = {
-            id: -9999,
-            codigo: "REPORTES_ADMISIONES",
-            nombre: "Reportes de Admisión",
-            ruta: "/recepcion/reportes",
-            icono: "FileSpreadsheet",
-            orden: admisionIdx >= 0 ? (hijos[admisionIdx].orden ?? 2) + 1 : 3,
-            hijos: [],
-          };
-
-          if (admisionIdx >= 0) {
-            hijos.splice(admisionIdx + 1, 0, reporteNode);
-          } else {
-            hijos.push(reporteNode);
-          }
-          changed = true;
-        }
-      }
-
-      // 2. Reportes de Ventas
-      if (!hasReportesVentas) {
-        const hasVentas = hijos.some(
-          (h) => h.ruta === "/ventas" || h.codigo === "VENTAS"
-        );
-        if (category.codigo === "CAJA_VENTAS" || hasVentas) {
-          const ventaIdx = hijos.findIndex(
-            (h) => h.ruta === "/ventas" || h.codigo === "VENTAS"
-          );
-
-          const reporteVentaNode: OpcionMenuTreeResponse = {
-            id: -9998,
-            codigo: "REPORTES_VENTAS",
-            nombre: "Reportes de Ventas",
-            ruta: "/ventas/reportes",
-            icono: "FileSpreadsheet",
-            orden: ventaIdx >= 0 ? (hijos[ventaIdx].orden ?? 1) + 1 : 2,
-            hijos: [],
-          };
-
-          if (ventaIdx >= 0) {
-            hijos.splice(ventaIdx + 1, 0, reporteVentaNode);
-          } else {
-            hijos.push(reporteVentaNode);
-          }
-          changed = true;
-        }
-      }
-
-      // 3. Reportes de Cobranzas
-      if (!hasReportesCobros) {
-        const hasCobros = hijos.some(
-          (h) => h.ruta === "/caja/cobros" || h.codigo === "COBROS"
-        );
-        if (category.codigo === "CAJA_VENTAS" || hasCobros) {
-          const cobroIdx = hijos.findIndex(
-            (h) => h.ruta === "/caja/cobros" || h.codigo === "COBROS"
-          );
-
-          const reporteCobroNode: OpcionMenuTreeResponse = {
-            id: -9997,
-            codigo: "REPORTES_COBROS",
-            nombre: "Reportes de Cobranzas",
-            ruta: "/caja/reportes",
-            icono: "FileSpreadsheet",
-            orden: cobroIdx >= 0 ? (hijos[cobroIdx].orden ?? 2) + 1 : 3,
-            hijos: [],
-          };
-
-          if (cobroIdx >= 0) {
-            hijos.splice(cobroIdx + 1, 0, reporteCobroNode);
-          } else {
-            hijos.push(reporteCobroNode);
-          }
-          changed = true;
-        }
-      }
-
-      // 4. Reportes de Movimientos de Caja
-      if (!hasReportesMovimientos) {
-        const hasMovimientos = hijos.some(
-          (h) => h.ruta === "/caja/movimientos" || h.codigo === "MOVIMIENTOS_CAJA"
-        );
-        if (category.codigo === "CAJA_VENTAS" || hasMovimientos) {
-          const movIdx = hijos.findIndex(
-            (h) => h.ruta === "/caja/movimientos" || h.codigo === "MOVIMIENTOS_CAJA"
-          );
-
-          const reporteMovNode: OpcionMenuTreeResponse = {
-            id: -9996,
-            codigo: "REPORTES_MOVIMIENTOS",
-            nombre: "Reportes de Movimientos",
-            ruta: "/caja/movimientos/reportes",
-            icono: "FileSpreadsheet",
-            orden: movIdx >= 0 ? (hijos[movIdx].orden ?? 5) + 1 : 6,
-            hijos: [],
-          };
-
-          if (movIdx >= 0) {
-            hijos.splice(movIdx + 1, 0, reporteMovNode);
-          } else {
-            hijos.push(reporteMovNode);
-          }
-          changed = true;
-        }
-      }
-
-      if (changed) {
-        return {
-          ...category,
-          hijos,
-        };
-      }
-
-      return category;
-    });
+  // Árbol de menú depurado: respeta estrictamente los permisos del rol del usuario
+  // y descarta categorías o grupos vacíos sin opciones permitidas.
+  const cleanMenuTree = React.useMemo(() => {
+    if (!menuTree || menuTree.length === 0) return [];
+    return pruneEmptyBranches(menuTree);
   }, [menuTree]);
 
   // Lista de todas las rutas del menú para desambiguar rutas que comparten prefijo (ej. /ventas vs /ventas/reportes)
@@ -240,13 +112,13 @@ export function AppSidebar({
       if (node.ruta) routes.push(node.ruta);
       if (node.hijos && node.hijos.length > 0) node.hijos.forEach(collect);
     }
-    enrichedMenuTree.forEach(collect);
+    cleanMenuTree.forEach(collect);
     return routes;
-  }, [enrichedMenuTree]);
+  }, [cleanMenuTree]);
 
   // Conjunto de IDs de grupos que contienen la ruta activa actual
   const activeGroupIds = React.useMemo(() => {
-    if (!pathname || enrichedMenuTree.length === 0) return new Set<number>();
+    if (!pathname || cleanMenuTree.length === 0) return new Set<number>();
     const activeIds = new Set<number>();
 
     function scanNode(node: OpcionMenuTreeResponse) {
@@ -259,9 +131,9 @@ export function AppSidebar({
       }
     }
 
-    enrichedMenuTree.forEach(scanNode);
+    cleanMenuTree.forEach(scanNode);
     return activeIds;
-  }, [pathname, enrichedMenuTree, allRoutes]);
+  }, [pathname, cleanMenuTree, allRoutes]);
 
   const toggleGroup = (id: number) => {
     setToggledGroups((prev) => {
@@ -276,12 +148,12 @@ export function AppSidebar({
   // Filtrar el árbol completo según la búsqueda
   const filteredTree = React.useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    if (!query) return enrichedMenuTree;
+    if (!query) return cleanMenuTree;
 
-    return enrichedMenuTree
+    return cleanMenuTree
       .map((node) => filterTreeNode(node, query))
       .filter(Boolean) as OpcionMenuTreeResponse[];
-  }, [enrichedMenuTree, searchQuery]);
+  }, [cleanMenuTree, searchQuery]);
 
   // Calcular total de elementos coincidentes
   const totalResults = React.useMemo(() => {
@@ -299,6 +171,36 @@ export function AppSidebar({
     countNodes(filteredTree);
     return count;
   }, [filteredTree, searchQuery]);
+
+  const renderContent = () => {
+    if (isLoading) {
+      return <SidebarLoadingSkeleton />;
+    }
+
+    if (isError) {
+      return <SidebarError onRetry={() => refetch()} />;
+    }
+
+    if (searchQuery && totalResults === 0) {
+      return <SidebarSearchEmpty searchQuery={searchQuery} />;
+    }
+
+    if (cleanMenuTree.length === 0) {
+      return <SidebarEmpty />;
+    }
+
+    return (
+      <SidebarNav
+        tree={filteredTree}
+        pathname={pathname}
+        searchQuery={searchQuery}
+        toggledGroups={toggledGroups}
+        activeGroupIds={activeGroupIds}
+        onToggleGroup={toggleGroup}
+        allRoutes={allRoutes}
+      />
+    );
+  };
 
   return (
     <Sidebar variant={variant} collapsible="offcanvas" {...props}>
@@ -335,25 +237,7 @@ export function AppSidebar({
 
       {/* ================= CONTENT ================= */}
       <SidebarContent className="gap-3 px-2 py-3 overflow-y-auto custom-scrollbar">
-        {isLoading ? (
-          <SidebarLoadingSkeleton />
-        ) : isError ? (
-          <SidebarError onRetry={() => refetch()} />
-        ) : searchQuery && totalResults === 0 ? (
-          <SidebarSearchEmpty searchQuery={searchQuery} />
-        ) : enrichedMenuTree.length === 0 ? (
-          <SidebarEmpty />
-        ) : (
-          <SidebarNav
-            tree={filteredTree}
-            pathname={pathname}
-            searchQuery={searchQuery}
-            toggledGroups={toggledGroups}
-            activeGroupIds={activeGroupIds}
-            onToggleGroup={toggleGroup}
-            allRoutes={allRoutes}
-          />
-        )}
+        {renderContent()}
       </SidebarContent>
 
       {/* ================= FOOTER ================= */}

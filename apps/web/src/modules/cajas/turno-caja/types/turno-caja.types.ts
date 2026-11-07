@@ -66,6 +66,21 @@ export interface AbrirTurnoCajaRequest {
   observacion?: string | null;
 }
 
+export interface AbrirMiTurnoCajaRequest {
+  cajaId: number;
+  montoInicial: number;
+  observacion?: string | null;
+}
+
+export interface MiSesionTurnoCajaResponse {
+  usuarioId: number;
+  userName: string;
+  nombreCompleto: string;
+  esAdministrador: boolean;
+  empleado?: EmpleadoInfo | null;
+  turnoAbierto?: TurnoCajaResponse | null;
+}
+
 export interface CerrarTurnoCajaRequest {
   observacion?: string | null;
 }
@@ -75,6 +90,8 @@ export interface TurnoCajaQueryParams {
   pageSize?: number;
   search?: string;
   cajaId?: number;
+  empleadoId?: number;
+  soloPropio?: boolean;
 }
 
 export interface TurnoCajaMetrics {

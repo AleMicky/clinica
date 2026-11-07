@@ -5,24 +5,39 @@ import { Check, ChevronsUpDown, Loader2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface AutocompleteOption {
-  value: string;
-  label: string;
-  description?: string;
+  readonly value: string;
+  readonly label: string;
+  readonly description?: string;
 }
 
 export interface AutocompleteProps {
-  value?: string;
-  onValueChange: (value: string) => void;
-  options: AutocompleteOption[];
-  placeholder?: string;
-  emptyText?: string;
-  isLoading?: boolean;
-  disabled?: boolean;
-  error?: boolean;
-  className?: string;
-  id?: string;
-  allowCustomValue?: boolean;
-  onSearchChange?: (val: string) => void;
+  readonly value?: string;
+  readonly onValueChange: (value: string) => void;
+  readonly options: AutocompleteOption[];
+  readonly placeholder?: string;
+  readonly emptyText?: string;
+  readonly isLoading?: boolean;
+  readonly disabled?: boolean;
+  readonly error?: boolean;
+  readonly className?: string;
+  readonly id?: string;
+  readonly allowCustomValue?: boolean;
+  readonly onSearchChange?: (val: string) => void;
+  readonly openOnFocus?: boolean;
+}
+
+function resolveDisplayValue(
+  val: string,
+  opts: readonly AutocompleteOption[],
+  allowCustom: boolean
+): string {
+  if (!val || val === "0") return "";
+  const selected = opts.find(
+    (opt) => opt.value.toLowerCase() === String(val).toLowerCase()
+  );
+  if (selected) return selected.label;
+  if (allowCustom) return val;
+  return "";
 }
 
 export function Autocomplete({
@@ -38,29 +53,33 @@ export function Autocomplete({
   id,
   allowCustomValue = true,
   onSearchChange,
-}: AutocompleteProps) {
+  openOnFocus = true,
+}: Readonly<AutocompleteProps>) {
   const [isOpen, setIsOpen] = React.useState(false);
-  const [query, setQuery] = React.useState(value);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
 
-  // Synchronize input query with external value prop change
-  React.useEffect(() => {
-    if (!value || value === "0") {
-      setQuery("");
-      return;
-    }
-    const selectedOpt = options.find(
+  // Derived state pattern: adjust query during render when external value or option labels change
+  const currentOpt = React.useMemo(() => {
+    if (!value || value === "0") return undefined;
+    return options.find(
       (opt) => opt.value.toLowerCase() === String(value).toLowerCase()
     );
-    if (selectedOpt) {
-      setQuery(selectedOpt.label);
-    } else if (allowCustomValue) {
-      setQuery(value);
-    } else {
-      setQuery("");
-    }
-  }, [value, options, allowCustomValue]);
+  }, [value, options]);
+
+  const currentLabel = currentOpt?.label;
+
+  const [prevValue, setPrevValue] = React.useState(value);
+  const [prevLabel, setPrevLabel] = React.useState(currentLabel);
+  const [query, setQuery] = React.useState(() =>
+    resolveDisplayValue(value, options, allowCustomValue)
+  );
+
+  if (prevValue !== value || prevLabel !== currentLabel) {
+    setPrevValue(value);
+    setPrevLabel(currentLabel);
+    setQuery(resolveDisplayValue(value, options, allowCustomValue));
+  }
 
   // Handle clicking outside the popover container
   React.useEffect(() => {
@@ -147,7 +166,16 @@ export function Autocomplete({
           disabled={disabled}
           value={query}
           placeholder={placeholder}
-          onFocus={() => setIsOpen(true)}
+          onFocus={() => {
+            if (openOnFocus) {
+              setIsOpen(true);
+            }
+          }}
+          onClick={() => {
+            if (!isOpen) {
+              setIsOpen(true);
+            }
+          }}
           onChange={(e) => {
             const nextVal = e.target.value;
             setQuery(nextVal);
