@@ -19,6 +19,7 @@ import {
   useRegistrarCobroDispensacion,
   useEntregarMedicamentosDispensacion,
 } from "../hooks/use-dispensacion";
+import { useMetodosPago } from "@/modules/parametros/metodo-pago/hooks/use-metodos-pago";
 import type { DispensacionResponse } from "../types/dispensacion.types";
 import { getApiErrorMessage } from "@/lib/api/api-error";
 
@@ -40,14 +41,34 @@ export function DispensacionCobrarDialog({
   onOpenChange,
   dispensacion,
   onSuccessCallback,
-}: DispensacionCobrarDialogProps) {
+}: Readonly<DispensacionCobrarDialogProps>) {
   const cobrarMutation = useRegistrarCobroDispensacion();
   const entregarMutation = useEntregarMedicamentosDispensacion();
+  const { data: metodosData, isLoading: isLoadingMetodos } = useMetodosPago(
+    { page: 1, pageSize: 100 },
+    open
+  );
+
+  const metodosPago = React.useMemo(
+    () => metodosData?.items?.filter((m) => m.activo) ?? [],
+    [metodosData?.items]
+  );
+
+  const defaultMetodoPago = React.useMemo(() => {
+    if (metodosPago.length === 0) return "Efectivo";
+    const efectivo = metodosPago.find(
+      (m) =>
+        m.codigo.toLowerCase().includes("efectivo") ||
+        m.nombre.toLowerCase().includes("efectivo")
+    );
+    return (efectivo ?? metodosPago[0]).nombre;
+  }, [metodosPago]);
 
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
     control,
     formState: { isSubmitting },
   } = useForm<FormValues>({
@@ -58,20 +79,53 @@ export function DispensacionCobrarDialog({
     },
   });
 
+  const metodoPagoSeleccionado = useWatch({
+    control,
+    name: "metodoPago",
+  });
+
   const entregarInmediatamente = useWatch({
     control,
     name: "entregarInmediatamente",
   });
 
+  const metodoSeleccionadoObj = React.useMemo(
+    () =>
+      metodosPago.find(
+        (m) =>
+          m.nombre === metodoPagoSeleccionado ||
+          m.codigo === metodoPagoSeleccionado
+      ),
+    [metodosPago, metodoPagoSeleccionado]
+  );
+
+  const requiereReferencia = Boolean(metodoSeleccionadoObj?.requiereReferencia);
+
+  React.useEffect(() => {
+    if (!requiereReferencia) {
+      setValue("comprobanteCobro", "");
+    }
+  }, [requiereReferencia, setValue]);
+
   React.useEffect(() => {
     if (open) {
       reset({
-        metodoPago: "Efectivo",
+        metodoPago: defaultMetodoPago,
         comprobanteCobro: "",
         entregarInmediatamente: true,
       });
     }
-  }, [open, reset]);
+  }, [open, reset, defaultMetodoPago]);
+
+  React.useEffect(() => {
+    if (
+      open &&
+      metodosPago.length > 0 &&
+      !metodosPago.some((m) => m.nombre === metodoPagoSeleccionado)
+    ) {
+      setValue("metodoPago", defaultMetodoPago);
+    }
+  }, [open, metodosPago, metodoPagoSeleccionado, defaultMetodoPago, setValue]);
 
   if (!dispensacion) return null;
 
@@ -81,7 +135,9 @@ export function DispensacionCobrarDialog({
         id: dispensacion.id,
         data: {
           metodoPago: values.metodoPago,
-          comprobanteCobro: values.comprobanteCobro?.trim() || undefined,
+          comprobanteCobro: requiereReferencia
+            ? values.comprobanteCobro?.trim() || undefined
+            : undefined,
           montoCobrado: dispensacion.total,
         },
       });
@@ -139,29 +195,60 @@ export function DispensacionCobrarDialog({
           </div>
 
           <div>
-            <Label className="text-xs font-semibold">Método de Pago</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-semibold">Método de Pago</Label>
+              {isLoadingMetodos && (
+                <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                  <Loader2 className="size-3 animate-spin" />
+                  Cargando...
+                </span>
+              )}
+              {!isLoadingMetodos && metodoSeleccionadoObj && (
+                <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                  {metodoSeleccionadoObj.codigo}
+                </span>
+              )}
+            </div>
             <select
               {...register("metodoPago")}
-              className="mt-1 w-full h-8 px-2 text-xs rounded-md border border-border/60 bg-background text-foreground"
+              disabled={isLoadingMetodos}
+              className="mt-1 w-full h-8 px-2 text-xs rounded-md border border-border/60 bg-background text-foreground disabled:opacity-60"
             >
-              <option value="Efectivo">Efectivo</option>
-              <option value="QR">Pago QR</option>
-              <option value="Tarjeta de Débito">Tarjeta de Débito</option>
-              <option value="Tarjeta de Crédito">Tarjeta de Crédito</option>
-              <option value="Transferencia">Transferencia Bancaria</option>
+              {metodosPago.length > 0 ? (
+                metodosPago.map((metodo) => (
+                  <option key={metodo.id} value={metodo.nombre}>
+                    {metodo.nombre}
+                  </option>
+                ))
+              ) : (
+                <>
+                  <option value="Efectivo">Efectivo</option>
+                  <option value="QR">Pago QR</option>
+                  <option value="Tarjeta de Débito">Tarjeta de Débito</option>
+                  <option value="Tarjeta de Crédito">Tarjeta de Crédito</option>
+                  <option value="Transferencia">Transferencia Bancaria</option>
+                </>
+              )}
             </select>
           </div>
 
-          <div>
-            <Label className="text-xs font-semibold">
-              N° Recibo / Comprobante de Caja (Opcional)
-            </Label>
-            <Input
-              {...register("comprobanteCobro")}
-              placeholder="Autogenerado si se deja vacío (Ej. COB-2026-0001)"
-              className="mt-1 h-8 text-xs font-mono"
-            />
-          </div>
+          {requiereReferencia && (
+            <div>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-semibold">
+                  N° de Referencia / Comprobante de Pago
+                </Label>
+                <span className="text-[10px] font-medium text-amber-600 dark:text-amber-400">
+                  Requiere referencia
+                </span>
+              </div>
+              <Input
+                {...register("comprobanteCobro")}
+                placeholder="Ingrese N° de referencia / comprobante de pago"
+                className="mt-1 h-8 text-xs font-mono"
+              />
+            </div>
+          )}
 
           <label className="flex items-start gap-2.5 p-2.5 rounded-lg border border-emerald-500/25 bg-emerald-500/5 cursor-pointer select-none">
             <input

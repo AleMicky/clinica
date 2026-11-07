@@ -39,7 +39,7 @@ export function useCreateMetodoPago() {
   return useMutation({
     mutationFn: (data: CreateMetodoPagoRequest) => createMetodoPago(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: metodoPagoKeys.all });
+      void queryClient.invalidateQueries({ queryKey: metodoPagoKeys.all });
     },
   });
 }
@@ -55,8 +55,8 @@ export function useUpdateMetodoPago() {
       data: UpdateMetodoPagoRequest;
     }) => updateMetodoPago(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: metodoPagoKeys.all });
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({ queryKey: metodoPagoKeys.all });
+      void queryClient.invalidateQueries({
         queryKey: metodoPagoKeys.detail(variables.id),
       });
     },
@@ -68,7 +68,7 @@ export function useDeleteMetodoPago() {
   return useMutation({
     mutationFn: (id: number) => deleteMetodoPago(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: metodoPagoKeys.all });
+      void queryClient.invalidateQueries({ queryKey: metodoPagoKeys.all });
     },
   });
 }

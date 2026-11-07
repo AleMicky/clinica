@@ -1450,13 +1450,24 @@ public sealed class DispensacionService(
         CancellationToken cancellationToken)
     {
         var upper = metodoPagoNombre.Trim().ToUpperInvariant();
+
+        // 1. Buscar coincidencia exacta por nombre o código
+        var metodoExacto = await dbContext.MetodosPago
+            .FirstOrDefaultAsync(
+                m => m.Activo &&
+                     (m.Nombre.ToUpper() == upper || m.Codigo.ToUpper() == upper),
+                cancellationToken);
+
+        if (metodoExacto != null) return metodoExacto;
+
+        // 2. Buscar por código normalizado o coincidencia parcial
         var codigoBuscado = upper switch
         {
             var s when s.Contains("EFECTIVO") => "EFECTIVO",
             var s when s.Contains("TARJETA") => "TARJETA",
             var s when s.Contains("QR") => "QR",
             var s when s.Contains("TRANSFERENCIA") => "TRANSFERENCIA",
-            _ => "EFECTIVO"
+            _ => upper
         };
 
         var metodo = await dbContext.MetodosPago

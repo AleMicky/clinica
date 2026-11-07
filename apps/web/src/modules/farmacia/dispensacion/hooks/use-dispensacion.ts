@@ -99,10 +99,10 @@ export function useCreateDispensacion() {
   return useMutation({
     mutationFn: (data: CreateDispensacionRequest) => createDispensacion(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: dispensacionKeys.all });
-      queryClient.invalidateQueries({ queryKey: existenciaKeys.all });
-      queryClient.invalidateQueries({ queryKey: cobroKeys.all });
-      queryClient.invalidateQueries({ queryKey: admisionKeys.all });
+      void queryClient.invalidateQueries({ queryKey: dispensacionKeys.all });
+      void queryClient.invalidateQueries({ queryKey: existenciaKeys.all });
+      void queryClient.invalidateQueries({ queryKey: cobroKeys.all });
+      void queryClient.invalidateQueries({ queryKey: admisionKeys.all });
     },
   });
 }
@@ -119,13 +119,13 @@ export function useUpdateDispensacion() {
       data: CreateDispensacionRequest;
     }) => updateDispensacion(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: dispensacionKeys.all });
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({ queryKey: dispensacionKeys.all });
+      void queryClient.invalidateQueries({
         queryKey: dispensacionKeys.detail(variables.id),
       });
-      queryClient.invalidateQueries({ queryKey: existenciaKeys.all });
-      queryClient.invalidateQueries({ queryKey: cobroKeys.all });
-      queryClient.invalidateQueries({ queryKey: admisionKeys.all });
+      void queryClient.invalidateQueries({ queryKey: existenciaKeys.all });
+      void queryClient.invalidateQueries({ queryKey: cobroKeys.all });
+      void queryClient.invalidateQueries({ queryKey: admisionKeys.all });
     },
   });
 }
@@ -142,12 +142,12 @@ export function useRegistrarCobroDispensacion() {
       data: RegistrarCobroDispensacionRequest;
     }) => registrarCobroDispensacion(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: dispensacionKeys.all });
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({ queryKey: dispensacionKeys.all });
+      void queryClient.invalidateQueries({
         queryKey: dispensacionKeys.detail(variables.id),
       });
-      queryClient.invalidateQueries({ queryKey: cobroKeys.all });
-      queryClient.invalidateQueries({ queryKey: movimientoCajaKeys.all });
+      void queryClient.invalidateQueries({ queryKey: cobroKeys.all });
+      void queryClient.invalidateQueries({ queryKey: movimientoCajaKeys.all });
     },
   });
 }
@@ -158,11 +158,11 @@ export function useEntregarMedicamentosDispensacion() {
   return useMutation({
     mutationFn: (id: number) => entregarMedicamentosDispensacion(id),
     onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: dispensacionKeys.all });
-      queryClient.invalidateQueries({ queryKey: dispensacionKeys.detail(id) });
-      queryClient.invalidateQueries({ queryKey: existenciaKeys.all });
-      queryClient.invalidateQueries({ queryKey: movimientoInventarioKeys.all });
-      queryClient.invalidateQueries({ queryKey: kardexKeys.all });
+      void queryClient.invalidateQueries({ queryKey: dispensacionKeys.all });
+      void queryClient.invalidateQueries({ queryKey: dispensacionKeys.detail(id) });
+      void queryClient.invalidateQueries({ queryKey: existenciaKeys.all });
+      void queryClient.invalidateQueries({ queryKey: movimientoInventarioKeys.all });
+      void queryClient.invalidateQueries({ queryKey: kardexKeys.all });
     },
   });
 }
@@ -179,16 +179,16 @@ export function useAnularDispensacion() {
       data: AnularDispensacionRequest;
     }) => anularDispensacion(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: dispensacionKeys.all });
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({ queryKey: dispensacionKeys.all });
+      void queryClient.invalidateQueries({
         queryKey: dispensacionKeys.detail(variables.id),
       });
-      queryClient.invalidateQueries({ queryKey: existenciaKeys.all });
-      queryClient.invalidateQueries({ queryKey: movimientoInventarioKeys.all });
-      queryClient.invalidateQueries({ queryKey: kardexKeys.all });
-      queryClient.invalidateQueries({ queryKey: cobroKeys.all });
-      queryClient.invalidateQueries({ queryKey: movimientoCajaKeys.all });
-      queryClient.invalidateQueries({ queryKey: admisionKeys.all });
+      void queryClient.invalidateQueries({ queryKey: existenciaKeys.all });
+      void queryClient.invalidateQueries({ queryKey: movimientoInventarioKeys.all });
+      void queryClient.invalidateQueries({ queryKey: kardexKeys.all });
+      void queryClient.invalidateQueries({ queryKey: cobroKeys.all });
+      void queryClient.invalidateQueries({ queryKey: movimientoCajaKeys.all });
+      void queryClient.invalidateQueries({ queryKey: admisionKeys.all });
     },
   });
 }
