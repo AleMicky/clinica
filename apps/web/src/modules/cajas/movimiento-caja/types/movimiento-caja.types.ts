@@ -83,6 +83,7 @@ export interface MovimientoCajaQueryParams {
   tipoMovimientoCajaId?: number;
   fechaDesde?: string;
   fechaHasta?: string;
+  soloPropio?: boolean;
 }
 
 export interface MovimientoCajaMetrics {
@@ -146,6 +147,7 @@ export interface ExportarMovimientosQueryParams {
   naturaleza?: string;
   fechaDesde?: string;
   fechaHasta?: string;
+  soloPropio?: boolean;
 }
 
 export interface PagedResult<T> {

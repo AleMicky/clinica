@@ -38,28 +38,28 @@ import {
 import type { CajaResponse } from "@/modules/cajas/caja/types/caja.types";
 
 interface TurnoCajaListProps {
-  turnos: TurnoCajaResponse[];
-  cajas: CajaResponse[];
-  counts?: {
-    total: number;
-    abiertos: number;
-    cerrados: number;
+  readonly turnos: TurnoCajaResponse[];
+  readonly cajas: CajaResponse[];
+  readonly counts?: {
+    readonly total: number;
+    readonly abiertos: number;
+    readonly cerrados: number;
   };
-  isLoading?: boolean;
-  totalItems: number;
-  currentPage: number;
-  pageSize: number;
-  searchTerm: string;
-  selectedStatusTab?: "TODOS" | "ABIERTOS" | "CERRADOS";
-  selectedCajaFilter?: string;
-  onStatusTabChange?: (tab: "TODOS" | "ABIERTOS" | "CERRADOS") => void;
-  onCajaFilterChange?: (cajaId: string) => void;
-  onSearchChange: (term: string) => void;
-  onPageChange: (page: number) => void;
-  onPageSizeChange: (size: number) => void;
-  onCloseTurno: (turno: TurnoCajaResponse) => void;
-  onNewTurnoClick?: () => void;
-  onRefresh?: () => void;
+  readonly isLoading?: boolean;
+  readonly totalItems: number;
+  readonly currentPage: number;
+  readonly pageSize: number;
+  readonly searchTerm: string;
+  readonly selectedStatusTab?: "TODOS" | "ABIERTOS" | "CERRADOS";
+  readonly selectedCajaFilter?: string;
+  readonly onStatusTabChange?: (tab: "TODOS" | "ABIERTOS" | "CERRADOS") => void;
+  readonly onCajaFilterChange?: (cajaId: string) => void;
+  readonly onSearchChange: (term: string) => void;
+  readonly onPageChange: (page: number) => void;
+  readonly onPageSizeChange: (size: number) => void;
+  readonly onCloseTurno: (turno: TurnoCajaResponse) => void;
+  readonly onNewTurnoClick?: () => void;
+  readonly onRefresh?: () => void;
 }
 
 function formatDate(dateStr?: string | null): string {
@@ -126,7 +126,7 @@ export function TurnoCajaList({
   onCloseTurno,
   onNewTurnoClick,
   onRefresh,
-}: TurnoCajaListProps) {
+}: Readonly<TurnoCajaListProps>) {
   const tabs: Array<{
     key: "TODOS" | "ABIERTOS" | "CERRADOS";
     label: string;

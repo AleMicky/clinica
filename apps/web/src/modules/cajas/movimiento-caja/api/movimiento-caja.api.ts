@@ -63,6 +63,7 @@ export async function getMovimientoCajaMetrics(params?: {
   naturaleza?: string;
   fechaDesde?: string;
   fechaHasta?: string;
+  soloPropio?: boolean;
 }): Promise<MovimientoCajaMetricsResponse> {
   const response = await apiClient.get<MovimientoCajaMetricsResponse>(
     "/movimientos-caja/metricas",

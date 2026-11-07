@@ -347,17 +347,6 @@ export function CobroHeader({
           </PopoverContent>
         </Popover>
 
-        <Link
-          href={ROUTES.CAJA.REPORTES}
-          className={cn(
-            buttonVariants({ variant: "outline", size: "sm" }),
-            "h-7 px-2.5 text-xs gap-1.5 cursor-pointer shadow-2xs font-semibold text-sky-700 dark:text-sky-400 bg-sky-500/10 border-sky-500/30 hover:bg-sky-500/20 shrink-0"
-          )}
-          title="Ver reportes y analítica de cobranzas"
-        >
-          <FileSpreadsheet className="size-3 text-sky-600 dark:text-sky-400" />
-          <span className="hidden sm:inline">Reportes</span>
-        </Link>
 
         {onRefresh && (
           <Button

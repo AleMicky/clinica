@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import {
@@ -15,6 +15,7 @@ import {
   Plus,
   Tag,
   AlertTriangle,
+  UserCheck,
 } from "lucide-react";
 import {
   Dialog,
@@ -37,7 +38,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { useTurnosCaja } from "../../turno-caja/hooks/use-turnos-caja";
+import {
+  useTurnosCaja,
+  useMisTurnosCaja,
+} from "../../turno-caja/hooks/use-turnos-caja";
+import type { MiSesionTurnoCajaResponse } from "../../turno-caja/types/turno-caja.types";
 import { useMonedas } from "@/modules/parametros/moneda/hooks/use-monedas";
 import {
   movimientoCajaSchema,
@@ -57,18 +62,20 @@ import type {
 import type { ConceptoMovimientoCajaInfo } from "../../tipo-movimiento/types/concepto-movimiento.types";
 
 interface MovimientoCajaFormDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  movimientoToEdit?: MovimientoCajaResponse | null;
-  onSuccessCallback?: () => void;
+  readonly open: boolean;
+  readonly onOpenChange: (open: boolean) => void;
+  readonly movimientoToEdit?: MovimientoCajaResponse | null;
+  readonly onSuccessCallback?: () => void;
+  readonly personalMode?: boolean;
+  readonly sessionData?: MiSesionTurnoCajaResponse | null;
 }
 
 interface QuickCreateConceptoDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  tipoPadre: TipoMovimientoCajaInfo | null;
-  conceptosExistentes: ConceptoMovimientoCajaInfo[];
-  onConceptoCreated: (concepto: ConceptoMovimientoCajaInfo) => void;
+  readonly open: boolean;
+  readonly onOpenChange: (open: boolean) => void;
+  readonly tipoPadre: TipoMovimientoCajaInfo | null;
+  readonly conceptosExistentes: readonly ConceptoMovimientoCajaInfo[];
+  readonly onConceptoCreated: (concepto: ConceptoMovimientoCajaInfo) => void;
 }
 
 function QuickCreateConceptoDialog({
@@ -343,16 +350,25 @@ export function MovimientoCajaFormDialog({
   onOpenChange,
   movimientoToEdit,
   onSuccessCallback,
+  personalMode = false,
+  sessionData,
 }: Readonly<MovimientoCajaFormDialogProps>) {
   const isEditing = !!movimientoToEdit;
   const [createConceptoDialogOpen, setCreateConceptoDialogOpen] =
     React.useState(false);
 
-  // Turnos de Caja
-  const { data: turnosData, isLoading: isLoadingTurnos } = useTurnosCaja(
+  // Turnos de Caja (todos para Admin, solo propios en modo sesión)
+  const { data: turnosAdminData, isLoading: isLoadingTurnosAdmin } = useTurnosCaja(
     { page: 1, pageSize: 100 },
-    open
+    open && !personalMode
   );
+  const { data: misTurnosData, isLoading: isLoadingMisTurnos } = useMisTurnosCaja(
+    { page: 1, pageSize: 50 },
+    open && personalMode
+  );
+
+  const turnosData = personalMode ? misTurnosData : turnosAdminData;
+  const isLoadingTurnos = personalMode ? isLoadingMisTurnos : isLoadingTurnosAdmin;
 
   // Tipos de Movimiento
   const { data: tiposData, isLoading: isLoadingTipos } =
@@ -372,7 +388,7 @@ export function MovimientoCajaFormDialog({
     handleSubmit,
     reset,
     setValue,
-    watch,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<MovimientoCajaFormValues>({
     resolver: zodResolver(movimientoCajaSchema),
@@ -388,12 +404,12 @@ export function MovimientoCajaFormDialog({
     },
   });
 
-  const selectedTurnoId = watch("turnoCajaId");
-  const selectedTipoId = watch("tipoMovimientoCajaId");
-  const selectedConceptoId = watch("conceptoMovimientoCajaId");
-  const selectedMonedaId = watch("monedaId");
-  const enteredMonto = watch("monto");
-  const enteredTipoCambio = watch("tipoCambio");
+  const selectedTurnoId = useWatch({ control, name: "turnoCajaId" });
+  const selectedTipoId = useWatch({ control, name: "tipoMovimientoCajaId" });
+  const selectedConceptoId = useWatch({ control, name: "conceptoMovimientoCajaId" });
+  const selectedMonedaId = useWatch({ control, name: "monedaId" });
+  const enteredMonto = useWatch({ control, name: "monto" });
+  const enteredTipoCambio = useWatch({ control, name: "tipoCambio" });
 
   // Conceptos filtrados por Tipo
   const { data: conceptosData, isLoading: isLoadingConceptos } =
@@ -403,28 +419,26 @@ export function MovimientoCajaFormDialog({
     );
 
   const turnosList = React.useMemo(() => {
-    return Array.isArray(turnosData?.items)
-      ? turnosData.items
-      : Array.isArray(turnosData)
-      ? turnosData
-      : [];
+    if (Array.isArray(turnosData?.items)) {
+      return turnosData.items.filter((t) => Number(t.estado) === 1);
+    }
+    if (Array.isArray(turnosData)) {
+      return turnosData.filter((t) => Number(t.estado) === 1);
+    }
+    return [];
   }, [turnosData]);
 
-  const selectedTurno = React.useMemo(() => {
-    const found = turnosList.find((t) => t.id === Number(selectedTurnoId));
-    if (found) return found;
-    if (
-      movimientoToEdit?.turnoCaja &&
-      movimientoToEdit.turnoCaja.id === Number(selectedTurnoId)
-    ) {
-      return movimientoToEdit.turnoCaja;
-    }
-    return null;
-  }, [turnosList, selectedTurnoId, movimientoToEdit]);
+  const turnoAbiertoSesion = sessionData?.turnoAbierto ?? null;
 
-  // Lista de turnos disponibles incluyendo el turno histórico en caso de edición
+  // Lista de turnos disponibles incluyendo el turno activo en sesión y el turno histórico en edición
   const availableTurnos = React.useMemo(() => {
     const list = [...turnosList];
+    if (
+      turnoAbiertoSesion &&
+      !list.some((t) => t.id === turnoAbiertoSesion.id)
+    ) {
+      list.unshift(turnoAbiertoSesion);
+    }
     if (
       movimientoToEdit?.turnoCaja &&
       !list.some((t) => t.id === movimientoToEdit.turnoCaja?.id)
@@ -432,14 +446,27 @@ export function MovimientoCajaFormDialog({
       list.unshift(movimientoToEdit.turnoCaja);
     }
     return list;
-  }, [turnosList, movimientoToEdit]);
+  }, [turnosList, turnoAbiertoSesion, movimientoToEdit]);
+
+  const selectedTurno = React.useMemo(() => {
+    const found = availableTurnos.find((t) => t.id === Number(selectedTurnoId));
+    if (found) return found;
+    if (
+      movimientoToEdit?.turnoCaja &&
+      movimientoToEdit.turnoCaja.id === Number(selectedTurnoId)
+    ) {
+      return movimientoToEdit.turnoCaja;
+    }
+    if (personalMode && turnoAbiertoSesion) {
+      return turnoAbiertoSesion;
+    }
+    return null;
+  }, [availableTurnos, selectedTurnoId, movimientoToEdit, personalMode, turnoAbiertoSesion]);
 
   const monedasList = React.useMemo(() => {
-    return Array.isArray(monedasData?.items)
-      ? monedasData.items
-      : Array.isArray(monedasData)
-      ? monedasData
-      : [];
+    if (Array.isArray(monedasData?.items)) return monedasData.items;
+    if (Array.isArray(monedasData)) return monedasData;
+    return [];
   }, [monedasData]);
 
   const monedaBase = React.useMemo(() => {
@@ -463,12 +490,15 @@ export function MovimientoCajaFormDialog({
     return conceptosData?.find((c) => c.id === Number(selectedConceptoId));
   }, [conceptosData, selectedConceptoId]);
 
-  // Auto-selección de turno cuando sólo hay uno disponible al crear
+  // Auto-selección de turno en modo personal o cuando sólo hay uno disponible al crear
   React.useEffect(() => {
-    if (open && !isEditing && availableTurnos.length === 1 && !selectedTurnoId) {
+    if (!open || isEditing) return;
+    if (personalMode && turnoAbiertoSesion?.id && !selectedTurnoId) {
+      setValue("turnoCajaId", turnoAbiertoSesion.id, { shouldValidate: true });
+    } else if (availableTurnos.length === 1 && !selectedTurnoId) {
       setValue("turnoCajaId", availableTurnos[0].id, { shouldValidate: true });
     }
-  }, [open, isEditing, availableTurnos, selectedTurnoId, setValue]);
+  }, [open, isEditing, personalMode, turnoAbiertoSesion, availableTurnos, selectedTurnoId, setValue]);
 
   // Auto-selección de moneda base por defecto
   React.useEffect(() => {
@@ -492,8 +522,15 @@ export function MovimientoCajaFormDialog({
           observacion: movimientoToEdit.observacion || "",
         });
       } else {
+        let defaultTurnoId = 0;
+        if (personalMode && turnoAbiertoSesion?.id) {
+          defaultTurnoId = turnoAbiertoSesion.id;
+        } else if (availableTurnos.length === 1) {
+          defaultTurnoId = availableTurnos[0].id;
+        }
+
         reset({
-          turnoCajaId: availableTurnos.length === 1 ? availableTurnos[0].id : 0,
+          turnoCajaId: defaultTurnoId,
           tipoMovimientoCajaId: 0,
           conceptoMovimientoCajaId: 0,
           monedaId: monedaBase?.id || 0,
@@ -504,7 +541,7 @@ export function MovimientoCajaFormDialog({
         });
       }
     }
-  }, [open, movimientoToEdit, monedaBase, availableTurnos, reset]);
+  }, [open, movimientoToEdit, monedaBase, personalMode, turnoAbiertoSesion, availableTurnos, reset]);
 
   const handleConceptoCreated = (nuevoConcepto: ConceptoMovimientoCajaInfo) => {
     setValue("conceptoMovimientoCajaId", nuevoConcepto.id, {
@@ -592,62 +629,109 @@ export function MovimientoCajaFormDialog({
                 )}
               </div>
 
-              <Select
-                value={selectedTurnoId ? String(selectedTurnoId) : ""}
-                onValueChange={(val) =>
-                  setValue("turnoCajaId", Number(val), { shouldValidate: true })
-                }
-                disabled={isSubmitting || isLoadingTurnos}
-              >
-                <SelectTrigger id="turnoCajaId" className="w-full h-auto min-h-10 py-2 text-xs bg-background">
-                  <SelectValue placeholder="Seleccione la caja y cajero activo...">
-                    {selectedTurno ? (
-                      <div className="flex flex-col text-left">
+              {personalMode && !isEditing ? (
+                sessionData?.turnoAbierto ? (
+                  <div className="flex items-center justify-between gap-3 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2.5">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="flex size-8 items-center justify-center rounded-lg bg-primary/15 text-primary shrink-0">
+                        <UserCheck className="size-4" />
+                      </div>
+                      <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-foreground text-xs">
-                            {selectedTurno.caja?.nombre || "Caja"}
+                          <span className="font-semibold text-foreground text-xs truncate">
+                            {sessionData.turnoAbierto.caja?.nombre || "Caja Asignada"}
                           </span>
-                          {selectedTurno.caja?.codigo && (
-                            <Badge variant="outline" className="text-[10px] py-0 px-1 font-mono">
-                              {selectedTurno.caja.codigo}
+                          {sessionData.turnoAbierto.caja?.codigo && (
+                            <Badge variant="outline" className="text-[10px] py-0 px-1.5 font-mono">
+                              {sessionData.turnoAbierto.caja.codigo}
                             </Badge>
                           )}
                         </div>
-                        <span className="text-[11px] text-muted-foreground">
-                          Cajero: {selectedTurno.empleado?.nombreCompleto || "Cajero Asignado"}
-                        </span>
+                        <p className="text-[11px] text-muted-foreground truncate">
+                          Cajero en sesión:{" "}
+                          <span className="font-medium text-foreground">
+                            {sessionData.empleado?.nombreCompleto ||
+                              sessionData.turnoAbierto.empleado?.nombreCompleto ||
+                              sessionData.nombreCompleto ||
+                              sessionData.userName ||
+                              "Usuario actual"}
+                          </span>
+                        </p>
                       </div>
-                    ) : undefined}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent className="max-h-60">
-                  {availableTurnos.length === 0 ? (
-                    <div className="py-4 text-center text-xs text-muted-foreground">
-                      No hay turnos de caja abiertos actualmente.
                     </div>
-                  ) : (
-                    availableTurnos.map((t) => (
-                      <SelectItem key={t.id} value={String(t.id)} className="py-2.5">
-                        <div className="flex flex-col gap-0.5 text-left">
+                    <Badge
+                      variant="secondary"
+                      className="text-[10px] font-semibold bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25 shrink-0"
+                    >
+                      Mi Turno #{sessionData.turnoAbierto.id}
+                    </Badge>
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2">
+                    <AlertTriangle className="size-4 text-amber-600 shrink-0" />
+                    <span>
+                      No tiene un turno de caja abierto en su sesión actual. Abra su turno en <strong>Mi Turno de Caja</strong> antes de registrar movimientos.
+                    </span>
+                  </div>
+                )
+              ) : (
+                <Select
+                  value={selectedTurnoId ? String(selectedTurnoId) : ""}
+                  onValueChange={(val) =>
+                    setValue("turnoCajaId", Number(val), { shouldValidate: true })
+                  }
+                  disabled={isSubmitting || isLoadingTurnos}
+                >
+                  <SelectTrigger id="turnoCajaId" className="w-full h-auto min-h-10 py-2 text-xs bg-background">
+                    <SelectValue placeholder="Seleccione la caja y cajero activo...">
+                      {selectedTurno ? (
+                        <div className="flex flex-col text-left">
                           <div className="flex items-center gap-2">
-                            <span className="font-semibold text-xs text-foreground">
-                              {t.caja?.nombre || "Caja"}
+                            <span className="font-semibold text-foreground text-xs">
+                              {selectedTurno.caja?.nombre || "Caja"}
                             </span>
-                            {t.caja?.codigo && (
-                              <Badge variant="secondary" className="text-[10px] py-0 px-1 font-mono">
-                                {t.caja.codigo}
+                            {selectedTurno.caja?.codigo && (
+                              <Badge variant="outline" className="text-[10px] py-0 px-1 font-mono">
+                                {selectedTurno.caja.codigo}
                               </Badge>
                             )}
                           </div>
                           <span className="text-[11px] text-muted-foreground">
-                            Cajero: {t.empleado?.nombreCompleto || "Cajero Asignado"}
+                            Cajero: {selectedTurno.empleado?.nombreCompleto || "Cajero Asignado"}
                           </span>
                         </div>
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
+                      ) : undefined}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent className="max-h-60">
+                    {availableTurnos.length === 0 ? (
+                      <div className="py-4 text-center text-xs text-muted-foreground">
+                        No hay turnos de caja abiertos actualmente.
+                      </div>
+                    ) : (
+                      availableTurnos.map((t) => (
+                        <SelectItem key={t.id} value={String(t.id)} className="py-2.5">
+                          <div className="flex flex-col gap-0.5 text-left">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-xs text-foreground">
+                                {t.caja?.nombre || "Caja"}
+                              </span>
+                              {t.caja?.codigo && (
+                                <Badge variant="secondary" className="text-[10px] py-0 px-1 font-mono">
+                                  {t.caja.codigo}
+                                </Badge>
+                              )}
+                            </div>
+                            <span className="text-[11px] text-muted-foreground">
+                              Cajero: {t.empleado?.nombreCompleto || "Cajero Asignado"}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              )}
 
               {errors.turnoCajaId && (
                 <p className="text-xs text-destructive">{errors.turnoCajaId.message}</p>

@@ -18,18 +18,18 @@ import { cn } from "@/lib/utils";
 import type { ArqueoCajaResponse } from "../types/arqueo-caja.types";
 
 interface ArqueoCajaListProps {
-  arqueos: ArqueoCajaResponse[];
-  isLoading: boolean;
-  totalItems: number;
-  currentPage: number;
-  pageSize: number;
-  searchTerm: string;
-  selectedFilter: "TODOS" | "CUADRADOS" | "DIFERENCIA";
-  onFilterChange: (filter: "TODOS" | "CUADRADOS" | "DIFERENCIA") => void;
-  onSearchChange: (term: string) => void;
-  onPageChange: (page: number) => void;
-  onPageSizeChange: (size: number) => void;
-  onSelectArqueo: (arqueo: ArqueoCajaResponse) => void;
+  readonly arqueos: readonly ArqueoCajaResponse[];
+  readonly isLoading: boolean;
+  readonly totalItems: number;
+  readonly currentPage: number;
+  readonly pageSize: number;
+  readonly searchTerm: string;
+  readonly selectedFilter: "TODOS" | "CUADRADOS" | "DIFERENCIA";
+  readonly onFilterChange: (filter: "TODOS" | "CUADRADOS" | "DIFERENCIA") => void;
+  readonly onSearchChange: (term: string) => void;
+  readonly onPageChange: (page: number) => void;
+  readonly onPageSizeChange: (size: number) => void;
+  readonly onSelectArqueo: (arqueo: ArqueoCajaResponse) => void;
 }
 
 function formatDatetime(dateStr?: string | null): string {
@@ -74,7 +74,7 @@ export function ArqueoCajaList({
   onPageChange,
   onPageSizeChange,
   onSelectArqueo,
-}: ArqueoCajaListProps) {
+}: Readonly<ArqueoCajaListProps>) {
   const tabs: Array<{
     key: "TODOS" | "CUADRADOS" | "DIFERENCIA";
     label: string;

@@ -6,16 +6,16 @@ import { cn } from "@/lib/utils";
 import type { ArqueoCajaMetrics as ArqueoCajaMetricsType } from "../types/arqueo-caja.types";
 
 interface ArqueoCajaMetricsProps {
-  metrics: ArqueoCajaMetricsType;
-  selectedFilter?: "TODOS" | "CUADRADOS" | "DIFERENCIA";
-  onFilterChange?: (filter: "TODOS" | "CUADRADOS" | "DIFERENCIA") => void;
+  readonly metrics: ArqueoCajaMetricsType;
+  readonly selectedFilter?: "TODOS" | "CUADRADOS" | "DIFERENCIA";
+  readonly onFilterChange?: (filter: "TODOS" | "CUADRADOS" | "DIFERENCIA") => void;
 }
 
 export function ArqueoCajaMetrics({
   metrics,
   selectedFilter = "TODOS",
   onFilterChange,
-}: ArqueoCajaMetricsProps) {
+}: Readonly<ArqueoCajaMetricsProps>) {
   const cards = [
     {
       id: "total",

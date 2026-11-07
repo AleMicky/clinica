@@ -5,10 +5,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { TurnoCajaMetrics as TurnoCajaMetricsType } from "../types/turno-caja.types";
 
 interface TurnoCajaMetricsProps {
-  metrics: TurnoCajaMetricsType;
-  isLoading?: boolean;
-  selectedFilter?: "TODOS" | "ABIERTOS" | "CERRADOS";
-  onFilterChange?: (tab: "TODOS" | "ABIERTOS" | "CERRADOS") => void;
+  readonly metrics: TurnoCajaMetricsType;
+  readonly isLoading?: boolean;
+  readonly selectedFilter?: "TODOS" | "ABIERTOS" | "CERRADOS";
+  readonly onFilterChange?: (tab: "TODOS" | "ABIERTOS" | "CERRADOS") => void;
 }
 
 export function TurnoCajaMetrics({
@@ -16,7 +16,7 @@ export function TurnoCajaMetrics({
   isLoading = false,
   selectedFilter = "TODOS",
   onFilterChange,
-}: TurnoCajaMetricsProps) {
+}: Readonly<TurnoCajaMetricsProps>) {
   const abiertosPct =
     metrics.totalTurnos > 0
       ? Math.round((metrics.turnosAbiertos / metrics.totalTurnos) * 100)

@@ -7,7 +7,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import {
   ArrowLeft,
-  Calculator,
   Loader2,
   Plus,
   Trash2,
@@ -21,7 +20,6 @@ import {
   TrendingUp,
   ShieldCheck,
   Check,
-  CreditCard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,7 +36,10 @@ import { Badge } from "@/components/ui/badge";
 import { Autocomplete, type AutocompleteOption } from "@/components/ui/autocomplete";
 import { cn } from "@/lib/utils";
 
-import { useTurnosCaja } from "../../turno-caja/hooks/use-turnos-caja";
+import {
+  useMiSesionTurnoCaja,
+  useMisTurnosCaja,
+} from "../../turno-caja/hooks/use-turnos-caja";
 import { useMetodosPago } from "@/modules/parametros/metodo-pago/hooks/use-metodos-pago";
 import { useMonedas } from "@/modules/parametros/moneda/hooks/use-monedas";
 import {
@@ -52,7 +53,7 @@ import {
 import { EstadoTurnoCaja, type TurnoCajaResponse } from "../../turno-caja/types/turno-caja.types";
 
 interface ArqueoCajaPageFormProps {
-  defaultTurnoId?: number | null;
+  readonly defaultTurnoId?: number | null;
 }
 
 function formatDatetime(dateStr?: string | null): string {
@@ -75,11 +76,14 @@ function formatCurrency(val?: number | null): string {
   })}`;
 }
 
-export function ArqueoCajaPageForm({ defaultTurnoId }: ArqueoCajaPageFormProps) {
+export function ArqueoCajaPageForm({
+  defaultTurnoId,
+}: Readonly<ArqueoCajaPageFormProps>) {
   const router = useRouter();
 
-  // Queries
-  const { data: turnosData, isLoading: isLoadingTurnos } = useTurnosCaja({
+  // Queries: filtra por sesión automáticamente si no es administrador
+  const { data: miSesion } = useMiSesionTurnoCaja();
+  const { data: turnosData, isLoading: isLoadingTurnos } = useMisTurnosCaja({
     page: 1,
     pageSize: 100,
   });
@@ -98,8 +102,8 @@ export function ArqueoCajaPageForm({ defaultTurnoId }: ArqueoCajaPageFormProps) 
     const list = Array.isArray(turnosData?.items)
       ? turnosData.items
       : Array.isArray(turnosData)
-      ? turnosData
-      : [];
+        ? turnosData
+        : [];
     return list.filter(
       (t: TurnoCajaResponse) =>
         t.estado === EstadoTurnoCaja.Abierto || t.id === defaultTurnoId
@@ -136,6 +140,15 @@ export function ArqueoCajaPageForm({ defaultTurnoId }: ArqueoCajaPageFormProps) 
 
   const selectedTurnoId = watch("turnoCajaId");
   const detallesWatch = watch("detalles");
+
+  // Si no se especificó defaultTurnoId y el cajero en sesión tiene un turno abierto, preseleccionarlo
+  React.useEffect(() => {
+    if (!defaultTurnoId && !selectedTurnoId && miSesion?.turnoAbierto?.id) {
+      setValue("turnoCajaId", miSesion.turnoAbierto.id, {
+        shouldValidate: true,
+      });
+    }
+  }, [defaultTurnoId, selectedTurnoId, miSesion?.turnoAbierto?.id, setValue]);
 
   // Query resumen previo del turno seleccionado
   const {
@@ -615,8 +628,8 @@ export function ArqueoCajaPageForm({ defaultTurnoId }: ArqueoCajaPageFormProps) 
                                 isRowExact
                                   ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-700 dark:text-emerald-400"
                                   : diffRow < 0
-                                  ? "bg-rose-500/10 border-rose-500/25 text-rose-700 dark:text-rose-400"
-                                  : "bg-amber-500/10 border-amber-500/25 text-amber-700 dark:text-amber-400"
+                                    ? "bg-rose-500/10 border-rose-500/25 text-rose-700 dark:text-rose-400"
+                                    : "bg-amber-500/10 border-amber-500/25 text-amber-700 dark:text-amber-400"
                               )}
                             >
                               <span className="sm:hidden font-sans font-medium text-[11px]">
@@ -725,8 +738,8 @@ export function ArqueoCajaPageForm({ defaultTurnoId }: ArqueoCajaPageFormProps) 
                       {isExacto
                         ? "Cuadre exacto"
                         : isFaltante
-                        ? "Faltante en caja"
-                        : "Sobrante en caja"}
+                          ? "Faltante en caja"
+                          : "Sobrante en caja"}
                     </span>
                   </div>
                   <span
@@ -735,8 +748,8 @@ export function ArqueoCajaPageForm({ defaultTurnoId }: ArqueoCajaPageFormProps) 
                       isExacto
                         ? "text-emerald-600 dark:text-emerald-400"
                         : isFaltante
-                        ? "text-rose-600 dark:text-rose-400"
-                        : "text-amber-600 dark:text-amber-400"
+                          ? "text-rose-600 dark:text-rose-400"
+                          : "text-amber-600 dark:text-amber-400"
                     )}
                   >
                     {diferenciaCalc > 0
@@ -753,8 +766,8 @@ export function ArqueoCajaPageForm({ defaultTurnoId }: ArqueoCajaPageFormProps) 
                   isExacto
                     ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
                     : isFaltante
-                    ? "bg-rose-500/10 text-rose-700 dark:text-rose-400"
-                    : "bg-amber-500/10 text-amber-700 dark:text-amber-400"
+                      ? "bg-rose-500/10 text-rose-700 dark:text-rose-400"
+                      : "bg-amber-500/10 text-amber-700 dark:text-amber-400"
                 )}
               >
                 {isExacto ? (

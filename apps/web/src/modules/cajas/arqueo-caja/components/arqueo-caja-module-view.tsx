@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/providers/auth-provider";
+import { useMiSesionTurnoCaja } from "../../turno-caja/hooks/use-turnos-caja";
 import { useArqueosCaja } from "../hooks/use-arqueos-caja";
 import { ArqueoCajaHeader } from "./arqueo-caja-header";
 import { ArqueoCajaMetrics } from "./arqueo-caja-metrics";
@@ -11,6 +13,8 @@ import type { ArqueoCajaResponse } from "../types/arqueo-caja.types";
 
 export function ArqueoCajaModuleView() {
   const router = useRouter();
+  const { user } = useAuth();
+
   const [currentPage, setCurrentPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(10);
   const [searchTerm, setSearchTerm] = React.useState("");
@@ -18,10 +22,20 @@ export function ArqueoCajaModuleView() {
   const [selectedFilter, setSelectedFilter] = React.useState<
     "TODOS" | "CUADRADOS" | "DIFERENCIA"
   >("TODOS");
+  const [soloPropioAdmin, setSoloPropioAdmin] = React.useState<boolean>(false);
 
   const [detailDialogOpen, setDetailDialogOpen] = React.useState(false);
   const [selectedArqueo, setSelectedArqueo] =
     React.useState<ArqueoCajaResponse | null>(null);
+
+  const {
+    data: miSesion,
+    isLoading: isLoadingSesion,
+    refetch: refetchSesion,
+  } = useMiSesionTurnoCaja();
+
+  const esAdmin = Boolean(miSesion?.esAdministrador);
+  const effectiveSoloPropio = esAdmin ? soloPropioAdmin : true;
 
   // Debounce search
   React.useEffect(() => {
@@ -40,13 +54,17 @@ export function ArqueoCajaModuleView() {
     page: currentPage,
     pageSize,
     search: debouncedSearch || undefined,
+    soloPropio: effectiveSoloPropio,
   });
 
-  const allArqueos = Array.isArray(apiData?.items)
-    ? apiData.items
-    : Array.isArray(apiData)
-    ? (apiData as unknown as ArqueoCajaResponse[])
-    : [];
+  const allArqueos = React.useMemo(() => {
+    return Array.isArray(apiData?.items)
+      ? apiData.items
+      : Array.isArray(apiData)
+      ? (apiData as unknown as ArqueoCajaResponse[])
+      : [];
+  }, [apiData]);
+
   const totalItems = apiData?.totalItems ?? allArqueos.length;
 
   // Filtrado local por pestañas
@@ -80,7 +98,11 @@ export function ArqueoCajaModuleView() {
   }, [allArqueos, totalItems]);
 
   const handleOpenCreateModal = () => {
-    router.push("/caja/arqueos/nuevo");
+    if (miSesion?.turnoAbierto?.id) {
+      router.push(`/caja/arqueos/nuevo?turnoId=${miSesion.turnoAbierto.id}`);
+    } else {
+      router.push("/caja/arqueos/nuevo");
+    }
   };
 
   const handleSelectArqueo = (arq: ArqueoCajaResponse) => {
@@ -88,11 +110,30 @@ export function ArqueoCajaModuleView() {
     setDetailDialogOpen(true);
   };
 
+  const handleRefreshAll = () => {
+    refetchSesion();
+    refetch();
+  };
+
+  const cajeroNombre =
+    miSesion?.empleado?.nombreCompleto ||
+    miSesion?.nombreCompleto ||
+    user?.nombreCompleto ||
+    user?.userName ||
+    null;
+
   return (
     <div className="flex flex-col gap-3 w-full animate-in fade-in-50 duration-300">
       <ArqueoCajaHeader
         onNewArqueoClick={handleOpenCreateModal}
-        onRefresh={() => refetch()}
+        onRefresh={handleRefreshAll}
+        cajeroNombre={cajeroNombre}
+        esAdmin={esAdmin}
+        soloPropio={effectiveSoloPropio}
+        onSoloPropioChange={(val) => {
+          setSoloPropioAdmin(val);
+          setCurrentPage(1);
+        }}
       />
 
       <ArqueoCajaMetrics
@@ -106,7 +147,7 @@ export function ArqueoCajaModuleView() {
 
       <ArqueoCajaList
         arqueos={filteredArqueos}
-        isLoading={isLoading}
+        isLoading={isLoading || isLoadingSesion}
         totalItems={totalItems}
         currentPage={currentPage}
         pageSize={pageSize}

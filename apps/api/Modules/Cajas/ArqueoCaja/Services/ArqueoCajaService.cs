@@ -9,6 +9,7 @@ using Clinica.Api.Modules.Parametros.MetodoPago.Dtos;
 using Clinica.Api.Modules.Parametros.MetodoPago.Entity;
 using Clinica.Api.Modules.Parametros.Moneda.Dtos;
 using Clinica.Api.Modules.Parametros.Moneda.Entity;
+using Clinica.Api.Shared.Abstractions;
 using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
@@ -18,7 +19,9 @@ using TurnoCajaEntity = Clinica.Api.Modules.Cajas.TurnoCaja.Entity.TurnoCaja;
 
 namespace Clinica.Api.Modules.Cajas.ArqueoCaja.Services;
 
-public sealed class ArqueoCajaService(AppDbContext dbContext)
+public sealed class ArqueoCajaService(
+    AppDbContext dbContext,
+    ICurrentUserService currentUserService)
 {
     private AppDbContext DbContext { get; } = dbContext;
 
@@ -32,11 +35,54 @@ public sealed class ArqueoCajaService(AppDbContext dbContext)
     public async Task<PagedResult<ArqueoCajaResponse>> ListarAsync(
         PaginationRequest pagination,
         string? search,
+        int? turnoCajaId = null,
+        bool? soloPropio = null,
         CancellationToken cancellationToken = default)
     {
+        var usuarioId = currentUserService.UserId
+            ?? throw new UnauthorizedAccessException();
+
+        var esAdministrador = currentUserService.IsInRole("ADMINISTRADOR") ||
+                              currentUserService.IsInRole("Administrador") ||
+                              currentUserService.IsInRole("ADMIN_CAJA");
+
         var query = BuildQuery()
             .AsNoTracking()
             .Where(x => x.Activo);
+
+        if (!esAdministrador || soloPropio == true)
+        {
+            var empleadoId = await DbContext.Users
+                .AsNoTracking()
+                .Where(x => x.Id == usuarioId)
+                .Join(
+                    DbContext.Empleados.Where(e => e.Activo),
+                    usuario => usuario.PersonaId,
+                    empleado => empleado.PersonaId,
+                    (_, empleado) => empleado.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (empleadoId == 0)
+            {
+                if (!esAdministrador)
+                {
+                    return new PagedResult<ArqueoCajaResponse>(
+                        [],
+                        pagination.ValidPage,
+                        pagination.ValidPageSize,
+                        0);
+                }
+            }
+            else
+            {
+                query = query.Where(x => x.TurnoCaja.EmpleadoId == empleadoId);
+            }
+        }
+
+        if (turnoCajaId.HasValue && turnoCajaId.Value > 0)
+        {
+            query = query.Where(x => x.TurnoCajaId == turnoCajaId.Value);
+        }
 
         var normalizedSearch =
             string.IsNullOrWhiteSpace(search)

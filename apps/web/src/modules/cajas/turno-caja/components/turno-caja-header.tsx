@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 interface TurnoCajaHeaderProps {
-  onNewTurnoClick: () => void;
+  readonly onNewTurnoClick: () => void;
 }
 
-export function TurnoCajaHeader({ onNewTurnoClick }: TurnoCajaHeaderProps) {
+export function TurnoCajaHeader({
+  onNewTurnoClick,
+}: Readonly<TurnoCajaHeaderProps>) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-3 border-b border-border/50">
       <div className="space-y-1">

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import {
@@ -528,7 +528,8 @@ function TurnoCajaCierreForm({
     },
   });
 
-  const observacionText = closeForm.watch("observacion") || "";
+  const observacionText =
+    useWatch({ control: closeForm.control, name: "observacion" }) || "";
 
   React.useEffect(() => {
     if (open) {
@@ -655,6 +656,60 @@ function TurnoCajaCierreForm({
   );
 }
 
+interface PersonalCajeroCardProps {
+  readonly sessionData?: MiSesionTurnoCajaResponse | null;
+}
+
+function PersonalCajeroCard({ sessionData }: Readonly<PersonalCajeroCardProps>) {
+  const cajeroNombre =
+    sessionData?.empleado?.nombreCompleto ||
+    sessionData?.nombreCompleto ||
+    "Usuario Autenticado";
+
+  const cajeroSubtitulo = sessionData?.empleado?.codigoEmpleado
+    ? `Código Empleado: ${sessionData.empleado.codigoEmpleado}`
+    : `Usuario: @${sessionData?.userName || "-"}`;
+
+  const faltaEmpleado = Boolean(sessionData && !sessionData.empleado);
+
+  return (
+    <div className="space-y-1.5">
+      <span className="text-xs font-semibold flex items-center gap-1 text-foreground">
+        Cajero en Sesión (Asignación Automática)
+      </span>
+      <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 p-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="size-9 rounded-lg bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
+            <User className="size-4.5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-foreground">
+                {cajeroNombre}
+              </span>
+              <Badge
+                variant="outline"
+                className="text-[10px] bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
+              >
+                Sesión Activa
+              </Badge>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-0.5 font-mono">
+              {cajeroSubtitulo}
+            </p>
+          </div>
+        </div>
+      </div>
+      {faltaEmpleado && (
+        <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1 pt-0.5">
+          <AlertTriangle className="size-3 shrink-0" />
+          Su cuenta de usuario no tiene una ficha de empleado activa vinculada.
+        </p>
+      )}
+    </div>
+  );
+}
+
 interface TurnoCajaAperturaFormProps {
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
@@ -694,10 +749,20 @@ function TurnoCajaAperturaForm({
     },
   });
 
-  const selectedCajaId = openForm.watch("cajaId");
-  const selectedEmpleadoId = openForm.watch("empleadoId");
-  const montoInicialVal = openForm.watch("montoInicial");
-  const observacionText = openForm.watch("observacion") || "";
+  const selectedCajaId = useWatch({
+    control: openForm.control,
+    name: "cajaId",
+  });
+  const selectedEmpleadoId = useWatch({
+    control: openForm.control,
+    name: "empleadoId",
+  });
+  const montoInicialVal = useWatch({
+    control: openForm.control,
+    name: "montoInicial",
+  });
+  const observacionText =
+    useWatch({ control: openForm.control, name: "observacion" }) || "";
 
   const empleadosList = React.useMemo(() => {
     return normalizeList<EmpleadoResponse>(empleadosData);
@@ -851,44 +916,7 @@ function TurnoCajaAperturaForm({
 
         {/* Cajero / Empleado Responsable */}
         {personalMode ? (
-          <div className="space-y-1.5">
-            <Label className="text-xs font-semibold flex items-center gap-1">
-              Cajero en Sesión (Asignación Automática)
-            </Label>
-            <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 p-3 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="size-9 rounded-lg bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                  <User className="size-4.5" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-foreground">
-                      {sessionData?.empleado?.nombreCompleto ||
-                        sessionData?.nombreCompleto ||
-                        "Usuario Autenticado"}
-                    </span>
-                    <Badge
-                      variant="outline"
-                      className="text-[10px] bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
-                    >
-                      Sesión Activa
-                    </Badge>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground mt-0.5 font-mono">
-                    {sessionData?.empleado?.codigoEmpleado
-                      ? `Código Empleado: ${sessionData.empleado.codigoEmpleado}`
-                      : `Usuario: @${sessionData?.userName || "-"}`}
-                  </p>
-                </div>
-              </div>
-            </div>
-            {sessionData && !sessionData.empleado && (
-              <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1 pt-0.5">
-                <AlertTriangle className="size-3 shrink-0" />
-                Su cuenta de usuario no tiene una ficha de empleado activa vinculada.
-              </p>
-            )}
-          </div>
+          <PersonalCajeroCard sessionData={sessionData} />
         ) : (
           <div className="space-y-1.5">
             <Label

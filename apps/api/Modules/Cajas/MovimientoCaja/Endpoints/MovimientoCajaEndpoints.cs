@@ -44,6 +44,7 @@ public static class MovimientoCajaEndpoints
         int? turnoCajaId,
         DateOnly? fechaDesde,
         DateOnly? fechaHasta,
+        bool? soloPropio,
         MovimientoCajaService service,
         CancellationToken cancellationToken)
     {
@@ -53,6 +54,7 @@ public static class MovimientoCajaEndpoints
             turnoCajaId,
             fechaDesde,
             fechaHasta,
+            soloPropio,
             cancellationToken);
 
         return Results.Ok(result);
@@ -64,6 +66,7 @@ public static class MovimientoCajaEndpoints
         string? naturaleza,
         DateOnly? fechaDesde,
         DateOnly? fechaHasta,
+        bool? soloPropio,
         MovimientoCajaService service,
         CancellationToken cancellationToken)
     {
@@ -73,6 +76,7 @@ public static class MovimientoCajaEndpoints
             naturaleza,
             fechaDesde,
             fechaHasta,
+            soloPropio,
             cancellationToken);
 
         return Results.Ok(result);
@@ -84,6 +88,7 @@ public static class MovimientoCajaEndpoints
         string? naturaleza,
         DateOnly? fechaDesde,
         DateOnly? fechaHasta,
+        bool? soloPropio,
         MovimientoCajaService service,
         CancellationToken cancellationToken)
     {
@@ -93,6 +98,7 @@ public static class MovimientoCajaEndpoints
             naturaleza,
             fechaDesde,
             fechaHasta,
+            soloPropio,
             cancellationToken);
 
         var fileName = $"reporte_movimientos_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";

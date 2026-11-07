@@ -70,6 +70,7 @@ export interface ArqueoCajaQueryParams {
   pageSize?: number;
   search?: string;
   turnoCajaId?: number;
+  soloPropio?: boolean;
 }
 
 export interface ArqueoCajaMetrics {

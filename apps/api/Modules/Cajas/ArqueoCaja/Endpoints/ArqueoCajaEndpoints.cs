@@ -37,12 +37,16 @@ public static class ArqueoCajaEndpoints
     private static async Task<IResult> ListarAsync(
         [AsParameters] PaginationRequest pagination,
         string? search,
+        int? turnoCajaId,
+        bool? soloPropio,
         ArqueoCajaService service,
         CancellationToken cancellationToken)
     {
         var result = await service.ListarAsync(
             pagination,
             search,
+            turnoCajaId,
+            soloPropio,
             cancellationToken);
 
         return Results.Ok(result);

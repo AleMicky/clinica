@@ -1,15 +1,30 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import {
+  Store,
+  CheckCircle2,
+  AlertCircle,
+  Filter,
+  ArrowRight,
+} from "lucide-react";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useDebounce } from "@/hooks/use-debounce";
+import { cn } from "@/lib/utils";
 import { movimientoCajaKeys } from "../api/movimiento-caja.key";
 import {
   useDeleteMovimientoCaja,
   useMovimientosCaja,
 } from "../hooks/use-movimientos-caja";
-import { useTurnosCaja } from "../../turno-caja/hooks/use-turnos-caja";
+import {
+  useTurnosCaja,
+  useMisTurnosCaja,
+  useMiSesionTurnoCaja,
+} from "../../turno-caja/hooks/use-turnos-caja";
 import { MovimientoCajaHeader } from "./movimiento-caja-header";
 import { MovimientoCajaMetrics } from "./movimiento-caja-metrics";
 import { MovimientoCajaTable } from "./movimiento-caja-table";
@@ -20,6 +35,25 @@ import type { MovimientoCajaResponse } from "../types/movimiento-caja.types";
 
 export function MovimientoCajaModuleView() {
   const queryClient = useQueryClient();
+
+  // Sesión actual del usuario logueado
+  const { data: sessionData, isLoading: isLoadingSession } =
+    useMiSesionTurnoCaja();
+
+  const esAdmin = Boolean(sessionData?.esAdministrador);
+  const [verTodoAdmin, setVerTodoAdmin] = React.useState<boolean | null>(null);
+
+  // Si es admin, por defecto puede ver todo, o alternar a "Mi Sesión". Si no es admin, siempre filtra por su sesión.
+  const verTodo = esAdmin ? (verTodoAdmin ?? true) : false;
+  const soloPropio = !verTodo;
+
+  const empleadoNombre =
+    sessionData?.empleado?.nombreCompleto ||
+    sessionData?.nombreCompleto ||
+    sessionData?.userName ||
+    null;
+
+  const turnoAbierto = sessionData?.turnoAbierto ?? null;
 
   // Paginación y búsqueda
   const [currentPage, setCurrentPage] = React.useState(1);
@@ -51,14 +85,22 @@ export function MovimientoCajaModuleView() {
   const [selectedMovimientoDetail, setSelectedMovimientoDetail] =
     React.useState<MovimientoCajaResponse | null>(null);
 
-  // Turnos de caja activos para el filtro en la cabecera
-  const { data: turnosData } = useTurnosCaja({ page: 1, pageSize: 50 });
+  // Turnos de caja para el selector de filtro (todos para Admin, solo propios en modo sesión)
+  const { data: turnosAdminData } = useTurnosCaja(
+    { page: 1, pageSize: 50 },
+    verTodo
+  );
+  const { data: misTurnosData } = useMisTurnosCaja(
+    { page: 1, pageSize: 50 },
+    soloPropio
+  );
+
+  const turnosData = soloPropio ? misTurnosData : turnosAdminData;
+
   const turnosList = React.useMemo(() => {
-    return Array.isArray(turnosData?.items)
-      ? turnosData.items
-      : Array.isArray(turnosData)
-      ? turnosData
-      : [];
+    if (Array.isArray(turnosData?.items)) return turnosData.items;
+    if (Array.isArray(turnosData)) return turnosData;
+    return [];
   }, [turnosData]);
 
   // Consulta de movimientos de caja
@@ -74,6 +116,7 @@ export function MovimientoCajaModuleView() {
     turnoCajaId: selectedTurnoId || undefined,
     fechaDesde: fechaDesde || undefined,
     fechaHasta: fechaHasta || undefined,
+    soloPropio,
   });
 
   const deleteMutation = useDeleteMovimientoCaja();
@@ -177,10 +220,22 @@ export function MovimientoCajaModuleView() {
     void refetch();
   }, [queryClient, refetch]);
 
+  const handleToggleVerTodo = React.useCallback(() => {
+    setVerTodoAdmin((prev) => !(prev ?? true));
+    setSelectedTurnoId(null);
+    setCurrentPage(1);
+  }, []);
+
   const handleOpenCreateModal = React.useCallback(() => {
+    if (soloPropio && !turnoAbierto) {
+      toast.warning(
+        "No tiene un turno de caja abierto en su sesión. Abra su turno primero en 'Mi Turno de Caja'."
+      );
+      return;
+    }
     setMovimientoToEdit(null);
     setFormDialogOpen(true);
-  }, []);
+  }, [soloPropio, turnoAbierto]);
 
   const handleEdit = React.useCallback((mov: MovimientoCajaResponse) => {
     setMovimientoToEdit(mov);
@@ -230,16 +285,114 @@ export function MovimientoCajaModuleView() {
     handleRefresh,
   ]);
 
-  const isRefreshing = isLoading || isRefetching;
+  const isRefreshing = isLoading || isRefetching || isLoadingSession;
+  const isFilteredByMyOpenShift =
+    Boolean(turnoAbierto) && selectedTurnoId === turnoAbierto?.id;
 
   return (
     <div className="space-y-4 w-full animate-in fade-in-50 duration-200">
-      {/* Cabecera Principal Limpia y Profesional */}
+      {/* Cabecera Principal con Sesión y Control por Rol */}
       <MovimientoCajaHeader
         onNewMovimientoClick={handleOpenCreateModal}
         onRefresh={handleRefresh}
         isRefreshing={isRefreshing}
+        empleadoNombre={empleadoNombre}
+        turnoActivoLabel={
+          turnoAbierto
+            ? `${turnoAbierto.caja?.nombre || "Caja"} • Turno #${turnoAbierto.id}`
+            : null
+        }
+        esAdmin={esAdmin}
+        verTodoAdmin={verTodo}
+        onToggleVerTodo={esAdmin ? handleToggleVerTodo : undefined}
+        disableNewMovimiento={soloPropio && !turnoAbierto && !isLoadingSession}
       />
+
+      {/* Banner de Turno en Sesión (Control rápido por Turno de Caja) */}
+      {turnoAbierto ? (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-emerald-500/25 bg-emerald-500/5 px-3.5 py-2.5">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 shrink-0">
+              <Store className="size-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-xs font-bold text-foreground">
+                  Mi Turno en Sesión: {turnoAbierto.caja?.nombre || "Caja"}
+                </span>
+                {turnoAbierto.caja?.codigo && (
+                  <Badge variant="outline" className="text-[10px] py-0 px-1.5 font-mono">
+                    {turnoAbierto.caja.codigo}
+                  </Badge>
+                )}
+                <Badge className="text-[10px] py-0 px-1.5 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25 font-semibold gap-1">
+                  <CheckCircle2 className="size-2.5" />
+                  <span>Abierto (#{turnoAbierto.id})</span>
+                </Badge>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Cajero:{" "}
+                <span className="font-medium text-foreground">
+                  {empleadoNombre || "Usuario en sesión"}
+                </span>{" "}
+                • Fondo inicial: Bs.{" "}
+                {Number(turnoAbierto.montoInicial || 0).toLocaleString("es-BO", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              type="button"
+              size="sm"
+              variant={isFilteredByMyOpenShift ? "default" : "outline"}
+              onClick={() =>
+                handleTurnoChange(
+                  isFilteredByMyOpenShift ? null : turnoAbierto.id
+                )
+              }
+              className="h-8 text-xs gap-1.5 cursor-pointer"
+            >
+              <Filter className="size-3.5" />
+              <span>
+                {isFilteredByMyOpenShift
+                  ? "Viendo solo Mi Turno Actual (Ver Todos)"
+                  : "Filtrar solo Mi Turno Actual"}
+              </span>
+            </Button>
+          </div>
+        </div>
+      ) : (
+        soloPropio &&
+        !isLoadingSession && (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-2.5 text-xs text-amber-900 dark:text-amber-300">
+            <div className="flex items-center gap-2.5">
+              <AlertCircle className="size-4 text-amber-600 dark:text-amber-400 shrink-0" />
+              <div>
+                <span className="font-semibold">
+                  No tiene un turno de caja abierto en su sesión actual.
+                </span>{" "}
+                <span className="text-amber-800/90 dark:text-amber-300/90">
+                  Puede consultar el historial de movimientos de sus turnos anteriores o abrir un turno para operar.
+                </span>
+              </div>
+            </div>
+            <Link
+              href="/caja/mi-turno"
+              className={cn(
+                buttonVariants({ variant: "outline", size: "sm" }),
+                "h-8 text-xs gap-1.5 bg-background font-semibold shrink-0"
+              )}
+            >
+              <span>Ir a Mi Turno de Caja</span>
+              <ArrowRight className="size-3.5" />
+            </Link>
+          </div>
+        )
+      )}
 
       {/* Métricas Financieras en Bolivianos (Bs.) */}
       <MovimientoCajaMetrics metrics={metrics} isLoading={isRefreshing} />
@@ -277,6 +430,8 @@ export function MovimientoCajaModuleView() {
         onOpenChange={setFormDialogOpen}
         movimientoToEdit={movimientoToEdit}
         onSuccessCallback={handleRefresh}
+        personalMode={soloPropio}
+        sessionData={sessionData}
       />
 
       {/* Diálogo de Confirmación de Eliminación */}

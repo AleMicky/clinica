@@ -6,6 +6,7 @@ using Clinica.Api.Modules.Cajas.TurnoCaja.Dtos;
 using Clinica.Api.Modules.Cajas.TurnoCaja.Entity;
 using Clinica.Api.Modules.Parametros.Moneda.Dtos;
 using Clinica.Api.Modules.Parametros.Moneda.Entity;
+using Clinica.Api.Shared.Abstractions;
 using Clinica.Api.Shared.Exceptions;
 using Clinica.Api.Shared.Excel;
 using Clinica.Api.Shared.Pagination;
@@ -19,13 +20,37 @@ namespace Clinica.Api.Modules.Cajas.MovimientoCaja.Services;
 
 public sealed class MovimientoCajaService(
     AppDbContext dbContext,
-    IExcelReportGenerator excelReportGenerator)
+    IExcelReportGenerator excelReportGenerator,
+    ICurrentUserService currentUserService)
 {
     private AppDbContext DbContext { get; } = dbContext;
     private IExcelReportGenerator ExcelReportGenerator { get; } = excelReportGenerator;
+    private ICurrentUserService CurrentUserService { get; } = currentUserService;
 
     private DbSet<MovimientoCajaEntity> Entities =>
         DbContext.Set<MovimientoCajaEntity>();
+
+    private bool EsAdministrador() =>
+        CurrentUserService.IsInRole("ADMINISTRADOR") ||
+        CurrentUserService.IsInRole("Administrador") ||
+        CurrentUserService.IsInRole("ADMIN_CAJA");
+
+    private async Task<int?> ObtenerEmpleadoActualIdAsync(CancellationToken cancellationToken)
+    {
+        if (CurrentUserService.UserId is null)
+            return null;
+
+        var empleadoId = await (
+            from u in DbContext.Users.AsNoTracking()
+            where u.Id == CurrentUserService.UserId.Value && u.PersonaId != null
+            join e in DbContext.Empleados.AsNoTracking()
+                on u.PersonaId equals e.PersonaId
+            where e.Activo
+            select (int?)e.Id
+        ).FirstOrDefaultAsync(cancellationToken);
+
+        return empleadoId;
+    }
 
     // ============================================================
     // LISTAR
@@ -37,11 +62,28 @@ public sealed class MovimientoCajaService(
         int? turnoCajaId = null,
         DateOnly? fechaDesde = null,
         DateOnly? fechaHasta = null,
+        bool? soloPropio = null,
         CancellationToken cancellationToken = default)
     {
         var query = BuildQuery()
             .AsNoTracking()
             .Where(x => x.Activo);
+
+        var esAdmin = EsAdministrador();
+        if (!esAdmin || soloPropio == true)
+        {
+            var empleadoId = await ObtenerEmpleadoActualIdAsync(cancellationToken);
+            if (empleadoId is null)
+            {
+                return new PagedResult<MovimientoCajaResponse>(
+                    [],
+                    pagination.ValidPage,
+                    pagination.ValidPageSize,
+                    0);
+            }
+
+            query = query.Where(x => x.TurnoCaja.EmpleadoId == empleadoId.Value);
+        }
 
         if (turnoCajaId.HasValue)
         {
@@ -99,6 +141,7 @@ public sealed class MovimientoCajaService(
         string? naturaleza = null,
         DateOnly? fechaDesde = null,
         DateOnly? fechaHasta = null,
+        bool? soloPropio = null,
         CancellationToken cancellationToken = default)
     {
         var query = Entities
@@ -107,6 +150,18 @@ public sealed class MovimientoCajaService(
             .Include(x => x.TurnoCaja).ThenInclude(x => x.Caja)
             .AsNoTracking()
             .Where(x => x.Activo);
+
+        var esAdmin = EsAdministrador();
+        if (!esAdmin || soloPropio == true)
+        {
+            var empleadoId = await ObtenerEmpleadoActualIdAsync(cancellationToken);
+            if (empleadoId is null)
+            {
+                return new MovimientoCajaMetricsResponse();
+            }
+
+            query = query.Where(x => x.TurnoCaja.EmpleadoId == empleadoId.Value);
+        }
 
         if (turnoCajaId.HasValue)
         {
@@ -303,11 +358,21 @@ public sealed class MovimientoCajaService(
         string? naturaleza = null,
         DateOnly? fechaDesde = null,
         DateOnly? fechaHasta = null,
+        bool? soloPropio = null,
         CancellationToken cancellationToken = default)
     {
         var query = BuildQuery()
             .AsNoTracking()
             .Where(x => x.Activo);
+
+        var esAdmin = EsAdministrador();
+        if (!esAdmin || soloPropio == true)
+        {
+            var empleadoId = await ObtenerEmpleadoActualIdAsync(cancellationToken);
+            query = empleadoId is null
+                ? query.Where(x => false)
+                : query.Where(x => x.TurnoCaja.EmpleadoId == empleadoId.Value);
+        }
 
         if (turnoCajaId.HasValue)
         {
@@ -408,6 +473,16 @@ public sealed class MovimientoCajaService(
         {
             throw new ConflictException(
                 "No se pueden registrar movimientos en un turno de caja cerrado.");
+        }
+
+        if (!EsAdministrador())
+        {
+            var empleadoId = await ObtenerEmpleadoActualIdAsync(cancellationToken);
+            if (empleadoId is null || turno.EmpleadoId != empleadoId.Value)
+            {
+                throw new ConflictException(
+                    "Solo puede registrar movimientos en su propio turno de caja activo.");
+            }
         }
 
         var moneda = await ObtenerMonedaAsync(
@@ -840,6 +915,16 @@ public sealed class MovimientoCajaService(
         {
             throw new ConflictException(
                 "No se pueden anular o eliminar movimientos de un turno de caja cerrado.");
+        }
+
+        if (!EsAdministrador())
+        {
+            var empleadoId = await ObtenerEmpleadoActualIdAsync(cancellationToken);
+            if (empleadoId is null || entity.TurnoCaja.EmpleadoId != empleadoId.Value)
+            {
+                throw new ConflictException(
+                    "Solo puede anular movimientos pertenecientes a su propio turno de caja activo.");
+            }
         }
 
         entity.Activo = false;
