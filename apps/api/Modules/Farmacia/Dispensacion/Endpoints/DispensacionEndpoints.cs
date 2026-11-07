@@ -28,6 +28,9 @@ public static class DispensacionEndpoints
         group.MapPost("/", CrearAsync)
             .WithName("CrearDispensacion");
 
+        group.MapPut("/{id:int}", ActualizarAsync)
+            .WithName("ActualizarDispensacion");
+
         group.MapPost("/{id:int}/cobrar", RegistrarCobroAsync)
             .WithName("RegistrarCobroDispensacion");
 
@@ -101,6 +104,16 @@ public static class DispensacionEndpoints
     {
         var result = await service.CrearAsync(request, cancellationToken);
         return TypedResults.Created($"/api/v1/farmacia/dispensaciones/{result.Id}", result);
+    }
+
+    private static async Task<IResult> ActualizarAsync(
+        int id,
+        CreateDispensacionRequest request,
+        IDispensacionService service,
+        CancellationToken cancellationToken)
+    {
+        var result = await service.ActualizarAsync(id, request, cancellationToken);
+        return TypedResults.Ok(result);
     }
 
     private static async Task<IResult> RegistrarCobroAsync(

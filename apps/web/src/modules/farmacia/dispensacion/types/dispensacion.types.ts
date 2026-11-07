@@ -1,13 +1,46 @@
 export type TipoDispensacion =
   | "VentaAmbulatoria"
   | "Hospitalaria"
-  | "Urgencia";
+  | "Urgencia"
+  | "ventaAmbulatoria"
+  | "hospitalaria"
+  | "urgencia";
 
 export type EstadoDispensacion =
   | "PendientePago"
   | "Pagado"
   | "Entregado"
-  | "Anulado";
+  | "Anulado"
+  | "pendientePago"
+  | "pagado"
+  | "entregado"
+  | "anulado";
+
+export function isEstadoPendientePago(
+  estado?: string | number | null
+): boolean {
+  if (estado == null) return false;
+  const s = String(estado).trim().toLowerCase();
+  return s === "pendientepago" || s === "1";
+}
+
+export function isEstadoPagado(estado?: string | number | null): boolean {
+  if (estado == null) return false;
+  const s = String(estado).trim().toLowerCase();
+  return s === "pagado" || s === "2";
+}
+
+export function isEstadoEntregado(estado?: string | number | null): boolean {
+  if (estado == null) return false;
+  const s = String(estado).trim().toLowerCase();
+  return s === "entregado" || s === "3";
+}
+
+export function isEstadoAnulado(estado?: string | number | null): boolean {
+  if (estado == null) return false;
+  const s = String(estado).trim().toLowerCase();
+  return s === "anulado" || s === "4";
+}
 
 export interface DispensacionDetalleRequest {
   productoId: number;

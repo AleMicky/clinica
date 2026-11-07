@@ -484,6 +484,221 @@ public sealed class DispensacionService(
         }
     }
 
+    public async Task<DispensacionResponse> ActualizarAsync(
+        int id,
+        CreateDispensacionRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (request.Detalles.Count == 0)
+        {
+            throw new BusinessException("Debe agregar al menos un medicamento o producto a la dispensación.");
+        }
+
+        var ownsTransaction = dbContext.Database.CurrentTransaction is null;
+        await using var tx = ownsTransaction
+            ? await dbContext.Database.BeginTransactionAsync(cancellationToken)
+            : null;
+        try
+        {
+            var entity = await dbContext.Set<Entity.Dispensacion>()
+                .Include(x => x.Detalles)
+                .FirstOrDefaultAsync(x => x.Id == id && x.Activo, cancellationToken);
+
+            if (entity is null)
+            {
+                throw new NotFoundException(nameof(Entity.Dispensacion), id);
+            }
+
+            if (entity.Estado != EstadoDispensacion.PendientePago)
+            {
+                throw new BusinessException($"Solo se pueden modificar dispensaciones en estado Pendiente de Pago. Estado actual: '{entity.Estado}'.");
+            }
+
+            // 1. Liberar la reserva previa de existencias y lotes
+            var detallesPrevios = entity.Detalles.Where(d => d.Activo).ToList();
+            await LiberarReservaStockDispensacionAsync(entity.AlmacenId, detallesPrevios, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            // 2. Si cambió el almacén emisor, validar nuevo almacén
+            var almacen = await dbContext.Almacenes
+                .FirstOrDefaultAsync(x => x.Id == request.AlmacenId && x.Activo, cancellationToken);
+            if (almacen is null)
+            {
+                throw new NotFoundException(nameof(Almacen), request.AlmacenId);
+            }
+
+            // 3. Validar stock disponible para los nuevos detalles
+            var agrupadoPorProducto = request.Detalles
+                .GroupBy(d => d.ProductoId)
+                .Select(g => new { ProductoId = g.Key, CantidadTotal = g.Sum(x => x.Cantidad) })
+                .ToList();
+
+            foreach (var grupo in agrupadoPorProducto)
+            {
+                if (grupo.CantidadTotal <= 0)
+                {
+                    throw new BusinessException("La cantidad debe ser mayor a cero.");
+                }
+
+                var existencia = await dbContext.Existencias
+                    .FirstOrDefaultAsync(x => x.AlmacenId == request.AlmacenId && x.ProductoId == grupo.ProductoId && x.Activo, cancellationToken);
+
+                var disponible = existencia != null ? existencia.Cantidad - existencia.CantidadReservada : 0m;
+                if (existencia is null || disponible < grupo.CantidadTotal)
+                {
+                    var prod = await dbContext.Productos.FindAsync([grupo.ProductoId], cancellationToken);
+                    var prodNom = prod?.Nombre ?? $"#{grupo.ProductoId}";
+                    throw new BusinessException($"Stock insuficiente en {almacen.Nombre} para '{prodNom}'. Disponible: {disponible}, Solicitado: {grupo.CantidadTotal}.");
+                }
+            }
+
+            // 4. Actualizar cabecera
+            var clienteNombre = request.ClienteNombre?.Trim();
+            if (string.IsNullOrWhiteSpace(clienteNombre) && !request.PacienteId.HasValue)
+            {
+                clienteNombre = "Cliente Mostrador (Venta Libre)";
+            }
+
+            entity.Tipo = request.Tipo;
+            entity.AlmacenId = request.AlmacenId;
+            entity.PacienteId = request.PacienteId;
+            entity.ClienteNombre = clienteNombre;
+            entity.ClienteDocumento = request.ClienteDocumento?.Trim();
+            entity.MedicoId = request.MedicoId;
+            entity.AdmisionId = request.AdmisionId;
+            entity.Observaciones = request.Observaciones?.Trim();
+            if (request.Fecha.HasValue)
+            {
+                entity.Fecha = request.Fecha.Value.ToUniversalTime();
+            }
+
+            // 5. Eliminar detalles previos de la base de datos
+            dbContext.Set<DispensacionDetalle>().RemoveRange(entity.Detalles);
+
+            // 6. Aplicar nuevas reservas y crear nuevos detalles
+            decimal subtotal = 0m;
+            decimal descuentoTotal = 0m;
+            var nuevosDetalles = new List<DispensacionDetalle>();
+
+            foreach (var det in request.Detalles)
+            {
+                if (det.Cantidad <= 0)
+                {
+                    throw new BusinessException("La cantidad de cada ítem debe ser mayor a cero.");
+                }
+
+                var totalLinea = Math.Round((det.Cantidad * det.PrecioUnitario) - det.Descuento, 2);
+                subtotal += det.Cantidad * det.PrecioUnitario;
+                descuentoTotal += det.Descuento;
+
+                string? loteNombre = null;
+                DateTime? fechaVenc = null;
+
+                var existencia = await dbContext.Existencias
+                    .FirstAsync(x => x.AlmacenId == request.AlmacenId && x.ProductoId == det.ProductoId && x.Activo, cancellationToken);
+
+                existencia.CantidadReservada += det.Cantidad;
+
+                if (det.PartidaInventarioId.HasValue)
+                {
+                    var partida = await dbContext.PartidasInventario.FindAsync([det.PartidaInventarioId.Value], cancellationToken);
+                    if (partida != null)
+                    {
+                        loteNombre = partida.NumeroPartida;
+                        if (partida.FechaVencimiento.HasValue)
+                        {
+                            fechaVenc = partida.FechaVencimiento.Value.ToDateTime(TimeOnly.MinValue);
+                        }
+                    }
+
+                    var existenciaPartida = await dbContext.ExistenciasPartidas
+                        .FirstOrDefaultAsync(
+                            ep => ep.ExistenciaId == existencia.Id &&
+                                  ep.PartidaInventarioId == det.PartidaInventarioId.Value &&
+                                  ep.Activo,
+                            cancellationToken);
+
+                    if (existenciaPartida != null)
+                    {
+                        var dispLote = existenciaPartida.Cantidad - existenciaPartida.CantidadReservada;
+                        if (dispLote < det.Cantidad)
+                        {
+                            throw new BusinessException($"El lote '{loteNombre ?? det.PartidaInventarioId.Value.ToString()}' solo tiene {dispLote} unidades disponibles.");
+                        }
+
+                        existenciaPartida.CantidadReservada += det.Cantidad;
+                    }
+                }
+                else
+                {
+                    var partidasDisponibles = await dbContext.ExistenciasPartidas
+                        .Include(ep => ep.PartidaInventario)
+                        .Where(ep => ep.ExistenciaId == existencia.Id && ep.Activo && ep.Cantidad > ep.CantidadReservada)
+                        .OrderBy(ep => ep.PartidaInventario.FechaVencimiento ?? DateOnly.MaxValue)
+                        .ThenBy(ep => ep.Id)
+                        .ToListAsync(cancellationToken);
+
+                    decimal porReservar = det.Cantidad;
+                    foreach (var ep in partidasDisponibles)
+                    {
+                        if (porReservar <= 0m) break;
+                        var dispEp = ep.Cantidad - ep.CantidadReservada;
+                        if (dispEp <= 0m) continue;
+
+                        var reservaEp = Math.Min(porReservar, dispEp);
+                        ep.CantidadReservada += reservaEp;
+                        porReservar -= reservaEp;
+
+                        if (loteNombre is null)
+                        {
+                            loteNombre = ep.PartidaInventario.NumeroPartida;
+                            if (ep.PartidaInventario.FechaVencimiento.HasValue)
+                            {
+                                fechaVenc = ep.PartidaInventario.FechaVencimiento.Value.ToDateTime(TimeOnly.MinValue);
+                            }
+                        }
+                    }
+                }
+
+                nuevosDetalles.Add(new DispensacionDetalle
+                {
+                    DispensacionId = entity.Id,
+                    ProductoId = det.ProductoId,
+                    PartidaInventarioId = det.PartidaInventarioId,
+                    Lote = loteNombre,
+                    FechaVencimiento = fechaVenc,
+                    Cantidad = det.Cantidad,
+                    PrecioUnitario = det.PrecioUnitario,
+                    Descuento = det.Descuento,
+                    Total = totalLinea,
+                    Indicaciones = det.Indicaciones?.Trim(),
+                    Activo = true
+                });
+            }
+
+            entity.Subtotal = Math.Round(subtotal, 2);
+            entity.Descuento = Math.Round(descuentoTotal, 2);
+            entity.Total = Math.Max(0m, entity.Subtotal - entity.Descuento);
+            entity.Detalles = nuevosDetalles;
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+            if (tx is not null)
+            {
+                await tx.CommitAsync(cancellationToken);
+            }
+
+            return await ObtenerPorIdAsync(entity.Id, cancellationToken);
+        }
+        catch
+        {
+            if (tx is not null)
+            {
+                await tx.RollbackAsync(cancellationToken);
+            }
+            throw;
+        }
+    }
+
     public async Task<DispensacionResponse> RegistrarCobroAsync(
         int id,
         RegistrarCobroDispensacionRequest request,

@@ -35,6 +35,11 @@ public interface IDispensacionService
         CreateDispensacionRequest request,
         CancellationToken cancellationToken = default);
 
+    Task<DispensacionResponse> ActualizarAsync(
+        int id,
+        CreateDispensacionRequest request,
+        CancellationToken cancellationToken = default);
+
     Task<DispensacionResponse> RegistrarCobroAsync(
         int id,
         RegistrarCobroDispensacionRequest request,

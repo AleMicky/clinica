@@ -64,6 +64,17 @@ export async function createDispensacion(
   return response.data;
 }
 
+export async function updateDispensacion(
+  id: number,
+  request: CreateDispensacionRequest
+): Promise<DispensacionResponse> {
+  const response = await apiClient.put<DispensacionResponse>(
+    `/farmacia/dispensaciones/${id}`,
+    request
+  );
+  return response.data;
+}
+
 export async function registrarCobroDispensacion(
   id: number,
   request: RegistrarCobroDispensacionRequest

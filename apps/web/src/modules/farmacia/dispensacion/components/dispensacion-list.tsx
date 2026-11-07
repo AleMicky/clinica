@@ -5,6 +5,7 @@ import {
   Search,
   MoreVertical,
   Eye,
+  Pencil,
   CheckCircle2,
   PackageCheck,
   Ban,
@@ -30,9 +31,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { DataTablePagination } from "@/components/shared";
 import { cn, formatDate } from "@/lib/utils";
-import type {
-  DispensacionResponse,
-  EstadoDispensacion,
+import {
+  type DispensacionResponse,
+  type EstadoDispensacion,
+  isEstadoPendientePago,
+  isEstadoPagado,
+  isEstadoEntregado,
+  isEstadoAnulado,
 } from "../types/dispensacion.types";
 import type { AlmacenResponse } from "@/modules/almacenes/almacen/types/almacen.types";
 
@@ -52,6 +57,7 @@ interface DispensacionListProps {
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (size: number) => void;
   onViewDetail?: (item: DispensacionResponse) => void;
+  onEdit?: (item: DispensacionResponse) => void;
   onCobrar?: (item: DispensacionResponse) => void;
   onEntregar?: (item: DispensacionResponse) => void;
   onAnular?: (item: DispensacionResponse) => void;
@@ -75,78 +81,85 @@ export function DispensacionList({
   onPageChange,
   onPageSizeChange,
   onViewDetail,
+  onEdit,
   onCobrar,
   onEntregar,
   onAnular,
   onViewAudit,
   onRefresh,
 }: DispensacionListProps) {
-  const getEstadoBadge = (estado: EstadoDispensacion) => {
-    switch (estado) {
-      case "PendientePago":
-        return (
-          <Badge
-            variant="outline"
-            className="text-[10px] h-4.5 px-1.5 font-bold text-amber-700 dark:text-amber-400 border-amber-500/30 bg-amber-500/10 gap-1"
-          >
-            <Clock className="size-2.5" /> Pendiente Caja
-          </Badge>
-        );
-      case "Pagado":
-        return (
-          <Badge
-            variant="outline"
-            className="text-[10px] h-4.5 px-1.5 font-bold text-blue-700 dark:text-blue-400 border-blue-500/30 bg-blue-500/10 gap-1"
-          >
-            <CheckCircle2 className="size-2.5" /> Pagado (Listo)
-          </Badge>
-        );
-      case "Entregado":
-        return (
-          <Badge
-            variant="outline"
-            className="text-[10px] h-4.5 px-1.5 font-bold text-emerald-700 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/10 gap-1"
-          >
-            <PackageCheck className="size-2.5" /> Entregado
-          </Badge>
-        );
-      case "Anulado":
-        return (
-          <Badge
-            variant="outline"
-            className="text-[10px] h-4.5 px-1.5 font-bold text-rose-700 dark:text-rose-400 border-rose-500/30 bg-rose-500/10 gap-1"
-          >
-            <Ban className="size-2.5" /> Anulado
-          </Badge>
-        );
-      default:
-        return null;
+  const getEstadoBadge = (estado: string | number) => {
+    if (isEstadoPendientePago(estado)) {
+      return (
+        <Badge
+          variant="outline"
+          className="text-[10px] h-4.5 px-1.5 font-bold text-amber-700 dark:text-amber-400 border-amber-500/30 bg-amber-500/10 gap-1"
+        >
+          <Clock className="size-2.5" /> Pendiente Pago (Editable)
+        </Badge>
+      );
     }
+    if (isEstadoPagado(estado)) {
+      return (
+        <Badge
+          variant="outline"
+          className="text-[10px] h-4.5 px-1.5 font-bold text-blue-700 dark:text-blue-400 border-blue-500/30 bg-blue-500/10 gap-1"
+        >
+          <CheckCircle2 className="size-2.5" /> Pagado (Listo para Entrega)
+        </Badge>
+      );
+    }
+    if (isEstadoEntregado(estado)) {
+      return (
+        <Badge
+          variant="outline"
+          className="text-[10px] h-4.5 px-1.5 font-bold text-emerald-700 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/10 gap-1"
+        >
+          <PackageCheck className="size-2.5" /> Entregado (Despachado)
+        </Badge>
+      );
+    }
+    if (isEstadoAnulado(estado)) {
+      return (
+        <Badge
+          variant="outline"
+          className="text-[10px] h-4.5 px-1.5 font-bold text-rose-700 dark:text-rose-400 border-rose-500/30 bg-rose-500/10 gap-1"
+        >
+          <Ban className="size-2.5" /> Anulado
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="outline" className="text-[10px] h-4.5 px-1.5 font-medium">
+        {String(estado ?? "Desconocido")}
+      </Badge>
+    );
   };
 
-  const getTipoBadge = (tipo: string) => {
-    switch (tipo) {
-      case "VentaAmbulatoria":
-        return (
-          <Badge variant="secondary" className="text-[9px] h-4 px-1 text-muted-foreground font-medium">
-            Venta Mostrador
-          </Badge>
-        );
-      case "Hospitalaria":
-        return (
-          <Badge variant="secondary" className="text-[9px] h-4 px-1 text-blue-600 dark:text-blue-400 font-medium">
-            Hospitalización
-          </Badge>
-        );
-      case "Urgencia":
-        return (
-          <Badge variant="secondary" className="text-[9px] h-4 px-1 text-orange-600 dark:text-orange-400 font-medium">
-            Urgencias
-          </Badge>
-        );
-      default:
-        return null;
+  const getTipoBadge = (tipo?: string | number) => {
+    const t = String(tipo ?? "").toLowerCase();
+    if (t === "ventaambulatoria" || t === "1") {
+      return (
+        <Badge variant="secondary" className="text-[9px] h-4 px-1 text-muted-foreground font-medium">
+          Venta Mostrador
+        </Badge>
+      );
     }
+    if (t === "hospitalaria" || t === "2") {
+      return (
+        <Badge variant="secondary" className="text-[9px] h-4 px-1 text-blue-600 dark:text-blue-400 font-medium">
+          Hospitalización
+        </Badge>
+      );
+    }
+    if (t === "urgencia" || t === "3") {
+      return (
+        <Badge variant="secondary" className="text-[9px] h-4 px-1 text-orange-600 dark:text-orange-400 font-medium">
+          Urgencias
+        </Badge>
+      );
+    }
+    return null;
   };
 
   return (
@@ -199,7 +212,19 @@ export function DispensacionList({
 
       {/* Status Tabs */}
       <Tabs
-        value={selectedEstado ?? "TODOS"}
+        value={
+          !selectedEstado
+            ? "TODOS"
+            : isEstadoPendientePago(selectedEstado)
+              ? "PendientePago"
+              : isEstadoPagado(selectedEstado)
+                ? "Pagado"
+                : isEstadoEntregado(selectedEstado)
+                  ? "Entregado"
+                  : isEstadoAnulado(selectedEstado)
+                    ? "Anulado"
+                    : String(selectedEstado)
+        }
         onValueChange={(val) => {
           onEstadoChange?.(val === "TODOS" ? null : (val as EstadoDispensacion));
         }}
@@ -257,6 +282,10 @@ export function DispensacionList({
               item.pacienteNombre || item.clienteNombre || "Cliente Particular";
             const documento =
               item.pacienteDocumento || item.clienteDocumento || "S/D";
+            const isPendiente = isEstadoPendientePago(item.estado);
+            const isPagado = isEstadoPagado(item.estado);
+            const isEntregado = isEstadoEntregado(item.estado);
+            const isAnulado = isEstadoAnulado(item.estado);
 
             return (
               <div
@@ -301,7 +330,7 @@ export function DispensacionList({
                         >
                           Mov: {item.movimientoInventarioNumero || `#${item.movimientoInventarioId}`}
                         </Badge>
-                      ) : item.estado === "PendientePago" || item.estado === "Pagado" ? (
+                      ) : isPendiente || isPagado ? (
                         <Badge
                           variant="outline"
                           className="text-[9px] h-4 px-1.5 font-medium text-amber-700 dark:text-amber-400 border-amber-500/25 bg-amber-500/5"
@@ -360,7 +389,20 @@ export function DispensacionList({
                   </div>
 
                   {/* Primary Context Actions */}
-                  {item.estado === "PendientePago" && onCobrar && (
+                  {isPendiente && onEdit && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onEdit(item)}
+                      className="h-7 text-xs px-2.5 gap-1.5 text-blue-600 dark:text-blue-400 border-blue-500/30 hover:bg-blue-500/10 cursor-pointer"
+                      title="Editar orden y medicamentos"
+                    >
+                      <Pencil className="size-3" />
+                      <span>Editar</span>
+                    </Button>
+                  )}
+
+                  {isPendiente && onCobrar && (
                     <Button
                       size="sm"
                       onClick={() => onCobrar(item)}
@@ -372,7 +414,7 @@ export function DispensacionList({
                     </Button>
                   )}
 
-                  {item.estado === "Pagado" && onEntregar && (
+                  {isPagado && onEntregar && (
                     <Button
                       size="sm"
                       onClick={() => onEntregar(item)}
@@ -401,7 +443,15 @@ export function DispensacionList({
                           <Eye className="size-3.5 text-primary" /> Ver Ticket / Detalle
                         </DropdownMenuItem>
                       )}
-                      {item.estado === "PendientePago" && onCobrar && (
+                      {isPendiente && onEdit && (
+                        <DropdownMenuItem
+                          onClick={() => onEdit(item)}
+                          className="gap-2 text-xs cursor-pointer text-blue-600 dark:text-blue-400"
+                        >
+                          <Pencil className="size-3.5" /> Editar Orden
+                        </DropdownMenuItem>
+                      )}
+                      {isPendiente && onCobrar && (
                         <DropdownMenuItem
                           onClick={() => onCobrar(item)}
                           className="gap-2 text-xs cursor-pointer text-amber-600"
@@ -409,7 +459,7 @@ export function DispensacionList({
                           <CreditCard className="size-3.5" /> Registrar Cobro
                         </DropdownMenuItem>
                       )}
-                      {item.estado === "Pagado" && onEntregar && (
+                      {isPagado && onEntregar && (
                         <DropdownMenuItem
                           onClick={() => onEntregar(item)}
                           className="gap-2 text-xs cursor-pointer text-emerald-600"
@@ -425,7 +475,7 @@ export function DispensacionList({
                           <Clock className="size-3.5" /> Ver Auditoría
                         </DropdownMenuItem>
                       )}
-                      {item.estado !== "Anulado" && onAnular && (
+                      {!isAnulado && onAnular && (
                         <>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem

@@ -167,6 +167,7 @@ export function DispensacionModuleView() {
           setPage(1);
         }}
         onViewDetail={handleOpenDetail}
+        onEdit={(item) => router.push(`/farmacia/dispensaciones/${item.id}/editar`)}
         onCobrar={handleOpenCobro}
         onEntregar={handleOpenEntrega}
         onAnular={handleOpenAnulacion}

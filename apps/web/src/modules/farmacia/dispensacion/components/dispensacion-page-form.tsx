@@ -13,7 +13,6 @@ import { toast } from "sonner";
 import { getApiErrorMessage } from "@/lib/api/api-error";
 import {
   Plus,
-  Minus,
   Trash2,
   Package,
   Warehouse,
@@ -35,10 +34,6 @@ import {
   Calendar,
   ArrowLeft,
   RotateCcw,
-  LayoutList,
-  Table as TableIcon,
-  CreditCard,
-  PackageCheck,
 } from "lucide-react";
 
 import {
@@ -61,6 +56,8 @@ import { cn, formatDate } from "@/lib/utils";
 
 import {
   useCreateDispensacion,
+  useUpdateDispensacion,
+  useDispensacion,
   useMedicamentosStock,
 } from "../hooks/use-dispensacion";
 import {
@@ -73,11 +70,17 @@ import { useAlmacenes } from "@/modules/almacenes/almacen/hooks/use-almacen";
 import { usePacientes } from "@/modules/recepcion/pacientes/hooks/use-pacientes";
 import { useAdmisiones } from "@/modules/recepcion/admisiones/hooks/use-admisiones";
 import { useMedicos } from "@/modules/recursos-humanos/medico";
-import type {
-  CreateDispensacionRequest,
-  DispensacionResponse,
-  TipoDispensacion,
-  MedicamentoStockResponse,
+import {
+  type CreateDispensacionRequest,
+  type DispensacionResponse,
+  type DispensacionDetalleResponse,
+  type TipoDispensacion,
+  type MedicamentoStockResponse,
+  type LoteMedicamentoStockResponse,
+  isEstadoPendientePago,
+  isEstadoPagado,
+  isEstadoEntregado,
+  isEstadoAnulado,
 } from "../types/dispensacion.types";
 
 interface FormDetalle {
@@ -129,6 +132,132 @@ function formatBs(value: number): string {
   });
 }
 
+function validateRowProducto(
+  pid: number,
+  selectedAlmacenId: number
+): string | undefined {
+  if (!selectedAlmacenId) {
+    return "Seleccione un almacén emisor primero";
+  }
+  if (!pid || pid <= 0) {
+    return "Seleccione un medicamento";
+  }
+  return undefined;
+}
+
+function validateRowCantidad(
+  cant: number,
+  effectiveStock: number,
+  hasMed: boolean
+): string | undefined {
+  if (!cant || cant <= 0) {
+    return "Cantidad debe ser mayor a 0";
+  }
+  if (hasMed) {
+    if (effectiveStock <= 0) {
+      return "Sin existencias en este almacén (Stock: 0)";
+    }
+    if (cant > effectiveStock) {
+      return `Supera el stock total disponible (${effectiveStock} unids)`;
+    }
+  }
+  return undefined;
+}
+
+function validateRowLote(
+  cant: number,
+  partidaId: number | undefined,
+  med: MedicamentoStockResponse | undefined,
+  previouslyReservedLot: number
+): string | undefined {
+  if (!med || !partidaId) return undefined;
+
+  const chosenLot = med.lotes.find(
+    (l) => l.partidaInventarioId === Number(partidaId)
+  );
+  if (!chosenLot) return undefined;
+
+  const effectiveLotStock = chosenLot.cantidadDisponible + previouslyReservedLot;
+  if (effectiveLotStock <= 0) {
+    return `El lote ${chosenLot.lote || "S/N"} no tiene existencias`;
+  }
+  if (cant > effectiveLotStock) {
+    return `El lote seleccionado solo tiene ${effectiveLotStock} unids`;
+  }
+  return undefined;
+}
+
+function validateRowDescuento(
+  desc: number,
+  descTipo: string,
+  cant: number,
+  precio: number
+): string | undefined {
+  if (descTipo === "porcentaje") {
+    if (desc < 0 || desc > 100) {
+      return "El porcentaje debe estar entre 0% y 100%";
+    }
+    return undefined;
+  }
+
+  const subtotalBruto = cant * precio;
+  if (desc < 0) {
+    return "El descuento no puede ser negativo";
+  }
+  if (desc > subtotalBruto && subtotalBruto > 0) {
+    return `Descuento supera el subtotal bruto (Bs. ${formatBs(subtotalBruto)})`;
+  }
+  return undefined;
+}
+
+function getPreviouslyReservedQuantity(
+  detalles: DispensacionDetalleResponse[] | undefined,
+  predicate: (d: DispensacionDetalleResponse) => boolean
+): number {
+  if (!detalles) return 0;
+  return detalles
+    .filter(predicate)
+    .reduce((sum, item) => sum + item.cantidad, 0);
+}
+
+function validateDetalleRow(
+  detalle: FormDetalle,
+  selectedAlmacenId: number,
+  stockMedicamentos: MedicamentoStockResponse[],
+  isEditMode: boolean,
+  dispensacionExistente?: DispensacionResponse
+): RowIssues {
+  const pid = Number(detalle?.productoId) || 0;
+  const cant = Number(detalle?.cantidad) || 0;
+  const precio = Number(detalle?.precioUnitario) || 0;
+  const desc = Number(detalle?.descuento) || 0;
+  const descTipo = detalle?.descuentoTipo || "monto";
+  const med = stockMedicamentos.find((m) => m.productoId === pid);
+
+  const prevReservedProd = isEditMode
+    ? getPreviouslyReservedQuantity(
+        dispensacionExistente?.detalles,
+        (d) => d.productoId === pid
+      )
+    : 0;
+  const effectiveStock = med ? med.stockDisponible + prevReservedProd : 0;
+
+  const prevReservedLot =
+    isEditMode && detalle?.partidaInventarioId
+      ? getPreviouslyReservedQuantity(
+          dispensacionExistente?.detalles,
+          (d) => d.partidaInventarioId === Number(detalle.partidaInventarioId)
+        )
+      : 0;
+
+  return {
+    producto: validateRowProducto(pid, selectedAlmacenId),
+    cantidad: validateRowCantidad(cant, effectiveStock, Boolean(med)),
+    lote: validateRowLote(cant, detalle?.partidaInventarioId, med, prevReservedLot),
+    descuento: validateRowDescuento(desc, descTipo, cant, precio),
+  };
+}
+
 function getLocalCurrentDateTime(): string {
   const now = new Date();
   const offset = now.getTimezoneOffset() * 60000;
@@ -152,6 +281,46 @@ function getRowSubtotal(d?: FormDetalle): number {
   const precio = Number(d.precioUnitario) || 0;
   const descMonto = getRowDescuentoMonto(d);
   return Math.max(0, cant * precio - descMonto);
+}
+
+function buildDispensacionPayload(
+  values: FormValues
+): CreateDispensacionRequest {
+  const fechaIso = values.fecha
+    ? new Date(values.fecha).toISOString()
+    : new Date().toISOString();
+
+  const detalles = values.detalles.map((d) => ({
+    productoId: Number(d.productoId),
+    partidaInventarioId: d.partidaInventarioId
+      ? Number(d.partidaInventarioId)
+      : undefined,
+    cantidad: Number(d.cantidad),
+    precioUnitario: Number(d.precioUnitario),
+    descuento: Number(getRowDescuentoMonto(d).toFixed(2)),
+    indicaciones: d.indicaciones?.trim(),
+  }));
+
+  return {
+    tipo: values.tipo,
+    fecha: fechaIso,
+    almacenId: Number(values.almacenId),
+    pacienteId:
+      !values.isWalkIn && values.pacienteId
+        ? Number(values.pacienteId)
+        : undefined,
+    admisionId:
+      !values.isWalkIn && values.admisionId
+        ? Number(values.admisionId)
+        : undefined,
+    clienteNombre: values.isWalkIn ? values.clienteNombre?.trim() : undefined,
+    clienteDocumento: values.isWalkIn
+      ? values.clienteDocumento?.trim()
+      : undefined,
+    medicoId: values.medicoId ? Number(values.medicoId) : undefined,
+    observaciones: values.observaciones?.trim(),
+    detalles,
+  };
 }
 
 /** Evita que la rueda del mouse cambie el valor de un input numérico al hacer scroll. */
@@ -193,6 +362,24 @@ function getStockBadgeClass(stock: number): string {
     return "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30";
   }
   return "bg-destructive/10 text-destructive border-destructive/30 font-bold";
+}
+
+function getDispensacionEstadoLabel(estado?: string | number | null): string {
+  if (isEstadoPendientePago(estado)) return "Pendiente de Pago (Editable)";
+  if (isEstadoPagado(estado)) return "Pagado";
+  if (isEstadoEntregado(estado)) return "Entregado";
+  if (isEstadoAnulado(estado)) return "Anulado";
+  return String(estado ?? "");
+}
+
+function getTipoDispensacionLabel(tipo: TipoDispensacion): string {
+  if (tipo === "VentaAmbulatoria" || tipo === "ventaAmbulatoria") {
+    return "Venta Mostrador";
+  }
+  if (tipo === "Hospitalaria" || tipo === "hospitalaria") {
+    return "Hospitalaria";
+  }
+  return "Urgencia";
 }
 
 interface ApplyMedicineSelectionParams {
@@ -335,6 +522,184 @@ function useDetalleItemState({
   };
 }
 
+interface LoteCellProps {
+  readonly index: number;
+  readonly register: ReturnType<typeof useForm<FormValues>>["register"];
+  readonly lotes: LoteMedicamentoStockResponse[];
+  readonly currentProductoId?: number;
+  readonly loteError?: string;
+  readonly onSplitLots: () => void;
+}
+
+function LoteCell({
+  index,
+  register,
+  lotes,
+  currentProductoId,
+  loteError,
+  onSplitLots,
+}: LoteCellProps) {
+  if (lotes.length === 0) {
+    return (
+      <td className="px-1 py-0.5 w-24">
+        <span className="text-[10px] text-muted-foreground italic block text-center truncate">
+          {currentProductoId ? "S/L" : "—"}
+        </span>
+      </td>
+    );
+  }
+
+  return (
+    <td className="px-1 py-0.5 w-24">
+      <div className="flex items-center gap-0.5">
+        <select
+          {...register(`detalles.${index}.partidaInventarioId`, {
+            setValueAs: (v) => (v === "" || v === null ? undefined : Number(v)),
+          })}
+          title="Lote y fecha de vencimiento"
+          className={cn(
+            "h-6.5 text-[10px] px-1 rounded border border-input bg-background font-mono truncate w-full cursor-pointer focus:ring-1 focus:ring-teal-500",
+            loteError && "border-destructive text-destructive font-medium"
+          )}
+        >
+          {lotes.map((lt) => (
+            <option key={lt.partidaInventarioId} value={lt.partidaInventarioId}>
+              {lt.lote || "S/N"} ({lt.cantidadDisponible})
+            </option>
+          ))}
+        </select>
+        {lotes.length > 1 && (
+          <button
+            type="button"
+            onClick={onSplitLots}
+            className="text-[9px] font-bold text-teal-700 dark:text-teal-300 hover:underline cursor-pointer shrink-0 px-0.5"
+            title="Repartir lotes por FEFO"
+          >
+            FEFO
+          </button>
+        )}
+      </div>
+    </td>
+  );
+}
+
+interface PrecioCellProps {
+  readonly index: number;
+  readonly register: ReturnType<typeof useForm<FormValues>>["register"];
+  readonly isPriceUnlocked: boolean;
+  readonly onTogglePriceUnlock: () => void;
+}
+
+function PrecioCell({
+  index,
+  register,
+  isPriceUnlocked,
+  onTogglePriceUnlock,
+}: PrecioCellProps) {
+  return (
+    <td className="px-1 py-0.5 w-20 text-right">
+      <div className="relative flex items-center">
+        <span className="absolute left-1 text-[8px] text-muted-foreground font-mono select-none pointer-events-none">
+          Bs
+        </span>
+        <Input
+          type="number"
+          step="0.01"
+          min="0"
+          disabled={!isPriceUnlocked}
+          onWheel={blurOnWheel}
+          {...register(`detalles.${index}.precioUnitario`, {
+            setValueAs: (v) => (v === "" || v === null ? 0 : Number(v)),
+          })}
+          placeholder="0.00"
+          className={cn(
+            "h-6.5 text-[11px] font-mono text-right pl-4 pr-3.5 font-medium w-full [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
+            !isPriceUnlocked &&
+              "bg-muted/50 text-foreground cursor-not-allowed opacity-90"
+          )}
+        />
+        <button
+          type="button"
+          onClick={onTogglePriceUnlock}
+          title={
+            isPriceUnlocked
+              ? "Bloquear precio unitario"
+              : "Desbloquear para modificar precio"
+          }
+          className={cn(
+            "absolute right-0.5 p-0.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer rounded",
+            isPriceUnlocked
+              ? "text-teal-600 dark:text-teal-400 font-bold"
+              : "text-muted-foreground/60"
+          )}
+        >
+          {isPriceUnlocked ? (
+            <Unlock className="size-2.5" />
+          ) : (
+            <Lock className="size-2.5" />
+          )}
+        </button>
+      </div>
+    </td>
+  );
+}
+
+interface DescuentoCellProps {
+  readonly index: number;
+  readonly register: ReturnType<typeof useForm<FormValues>>["register"];
+  readonly setValue: ReturnType<typeof useForm<FormValues>>["setValue"];
+  readonly descuentoTipo?: "monto" | "porcentaje";
+  readonly descuentoError?: string;
+}
+
+function DescuentoCell({
+  index,
+  register,
+  setValue,
+  descuentoTipo,
+  descuentoError,
+}: DescuentoCellProps) {
+  const isPercentage = descuentoTipo === "porcentaje";
+
+  return (
+    <td className="px-1 py-0.5 w-20 text-right">
+      <div className="flex items-center">
+        <Input
+          type="number"
+          step={isPercentage ? "1" : "0.01"}
+          min="0"
+          max={isPercentage ? 100 : undefined}
+          onWheel={blurOnWheel}
+          {...register(`detalles.${index}.descuento`, {
+            setValueAs: (v) => (v === "" || v === null ? 0 : Number(v)),
+          })}
+          placeholder="0"
+          aria-invalid={Boolean(descuentoError)}
+          className={cn(
+            "h-6.5 text-[11px] font-mono text-right pl-1 pr-1 w-full rounded-r-none border-r-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
+            descuentoError &&
+              "border-destructive text-destructive focus-visible:ring-destructive font-bold"
+          )}
+        />
+        <button
+          type="button"
+          onClick={() => {
+            setValue(
+              `detalles.${index}.descuentoTipo`,
+              isPercentage ? "monto" : "porcentaje"
+            );
+            setValue(`detalles.${index}.descuento`, 0);
+          }}
+          title="Alternar entre % y Bs."
+          className="h-6.5 px-1 text-[9px] font-bold rounded-r-md border border-input bg-muted/40 hover:bg-muted text-foreground transition-colors cursor-pointer shrink-0"
+        >
+          {isPercentage ? "%" : "Bs"}
+        </button>
+      </div>
+    </td>
+  );
+}
+
 /** Fila para vista de escritorio (lg+) */
 function DetalleRow({
   index,
@@ -355,9 +720,7 @@ function DetalleRow({
 }: DetalleRowProps) {
   const {
     currentProductoId,
-    descuento,
     descuentoTipo,
-    descMonto,
     subtotal,
     selectedMed,
     lotes,
@@ -378,8 +741,6 @@ function DetalleRow({
     stockMedicamentos,
   });
 
-  const isPercentage = descuentoTipo === "porcentaje";
-
   const hasVisibleError = Boolean(
     productoError || cantidadError || loteError || descuentoError
   );
@@ -388,17 +749,17 @@ function DetalleRow({
     <tr
       id={`detalle-row-${index}`}
       className={cn(
-        "group align-middle hover:bg-muted/30 transition-colors border-b border-border/40 last:border-0",
+        "group align-middle hover:bg-muted/40 transition-colors border-b border-border/40 last:border-0 h-8",
         isDuplicate && "bg-amber-500/5 hover:bg-amber-500/10",
         hasVisibleError && "bg-destructive/5 hover:bg-destructive/10",
         isHighlighted && "bg-teal-500/15 ring-1 ring-teal-500/30"
       )}
     >
       {/* Index */}
-      <td className="px-1 py-1.5 text-center text-muted-foreground font-mono text-[11px] w-7">
+      <td className="px-1 py-0.5 text-center text-muted-foreground font-mono text-[10px] w-6 shrink-0">
         <span
           className={cn(
-            "size-5 rounded inline-flex items-center justify-center bg-muted/80 text-[10px] font-semibold text-foreground/80",
+            "size-4.5 rounded inline-flex items-center justify-center bg-teal-500/10 text-teal-700 dark:text-teal-300 text-[9px] font-bold",
             hasVisibleError && "bg-destructive/15 text-destructive font-bold"
           )}
         >
@@ -406,123 +767,62 @@ function DetalleRow({
         </span>
       </td>
 
-      {/* Producto Selector con Autocomplete */}
-      <td className="px-2 py-1.5 min-w-0">
-        <div className="space-y-0.5">
-          <Controller
-            name={`detalles.${index}.productoId`}
-            control={control}
-            render={({ field, fieldState }) => (
-              <MedicamentoAutocomplete
-                id={`detalle-med-${index}`}
-                almacenId={almacenId}
-                value={field.value}
-                onValueChange={(val, med) => {
-                  field.onChange(val || 0);
-                  handleMedicineChange(med ?? null);
-                }}
-                error={Boolean(fieldState.error) || Boolean(productoError)}
-                placeholder={
-                  !almacenId
-                    ? "Seleccione un almacén..."
-                    : "Buscar por nombre, código..."
-                }
-                className="h-7 text-xs"
-              />
-            )}
-          />
-          <IssueText>{productoError}</IssueText>
-
-          {/* Badges metadata en una sola línea compacta */}
-          {selectedMed && (
-            <div className="flex items-center gap-1 truncate pt-0.5 text-[9px] text-muted-foreground">
-              {selectedMed.codigo && (
-                <span className="font-mono bg-muted px-1 py-0.2 rounded text-muted-foreground font-medium shrink-0">
-                  {selectedMed.codigo}
-                </span>
-              )}
-              <span className="font-medium text-teal-700 dark:text-teal-300 truncate">
-                {getMedicineBrand(selectedMed)}
-              </span>
-              {selectedMed.unidadMedida && (
-                <span className="font-mono text-muted-foreground shrink-0">
-                  • {selectedMed.unidadMedida}
-                </span>
-              )}
-              {isDuplicate && (
-                <span className="inline-flex items-center gap-0.5 text-amber-600 dark:text-amber-400 font-semibold bg-amber-500/10 px-1 py-0.2 rounded shrink-0">
-                  <AlertTriangle className="size-2.5" />
-                  Dup
-                </span>
-              )}
-            </div>
+      {/* Medicamento / Insumo */}
+      <td className="px-1.5 py-0.5 min-w-[210px]">
+        <Controller
+          name={`detalles.${index}.productoId`}
+          control={control}
+          render={({ field, fieldState }) => (
+            <MedicamentoAutocomplete
+              id={`detalle-med-${index}`}
+              almacenId={almacenId}
+              value={field.value}
+              onValueChange={(val, med) => {
+                field.onChange(val || 0);
+                handleMedicineChange(med ?? null);
+              }}
+              error={Boolean(fieldState.error) || Boolean(productoError)}
+              placeholder={
+                !almacenId
+                  ? "Seleccione almacén..."
+                  : "Buscar medicamento o insumo..."
+              }
+              className="h-6.5 text-[11px] font-medium"
+            />
           )}
-        </div>
+        />
       </td>
 
-      {/* Lote / Vencimiento */}
-      <td className="px-1.5 py-1.5 w-36">
-        {lotes.length > 0 ? (
-          <div className="space-y-0.5">
-            <select
-              {...register(`detalles.${index}.partidaInventarioId`, {
-                setValueAs: (v) =>
-                  v === "" || v === null ? undefined : Number(v),
-              })}
-              className={cn(
-                "w-full h-7 text-[11px] px-1 rounded-md border border-input bg-background font-mono truncate",
-                loteError && "border-destructive text-destructive font-medium"
-              )}
-            >
-              {lotes.map((lt) => (
-                <option
-                  key={lt.partidaInventarioId}
-                  value={lt.partidaInventarioId}
-                >
-                  {lt.lote || "S/N"} ({lt.cantidadDisponible}
-                  {(lt.cantidadReservada ?? 0) > 0 ? ` · Res:${lt.cantidadReservada}` : ""})
-                </option>
-              ))}
-            </select>
-            {loteError && (
-              <div className="flex items-center gap-1 flex-wrap">
-                <span className="text-[10px] leading-tight font-medium text-destructive">
-                  {loteError}
-                </span>
-                {lotes.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={onSplitLots}
-                    className="text-[10px] font-semibold text-teal-700 dark:text-teal-300 underline underline-offset-2 hover:text-teal-600 cursor-pointer"
-                  >
-                    Repartir FEFO
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        ) : (
-          <span className="text-[11px] text-muted-foreground italic block text-center truncate">
-            {currentProductoId ? "Sin lotes" : "—"}
-          </span>
-        )}
-      </td>
+      {/* Lote */}
+      <LoteCell
+        index={index}
+        register={register}
+        lotes={lotes}
+        currentProductoId={currentProductoId}
+        loteError={loteError}
+        onSplitLots={onSplitLots}
+      />
 
       {/* Stock Disponible */}
-      <td className="px-1 py-1.5 w-14 text-center">
+      <td className="px-1 py-0.5 w-12 text-center">
         <Badge
           variant="outline"
           className={cn(
-            "font-mono text-[10px] px-1 py-0 font-semibold tabular-nums border",
+            "font-mono text-[9px] px-1 py-0 h-4.5 font-bold tabular-nums border",
             getStockBadgeClass(stockDisponible)
           )}
+          title={
+            (selectedMed?.stockReservado ?? 0) > 0
+              ? `Físico: ${selectedMed?.stockFisico ?? stockDisponible} · Reservado: ${selectedMed?.stockReservado}`
+              : undefined
+          }
         >
           {stockDisponible}
         </Badge>
       </td>
 
       {/* Cantidad */}
-      <td className="px-1 py-1.5 w-16 text-center">
+      <td className="px-1 py-0.5 w-14 text-center">
         <Input
           type="number"
           step="any"
@@ -534,122 +834,51 @@ function DetalleRow({
           placeholder="1"
           aria-invalid={Boolean(cantidadError)}
           className={cn(
-            "h-7 text-xs font-mono text-center font-bold px-1 w-12 mx-auto [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
+            "h-6.5 text-[11px] font-mono text-center font-bold px-1 w-11 mx-auto [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
             cantidadError &&
-            "border-destructive text-destructive font-bold focus-visible:ring-destructive"
+              "border-destructive text-destructive font-bold focus-visible:ring-destructive"
           )}
         />
-        <IssueText>{cantidadError}</IssueText>
       </td>
 
       {/* Precio Unitario */}
-      <td className="px-1.5 py-1.5 w-28 text-right">
-        <div className="relative flex items-center">
-          <span className="absolute left-2 text-[9px] text-muted-foreground font-mono select-none pointer-events-none">
-            Bs.
-          </span>
-          <Input
-            type="number"
-            step="0.01"
-            min="0"
-            disabled={!isPriceUnlocked}
-            onWheel={blurOnWheel}
-            {...register(`detalles.${index}.precioUnitario`, {
-              setValueAs: (v) => (v === "" || v === null ? 0 : Number(v)),
-            })}
-            placeholder="0.00"
-            className={cn(
-              "h-7 text-xs font-mono text-right pl-7 pr-6 font-medium w-full [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
-              !isPriceUnlocked &&
-              "bg-muted/50 text-foreground cursor-not-allowed opacity-90"
-            )}
-          />
-          <button
-            type="button"
-            onClick={onTogglePriceUnlock}
-            title={
-              isPriceUnlocked
-                ? "Bloquear edición de precio unitario"
-                : "Desbloquear para modificar precio unitario"
-            }
-            className={cn(
-              "absolute right-1 p-0.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer rounded",
-              isPriceUnlocked
-                ? "text-teal-600 dark:text-teal-400 font-bold"
-                : "text-muted-foreground/60"
-            )}
-          >
-            {isPriceUnlocked ? (
-              <Unlock className="size-2.5" />
-            ) : (
-              <Lock className="size-2.5" />
-            )}
-          </button>
-        </div>
-      </td>
+      <PrecioCell
+        index={index}
+        register={register}
+        isPriceUnlocked={isPriceUnlocked}
+        onTogglePriceUnlock={onTogglePriceUnlock}
+      />
 
       {/* Descuento */}
-      <td className="px-1.5 py-1.5 w-26 text-right">
-        <div className="space-y-0.5">
-          <div className="flex items-center">
-            <Input
-              type="number"
-              step={isPercentage ? "1" : "0.01"}
-              min="0"
-              max={isPercentage ? 100 : undefined}
-              onWheel={blurOnWheel}
-              {...register(`detalles.${index}.descuento`, {
-                setValueAs: (v) => (v === "" || v === null ? 0 : Number(v)),
-              })}
-              placeholder="0"
-              aria-invalid={Boolean(descuentoError)}
-              className={cn(
-                "h-7 text-xs font-mono text-right pl-1 pr-1 w-full rounded-r-none border-r-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
-                descuentoError &&
-                "border-destructive text-destructive focus-visible:ring-destructive font-bold"
-              )}
-            />
-            <button
-              type="button"
-              onClick={() => {
-                setValue(
-                  `detalles.${index}.descuentoTipo`,
-                  isPercentage ? "monto" : "porcentaje"
-                );
-                setValue(`detalles.${index}.descuento`, 0);
-              }}
-              title="Alternar entre % y Bs."
-              className="h-7 px-1.5 text-[9px] font-bold rounded-r-md border border-input bg-muted/40 hover:bg-muted text-foreground transition-colors cursor-pointer shrink-0"
-            >
-              {isPercentage ? "%" : "Bs"}
-            </button>
-          </div>
-          {isPercentage && descuento > 0 && (
-            <p className="text-[8px] text-right text-muted-foreground font-mono leading-none">
-              -Bs.{formatBs(descMonto)}
-            </p>
-          )}
-          <IssueText>{descuentoError}</IssueText>
-        </div>
-      </td>
+      <DescuentoCell
+        index={index}
+        register={register}
+        setValue={setValue}
+        descuentoTipo={descuentoTipo}
+        descuentoError={descuentoError}
+      />
 
       {/* Subtotal */}
-      <td className="px-1.5 py-1.5 w-24 text-right">
-        <div className="h-7 flex items-center justify-end font-mono text-xs font-bold text-teal-600 dark:text-teal-400 tabular-nums whitespace-nowrap">
-          Bs. {formatBs(subtotal)}
-        </div>
+      <td className="px-1.5 py-0.5 w-20 text-right">
+        <span className="font-mono text-[11px] font-bold text-teal-600 dark:text-teal-400 tabular-nums whitespace-nowrap">
+          Bs.{formatBs(subtotal)}
+        </span>
       </td>
 
       {/* Acciones */}
-      <td className="px-1 py-1.5 text-center w-10">
+      <td className="px-0.5 py-0.5 text-center w-6">
         <Button
           type="button"
           variant="ghost"
           size="icon"
           onClick={onRemove}
           disabled={!canRemove}
-          title={canRemove ? "Eliminar fila" : "Mínimo 1 fila requerida"}
-          className="size-6 text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed transition-colors rounded p-0 mx-auto"
+          title={
+            canRemove
+              ? "Eliminar artículo de la orden"
+              : "Mínimo 1 artículo requerido"
+          }
+          className="size-5.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed transition-colors rounded p-0 mx-auto"
         >
           <Trash2 className="size-3" />
           <span className="sr-only">Eliminar</span>
@@ -659,343 +888,21 @@ function DetalleRow({
   );
 }
 
-/** Tarjeta / Fila de lista individual optimizada para edición cómoda en cualquier pantalla */
-function DetalleItemCard({
-  index,
-  almacenId,
-  control,
-  register,
-  setValue,
-  onRemove,
-  onSplitLots,
-  canRemove,
-  isDuplicate,
-  isHighlighted,
-  issues,
-  showRequiredErrors,
-  stockMedicamentos,
-  isPriceUnlocked,
-  onTogglePriceUnlock,
-}: DetalleRowProps) {
-  const {
-    currentProductoId,
-    cantidad,
-    descuentoTipo,
-    descMonto,
-    subtotal,
-    selectedMed,
-    lotes,
-    stockDisponible,
-    productoError,
-    cantidadError,
-    loteError,
-    descuentoError,
-    handleMedicineChange,
-  } = useDetalleItemState({
-    index,
-    control,
-    setValue,
-    onRemove,
-    canRemove,
-    issues,
-    showRequiredErrors,
-    stockMedicamentos,
-  });
-
-  const isPercentage = descuentoTipo === "porcentaje";
-
-  return (
-    <div
-      className={cn(
-        "p-3.5 sm:p-4 rounded-xl border border-border/80 bg-card space-y-3 shadow-2xs transition-all hover:border-border",
-        isDuplicate && "border-amber-500/40 bg-amber-500/5",
-        hasIssues(issues) && "border-destructive/40 bg-destructive/5",
-        isHighlighted && "bg-teal-500/10 ring-2 ring-teal-500/40 border-teal-500/40"
-      )}
-    >
-      {/* Fila superior: Número, Medicamento Autocomplete y Badges, Botón Eliminar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-2.5 pb-2.5 border-b border-border/40">
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          <span className="size-6 rounded-md inline-flex items-center justify-center bg-teal-500/10 text-teal-700 dark:text-teal-300 text-xs font-bold shrink-0">
-            #{index + 1}
-          </span>
-          <div className="flex-1 min-w-0">
-            <Controller
-              name={`detalles.${index}.productoId`}
-              control={control}
-              render={({ field, fieldState }) => (
-                <MedicamentoAutocomplete
-                  id={`detalle-med-card-${index}`}
-                  almacenId={almacenId}
-                  value={field.value}
-                  onValueChange={(val, med) => {
-                    field.onChange(val || 0);
-                    handleMedicineChange(med ?? null);
-                  }}
-                  error={Boolean(fieldState.error) || Boolean(productoError)}
-                  placeholder={
-                    !almacenId
-                      ? "Seleccione un almacén primero..."
-                      : "Buscar medicamento o insumo por nombre o código..."
-                  }
-                  className="h-8.5 text-xs w-full"
-                />
-              )}
-            />
-            <IssueText>{productoError}</IssueText>
-          </div>
-        </div>
-
-        {/* Badges de metadata del medicamento */}
-        <div className="flex items-center gap-1.5 flex-wrap shrink-0">
-          {selectedMed?.codigo && (
-            <span className="font-mono text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground font-medium">
-              {selectedMed.codigo}
-            </span>
-          )}
-          {selectedMed && (
-            <span className="font-mono text-[10px] bg-teal-500/10 text-teal-700 dark:text-teal-300 px-1.5 py-0.5 rounded font-semibold">
-              Marca: {getMedicineBrand(selectedMed)}
-            </span>
-          )}
-          {selectedMed?.unidadMedida && (
-            <span className="font-mono text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-semibold">
-              {selectedMed.unidadMedida}
-            </span>
-          )}
-          {currentProductoId > 0 && (
-            <Badge
-              variant="outline"
-              className={cn(
-                "font-mono text-[10px] px-2 py-0.5 font-semibold",
-                getStockBadgeClass(stockDisponible)
-              )}
-              title={
-                (selectedMed?.stockReservado ?? 0) > 0
-                  ? `Físico: ${selectedMed?.stockFisico ?? stockDisponible} · Reservado en órdenes pendientes: ${selectedMed?.stockReservado}`
-                  : undefined
-              }
-            >
-              Disp: {stockDisponible}
-              {(selectedMed?.stockReservado ?? 0) > 0 && ` (Res: ${selectedMed?.stockReservado})`}
-            </Badge>
-          )}
-
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={onRemove}
-            disabled={!canRemove}
-            title={canRemove ? "Eliminar artículo de la lista" : "Mínimo 1 artículo requerido"}
-            className="size-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md cursor-pointer disabled:opacity-20 shrink-0 ml-1"
-          >
-            <Trash2 className="size-3.5" />
-            <span className="sr-only">Eliminar</span>
-          </Button>
-        </div>
-      </div>
-
-      {/* Fila inferior: Controles organizados y cómodos para editar */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
-        {/* Lote & Vencimiento */}
-        <div className={cn(lotes.length > 0 ? "lg:col-span-4" : "lg:col-span-3", "space-y-1")}>
-          <div className="flex items-center justify-between">
-            <Label className="text-[11px] text-muted-foreground font-medium">
-              Lote & Vencimiento
-            </Label>
-            {lotes.length > 1 && (
-              <button
-                type="button"
-                onClick={onSplitLots}
-                className="text-[10px] text-teal-700 dark:text-teal-300 underline font-semibold hover:text-teal-800 cursor-pointer"
-              >
-                Repartir FEFO
-              </button>
-            )}
-          </div>
-          {lotes.length > 0 ? (
-            <>
-              <select
-                {...register(`detalles.${index}.partidaInventarioId`, {
-                  setValueAs: (v) =>
-                    v === "" || v === null ? undefined : Number(v),
-                })}
-                className={cn(
-                  "w-full h-8.5 text-xs px-2.5 rounded-md border border-input bg-background font-mono truncate focus-visible:ring-1 focus-visible:ring-teal-500",
-                  loteError && "border-destructive text-destructive font-medium"
-                )}
-              >
-                {lotes.map((lt) => (
-                  <option
-                    key={lt.partidaInventarioId}
-                    value={lt.partidaInventarioId}
-                  >
-                    {lt.lote || "S/N"} · {lt.fechaVencimiento ? formatDate(lt.fechaVencimiento) : "S/V"} (Disp: {lt.cantidadDisponible}
-                    {(lt.cantidadReservada ?? 0) > 0 ? ` · Res: ${lt.cantidadReservada}` : ""})
-                  </option>
-                ))}
-              </select>
-              <IssueText>{loteError}</IssueText>
-            </>
-          ) : (
-            <div className="h-8.5 px-2.5 rounded-md border border-border/40 bg-muted/30 text-muted-foreground text-xs font-mono flex items-center">
-              {currentProductoId ? "Sin lotes disponibles" : "—"}
-            </div>
-          )}
-        </div>
-
-        {/* Cantidad (+/- táctil y numérico) */}
-        <div className={cn(lotes.length > 0 ? "lg:col-span-2" : "lg:col-span-2", "space-y-1")}>
-          <Label className="text-[11px] text-muted-foreground font-medium">
-            Cantidad *
-          </Label>
-          <div className="flex items-center gap-1">
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={() => {
-                const nextVal = Math.max(1, cantidad - 1);
-                setValue(`detalles.${index}.cantidad`, nextVal);
-              }}
-              disabled={cantidad <= 1}
-              className="size-8.5 shrink-0 cursor-pointer"
-            >
-              <Minus className="size-3" />
-            </Button>
-            <Input
-              type="number"
-              step="any"
-              min="1"
-              onWheel={blurOnWheel}
-              {...register(`detalles.${index}.cantidad`, {
-                valueAsNumber: true,
-              })}
-              className={cn(
-                "h-8.5 text-xs font-mono text-center font-bold px-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
-                cantidadError && "border-destructive focus-visible:ring-destructive text-destructive"
-              )}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={() => {
-                setValue(`detalles.${index}.cantidad`, cantidad + 1);
-              }}
-              className="size-8.5 shrink-0 cursor-pointer"
-            >
-              <Plus className="size-3" />
-            </Button>
-          </div>
-          <IssueText>{cantidadError}</IssueText>
-        </div>
-
-        {/* Precio Unitario */}
-        <div className={cn(lotes.length > 0 ? "lg:col-span-2" : "lg:col-span-3", "space-y-1")}>
-          <div className="flex items-center justify-between">
-            <Label className="text-[11px] text-muted-foreground font-medium">
-              P. Unitario
-            </Label>
-            <button
-              type="button"
-              onClick={onTogglePriceUnlock}
-              title={
-                isPriceUnlocked
-                  ? "Bloquear edición de precio unitario"
-                  : "Desbloquear para modificar precio unitario"
-              }
-              className="text-muted-foreground hover:text-foreground cursor-pointer p-0.5"
-            >
-              {isPriceUnlocked ? (
-                <Unlock className="size-3 text-teal-600" />
-              ) : (
-                <Lock className="size-3" />
-              )}
-            </button>
-          </div>
-          <div className="relative flex items-center">
-            <span className="absolute left-2.5 text-[10px] text-muted-foreground font-medium pointer-events-none select-none">
-              Bs.
-            </span>
-            <Input
-              type="number"
-              step="0.01"
-              min="0"
-              disabled={!isPriceUnlocked}
-              onWheel={blurOnWheel}
-              {...register(`detalles.${index}.precioUnitario`, {
-                setValueAs: (v) => (v === "" || v === null ? 0 : Number(v)),
-              })}
-              className={cn(
-                "h-8.5 text-xs font-mono text-right pl-8 pr-2.5 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
-                !isPriceUnlocked && "bg-muted/50 cursor-not-allowed opacity-90"
-              )}
-            />
-          </div>
-        </div>
-
-        {/* Descuento */}
-        <div className={cn(lotes.length > 0 ? "lg:col-span-2" : "lg:col-span-2", "space-y-1")}>
-          <div className="flex items-center justify-between">
-            <Label className="text-[11px] text-muted-foreground font-medium">
-              Descuento
-            </Label>
-            <button
-              type="button"
-              onClick={() => {
-                setValue(
-                  `detalles.${index}.descuentoTipo`,
-                  isPercentage ? "monto" : "porcentaje"
-                );
-                setValue(`detalles.${index}.descuento`, 0);
-              }}
-              className="text-[10px] font-bold text-teal-700 dark:text-teal-300 underline cursor-pointer"
-            >
-              {isPercentage ? "% Porc." : "Bs. Monto"}
-            </button>
-          </div>
-          <div className="relative flex items-center">
-            <span className="absolute left-2.5 text-[10px] text-muted-foreground font-medium pointer-events-none select-none">
-              {isPercentage ? "%" : "Bs."}
-            </span>
-            <Input
-              type="number"
-              step={isPercentage ? "1" : "0.01"}
-              min="0"
-              max={isPercentage ? 100 : undefined}
-              onWheel={blurOnWheel}
-              {...register(`detalles.${index}.descuento`, {
-                setValueAs: (v) => (v === "" || v === null ? 0 : Number(v)),
-              })}
-              className="h-8.5 text-xs font-mono text-right pl-7 pr-2.5 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-            />
-          </div>
-          <IssueText>{descuentoError}</IssueText>
-        </div>
-
-        {/* Subtotal */}
-        <div className={cn(lotes.length > 0 ? "lg:col-span-2" : "lg:col-span-2", "text-right space-y-0.5 pb-0.5")}>
-          <Label className="text-[11px] text-muted-foreground font-medium block">
-            Subtotal
-          </Label>
-          <div className="font-mono font-bold text-teal-600 dark:text-teal-400 text-sm h-8.5 flex items-center justify-end">
-            Bs. {formatBs(subtotal)}
-          </div>
-          {descMonto > 0 && (
-            <p className="text-[9px] text-amber-600 dark:text-amber-400 font-mono -mt-1">
-              Desc: -Bs. {formatBs(descMonto)}
-            </p>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+interface DispensacionPageFormProps {
+  readonly dispensacionId?: number;
+  readonly id?: number;
 }
 
-export function DispensacionPageForm() {
+export function DispensacionPageForm({
+  dispensacionId,
+  id,
+}: DispensacionPageFormProps = {}) {
   const router = useRouter();
+  const editId = dispensacionId ?? id;
+  const isEditMode = Boolean(editId && editId > 0);
+
+  const { data: dispensacionExistente, isLoading: loadingExistente } =
+    useDispensacion(editId ?? 0);
 
   const { data: almacenesData } = useAlmacenes({ pageSize: 50 });
   const almacenes = almacenesData?.items ?? [];
@@ -1079,6 +986,7 @@ export function DispensacionPageForm() {
   );
 
   const createMutation = useCreateDispensacion();
+  const updateMutation = useUpdateDispensacion();
 
   const {
     register,
@@ -1109,6 +1017,68 @@ export function DispensacionPageForm() {
     },
   });
 
+  // Si estamos en modo edición, poblar el formulario con la orden existente
+  const [loadedDispensacionId, setLoadedDispensacionId] = React.useState<
+    number | null
+  >(null);
+
+  React.useEffect(() => {
+    if (
+      isEditMode &&
+      dispensacionExistente &&
+      loadedDispensacionId !== dispensacionExistente.id
+    ) {
+      const isWalkIn = !dispensacionExistente.pacienteId;
+      const formattedDate = dispensacionExistente.fecha
+        ? new Date(
+          new Date(dispensacionExistente.fecha).getTime() -
+          new Date().getTimezoneOffset() * 60000
+        )
+          .toISOString()
+          .slice(0, 16)
+        : getLocalCurrentDateTime();
+
+      reset({
+        tipo: dispensacionExistente.tipo,
+        fecha: formattedDate,
+        almacenId: dispensacionExistente.almacenId,
+        isWalkIn,
+        pacienteId: dispensacionExistente.pacienteId ?? undefined,
+        admisionId: dispensacionExistente.admisionId ?? undefined,
+        clienteNombre: dispensacionExistente.clienteNombre ?? "",
+        clienteDocumento: dispensacionExistente.clienteDocumento ?? "",
+        medicoId: dispensacionExistente.medicoId ?? undefined,
+        observaciones: dispensacionExistente.observaciones ?? "",
+        detalles:
+          dispensacionExistente.detalles.length > 0
+            ? dispensacionExistente.detalles.map((d) => ({
+              productoId: d.productoId,
+              partidaInventarioId: d.partidaInventarioId ?? undefined,
+              cantidad: d.cantidad,
+              precioUnitario: d.precioUnitario,
+              descuento: d.descuento,
+              descuentoTipo: "monto",
+              indicaciones: d.indicaciones ?? "",
+            }))
+            : [
+              {
+                productoId: 0,
+                cantidad: 1,
+                precioUnitario: 0,
+                descuento: 0,
+                descuentoTipo: "monto",
+              },
+            ],
+      });
+      setLoadedDispensacionId(dispensacionExistente.id);
+    }
+  }, [
+    isEditMode,
+    dispensacionExistente,
+    loadedDispensacionId,
+    reset,
+  ]);
+
   const { fields, append, remove, insert } = useFieldArray({
     control,
     name: "detalles",
@@ -1136,10 +1106,10 @@ export function DispensacionPageForm() {
     const items = admisionesData?.items ?? [];
     const filtered = watchedPacienteId
       ? items.filter(
-          (a) =>
-            a.pacienteId === Number(watchedPacienteId) ||
-            a.paciente?.id === Number(watchedPacienteId)
-        )
+        (a) =>
+          a.pacienteId === Number(watchedPacienteId) ||
+          a.paciente?.id === Number(watchedPacienteId)
+      )
       : items;
 
     return filtered.map((a) => {
@@ -1148,12 +1118,11 @@ export function DispensacionPageForm() {
         (a.paciente?.persona
           ? `${a.paciente.persona.nombres} ${a.paciente.persona.apellidoPaterno}`
           : "Paciente");
+      const convenioText = a.convenioNombre ? ` · Convenio: ${a.convenioNombre}` : "";
       return {
         value: String(a.id),
         label: `${a.numero} · ${pacNom}`,
-        description: `Fecha: ${formatDate(a.fechaHora)}${
-          a.convenioNombre ? ` · Convenio: ${a.convenioNombre}` : ""
-        }`,
+        description: `Fecha: ${formatDate(a.fechaHora)}${convenioText}`,
       };
     });
   }, [admisionesData, watchedPacienteId]);
@@ -1187,7 +1156,6 @@ export function DispensacionPageForm() {
     [stockMedicamentos]
   );
   const [quickAddKey, setQuickAddKey] = React.useState(0);
-  const [viewMode, setViewMode] = React.useState<"lista" | "tabla">("lista");
 
   // Verificar si hay datos cargados para evitar pérdida accidental
   const isFormDirty = React.useMemo(() => {
@@ -1249,67 +1217,22 @@ export function DispensacionPageForm() {
 
   // Validación de problemas por fila
   const rowsIssues = React.useMemo(() => {
-    return watchedDetalles.map((detalle) => {
-      const issues: RowIssues = {};
-      const pid = Number(detalle?.productoId) || 0;
-      const cant = Number(detalle?.cantidad) || 0;
-      const precio = Number(detalle?.precioUnitario) || 0;
-      const desc = Number(detalle?.descuento) || 0;
-      const descTipo = detalle?.descuentoTipo || "monto";
-      const med = stockMedicamentos.find((m) => m.productoId === pid);
-
-      // 1. Producto
-      if (!selectedAlmacenId) {
-        issues.producto = "Seleccione un almacén emisor primero";
-      } else if (!pid || pid <= 0) {
-        issues.producto = "Seleccione un medicamento";
-      }
-
-      // 2. Cantidad y existencias
-      if (!cant || cant <= 0) {
-        issues.cantidad = "Cantidad debe ser mayor a 0";
-      } else if (med) {
-        if (med.stockDisponible <= 0) {
-          issues.cantidad = "Sin existencias en este almacén (Stock: 0)";
-        } else if (cant > med.stockDisponible) {
-          issues.cantidad = `Supera el stock total disponible (${med.stockDisponible} unids)`;
-        }
-      }
-
-      // 3. Lote
-      if (med && detalle?.partidaInventarioId) {
-        const chosenLot = med.lotes.find(
-          (l) => l.partidaInventarioId === Number(detalle.partidaInventarioId)
-        );
-        if (chosenLot) {
-          if (chosenLot.cantidadDisponible <= 0) {
-            issues.lote = `El lote ${chosenLot.lote || "S/N"
-              } no tiene existencias`;
-          } else if (cant > chosenLot.cantidadDisponible) {
-            issues.lote = `El lote seleccionado solo tiene ${chosenLot.cantidadDisponible} unids`;
-          }
-        }
-      }
-
-      // 4. Descuento
-      if (descTipo === "porcentaje") {
-        if (desc < 0 || desc > 100) {
-          issues.descuento = "El porcentaje debe estar entre 0% y 100%";
-        }
-      } else {
-        const subtotalBruto = cant * precio;
-        if (desc < 0) {
-          issues.descuento = "El descuento no puede ser negativo";
-        } else if (desc > subtotalBruto && subtotalBruto > 0) {
-          issues.descuento = `Descuento supera el subtotal bruto (Bs. ${formatBs(
-            subtotalBruto
-          )})`;
-        }
-      }
-
-      return issues;
-    });
-  }, [watchedDetalles, stockMedicamentos, selectedAlmacenId]);
+    return watchedDetalles.map((detalle) =>
+      validateDetalleRow(
+        detalle,
+        selectedAlmacenId,
+        stockMedicamentos,
+        isEditMode,
+        dispensacionExistente
+      )
+    );
+  }, [
+    watchedDetalles,
+    stockMedicamentos,
+    selectedAlmacenId,
+    isEditMode,
+    dispensacionExistente,
+  ]);
 
   const hasAnyRowIssues = rowsIssues.some((issue) => hasIssues(issue));
   const isAlmacenRequiredAndMissing =
@@ -1493,6 +1416,106 @@ export function DispensacionPageForm() {
     }));
   };
 
+  // Validaciones previas al guardado
+  const validateSaveOrder = (values: FormValues): boolean => {
+    if (
+      isEditMode &&
+      dispensacionExistente &&
+      !isEstadoPendientePago(dispensacionExistente.estado)
+    ) {
+      toast.error(
+        `No se puede modificar una dispensación en estado "${dispensacionExistente.estado}".`
+      );
+      return false;
+    }
+
+    if (isAlmacenRequiredAndMissing) {
+      toast.error("Debe seleccionar un almacén emisor.");
+      return false;
+    }
+
+    if (values.detalles.length === 0) {
+      toast.error("Debe agregar al menos un medicamento a la orden.");
+      return false;
+    }
+
+    if (isPacienteRequiredAndMissing) {
+      toast.error(
+        "Debe seleccionar un paciente registrado con historia clínica."
+      );
+      return false;
+    }
+
+    if (hasAnyRowIssues) {
+      toast.error(
+        "Existen filas con errores de stock, lotes o descuentos. Corríjalos para continuar."
+      );
+      return false;
+    }
+
+    return true;
+  };
+
+  const handlePayAndDeliver = (res: DispensacionResponse) => {
+    if (isEstadoPagado(res.estado)) {
+      toast.success(
+        `Dispensación "${res.numero}" autorizada con cargo a Admisión ${res.admisionNumero || ""}. Confirme la entrega física.`
+      );
+      setCreatedForEntrega(res);
+      return;
+    }
+    toast.success(
+      `Dispensación "${res.numero}" emitida y stock reservado. Complete el cobro y despacho a continuación.`
+    );
+    setCreatedForCobro(res);
+  };
+
+  const handleResetForNewOrder = () => {
+    setAttemptedSubmit(false);
+    reset({
+      tipo: "VentaAmbulatoria",
+      fecha: getLocalCurrentDateTime(),
+      almacenId: selectedAlmacenId,
+      isWalkIn: true,
+      pacienteId: undefined,
+      admisionId: undefined,
+      clienteNombre: "",
+      clienteDocumento: "",
+      observaciones: "",
+      detalles: [
+        {
+          productoId: 0,
+          cantidad: 1,
+          precioUnitario: 0,
+          descuento: 0,
+          descuentoTipo: "monto",
+        },
+      ],
+    });
+    toast.info("Formulario reiniciado para una nueva atención.");
+  };
+
+  const handlePostSaveSuccess = (
+    res: DispensacionResponse,
+    action: "close" | "new_order" | "pay_and_deliver"
+  ) => {
+    if (action === "pay_and_deliver") {
+      handlePayAndDeliver(res);
+      return;
+    }
+
+    const message = isEstadoPagado(res.estado)
+      ? `Dispensación "${res.numero}" emitida con cargo a Admisión ${res.admisionNumero || ""} y lista para entrega.`
+      : `Dispensación "${res.numero}" emitida con stock reservado y enviada a Cobros de Caja.`;
+    toast.success(message);
+
+    if (action === "new_order") {
+      handleResetForNewOrder();
+    } else {
+      router.push("/farmacia/dispensaciones");
+    }
+  };
+
   // Guardado y emisión de la orden
   const handleSaveOrder = async (
     values: FormValues,
@@ -1500,121 +1523,34 @@ export function DispensacionPageForm() {
   ) => {
     setAttemptedSubmit(true);
 
-    if (isAlmacenRequiredAndMissing) {
-      toast.error("Debe seleccionar un almacén emisor.");
-      return;
-    }
-
-    if (values.detalles.length === 0) {
-      toast.error("Debe agregar al menos un medicamento a la orden.");
-      return;
-    }
-
-    if (isPacienteRequiredAndMissing) {
-      toast.error(
-        "Debe seleccionar un paciente registrado con historia clínica."
-      );
-      return;
-    }
-
-    if (hasAnyRowIssues) {
-      toast.error(
-        "Existen filas con errores de stock, lotes o descuentos. Corríjalos para continuar."
-      );
+    if (!validateSaveOrder(values)) {
       return;
     }
 
     try {
-      const payload: CreateDispensacionRequest = {
-        tipo: values.tipo,
-        fecha: values.fecha
-          ? new Date(values.fecha).toISOString()
-          : new Date().toISOString(),
-        almacenId: Number(values.almacenId),
-        pacienteId:
-          !values.isWalkIn && values.pacienteId
-            ? Number(values.pacienteId)
-            : undefined,
-        admisionId:
-          !values.isWalkIn && values.admisionId
-            ? Number(values.admisionId)
-            : undefined,
-        clienteNombre: values.isWalkIn
-          ? values.clienteNombre?.trim()
-          : undefined,
-        clienteDocumento: values.isWalkIn
-          ? values.clienteDocumento?.trim()
-          : undefined,
-        medicoId: values.medicoId ? Number(values.medicoId) : undefined,
-        observaciones: values.observaciones?.trim(),
-        detalles: values.detalles.map((d) => {
-          const descMonto = getRowDescuentoMonto(d);
-          return {
-            productoId: Number(d.productoId),
-            partidaInventarioId: d.partidaInventarioId
-              ? Number(d.partidaInventarioId)
-              : undefined,
-            cantidad: Number(d.cantidad),
-            precioUnitario: Number(d.precioUnitario),
-            descuento: Number(descMonto.toFixed(2)),
-            indicaciones: d.indicaciones?.trim(),
-          };
-        }),
-      };
+      const payload = buildDispensacionPayload(values);
 
-      const res = await createMutation.mutateAsync(payload);
-
-      if (action === "pay_and_deliver") {
-        if (res.estado === "Pagado") {
-          toast.success(
-            `Dispensación "${res.numero}" autorizada con cargo a Admisión ${res.admisionNumero || ""}. Confirme la entrega física.`
-          );
-          setCreatedForEntrega(res);
-        } else {
-          toast.success(
-            `Dispensación "${res.numero}" emitida y stock reservado. Complete el cobro y despacho a continuación.`
-          );
-          setCreatedForCobro(res);
-        }
+      if (isEditMode && editId) {
+        const res = await updateMutation.mutateAsync({
+          id: editId,
+          data: payload,
+        });
+        toast.success(
+          `Dispensación "${res.numero}" actualizada correctamente con stock reservado recalculado.`
+        );
+        router.push("/farmacia/dispensaciones");
         return;
       }
 
-      toast.success(
-        res.estado === "Pagado"
-          ? `Dispensación "${res.numero}" emitida con cargo a Admisión ${res.admisionNumero || ""} y lista para entrega.`
-          : `Dispensación "${res.numero}" emitida con stock reservado y enviada a Cobros de Caja.`
-      );
-
-      if (action === "new_order") {
-        setAttemptedSubmit(false);
-        reset({
-          tipo: "VentaAmbulatoria",
-          fecha: getLocalCurrentDateTime(),
-          almacenId: selectedAlmacenId,
-          isWalkIn: true,
-          pacienteId: undefined,
-          admisionId: undefined,
-          clienteNombre: "",
-          clienteDocumento: "",
-          observaciones: "",
-          detalles: [
-            {
-              productoId: 0,
-              cantidad: 1,
-              precioUnitario: 0,
-              descuento: 0,
-              descuentoTipo: "monto",
-            },
-          ],
-        });
-        toast.info("Formulario reiniciado para una nueva atención.");
-      } else {
-        router.push("/farmacia/dispensaciones");
-      }
+      const res = await createMutation.mutateAsync(payload);
+      handlePostSaveSuccess(res, action);
     } catch (error: unknown) {
       toast.error(getApiErrorMessage(error));
     }
   };
+
+  const handleSaveOrderRef = React.useRef(handleSaveOrder);
+  handleSaveOrderRef.current = handleSaveOrder;
 
   // Atajos de teclado: F2 para agregar fila, Ctrl+Enter / Cmd+Enter para emitir
   React.useEffect(() => {
@@ -1624,7 +1560,9 @@ export function DispensacionPageForm() {
         handleAddRow();
       } else if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
-        handleSubmit((vals) => handleSaveOrder(vals, "close"))();
+        void handleSubmit((vals) =>
+          handleSaveOrderRef.current(vals, "close")
+        )();
       }
     };
 
@@ -1632,7 +1570,8 @@ export function DispensacionPageForm() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleAddRow, handleSubmit]);
 
-  const isSaving = createMutation.isPending || isSubmitting;
+  const isSaving =
+    createMutation.isPending || updateMutation.isPending || isSubmitting;
 
   const renderDetallesRows = () => {
     if (loadingStock) {
@@ -1640,12 +1579,12 @@ export function DispensacionPageForm() {
         <tr>
           <td
             colSpan={9}
-            className="px-3 py-8 text-center text-muted-foreground text-xs"
+            className="px-3 py-6 text-center text-muted-foreground text-xs"
           >
             <div className="flex flex-col items-center justify-center gap-1.5">
-              <Loader2 className="size-5 animate-spin text-teal-600" />
+              <Loader2 className="size-4 animate-spin text-teal-600" />
               <span className="font-medium text-xs">
-                Cargando catálogo y existencias de farmacia...
+                Cargando existencias...
               </span>
             </div>
           </td>
@@ -1658,7 +1597,7 @@ export function DispensacionPageForm() {
         <tr>
           <td
             colSpan={9}
-            className="px-3 py-10 text-center text-muted-foreground text-xs"
+            className="px-3 py-8 text-center text-muted-foreground text-xs"
           >
             <div className="flex flex-col items-center justify-center gap-2">
               <Search className="size-6 text-muted-foreground/50" />
@@ -1724,6 +1663,20 @@ export function DispensacionPageForm() {
     });
   };
 
+  if (isEditMode && loadingExistente) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[350px] gap-3">
+        <Loader2 className="size-8 animate-spin text-teal-600" />
+        <p className="text-sm font-medium text-muted-foreground">
+          Cargando datos de la dispensación...
+        </p>
+      </div>
+    );
+  }
+
+  const orderIdentifier =
+    dispensacionExistente?.numero || (editId ? `#${editId}` : "");
+
   return (
     <div className="flex flex-col gap-4 w-full max-w-7xl mx-auto pb-12">
       {/* HEADER DE PÁGINA */}
@@ -1743,42 +1696,79 @@ export function DispensacionPageForm() {
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-base sm:text-lg font-bold tracking-tight text-foreground">
-                Nueva Dispensación y Venta de Farmacia
+                {isEditMode
+                  ? `Editar Dispensación: ${orderIdentifier}`
+                  : "Nueva Dispensación y Venta de Farmacia"}
               </h1>
               <Badge
                 variant="outline"
                 className="text-[10px] h-5 px-2 font-semibold text-teal-700 dark:text-teal-300 border-teal-500/30 bg-teal-500/10 shrink-0 gap-1"
               >
                 <ShoppingBag className="size-2.5" />
-                <span>
-                  {selectedTipo === "VentaAmbulatoria"
-                    ? "Venta Mostrador"
-                    : selectedTipo === "Hospitalaria"
-                      ? "Hospitalaria"
-                      : "Urgencia"}
-                </span>
+                <span>{getTipoDispensacionLabel(selectedTipo)}</span>
               </Badge>
-              <Badge
-                variant="outline"
-                className="text-[10px] h-5 px-2 font-medium text-amber-700 dark:text-amber-300 border-amber-500/30 bg-amber-500/10 shrink-0 gap-1"
-              >
-                <Clock className="size-2.5" />
-                <span>Pase a Cobro en Caja</span>
-              </Badge>
+              {isEditMode && dispensacionExistente ? (
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "text-[10px] h-5 px-2 font-semibold shrink-0 gap-1",
+                    isEstadoPendientePago(dispensacionExistente.estado) &&
+                    "text-amber-700 dark:text-amber-300 border-amber-500/30 bg-amber-500/10",
+                    isEstadoPagado(dispensacionExistente.estado) &&
+                    "text-blue-700 dark:text-blue-300 border-blue-500/30 bg-blue-500/10",
+                    isEstadoEntregado(dispensacionExistente.estado) &&
+                    "text-emerald-700 dark:text-emerald-300 border-emerald-500/30 bg-emerald-500/10",
+                    isEstadoAnulado(dispensacionExistente.estado) &&
+                    "text-rose-700 dark:text-rose-300 border-rose-500/30 bg-rose-500/10"
+                  )}
+                >
+                  <Clock className="size-2.5" />
+                  <span>
+                    {getDispensacionEstadoLabel(dispensacionExistente.estado)}
+                  </span>
+                </Badge>
+              ) : (
+                <Badge
+                  variant="outline"
+                  className="text-[10px] h-5 px-2 font-medium text-amber-700 dark:text-amber-300 border-amber-500/30 bg-amber-500/10 shrink-0 gap-1"
+                >
+                  <Clock className="size-2.5" />
+                  <span>Pase a Cobro en Caja</span>
+                </Badge>
+              )}
             </div>
             <p className="text-xs text-muted-foreground leading-normal mt-0.5">
-              Emisión con control FEFO de lotes, cálculo automático de importes y ticket para cobro en caja central.
+              {isEditMode
+                ? "Actualización de medicamentos, lotes y cantidades de la orden antes de su cobro final."
+                : "Emisión con control FEFO de lotes, cálculo automático de importes y ticket para cobro en caja central."}
             </p>
           </div>
         </div>
       </div>
+
+      {/* ALERTA DE NO EDITABLE SI NO ESTÁ EN PENDIENTE PAGO */}
+      {isEditMode &&
+        dispensacionExistente &&
+        !isEstadoPendientePago(dispensacionExistente.estado) && (
+          <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-3 text-amber-800 dark:text-amber-300">
+            <AlertTriangle className="size-5 shrink-0 mt-0.5" />
+            <div className="space-y-0.5 text-xs">
+              <p className="font-bold">
+                Esta orden se encuentra en estado &quot;{dispensacionExistente.estado}&quot;
+              </p>
+              <p className="text-muted-foreground">
+                Solo las dispensaciones en estado <strong>Pendiente de Pago</strong> pueden ser modificadas. Una vez pagada o entregada, el inventario y cobro han sido procesados.
+              </p>
+            </div>
+          </div>
+        )}
 
       {/* CUERPO DEL FORMULARIO */}
       <form
         id="dispensacion-page-form"
         onSubmit={(e) => {
           e.preventDefault();
-          handleSubmit((vals) => handleSaveOrder(vals, "close"))();
+          void handleSubmit((vals) => handleSaveOrder(vals, "close"))();
         }}
         className="flex flex-col gap-4 text-xs"
       >
@@ -2111,38 +2101,6 @@ export function DispensacionPageForm() {
               >
                 {totalItemsCount} {totalItemsCount === 1 ? "artículo" : "artículos"}
               </Badge>
-
-              {/* Selector de modo de vista: Lista vs Tabla */}
-              <div className="hidden sm:inline-flex items-center bg-muted/60 p-0.5 rounded-lg border border-border/40 ml-1">
-                <button
-                  type="button"
-                  onClick={() => setViewMode("lista")}
-                  className={cn(
-                    "px-2 py-0.5 text-[11px] rounded-md font-medium transition-all flex items-center gap-1 cursor-pointer",
-                    viewMode === "lista"
-                      ? "bg-background text-teal-700 dark:text-teal-300 shadow-xs font-semibold"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                  title="Vista lista / tarjetas amplias (más cómoda para editar)"
-                >
-                  <LayoutList className="size-3" />
-                  <span>Lista</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode("tabla")}
-                  className={cn(
-                    "px-2 py-0.5 text-[11px] rounded-md font-medium transition-all flex items-center gap-1 cursor-pointer",
-                    viewMode === "tabla"
-                      ? "bg-background text-teal-700 dark:text-teal-300 shadow-xs font-semibold"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                  title="Vista tabla compacta POS"
-                >
-                  <TableIcon className="size-3" />
-                  <span>Tabla</span>
-                </button>
-              </div>
             </div>
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
@@ -2228,130 +2186,37 @@ export function DispensacionPageForm() {
             </div>
           )}
 
-          {/* VISTA LISTA / TARJETAS (Predeterminada, cómoda y amplia para editar en cualquier pantalla) */}
-          {viewMode === "lista" ? (
-            <div className="space-y-3">
-              {fields.length === 0 ? (
-                <div className="p-8 text-center text-muted-foreground border border-dashed rounded-xl bg-muted/10 space-y-2">
-                  <Package className="size-8 text-muted-foreground/40 mx-auto" />
-                  <p className="text-xs font-medium">No hay medicamentos en la orden.</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    Usa el buscador rápido de arriba o presiona{" "}
-                    <kbd className="px-1 py-0.5 rounded bg-muted font-mono text-[10px] border">
-                      F2
-                    </kbd>{" "}
-                    para agregar una línea.
-                  </p>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={handleAddRow}
-                    className="mt-2 text-xs h-8 text-teal-600 border-teal-500/30 hover:bg-teal-500/10 cursor-pointer"
-                  >
-                    <Plus className="size-3.5 mr-1" />
-                    Agregar Medicamento
-                  </Button>
-                </div>
-              ) : (
-                fields.map((field, idx) => (
-                  <DetalleItemCard
-                    key={field.id}
-                    index={idx}
-                    almacenId={selectedAlmacenId}
-                    control={control}
-                    register={register}
-                    setValue={setValue}
-                    onRemove={() => remove(idx)}
-                    onSplitLots={() => handleSplitLots(idx)}
-                    canRemove={fields.length > 1}
-                    isDuplicate={duplicateProductIds.has(
-                      Number(watchedDetalles[idx]?.productoId)
-                    )}
-                    isHighlighted={highlightedRowIndex === idx}
-                    issues={rowsIssues[idx]}
-                    showRequiredErrors={attemptedSubmit}
-                    stockMedicamentos={stockMedicamentos}
-                    isPriceUnlocked={unlockedPriceRows[idx] ?? true}
-                    onTogglePriceUnlock={() => {
-                      setUnlockedPriceRows((prev) => ({
-                        ...prev,
-                        [idx]: !(prev[idx] ?? true),
-                      }));
-                    }}
-                  />
-                ))
-              )}
-            </div>
-          ) : (
-            /* VISTA TABLA (Activa cuando se selecciona el modo 'Tabla') */
-            <>
-              {/* En móviles siempre muestra tarjetas cómodas */}
-              <div className="lg:hidden space-y-3">
-                {fields.map((field, idx) => (
-                  <DetalleItemCard
-                    key={field.id}
-                    index={idx}
-                    almacenId={selectedAlmacenId}
-                    control={control}
-                    register={register}
-                    setValue={setValue}
-                    onRemove={() => remove(idx)}
-                    onSplitLots={() => handleSplitLots(idx)}
-                    canRemove={fields.length > 1}
-                    isDuplicate={duplicateProductIds.has(
-                      Number(watchedDetalles[idx]?.productoId)
-                    )}
-                    isHighlighted={highlightedRowIndex === idx}
-                    issues={rowsIssues[idx]}
-                    showRequiredErrors={attemptedSubmit}
-                    stockMedicamentos={stockMedicamentos}
-                    isPriceUnlocked={unlockedPriceRows[idx] ?? true}
-                    onTogglePriceUnlock={() => {
-                      setUnlockedPriceRows((prev) => ({
-                        ...prev,
-                        [idx]: !(prev[idx] ?? true),
-                      }));
-                    }}
-                  />
-                ))}
-              </div>
-
-              {/* En pantallas grandes (lg+) muestra la tabla mejorada sin solapamientos */}
-              <div className="hidden lg:block rounded-xl border border-border/40 bg-card overflow-x-auto shadow-2xs">
-                <table className="w-full min-w-[960px] table-fixed text-left text-xs border-collapse">
-                  <thead className="bg-muted/40 border-b border-border/40 text-muted-foreground font-semibold text-[10px] uppercase tracking-wider">
-                    <tr>
-                      <th className="px-1 py-2 w-8 text-center whitespace-nowrap">#</th>
-                      <th className="px-2 py-2 min-w-0 whitespace-nowrap">
-                        Medicamento / Insumo *
-                      </th>
-                      <th className="px-1.5 py-2 w-36 whitespace-nowrap">
-                        Lote / Vcto
-                      </th>
-                      <th className="px-1 py-2 w-14 text-center whitespace-nowrap">Stock</th>
-                      <th className="px-1 py-2 w-16 text-center whitespace-nowrap">Cant. *</th>
-                      <th className="px-1.5 py-2 w-28 text-right whitespace-nowrap">
-                        P. Unit.
-                      </th>
-                      <th className="px-1.5 py-2 w-26 text-right whitespace-nowrap">
-                        Desc.
-                      </th>
-                      <th className="px-1.5 py-2 w-24 text-right whitespace-nowrap">
-                        Subtotal
-                      </th>
-                      <th className="px-1 py-2 w-10 text-center whitespace-nowrap">
-                        <span className="sr-only">Acciones</span>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border/40">
-                    {renderDetallesRows()}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
+          {/* LISTA ULTRA COMPACTA: ADAPTABLE A PANTALLAS PEQUEÑAS Y APTA PARA 20+ ITEMS */}
+          <div className="rounded-xl border border-border/40 bg-card overflow-x-auto max-h-[480px] overflow-y-auto shadow-2xs">
+            <table className="w-full min-w-[680px] table-fixed text-left text-xs border-collapse">
+              <thead className="sticky top-0 z-10 bg-muted/95 backdrop-blur border-b border-border/40 text-muted-foreground font-semibold text-[10px] uppercase tracking-wider">
+                <tr className="h-7">
+                  <th className="px-1 py-1 w-6 text-center whitespace-nowrap">#</th>
+                  <th className="px-1.5 py-1 min-w-[210px] whitespace-nowrap">
+                    Medicamento / Insumo *
+                  </th>
+                  <th className="px-1 py-1 w-24 whitespace-nowrap">Lote</th>
+                  <th className="px-1 py-1 w-12 text-center whitespace-nowrap">Stock</th>
+                  <th className="px-1 py-1 w-14 text-center whitespace-nowrap">Cant. *</th>
+                  <th className="px-1 py-1 w-20 text-right whitespace-nowrap">
+                    P. Unit.
+                  </th>
+                  <th className="px-1 py-1 w-20 text-right whitespace-nowrap">
+                    Desc.
+                  </th>
+                  <th className="px-1.5 py-1 w-20 text-right whitespace-nowrap">
+                    Subtotal
+                  </th>
+                  <th className="px-0.5 py-1 w-6 text-center whitespace-nowrap">
+                    <span className="sr-only">Acciones</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/40">
+                {renderDetallesRows()}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* FOOTER UNIFICADO DE TOTALES Y ACCIONES */}
@@ -2396,7 +2261,7 @@ export function DispensacionPageForm() {
             </div>
           </div>
 
-          {/* Fila 2: Acciones de emisión */}
+          {/* Fila 2: Acciones */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
             <Button
               type="button"
@@ -2404,75 +2269,65 @@ export function DispensacionPageForm() {
               size="sm"
               onClick={handleBackNavigation}
               disabled={isSaving}
-              className="w-full sm:w-auto h-8.5 px-4 text-xs cursor-pointer order-2 sm:order-1"
+              className="w-full sm:w-auto h-8 px-4 text-xs cursor-pointer order-2 sm:order-1 text-muted-foreground hover:text-foreground"
             >
               Cancelar
             </Button>
 
             <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2.5 justify-end order-1 sm:order-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={isSaving || fields.length === 0}
-                onClick={() =>
-                  handleSubmit((vals) => handleSaveOrder(vals, "new_order"))()
-                }
-                className="w-full sm:w-auto h-8.5 px-4 text-xs text-teal-700 dark:text-teal-300 border-teal-500/30 hover:bg-teal-500/10 font-medium cursor-pointer"
-              >
-                {isSaving ? (
-                  <Loader2 className="size-3.5 animate-spin mr-1.5" />
-                ) : (
-                  <Plus className="size-3.5 mr-1.5" />
-                )}
-                <span>Emitir y nueva</span>
-              </Button>
-
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={isSaving || fields.length === 0}
-                onClick={() =>
-                  handleSubmit((vals) =>
-                    handleSaveOrder(vals, "pay_and_deliver")
-                  )()
-                }
-                className="w-full sm:w-auto h-8.5 px-4 text-xs text-amber-700 dark:text-amber-300 border-amber-500/40 bg-amber-500/5 hover:bg-amber-500/15 font-semibold cursor-pointer gap-1.5"
-              >
-                {watchedAdmisionId &&
-                (selectedTipo === "Hospitalaria" ||
-                  selectedTipo === "Urgencia") ? (
-                  <>
-                    <PackageCheck className="size-3.5 text-emerald-600" />
-                    <span>Emitir y Entregar Stock</span>
-                  </>
-                ) : (
-                  <>
-                    <CreditCard className="size-3.5 text-amber-600" />
-                    <span>Emitir y Cobrar / Despachar</span>
-                  </>
-                )}
-              </Button>
+              {!isEditMode && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={isSaving || fields.length === 0}
+                  onClick={() => {
+                    void handleSubmit((vals) =>
+                      handleSaveOrder(vals, "new_order")
+                    )();
+                  }}
+                  className="w-full sm:w-auto h-8 px-4 text-xs text-teal-700 dark:text-teal-300 border-teal-500/30 hover:bg-teal-500/10 font-medium cursor-pointer gap-1.5"
+                >
+                  {isSaving ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <Plus className="size-3.5" />
+                  )}
+                  <span>Guardar y Nueva Venta</span>
+                </Button>
+              )}
 
               <Button
                 type="button"
                 size="sm"
-                disabled={isSaving || fields.length === 0}
-                onClick={() =>
-                  handleSubmit((vals) => handleSaveOrder(vals, "close"))()
+                disabled={
+                  isSaving ||
+                  fields.length === 0 ||
+                  (isEditMode &&
+                    !isEstadoPendientePago(dispensacionExistente?.estado))
                 }
-                className="w-full sm:w-auto h-8.5 px-5 text-xs bg-teal-600 hover:bg-teal-700 text-white font-medium gap-1.5 cursor-pointer shadow-xs transition-all"
+                onClick={() => {
+                  void handleSubmit((vals) =>
+                    handleSaveOrder(vals, "close")
+                  )();
+                }}
+                className="w-full sm:w-auto h-8 px-5 text-xs bg-teal-600 hover:bg-teal-700 text-white font-medium gap-1.5 cursor-pointer shadow-xs transition-all"
+                title={
+                  isEditMode &&
+                    !isEstadoPendientePago(dispensacionExistente?.estado)
+                    ? "Solo se pueden editar órdenes en estado Pendiente de Pago"
+                    : "Guardar orden (Ctrl + Enter)"
+                }
               >
                 {isSaving ? (
                   <>
                     <Loader2 className="size-3.5 animate-spin" />
-                    <span>Emitiendo...</span>
+                    <span>Guardando...</span>
                   </>
                 ) : (
                   <>
                     <Check className="size-3.5" />
-                    <span>Emitir Orden</span>
+                    <span>{isEditMode ? "Guardar Cambios" : "Guardar"}</span>
                     <kbd className="hidden sm:inline-block ml-1 text-[9px] px-1 py-0.2 rounded bg-teal-800 text-white font-mono opacity-90">
                       Ctrl+↵
                     </kbd>

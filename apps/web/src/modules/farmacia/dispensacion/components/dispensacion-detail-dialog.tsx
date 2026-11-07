@@ -2,8 +2,10 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Printer,
+  Pencil,
   CreditCard,
   PackageCheck,
   Receipt,
@@ -21,7 +23,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
-import type { DispensacionResponse } from "../types/dispensacion.types";
+import {
+  type DispensacionResponse,
+  isEstadoPendientePago,
+  isEstadoPagado,
+  isEstadoEntregado,
+  isEstadoAnulado,
+} from "../types/dispensacion.types";
 
 interface DispensacionDetailDialogProps {
   open: boolean;
@@ -38,6 +46,8 @@ export function DispensacionDetailDialog({
   onCobrar,
   onEntregar,
 }: DispensacionDetailDialogProps) {
+  const router = useRouter();
+
   if (!dispensacion) return null;
 
   const handlePrint = () => {
@@ -64,22 +74,22 @@ export function DispensacionDetailDialog({
               <div>
                 <DialogTitle className="text-base font-bold text-foreground flex items-center gap-2">
                   <span>Ticket de Farmacia: {dispensacion.numero}</span>
-                  {dispensacion.estado === "PendientePago" && (
+                  {isEstadoPendientePago(dispensacion.estado) && (
                     <Badge variant="outline" className="text-amber-600 border-amber-500/30 bg-amber-500/10 text-xs">
-                      Pendiente en Caja
+                      Pendiente en Caja (Editable)
                     </Badge>
                   )}
-                  {dispensacion.estado === "Pagado" && (
+                  {isEstadoPagado(dispensacion.estado) && (
                     <Badge variant="outline" className="text-blue-600 border-blue-500/30 bg-blue-500/10 text-xs">
                       Pagado (Listo para Entrega)
                     </Badge>
                   )}
-                  {dispensacion.estado === "Entregado" && (
+                  {isEstadoEntregado(dispensacion.estado) && (
                     <Badge variant="outline" className="text-emerald-600 border-emerald-500/30 bg-emerald-500/10 text-xs">
                       Fármacos Entregados
                     </Badge>
                   )}
-                  {dispensacion.estado === "Anulado" && (
+                  {isEstadoAnulado(dispensacion.estado) && (
                     <Badge variant="outline" className="text-rose-600 border-rose-500/30 bg-rose-500/10 text-xs">
                       Anulado
                     </Badge>
@@ -307,7 +317,22 @@ export function DispensacionDetailDialog({
           </Button>
 
           <div className="flex items-center gap-2">
-            {dispensacion.estado === "PendientePago" && onCobrar && (
+            {isEstadoPendientePago(dispensacion.estado) && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  onOpenChange(false);
+                  router.push(`/farmacia/dispensaciones/${dispensacion.id}/editar`);
+                }}
+                className="h-8 text-xs gap-1.5 text-blue-600 dark:text-blue-400 border-blue-500/30 hover:bg-blue-500/10 cursor-pointer"
+              >
+                <Pencil className="size-3.5" />
+                <span>Editar Orden</span>
+              </Button>
+            )}
+
+            {isEstadoPendientePago(dispensacion.estado) && onCobrar && (
               <Button
                 size="sm"
                 onClick={() => {
@@ -321,7 +346,7 @@ export function DispensacionDetailDialog({
               </Button>
             )}
 
-            {dispensacion.estado === "Pagado" && onEntregar && (
+            {isEstadoPagado(dispensacion.estado) && onEntregar && (
               <Button
                 size="sm"
                 onClick={() => {

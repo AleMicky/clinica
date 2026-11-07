@@ -7,6 +7,7 @@ import {
 import {
   anularDispensacion,
   createDispensacion,
+  updateDispensacion,
   entregarMedicamentosDispensacion,
   getDispensacionById,
   getDispensacionMetrics,
@@ -99,6 +100,29 @@ export function useCreateDispensacion() {
     mutationFn: (data: CreateDispensacionRequest) => createDispensacion(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: dispensacionKeys.all });
+      queryClient.invalidateQueries({ queryKey: existenciaKeys.all });
+      queryClient.invalidateQueries({ queryKey: cobroKeys.all });
+      queryClient.invalidateQueries({ queryKey: admisionKeys.all });
+    },
+  });
+}
+
+export function useUpdateDispensacion() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number;
+      data: CreateDispensacionRequest;
+    }) => updateDispensacion(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: dispensacionKeys.all });
+      queryClient.invalidateQueries({
+        queryKey: dispensacionKeys.detail(variables.id),
+      });
       queryClient.invalidateQueries({ queryKey: existenciaKeys.all });
       queryClient.invalidateQueries({ queryKey: cobroKeys.all });
       queryClient.invalidateQueries({ queryKey: admisionKeys.all });
