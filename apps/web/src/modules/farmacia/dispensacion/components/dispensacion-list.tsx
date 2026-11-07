@@ -14,7 +14,6 @@ import {
   CreditCard,
   User,
   RefreshCw,
-  Building2,
   Stethoscope,
   Calendar,
   ChevronDown,
@@ -472,6 +471,268 @@ export function DispensacionList({
     return null;
   };
 
+  const getTabValue = (estado?: EstadoDispensacion | null): string => {
+    if (!estado) return "TODOS";
+    if (isEstadoPendientePago(estado)) return "PendientePago";
+    if (isEstadoPagado(estado)) return "Pagado";
+    if (isEstadoEntregado(estado)) return "Entregado";
+    if (isEstadoAnulado(estado)) return "Anulado";
+    return String(estado);
+  };
+
+  const getInventarioBadge = (
+    item: DispensacionResponse,
+    isPendiente: boolean,
+    isPagado: boolean
+  ) => {
+    if (item.movimientoInventarioId) {
+      return (
+        <Badge
+          variant="outline"
+          className="text-[9px] h-4 px-1.5 font-mono text-emerald-700 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/5"
+          title="Movimiento de salida confirmado en Kárdex"
+        >
+          Mov: {item.movimientoInventarioNumero || `#${item.movimientoInventarioId}`}
+        </Badge>
+      );
+    }
+
+    if (isPendiente || isPagado) {
+      return (
+        <Badge
+          variant="outline"
+          className="text-[9px] h-4 px-1.5 font-medium text-amber-700 dark:text-amber-400 border-amber-500/25 bg-amber-500/5"
+          title="Stock reservado en almacén hasta su entrega"
+        >
+          Stock Reservado
+        </Badge>
+      );
+    }
+
+    return null;
+  };
+
+  const renderListContent = () => {
+    if (isLoading) {
+      return [1, 2, 3, 4].map((skeletonId) => (
+        <div
+          key={`dispensacion-skeleton-${skeletonId}`}
+          className="p-3.5 rounded-lg border border-border/50 bg-card space-y-2"
+        >
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-4 w-20" />
+          </div>
+          <Skeleton className="h-3 w-48" />
+        </div>
+      ));
+    }
+
+    if (dispensaciones.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center p-12 text-center border border-dashed border-border/60 rounded-lg bg-card/40">
+          <div className="size-10 rounded-full bg-teal-500/10 text-teal-600 flex items-center justify-center mb-2">
+            <Pill className="size-5" />
+          </div>
+          <p className="text-xs font-semibold text-foreground">
+            No se encontraron dispensaciones o ventas de farmacia
+          </p>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            {hasActiveFilters
+              ? "No hay resultados para los filtros seleccionados o el rango de fechas. Intenta restablecer la búsqueda."
+              : "Crea una nueva orden de farmacia para iniciar la preventa o dispensación."}
+          </p>
+          {hasActiveFilters && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleReset}
+              className="text-xs gap-1.5 cursor-pointer mt-2.5"
+            >
+              <X className="size-3.5" />
+              Limpiar filtros
+            </Button>
+          )}
+        </div>
+      );
+    }
+
+    return dispensaciones.map((item) => {
+      const pacienteNombre =
+        item.pacienteNombre || item.clienteNombre || "Cliente Particular";
+      const documento =
+        item.pacienteDocumento || item.clienteDocumento || "S/D";
+      const isPendiente = isEstadoPendientePago(item.estado);
+      const isPagado = isEstadoPagado(item.estado);
+      const isAnulado = isEstadoAnulado(item.estado);
+
+      return (
+        <div
+          key={item.id}
+          className="p-3 rounded-lg border border-border/60 bg-card hover:bg-muted/20 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs"
+        >
+          {/* Left section: Ticket & Patient Info */}
+          <div className="flex items-start gap-3 flex-1">
+            <div className="size-8 rounded-lg bg-teal-500/10 text-teal-600 flex items-center justify-center shrink-0 mt-0.5">
+              <Pill className="size-4" />
+            </div>
+
+            <div className="space-y-1 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-mono text-xs font-bold text-foreground">
+                  {item.numero}
+                </span>
+                {getTipoBadge(item.tipo)}
+                {getEstadoBadge(item.estado)}
+                {item.comprobanteCobro && (
+                  <Badge
+                    variant="outline"
+                    className="text-[9px] h-4 px-1.5 font-mono text-teal-700 dark:text-teal-400 border-teal-500/30 bg-teal-500/5"
+                    title={`Método: ${item.metodoPago || "Caja"}`}
+                  >
+                    Recibo: {item.comprobanteCobro}
+                  </Badge>
+                )}
+                {item.admisionNumero && (
+                  <Badge
+                    variant="outline"
+                    className="text-[9px] h-4 px-1.5 font-mono text-blue-700 dark:text-blue-400 border-blue-500/30 bg-blue-500/5"
+                  >
+                    Adm: {item.admisionNumero}
+                  </Badge>
+                )}
+                {getInventarioBadge(item, isPendiente, isPagado)}
+                <span className="text-[11px] text-muted-foreground">
+                  • {formatDate(item.fecha)} • {item.almacenNombre}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2 text-xs font-medium text-foreground">
+                <User className="size-3 text-muted-foreground" />
+                <span>{pacienteNombre}</span>
+                <span className="text-[10px] text-muted-foreground">
+                  (Doc: {documento})
+                </span>
+                {item.medicoNombre && (
+                  <span className="text-[10px] text-muted-foreground flex items-center gap-1 pl-2 border-l border-border/60">
+                    <Stethoscope className="size-3 text-primary" />
+                    {item.medicoNombre}
+                  </span>
+                )}
+              </div>
+
+              {/* Medicines pills preview */}
+              <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                {item.detalles.slice(0, 3).map((d) => (
+                  <span
+                    key={d.id}
+                    className="text-[10px] px-1.5 py-0.5 bg-muted/60 text-muted-foreground rounded border border-border/40 font-mono"
+                  >
+                    {d.cantidad}x {d.productoNombre}
+                  </span>
+                ))}
+                {item.detalles.length > 3 && (
+                  <span className="text-[10px] text-muted-foreground">
+                    +{item.detalles.length - 3} más
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Right section: Total & Action Buttons */}
+          <div className="flex items-center gap-3 self-end md:self-center shrink-0">
+            <div className="text-right">
+              <div className="text-[10px] text-muted-foreground uppercase font-semibold">
+                Total a Pagar
+              </div>
+              <div className="font-mono text-sm font-bold text-foreground">
+                Bs. {item.total.toFixed(2)}
+              </div>
+            </div>
+
+            {/* Primary Context Actions */}
+            {isPendiente && onEdit && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onEdit(item)}
+                className="h-7 text-xs px-2.5 gap-1.5 text-blue-600 dark:text-blue-400 border-blue-500/30 hover:bg-blue-500/10 cursor-pointer"
+                title="Editar orden y medicamentos"
+              >
+                <Pencil className="size-3" />
+                <span>Editar</span>
+              </Button>
+            )}
+
+            {isPendiente && onCobrar && (
+              <Button
+                size="sm"
+                onClick={() => onCobrar(item)}
+                className="h-7 text-xs px-2.5 gap-1.5 bg-amber-600 hover:bg-amber-700 text-white cursor-pointer"
+                title="Registrar cobro en Caja"
+              >
+                <CreditCard className="size-3" />
+                <span>Cobrar</span>
+              </Button>
+            )}
+
+            {isPagado && onEntregar && (
+              <Button
+                size="sm"
+                onClick={() => onEntregar(item)}
+                className="h-7 text-xs px-2.5 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
+                title="Entregar fármacos y descontar stock"
+              >
+                <PackageCheck className="size-3" />
+                <span>Entregar</span>
+              </Button>
+            )}
+
+            {/* 3-dots Menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                className="inline-flex size-7 items-center justify-center rounded-md hover:bg-accent text-muted-foreground transition-colors cursor-pointer"
+                aria-label="Acciones de dispensación"
+              >
+                <MoreVertical className="size-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                {onViewDetail && (
+                  <DropdownMenuItem
+                    onClick={() => onViewDetail(item)}
+                    className="gap-2 text-xs cursor-pointer"
+                  >
+                    <Eye className="size-3.5 text-primary" /> Ver Ticket / Detalle
+                  </DropdownMenuItem>
+                )}
+                {onViewAudit && (
+                  <DropdownMenuItem
+                    onClick={() => onViewAudit(item)}
+                    className="gap-2 text-xs cursor-pointer"
+                  >
+                    <Clock className="size-3.5" /> Ver Auditoría
+                  </DropdownMenuItem>
+                )}
+                {!isAnulado && onAnular && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => onAnular(item)}
+                      className="gap-2 text-xs text-destructive focus:text-destructive cursor-pointer"
+                    >
+                      <Ban className="size-3.5" /> Anular Orden
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      );
+    });
+  };
+
   return (
     <div className="flex flex-col gap-3 w-full">
       {/* Controls & Filter bar */}
@@ -541,19 +802,7 @@ export function DispensacionList({
 
       {/* Status Tabs */}
       <Tabs
-        value={
-          !selectedEstado
-            ? "TODOS"
-            : isEstadoPendientePago(selectedEstado)
-              ? "PendientePago"
-              : isEstadoPagado(selectedEstado)
-                ? "Pagado"
-                : isEstadoEntregado(selectedEstado)
-                  ? "Entregado"
-                  : isEstadoAnulado(selectedEstado)
-                    ? "Anulado"
-                    : String(selectedEstado)
-        }
+        value={getTabValue(selectedEstado)}
         onValueChange={(val) => {
           onEstadoChange?.(val === "TODOS" ? null : (val as EstadoDispensacion));
         }}
@@ -580,237 +829,7 @@ export function DispensacionList({
 
       {/* List Content */}
       <div className="flex flex-col gap-2">
-        {isLoading ? (
-          Array.from({ length: 4 }).map((_, i) => (
-            <div
-              key={i}
-              className="p-3.5 rounded-lg border border-border/50 bg-card space-y-2"
-            >
-              <div className="flex items-center justify-between">
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-4 w-20" />
-              </div>
-              <Skeleton className="h-3 w-48" />
-            </div>
-          ))
-        ) : dispensaciones.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-12 text-center border border-dashed border-border/60 rounded-lg bg-card/40">
-            <div className="size-10 rounded-full bg-teal-500/10 text-teal-600 flex items-center justify-center mb-2">
-              <Pill className="size-5" />
-            </div>
-            <p className="text-xs font-semibold text-foreground">
-              No se encontraron dispensaciones o ventas de farmacia
-            </p>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
-              {hasActiveFilters
-                ? "No hay resultados para los filtros seleccionados o el rango de fechas. Intenta restablecer la búsqueda."
-                : "Crea una nueva orden de farmacia para iniciar la preventa o dispensación."}
-            </p>
-            {hasActiveFilters && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleReset}
-                className="text-xs gap-1.5 cursor-pointer mt-2.5"
-              >
-                <X className="size-3.5" />
-                Limpiar filtros
-              </Button>
-            )}
-          </div>
-        ) : (
-          dispensaciones.map((item) => {
-            const pacienteNombre =
-              item.pacienteNombre || item.clienteNombre || "Cliente Particular";
-            const documento =
-              item.pacienteDocumento || item.clienteDocumento || "S/D";
-            const isPendiente = isEstadoPendientePago(item.estado);
-            const isPagado = isEstadoPagado(item.estado);
-            const isEntregado = isEstadoEntregado(item.estado);
-            const isAnulado = isEstadoAnulado(item.estado);
-
-            return (
-              <div
-                key={item.id}
-                className="p-3 rounded-lg border border-border/60 bg-card hover:bg-muted/20 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs"
-              >
-                {/* Left section: Ticket & Patient Info */}
-                <div className="flex items-start gap-3 flex-1">
-                  <div className="size-8 rounded-lg bg-teal-500/10 text-teal-600 flex items-center justify-center shrink-0 mt-0.5">
-                    <Pill className="size-4" />
-                  </div>
-
-                  <div className="space-y-1 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-mono text-xs font-bold text-foreground">
-                        {item.numero}
-                      </span>
-                      {getTipoBadge(item.tipo)}
-                      {getEstadoBadge(item.estado)}
-                      {item.comprobanteCobro && (
-                        <Badge
-                          variant="outline"
-                          className="text-[9px] h-4 px-1.5 font-mono text-teal-700 dark:text-teal-400 border-teal-500/30 bg-teal-500/5"
-                          title={`Método: ${item.metodoPago || "Caja"}`}
-                        >
-                          Recibo: {item.comprobanteCobro}
-                        </Badge>
-                      )}
-                      {item.admisionNumero && (
-                        <Badge
-                          variant="outline"
-                          className="text-[9px] h-4 px-1.5 font-mono text-blue-700 dark:text-blue-400 border-blue-500/30 bg-blue-500/5"
-                        >
-                          Adm: {item.admisionNumero}
-                        </Badge>
-                      )}
-                      {item.movimientoInventarioId ? (
-                        <Badge
-                          variant="outline"
-                          className="text-[9px] h-4 px-1.5 font-mono text-emerald-700 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/5"
-                          title="Movimiento de salida confirmado en Kárdex"
-                        >
-                          Mov: {item.movimientoInventarioNumero || `#${item.movimientoInventarioId}`}
-                        </Badge>
-                      ) : isPendiente || isPagado ? (
-                        <Badge
-                          variant="outline"
-                          className="text-[9px] h-4 px-1.5 font-medium text-amber-700 dark:text-amber-400 border-amber-500/25 bg-amber-500/5"
-                          title="Stock reservado en almacén hasta su entrega"
-                        >
-                          Stock Reservado
-                        </Badge>
-                      ) : null}
-                      <span className="text-[11px] text-muted-foreground">
-                        • {formatDate(item.fecha)} • {item.almacenNombre}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-xs font-medium text-foreground">
-                      <User className="size-3 text-muted-foreground" />
-                      <span>{pacienteNombre}</span>
-                      <span className="text-[10px] text-muted-foreground">
-                        (Doc: {documento})
-                      </span>
-                      {item.medicoNombre && (
-                        <span className="text-[10px] text-muted-foreground flex items-center gap-1 pl-2 border-l border-border/60">
-                          <Stethoscope className="size-3 text-primary" />
-                          {item.medicoNombre}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Medicines pills preview */}
-                    <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
-                      {item.detalles.slice(0, 3).map((d) => (
-                        <span
-                          key={d.id}
-                          className="text-[10px] px-1.5 py-0.5 bg-muted/60 text-muted-foreground rounded border border-border/40 font-mono"
-                        >
-                          {d.cantidad}x {d.productoNombre}
-                        </span>
-                      ))}
-                      {item.detalles.length > 3 && (
-                        <span className="text-[10px] text-muted-foreground">
-                          +{item.detalles.length - 3} más
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right section: Total & Action Buttons */}
-                <div className="flex items-center gap-3 self-end md:self-center shrink-0">
-                  <div className="text-right">
-                    <div className="text-[10px] text-muted-foreground uppercase font-semibold">
-                      Total a Pagar
-                    </div>
-                    <div className="font-mono text-sm font-bold text-foreground">
-                      Bs. {item.total.toFixed(2)}
-                    </div>
-                  </div>
-
-                  {/* Primary Context Actions */}
-                  {isPendiente && onEdit && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => onEdit(item)}
-                      className="h-7 text-xs px-2.5 gap-1.5 text-blue-600 dark:text-blue-400 border-blue-500/30 hover:bg-blue-500/10 cursor-pointer"
-                      title="Editar orden y medicamentos"
-                    >
-                      <Pencil className="size-3" />
-                      <span>Editar</span>
-                    </Button>
-                  )}
-
-                  {isPendiente && onCobrar && (
-                    <Button
-                      size="sm"
-                      onClick={() => onCobrar(item)}
-                      className="h-7 text-xs px-2.5 gap-1.5 bg-amber-600 hover:bg-amber-700 text-white cursor-pointer"
-                      title="Registrar cobro en Caja"
-                    >
-                      <CreditCard className="size-3" />
-                      <span>Cobrar</span>
-                    </Button>
-                  )}
-
-                  {isPagado && onEntregar && (
-                    <Button
-                      size="sm"
-                      onClick={() => onEntregar(item)}
-                      className="h-7 text-xs px-2.5 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
-                      title="Entregar fármacos y descontar stock"
-                    >
-                      <PackageCheck className="size-3" />
-                      <span>Entregar</span>
-                    </Button>
-                  )}
-
-                  {/* 3-dots Menu */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger
-                      className="inline-flex size-7 items-center justify-center rounded-md hover:bg-accent text-muted-foreground transition-colors cursor-pointer"
-                      aria-label="Acciones de dispensación"
-                    >
-                      <MoreVertical className="size-4" />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-44">
-                      {onViewDetail && (
-                        <DropdownMenuItem
-                          onClick={() => onViewDetail(item)}
-                          className="gap-2 text-xs cursor-pointer"
-                        >
-                          <Eye className="size-3.5 text-primary" /> Ver Ticket / Detalle
-                        </DropdownMenuItem>
-                      )}
-                      {onViewAudit && (
-                        <DropdownMenuItem
-                          onClick={() => onViewAudit(item)}
-                          className="gap-2 text-xs cursor-pointer"
-                        >
-                          <Clock className="size-3.5" /> Ver Auditoría
-                        </DropdownMenuItem>
-                      )}
-                      {!isAnulado && onAnular && (
-                        <>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => onAnular(item)}
-                            className="gap-2 text-xs text-destructive focus:text-destructive cursor-pointer"
-                          >
-                            <Ban className="size-3.5" /> Anular Orden
-                          </DropdownMenuItem>
-                        </>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
-            );
-          })
-        )}
+        {renderListContent()}
       </div>
 
       {/* Pagination Footer */}
@@ -819,8 +838,8 @@ export function DispensacionList({
           totalItems={totalItems}
           currentPage={currentPage}
           pageSize={pageSize}
-          onPageChange={onPageChange ?? (() => {})}
-          onPageSizeChange={onPageSizeChange ?? (() => {})}
+          onPageChange={onPageChange ?? (() => { })}
+          onPageSizeChange={onPageSizeChange ?? (() => { })}
         />
       )}
     </div>

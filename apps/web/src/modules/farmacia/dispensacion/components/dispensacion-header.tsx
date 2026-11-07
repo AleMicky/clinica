@@ -1,7 +1,6 @@
 "use client";
 
-import * as React from "react";
-import { Pill, Plus, RefreshCw, ShoppingCart } from "lucide-react";
+import { Pill, Plus, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -18,7 +17,7 @@ export function DispensacionHeader({
   onRefresh,
   isLoading = false,
   onAddDispensacion,
-}: DispensacionHeaderProps) {
+}: Readonly<DispensacionHeaderProps>) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-card border border-border/60 rounded-lg p-3.5 shadow-2xs">
       <div className="flex items-center gap-3">

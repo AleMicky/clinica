@@ -45,7 +45,7 @@ function normalizeText(value?: string | null): string {
 
 export function getMedicineBrand(med?: MedicamentoStockResponse | null): string {
   if (!med) return "";
-  if (med.marca && med.marca.trim()) return med.marca;
+  if (med.marca?.trim()) return med.marca;
   if (med.codigo === "MED-006") return "B. Braun";
   if (med.codigo === "MED-001") return "Bagó";
   if (med.codigo === "MED-002") return "Bayer";
@@ -53,6 +53,16 @@ export function getMedicineBrand(med?: MedicamentoStockResponse | null): string 
   if (med.codigo === "MED-004") return "Crespal";
   if (med.codigo === "MED-005") return "Novartis";
   return "Genérico";
+}
+
+function getStockAvailabilityClass(stockDisponible: number): string {
+  if (stockDisponible > 10) {
+    return "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300";
+  }
+  if (stockDisponible > 0) {
+    return "bg-amber-500/10 text-amber-700 dark:text-amber-300";
+  }
+  return "bg-destructive/10 text-destructive";
 }
 
 const ITEMS_PER_PAGE = 5;
@@ -66,7 +76,7 @@ export function MedicamentoAutocomplete({
   error = false,
   className,
   id,
-}: MedicamentoAutocompleteProps) {
+}: Readonly<MedicamentoAutocompleteProps>) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [debouncedSearch, setDebouncedSearch] = React.useState("");
@@ -155,6 +165,88 @@ export function MedicamentoAutocomplete({
       e.preventDefault();
       handleSelect(paginatedMedicamentos[0]);
     }
+  };
+
+  const renderResultsContent = () => {
+    if (isLoading && stockMedicamentos.length === 0) {
+      return (
+        <div className="flex items-center justify-center gap-2 px-3 py-6 text-xs text-muted-foreground">
+          <Loader2 className="size-3.5 animate-spin text-teal-600" />
+          <span>Cargando catálogo de medicamentos...</span>
+        </div>
+      );
+    }
+
+    if (paginatedMedicamentos.length === 0) {
+      return (
+        <div className="px-3 py-6 text-xs text-muted-foreground text-center">
+          No se encontraron medicamentos con stock en este almacén.
+        </div>
+      );
+    }
+
+    return (
+      <ul className="space-y-0.5">
+        {paginatedMedicamentos.map((med) => {
+          const isSelected = selectedMedicamento?.productoId === med.productoId;
+
+          return (
+            <li key={med.productoId}>
+              <button
+                type="button"
+                onClick={() => handleSelect(med)}
+                className={cn(
+                  "w-full flex cursor-pointer select-none items-center justify-between rounded-lg px-2 py-1.5 outline-hidden hover:bg-accent hover:text-accent-foreground transition-colors text-xs text-left",
+                  isSelected && "bg-accent/80 font-medium text-accent-foreground"
+                )}
+              >
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <div className="size-5 rounded flex items-center justify-center shrink-0 border bg-teal-500/10 border-teal-500/30 text-teal-600 dark:text-teal-400">
+                    <Pill className="size-3" />
+                  </div>
+                  <div className="flex flex-col min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="font-mono font-bold text-[10px] text-foreground bg-muted px-1 py-0.2 rounded shrink-0">
+                        {med.codigo}
+                      </span>
+                      <span className="truncate font-medium text-xs text-foreground">
+                        {med.nombre}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground pt-0.5">
+                      <span className="truncate text-teal-700 dark:text-teal-300 font-semibold bg-teal-500/10 px-1.5 py-0.5 rounded text-[10px]">
+                        Marca: {getMedicineBrand(med)}
+                      </span>
+                      <span>•</span>
+                      <span className="font-semibold text-foreground font-mono">
+                        Bs. {med.precioReferencial.toFixed(2)}
+                      </span>
+                      <span>•</span>
+                      <span
+                        className={cn(
+                          "font-mono font-semibold px-1 rounded text-[9px]",
+                          getStockAvailabilityClass(med.stockDisponible)
+                        )}
+                      >
+                        Disp: {med.stockDisponible} {med.unidadMedida || ""}
+                      </span>
+                      {(med.stockReservado ?? 0) > 0 && (
+                        <span className="font-mono font-medium px-1 rounded text-[9px] bg-amber-500/10 text-amber-700 dark:text-amber-300">
+                          Res: {med.stockReservado}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                {isSelected && (
+                  <Check className="size-3.5 text-teal-600 ml-1.5 shrink-0" />
+                )}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    );
   };
 
   return (
@@ -262,82 +354,7 @@ export function MedicamentoAutocomplete({
 
         {/* Results list */}
         <div className="overflow-y-auto max-h-60 pr-0.5 space-y-0.5 flex-1">
-          {isLoading && stockMedicamentos.length === 0 ? (
-            <div className="flex items-center justify-center gap-2 px-3 py-6 text-xs text-muted-foreground">
-              <Loader2 className="size-3.5 animate-spin text-teal-600" />
-              <span>Cargando catálogo de medicamentos...</span>
-            </div>
-          ) : paginatedMedicamentos.length === 0 ? (
-            <div className="px-3 py-6 text-xs text-muted-foreground text-center">
-              No se encontraron medicamentos con stock en este almacén.
-            </div>
-          ) : (
-            <ul className="space-y-0.5">
-              {paginatedMedicamentos.map((med) => {
-                const isSelected = selectedMedicamento?.productoId === med.productoId;
-                const hasLots = med.lotes && med.lotes.length > 0;
-
-                return (
-                  <li key={med.productoId}>
-                    <button
-                      type="button"
-                      onClick={() => handleSelect(med)}
-                      className={cn(
-                        "w-full flex cursor-pointer select-none items-center justify-between rounded-lg px-2 py-1.5 outline-hidden hover:bg-accent hover:text-accent-foreground transition-colors text-xs text-left",
-                        isSelected && "bg-accent/80 font-medium text-accent-foreground"
-                      )}
-                    >
-                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <div className="size-5 rounded flex items-center justify-center shrink-0 border bg-teal-500/10 border-teal-500/30 text-teal-600 dark:text-teal-400">
-                          <Pill className="size-3" />
-                        </div>
-                        <div className="flex flex-col min-w-0 flex-1">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="font-mono font-bold text-[10px] text-foreground bg-muted px-1 py-0.2 rounded shrink-0">
-                              {med.codigo}
-                            </span>
-                            <span className="truncate font-medium text-xs text-foreground">
-                              {med.nombre}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 text-[10px] text-muted-foreground pt-0.5">
-                            <span className="truncate text-teal-700 dark:text-teal-300 font-semibold bg-teal-500/10 px-1.5 py-0.5 rounded text-[10px]">
-                              Marca: {getMedicineBrand(med)}
-                            </span>
-                            <span>•</span>
-                            <span className="font-semibold text-foreground font-mono">
-                              Bs. {med.precioReferencial.toFixed(2)}
-                            </span>
-                            <span>•</span>
-                            <span
-                              className={cn(
-                                "font-mono font-semibold px-1 rounded text-[9px]",
-                                med.stockDisponible > 10
-                                  ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                                  : med.stockDisponible > 0
-                                    ? "bg-amber-500/10 text-amber-700 dark:text-amber-300"
-                                    : "bg-destructive/10 text-destructive"
-                              )}
-                            >
-                              Disp: {med.stockDisponible} {med.unidadMedida || ""}
-                            </span>
-                            {(med.stockReservado ?? 0) > 0 && (
-                              <span className="font-mono font-medium px-1 rounded text-[9px] bg-amber-500/10 text-amber-700 dark:text-amber-300">
-                                Res: {med.stockReservado}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      {isSelected && (
-                        <Check className="size-3.5 text-teal-600 ml-1.5 shrink-0" />
-                      )}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+          {renderResultsContent()}
         </div>
 
         {/* Footer with Pagination Controls */}

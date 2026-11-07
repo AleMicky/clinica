@@ -35,7 +35,7 @@ export function DispensacionAnularDialog({
   onOpenChange,
   dispensacion,
   onSuccessCallback,
-}: DispensacionAnularDialogProps) {
+}: Readonly<DispensacionAnularDialogProps>) {
   const anularMutation = useAnularDispensacion();
 
   const {
@@ -97,8 +97,7 @@ export function DispensacionAnularDialog({
                 Esta acción cancelará la orden{" "}
                 <span className="font-mono font-semibold">
                   {dispensacion.numero}
-                </span>
-                .
+                </span>.
               </DialogDescription>
             </div>
           </div>

@@ -1,13 +1,10 @@
 "use client";
 
-import * as React from "react";
 import {
   FileText,
   Clock,
   CheckCircle2,
-  PackageCheck,
   Coins,
-  Ban,
 } from "lucide-react";
 import type { DispensacionMetricsResponse } from "../types/dispensacion.types";
 
@@ -19,7 +16,7 @@ interface DispensacionMetricsProps {
 export function DispensacionMetrics({
   metrics,
   isLoading = false,
-}: DispensacionMetricsProps) {
+}: Readonly<DispensacionMetricsProps>) {
   const formatCurrency = (amount?: number) => {
     if (amount === undefined || amount === null) return "Bs. 0.00";
     return `Bs. ${Number(amount).toLocaleString("es-ES", {

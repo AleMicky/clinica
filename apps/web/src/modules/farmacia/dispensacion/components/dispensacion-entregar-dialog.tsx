@@ -28,7 +28,7 @@ export function DispensacionEntregarDialog({
   onOpenChange,
   dispensacion,
   onSuccessCallback,
-}: DispensacionEntregarDialogProps) {
+}: Readonly<DispensacionEntregarDialogProps>) {
   const entregarMutation = useEntregarMedicamentosDispensacion();
 
   if (!dispensacion) return null;
@@ -76,8 +76,7 @@ export function DispensacionEntregarDialog({
             al paciente{" "}
             <strong className="text-foreground">
               {dispensacion.pacienteNombre || dispensacion.clienteNombre || "Cliente"}
-            </strong>
-            ?
+            </strong>?
           </p>
 
           <div className="p-2.5 rounded-lg border border-border/60 bg-muted/30 space-y-1">
