@@ -16,6 +16,9 @@ import {
   RefreshCw,
   Building2,
   Stethoscope,
+  Calendar,
+  ChevronDown,
+  X,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -29,6 +32,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { DatePicker } from "@/components/ui/date-picker";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { DataTablePagination } from "@/components/shared";
 import { cn, formatDate } from "@/lib/utils";
 import {
@@ -41,28 +46,280 @@ import {
 } from "../types/dispensacion.types";
 import type { AlmacenResponse } from "@/modules/almacenes/almacen/types/almacen.types";
 
+function formatDisplayDate(isoStr?: string): string {
+  if (!isoStr) return "";
+  const cleanIso = isoStr.includes("T") ? isoStr.split("T")[0] : isoStr;
+  const parts = cleanIso.split("-");
+  if (parts.length !== 3) return isoStr;
+  const [year, month, day] = parts;
+  const monthNames = [
+    "ene.", "feb.", "mar.", "abr.", "may.", "jun.",
+    "jul.", "ago.", "sep.", "oct.", "nov.", "dic."
+  ];
+  const mIndex = Number.parseInt(month, 10) - 1;
+  const mName = monthNames[mIndex] || month;
+  return `${Number.parseInt(day, 10)} ${mName} ${year}`;
+}
+
+function getRangeLabel(
+  desde?: string,
+  hasta?: string,
+  isToday?: boolean,
+  isYesterday?: boolean,
+  is7Days?: boolean,
+  isMonth?: boolean,
+  isAll?: boolean
+): string {
+  if (isToday) return `Hoy (${formatDisplayDate(desde)})`;
+  if (isYesterday) return `Ayer (${formatDisplayDate(desde)})`;
+  if (is7Days) return "Últimos 7 días";
+  if (isMonth) return "Este mes";
+  if (isAll) return "Todo el histórico";
+  if (!desde && !hasta) return "Todo el histórico";
+  if (desde && hasta && desde === hasta) {
+    return formatDisplayDate(desde);
+  }
+  if (desde && hasta) {
+    return `${formatDisplayDate(desde)} al ${formatDisplayDate(hasta)}`;
+  }
+  if (desde) return `Desde ${formatDisplayDate(desde)}`;
+  if (hasta) return `Hasta ${formatDisplayDate(hasta)}`;
+  return "Seleccionar período";
+}
+
+interface DispensacionDateFilterBarProps {
+  readonly fechaDesde?: string;
+  readonly fechaHasta?: string;
+  readonly todayIso: string;
+  readonly yesterdayIso: string;
+  readonly last7DaysIso: string;
+  readonly monthStartIso: string;
+  readonly isTodayActive: boolean;
+  readonly isYesterdayActive: boolean;
+  readonly is7DaysActive: boolean;
+  readonly isMonthActive: boolean;
+  readonly isAllActive: boolean;
+  readonly isCustomActive: boolean;
+  readonly onDateRangeChange?: (desde: string, hasta: string) => void;
+  readonly onFechaDesdeChange?: (value: string) => void;
+  readonly onFechaHastaChange?: (value: string) => void;
+}
+
+function DispensacionDateFilterBar({
+  fechaDesde,
+  fechaHasta,
+  todayIso,
+  yesterdayIso,
+  last7DaysIso,
+  monthStartIso,
+  isTodayActive,
+  isYesterdayActive,
+  is7DaysActive,
+  isMonthActive,
+  isAllActive,
+  isCustomActive,
+  onDateRangeChange,
+  onFechaDesdeChange,
+  onFechaHastaChange,
+}: Readonly<DispensacionDateFilterBarProps>) {
+  const [isCustomDateOpen, setIsCustomDateOpen] = React.useState(false);
+
+  return (
+    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-card border border-border/60 shadow-2xs">
+      {/* Presets rápidos */}
+      <div className="flex items-center gap-1 overflow-x-auto pb-0.5 sm:pb-0 scrollbar-none">
+        <div className="flex items-center gap-1 text-xs font-medium text-muted-foreground mr-1 shrink-0">
+          <Calendar className="size-3 text-primary" />
+          <span className="font-semibold text-foreground text-xs">Fecha:</span>
+        </div>
+        <button
+          type="button"
+          onClick={() => onDateRangeChange?.(todayIso, todayIso)}
+          className={cn(
+            "px-2 py-0.5 rounded-md text-xs font-medium transition-all cursor-pointer select-none",
+            isTodayActive
+              ? "bg-primary text-primary-foreground font-semibold shadow-xs shadow-primary/20"
+              : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+          )}
+        >
+          Hoy
+        </button>
+        <button
+          type="button"
+          onClick={() => onDateRangeChange?.(yesterdayIso, yesterdayIso)}
+          className={cn(
+            "px-2 py-0.5 rounded-md text-xs font-medium transition-all cursor-pointer select-none",
+            isYesterdayActive
+              ? "bg-primary text-primary-foreground font-semibold shadow-xs shadow-primary/20"
+              : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+          )}
+        >
+          Ayer
+        </button>
+        <button
+          type="button"
+          onClick={() => onDateRangeChange?.(last7DaysIso, todayIso)}
+          className={cn(
+            "px-2 py-0.5 rounded-md text-xs font-medium transition-all cursor-pointer select-none",
+            is7DaysActive
+              ? "bg-primary text-primary-foreground font-semibold shadow-xs shadow-primary/20"
+              : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+          )}
+        >
+          Últimos 7 días
+        </button>
+        <button
+          type="button"
+          onClick={() => onDateRangeChange?.(monthStartIso, todayIso)}
+          className={cn(
+            "px-2 py-0.5 rounded-md text-xs font-medium transition-all cursor-pointer select-none",
+            isMonthActive
+              ? "bg-primary text-primary-foreground font-semibold shadow-xs shadow-primary/20"
+              : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+          )}
+        >
+          Este mes
+        </button>
+        <button
+          type="button"
+          onClick={() => onDateRangeChange?.("", "")}
+          className={cn(
+            "px-2 py-0.5 rounded-md text-xs font-medium transition-all cursor-pointer select-none",
+            isAllActive
+              ? "bg-primary text-primary-foreground font-semibold shadow-xs shadow-primary/20"
+              : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+          )}
+        >
+          Histórico (Todo)
+        </button>
+      </div>
+
+      {/* Botón selector de Rango Personalizado con Popover */}
+      <div className="flex items-center shrink-0">
+        <Popover open={isCustomDateOpen} onOpenChange={setIsCustomDateOpen}>
+          <PopoverTrigger
+            type="button"
+            className={cn(
+              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all cursor-pointer border select-none w-full sm:w-auto justify-between sm:justify-start",
+              isCustomActive
+                ? "bg-primary text-primary-foreground border-primary font-semibold shadow-xs shadow-primary/20"
+                : "bg-background text-foreground border-border/70 hover:bg-muted/80 hover:text-foreground shadow-2xs"
+            )}
+          >
+            <div className="flex items-center gap-1.5">
+              <Calendar className="size-3 text-primary shrink-0" />
+              <span className="font-medium">
+                {getRangeLabel(fechaDesde, fechaHasta, isTodayActive, isYesterdayActive, is7DaysActive, isMonthActive, isAllActive)}
+              </span>
+            </div>
+            <ChevronDown className="size-3 opacity-60 ml-0.5 shrink-0" />
+          </PopoverTrigger>
+          <PopoverContent
+            align="end"
+            sideOffset={6}
+            className="w-[320px] p-3.5 space-y-3 bg-popover rounded-xl shadow-xl border border-border/80 text-xs"
+          >
+            <div className="flex items-center justify-between border-b border-border/50 pb-2">
+              <span className="font-semibold text-foreground flex items-center gap-1.5 text-xs">
+                <Calendar className="size-3.5 text-primary" />
+                Rango de Fechas
+              </span>
+              {Boolean(fechaDesde || fechaHasta) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onDateRangeChange?.("", "");
+                    setIsCustomDateOpen(false);
+                  }}
+                  className="text-[11px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                >
+                  Ver Todo
+                </button>
+              )}
+            </div>
+
+            <div className="space-y-2.5">
+              <div className="space-y-1">
+                <label htmlFor="dispensacion-popover-fecha-desde" className="text-[11px] font-semibold text-muted-foreground block">
+                  Desde:
+                </label>
+                <DatePicker
+                  id="dispensacion-popover-fecha-desde"
+                  value={fechaDesde || ""}
+                  onChange={(val) => onFechaDesdeChange?.(val)}
+                  placeholder="DD/MM/AAAA"
+                  allowClear
+                />
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="dispensacion-popover-fecha-hasta" className="text-[11px] font-semibold text-muted-foreground block">
+                  Hasta:
+                </label>
+                <DatePicker
+                  id="dispensacion-popover-fecha-hasta"
+                  value={fechaHasta || ""}
+                  onChange={(val) => onFechaHastaChange?.(val)}
+                  placeholder="DD/MM/AAAA"
+                  allowClear
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-2 border-t border-border/50">
+              <button
+                type="button"
+                onClick={() => {
+                  onDateRangeChange?.(todayIso, todayIso);
+                  setIsCustomDateOpen(false);
+                }}
+                className="text-[11px] font-medium text-primary hover:underline cursor-pointer"
+              >
+                Restablecer a Hoy
+              </button>
+              <Button
+                type="button"
+                size="sm"
+                className="h-7 text-xs px-3 cursor-pointer"
+                onClick={() => setIsCustomDateOpen(false)}
+              >
+                Aplicar
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+    </div>
+  );
+}
+
 interface DispensacionListProps {
-  dispensaciones: DispensacionResponse[];
-  almacenes?: AlmacenResponse[];
-  isLoading?: boolean;
-  totalItems?: number;
-  currentPage?: number;
-  pageSize?: number;
-  searchTerm?: string;
-  selectedAlmacenId?: number | null;
-  selectedEstado?: EstadoDispensacion | null;
-  onSearchChange?: (val: string) => void;
-  onAlmacenChange?: (id: number | null) => void;
-  onEstadoChange?: (estado: EstadoDispensacion | null) => void;
-  onPageChange?: (page: number) => void;
-  onPageSizeChange?: (size: number) => void;
-  onViewDetail?: (item: DispensacionResponse) => void;
-  onEdit?: (item: DispensacionResponse) => void;
-  onCobrar?: (item: DispensacionResponse) => void;
-  onEntregar?: (item: DispensacionResponse) => void;
-  onAnular?: (item: DispensacionResponse) => void;
-  onViewAudit?: (item: DispensacionResponse) => void;
-  onRefresh?: () => void;
+  readonly dispensaciones: DispensacionResponse[];
+  readonly almacenes?: AlmacenResponse[];
+  readonly isLoading?: boolean;
+  readonly totalItems?: number;
+  readonly currentPage?: number;
+  readonly pageSize?: number;
+  readonly searchTerm?: string;
+  readonly selectedAlmacenId?: number | null;
+  readonly selectedEstado?: EstadoDispensacion | null;
+  readonly fechaDesde?: string;
+  readonly fechaHasta?: string;
+  readonly onSearchChange?: (val: string) => void;
+  readonly onAlmacenChange?: (id: number | null) => void;
+  readonly onEstadoChange?: (estado: EstadoDispensacion | null) => void;
+  readonly onFechaDesdeChange?: (value: string) => void;
+  readonly onFechaHastaChange?: (value: string) => void;
+  readonly onDateRangeChange?: (desde: string, hasta: string) => void;
+  readonly onResetFilters?: () => void;
+  readonly onPageChange?: (page: number) => void;
+  readonly onPageSizeChange?: (size: number) => void;
+  readonly onViewDetail?: (item: DispensacionResponse) => void;
+  readonly onEdit?: (item: DispensacionResponse) => void;
+  readonly onCobrar?: (item: DispensacionResponse) => void;
+  readonly onEntregar?: (item: DispensacionResponse) => void;
+  readonly onAnular?: (item: DispensacionResponse) => void;
+  readonly onViewAudit?: (item: DispensacionResponse) => void;
+  readonly onRefresh?: () => void;
 }
 
 export function DispensacionList({
@@ -75,9 +332,15 @@ export function DispensacionList({
   searchTerm = "",
   selectedAlmacenId = null,
   selectedEstado = null,
+  fechaDesde,
+  fechaHasta,
   onSearchChange,
   onAlmacenChange,
   onEstadoChange,
+  onFechaDesdeChange,
+  onFechaHastaChange,
+  onDateRangeChange,
+  onResetFilters,
   onPageChange,
   onPageSizeChange,
   onViewDetail,
@@ -87,7 +350,54 @@ export function DispensacionList({
   onAnular,
   onViewAudit,
   onRefresh,
-}: DispensacionListProps) {
+}: Readonly<DispensacionListProps>) {
+  // Helper dates (ISO strings YYYY-MM-DD)
+  const todayIso = React.useMemo(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }, []);
+
+  const yesterdayIso = React.useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }, []);
+
+  const last7DaysIso = React.useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 6);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }, []);
+
+  const monthStartIso = React.useMemo(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
+  }, []);
+
+  const isTodayActive = fechaDesde === todayIso && fechaHasta === todayIso;
+  const isYesterdayActive = fechaDesde === yesterdayIso && fechaHasta === yesterdayIso;
+  const is7DaysActive = fechaDesde === last7DaysIso && fechaHasta === todayIso;
+  const isMonthActive = fechaDesde === monthStartIso && fechaHasta === todayIso;
+  const isAllActive = !fechaDesde && !fechaHasta;
+  const isCustomActive =
+    !isTodayActive && !isYesterdayActive && !is7DaysActive && !isMonthActive && !isAllActive;
+
+  const hasActiveFilters =
+    Boolean(searchTerm.trim()) ||
+    selectedAlmacenId !== null ||
+    selectedEstado !== null ||
+    !isTodayActive;
+
+  const handleReset = () => {
+    if (onResetFilters) {
+      onResetFilters();
+    } else {
+      onSearchChange?.("");
+      onAlmacenChange?.(null);
+      onEstadoChange?.(null);
+      onDateRangeChange?.(todayIso, todayIso);
+    }
+  };
   const getEstadoBadge = (estado: string | number) => {
     if (isEstadoPendientePago(estado)) {
       return (
@@ -210,6 +520,25 @@ export function DispensacionList({
         )}
       </div>
 
+      {/* Date Range Filter Bar */}
+      <DispensacionDateFilterBar
+        fechaDesde={fechaDesde}
+        fechaHasta={fechaHasta}
+        todayIso={todayIso}
+        yesterdayIso={yesterdayIso}
+        last7DaysIso={last7DaysIso}
+        monthStartIso={monthStartIso}
+        isTodayActive={isTodayActive}
+        isYesterdayActive={isYesterdayActive}
+        is7DaysActive={is7DaysActive}
+        isMonthActive={isMonthActive}
+        isAllActive={isAllActive}
+        isCustomActive={isCustomActive}
+        onDateRangeChange={onDateRangeChange}
+        onFechaDesdeChange={onFechaDesdeChange}
+        onFechaHastaChange={onFechaHastaChange}
+      />
+
       {/* Status Tabs */}
       <Tabs
         value={
@@ -273,8 +602,21 @@ export function DispensacionList({
               No se encontraron dispensaciones o ventas de farmacia
             </p>
             <p className="text-[11px] text-muted-foreground mt-0.5">
-              Crea una nueva orden de farmacia para iniciar la preventa o dispensación.
+              {hasActiveFilters
+                ? "No hay resultados para los filtros seleccionados o el rango de fechas. Intenta restablecer la búsqueda."
+                : "Crea una nueva orden de farmacia para iniciar la preventa o dispensación."}
             </p>
+            {hasActiveFilters && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleReset}
+                className="text-xs gap-1.5 cursor-pointer mt-2.5"
+              >
+                <X className="size-3.5" />
+                Limpiar filtros
+              </Button>
+            )}
           </div>
         ) : (
           dispensaciones.map((item) => {
@@ -441,30 +783,6 @@ export function DispensacionList({
                           className="gap-2 text-xs cursor-pointer"
                         >
                           <Eye className="size-3.5 text-primary" /> Ver Ticket / Detalle
-                        </DropdownMenuItem>
-                      )}
-                      {isPendiente && onEdit && (
-                        <DropdownMenuItem
-                          onClick={() => onEdit(item)}
-                          className="gap-2 text-xs cursor-pointer text-blue-600 dark:text-blue-400"
-                        >
-                          <Pencil className="size-3.5" /> Editar Orden
-                        </DropdownMenuItem>
-                      )}
-                      {isPendiente && onCobrar && (
-                        <DropdownMenuItem
-                          onClick={() => onCobrar(item)}
-                          className="gap-2 text-xs cursor-pointer text-amber-600"
-                        >
-                          <CreditCard className="size-3.5" /> Registrar Cobro
-                        </DropdownMenuItem>
-                      )}
-                      {isPagado && onEntregar && (
-                        <DropdownMenuItem
-                          onClick={() => onEntregar(item)}
-                          className="gap-2 text-xs cursor-pointer text-emerald-600"
-                        >
-                          <PackageCheck className="size-3.5" /> Entregar Medicamentos
                         </DropdownMenuItem>
                       )}
                       {onViewAudit && (

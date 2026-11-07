@@ -20,6 +20,11 @@ import type {
   EstadoDispensacion,
 } from "../types/dispensacion.types";
 
+const getTodayIso = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+
 export function DispensacionModuleView() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = React.useState("");
@@ -28,6 +33,8 @@ export function DispensacionModuleView() {
   );
   const [selectedEstado, setSelectedEstado] =
     React.useState<EstadoDispensacion | null>(null);
+  const [fechaDesde, setFechaDesde] = React.useState<string>(getTodayIso);
+  const [fechaHasta, setFechaHasta] = React.useState<string>(getTodayIso);
   const [page, setPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(10);
 
@@ -47,6 +54,8 @@ export function DispensacionModuleView() {
     search: searchTerm.trim() || undefined,
     almacenId: selectedAlmacenId ?? undefined,
     estado: selectedEstado ?? undefined,
+    fechaDesde: fechaDesde || undefined,
+    fechaHasta: fechaHasta || undefined,
   });
 
   const dispensaciones = dispensacionesData?.items ?? [];
@@ -54,6 +63,8 @@ export function DispensacionModuleView() {
   // Metrics query
   const { data: metricsData } = useDispensacionMetrics({
     almacenId: selectedAlmacenId ?? undefined,
+    fechaDesde: fechaDesde || undefined,
+    fechaHasta: fechaHasta || undefined,
   });
 
   // Dialog states
@@ -125,6 +136,32 @@ export function DispensacionModuleView() {
     setAuditOpen(true);
   };
 
+  const handleDateRangeChange = (desde: string, hasta: string) => {
+    setFechaDesde(desde);
+    setFechaHasta(hasta);
+    setPage(1);
+  };
+
+  const handleFechaDesdeChange = (val: string) => {
+    setFechaDesde(val);
+    setPage(1);
+  };
+
+  const handleFechaHastaChange = (val: string) => {
+    setFechaHasta(val);
+    setPage(1);
+  };
+
+  const handleResetFilters = () => {
+    const today = getTodayIso();
+    setSearchTerm("");
+    setSelectedAlmacenId(null);
+    setSelectedEstado(null);
+    setFechaDesde(today);
+    setFechaHasta(today);
+    setPage(1);
+  };
+
   return (
     <div className="flex flex-col gap-3.5 w-full">
       {/* Header */}
@@ -149,6 +186,8 @@ export function DispensacionModuleView() {
         searchTerm={searchTerm}
         selectedAlmacenId={selectedAlmacenId}
         selectedEstado={selectedEstado}
+        fechaDesde={fechaDesde}
+        fechaHasta={fechaHasta}
         onSearchChange={(val) => {
           setSearchTerm(val);
           setPage(1);
@@ -161,6 +200,10 @@ export function DispensacionModuleView() {
           setSelectedEstado(estado);
           setPage(1);
         }}
+        onFechaDesdeChange={handleFechaDesdeChange}
+        onFechaHastaChange={handleFechaHastaChange}
+        onDateRangeChange={handleDateRangeChange}
+        onResetFilters={handleResetFilters}
         onPageChange={setPage}
         onPageSizeChange={(size) => {
           setPageSize(size);
