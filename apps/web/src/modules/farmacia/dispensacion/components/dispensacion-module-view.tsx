@@ -61,7 +61,11 @@ export function DispensacionModuleView() {
   const dispensaciones = dispensacionesData?.items ?? [];
 
   // Metrics query
-  const { data: metricsData } = useDispensacionMetrics({
+  const {
+    data: metricsData,
+    isLoading: isLoadingMetrics,
+    refetch: refetchMetrics,
+  } = useDispensacionMetrics({
     almacenId: selectedAlmacenId ?? undefined,
     fechaDesde: fechaDesde || undefined,
     fechaHasta: fechaHasta || undefined,
@@ -167,13 +171,16 @@ export function DispensacionModuleView() {
       {/* Header */}
       <DispensacionHeader
         totalItems={dispensacionesData?.totalItems ?? 0}
-        isLoading={isLoading || isFetching}
-        onRefresh={() => refetch()}
+        isLoading={isLoading || isFetching || isLoadingMetrics}
+        onRefresh={() => {
+          void refetch();
+          void refetchMetrics();
+        }}
         onAddDispensacion={() => router.push("/farmacia/dispensaciones/nueva")}
       />
 
       {/* Metrics Bar */}
-      <DispensacionMetrics metrics={metricsData} isLoading={isLoading} />
+      <DispensacionMetrics metrics={metricsData} isLoading={isLoadingMetrics} />
 
       {/* List */}
       <DispensacionList

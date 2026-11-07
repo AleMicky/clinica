@@ -59,6 +59,22 @@ public sealed class DispensacionService(
             .Include(x => x.Detalles).ThenInclude(d => d.Producto)
             .Where(x => x.Activo);
 
+        var esAdmin = currentUserService.IsInRole("ADMINISTRADOR") || currentUserService.IsInRole("ADMIN");
+        if (!esAdmin)
+        {
+            var currentUserName = currentUserService.UserName;
+            if (string.IsNullOrWhiteSpace(currentUserName))
+            {
+                return new PagedResult<DispensacionResponse>(
+                    [],
+                    pagination.ValidPage,
+                    pagination.ValidPageSize,
+                    0);
+            }
+
+            query = query.Where(x => x.CreadoPor == currentUserName);
+        }
+
         if (almacenId.HasValue && almacenId.Value > 0)
         {
             query = query.Where(x => x.AlmacenId == almacenId.Value);
@@ -150,6 +166,18 @@ public sealed class DispensacionService(
         var query = dbContext.Set<Entity.Dispensacion>()
             .AsNoTracking()
             .Where(x => x.Activo);
+
+        var esAdmin = currentUserService.IsInRole("ADMINISTRADOR") || currentUserService.IsInRole("ADMIN");
+        if (!esAdmin)
+        {
+            var currentUserName = currentUserService.UserName;
+            if (string.IsNullOrWhiteSpace(currentUserName))
+            {
+                return new DispensacionMetricsResponse();
+            }
+
+            query = query.Where(x => x.CreadoPor == currentUserName);
+        }
 
         if (almacenId.HasValue && almacenId.Value > 0)
         {
