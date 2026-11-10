@@ -4,6 +4,60 @@ export enum EstadoMovimientoInventario {
   Anulado = 3,
 }
 
+export type EstadoMovimientoInventarioValue =
+  | EstadoMovimientoInventario
+  | "borrador"
+  | "confirmado"
+  | "anulado"
+  | "Borrador"
+  | "Confirmado"
+  | "Anulado"
+  | number
+  | string;
+
+export function normalizeEstadoMovimiento(
+  estado?: EstadoMovimientoInventarioValue | null
+): EstadoMovimientoInventario | null {
+  if (estado === null || estado === undefined) return null;
+  if (
+    estado === EstadoMovimientoInventario.Borrador ||
+    String(estado).toLowerCase() === "borrador" ||
+    String(estado) === "1"
+  ) {
+    return EstadoMovimientoInventario.Borrador;
+  }
+  if (
+    estado === EstadoMovimientoInventario.Confirmado ||
+    String(estado).toLowerCase() === "confirmado" ||
+    String(estado) === "2"
+  ) {
+    return EstadoMovimientoInventario.Confirmado;
+  }
+  if (
+    estado === EstadoMovimientoInventario.Anulado ||
+    String(estado).toLowerCase() === "anulado" ||
+    String(estado) === "3"
+  ) {
+    return EstadoMovimientoInventario.Anulado;
+  }
+  return null;
+}
+
+export const INTEGRATED_REFERENCIA_TIPOS = new Set([
+  "DEVOLUCION_PROVEEDOR",
+  "RECEPCION_COMPRA",
+  "CONSUMO_INTERNO",
+  "TRANSFERENCIA_ALMACEN",
+  "BAJA_INVENTARIO",
+  "AJUSTE_INVENTARIO",
+  "DISPENSACION",
+  "INVENTARIO_FISICO",
+  "INVENTARIOFISICO",
+  "INTEGRACION",
+  "CIRUGIA",
+  "QUIROFANO",
+]);
+
 export interface MovimientoInventarioDetalleRequest {
   productoId: number;
   cantidad: number;
@@ -17,15 +71,14 @@ export interface MovimientoInventarioRequest {
   fechaMovimiento: string;
   referenciaTipo?: string | null;
   referenciaId?: number | null;
+  esIntegrado?: boolean;
   observacion?: string | null;
   detalles: MovimientoInventarioDetalleRequest[];
 }
 
-export interface CreateMovimientoInventarioRequest
-  extends MovimientoInventarioRequest {}
+export type CreateMovimientoInventarioRequest = MovimientoInventarioRequest;
 
-export interface UpdateMovimientoInventarioRequest
-  extends MovimientoInventarioRequest {}
+export type UpdateMovimientoInventarioRequest = MovimientoInventarioRequest;
 
 export interface AnularMovimientoInventarioRequest {
   motivoAnulacion: string;
@@ -48,9 +101,10 @@ export interface MovimientoInventarioResponse {
   almacenId: number;
   almacenNombre?: string | null;
   fechaMovimiento: string;
-  estado: EstadoMovimientoInventario;
+  estado: EstadoMovimientoInventarioValue;
   referenciaTipo?: string | null;
   referenciaId?: number | null;
+  esIntegrado?: boolean;
   observacion?: string | null;
   fechaConfirmacion?: string | null;
   fechaAnulacion?: string | null;
@@ -78,4 +132,29 @@ export interface PagedResult<T> {
   totalPages: number;
   hasPreviousPage: boolean;
   hasNextPage: boolean;
+}
+
+export function isMovimientoIntegrado(
+  mov?: Pick<
+    MovimientoInventarioResponse,
+    "esIntegrado" | "referenciaTipo"
+  > | null
+): boolean {
+  if (!mov) return false;
+  if (mov.esIntegrado === true) return true;
+  const ref = mov.referenciaTipo?.trim().toUpperCase();
+  return Boolean(ref && INTEGRATED_REFERENCIA_TIPOS.has(ref));
+}
+
+export function canEditMovimiento(
+  mov?: Pick<
+    MovimientoInventarioResponse,
+    "estado" | "esIntegrado" | "referenciaTipo"
+  > | null
+): boolean {
+  if (!mov) return false;
+  return (
+    normalizeEstadoMovimiento(mov.estado) ===
+      EstadoMovimientoInventario.Borrador && !isMovimientoIntegrado(mov)
+  );
 }

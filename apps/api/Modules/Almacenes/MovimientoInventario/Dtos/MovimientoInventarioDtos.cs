@@ -70,6 +70,7 @@ public sealed record MovimientoInventarioResponse : AuditableResponse
 
     public string? ReferenciaTipo { get; init; }
     public int? ReferenciaId { get; init; }
+    public bool EsIntegrado { get; init; }
 
     public string? Observacion { get; init; }
 

@@ -1,4 +1,5 @@
 using Clinica.Api.Modules.Almacenes.MovimientoInventario.Dtos;
+using Clinica.Api.Modules.Almacenes.MovimientoInventario.Services;
 using FluentValidation;
 
 namespace Clinica.Api.Modules.Almacenes.MovimientoInventario.Validators;
@@ -21,6 +22,8 @@ public abstract class MovimientoInventarioRequestValidator<TRequest>
         RuleFor(x => x.ReferenciaTipo)
             .MaximumLength(30)
             .WithMessage("El tipo de referencia no puede superar los 30 caracteres.")
+            .Must(refTipo => !MovimientoInventarioService.ReferenciasIntegradas.Contains(refTipo!.Trim()))
+            .WithMessage("El tipo de referencia está reservado para movimientos integrados de otros módulos o sistemas.")
             .When(x => !string.IsNullOrWhiteSpace(x.ReferenciaTipo));
 
         RuleFor(x => x.Observacion)

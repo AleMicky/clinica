@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { INTEGRATED_REFERENCIA_TIPOS } from "../types/movimiento-inventario.types";
 
 export const movimientoInventarioDetalleSchema = z.object({
   productoId: z
@@ -26,7 +27,16 @@ export const movimientoInventarioSchema = z.object({
   fechaMovimiento: z
     .string()
     .min(1, "La fecha de movimiento es obligatoria"),
-  referenciaTipo: z.string().trim().max(100).nullable().optional(),
+  referenciaTipo: z
+    .string()
+    .trim()
+    .max(30, "El tipo de referencia no puede superar los 30 caracteres")
+    .refine(
+      (val) => !INTEGRATED_REFERENCIA_TIPOS.has(val.trim().toUpperCase()),
+      "Este tipo de referencia está reservado para movimientos integrados"
+    )
+    .nullable()
+    .optional(),
   referenciaId: z.number().nullable().optional(),
   observacion: z.string().trim().max(500).nullable().optional(),
   detalles: z

@@ -22,6 +22,7 @@ public sealed class MovimientoInventario : AuditableEntity
 
     public string? ReferenciaTipo { get; set; }
     public int? ReferenciaId { get; set; }
+    public bool EsIntegrado { get; set; }
 
     public string? Observacion { get; set; }
     

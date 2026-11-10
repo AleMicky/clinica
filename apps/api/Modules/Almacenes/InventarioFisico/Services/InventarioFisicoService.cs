@@ -598,6 +598,7 @@ public sealed class InventarioFisicoService(
                 FechaConfirmacion = DateTime.UtcNow,
                 ReferenciaTipo = ReferenciaInventarioFisico,
                 ReferenciaId = inventario.Id,
+                EsIntegrado = true,
                 Observacion = $"Ajuste positivo por inventario físico {inventario.Numero}"
             };
 
@@ -628,6 +629,7 @@ public sealed class InventarioFisicoService(
                 FechaConfirmacion = DateTime.UtcNow,
                 ReferenciaTipo = ReferenciaInventarioFisico,
                 ReferenciaId = inventario.Id,
+                EsIntegrado = true,
                 Observacion = $"Ajuste negativo por inventario físico {inventario.Numero}"
             };
 

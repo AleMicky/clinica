@@ -29,6 +29,10 @@ public sealed class MovimientoInventarioConfiguration
         builder.Property(x => x.ReferenciaTipo)
             .HasMaxLength(30);
 
+        builder.Property(x => x.EsIntegrado)
+            .IsRequired()
+            .HasDefaultValue(false);
+
         builder.Property(x => x.Observacion)
             .HasMaxLength(500);
 

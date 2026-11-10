@@ -9,6 +9,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   EstadoMovimientoInventario,
+  normalizeEstadoMovimiento,
   type MovimientoInventarioResponse,
 } from "../types/movimiento-inventario.types";
 
@@ -22,17 +23,23 @@ export function MovimientoInventarioMetrics({
   movimientos,
   totalItems = 0,
   isLoading = false,
-}: MovimientoInventarioMetricsProps) {
+}: Readonly<MovimientoInventarioMetricsProps>) {
   const borradoresCount = movimientos.filter(
-    (m) => m.estado === EstadoMovimientoInventario.Borrador
+    (m) =>
+      normalizeEstadoMovimiento(m.estado) ===
+      EstadoMovimientoInventario.Borrador
   ).length;
 
   const confirmadosCount = movimientos.filter(
-    (m) => m.estado === EstadoMovimientoInventario.Confirmado
+    (m) =>
+      normalizeEstadoMovimiento(m.estado) ===
+      EstadoMovimientoInventario.Confirmado
   ).length;
 
   const anuladosCount = movimientos.filter(
-    (m) => m.estado === EstadoMovimientoInventario.Anulado
+    (m) =>
+      normalizeEstadoMovimiento(m.estado) ===
+      EstadoMovimientoInventario.Anulado
   ).length;
 
   const metrics = [

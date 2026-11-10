@@ -802,6 +802,11 @@ namespace Clinica.Api.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<bool>("EsIntegrado")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<int>("Estado")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")

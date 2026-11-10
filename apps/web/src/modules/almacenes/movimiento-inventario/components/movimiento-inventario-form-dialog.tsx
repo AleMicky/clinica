@@ -48,7 +48,11 @@ import {
   useUpdateMovimientoInventario,
   useMovimientoInventario,
 } from "../hooks/use-movimiento-inventario";
-import type { MovimientoInventarioResponse } from "../types/movimiento-inventario.types";
+import {
+  canEditMovimiento,
+  isMovimientoIntegrado,
+  type MovimientoInventarioResponse,
+} from "../types/movimiento-inventario.types";
 import { AlmacenAutocomplete } from "../../almacen";
 import {
   TipoMovimientoInventarioAutocomplete,
@@ -79,6 +83,30 @@ const REFERENCIA_SUGGESTIONS = [
 interface ProductMeta {
   codigo?: string;
   unidad?: string;
+}
+
+function toLocalDateTimeInputValue(value?: string | Date | null): string {
+  const date = value ? new Date(value) : new Date();
+  if (Number.isNaN(date.getTime())) {
+    return toLocalDateTimeInputValue(new Date());
+  }
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
+    date.getDate()
+  )}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function isNaturalezaTipo(
+  naturaleza: NaturalezaMovimiento | string | number | undefined,
+  expected: NaturalezaMovimiento
+): boolean {
+  if (naturaleza === undefined || naturaleza === null) return false;
+  if (naturaleza === expected) return true;
+  const normalized = String(naturaleza).trim().toLowerCase();
+  if (expected === NaturalezaMovimiento.Entrada) {
+    return normalized === "entrada" || normalized === "1";
+  }
+  return normalized === "salida" || normalized === "2";
 }
 
 function getNatureConfig(isEntrada: boolean, isSalida: boolean) {
@@ -327,13 +355,15 @@ export function MovimientoInventarioFormDialog({
     defaultValues: {
       tipoMovimientoInventarioId: 0,
       almacenId: 0,
-      fechaMovimiento: new Date().toISOString().slice(0, 16),
+      fechaMovimiento: toLocalDateTimeInputValue(new Date()),
       referenciaTipo: "",
       referenciaId: null,
       observacion: "",
       detalles: [],
     },
   });
+
+  const syncedFormKeyRef = React.useRef<string | null>(null);
 
   const { fields, append, remove, insert } = useFieldArray({
     control,
@@ -388,38 +418,56 @@ export function MovimientoInventarioFormDialog({
 
   // Sync initial form values
   React.useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      syncedFormKeyRef.current = null;
+      return;
+    }
 
     if (isEditing) {
       const target = fullMovimiento || movimientoToEdit;
-      if (target) {
-        const formattedDate = target.fechaMovimiento
-          ? new Date(target.fechaMovimiento).toISOString().slice(0, 16)
-          : new Date().toISOString().slice(0, 16);
+      if (!target) return;
 
-        reset({
-          tipoMovimientoInventarioId: target.tipoMovimientoInventarioId,
-          almacenId: target.almacenId,
-          fechaMovimiento: formattedDate,
-          referenciaTipo: target.referenciaTipo || "",
-          referenciaId: target.referenciaId || null,
-          observacion: target.observacion || "",
-          detalles: (target.detalles || []).map((d) => ({
-            productoId: d.productoId,
-            productoNombre: d.productoNombre || "",
-            cantidad: Number(d.cantidad),
-            costoUnitario:
-              d.costoUnitario !== null && d.costoUnitario !== undefined
-                ? Number(d.costoUnitario)
-                : 0,
-          })),
-        });
+      const syncKey = fullMovimiento
+        ? `edit-${target.id}-full`
+        : `edit-${target.id}-stub`;
+
+      if (syncedFormKeyRef.current === syncKey) return;
+      if (
+        syncedFormKeyRef.current === `edit-${target.id}-full` &&
+        !fullMovimiento
+      ) {
+        return;
       }
+
+      syncedFormKeyRef.current = syncKey;
+
+      const formattedDate = toLocalDateTimeInputValue(target.fechaMovimiento);
+
+      reset({
+        tipoMovimientoInventarioId: target.tipoMovimientoInventarioId,
+        almacenId: target.almacenId,
+        fechaMovimiento: formattedDate,
+        referenciaTipo: target.referenciaTipo || "",
+        referenciaId: target.referenciaId ?? null,
+        observacion: target.observacion || "",
+        detalles: (target.detalles || []).map((d) => ({
+          productoId: d.productoId,
+          productoNombre: d.productoNombre || "",
+          cantidad: Number(d.cantidad),
+          costoUnitario:
+            d.costoUnitario !== null && d.costoUnitario !== undefined
+              ? Number(d.costoUnitario)
+              : 0,
+        })),
+      });
     } else {
+      if (syncedFormKeyRef.current === "create") return;
+      syncedFormKeyRef.current = "create";
+
       reset({
         tipoMovimientoInventarioId: 0,
         almacenId: 0,
-        fechaMovimiento: new Date().toISOString().slice(0, 16),
+        fechaMovimiento: toLocalDateTimeInputValue(new Date()),
         referenciaTipo: "",
         referenciaId: null,
         observacion: "",
@@ -471,7 +519,7 @@ export function MovimientoInventarioFormDialog({
   };
 
   const handleSetCurrentDateTime = () => {
-    setValue("fechaMovimiento", new Date().toISOString().slice(0, 16), {
+    setValue("fechaMovimiento", toLocalDateTimeInputValue(new Date()), {
       shouldValidate: true,
     });
   };
@@ -508,7 +556,22 @@ export function MovimientoInventarioFormDialog({
     }
   };
 
+  const editTarget = isEditing ? fullMovimiento || movimientoToEdit : null;
+  const canEditTarget = !isEditing || canEditMovimiento(editTarget);
+  const isBlockedByIntegration = Boolean(
+    isEditing && editTarget && isMovimientoIntegrado(editTarget)
+  );
+
   const onSubmit = async (values: MovimientoInventarioFormValues) => {
+    if (isEditing && editTarget && !canEditMovimiento(editTarget)) {
+      toast.error(
+        isMovimientoIntegrado(editTarget)
+          ? "No se puede editar un movimiento integrado desde otro sistema o módulo."
+          : "Solo se pueden editar movimientos registrados en estado Borrador."
+      );
+      return;
+    }
+
     if (values.detalles.length === 0) {
       toast.error("Debe agregar al menos un producto al movimiento.");
       return;
@@ -579,10 +642,14 @@ export function MovimientoInventarioFormDialog({
   const isSaving =
     createMutation.isPending || updateMutation.isPending || isSubmitting;
 
-  const isEntrada =
-    selectedTipoInfo?.naturaleza === NaturalezaMovimiento.Entrada;
-  const isSalida =
-    selectedTipoInfo?.naturaleza === NaturalezaMovimiento.Salida;
+  const isEntrada = isNaturalezaTipo(
+    selectedTipoInfo?.naturaleza,
+    NaturalezaMovimiento.Entrada
+  );
+  const isSalida = isNaturalezaTipo(
+    selectedTipoInfo?.naturaleza,
+    NaturalezaMovimiento.Salida
+  );
 
   const natureConfig = getNatureConfig(isEntrada, isSalida);
 
@@ -658,6 +725,17 @@ export function MovimientoInventarioFormDialog({
           onSubmit={handleSubmit(onSubmit)}
           className="flex-1 overflow-y-auto py-2.5 space-y-2.5 pr-0.5 text-xs"
         >
+          {isEditing && !canEditTarget && (
+            <div className="p-2 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-300 text-[11px] flex items-center gap-2">
+              <AlertCircle className="size-3.5 shrink-0 text-rose-500" />
+              <span>
+                {isBlockedByIntegration
+                  ? "Este movimiento proviene de una integración con otro módulo o sistema y no puede editarse manualmente."
+                  : "Solo se pueden editar movimientos registrados manualmente en estado Borrador."}
+              </span>
+            </div>
+          )}
+
           {/* Section 1: Cabecera Compacta */}
           <div className="p-2.5 rounded-lg bg-card border border-border/70 flex flex-col gap-2 shadow-2xs">
             <div className="flex items-center justify-between pb-0.5 border-b border-border/30">
@@ -782,8 +860,17 @@ export function MovimientoInventarioFormDialog({
                   list="referencia-compact-list"
                   {...register("referenciaTipo")}
                   placeholder="Ej. Factura, Ajuste..."
-                  className="h-7 text-xs bg-background/50"
+                  className={cn(
+                    "h-7 text-xs bg-background/50",
+                    errors.referenciaTipo &&
+                      "border-destructive focus-visible:ring-destructive"
+                  )}
                 />
+                {errors.referenciaTipo && (
+                  <span className="text-[10px] text-destructive leading-none block">
+                    {errors.referenciaTipo.message}
+                  </span>
+                )}
                 <datalist id="referencia-compact-list">
                   {REFERENCIA_SUGGESTIONS.map((item) => (
                     <option key={item} value={item} />
@@ -803,7 +890,10 @@ export function MovimientoInventarioFormDialog({
                   id="referenciaId"
                   type="number"
                   {...register("referenciaId", {
-                    setValueAs: (v) => (v === "" || v === null ? null : Number(v)),
+                    setValueAs: (v) =>
+                      v === "" || v === null || v === undefined
+                        ? null
+                        : Number(v),
                   })}
                   placeholder="Ej. 1042"
                   className="h-7 text-xs font-mono bg-background/50"
@@ -1020,7 +1110,12 @@ export function MovimientoInventarioFormDialog({
             type="submit"
             form="movimiento-inventario-form"
             size="sm"
-            disabled={isSaving || fields.length === 0}
+            disabled={
+              isSaving ||
+              fields.length === 0 ||
+              !canEditTarget ||
+              (isEditing && isLoadingFull && !fullMovimiento)
+            }
             className="h-7.5 px-3.5 text-xs bg-primary hover:bg-primary/90 text-primary-foreground font-medium gap-1.5 cursor-pointer shadow-2xs"
           >
             {isSaving ? (

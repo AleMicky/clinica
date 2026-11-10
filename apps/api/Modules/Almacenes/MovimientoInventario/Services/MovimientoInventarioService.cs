@@ -73,6 +73,28 @@ public sealed class MovimientoInventarioService(
     ICorrelativoService correlativoService
 ) : IMovimientoInventarioService
 {
+    internal static readonly HashSet<string> ReferenciasIntegradas = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "DEVOLUCION_PROVEEDOR",
+        "RECEPCION_COMPRA",
+        "CONSUMO_INTERNO",
+        "TRANSFERENCIA_ALMACEN",
+        "BAJA_INVENTARIO",
+        "AJUSTE_INVENTARIO",
+        "DISPENSACION",
+        "INVENTARIO_FISICO",
+        "InventarioFisico",
+        "INTEGRACION",
+        "CIRUGIA",
+        "QUIROFANO"
+    };
+
+    private static bool EsMovimientoIntegrado(MovimientoEntity entity)
+    {
+        return entity.EsIntegrado
+            || (!string.IsNullOrWhiteSpace(entity.ReferenciaTipo)
+                && ReferenciasIntegradas.Contains(entity.ReferenciaTipo.Trim()));
+    }
     public async Task<PagedResult<MovimientoInventarioResponse>> ListarAsync(int? tipoMovimientoInventarioId,
         int? almacenId, string? search, PaginationRequest pagination, CancellationToken cancellationToken = default)
     {
@@ -173,6 +195,7 @@ public sealed class MovimientoInventarioService(
         var entity = MovimientoMapper.ToEntity(request);
         NormalizarEncabezado(entity, request);
         entity.Numero = correlativo;
+        entity.EsIntegrado = false;
         dbContext.MovimientosInventario.Add(entity);
 
         foreach (var detalle in request.Detalles)
@@ -224,9 +247,10 @@ public sealed class MovimientoInventarioService(
         entity.Numero = correlativo;
         entity.FechaMovimiento = request.Fecha;
         entity.Observacion = Limpiar(request.Observacion);
-        entity.ReferenciaTipo = request.TipoReferencia;
+        entity.ReferenciaTipo = Limpiar(request.TipoReferencia) ?? "INTEGRACION";
         entity.ReferenciaId = request.ReferenciaId;
         entity.TipoMovimientoInventarioId = tipoMovimiento.Id;
+        entity.EsIntegrado = true;
 
         dbContext.MovimientosInventario.Add(entity);
 
@@ -266,6 +290,11 @@ public sealed class MovimientoInventarioService(
         if (entity.Estado != EstadoMovimientoInventario.Borrador)
         {
             throw new ConflictException("No se puede editar un movimiento que no esté en estado Borrador.");
+        }
+
+        if (EsMovimientoIntegrado(entity))
+        {
+            throw new ConflictException("No se puede editar un movimiento integrado desde otro sistema o módulo.");
         }
 
         await ValidarEncabezadoAsync(
@@ -670,6 +699,7 @@ public sealed class MovimientoInventarioService(
         {
             TipoMovimientoNombre = nombreTipo,
             AlmacenNombre = nombreAlmacen,
+            EsIntegrado = EsMovimientoIntegrado(entity),
             Detalles =
             [
                 .. (detalles ?? [])

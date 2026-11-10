@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { toast } from "sonner";
 import { MovimientoInventarioHeader } from "./movimiento-inventario-header";
 import { MovimientoInventarioMetrics } from "./movimiento-inventario-metrics";
 import { MovimientoInventarioList } from "./movimiento-inventario-list";
@@ -12,6 +13,9 @@ import { MovimientoInventarioDeleteDialog } from "./movimiento-inventario-delete
 import { useMovimientosInventario } from "../hooks/use-movimiento-inventario";
 import {
   EstadoMovimientoInventario,
+  canEditMovimiento,
+  isMovimientoIntegrado,
+  normalizeEstadoMovimiento,
   type MovimientoInventarioResponse,
 } from "../types/movimiento-inventario.types";
 import { AuditDialog, type AuditInfo } from "@/components/shared";
@@ -47,12 +51,17 @@ export function MovimientoInventarioModuleView() {
     tipoMovimientoInventarioId: selectedTipoMovimientoId ?? undefined,
   });
 
-  const rawItems = movimientosData?.items ?? [];
+  const rawItems = React.useMemo(
+    () => movimientosData?.items ?? [],
+    [movimientosData?.items]
+  );
 
   // Filter in-memory for Estado if selected
   const movimientos = React.useMemo(() => {
     if (selectedEstado === null) return rawItems;
-    return rawItems.filter((m) => m.estado === selectedEstado);
+    return rawItems.filter(
+      (m) => normalizeEstadoMovimiento(m.estado) === selectedEstado
+    );
   }, [rawItems, selectedEstado]);
 
   const handleSearchChange = (term: string) => {
@@ -82,6 +91,14 @@ export function MovimientoInventarioModuleView() {
   };
 
   const handleOpenEdit = (mov: MovimientoInventarioResponse) => {
+    if (!canEditMovimiento(mov)) {
+      toast.error(
+        isMovimientoIntegrado(mov)
+          ? "No se puede editar un movimiento integrado desde otro sistema o módulo."
+          : "Solo se pueden editar movimientos registrados en estado Borrador."
+      );
+      return;
+    }
     setMovimientoToEdit(mov);
     setFormOpen(true);
   };
@@ -157,10 +174,11 @@ export function MovimientoInventarioModuleView() {
       movRecord.updated_by ||
       movRecord.usuarioModificacion;
 
+    const normalizedEstado = normalizeEstadoMovimiento(mov.estado);
     const estadoTexto =
-      mov.estado === EstadoMovimientoInventario.Borrador
+      normalizedEstado === EstadoMovimientoInventario.Borrador
         ? "Borrador"
-        : mov.estado === EstadoMovimientoInventario.Confirmado
+        : normalizedEstado === EstadoMovimientoInventario.Confirmado
         ? "Confirmado"
         : "Anulado";
 
@@ -176,6 +194,12 @@ export function MovimientoInventarioModuleView() {
       extraDetails: [
         { label: "Tipo Movimiento", value: mov.tipoMovimientoNombre || "-" },
         { label: "Almacén", value: mov.almacenNombre || "-" },
+        {
+          label: "Origen",
+          value: isMovimientoIntegrado(mov)
+            ? "Integrado de otro módulo/sistema"
+            : "Registrado manualmente",
+        },
         { label: "Estado", value: estadoTexto },
         ...(mov.fechaConfirmacion
           ? [{ label: "Fecha Confirmación", value: mov.fechaConfirmacion }]
@@ -236,14 +260,16 @@ export function MovimientoInventarioModuleView() {
         onConfirm={handleOpenConfirm}
         onAnular={handleOpenAnular}
         onDelete={handleOpenDelete}
-        onRefresh={() => refetch()}
         onViewAudit={handleViewAudit}
       />
 
       {/* Form Dialog */}
       <MovimientoInventarioFormDialog
         open={formOpen}
-        onOpenChange={setFormOpen}
+        onOpenChange={(isOpen) => {
+          setFormOpen(isOpen);
+          if (!isOpen) setMovimientoToEdit(null);
+        }}
         movimientoToEdit={movimientoToEdit}
         onSuccessCallback={() => refetch()}
       />
@@ -253,6 +279,7 @@ export function MovimientoInventarioModuleView() {
         open={detailOpen}
         onOpenChange={setDetailOpen}
         movimientoId={detailMovimientoId}
+        onEdit={handleOpenEdit}
         onConfirm={handleOpenConfirm}
         onAnular={handleOpenAnular}
       />

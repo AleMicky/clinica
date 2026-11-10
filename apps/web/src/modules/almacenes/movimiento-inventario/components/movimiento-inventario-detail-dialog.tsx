@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   Printer,
   User,
+  Edit,
 } from "lucide-react";
 
 import {
@@ -27,6 +28,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import {
   EstadoMovimientoInventario,
+  canEditMovimiento,
+  isMovimientoIntegrado,
+  normalizeEstadoMovimiento,
   type MovimientoInventarioResponse,
 } from "../types/movimiento-inventario.types";
 import { useMovimientoInventario } from "../hooks/use-movimiento-inventario";
@@ -35,6 +39,7 @@ interface MovimientoInventarioDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   movimientoId?: number | null;
+  onEdit?: (movimiento: MovimientoInventarioResponse) => void;
   onConfirm?: (movimiento: MovimientoInventarioResponse) => void;
   onAnular?: (movimiento: MovimientoInventarioResponse) => void;
 }
@@ -61,6 +66,7 @@ export function MovimientoInventarioDetailDialog({
   open,
   onOpenChange,
   movimientoId,
+  onEdit,
   onConfirm,
   onAnular,
 }: MovimientoInventarioDetailDialogProps) {
@@ -73,10 +79,13 @@ export function MovimientoInventarioDetailDialog({
     window.print();
   };
 
-  const isBorrador = movimiento?.estado === EstadoMovimientoInventario.Borrador;
+  const normalizedEstado = normalizeEstadoMovimiento(movimiento?.estado);
+  const isBorrador = normalizedEstado === EstadoMovimientoInventario.Borrador;
   const isConfirmado =
-    movimiento?.estado === EstadoMovimientoInventario.Confirmado;
-  const isAnulado = movimiento?.estado === EstadoMovimientoInventario.Anulado;
+    normalizedEstado === EstadoMovimientoInventario.Confirmado;
+  const isAnulado = normalizedEstado === EstadoMovimientoInventario.Anulado;
+  const isIntegrado = isMovimientoIntegrado(movimiento);
+  const isEditable = canEditMovimiento(movimiento);
 
   const totalCostoGeneral = (movimiento?.detalles || []).reduce(
     (acc, d) => acc + (Number(d.costoTotal) || 0),
@@ -116,7 +125,15 @@ export function MovimientoInventarioDetailDialog({
             </div>
 
             {movimiento && (
-              <div>
+              <div className="flex items-center gap-1.5">
+                {isIntegrado && (
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] h-5 font-medium text-sky-600 dark:text-sky-400 border-sky-500/30 bg-sky-500/10"
+                  >
+                    Integrado
+                  </Badge>
+                )}
                 {isBorrador && (
                   <Badge
                     variant="outline"
@@ -333,6 +350,22 @@ export function MovimientoInventarioDetailDialog({
           </Button>
 
           <div className="flex items-center gap-1.5">
+            {isEditable && onEdit && movimiento && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  onOpenChange(false);
+                  onEdit(movimiento);
+                }}
+                className="h-7 text-xs gap-1 text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/10 cursor-pointer font-medium"
+              >
+                <Edit className="size-3" />
+                <span>Editar Borrador</span>
+              </Button>
+            )}
+
             {isBorrador && onConfirm && movimiento && (
               <Button
                 type="button"

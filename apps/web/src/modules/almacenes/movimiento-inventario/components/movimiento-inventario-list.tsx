@@ -33,6 +33,10 @@ import {
 import { DataTablePagination } from "@/components/shared";
 import {
   EstadoMovimientoInventario,
+  canEditMovimiento,
+  isMovimientoIntegrado,
+  normalizeEstadoMovimiento,
+  type EstadoMovimientoInventarioValue,
   type MovimientoInventarioResponse,
 } from "../types/movimiento-inventario.types";
 import { AlmacenAutocomplete } from "../../almacen";
@@ -60,7 +64,6 @@ interface MovimientoInventarioListProps {
   onConfirm?: (movimiento: MovimientoInventarioResponse) => void;
   onAnular?: (movimiento: MovimientoInventarioResponse) => void;
   onDelete?: (movimiento: MovimientoInventarioResponse) => void;
-  onRefresh?: () => void;
   onViewAudit?: (movimiento: MovimientoInventarioResponse) => void;
 }
 
@@ -82,8 +85,8 @@ function formatDate(dateStr?: string | null) {
   }
 }
 
-function getEstadoBadge(estado: EstadoMovimientoInventario) {
-  switch (estado) {
+function getEstadoBadge(estado: EstadoMovimientoInventarioValue) {
+  switch (normalizeEstadoMovimiento(estado)) {
     case EstadoMovimientoInventario.Borrador:
       return (
         <Badge
@@ -119,6 +122,32 @@ function getEstadoBadge(estado: EstadoMovimientoInventario) {
   }
 }
 
+function getEstadoLabel(estado: EstadoMovimientoInventarioValue) {
+  switch (normalizeEstadoMovimiento(estado)) {
+    case EstadoMovimientoInventario.Borrador:
+      return "Borrador";
+    case EstadoMovimientoInventario.Confirmado:
+      return "Confirmado";
+    case EstadoMovimientoInventario.Anulado:
+      return "Anulado";
+    default:
+      return "Desconocido";
+  }
+}
+
+function getCurrentTab(selectedEstado: EstadoMovimientoInventario | null) {
+  switch (selectedEstado) {
+    case null:
+      return "all";
+    case EstadoMovimientoInventario.Borrador:
+      return "borrador";
+    case EstadoMovimientoInventario.Confirmado:
+      return "confirmado";
+    default:
+      return "anulado";
+  }
+}
+
 export function MovimientoInventarioList({
   movimientos,
   isLoading = false,
@@ -141,16 +170,17 @@ export function MovimientoInventarioList({
   onConfirm,
   onAnular,
   onDelete,
-  onRefresh,
   onViewAudit,
-}: MovimientoInventarioListProps) {
+}: Readonly<MovimientoInventarioListProps>) {
   const [localSearch, setLocalSearch] = React.useState(searchTerm);
+  const [prevSearchTerm, setPrevSearchTerm] = React.useState(searchTerm);
 
-  React.useEffect(() => {
+  if (searchTerm !== prevSearchTerm) {
+    setPrevSearchTerm(searchTerm);
     setLocalSearch(searchTerm);
-  }, [searchTerm]);
+  }
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
+  const handleSearchSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     onSearchChange?.(localSearch);
   };
@@ -170,14 +200,7 @@ export function MovimientoInventarioList({
       onEstadoChange?.(EstadoMovimientoInventario.Anulado);
   };
 
-  const currentTab =
-    selectedEstado === null
-      ? "all"
-      : selectedEstado === EstadoMovimientoInventario.Borrador
-      ? "borrador"
-      : selectedEstado === EstadoMovimientoInventario.Confirmado
-      ? "confirmado"
-      : "anulado";
+  const currentTab = getCurrentTab(selectedEstado);
 
   const handleExportCsv = () => {
     if (!movimientos || movimientos.length === 0) return;
@@ -198,11 +221,7 @@ export function MovimientoInventarioList({
       `"${(m.tipoMovimientoNombre || "").replace(/"/g, '""')}"`,
       `"${(m.almacenNombre || "").replace(/"/g, '""')}"`,
       `"${m.fechaMovimiento}"`,
-      m.estado === EstadoMovimientoInventario.Borrador
-        ? "Borrador"
-        : m.estado === EstadoMovimientoInventario.Confirmado
-        ? "Confirmado"
-        : "Anulado",
+      getEstadoLabel(m.estado),
       `"${(m.referenciaTipo || "").replace(/"/g, '""')}"`,
       m.referenciaId || "",
       `"${(m.observacion || "").replace(/"/g, '""')}"`,
@@ -229,6 +248,201 @@ export function MovimientoInventarioList({
     selectedAlmacenId !== null ||
     selectedTipoMovimientoId !== null ||
     selectedEstado !== null;
+
+  const renderTableRows = () => {
+    if (isLoading) {
+      return Array.from({ length: 5 }).map((_, idx) => (
+        <tr key={idx}>
+          <td className="px-2.5 py-2">
+            <Skeleton className="h-3.5 w-24" />
+          </td>
+          <td className="px-2.5 py-2">
+            <Skeleton className="h-3.5 w-32" />
+          </td>
+          <td className="px-2.5 py-2">
+            <Skeleton className="h-3.5 w-24" />
+          </td>
+          <td className="px-2.5 py-2">
+            <Skeleton className="h-3.5 w-20" />
+          </td>
+          <td className="px-2.5 py-2">
+            <Skeleton className="h-4.5 w-16 rounded-full" />
+          </td>
+          <td className="px-2.5 py-2">
+            <Skeleton className="h-3.5 w-16" />
+          </td>
+          <td className="px-2.5 py-2 text-right">
+            <Skeleton className="h-5 w-5 rounded ml-auto" />
+          </td>
+        </tr>
+      ));
+    }
+
+    if (movimientos.length === 0) {
+      return (
+        <tr>
+          <td colSpan={7} className="px-3 py-8 text-center">
+            <div className="flex flex-col items-center justify-center gap-1.5">
+              <div className="size-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
+                <Inbox className="size-4" />
+              </div>
+              <p className="text-xs font-semibold text-foreground">
+                No se encontraron movimientos
+              </p>
+              <p className="text-[10px] text-muted-foreground max-w-xs">
+                {hasActiveFilters
+                  ? "Intenta modificar los filtros de búsqueda o restablecerlos."
+                  : "Comienza registrando tu primer movimiento de inventario."}
+              </p>
+              {onAddMovimiento && (
+                <Button
+                  size="sm"
+                  onClick={onAddMovimiento}
+                  className="mt-1 h-6.5 text-[11px] bg-primary hover:bg-primary/90 text-primary-foreground gap-1"
+                >
+                  <Plus className="size-2.5" />
+                  <span>Nuevo Movimiento</span>
+                </Button>
+              )}
+            </div>
+          </td>
+        </tr>
+      );
+    }
+
+    return movimientos.map((mov) => {
+      const normalizedEstado = normalizeEstadoMovimiento(mov.estado);
+      const isBorrador =
+        normalizedEstado === EstadoMovimientoInventario.Borrador;
+      const isConfirmado =
+        normalizedEstado === EstadoMovimientoInventario.Confirmado;
+      const isIntegrado = isMovimientoIntegrado(mov);
+      const isEditable = canEditMovimiento(mov);
+
+      return (
+        <tr
+          key={mov.id}
+          className="hover:bg-muted/30 transition-colors group cursor-pointer"
+          onClick={() => onViewDetail?.(mov)}
+        >
+          <td className="px-2.5 py-1.5">
+            <span className="font-mono font-bold text-foreground text-xs">
+              {mov.numero}
+            </span>
+          </td>
+          <td className="px-2.5 py-1.5">
+            <span className="font-medium text-foreground text-xs">
+              {mov.tipoMovimientoNombre || "-"}
+            </span>
+          </td>
+          <td className="px-2.5 py-1.5">
+            <div className="flex items-center gap-1 text-muted-foreground text-xs">
+              <Warehouse className="size-3 text-muted-foreground/70 shrink-0" />
+              <span className="truncate">{mov.almacenNombre || "-"}</span>
+            </div>
+          </td>
+          <td className="px-2.5 py-1.5 text-muted-foreground font-mono text-[10px]">
+            {formatDate(mov.fechaMovimiento)}
+          </td>
+          <td className="px-2.5 py-1.5">{getEstadoBadge(mov.estado)}</td>
+          <td className="px-2.5 py-1.5 text-muted-foreground text-[10px]">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {isIntegrado && (
+                <Badge
+                  variant="outline"
+                  className="text-[9px] h-4 px-1 font-medium text-sky-600 dark:text-sky-400 border-sky-500/30 bg-sky-500/10"
+                >
+                  Integrado
+                </Badge>
+              )}
+              {mov.referenciaTipo ? (
+                <span>
+                  {mov.referenciaTipo}{" "}
+                  {mov.referenciaId ? `#${mov.referenciaId}` : ""}
+                </span>
+              ) : (
+                !isIntegrado && "-"
+              )}
+            </div>
+          </td>
+          <td
+            className="px-2.5 py-1.5 text-right"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                className="inline-flex size-6 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
+                aria-label={`Acciones de ${mov.numero}`}
+              >
+                <MoreVertical className="size-3" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44 text-xs">
+                <DropdownMenuItem
+                  onClick={() => onViewDetail?.(mov)}
+                  className="gap-1.5 cursor-pointer text-xs"
+                >
+                  <Eye className="size-3 text-blue-500" />
+                  <span>Ver Comprobante</span>
+                </DropdownMenuItem>
+
+                {isEditable && onEdit && (
+                  <DropdownMenuItem
+                    onClick={() => onEdit(mov)}
+                    className="gap-1.5 cursor-pointer text-xs"
+                  >
+                    <Edit className="size-3 text-amber-500" />
+                    <span>Editar Borrador</span>
+                  </DropdownMenuItem>
+                )}
+
+                {isBorrador && onConfirm && (
+                  <DropdownMenuItem
+                    onClick={() => onConfirm(mov)}
+                    className="gap-1.5 text-emerald-600 focus:text-emerald-600 cursor-pointer text-xs"
+                  >
+                    <CheckCircle2 className="size-3 text-emerald-500" />
+                    <span>Confirmar Stock</span>
+                  </DropdownMenuItem>
+                )}
+
+                {isConfirmado && onAnular && (
+                  <DropdownMenuItem
+                    onClick={() => onAnular(mov)}
+                    className="gap-1.5 text-rose-600 focus:text-rose-600 cursor-pointer text-xs"
+                  >
+                    <Ban className="size-3 text-rose-500" />
+                    <span>Anular</span>
+                  </DropdownMenuItem>
+                )}
+
+                {isBorrador && onDelete && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => onDelete(mov)}
+                      className="gap-1.5 text-destructive focus:text-destructive cursor-pointer text-xs"
+                    >
+                      <Trash2 className="size-3" />
+                      <span>Eliminar Borrador</span>
+                    </DropdownMenuItem>
+                  </>
+                )}
+
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => onViewAudit?.(mov)}
+                  className="gap-1.5 text-muted-foreground cursor-pointer text-xs"
+                >
+                  <ShieldCheck className="size-3" />
+                  <span>Ver Auditoría</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </td>
+        </tr>
+      );
+    });
+  };
 
   return (
     <div className="flex flex-col gap-2.5 bg-card border border-border/60 rounded-lg p-3 shadow-2xs">
@@ -382,181 +596,7 @@ export function MovimientoInventarioList({
             </tr>
           </thead>
           <tbody className="divide-y divide-border/30">
-            {isLoading ? (
-              Array.from({ length: 5 }).map((_, idx) => (
-                <tr key={idx}>
-                  <td className="px-2.5 py-2">
-                    <Skeleton className="h-3.5 w-24" />
-                  </td>
-                  <td className="px-2.5 py-2">
-                    <Skeleton className="h-3.5 w-32" />
-                  </td>
-                  <td className="px-2.5 py-2">
-                    <Skeleton className="h-3.5 w-24" />
-                  </td>
-                  <td className="px-2.5 py-2">
-                    <Skeleton className="h-3.5 w-20" />
-                  </td>
-                  <td className="px-2.5 py-2">
-                    <Skeleton className="h-4.5 w-16 rounded-full" />
-                  </td>
-                  <td className="px-2.5 py-2">
-                    <Skeleton className="h-3.5 w-16" />
-                  </td>
-                  <td className="px-2.5 py-2 text-right">
-                    <Skeleton className="h-5 w-5 rounded ml-auto" />
-                  </td>
-                </tr>
-              ))
-            ) : movimientos.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="px-3 py-8 text-center">
-                  <div className="flex flex-col items-center justify-center gap-1.5">
-                    <div className="size-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
-                      <Inbox className="size-4" />
-                    </div>
-                    <p className="text-xs font-semibold text-foreground">
-                      No se encontraron movimientos
-                    </p>
-                    <p className="text-[10px] text-muted-foreground max-w-xs">
-                      {hasActiveFilters
-                        ? "Intenta modificar los filtros de búsqueda o restablecerlos."
-                        : "Comienza registrando tu primer movimiento de inventario."}
-                    </p>
-                    {onAddMovimiento && (
-                      <Button
-                        size="sm"
-                        onClick={onAddMovimiento}
-                        className="mt-1 h-6.5 text-[11px] bg-primary hover:bg-primary/90 text-primary-foreground gap-1"
-                      >
-                        <Plus className="size-2.5" />
-                        <span>Nuevo Movimiento</span>
-                      </Button>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ) : (
-              movimientos.map((mov) => {
-                const isBorrador =
-                  mov.estado === EstadoMovimientoInventario.Borrador;
-                const isConfirmado =
-                  mov.estado === EstadoMovimientoInventario.Confirmado;
-
-                return (
-                  <tr
-                    key={mov.id}
-                    className="hover:bg-muted/30 transition-colors group cursor-pointer"
-                    onClick={() => onViewDetail?.(mov)}
-                  >
-                    <td className="px-2.5 py-1.5">
-                      <span className="font-mono font-bold text-foreground text-xs">
-                        {mov.numero}
-                      </span>
-                    </td>
-                    <td className="px-2.5 py-1.5">
-                      <span className="font-medium text-foreground text-xs">
-                        {mov.tipoMovimientoNombre || "-"}
-                      </span>
-                    </td>
-                    <td className="px-2.5 py-1.5">
-                      <div className="flex items-center gap-1 text-muted-foreground text-xs">
-                        <Warehouse className="size-3 text-muted-foreground/70 shrink-0" />
-                        <span className="truncate">{mov.almacenNombre || "-"}</span>
-                      </div>
-                    </td>
-                    <td className="px-2.5 py-1.5 text-muted-foreground font-mono text-[10px]">
-                      {formatDate(mov.fechaMovimiento)}
-                    </td>
-                    <td className="px-2.5 py-1.5">{getEstadoBadge(mov.estado)}</td>
-                    <td className="px-2.5 py-1.5 text-muted-foreground text-[10px]">
-                      {mov.referenciaTipo ? (
-                        <span>
-                          {mov.referenciaTipo}{" "}
-                          {mov.referenciaId ? `#${mov.referenciaId}` : ""}
-                        </span>
-                      ) : (
-                        "-"
-                      )}
-                    </td>
-                    <td
-                      className="px-2.5 py-1.5 text-right"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          className="inline-flex size-6 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
-                          aria-label={`Acciones de ${mov.numero}`}
-                        >
-                          <MoreVertical className="size-3" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-40 text-xs">
-                          <DropdownMenuItem
-                            onClick={() => onViewDetail?.(mov)}
-                            className="gap-1.5 cursor-pointer text-xs"
-                          >
-                            <Eye className="size-3 text-blue-500" />
-                            <span>Ver Comprobante</span>
-                          </DropdownMenuItem>
-
-                          {isBorrador && onEdit && (
-                            <DropdownMenuItem
-                              onClick={() => onEdit(mov)}
-                              className="gap-1.5 cursor-pointer text-xs"
-                            >
-                              <Edit className="size-3 text-amber-500" />
-                              <span>Editar Borrador</span>
-                            </DropdownMenuItem>
-                          )}
-
-                          {isBorrador && onConfirm && (
-                            <DropdownMenuItem
-                              onClick={() => onConfirm(mov)}
-                              className="gap-1.5 text-emerald-600 focus:text-emerald-600 cursor-pointer text-xs"
-                            >
-                              <CheckCircle2 className="size-3 text-emerald-500" />
-                              <span>Confirmar Stock</span>
-                            </DropdownMenuItem>
-                          )}
-
-                          {isConfirmado && onAnular && (
-                            <DropdownMenuItem
-                              onClick={() => onAnular(mov)}
-                              className="gap-1.5 text-rose-600 focus:text-rose-600 cursor-pointer text-xs"
-                            >
-                              <Ban className="size-3 text-rose-500" />
-                              <span>Anular</span>
-                            </DropdownMenuItem>
-                          )}
-
-                          {isBorrador && onDelete && (
-                            <>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={() => onDelete(mov)}
-                                className="gap-1.5 text-destructive focus:text-destructive cursor-pointer text-xs"
-                              >
-                                <Trash2 className="size-3" />
-                                <span>Eliminar Borrador</span>
-                              </DropdownMenuItem>
-                            </>
-                          )}
-
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => onViewAudit?.(mov)}
-                            className="gap-1.5 text-muted-foreground cursor-pointer text-xs"
-                          >
-                            <ShieldCheck className="size-3" />
-                            <span>Ver Auditoría</span>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
+            {renderTableRows()}
           </tbody>
         </table>
       </div>

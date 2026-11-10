@@ -13,6 +13,9 @@ public static partial class MovimientoInventarioMapper
     [MapperIgnoreSource(nameof(MovimientoInventarioEntity.Detalles))]
     [MapperIgnoreSource(nameof(MovimientoInventarioEntity.TipoMovimientoInventario))]
     [MapperIgnoreSource(nameof(MovimientoInventarioEntity.Almacen))]
+    [MapperIgnoreTarget(nameof(MovimientoInventarioResponse.TipoMovimientoNombre))]
+    [MapperIgnoreTarget(nameof(MovimientoInventarioResponse.AlmacenNombre))]
+    [MapperIgnoreTarget(nameof(MovimientoInventarioResponse.EsIntegrado))]
     public static partial MovimientoInventarioResponse ToResponse(
         MovimientoInventarioEntity entity);
 
@@ -29,6 +32,7 @@ public static partial class MovimientoInventarioMapper
     [MapperIgnoreTarget(nameof(MovimientoInventarioEntity.TipoMovimientoInventario))]
     [MapperIgnoreTarget(nameof(MovimientoInventarioEntity.Almacen))]
     [MapperIgnoreTarget(nameof(MovimientoInventarioEntity.Estado))]
+    [MapperIgnoreTarget(nameof(MovimientoInventarioEntity.EsIntegrado))]
     [MapperIgnoreTarget(nameof(MovimientoInventarioEntity.FechaConfirmacion))]
     [MapperIgnoreTarget(nameof(MovimientoInventarioEntity.FechaAnulacion))]
     [MapperIgnoreTarget(nameof(MovimientoInventarioEntity.MotivoAnulacion))]
@@ -51,6 +55,7 @@ public static partial class MovimientoInventarioMapper
     [MapperIgnoreTarget(nameof(MovimientoInventarioEntity.TipoMovimientoInventario))]
     [MapperIgnoreTarget(nameof(MovimientoInventarioEntity.Almacen))]
     [MapperIgnoreTarget(nameof(MovimientoInventarioEntity.Estado))]
+    [MapperIgnoreTarget(nameof(MovimientoInventarioEntity.EsIntegrado))]
     [MapperIgnoreTarget(nameof(MovimientoInventarioEntity.FechaConfirmacion))]
     [MapperIgnoreTarget(nameof(MovimientoInventarioEntity.FechaAnulacion))]
     [MapperIgnoreTarget(nameof(MovimientoInventarioEntity.MotivoAnulacion))]
