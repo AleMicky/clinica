@@ -26,7 +26,7 @@ Web API en .NET 10 ASP.NET Core. El monorepo está un nivel arriba (`../`, raíz
 
 ## Comandos
 
-- Build / typecheck: `dotnet build` (el proyecto es `Clinica.Api.csproj`; no hay archivo de solución).
+- Build / typecheck: `dotnet build` (el proyecto es `Clinica.Api.csproj` y la solución raíz es `../../clinica.sln`).
 - Run: `dotnet run` (desde `apps/api`).
 - Aplicar migraciones a la BD dev: `dotnet ef database update`.
 - No hay proyecto de tests en este repo todavía.

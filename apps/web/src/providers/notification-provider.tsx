@@ -16,13 +16,11 @@ import * as signalR from "@microsoft/signalr";
 import {
     type Notification,
     NotificationType,
-} from "@/modules/notification/types/notification";
-import {
     getNotifications,
     getUnreadCount,
     markAllNotificationsAsRead,
     markNotificationAsRead,
-} from "@/modules/notification/api/notification.api";
+} from "@/modules/notificaciones";
 import { createNotificationConnection } from "@/lib/signalr/notification-connection";
 import { playNotificationSound } from "@/lib/sound/notification-sound";
 import { useAuth } from "./auth-provider";

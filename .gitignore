@@ -23,8 +23,11 @@ tsconfig.tsbuildinfo
 *.pem
 
 # IDEs and Editors
+.vs/
 .idea/
 .vscode/
+.local/
+Library/
 *.swp
 *.swo
 *~

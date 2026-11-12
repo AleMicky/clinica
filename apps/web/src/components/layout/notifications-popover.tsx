@@ -29,7 +29,7 @@ import { playNotificationSound } from "@/lib/sound/notification-sound";
 import {
   type Notification,
   NotificationType,
-} from "@/modules/notification/types/notification";
+} from "@/modules/notificaciones";
 
 function formatRelativeTime(dateString: string): string {
   try {
