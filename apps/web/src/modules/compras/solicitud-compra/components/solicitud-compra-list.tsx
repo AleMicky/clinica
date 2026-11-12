@@ -38,6 +38,8 @@ import {
 import { DataTablePagination } from "@/components/shared";
 import {
   EstadoSolicitudCompra,
+  normalizeEstadoSolicitudCompra,
+  getEstadoSolicitudCompraLabel,
   type SolicitudCompraResponse,
 } from "../types/solicitud-compra.types";
 import { AlmacenAutocomplete } from "@/modules/almacenes/almacen";
@@ -75,12 +77,12 @@ function formatDate(dateStr?: string | null) {
     return isNaN(d.getTime())
       ? dateStr
       : d.toLocaleDateString("es-ES", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
   } catch {
     return dateStr;
   }
@@ -93,17 +95,19 @@ function formatDateOnly(dateStr?: string | null) {
     return isNaN(d.getTime())
       ? dateStr
       : d.toLocaleDateString("es-ES", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        });
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
   } catch {
     return dateStr;
   }
 }
 
-export function getEstadoBadge(estado: EstadoSolicitudCompra) {
-  switch (estado) {
+export function getEstadoBadge(
+  estado?: EstadoSolicitudCompra | string | number | null
+) {
+  switch (normalizeEstadoSolicitudCompra(estado)) {
     case EstadoSolicitudCompra.Borrador:
       return (
         <Badge
@@ -340,12 +344,6 @@ export function SolicitudCompraList({
             Borrador
           </TabsTrigger>
           <TabsTrigger
-            value={String(EstadoSolicitudCompra.PendienteAprobacion)}
-            className="text-[11px] h-6 px-2.5 data-[state=active]:bg-background data-[state=active]:text-foreground"
-          >
-            Pend. Aprobación
-          </TabsTrigger>
-          <TabsTrigger
             value={String(EstadoSolicitudCompra.Aprobada)}
             className="text-[11px] h-6 px-2.5 data-[state=active]:bg-background data-[state=active]:text-foreground"
           >
@@ -358,10 +356,10 @@ export function SolicitudCompraList({
             Atendidas
           </TabsTrigger>
           <TabsTrigger
-            value={String(EstadoSolicitudCompra.Rechazada)}
+            value={String(EstadoSolicitudCompra.Cancelada)}
             className="text-[11px] h-6 px-2.5 data-[state=active]:bg-background data-[state=active]:text-foreground"
           >
-            Rechazadas
+            Canceladas
           </TabsTrigger>
         </TabsList>
       </Tabs>
@@ -565,30 +563,10 @@ export function SolicitudCompraList({
                             {isBorrador && onSendApproval && (
                               <DropdownMenuItem
                                 onClick={() => onSendApproval?.(s)}
-                                className="gap-2 cursor-pointer text-amber-600 dark:text-amber-400"
+                                className="gap-2 cursor-pointer text-emerald-600 dark:text-emerald-400 font-medium"
                               >
                                 <Send className="size-3.5" />
-                                Enviar a Aprobación
-                              </DropdownMenuItem>
-                            )}
-
-                            {isPendiente && onApprove && (
-                              <DropdownMenuItem
-                                onClick={() => onApprove?.(s)}
-                                className="gap-2 cursor-pointer text-emerald-600 dark:text-emerald-400"
-                              >
-                                <CheckCircle2 className="size-3.5" />
-                                Aprobar Solicitud
-                              </DropdownMenuItem>
-                            )}
-
-                            {isPendiente && onReject && (
-                              <DropdownMenuItem
-                                onClick={() => onReject?.(s)}
-                                className="gap-2 cursor-pointer text-rose-600 dark:text-rose-400"
-                              >
-                                <XCircle className="size-3.5" />
-                                Rechazar Solicitud
+                                Mandar a Cotización
                               </DropdownMenuItem>
                             )}
 

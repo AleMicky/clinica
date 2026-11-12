@@ -10,6 +10,9 @@ using Microsoft.EntityFrameworkCore;
 using OrdenCompraDetalleEntity = Clinica.Api.Modules.Compras.OrdenCompra.Entity.OrdenCompraDetalle;
 using OrdenCompraEntity = Clinica.Api.Modules.Compras.OrdenCompra.Entity.OrdenCompra;
 using OrdenCompraMapper = Clinica.Api.Modules.Compras.OrdenCompra.Mappers.OrdenCompraMapper;
+using RecepcionCompraDetalleEntity = Clinica.Api.Modules.Compras.RecepcionCompra.Entity.RecepcionCompraDetalle;
+using RecepcionCompraEntity = Clinica.Api.Modules.Compras.RecepcionCompra.Entity.RecepcionCompra;
+using EstadoRecepcionCompra = Clinica.Api.Modules.Compras.RecepcionCompra.Enums.EstadoRecepcionCompra;
 
 namespace Clinica.Api.Modules.Compras.OrdenCompra.Services;
 
@@ -120,6 +123,8 @@ public sealed class OrdenCompraService(
             .Include(x => x.Almacen)
             .Include(x => x.SolicitudCompra)
             .Include(x => x.CotizacionCompra)
+            .Include(x => x.Detalles)
+            .ThenInclude(d => d.Producto)
             .ToListAsync(cancellationToken);
 
         var items = ordenes
@@ -129,7 +134,7 @@ public sealed class OrdenCompraService(
                 x.Almacen?.Nombre,
                 x.SolicitudCompra?.Numero,
                 x.CotizacionCompra?.Numero,
-                detalles: null))
+                x.Detalles))
             .ToList();
 
         return new PagedResult<OrdenCompraResponse>(
@@ -318,59 +323,93 @@ public sealed class OrdenCompraService(
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<OrdenCompraResponse> EnviarAprobacionAsync(
+    public Task<OrdenCompraResponse> EnviarAprobacionAsync(
         int id,
         CancellationToken cancellationToken = default)
     {
-        var entity = await ObtenerCabeceraAsync(id, cancellationToken);
-
-        if (entity.Estado != EstadoOrdenCompra.Borrador)
-        {
-            throw new ConflictException(
-                $"No se puede enviar a aprobación una orden en estado {entity.Estado}.");
-        }
-
-        entity.Estado = EstadoOrdenCompra.PendienteAprobacion;
-
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        return await ObtenerAsync(id, cancellationToken);
+        return EnviarProveedorAsync(id, cancellationToken);
     }
 
-    public async Task<OrdenCompraResponse> AprobarAsync(
+    public Task<OrdenCompraResponse> AprobarAsync(
         int id,
         CancellationToken cancellationToken = default)
     {
-        var entity = await ObtenerCabeceraAsync(id, cancellationToken);
-
-        if (entity.Estado != EstadoOrdenCompra.PendienteAprobacion)
-        {
-            throw new ConflictException(
-                $"No se puede aprobar una orden en estado {entity.Estado}.");
-        }
-
-        entity.Estado = EstadoOrdenCompra.Aprobada;
-        entity.AprobadoPorId = currentUserService.UserName;
-        entity.FechaAprobacion = DateTime.UtcNow;
-
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        return await ObtenerAsync(id, cancellationToken);
+        return EnviarProveedorAsync(id, cancellationToken);
     }
 
     public async Task<OrdenCompraResponse> EnviarProveedorAsync(
         int id,
         CancellationToken cancellationToken = default)
     {
-        var entity = await ObtenerCabeceraAsync(id, cancellationToken);
+        var entity = await ObtenerCabeceraConDetallesAsync(id, cancellationToken);
 
-        if (entity.Estado != EstadoOrdenCompra.Aprobada)
+        if (entity.Estado is not (
+            EstadoOrdenCompra.Borrador or
+            EstadoOrdenCompra.PendienteAprobacion or
+            EstadoOrdenCompra.Aprobada))
         {
             throw new ConflictException(
-                $"No se puede enviar al proveedor una orden en estado {entity.Estado}.");
+                $"No se puede enviar a recepción una orden en estado {entity.Estado}.");
         }
 
         entity.Estado = EstadoOrdenCompra.EnviadaProveedor;
+        entity.AprobadoPorId ??= currentUserService.UserName;
+        entity.FechaAprobacion ??= DateTime.UtcNow;
+
+        // Generar automáticamente el registro de Recepción de Compra (en Borrador) si no tiene uno activo en borrador
+        var existeRecepcionBorrador = await dbContext.RecepcionesCompra
+            .AnyAsync(
+                x => x.Activo &&
+                     x.OrdenCompraId == entity.Id &&
+                     x.Estado == EstadoRecepcionCompra.Borrador,
+                cancellationToken);
+
+        if (!existeRecepcionBorrador)
+        {
+            var detallesPendientes = entity.Detalles
+                .Where(d => d.Activo && (d.Cantidad - d.CantidadRecibida) > 0)
+                .ToList();
+
+            if (detallesPendientes.Count > 0)
+            {
+                var correlativoRec = await correlativoService.GenerarAsync(
+                    new GenerarCorrelativoRequest
+                    {
+                        Codigo = "REC",
+                        Gestion = DateTime.Now.Year,
+                        Prefijo = "REC",
+                        Longitud = 6
+                    },
+                    cancellationToken);
+
+                var nuevaRecepcion = new RecepcionCompraEntity
+                {
+                    Numero = correlativoRec.NumeroFormateado,
+                    OrdenCompraId = entity.Id,
+                    ProveedorId = entity.ProveedorId,
+                    AlmacenId = entity.AlmacenId,
+                    FechaRecepcion = DateTime.UtcNow,
+                    Estado = EstadoRecepcionCompra.Borrador,
+                    Observacion = string.IsNullOrWhiteSpace(entity.Observacion)
+                        ? $"Generada automáticamente desde Orden de Compra {entity.Numero}"
+                        : entity.Observacion,
+                };
+
+                foreach (var det in detallesPendientes)
+                {
+                    nuevaRecepcion.Detalles.Add(new RecepcionCompraDetalleEntity
+                    {
+                        OrdenCompraDetalleId = det.Id,
+                        ProductoId = det.ProductoId,
+                        CantidadRecibida = det.Cantidad - det.CantidadRecibida,
+                        PrecioUnitario = det.PrecioUnitario,
+                        Observacion = det.Observacion,
+                    });
+                }
+
+                dbContext.RecepcionesCompra.Add(nuevaRecepcion);
+            }
+        }
 
         await dbContext.SaveChangesAsync(cancellationToken);
 

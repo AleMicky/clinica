@@ -16,6 +16,7 @@ import {
 } from "../hooks/use-orden-compra";
 import {
   EstadoOrdenCompra,
+  getEstadoOrdenCompraLabel,
   type OrdenCompraResponse,
 } from "../types/orden-compra.types";
 import { AuditDialog, type AuditInfo } from "@/components/shared";
@@ -124,10 +125,12 @@ export function OrdenCompraModuleView() {
   const handleSendProveedor = async (o: OrdenCompraResponse) => {
     try {
       await enviarProveedorMutation.mutateAsync(o.id);
-      toast.success(`Orden "${o.numero}" marcada como Enviada al Proveedor.`);
+      toast.success(
+        `Orden "${o.numero}" enviada a recepción y Recepción de Compra generada automáticamente.`
+      );
       refetch();
     } catch (error: any) {
-      toast.error(error?.message || "Error al enviar al proveedor.");
+      toast.error(error?.message || "Error al enviar la orden a recepción.");
     }
   };
 
@@ -177,8 +180,11 @@ export function OrdenCompraModuleView() {
       updatedAt: rawUpdated,
       updatedBy: o.modificadoPor || (o as any).updatedBy,
       extraDetails: [
+        { label: "Estado", value: getEstadoOrdenCompraLabel(o.estado) },
         { label: "Proveedor", value: o.proveedorRazonSocial || "-" },
         { label: "Almacén Destino", value: o.almacenNombre || "-" },
+        { label: "Cotización Base", value: o.cotizacionCompraNumero || "-" },
+        { label: "Solicitud Origen", value: o.solicitudCompraNumero || "-" },
         { label: "Fecha Emisión", value: o.fecha || "-" },
         { label: "Entrega Esperada", value: o.fechaEntregaEsperada || "-" },
         { label: "Condición de Pago", value: o.condicionPago || "-" },

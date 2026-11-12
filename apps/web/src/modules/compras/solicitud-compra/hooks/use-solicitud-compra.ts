@@ -13,6 +13,7 @@ import {
   updateSolicitudCompra,
 } from "../api/solicitud-compra.api";
 import { solicitudCompraKeys } from "../api/solicitud-compra.key";
+import { cotizacionCompraKeys } from "@/modules/compras/cotizacion-compra/api/cotizacion-compra.key";
 import type {
   SolicitudCompraQueryParams,
   CreateSolicitudCompraRequest,
@@ -46,6 +47,9 @@ export function useCreateSolicitudCompra() {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: solicitudCompraKeys.all,
+      });
+      queryClient.invalidateQueries({
+        queryKey: cotizacionCompraKeys.all,
       });
     },
   });
@@ -82,6 +86,9 @@ export function useDeleteSolicitudCompra() {
       queryClient.invalidateQueries({
         queryKey: solicitudCompraKeys.all,
       });
+      queryClient.invalidateQueries({
+        queryKey: cotizacionCompraKeys.all,
+      });
     },
   });
 }
@@ -97,6 +104,9 @@ export function useEnviarAprobacionSolicitudCompra() {
       });
       queryClient.invalidateQueries({
         queryKey: solicitudCompraKeys.detail(id),
+      });
+      queryClient.invalidateQueries({
+        queryKey: cotizacionCompraKeys.all,
       });
     },
   });

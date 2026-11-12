@@ -215,7 +215,7 @@ export function SolicitudCompraFormDialog({
                 <DialogDescription className="text-xs text-muted-foreground pt-0.5">
                   {isEditing
                     ? "Modifica los detalles del borrador de la solicitud"
-                    : "Registra los insumos o productos requeridos para el almacén"}
+                    : "Registra los productos requeridos en borrador para luego enviarlos a cotizar"}
                 </DialogDescription>
               </div>
             </div>

@@ -7,6 +7,61 @@ export enum EstadoSolicitudCompra {
   Cancelada = 6,
 }
 
+export function normalizeEstadoSolicitudCompra(
+  estado?: EstadoSolicitudCompra | string | number | null
+): EstadoSolicitudCompra {
+  if (typeof estado === "number" && estado >= 1 && estado <= 6) {
+    return estado as EstadoSolicitudCompra;
+  }
+  const key = String(estado ?? "")
+    .trim()
+    .toLowerCase();
+  switch (key) {
+    case "1":
+    case "borrador":
+      return EstadoSolicitudCompra.Borrador;
+    case "2":
+    case "pendienteaprobacion":
+    case "pendiente_aprobacion":
+      return EstadoSolicitudCompra.PendienteAprobacion;
+    case "3":
+    case "aprobada":
+      return EstadoSolicitudCompra.Aprobada;
+    case "4":
+    case "rechazada":
+      return EstadoSolicitudCompra.Rechazada;
+    case "5":
+    case "atendida":
+      return EstadoSolicitudCompra.Atendida;
+    case "6":
+    case "cancelada":
+      return EstadoSolicitudCompra.Cancelada;
+    default:
+      return EstadoSolicitudCompra.Borrador;
+  }
+}
+
+export function getEstadoSolicitudCompraLabel(
+  estado?: EstadoSolicitudCompra | string | number | null
+): string {
+  switch (normalizeEstadoSolicitudCompra(estado)) {
+    case EstadoSolicitudCompra.Borrador:
+      return "Borrador";
+    case EstadoSolicitudCompra.PendienteAprobacion:
+      return "Pendiente Aprobación";
+    case EstadoSolicitudCompra.Aprobada:
+      return "Aprobada";
+    case EstadoSolicitudCompra.Rechazada:
+      return "Rechazada";
+    case EstadoSolicitudCompra.Atendida:
+      return "Atendida";
+    case EstadoSolicitudCompra.Cancelada:
+      return "Cancelada";
+    default:
+      return "-";
+  }
+}
+
 export interface SolicitudCompraDetalleRequest {
   productoId: number;
   cantidadSolicitada: number;

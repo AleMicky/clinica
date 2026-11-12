@@ -119,6 +119,8 @@ public sealed class RecepcionCompraService(
             .Include(x => x.OrdenCompra)
             .Include(x => x.Proveedor)
             .Include(x => x.Almacen)
+            .Include(x => x.Detalles)
+            .ThenInclude(d => d.Producto)
             .ToListAsync(cancellationToken);
 
         var items = recepciones
@@ -127,7 +129,7 @@ public sealed class RecepcionCompraService(
                 x.OrdenCompra?.Numero,
                 x.Proveedor?.RazonSocial,
                 x.Almacen?.Nombre,
-                detalles: null))
+                x.Detalles))
             .ToList();
 
         return new PagedResult<RecepcionCompraResponse>(
@@ -573,6 +575,7 @@ public sealed class RecepcionCompraService(
             .All(x => x.CantidadRecibida >= x.Cantidad);
 
         var actualizarEstado = ordenCompra.Estado is
+            Clinica.Api.Modules.Compras.OrdenCompra.Enums.EstadoOrdenCompra.Aprobada or
             Clinica.Api.Modules.Compras.OrdenCompra.Enums.EstadoOrdenCompra.EnviadaProveedor or
             Clinica.Api.Modules.Compras.OrdenCompra.Enums.EstadoOrdenCompra.ParcialmenteRecibida;
 

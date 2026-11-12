@@ -338,41 +338,10 @@ export function SolicitudCompraDetailDialog({
                   onOpenChange(false);
                   if (solicitud) onSendApproval(solicitud);
                 }}
-                className="h-7.5 text-xs bg-amber-600 hover:bg-amber-700 text-white gap-1 font-medium"
+                className="h-7.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white gap-1 font-medium cursor-pointer"
               >
                 <Send className="size-3" />
-                <span>Enviar a Aprobación</span>
-              </Button>
-            )}
-
-            {isPendiente && onApprove && (
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => {
-                  onOpenChange(false);
-                  if (solicitud) onApprove(solicitud);
-                }}
-                className="h-7.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white gap-1 font-medium"
-              >
-                <CheckCircle2 className="size-3" />
-                <span>Aprobar</span>
-              </Button>
-            )}
-
-            {isPendiente && onReject && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  onOpenChange(false);
-                  if (solicitud) onReject(solicitud);
-                }}
-                className="h-7.5 text-xs text-rose-600 border-rose-500/30 hover:bg-rose-500/10 gap-1"
-              >
-                <XCircle className="size-3" />
-                <span>Rechazar</span>
+                <span>Mandar a Cotización</span>
               </Button>
             )}
 
@@ -388,7 +357,7 @@ export function SolicitudCompraDetailDialog({
                 className="h-7.5 text-xs text-zinc-600 border-zinc-500/30 hover:bg-zinc-500/10 gap-1"
               >
                 <Ban className="size-3" />
-                <span>Cancelar</span>
+                <span>Cancelar Solicitud</span>
               </Button>
             )}
           </div>

@@ -8,6 +8,68 @@ export enum EstadoOrdenCompra {
   Cancelada = 7,
 }
 
+export function normalizeEstadoOrdenCompra(
+  estado?: EstadoOrdenCompra | string | number | null
+): EstadoOrdenCompra {
+  if (typeof estado === "number" && estado >= 1 && estado <= 7) {
+    return estado as EstadoOrdenCompra;
+  }
+  const key = String(estado ?? "")
+    .trim()
+    .toLowerCase();
+  switch (key) {
+    case "1":
+    case "borrador":
+      return EstadoOrdenCompra.Borrador;
+    case "2":
+    case "pendienteaprobacion":
+    case "pendiente_aprobacion":
+      return EstadoOrdenCompra.PendienteAprobacion;
+    case "3":
+    case "aprobada":
+      return EstadoOrdenCompra.Aprobada;
+    case "4":
+    case "enviadaproveedor":
+    case "enviada_proveedor":
+      return EstadoOrdenCompra.EnviadaProveedor;
+    case "5":
+    case "parcialmenterecibida":
+    case "parcialmente_recibida":
+      return EstadoOrdenCompra.ParcialmenteRecibida;
+    case "6":
+    case "recibida":
+      return EstadoOrdenCompra.Recibida;
+    case "7":
+    case "cancelada":
+      return EstadoOrdenCompra.Cancelada;
+    default:
+      return EstadoOrdenCompra.Borrador;
+  }
+}
+
+export function getEstadoOrdenCompraLabel(
+  estado?: EstadoOrdenCompra | string | number | null
+): string {
+  switch (normalizeEstadoOrdenCompra(estado)) {
+    case EstadoOrdenCompra.Borrador:
+      return "Borrador";
+    case EstadoOrdenCompra.PendienteAprobacion:
+      return "Pendiente Aprobación";
+    case EstadoOrdenCompra.Aprobada:
+      return "Aprobada";
+    case EstadoOrdenCompra.EnviadaProveedor:
+      return "Enviada al Proveedor";
+    case EstadoOrdenCompra.ParcialmenteRecibida:
+      return "Parcialmente Recibida";
+    case EstadoOrdenCompra.Recibida:
+      return "Recibida";
+    case EstadoOrdenCompra.Cancelada:
+      return "Cancelada";
+    default:
+      return "-";
+  }
+}
+
 export interface OrdenCompraDetalleRequest {
   productoId: number;
   cantidad: number;

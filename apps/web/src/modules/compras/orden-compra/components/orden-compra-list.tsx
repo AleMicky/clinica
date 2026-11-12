@@ -38,6 +38,7 @@ import {
 import { DataTablePagination } from "@/components/shared";
 import {
   EstadoOrdenCompra,
+  normalizeEstadoOrdenCompra,
   type OrdenCompraResponse,
 } from "../types/orden-compra.types";
 import { ProveedorAutocomplete } from "@/modules/compras/proveedor";
@@ -78,12 +79,12 @@ function formatDate(dateStr?: string | null) {
     return isNaN(d.getTime())
       ? dateStr
       : d.toLocaleDateString("es-ES", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
   } catch {
     return dateStr;
   }
@@ -96,17 +97,19 @@ function formatDateOnly(dateStr?: string | null) {
     return isNaN(d.getTime())
       ? dateStr
       : d.toLocaleDateString("es-ES", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        });
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
   } catch {
     return dateStr;
   }
 }
 
-export function getEstadoBadge(estado: EstadoOrdenCompra) {
-  switch (estado) {
+export function getEstadoBadge(
+  estado?: EstadoOrdenCompra | string | number | null
+) {
+  switch (normalizeEstadoOrdenCompra(estado)) {
     case EstadoOrdenCompra.Borrador:
       return (
         <Badge
@@ -144,7 +147,7 @@ export function getEstadoBadge(estado: EstadoOrdenCompra) {
           className="text-[10px] h-5 px-1.5 font-semibold text-indigo-700 dark:text-indigo-400 border-indigo-500/30 bg-indigo-500/10 gap-1"
         >
           <Send className="size-3" />
-          Enviada a Prov.
+          En Recepción
         </Badge>
       );
     case EstadoOrdenCompra.ParcialmenteRecibida:
@@ -334,7 +337,7 @@ export function OrdenCompraList({
         }
         className="w-full"
       >
-        <TabsList className="h-7.5 p-0.5 bg-muted/60 border border-border/40 grid grid-cols-3 sm:flex sm:w-auto w-full">
+        <TabsList className="h-7.5 p-0.5 bg-muted/60 border border-border/40 grid grid-cols-2 sm:flex sm:w-auto w-full">
           <TabsTrigger
             value="all"
             className="text-[11px] h-6 px-2.5 data-[state=active]:bg-background data-[state=active]:text-foreground"
@@ -348,22 +351,10 @@ export function OrdenCompraList({
             Borrador
           </TabsTrigger>
           <TabsTrigger
-            value={String(EstadoOrdenCompra.PendienteAprobacion)}
-            className="text-[11px] h-6 px-2.5 data-[state=active]:bg-background data-[state=active]:text-foreground"
-          >
-            Pend. Aprobación
-          </TabsTrigger>
-          <TabsTrigger
-            value={String(EstadoOrdenCompra.Aprobada)}
-            className="text-[11px] h-6 px-2.5 data-[state=active]:bg-background data-[state=active]:text-foreground"
-          >
-            Aprobadas
-          </TabsTrigger>
-          <TabsTrigger
             value={String(EstadoOrdenCompra.EnviadaProveedor)}
             className="text-[11px] h-6 px-2.5 data-[state=active]:bg-background data-[state=active]:text-foreground"
           >
-            Enviadas a Prov.
+            En Recepción
           </TabsTrigger>
           <TabsTrigger
             value={String(EstadoOrdenCompra.Recibida)}
@@ -484,9 +475,20 @@ export function OrdenCompraList({
                             <ShoppingBag className="size-3" />
                           </div>
                           <div>
-                            <span className="font-mono font-bold text-foreground hover:text-blue-600 transition-colors">
-                              {o.numero}
-                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-mono font-bold text-foreground hover:text-blue-600 transition-colors">
+                                {o.numero}
+                              </span>
+                              {o.cotizacionCompraNumero && (
+                                <Badge
+                                  variant="secondary"
+                                  className="text-[9px] h-4 px-1 font-mono"
+                                  title={`Cotización: ${o.cotizacionCompraNumero}`}
+                                >
+                                  {o.cotizacionCompraNumero}
+                                </Badge>
+                              )}
+                            </div>
                             {o.observacion && (
                               <p className="text-[10px] text-muted-foreground truncate max-w-[180px]">
                                 {o.observacion}
@@ -565,35 +567,16 @@ export function OrdenCompraList({
                               </DropdownMenuItem>
                             )}
 
-                            {isBorrador && onSendApproval && (
-                              <DropdownMenuItem
-                                onClick={() => onSendApproval?.(o)}
-                                className="gap-2 cursor-pointer text-amber-600 dark:text-amber-400"
-                              >
-                                <Send className="size-3.5" />
-                                Enviar a Aprobación
-                              </DropdownMenuItem>
-                            )}
-
-                            {isPendiente && onApprove && (
-                              <DropdownMenuItem
-                                onClick={() => onApprove?.(o)}
-                                className="gap-2 cursor-pointer text-emerald-600 dark:text-emerald-400"
-                              >
-                                <CheckCircle2 className="size-3.5" />
-                                Aprobar Orden
-                              </DropdownMenuItem>
-                            )}
-
-                            {isAprobada && onSendProveedor && (
-                              <DropdownMenuItem
-                                onClick={() => onSendProveedor?.(o)}
-                                className="gap-2 cursor-pointer text-indigo-600 dark:text-indigo-400"
-                              >
-                                <Send className="size-3.5" />
-                                Enviar al Proveedor
-                              </DropdownMenuItem>
-                            )}
+                            {(isBorrador || isPendiente || isAprobada) &&
+                              onSendProveedor && (
+                                <DropdownMenuItem
+                                  onClick={() => onSendProveedor?.(o)}
+                                  className="gap-2 cursor-pointer text-emerald-600 dark:text-emerald-400 font-medium"
+                                >
+                                  <PackageCheck className="size-3.5" />
+                                  Enviar a Recepcionar
+                                </DropdownMenuItem>
+                              )}
 
                             {isCancelable && onCancel && (
                               <DropdownMenuItem

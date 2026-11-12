@@ -63,15 +63,7 @@ export function SolicitudCompraMetrics({
       border: "border-slate-500/20",
     },
     {
-      title: "Pendientes",
-      value: pendientes,
-      icon: Hourglass,
-      color: "text-amber-600 dark:text-amber-400",
-      bg: "bg-amber-500/10",
-      border: "border-amber-500/20",
-    },
-    {
-      title: "Aprobadas",
+      title: "Aprobadas (Cotizando)",
       value: aprobadas,
       icon: CheckCircle2,
       color: "text-emerald-600 dark:text-emerald-400",
@@ -87,9 +79,9 @@ export function SolicitudCompraMetrics({
       border: "border-blue-500/20",
     },
     {
-      title: "Rechazadas/Canc.",
+      title: "Canceladas",
       value: rechazadas + canceladas,
-      icon: XCircle,
+      icon: Ban,
       color: "text-rose-600 dark:text-rose-400",
       bg: "bg-rose-500/10",
       border: "border-rose-500/20",
@@ -98,8 +90,8 @@ export function SolicitudCompraMetrics({
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
-        {Array.from({ length: 6 }).map((_, idx) => (
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+        {Array.from({ length: 5 }).map((_, idx) => (
           <div
             key={idx}
             className="p-2.5 rounded-lg border border-border/50 bg-card flex flex-col gap-1.5"
@@ -116,7 +108,7 @@ export function SolicitudCompraMetrics({
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
       {metrics.map((item, idx) => {
         const Icon = item.icon;
         return (

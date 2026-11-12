@@ -7,13 +7,12 @@ import { SolicitudCompraList } from "./solicitud-compra-list";
 import { SolicitudCompraFormDialog } from "./solicitud-compra-form-dialog";
 import { SolicitudCompraDetailDialog } from "./solicitud-compra-detail-dialog";
 import { SolicitudCompraSendApprovalDialog } from "./solicitud-compra-send-approval-dialog";
-import { SolicitudCompraApproveDialog } from "./solicitud-compra-approve-dialog";
-import { SolicitudCompraRejectDialog } from "./solicitud-compra-reject-dialog";
 import { SolicitudCompraCancelDialog } from "./solicitud-compra-cancel-dialog";
 import { SolicitudCompraDeleteDialog } from "./solicitud-compra-delete-dialog";
 import { useSolicitudesCompra } from "../hooks/use-solicitud-compra";
 import {
   EstadoSolicitudCompra,
+  getEstadoSolicitudCompraLabel,
   type SolicitudCompraResponse,
 } from "../types/solicitud-compra.types";
 import { AuditDialog, type AuditInfo } from "@/components/shared";
@@ -85,7 +84,7 @@ export function SolicitudCompraModuleView() {
     setDetailOpen(true);
   };
 
-  // Send Approval Dialog
+  // Send to Quotation (Mandar a Cotización) Dialog
   const [sendApprovalOpen, setSendApprovalOpen] = React.useState(false);
   const [solicitudToSend, setSolicitudToSend] =
     React.useState<SolicitudCompraResponse | null>(null);
@@ -93,26 +92,6 @@ export function SolicitudCompraModuleView() {
   const handleOpenSendApproval = (s: SolicitudCompraResponse) => {
     setSolicitudToSend(s);
     setSendApprovalOpen(true);
-  };
-
-  // Approve Dialog
-  const [approveOpen, setApproveOpen] = React.useState(false);
-  const [solicitudToApprove, setSolicitudToApprove] =
-    React.useState<SolicitudCompraResponse | null>(null);
-
-  const handleOpenApprove = (s: SolicitudCompraResponse) => {
-    setSolicitudToApprove(s);
-    setApproveOpen(true);
-  };
-
-  // Reject Dialog
-  const [rejectOpen, setRejectOpen] = React.useState(false);
-  const [solicitudToReject, setSolicitudToReject] =
-    React.useState<SolicitudCompraResponse | null>(null);
-
-  const handleOpenReject = (s: SolicitudCompraResponse) => {
-    setSolicitudToReject(s);
-    setRejectOpen(true);
   };
 
   // Cancel Dialog
@@ -171,6 +150,7 @@ export function SolicitudCompraModuleView() {
       updatedAt: rawUpdated,
       updatedBy: updatedUser,
       extraDetails: [
+        { label: "Estado", value: getEstadoSolicitudCompraLabel(s.estado) },
         { label: "Almacén Destino", value: s.almacenNombre || "-" },
         { label: "Fecha Emisión", value: s.fechaSolicitud || "-" },
         { label: "Fecha Requerida", value: s.fechaRequerida || "-" },
@@ -227,8 +207,6 @@ export function SolicitudCompraModuleView() {
         onViewDetail={handleViewDetail}
         onEdit={handleOpenEdit}
         onSendApproval={handleOpenSendApproval}
-        onApprove={handleOpenApprove}
-        onReject={handleOpenReject}
         onCancel={handleOpenCancel}
         onDelete={handleOpenDelete}
         onRefresh={() => refetch()}
@@ -249,32 +227,14 @@ export function SolicitudCompraModuleView() {
         onOpenChange={setDetailOpen}
         solicitudId={detailSolicitudId}
         onSendApproval={handleOpenSendApproval}
-        onApprove={handleOpenApprove}
-        onReject={handleOpenReject}
         onCancel={handleOpenCancel}
       />
 
-      {/* Send Approval Dialog */}
+      {/* Mandar a Cotización Dialog */}
       <SolicitudCompraSendApprovalDialog
         open={sendApprovalOpen}
         onOpenChange={setSendApprovalOpen}
         solicitud={solicitudToSend}
-        onSuccessCallback={() => refetch()}
-      />
-
-      {/* Approve Dialog */}
-      <SolicitudCompraApproveDialog
-        open={approveOpen}
-        onOpenChange={setApproveOpen}
-        solicitud={solicitudToApprove}
-        onSuccessCallback={() => refetch()}
-      />
-
-      {/* Reject Dialog */}
-      <SolicitudCompraRejectDialog
-        open={rejectOpen}
-        onOpenChange={setRejectOpen}
-        solicitud={solicitudToReject}
         onSuccessCallback={() => refetch()}
       />
 

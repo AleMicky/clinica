@@ -1,14 +1,24 @@
 import { apiClient } from "@/lib/api/api-client";
-import type {
-  SolicitudCompraQueryParams,
-  SolicitudCompraResponse,
-  CreateSolicitudCompraRequest,
-  UpdateSolicitudCompraRequest,
-  AprobarSolicitudCompraRequest,
-  RechazarSolicitudCompraRequest,
-  CancelarSolicitudCompraRequest,
-  PagedResult,
+import {
+  normalizeEstadoSolicitudCompra,
+  type SolicitudCompraQueryParams,
+  type SolicitudCompraResponse,
+  type CreateSolicitudCompraRequest,
+  type UpdateSolicitudCompraRequest,
+  type AprobarSolicitudCompraRequest,
+  type RechazarSolicitudCompraRequest,
+  type CancelarSolicitudCompraRequest,
+  type PagedResult,
 } from "../types/solicitud-compra.types";
+
+function mapSolicitudResponse(
+  item: SolicitudCompraResponse
+): SolicitudCompraResponse {
+  return {
+    ...item,
+    estado: normalizeEstadoSolicitudCompra(item.estado),
+  };
+}
 
 export async function getSolicitudesCompra(
   params?: SolicitudCompraQueryParams
@@ -17,7 +27,10 @@ export async function getSolicitudesCompra(
     "/solicitudes-compra",
     { params }
   );
-  return response.data;
+  return {
+    ...response.data,
+    items: (response.data.items ?? []).map(mapSolicitudResponse),
+  };
 }
 
 export async function getSolicitudCompraById(
@@ -26,7 +39,7 @@ export async function getSolicitudCompraById(
   const response = await apiClient.get<SolicitudCompraResponse>(
     `/solicitudes-compra/${id}`
   );
-  return response.data;
+  return mapSolicitudResponse(response.data);
 }
 
 export async function createSolicitudCompra(
@@ -36,7 +49,7 @@ export async function createSolicitudCompra(
     "/solicitudes-compra",
     request
   );
-  return response.data;
+  return mapSolicitudResponse(response.data);
 }
 
 export async function updateSolicitudCompra(
@@ -47,7 +60,7 @@ export async function updateSolicitudCompra(
     `/solicitudes-compra/${id}`,
     request
   );
-  return response.data;
+  return mapSolicitudResponse(response.data);
 }
 
 export async function deleteSolicitudCompra(id: number): Promise<void> {
@@ -60,7 +73,7 @@ export async function enviarAprobacionSolicitudCompra(
   const response = await apiClient.post<SolicitudCompraResponse>(
     `/solicitudes-compra/${id}/enviar-aprobacion`
   );
-  return response.data;
+  return mapSolicitudResponse(response.data);
 }
 
 export async function aprobarSolicitudCompra(
@@ -71,7 +84,7 @@ export async function aprobarSolicitudCompra(
     `/solicitudes-compra/${id}/aprobar`,
     request
   );
-  return response.data;
+  return mapSolicitudResponse(response.data);
 }
 
 export async function rechazarSolicitudCompra(
@@ -82,7 +95,7 @@ export async function rechazarSolicitudCompra(
     `/solicitudes-compra/${id}/rechazar`,
     request
   );
-  return response.data;
+  return mapSolicitudResponse(response.data);
 }
 
 export async function cancelarSolicitudCompra(
@@ -93,5 +106,5 @@ export async function cancelarSolicitudCompra(
     `/solicitudes-compra/${id}/cancelar`,
     request
   );
-  return response.data;
+  return mapSolicitudResponse(response.data);
 }

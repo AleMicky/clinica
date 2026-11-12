@@ -11,6 +11,7 @@ import {
   updateRecepcionCompra,
 } from "../api/recepcion-compra.api";
 import { recepcionCompraKeys } from "../api/recepcion-compra.key";
+import { ordenCompraKeys } from "@/modules/compras/orden-compra/api/orden-compra.key";
 import type {
   RecepcionCompraQueryParams,
   CreateRecepcionCompraRequest,
@@ -94,6 +95,9 @@ export function useConfirmarRecepcionCompra() {
       queryClient.invalidateQueries({
         queryKey: recepcionCompraKeys.detail(id),
       });
+      queryClient.invalidateQueries({
+        queryKey: ordenCompraKeys.all,
+      });
     },
   });
 }
@@ -115,6 +119,9 @@ export function useAnularRecepcionCompra() {
       });
       queryClient.invalidateQueries({
         queryKey: recepcionCompraKeys.detail(variables.id),
+      });
+      queryClient.invalidateQueries({
+        queryKey: ordenCompraKeys.all,
       });
     },
   });

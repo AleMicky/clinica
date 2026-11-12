@@ -13,6 +13,8 @@ import {
   updateCotizacionCompra,
 } from "../api/cotizacion-compra.api";
 import { cotizacionCompraKeys } from "../api/cotizacion-compra.key";
+import { solicitudCompraKeys } from "@/modules/compras/solicitud-compra/api/solicitud-compra.key";
+import { ordenCompraKeys } from "@/modules/compras/orden-compra/api/orden-compra.key";
 import type {
   CotizacionCompraQueryParams,
   CreateCotizacionCompraRequest,
@@ -111,6 +113,12 @@ export function useSeleccionarCotizacionCompra() {
       });
       queryClient.invalidateQueries({
         queryKey: cotizacionCompraKeys.detail(id),
+      });
+      queryClient.invalidateQueries({
+        queryKey: solicitudCompraKeys.all,
+      });
+      queryClient.invalidateQueries({
+        queryKey: ordenCompraKeys.all,
       });
     },
   });

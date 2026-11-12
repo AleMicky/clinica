@@ -349,37 +349,7 @@ export function OrdenCompraDetailDialog({
           </Button>
 
           <div className="flex items-center gap-1.5">
-            {isBorrador && onSendApproval && (
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => {
-                  onOpenChange(false);
-                  if (orden) onSendApproval(orden);
-                }}
-                className="h-7.5 text-xs bg-amber-600 hover:bg-amber-700 text-white gap-1 font-medium"
-              >
-                <Send className="size-3" />
-                <span>Enviar a Aprobación</span>
-              </Button>
-            )}
-
-            {isPendiente && onApprove && (
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => {
-                  onOpenChange(false);
-                  if (orden) onApprove(orden);
-                }}
-                className="h-7.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white gap-1 font-medium"
-              >
-                <CheckCircle2 className="size-3" />
-                <span>Aprobar Orden</span>
-              </Button>
-            )}
-
-            {isAprobada && onSendProveedor && (
+            {(isBorrador || isPendiente || isAprobada) && onSendProveedor && (
               <Button
                 type="button"
                 size="sm"
@@ -387,10 +357,10 @@ export function OrdenCompraDetailDialog({
                   onOpenChange(false);
                   if (orden) onSendProveedor(orden);
                 }}
-                className="h-7.5 text-xs bg-indigo-600 hover:bg-indigo-700 text-white gap-1 font-medium"
+                className="h-7.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white gap-1 font-medium cursor-pointer"
               >
-                <Send className="size-3" />
-                <span>Enviar al Proveedor</span>
+                <PackageCheck className="size-3" />
+                <span>Enviar a Recepcionar</span>
               </Button>
             )}
 

@@ -64,8 +64,7 @@ public interface ISolicitudCompraService
 public sealed class SolicitudCompraService(
     AppDbContext dbContext,
     ICurrentUserService currentUserService,
-    ICorrelativoService correlativoService,
-    ICotizacionCompraService cotizacionCompraService
+    ICorrelativoService correlativoService
 )
     : ISolicitudCompraService
 {
@@ -105,13 +104,15 @@ public sealed class SolicitudCompraService(
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .Include(x => x.Almacen)
+            .Include(x => x.Detalles)
+            .ThenInclude(d => d.Producto)
             .ToListAsync(cancellationToken);
 
         var items = solicitudes
             .Select(x => Mapear(
                 x,
                 x.Almacen?.Nombre,
-                detalles: null))
+                x.Detalles))
             .ToList();
 
         return new PagedResult<SolicitudCompraResponse>(
@@ -166,6 +167,8 @@ public sealed class SolicitudCompraService(
 
         var entity = SolicitudCompraMapper.ToEntity(request);
         entity.Numero = correlativo.NumeroFormateado;
+        entity.Estado = EstadoSolicitudCompra.Borrador;
+        entity.SolicitadoPorId = currentUserService.UserName;
         entity.Observacion = Limpiar(request.Observacion);
 
         dbContext.SolicitudesCompra.Add(entity);
@@ -252,16 +255,24 @@ public sealed class SolicitudCompraService(
         int id,
         CancellationToken cancellationToken = default)
     {
-        var entity = await ObtenerCabeceraAsync(id, cancellationToken);
+        var entity = await ObtenerCabeceraConDetallesAsync(id, cancellationToken);
 
         if (entity.Estado != EstadoSolicitudCompra.Borrador)
         {
-            throw new ConflictException($"No se puede enviar a aprobación una solicitud en estado {entity.Estado}.");
+            throw new ConflictException($"No se puede enviar a cotización una solicitud en estado {entity.Estado}.");
         }
 
-        // cotizacionCompraService
-        entity.Estado = EstadoSolicitudCompra.PendienteAprobacion;
+        entity.Estado = EstadoSolicitudCompra.Aprobada;
+        entity.AprobadoPorId = currentUserService.UserName;
+        entity.FechaAprobacion = DateTime.UtcNow;
+
+        foreach (var detalle in entity.Detalles.Where(x => x.Activo))
+        {
+            detalle.CantidadAprobada = detalle.CantidadSolicitada;
+        }
+
         await dbContext.SaveChangesAsync(cancellationToken);
+
         return await ObtenerAsync(id, cancellationToken);
     }
 
@@ -379,6 +390,7 @@ public sealed class SolicitudCompraService(
         {
             ProductoId = request.ProductoId,
             CantidadSolicitada = request.CantidadSolicitada,
+            CantidadAprobada = request.CantidadSolicitada,
             Observacion = Limpiar(request.Observacion)
         };
     }

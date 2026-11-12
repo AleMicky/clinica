@@ -10,6 +10,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   EstadoRecepcionCompra,
+  normalizeEstadoRecepcionCompra,
   type RecepcionCompraResponse,
 } from "../types/recepcion-compra.types";
 
@@ -25,13 +26,19 @@ export function RecepcionCompraMetrics({
   isLoading = false,
 }: RecepcionCompraMetricsProps) {
   const borradores = recepciones.filter(
-    (r) => r.estado === EstadoRecepcionCompra.Borrador
+    (r) =>
+      normalizeEstadoRecepcionCompra(r.estado) ===
+      EstadoRecepcionCompra.Borrador
   ).length;
   const confirmadas = recepciones.filter(
-    (r) => r.estado === EstadoRecepcionCompra.Confirmada
+    (r) =>
+      normalizeEstadoRecepcionCompra(r.estado) ===
+      EstadoRecepcionCompra.Confirmada
   ).length;
   const anuladas = recepciones.filter(
-    (r) => r.estado === EstadoRecepcionCompra.Anulada
+    (r) =>
+      normalizeEstadoRecepcionCompra(r.estado) ===
+      EstadoRecepcionCompra.Anulada
   ).length;
 
   const totalProductos = recepciones.reduce(

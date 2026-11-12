@@ -14,6 +14,7 @@ import {
 } from "../hooks/use-recepcion-compra";
 import {
   EstadoRecepcionCompra,
+  getEstadoRecepcionCompraLabel,
   type RecepcionCompraResponse,
 } from "../types/recepcion-compra.types";
 import { AuditDialog, type AuditInfo } from "@/components/shared";
@@ -160,6 +161,7 @@ export function RecepcionCompraModuleView() {
       updatedAt: rawUpdated,
       updatedBy: r.modificadoPor || (r as any).updatedBy,
       extraDetails: [
+        { label: "Estado", value: getEstadoRecepcionCompraLabel(r.estado) },
         { label: "Orden Compra", value: r.ordenCompraNumero || "-" },
         { label: "Proveedor", value: r.proveedorRazonSocial || "-" },
         { label: "Almacén", value: r.almacenNombre || "-" },

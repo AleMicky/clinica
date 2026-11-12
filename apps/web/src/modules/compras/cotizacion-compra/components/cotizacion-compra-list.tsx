@@ -36,9 +36,11 @@ import {
 import { DataTablePagination } from "@/components/shared";
 import {
   EstadoCotizacionCompra,
+  normalizeEstadoCotizacionCompra,
   type CotizacionCompraResponse,
 } from "../types/cotizacion-compra.types";
 import { ProveedorAutocomplete } from "@/modules/compras/proveedor";
+import { SolicitudCompraAutocomplete } from "@/modules/compras/solicitud-compra";
 
 interface CotizacionCompraListProps {
   cotizaciones: CotizacionCompraResponse[];
@@ -48,9 +50,11 @@ interface CotizacionCompraListProps {
   pageSize?: number;
   searchTerm?: string;
   selectedProveedorId?: number | null;
+  selectedSolicitudCompraId?: number | null;
   selectedEstado?: EstadoCotizacionCompra | null;
   onSearchChange?: (value: string) => void;
   onProveedorChange?: (proveedorId: number | null) => void;
+  onSolicitudCompraChange?: (solicitudCompraId: number | null) => void;
   onEstadoChange?: (estado: EstadoCotizacionCompra | null) => void;
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (size: number) => void;
@@ -100,8 +104,10 @@ function formatDateOnly(dateStr?: string | null) {
   }
 }
 
-export function getEstadoBadge(estado: EstadoCotizacionCompra) {
-  switch (estado) {
+export function getEstadoBadge(
+  estado?: EstadoCotizacionCompra | string | number | null
+) {
+  switch (normalizeEstadoCotizacionCompra(estado)) {
     case EstadoCotizacionCompra.Borrador:
       return (
         <Badge
@@ -175,9 +181,11 @@ export function CotizacionCompraList({
   pageSize = 10,
   searchTerm = "",
   selectedProveedorId = null,
+  selectedSolicitudCompraId = null,
   selectedEstado = null,
   onSearchChange,
   onProveedorChange,
+  onSolicitudCompraChange,
   onEstadoChange,
   onPageChange,
   onPageSizeChange,
@@ -192,6 +200,32 @@ export function CotizacionCompraList({
   onRefresh,
   onViewAudit,
 }: CotizacionCompraListProps) {
+  // Compute best offer per SolicitudCompraId among active/selected quotations with total > 0
+  const lowestTotalBySolicitud = React.useMemo(() => {
+    const map = new Map<number, { minTotal: number; count: number }>();
+    for (const c of cotizaciones) {
+      if (!c.solicitudCompraId) continue;
+      const total = Number(c.total || 0);
+      if (total <= 0) continue;
+      const est = normalizeEstadoCotizacionCompra(c.estado);
+      if (
+        est === EstadoCotizacionCompra.Cancelada ||
+        est === EstadoCotizacionCompra.Vencida
+      ) {
+        continue;
+      }
+      const existing = map.get(c.solicitudCompraId);
+      if (!existing) {
+        map.set(c.solicitudCompraId, { minTotal: total, count: 1 });
+      } else {
+        map.set(c.solicitudCompraId, {
+          minTotal: Math.min(existing.minTotal, total),
+          count: existing.count + 1,
+        });
+      }
+    }
+    return map;
+  }, [cotizaciones]);
   // Export CSV
   const handleExportCSV = () => {
     if (cotizaciones.length === 0) return;
@@ -257,6 +291,16 @@ export function CotizacionCompraList({
                 <X className="size-3" />
               </button>
             )}
+          </div>
+
+          {/* Solicitud de Compra Filter (para comparar proveedores de una solicitud) */}
+          <div className="w-[190px] sm:w-[230px]">
+            <SolicitudCompraAutocomplete
+              value={selectedSolicitudCompraId}
+              onValueChange={(val) => onSolicitudCompraChange?.(val)}
+              placeholder="Filtrar por solicitud..."
+              className="h-7.5 text-xs bg-background/50"
+            />
           </div>
 
           {/* Proveedor Filter */}
@@ -431,8 +475,16 @@ export function CotizacionCompraList({
                     c.estado === EstadoCotizacionCompra.Borrador;
                   const isRecibida =
                     c.estado === EstadoCotizacionCompra.Recibida;
-                  const isCancelable =
-                    isBorrador || isRecibida;
+                  const canEvaluar = isBorrador || isRecibida;
+                  const isCancelable = isBorrador || isRecibida;
+
+                  const solStats = c.solicitudCompraId
+                    ? lowestTotalBySolicitud.get(c.solicitudCompraId)
+                    : undefined;
+                  const isMejorOferta =
+                    Boolean(solStats && solStats.count > 1) &&
+                    Number(c.total || 0) > 0 &&
+                    Number(c.total || 0) === solStats?.minTotal;
 
                   return (
                     <tr
@@ -481,10 +533,22 @@ export function CotizacionCompraList({
 
                       {/* Monto Total */}
                       <td className="px-3 py-2.5 text-right font-mono font-bold text-foreground">
-                        {Number(c.total || 0).toLocaleString("es-ES", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
+                        <div className="flex items-center justify-end gap-1.5">
+                          {isMejorOferta && (
+                            <Badge
+                              variant="outline"
+                              className="text-[9px] h-4 px-1 font-semibold text-emerald-700 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/10"
+                            >
+                              Mejor Oferta
+                            </Badge>
+                          )}
+                          <span>
+                            {Number(c.total || 0).toLocaleString("es-ES", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </span>
+                        </div>
                       </td>
 
                       {/* Estado Badge */}
@@ -504,7 +568,7 @@ export function CotizacionCompraList({
                           >
                             <MoreVertical className="size-3.5" />
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-44 text-xs">
+                          <DropdownMenuContent align="end" className="w-48 text-xs">
                             <DropdownMenuItem
                               onClick={() => onViewDetail?.(c)}
                               className="gap-2 cursor-pointer"
@@ -523,17 +587,7 @@ export function CotizacionCompraList({
                               </DropdownMenuItem>
                             )}
 
-                            {isBorrador && onRecibir && (
-                              <DropdownMenuItem
-                                onClick={() => onRecibir?.(c)}
-                                className="gap-2 cursor-pointer text-blue-600 dark:text-blue-400"
-                              >
-                                <CheckCircle2 className="size-3.5" />
-                                Marcar Recibida
-                              </DropdownMenuItem>
-                            )}
-
-                            {isRecibida && onSeleccionar && (
+                            {canEvaluar && onSeleccionar && (
                               <DropdownMenuItem
                                 onClick={() => onSeleccionar?.(c)}
                                 className="gap-2 cursor-pointer text-emerald-600 dark:text-emerald-400 font-medium"
@@ -543,13 +597,23 @@ export function CotizacionCompraList({
                               </DropdownMenuItem>
                             )}
 
-                            {isRecibida && onRechazar && (
+                            {canEvaluar && onRechazar && (
                               <DropdownMenuItem
                                 onClick={() => onRechazar?.(c)}
                                 className="gap-2 cursor-pointer text-rose-600 dark:text-rose-400"
                               >
                                 <XCircle className="size-3.5" />
-                                Rechazar
+                                Rechazar Oferta
+                              </DropdownMenuItem>
+                            )}
+
+                            {isBorrador && onRecibir && (
+                              <DropdownMenuItem
+                                onClick={() => onRecibir?.(c)}
+                                className="gap-2 cursor-pointer text-blue-600 dark:text-blue-400"
+                              >
+                                <CheckCircle2 className="size-3.5" />
+                                Marcar Recibida
                               </DropdownMenuItem>
                             )}
 

@@ -14,6 +14,7 @@ import {
   updateOrdenCompra,
 } from "../api/orden-compra.api";
 import { ordenCompraKeys } from "../api/orden-compra.key";
+import { recepcionCompraKeys } from "@/modules/compras/recepcion-compra/api/recepcion-compra.key";
 import type {
   OrdenCompraQueryParams,
   CreateOrdenCompraRequest,
@@ -97,6 +98,9 @@ export function useEnviarAprobacionOrdenCompra() {
       queryClient.invalidateQueries({
         queryKey: ordenCompraKeys.detail(id),
       });
+      queryClient.invalidateQueries({
+        queryKey: recepcionCompraKeys.all,
+      });
     },
   });
 }
@@ -113,6 +117,9 @@ export function useAprobarOrdenCompra() {
       queryClient.invalidateQueries({
         queryKey: ordenCompraKeys.detail(id),
       });
+      queryClient.invalidateQueries({
+        queryKey: recepcionCompraKeys.all,
+      });
     },
   });
 }
@@ -128,6 +135,9 @@ export function useEnviarProveedorOrdenCompra() {
       });
       queryClient.invalidateQueries({
         queryKey: ordenCompraKeys.detail(id),
+      });
+      queryClient.invalidateQueries({
+        queryKey: recepcionCompraKeys.all,
       });
     },
   });

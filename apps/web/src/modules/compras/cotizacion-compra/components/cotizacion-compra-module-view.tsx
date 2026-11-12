@@ -16,6 +16,7 @@ import {
 } from "../hooks/use-cotizacion-compra";
 import {
   EstadoCotizacionCompra,
+  getEstadoCotizacionCompraLabel,
   type CotizacionCompraResponse,
 } from "../types/cotizacion-compra.types";
 import { AuditDialog, type AuditInfo } from "@/components/shared";
@@ -26,6 +27,8 @@ export function CotizacionCompraModuleView() {
   const [selectedProveedorId, setSelectedProveedorId] = React.useState<
     number | null
   >(null);
+  const [selectedSolicitudCompraId, setSelectedSolicitudCompraId] =
+    React.useState<number | null>(null);
   const [selectedEstado, setSelectedEstado] =
     React.useState<EstadoCotizacionCompra | null>(null);
   const [page, setPage] = React.useState(1);
@@ -41,6 +44,7 @@ export function CotizacionCompraModuleView() {
     pageSize,
     search: searchTerm.trim() || undefined,
     proveedorId: selectedProveedorId ?? undefined,
+    solicitudCompraId: selectedSolicitudCompraId ?? undefined,
     estado: selectedEstado ?? undefined,
   });
 
@@ -57,6 +61,11 @@ export function CotizacionCompraModuleView() {
 
   const handleProveedorChange = (id: number | null) => {
     setSelectedProveedorId(id);
+    setPage(1);
+  };
+
+  const handleSolicitudCompraChange = (id: number | null) => {
+    setSelectedSolicitudCompraId(id);
     setPage(1);
   };
 
@@ -105,7 +114,9 @@ export function CotizacionCompraModuleView() {
   const handleSeleccionar = async (c: CotizacionCompraResponse) => {
     try {
       await seleccionarMutation.mutateAsync(c.id);
-      toast.success(`Cotización "${c.numero}" seleccionada como Ganadora.`);
+      toast.success(
+        `Cotización "${c.numero}" (${c.proveedorRazonSocial || "Proveedor"}) seleccionada como Ganadora y Orden de Compra generada automáticamente.`
+      );
       refetch();
     } catch (error: any) {
       toast.error(error?.message || "Error al seleccionar cotización.");
@@ -168,6 +179,7 @@ export function CotizacionCompraModuleView() {
       updatedAt: rawUpdated,
       updatedBy: c.modificadoPor || (c as any).updatedBy,
       extraDetails: [
+        { label: "Estado", value: getEstadoCotizacionCompraLabel(c.estado) },
         { label: "Proveedor", value: c.proveedorRazonSocial || "-" },
         { label: "Solicitud Origen", value: c.solicitudCompraNumero || "-" },
         { label: "Condición de Pago", value: c.condicionPago || "-" },
@@ -203,9 +215,11 @@ export function CotizacionCompraModuleView() {
         pageSize={pageSize}
         searchTerm={searchTerm}
         selectedProveedorId={selectedProveedorId}
+        selectedSolicitudCompraId={selectedSolicitudCompraId}
         selectedEstado={selectedEstado}
         onSearchChange={handleSearchChange}
         onProveedorChange={handleProveedorChange}
+        onSolicitudCompraChange={handleSolicitudCompraChange}
         onEstadoChange={handleEstadoChange}
         onPageChange={setPage}
         onPageSizeChange={(size) => {

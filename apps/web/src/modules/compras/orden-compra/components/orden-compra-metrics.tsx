@@ -12,6 +12,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   EstadoOrdenCompra,
+  normalizeEstadoOrdenCompra,
   type OrdenCompraResponse,
 } from "../types/orden-compra.types";
 
@@ -27,24 +28,30 @@ export function OrdenCompraMetrics({
   isLoading = false,
 }: OrdenCompraMetricsProps) {
   const borradores = ordenes.filter(
-    (o) => o.estado === EstadoOrdenCompra.Borrador
+    (o) => normalizeEstadoOrdenCompra(o.estado) === EstadoOrdenCompra.Borrador
   ).length;
   const pendientes = ordenes.filter(
-    (o) => o.estado === EstadoOrdenCompra.PendienteAprobacion
+    (o) =>
+      normalizeEstadoOrdenCompra(o.estado) ===
+      EstadoOrdenCompra.PendienteAprobacion
   ).length;
   const aprobadas = ordenes.filter(
-    (o) => o.estado === EstadoOrdenCompra.Aprobada
+    (o) => normalizeEstadoOrdenCompra(o.estado) === EstadoOrdenCompra.Aprobada
   ).length;
   const enviadas = ordenes.filter(
-    (o) => o.estado === EstadoOrdenCompra.EnviadaProveedor
-  ).length;
-  const recibidas = ordenes.filter(
     (o) =>
-      o.estado === EstadoOrdenCompra.Recibida ||
-      o.estado === EstadoOrdenCompra.ParcialmenteRecibida
+      normalizeEstadoOrdenCompra(o.estado) ===
+      EstadoOrdenCompra.EnviadaProveedor
   ).length;
+  const recibidas = ordenes.filter((o) => {
+    const est = normalizeEstadoOrdenCompra(o.estado);
+    return (
+      est === EstadoOrdenCompra.Recibida ||
+      est === EstadoOrdenCompra.ParcialmenteRecibida
+    );
+  }).length;
   const canceladas = ordenes.filter(
-    (o) => o.estado === EstadoOrdenCompra.Cancelada
+    (o) => normalizeEstadoOrdenCompra(o.estado) === EstadoOrdenCompra.Cancelada
   ).length;
 
   const metrics = [
@@ -65,24 +72,8 @@ export function OrdenCompraMetrics({
       border: "border-slate-500/20",
     },
     {
-      title: "Pend. Aprobación",
-      value: pendientes,
-      icon: Clock,
-      color: "text-amber-600 dark:text-amber-400",
-      bg: "bg-amber-500/10",
-      border: "border-amber-500/20",
-    },
-    {
-      title: "Aprobadas",
-      value: aprobadas,
-      icon: CheckCircle2,
-      color: "text-emerald-600 dark:text-emerald-400",
-      bg: "bg-emerald-500/10",
-      border: "border-emerald-500/20",
-    },
-    {
-      title: "Enviadas a Prov.",
-      value: enviadas,
+      title: "En Recepción",
+      value: enviadas + aprobadas + pendientes,
       icon: Send,
       color: "text-indigo-600 dark:text-indigo-400",
       bg: "bg-indigo-500/10",
@@ -96,12 +87,20 @@ export function OrdenCompraMetrics({
       bg: "bg-teal-500/10",
       border: "border-teal-500/20",
     },
+    {
+      title: "Canceladas",
+      value: canceladas,
+      icon: XCircle,
+      color: "text-rose-600 dark:text-rose-400",
+      bg: "bg-rose-500/10",
+      border: "border-rose-500/20",
+    },
   ];
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
-        {Array.from({ length: 6 }).map((_, idx) => (
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+        {Array.from({ length: 5 }).map((_, idx) => (
           <div
             key={idx}
             className="p-2.5 rounded-lg border border-border/50 bg-card flex flex-col gap-1.5"
@@ -118,7 +117,7 @@ export function OrdenCompraMetrics({
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
       {metrics.map((item, idx) => {
         const Icon = item.icon;
         return (

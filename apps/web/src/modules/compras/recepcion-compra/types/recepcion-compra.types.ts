@@ -4,6 +4,45 @@ export enum EstadoRecepcionCompra {
   Anulada = 3,
 }
 
+export function normalizeEstadoRecepcionCompra(
+  estado?: EstadoRecepcionCompra | string | number | null
+): EstadoRecepcionCompra {
+  if (typeof estado === "number" && estado >= 1 && estado <= 3) {
+    return estado as EstadoRecepcionCompra;
+  }
+  const key = String(estado ?? "")
+    .trim()
+    .toLowerCase();
+  switch (key) {
+    case "1":
+    case "borrador":
+      return EstadoRecepcionCompra.Borrador;
+    case "2":
+    case "confirmada":
+      return EstadoRecepcionCompra.Confirmada;
+    case "3":
+    case "anulada":
+      return EstadoRecepcionCompra.Anulada;
+    default:
+      return EstadoRecepcionCompra.Borrador;
+  }
+}
+
+export function getEstadoRecepcionCompraLabel(
+  estado?: EstadoRecepcionCompra | string | number | null
+): string {
+  switch (normalizeEstadoRecepcionCompra(estado)) {
+    case EstadoRecepcionCompra.Borrador:
+      return "Borrador";
+    case EstadoRecepcionCompra.Confirmada:
+      return "Confirmada (En Stock)";
+    case EstadoRecepcionCompra.Anulada:
+      return "Anulada";
+    default:
+      return "-";
+  }
+}
+
 export interface RecepcionCompraDetalleRequest {
   ordenCompraDetalleId: number;
   cantidadRecibida: number;
@@ -21,9 +60,9 @@ export interface RecepcionCompraRequest {
   detalles: RecepcionCompraDetalleRequest[];
 }
 
-export interface CreateRecepcionCompraRequest extends RecepcionCompraRequest {}
+export interface CreateRecepcionCompraRequest extends RecepcionCompraRequest { }
 
-export interface UpdateRecepcionCompraRequest extends RecepcionCompraRequest {}
+export interface UpdateRecepcionCompraRequest extends RecepcionCompraRequest { }
 
 export interface AnularRecepcionCompraRequest {
   motivoAnulacion: string;

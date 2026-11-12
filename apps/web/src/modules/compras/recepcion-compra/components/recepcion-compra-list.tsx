@@ -35,6 +35,7 @@ import {
 import { DataTablePagination } from "@/components/shared";
 import {
   EstadoRecepcionCompra,
+  normalizeEstadoRecepcionCompra,
   type RecepcionCompraResponse,
 } from "../types/recepcion-compra.types";
 import { AlmacenAutocomplete } from "@/modules/almacenes/almacen";
@@ -84,8 +85,10 @@ function formatDate(dateStr?: string | null) {
   }
 }
 
-export function getEstadoBadge(estado: EstadoRecepcionCompra) {
-  switch (estado) {
+export function getEstadoBadge(
+  estado?: EstadoRecepcionCompra | string | number | null
+) {
+  switch (normalizeEstadoRecepcionCompra(estado)) {
     case EstadoRecepcionCompra.Borrador:
       return (
         <Badge

@@ -1,13 +1,21 @@
 import { apiClient } from "@/lib/api/api-client";
-import type {
-  OrdenCompraQueryParams,
-  OrdenCompraResponse,
-  CreateOrdenCompraRequest,
-  UpdateOrdenCompraRequest,
-  RecibirOrdenCompraRequest,
-  CancelarOrdenCompraRequest,
-  PagedResult,
+import {
+  normalizeEstadoOrdenCompra,
+  type OrdenCompraQueryParams,
+  type OrdenCompraResponse,
+  type CreateOrdenCompraRequest,
+  type UpdateOrdenCompraRequest,
+  type RecibirOrdenCompraRequest,
+  type CancelarOrdenCompraRequest,
+  type PagedResult,
 } from "../types/orden-compra.types";
+
+function normalizeOrdenCompra(item: OrdenCompraResponse): OrdenCompraResponse {
+  return {
+    ...item,
+    estado: normalizeEstadoOrdenCompra(item.estado),
+  };
+}
 
 export async function getOrdenesCompra(
   params?: OrdenCompraQueryParams
@@ -16,7 +24,10 @@ export async function getOrdenesCompra(
     "/ordenes-compra",
     { params }
   );
-  return response.data;
+  return {
+    ...response.data,
+    items: (response.data.items ?? []).map(normalizeOrdenCompra),
+  };
 }
 
 export async function getOrdenCompraById(
@@ -25,7 +36,7 @@ export async function getOrdenCompraById(
   const response = await apiClient.get<OrdenCompraResponse>(
     `/ordenes-compra/${id}`
   );
-  return response.data;
+  return normalizeOrdenCompra(response.data);
 }
 
 export async function createOrdenCompra(
@@ -35,7 +46,7 @@ export async function createOrdenCompra(
     "/ordenes-compra",
     request
   );
-  return response.data;
+  return normalizeOrdenCompra(response.data);
 }
 
 export async function updateOrdenCompra(
@@ -46,7 +57,7 @@ export async function updateOrdenCompra(
     `/ordenes-compra/${id}`,
     request
   );
-  return response.data;
+  return normalizeOrdenCompra(response.data);
 }
 
 export async function deleteOrdenCompra(id: number): Promise<void> {
@@ -59,7 +70,7 @@ export async function enviarAprobacionOrdenCompra(
   const response = await apiClient.post<OrdenCompraResponse>(
     `/ordenes-compra/${id}/enviar-aprobacion`
   );
-  return response.data;
+  return normalizeOrdenCompra(response.data);
 }
 
 export async function aprobarOrdenCompra(
@@ -68,7 +79,7 @@ export async function aprobarOrdenCompra(
   const response = await apiClient.post<OrdenCompraResponse>(
     `/ordenes-compra/${id}/aprobar`
   );
-  return response.data;
+  return normalizeOrdenCompra(response.data);
 }
 
 export async function enviarProveedorOrdenCompra(
@@ -77,7 +88,7 @@ export async function enviarProveedorOrdenCompra(
   const response = await apiClient.post<OrdenCompraResponse>(
     `/ordenes-compra/${id}/enviar-proveedor`
   );
-  return response.data;
+  return normalizeOrdenCompra(response.data);
 }
 
 export async function recibirOrdenCompra(
@@ -88,7 +99,7 @@ export async function recibirOrdenCompra(
     `/ordenes-compra/${id}/recibir`,
     request
   );
-  return response.data;
+  return normalizeOrdenCompra(response.data);
 }
 
 export async function cancelarOrdenCompra(
@@ -99,5 +110,5 @@ export async function cancelarOrdenCompra(
     `/ordenes-compra/${id}/cancelar`,
     request
   );
-  return response.data;
+  return normalizeOrdenCompra(response.data);
 }

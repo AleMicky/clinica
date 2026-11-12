@@ -10,6 +10,9 @@ using Microsoft.EntityFrameworkCore;
 using CotizacionCompraDetalleEntity = Clinica.Api.Modules.Compras.CotizacionCompra.Entity.CotizacionCompraDetalle;
 using CotizacionCompraEntity = Clinica.Api.Modules.Compras.CotizacionCompra.Entity.CotizacionCompra;
 using CotizacionCompraMapper = Clinica.Api.Modules.Compras.CotizacionCompra.Mappers.CotizacionCompraMapper;
+using OrdenCompraDetalleEntity = Clinica.Api.Modules.Compras.OrdenCompra.Entity.OrdenCompraDetalle;
+using OrdenCompraEntity = Clinica.Api.Modules.Compras.OrdenCompra.Entity.OrdenCompra;
+using EstadoOrdenCompra = Clinica.Api.Modules.Compras.OrdenCompra.Enums.EstadoOrdenCompra;
 
 namespace Clinica.Api.Modules.Compras.CotizacionCompra.Services;
 
@@ -304,15 +307,107 @@ public sealed class CotizacionCompraService(
         int id,
         CancellationToken cancellationToken = default)
     {
-        var entity = await ObtenerCabeceraAsync(id, cancellationToken);
+        var entity = await dbContext.CotizacionesCompra
+            .Include(x => x.Detalles)
+            .Include(x => x.SolicitudCompra)
+            .FirstOrDefaultAsync(x => x.Id == id && x.Activo, cancellationToken);
 
-        if (entity.Estado != EstadoCotizacionCompra.Recibida)
+        if (entity is null)
+        {
+            throw new NotFoundException(nameof(CotizacionCompraEntity), id);
+        }
+
+        if (entity.Estado is not (EstadoCotizacionCompra.Borrador or EstadoCotizacionCompra.Recibida))
         {
             throw new ConflictException(
                 $"No se puede seleccionar una cotización en estado {entity.Estado}.");
         }
 
         entity.Estado = EstadoCotizacionCompra.Seleccionada;
+
+        if (entity.SolicitudCompraId.HasValue)
+        {
+            var otrasCotizaciones = await dbContext.CotizacionesCompra
+                .Where(x =>
+                    x.Activo &&
+                    x.SolicitudCompraId == entity.SolicitudCompraId.Value &&
+                    x.Id != entity.Id &&
+                    (x.Estado == EstadoCotizacionCompra.Borrador || x.Estado == EstadoCotizacionCompra.Recibida))
+                .ToListAsync(cancellationToken);
+
+            foreach (var otra in otrasCotizaciones)
+            {
+                otra.Estado = EstadoCotizacionCompra.Rechazada;
+            }
+
+            if (entity.SolicitudCompra is not null && entity.SolicitudCompra.Activo)
+            {
+                entity.SolicitudCompra.Estado = SolicitudCompra.Enums.EstadoSolicitudCompra.Atendida;
+            }
+        }
+
+        // Generar automáticamente la Orden de Compra si aún no existe una para esta cotización
+        var existeOrden = await dbContext.OrdenesCompra
+            .AnyAsync(x => x.Activo && x.CotizacionCompraId == entity.Id, cancellationToken);
+
+        if (!existeOrden)
+        {
+            var almacenId = entity.SolicitudCompra?.AlmacenId
+                ?? await dbContext.Almacenes
+                    .Where(x => x.Activo)
+                    .OrderBy(x => x.Id)
+                    .Select(x => x.Id)
+                    .FirstOrDefaultAsync(cancellationToken);
+
+            if (almacenId > 0)
+            {
+                var correlativoOc = await correlativoService.GenerarAsync(
+                    new GenerarCorrelativoRequest
+                    {
+                        Codigo = "OC",
+                        Gestion = DateTime.Now.Year,
+                        Prefijo = "OC",
+                        Longitud = 6
+                    },
+                    cancellationToken);
+
+                var nuevaOrden = new OrdenCompraEntity
+                {
+                    Numero = correlativoOc.NumeroFormateado,
+                    ProveedorId = entity.ProveedorId,
+                    AlmacenId = almacenId,
+                    SolicitudCompraId = entity.SolicitudCompraId,
+                    CotizacionCompraId = entity.Id,
+                    Fecha = DateTime.UtcNow,
+                    FechaEntregaEsperada = entity.SolicitudCompra?.FechaRequerida,
+                    Estado = EstadoOrdenCompra.Borrador,
+                    Subtotal = entity.Subtotal,
+                    Descuento = entity.Descuento,
+                    Impuesto = entity.Impuesto,
+                    Total = entity.Total,
+                    CondicionPago = entity.CondicionPago ?? "Contado",
+                    Observacion = string.IsNullOrWhiteSpace(entity.Observacion)
+                        ? $"Generada automáticamente desde Cotización Ganadora {entity.Numero}"
+                        : entity.Observacion,
+                };
+
+                foreach (var det in entity.Detalles.Where(d => d.Activo))
+                {
+                    nuevaOrden.Detalles.Add(new OrdenCompraDetalleEntity
+                    {
+                        ProductoId = det.ProductoId,
+                        Cantidad = det.Cantidad,
+                        CantidadRecibida = 0,
+                        PrecioUnitario = det.PrecioUnitario,
+                        Descuento = det.Descuento,
+                        Subtotal = det.Subtotal,
+                        Observacion = det.Observacion,
+                    });
+                }
+
+                dbContext.OrdenesCompra.Add(nuevaOrden);
+            }
+        }
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
@@ -325,7 +420,7 @@ public sealed class CotizacionCompraService(
     {
         var entity = await ObtenerCabeceraAsync(id, cancellationToken);
 
-        if (entity.Estado != EstadoCotizacionCompra.Recibida)
+        if (entity.Estado is not (EstadoCotizacionCompra.Borrador or EstadoCotizacionCompra.Recibida))
         {
             throw new ConflictException(
                 $"No se puede rechazar una cotización en estado {entity.Estado}.");

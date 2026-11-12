@@ -1,12 +1,22 @@
 import { apiClient } from "@/lib/api/api-client";
-import type {
-  RecepcionCompraQueryParams,
-  RecepcionCompraResponse,
-  CreateRecepcionCompraRequest,
-  UpdateRecepcionCompraRequest,
-  AnularRecepcionCompraRequest,
-  PagedResult,
+import {
+  normalizeEstadoRecepcionCompra,
+  type RecepcionCompraQueryParams,
+  type RecepcionCompraResponse,
+  type CreateRecepcionCompraRequest,
+  type UpdateRecepcionCompraRequest,
+  type AnularRecepcionCompraRequest,
+  type PagedResult,
 } from "../types/recepcion-compra.types";
+
+function normalizeRecepcionCompra(
+  item: RecepcionCompraResponse
+): RecepcionCompraResponse {
+  return {
+    ...item,
+    estado: normalizeEstadoRecepcionCompra(item.estado),
+  };
+}
 
 export async function getRecepcionesCompra(
   params?: RecepcionCompraQueryParams
@@ -15,7 +25,10 @@ export async function getRecepcionesCompra(
     "/recepciones-compra",
     { params }
   );
-  return response.data;
+  return {
+    ...response.data,
+    items: (response.data.items ?? []).map(normalizeRecepcionCompra),
+  };
 }
 
 export async function getRecepcionCompraById(
@@ -24,7 +37,7 @@ export async function getRecepcionCompraById(
   const response = await apiClient.get<RecepcionCompraResponse>(
     `/recepciones-compra/${id}`
   );
-  return response.data;
+  return normalizeRecepcionCompra(response.data);
 }
 
 export async function createRecepcionCompra(
@@ -34,7 +47,7 @@ export async function createRecepcionCompra(
     "/recepciones-compra",
     request
   );
-  return response.data;
+  return normalizeRecepcionCompra(response.data);
 }
 
 export async function updateRecepcionCompra(
@@ -45,7 +58,7 @@ export async function updateRecepcionCompra(
     `/recepciones-compra/${id}`,
     request
   );
-  return response.data;
+  return normalizeRecepcionCompra(response.data);
 }
 
 export async function deleteRecepcionCompra(id: number): Promise<void> {
@@ -58,7 +71,7 @@ export async function confirmarRecepcionCompra(
   const response = await apiClient.post<RecepcionCompraResponse>(
     `/recepciones-compra/${id}/confirmar`
   );
-  return response.data;
+  return normalizeRecepcionCompra(response.data);
 }
 
 export async function anularRecepcionCompra(
@@ -69,5 +82,5 @@ export async function anularRecepcionCompra(
     `/recepciones-compra/${id}/anular`,
     request
   );
-  return response.data;
+  return normalizeRecepcionCompra(response.data);
 }

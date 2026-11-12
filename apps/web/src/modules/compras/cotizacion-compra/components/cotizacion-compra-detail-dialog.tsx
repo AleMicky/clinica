@@ -98,6 +98,7 @@ export function CotizacionCompraDetailDialog({
     cotizacion?.estado === EstadoCotizacionCompra.Borrador;
   const isRecibida =
     cotizacion?.estado === EstadoCotizacionCompra.Recibida;
+  const canEvaluar = isBorrador || isRecibida;
   const isCancelable =
     isBorrador || isRecibida;
 
@@ -342,22 +343,7 @@ export function CotizacionCompraDetailDialog({
           </Button>
 
           <div className="flex items-center gap-1.5">
-            {isBorrador && onRecibir && (
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => {
-                  onOpenChange(false);
-                  if (cotizacion) onRecibir(cotizacion);
-                }}
-                className="h-7.5 text-xs bg-blue-600 hover:bg-blue-700 text-white gap-1 font-medium"
-              >
-                <CheckCircle2 className="size-3" />
-                <span>Marcar Recibida</span>
-              </Button>
-            )}
-
-            {isRecibida && onSeleccionar && (
+            {canEvaluar && onSeleccionar && (
               <Button
                 type="button"
                 size="sm"
@@ -365,14 +351,14 @@ export function CotizacionCompraDetailDialog({
                   onOpenChange(false);
                   if (cotizacion) onSeleccionar(cotizacion);
                 }}
-                className="h-7.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white gap-1 font-medium"
+                className="h-7.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white gap-1 font-medium cursor-pointer"
               >
                 <CheckCheck className="size-3" />
                 <span>Seleccionar Ganadora</span>
               </Button>
             )}
 
-            {isRecibida && onRechazar && (
+            {canEvaluar && onRechazar && (
               <Button
                 type="button"
                 variant="outline"
@@ -381,10 +367,26 @@ export function CotizacionCompraDetailDialog({
                   onOpenChange(false);
                   if (cotizacion) onRechazar(cotizacion);
                 }}
-                className="h-7.5 text-xs text-rose-600 border-rose-500/30 hover:bg-rose-500/10 gap-1"
+                className="h-7.5 text-xs text-rose-600 border-rose-500/30 hover:bg-rose-500/10 gap-1 cursor-pointer"
               >
                 <XCircle className="size-3" />
                 <span>Rechazar</span>
+              </Button>
+            )}
+
+            {isBorrador && onRecibir && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  onOpenChange(false);
+                  if (cotizacion) onRecibir(cotizacion);
+                }}
+                className="h-7.5 text-xs text-blue-600 border-blue-500/30 hover:bg-blue-500/10 gap-1 cursor-pointer"
+              >
+                <CheckCircle2 className="size-3" />
+                <span>Marcar Recibida</span>
               </Button>
             )}
 

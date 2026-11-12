@@ -7,6 +7,60 @@ export enum EstadoCotizacionCompra {
   Cancelada = 6,
 }
 
+export function normalizeEstadoCotizacionCompra(
+  estado?: EstadoCotizacionCompra | string | number | null
+): EstadoCotizacionCompra {
+  if (typeof estado === "number" && estado >= 1 && estado <= 6) {
+    return estado as EstadoCotizacionCompra;
+  }
+  const key = String(estado ?? "")
+    .trim()
+    .toLowerCase();
+  switch (key) {
+    case "1":
+    case "borrador":
+      return EstadoCotizacionCompra.Borrador;
+    case "2":
+    case "recibida":
+      return EstadoCotizacionCompra.Recibida;
+    case "3":
+    case "seleccionada":
+      return EstadoCotizacionCompra.Seleccionada;
+    case "4":
+    case "rechazada":
+      return EstadoCotizacionCompra.Rechazada;
+    case "5":
+    case "vencida":
+      return EstadoCotizacionCompra.Vencida;
+    case "6":
+    case "cancelada":
+      return EstadoCotizacionCompra.Cancelada;
+    default:
+      return EstadoCotizacionCompra.Borrador;
+  }
+}
+
+export function getEstadoCotizacionCompraLabel(
+  estado?: EstadoCotizacionCompra | string | number | null
+): string {
+  switch (normalizeEstadoCotizacionCompra(estado)) {
+    case EstadoCotizacionCompra.Borrador:
+      return "Borrador";
+    case EstadoCotizacionCompra.Recibida:
+      return "Recibida";
+    case EstadoCotizacionCompra.Seleccionada:
+      return "Seleccionada";
+    case EstadoCotizacionCompra.Rechazada:
+      return "Rechazada";
+    case EstadoCotizacionCompra.Vencida:
+      return "Vencida";
+    case EstadoCotizacionCompra.Cancelada:
+      return "Cancelada";
+    default:
+      return "-";
+  }
+}
+
 export interface CotizacionCompraDetalleRequest {
   productoId: number;
   cantidad: number;

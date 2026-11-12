@@ -1,12 +1,22 @@
 import { apiClient } from "@/lib/api/api-client";
-import type {
-  CotizacionCompraQueryParams,
-  CotizacionCompraResponse,
-  CreateCotizacionCompraRequest,
-  UpdateCotizacionCompraRequest,
-  CancelarCotizacionCompraRequest,
-  PagedResult,
+import {
+  normalizeEstadoCotizacionCompra,
+  type CotizacionCompraQueryParams,
+  type CotizacionCompraResponse,
+  type CreateCotizacionCompraRequest,
+  type UpdateCotizacionCompraRequest,
+  type CancelarCotizacionCompraRequest,
+  type PagedResult,
 } from "../types/cotizacion-compra.types";
+
+function mapCotizacionResponse(
+  item: CotizacionCompraResponse
+): CotizacionCompraResponse {
+  return {
+    ...item,
+    estado: normalizeEstadoCotizacionCompra(item.estado),
+  };
+}
 
 export async function getCotizacionesCompra(
   params?: CotizacionCompraQueryParams
@@ -15,7 +25,10 @@ export async function getCotizacionesCompra(
     "/cotizaciones-compra",
     { params }
   );
-  return response.data;
+  return {
+    ...response.data,
+    items: (response.data.items ?? []).map(mapCotizacionResponse),
+  };
 }
 
 export async function getCotizacionCompraById(
@@ -24,7 +37,7 @@ export async function getCotizacionCompraById(
   const response = await apiClient.get<CotizacionCompraResponse>(
     `/cotizaciones-compra/${id}`
   );
-  return response.data;
+  return mapCotizacionResponse(response.data);
 }
 
 export async function createCotizacionCompra(
@@ -34,7 +47,7 @@ export async function createCotizacionCompra(
     "/cotizaciones-compra",
     request
   );
-  return response.data;
+  return mapCotizacionResponse(response.data);
 }
 
 export async function updateCotizacionCompra(
@@ -45,7 +58,7 @@ export async function updateCotizacionCompra(
     `/cotizaciones-compra/${id}`,
     request
   );
-  return response.data;
+  return mapCotizacionResponse(response.data);
 }
 
 export async function deleteCotizacionCompra(id: number): Promise<void> {
@@ -58,7 +71,7 @@ export async function recibirCotizacionCompra(
   const response = await apiClient.post<CotizacionCompraResponse>(
     `/cotizaciones-compra/${id}/recibir`
   );
-  return response.data;
+  return mapCotizacionResponse(response.data);
 }
 
 export async function seleccionarCotizacionCompra(
@@ -67,7 +80,7 @@ export async function seleccionarCotizacionCompra(
   const response = await apiClient.post<CotizacionCompraResponse>(
     `/cotizaciones-compra/${id}/seleccionar`
   );
-  return response.data;
+  return mapCotizacionResponse(response.data);
 }
 
 export async function rechazarCotizacionCompra(
@@ -76,7 +89,7 @@ export async function rechazarCotizacionCompra(
   const response = await apiClient.post<CotizacionCompraResponse>(
     `/cotizaciones-compra/${id}/rechazar`
   );
-  return response.data;
+  return mapCotizacionResponse(response.data);
 }
 
 export async function cancelarCotizacionCompra(
@@ -87,5 +100,5 @@ export async function cancelarCotizacionCompra(
     `/cotizaciones-compra/${id}/cancelar`,
     request
   );
-  return response.data;
+  return mapCotizacionResponse(response.data);
 }
