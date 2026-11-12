@@ -338,13 +338,14 @@ public sealed class RecepcionCompraService(
             Detalles = detallesMovimiento
         };
 
-        await movimientoInventarioService.CrearIntegracionAsync(
+        var movimientoCreado = await movimientoInventarioService.CrearIntegracionAsync(
             requestIntegracion,
             confirmar: true,
             cancellationToken);
 
         await ActualizarOrdenCompra(entity, detallesActivos, cancellationToken);
 
+        entity.MovimientoInventarioId = movimientoCreado.Id;
         entity.Estado = EstadoRecepcionCompra.Confirmada;
         entity.RecibidoPorId = currentUserService.UserName;
 
@@ -369,9 +370,9 @@ public sealed class RecepcionCompraService(
         // 1. Revertir el movimiento de inventario generado
         var movimiento = await dbContext.MovimientosInventario
             .FirstOrDefaultAsync(
-                x => x.ReferenciaTipo == "RECEPCION_COMPRA" &&
-                     x.ReferenciaId == entity.Id &&
-                     x.Activo,
+                x => x.Activo &&
+                     ((entity.MovimientoInventarioId.HasValue && x.Id == entity.MovimientoInventarioId.Value) ||
+                      (x.ReferenciaTipo == "RECEPCION_COMPRA" && x.ReferenciaId == entity.Id)),
                 cancellationToken);
 
         if (movimiento is not null && movimiento.Estado == Clinica.Api.Modules.Almacenes.MovimientoInventario.Enums.EstadoMovimientoInventario.Confirmado)

@@ -464,7 +464,14 @@ export function RecepcionCompraList({
 
                       {/* Estado Badge */}
                       <td className="px-3 py-2.5 whitespace-nowrap">
-                        {getEstadoBadge(r.estado)}
+                        <div className="flex flex-col items-start gap-1">
+                          {getEstadoBadge(r.estado)}
+                          {r.movimientoInventarioId && (
+                            <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400">
+                              Mov. #{r.movimientoInventarioId}
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       {/* Actions */}

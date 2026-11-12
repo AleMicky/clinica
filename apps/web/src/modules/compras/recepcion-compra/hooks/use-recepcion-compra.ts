@@ -12,6 +12,8 @@ import {
 } from "../api/recepcion-compra.api";
 import { recepcionCompraKeys } from "../api/recepcion-compra.key";
 import { ordenCompraKeys } from "@/modules/compras/orden-compra/api/orden-compra.key";
+import { existenciaKeys } from "@/modules/almacenes/existencia/api/existencia.key";
+import { movimientoInventarioKeys } from "@/modules/almacenes/movimiento-inventario/api/movimiento-inventario.key";
 import type {
   RecepcionCompraQueryParams,
   CreateRecepcionCompraRequest,
@@ -98,6 +100,21 @@ export function useConfirmarRecepcionCompra() {
       queryClient.invalidateQueries({
         queryKey: ordenCompraKeys.all,
       });
+      queryClient.invalidateQueries({
+        queryKey: existenciaKeys.all,
+      });
+      queryClient.invalidateQueries({
+        queryKey: movimientoInventarioKeys.all,
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["kardex"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["alertas-stock"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["existencia-partidas"],
+      });
     },
   });
 }
@@ -122,6 +139,21 @@ export function useAnularRecepcionCompra() {
       });
       queryClient.invalidateQueries({
         queryKey: ordenCompraKeys.all,
+      });
+      queryClient.invalidateQueries({
+        queryKey: existenciaKeys.all,
+      });
+      queryClient.invalidateQueries({
+        queryKey: movimientoInventarioKeys.all,
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["kardex"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["alertas-stock"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["existencia-partidas"],
       });
     },
   });

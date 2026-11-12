@@ -133,6 +133,8 @@ public sealed class MovimientoInventarioService(
             .Take(pageSize)
             .Include(x => x.TipoMovimientoInventario)
             .Include(x => x.Almacen)
+            .Include(x => x.Detalles)
+            .ThenInclude(d => d.Producto)
             .ToListAsync(cancellationToken);
 
         var items = movimientos
@@ -140,7 +142,7 @@ public sealed class MovimientoInventarioService(
                 x,
                 x.TipoMovimientoInventario?.Nombre,
                 x.Almacen?.Nombre,
-                detalles: null))
+                x.Detalles))
             .ToList();
 
         return new PagedResult<MovimientoInventarioResponse>(

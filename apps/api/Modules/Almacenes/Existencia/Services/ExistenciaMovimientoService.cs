@@ -29,9 +29,11 @@ public sealed class ExistenciaMovimientoService(AppDbContext dbContext)
             throw new BusinessException("La entrada debe tener un costo unitario válido.");
 
 
-        var existencia = await dbContext.Existencias.FirstOrDefaultAsync(
-            x => x.AlmacenId == almacenId && x.ProductoId == detalle.ProductoId && x.Activo,
-            cancellationToken);
+        var existencia = dbContext.Existencias.Local.FirstOrDefault(
+                             x => x.AlmacenId == almacenId && x.ProductoId == detalle.ProductoId)
+                         ?? await dbContext.Existencias.FirstOrDefaultAsync(
+                             x => x.AlmacenId == almacenId && x.ProductoId == detalle.ProductoId,
+                             cancellationToken);
 
         if (existencia is null)
         {
@@ -44,6 +46,13 @@ public sealed class ExistenciaMovimientoService(AppDbContext dbContext)
                 CostoPromedio = 0m
             };
             dbContext.Existencias.Add(existencia);
+        }
+        else if (!existencia.Activo)
+        {
+            existencia.Activo = true;
+            existencia.Cantidad = 0m;
+            existencia.CantidadReservada = 0m;
+            existencia.CostoPromedio = 0m;
         }
 
         decimal cantidadNueva = existencia.Cantidad + detalle.Cantidad;
